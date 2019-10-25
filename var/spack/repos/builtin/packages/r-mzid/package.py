@@ -24,12 +24,6 @@ class RMzid(RPackage):
     version('1.16.0', commit='fc203832a4cbbbe20f6dd826c6bf2128f2c271c4')
     version('1.14.0', commit='1c53aa6523ae61d3ebb13381381fc119d6cc6115')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-
     depends_on('r-doparallel', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-foreach', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-iterators', when='@1.14.0:', type=('build', 'run'))

@@ -21,12 +21,6 @@ class RCategory(RPackage):
     version('2.44.0', commit='eaba50c1a801ba7983e6ffdf41ab0fc9cfe5a626')
     version('2.42.1', commit='382c817a2371671a72f8f949dfb4050361ebabcd')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.50.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.48.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.46.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.44.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.42.1', type=('build', 'run'))
-
     depends_on('r-annotate', when='@2.42.1:', type=('build', 'run'))
     depends_on('r-annotationdbi', when='@2.42.1:', type=('build', 'run'))
     depends_on('r-biobase', when='@2.42.1:', type=('build', 'run'))

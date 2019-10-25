@@ -23,12 +23,6 @@ class RGeoquery(RPackage):
     version('2.46.15', commit='a52b195ac640caae9679610d5b486b7cb828c0fd')
     version('2.42.0', commit='c26adef8d3ddbd6932a3170f2f84f6e4327641fb')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.52.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.50.5', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.48.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.46.15', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.42.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-httr', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-rcurl', when='@2.42.0:', type=('build', 'run'))

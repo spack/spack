@@ -25,12 +25,6 @@ class RShortread(RPackage):
     version('1.36.1', commit='176c34eddf4a416d30c69cb4ac197141ba42e66f')
     version('1.34.2', commit='25daac63b301df66a8ef6e98cc2977522c6786cd')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.42.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.40.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.38.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.36.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.34.2', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.34.2:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.22.1:', when='@1.34.2:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@1.34.2:', type=('build', 'run'))

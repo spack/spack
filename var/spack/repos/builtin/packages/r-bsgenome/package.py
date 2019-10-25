@@ -22,17 +22,12 @@ class RBsgenome(RPackage):
     version('1.46.0', commit='bdfbd6d09820993585b8231ddea5e11c99008dc5')
     version('1.44.2', commit='105b00588a758d5ec7c347a7dff2756aea4516a0')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.50.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.48.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.46.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.44.2', type=('build', 'run'))
-
     depends_on('r-biocgenerics@0.13.8:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-biostrings@2.35.3:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.11.4:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-genomicranges@1.27.6:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-iranges@2.1.33:', when='@1.44.2:', type=('build', 'run'))
+    depends_on('r@2.8.0:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-rsamtools', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-rtracklayer@1.25.8:', when='@1.44.2:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.36:', when='@1.44.2:', type=('build', 'run'))

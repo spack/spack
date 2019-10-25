@@ -22,12 +22,6 @@ class RClusterprofiler(RPackage):
     version('3.6.0', commit='ff15e3dba69b93bc872d5f5d07821cd9ae20d829')
     version('3.4.4', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
 
-    depends_on('r@3.6.0:3.6.9', when='@3.12.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.8.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.4.4', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-dose@3.1.3:', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-ggplot2', when='@3.4.4:', type=('build', 'run'))
@@ -36,6 +30,7 @@ class RClusterprofiler(RPackage):
     depends_on('r-magrittr', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-plyr', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-qvalue', when='@3.4.4:', type=('build', 'run'))
+    depends_on('r@3.3.1:', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-rvcheck', when='@3.4.4:', type=('build', 'run'))
     depends_on('r-tidyr', when='@3.4.4:', type=('build', 'run'))
 
@@ -43,3 +38,4 @@ class RClusterprofiler(RPackage):
 
     depends_on('r-dose@3.5.1:', when='@3.8.1:', type=('build', 'run'))
     depends_on('r-enrichplot@0.99.7:', when='@3.8.1:', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@3.8.1:', type=('build', 'run'))

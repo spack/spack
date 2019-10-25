@@ -25,12 +25,6 @@ class RYapsa(RPackage):
     version('1.4.0', commit='6f24150a0689d5215983975ece96c8c205923c72')
     version('1.2.0', commit='320809b69e470e30a777a383f8341f93064ec24d')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.2.0', type=('build', 'run'))
-
     depends_on('r-circlize', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-complexheatmap', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-corrplot', when='@1.2.0:', type=('build', 'run'))
@@ -44,6 +38,7 @@ class RYapsa(RPackage):
     depends_on('r-keggrest', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-lsei', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-pmcmr', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-reshape2', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-somaticsignatures', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-variantannotation', when='@1.2.0:', type=('build', 'run'))

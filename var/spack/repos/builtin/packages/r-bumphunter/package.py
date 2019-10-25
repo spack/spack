@@ -20,12 +20,6 @@ class RBumphunter(RPackage):
     version('1.20.0', commit='c9d8e7ab0c19299988e5d7fa74970312e9a1eac0')
     version('1.16.0', commit='1c3ab4d1fd2d75b1586ccef12665960b3602080a')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.24.5', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-dorng', when='@1.16.0:', type=('build', 'run'))
@@ -38,4 +32,9 @@ class RBumphunter(RPackage):
     depends_on('r-limma', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-locfit', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-matrixstats', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.16.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', when='@1.16.0:', type=('build', 'run'))
+
+    depends_on('r@3.4:', when='@1.20.0:', type=('build', 'run'))
+
+    depends_on('r@3.5:', when='@1.24.5:', type=('build', 'run'))

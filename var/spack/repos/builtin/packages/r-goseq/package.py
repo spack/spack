@@ -21,15 +21,10 @@ class RGoseq(RPackage):
     version('1.30.0', commit='fa8cafe0766ed0b6a97a4ed3374a709ed9d1daf1')
     version('1.28.0', commit='ed0ce332a8972618d740d8a93711dff994657738')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.36.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.34.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-biasedurn', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-genelendatabase@1.9.2:', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-go-db', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-mgcv', when='@1.28.0:', type=('build', 'run'))
+    depends_on('r@2.11.0:', when='@1.28.0:', type=('build', 'run'))

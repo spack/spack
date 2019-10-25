@@ -25,12 +25,6 @@ class RYarn(RPackage):
     version('1.4.0', commit='36100f40b9e520c072d0d5ebf963723b813f7db0')
     version('1.2.0', commit='28af616ef8c27dcadf6568e276dea8465486a697')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.2.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-biomart', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-downloader', when='@1.2.0:', type=('build', 'run'))

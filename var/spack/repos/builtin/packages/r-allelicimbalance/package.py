@@ -21,12 +21,6 @@ class RAllelicimbalance(RPackage):
     version('1.16.0', commit='85f652ae8a0dd15535819b6e934065182df5544a')
     version('1.14.0', commit='35958534945819baafde0e13d1eb4d05a514142c')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-biostrings', when='@1.14.0:', type=('build', 'run'))
@@ -41,6 +35,7 @@ class RAllelicimbalance(RPackage):
     depends_on('r-lattice', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-latticeextra', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-nlme', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-rsamtools', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-seqinr', when='@1.14.0:', type=('build', 'run'))

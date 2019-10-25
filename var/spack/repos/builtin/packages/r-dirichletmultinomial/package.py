@@ -25,12 +25,6 @@ class RDirichletmultinomial(RPackage):
     version('1.20.0', commit='251529f301da1482551142240aeb6baf8dab2272')
     version('1.18.0', commit='81ccc8d83b8ef84f5d3e877bc0a04233a0f63c51')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.24.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.18.0', type=('build', 'run'))
-
     depends_on('r-biocgenerics', when='@1.18.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.18.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.18.0:', type=('build', 'run'))

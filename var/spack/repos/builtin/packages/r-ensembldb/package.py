@@ -25,17 +25,11 @@ class REnsembldb(RPackage):
     homepage = "https://bioconductor.org/packages/ensembldb"
     git      = "https://git.bioconductor.org/packages/ensembldb.git"
 
-    version('2.8.0', commit='b35f4c97d6d1890d8a9dbc0d31a8b63b008c35ac')
+    version('2.8.1', commit='a4d8d89c143dca86b364d59dff8e46cc81c41ac0')
     version('2.6.8', commit='c2c4f41b4ecc81d5328ce1d380065dfcb5e0c54c')
     version('2.4.1', commit='b5b6b94826a2f46a4faecb9dde750ecd3bfaf327')
     version('2.2.2', commit='d71610e58aed88dbbe6a74e7a8ddfb7451398060')
     version('2.0.4', commit='514623d71e3cca7a4e547adb579b5a958702ef86')
-
-    depends_on('r@3.6.0:3.6.9', when='@2.8.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.6.8', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.4.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.2.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.0.4', type=('build', 'run'))
 
     depends_on('r-annotationdbi@1.31.19:', when='@2.0.4:', type=('build', 'run'))
     depends_on('r-annotationfilter@0.99.7:', when='@2.0.4:', type=('build', 'run'))

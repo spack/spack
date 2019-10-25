@@ -24,16 +24,12 @@ class RTmixclust(RPackage):
     version('1.2.0', commit='0250c0b238f08077b5b9ff17c2f3b7633c67dc3c')
     version('1.0.1', commit='0ac800210e3eb9da911767a80fb5582ab33c0cad')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.2.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.0.1', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-cluster', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-flexclust', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-gss', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-mvtnorm', when='@1.0.1:', type=('build', 'run'))
+    depends_on('r@3.4:', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-spem', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-zoo', when='@1.0.1:', type=('build', 'run'))

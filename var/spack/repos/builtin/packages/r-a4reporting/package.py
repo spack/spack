@@ -20,11 +20,5 @@ class RA4reporting(RPackage):
     version('1.26.0', commit='cce201502e2d3b28fd2823b66d9f81b034dc7eaa')
     version('1.24.0', commit='bf22c4d50daf40fc9eaf8c476385bf4a24a5b5ce')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-
     depends_on('r-annaffy', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-xtable', when='@1.24.0:', type=('build', 'run'))

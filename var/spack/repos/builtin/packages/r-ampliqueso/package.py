@@ -21,12 +21,6 @@ class RAmpliqueso(RPackage):
     version('1.16.0', commit='25d2543ff9dedef4f966f999c95cdf87185d3bb3')
     version('1.14.0', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.21.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-
     depends_on('r-deseq', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-doparallel', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-edger', when='@1.14.0:', type=('build', 'run'))
@@ -35,6 +29,7 @@ class RAmpliqueso(RPackage):
     depends_on('r-ggplot2', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-gplots', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-knitr', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@2.15.0:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-rgl', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-rnaseqmap@2.17.1:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-samr', when='@1.14.0:', type=('build', 'run'))

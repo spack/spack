@@ -23,13 +23,8 @@ class RAcgh(RPackage):
     version('1.56.0', commit='f3531ec99fc181044bdcb6a01c9976029efb6235')
     version('1.54.0', commit='be2ed339449f55c8d218e10c435e4ad356683693')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.62.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.60.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-cluster', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-multtest', when='@1.54.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-survival', when='@1.54.0:', type=('build', 'run'))

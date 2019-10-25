@@ -22,12 +22,6 @@ class RAneufinder(RPackage):
     version('1.6.0', commit='0cfbdd1951fb4df5622e002260cfa86294d65d1d')
     version('1.4.0', commit='e5bdf4d5e4f84ee5680986826ffed636ed853b8e')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.12.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-
     depends_on('r-aneufinderdata', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-bamsignals', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.4.0:', type=('build', 'run'))
@@ -44,9 +38,12 @@ class RAneufinder(RPackage):
     depends_on('r-ggrepel', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-mclust', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r@3.3:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-reordercluster', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-reshape2', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-rsamtools', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.4.0:', type=('build', 'run'))
 
     depends_on('r-ecp', when='@1.8.0:', type=('build', 'run'))
+
+    depends_on('r@3.5:', when='@1.10.2:', type=('build', 'run'))

@@ -22,12 +22,6 @@ class RAnalysispageserver(RPackage):
     version('1.12.0', commit='146501974ef1938ee1ec4eb293ea7eeca331a0dc')
     version('1.10.0', commit='876c87073be116fa15a1afdd407e21152eb80d50')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.10.0:', type=('build', 'run'))
     depends_on('r-graph', when='@1.10.0:', type=('build', 'run'))
     depends_on('r-log4r', when='@1.10.0:', type=('build', 'run'))

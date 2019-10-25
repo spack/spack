@@ -30,12 +30,6 @@ class RAldex2(RPackage):
     version('1.10.0', commit='e43f99e4009ad4d5ed200cc8a19faf7091c0c98a')
     version('1.8.0', commit='24104824ca2402ad4f54fbf1ed9cee7fac2aaaf1')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))
-
     depends_on('r-biocparallel', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-genomicranges', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))

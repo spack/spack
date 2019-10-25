@@ -24,11 +24,6 @@ class RAims(RPackage):
     version('1.10.0', commit='972945980b39168502a02ac3aa396f9b99fb3d71')
     version('1.8.0', commit='86b866c20e191047492c51b43e3f73082c3f8357')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-e1071', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.8.0:', type=('build', 'run'))

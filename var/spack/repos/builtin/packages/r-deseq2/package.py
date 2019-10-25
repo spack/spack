@@ -23,12 +23,6 @@ class RDeseq2(RPackage):
     version('1.18.1', commit='ef65091d46436af68915124b752f5e1cc55e93a7')
     version('1.16.1', commit='f41d9df2de25fb57054480e50bc208447a6d82fb')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.22.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.1', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.16.1:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.7.5:', when='@1.16.1:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@1.16.1:', type=('build', 'run'))

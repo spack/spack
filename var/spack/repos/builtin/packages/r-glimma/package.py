@@ -24,14 +24,11 @@ class RGlimma(RPackage):
     version('1.6.0', commit='57572996982806aa7ac155eedb97b03249979610')
     version('1.4.0', commit='c613c5334ed7868f36d5716b97fdb6234fb291f8')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-edger', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-jsonlite', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-scater', when='@1.4.0:', type=('build', 'run'))
+
+    depends_on('r@3.4.0:', when='@1.6.0:', type=('build', 'run'))

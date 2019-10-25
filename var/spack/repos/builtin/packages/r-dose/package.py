@@ -25,12 +25,6 @@ class RDose(RPackage):
     version('3.4.0', commit='dabb70de1a0f91d1767601e871f2f1c16d29a612')
     version('3.2.0', commit='71f563fc39d02dfdf65184c94e0890a63b96b86b')
 
-    depends_on('r@3.6.0:3.6.9', when='@3.10.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.8.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.6.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.2.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-do-db', when='@3.2.0:', type=('build', 'run'))
@@ -39,8 +33,11 @@ class RDose(RPackage):
     depends_on('r-gosemsim@2.0.0:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-igraph', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-qvalue', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r@3.3.1:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-reshape2', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-scales', when='@3.2.0:', type=('build', 'run'))
 
     depends_on('r-rvcheck', when='@3.4.0:', type=('build', 'run'))
+
+    depends_on('r@3.4.0:', when='@3.6.1:', type=('build', 'run'))

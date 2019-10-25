@@ -19,9 +19,3 @@ class RProtgenerics(RPackage):
     version('1.12.0', commit='e84382a4b1730409f572fb681b5070017d00d30d')
     version('1.10.0', commit='9ae2c3710b77381571900f0f25c6c8fda65795ac')
     version('1.8.0', commit='b2b3bb0938e20f58fca905f6870de7dbc9dfd7a3')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))

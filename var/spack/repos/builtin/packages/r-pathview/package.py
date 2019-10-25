@@ -27,17 +27,12 @@ class RPathview(RPackage):
     version('1.18.2', commit='d2048981696564ec75f661ed665977d3a6e09188')
     version('1.16.7', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.22.3', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.18.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.7', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-graph', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-kegggraph', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-keggrest', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-org-hs-eg-db', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-png', when='@1.16.7:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-rgraphviz', when='@1.16.7:', type=('build', 'run'))
     depends_on('r-xml', when='@1.16.7:', type=('build', 'run'))

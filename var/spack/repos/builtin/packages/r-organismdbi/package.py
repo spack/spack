@@ -23,12 +23,6 @@ class ROrganismdbi(RPackage):
     version('1.20.0', commit='d42e06a24777e5ffb966ad5addb4f46dfffa2269')
     version('1.18.1', commit='ba2d1237256805e935d9534a0c6f1ded07b42e95')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.18.1', type=('build', 'run'))
-
     depends_on('r-annotationdbi@1.33.15:', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.10:', when='@1.18.1:', type=('build', 'run'))
@@ -38,6 +32,7 @@ class ROrganismdbi(RPackage):
     depends_on('r-genomicranges', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-graph', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.18.1:', type=('build', 'run'))
+    depends_on('r@2.14.0:', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-rbgl', when='@1.18.1:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', when='@1.18.1:', type=('build', 'run'))
 

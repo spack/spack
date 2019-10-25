@@ -21,8 +21,6 @@ class RLimma(RPackage):
     version('3.34.9', commit='6755278a929f942a49e2441fb002a3ed393e1139')
     version('3.32.10', commit='593edf28e21fe054d64137ae271b8a52ab05bc60')
 
-    depends_on('r@3.6.0:3.6.9', when='@3.40.6', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.38.3', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.36.5', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.34.9', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.32.10', type=('build', 'run'))
+    depends_on('r@2.3.0:', when='@3.32.10:', type=('build', 'run'))
+
+    depends_on('r@3.6.0:', when='@3.40.6:', type=('build', 'run'))

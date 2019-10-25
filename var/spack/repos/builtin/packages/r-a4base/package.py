@@ -20,12 +20,6 @@ class RA4base(RPackage):
     version('1.26.0', commit='9b8ee4a8be90f5035a4b105ecebb8bb5b50cd0d9')
     version('1.24.0', commit='f674afe424a508df2c8ee6c87a06fbd4aa410ef6')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-
     depends_on('r-a4core', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-a4preproc', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-annaffy', when='@1.24.0:', type=('build', 'run'))

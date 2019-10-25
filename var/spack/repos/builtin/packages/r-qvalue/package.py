@@ -30,11 +30,6 @@ class RQvalue(RPackage):
     version('2.10.0', commit='581e5664b4356440a96310897398f01a98ceb81b')
     version('2.8.0', commit='c7bf3315619d42d800f57a36670c25a7495ded72')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.14.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.10.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.8.0', type=('build', 'run'))
-
     depends_on('r-ggplot2', when='@2.8.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@2.8.0:', type=('build', 'run'))
     depends_on('r-reshape2', when='@2.8.0:', type=('build', 'run'))

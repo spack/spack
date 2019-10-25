@@ -37,14 +37,9 @@ class RSva(RPackage):
     version('3.26.0', commit='3cc5e75413c35ed5511892f5c36a8b5cb454937e')
     version('3.24.4', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
 
-    depends_on('r@3.6.0:3.6.9', when='@3.32.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.30.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@3.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@3.24.4', type=('build', 'run'))
-
     depends_on('r-biocparallel', when='@3.24.4:', type=('build', 'run'))
     depends_on('r-genefilter', when='@3.24.4:', type=('build', 'run'))
     depends_on('r-limma', when='@3.24.4:', type=('build', 'run'))
     depends_on('r-matrixstats', when='@3.24.4:', type=('build', 'run'))
     depends_on('r-mgcv', when='@3.24.4:', type=('build', 'run'))
+    depends_on('r@3.2:', when='@3.24.4:', type=('build', 'run'))

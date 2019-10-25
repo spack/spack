@@ -19,9 +19,3 @@ class RPreprocesscore(RPackage):
     version('1.42.0', commit='2e3a8baeacfaa1526d51252642772ea951015bba')
     version('1.40.0', commit='969bb0e5cbd63d569502ae4e6eaadc1e216646dd')
     version('1.38.1', commit='c58cb4c720eda0f1c733b989b14912093a7c5fbc')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.46.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.44.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.42.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.40.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.38.1', type=('build', 'run'))

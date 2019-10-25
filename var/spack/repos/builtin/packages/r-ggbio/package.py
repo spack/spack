@@ -28,12 +28,6 @@ class RGgbio(RPackage):
     version('1.26.1', commit='b4f4c898c92aa1082aa7574f1e5c2a0dae943fbc')
     version('1.24.1', commit='ef04c1bca1330f37152bcc21080cbde94849a094')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.5', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.1', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.24.1:', type=('build', 'run'))
     depends_on('r-annotationfilter', when='@1.24.1:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.24.1:', type=('build', 'run'))

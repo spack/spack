@@ -20,9 +20,4 @@ class RGenie3(RPackage):
     version('1.2.1', commit='1b56fe8184d521d1bb247f000efe9e2b540604c9')
     version('1.0.0', commit='eb7c95ed12ea50d61e8fa20bc2b25ae9d74c302f')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.4.3', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.2.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.0.0', type=('build', 'run'))
-
     depends_on('r-reshape2', when='@1.0.0:', type=('build', 'run'))

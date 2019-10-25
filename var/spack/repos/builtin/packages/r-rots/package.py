@@ -21,11 +21,6 @@ class RRots(RPackage):
     version('1.6.0', commit='3567ac1142ba97770b701ee8e5f9e3e6c781bd56')
     version('1.4.0', commit='2e656514a4bf5a837ee6e14ce9b28a61dab955e7')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r@3.3:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-rcpp', when='@1.4.0:', type=('build', 'run'))

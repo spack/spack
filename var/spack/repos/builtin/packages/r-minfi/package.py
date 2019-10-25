@@ -20,12 +20,6 @@ class RMinfi(RPackage):
     version('1.24.0', commit='a4df428588ea86a1c79ddba76132014f0a39644e')
     version('1.22.1', commit='b2faf84bcbb291e32d470a0e029450093527545b')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.4', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.26.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.22.1', type=('build', 'run'))
-
     depends_on('r-beanplot', when='@1.22.1:', type=('build', 'run'))
     depends_on('r-biobase@2.33.2:', when='@1.22.1:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.3:', when='@1.22.1:', type=('build', 'run'))

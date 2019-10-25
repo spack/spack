@@ -27,12 +27,6 @@ class RGenomicfeatures(RPackage):
     version('1.30.3', commit='496bbf81beebd7c934b8d3dcea001e3e4a7d7dee')
     version('1.28.5', commit='ba92381ae93cb1392dad5e6acfab8f6c1d744834')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.36.4', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.34.8', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.32.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.30.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.5', type=('build', 'run'))
-
     depends_on('r-annotationdbi@1.33.15:', when='@1.28.5:', type=('build', 'run'))
     depends_on('r-biobase@2.15.1:', when='@1.28.5:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.1.0:', when='@1.28.5:', type=('build', 'run'))

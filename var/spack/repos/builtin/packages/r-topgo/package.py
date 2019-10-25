@@ -23,12 +23,6 @@ class RTopgo(RPackage):
     version('2.30.1', commit='b1469ce1d198ccb73ef79ca22cab81659e16dbaa')
     version('2.28.0', commit='066a975d460046cce33fb27e74e6a0ebc33fd716')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.36.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.34.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.32.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.30.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.28.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi@1.7.19:', when='@2.28.0:', type=('build', 'run'))
     depends_on('r-biobase@2.0.0:', when='@2.28.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.6:', when='@2.28.0:', type=('build', 'run'))
@@ -37,4 +31,5 @@ class RTopgo(RPackage):
     depends_on('r-graph@1.14.0:', when='@2.28.0:', type=('build', 'run'))
     depends_on('r-lattice', when='@2.28.0:', type=('build', 'run'))
     depends_on('r-matrixstats', when='@2.28.0:', type=('build', 'run'))
+    depends_on('r@2.10.0:', when='@2.28.0:', type=('build', 'run'))
     depends_on('r-sparsem@0.73:', when='@2.28.0:', type=('build', 'run'))

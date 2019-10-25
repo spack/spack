@@ -21,10 +21,5 @@ class RAffypdnn(RPackage):
     version('1.52.0', commit='17d74c593ce4f0dfd43f13a5016e482c1399d21e')
     version('1.50.0', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0', type=('build', 'run'))
-
     depends_on('r-affy@1.5:', when='@1.50.0:', type=('build', 'run'))
+    depends_on('r@2.13.0:', when='@1.50.0:', type=('build', 'run'))

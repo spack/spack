@@ -21,9 +21,3 @@ class RDnacopy(RPackage):
     version('1.54.0', commit='fe2657936afbce8ee03221461dff4265e3ded4c4')
     version('1.52.0', commit='2632fbecec4cef3705b85676942a59188ae9bba4')
     version('1.50.1', commit='a20153029e28c009df813dbaf13d9f519fafa4e8')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.1', type=('build', 'run'))

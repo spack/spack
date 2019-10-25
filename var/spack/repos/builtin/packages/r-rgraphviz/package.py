@@ -21,10 +21,5 @@ class RRgraphviz(RPackage):
     version('2.22.0', commit='5b8ebbf9b38574c08959dd4632e802b3fbccc121')
     version('2.20.0', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.28.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.26.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.24.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.22.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.20.0', type=('build', 'run'))
-
     depends_on('r-graph', when='@2.20.0:', type=('build', 'run'))
+    depends_on('r@2.6.0:', when='@2.20.0:', type=('build', 'run'))

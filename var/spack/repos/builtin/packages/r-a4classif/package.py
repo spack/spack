@@ -20,12 +20,6 @@ class RA4classif(RPackage):
     version('1.26.0', commit='bc4018c3c441e1840bb3e2959c07611489439a50')
     version('1.24.0', commit='ca06bf274c87a73fc12c29a6eea4b90289fe30b1')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-
     depends_on('r-a4core', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-a4preproc', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-glmnet', when='@1.24.0:', type=('build', 'run'))

@@ -21,8 +21,6 @@ class RBiocinstaller(RPackage):
     version('1.28.0', commit='7261763529a0a1f730cde8a1bbdbf454c3e25603')
     version('1.26.1', commit='9049b82a77aefa98e3f8e4dd7068317505d70e98')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.33.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.32.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.1', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@1.26.1:', type=('build', 'run'))
+
+    depends_on('r@3.5.0:', when='@1.30.0:', type=('build', 'run'))

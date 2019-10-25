@@ -18,17 +18,11 @@ class RRsamtools(RPackage):
     homepage = "https://bioconductor.org/packages/Rsamtools"
     git      = "https://git.bioconductor.org/packages/Rsamtools.git"
 
-    version('2.0.0', commit='dc422f7d56bb604af30fbf33df126d0131d8d77f')
+    version('2.0.3', commit='17d254cc026574d20db67474260944bf60befd70')
     version('1.34.1', commit='0ec1d45c7a14b51d019c3e20c4aa87c6bd2b0d0c')
     version('1.32.3', commit='0aa3f134143b045aa423894de81912becf64e4c2')
     version('1.30.0', commit='61b365fe3762e796b3808cec7238944b7f68d7a6')
     version('1.28.0', commit='dfa5b6abef68175586f21add7927174786412472')
-
-    depends_on('r@3.6.0:3.6.9', when='@2.0.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.34.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.32.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.28.0', type=('build', 'run'))
 
     depends_on('r-biocgenerics@0.1.3:', when='@1.28.0:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@1.28.0:', type=('build', 'run'))
@@ -48,4 +42,4 @@ class RRsamtools(RPackage):
     depends_on('r-s4vectors@0.17.25:', when='@1.32.3:', type=('build', 'run'))
     depends_on('r-xvector@0.19.7:', when='@1.32.3:', type=('build', 'run'))
 
-    depends_on('r-rhtslib@1.15.3:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-rhtslib@1.16.3:', when='@2.0.3:', type=('build', 'run'))

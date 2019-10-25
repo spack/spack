@@ -30,12 +30,6 @@ class RReportingtools(RPackage):
     version('2.17.3', commit='b2e379cd5b813d8ccca37ec25f0660deec943622')
     version('2.16.0', commit='b1aa0ea302da7f2993ce8087b1d09c11ddf03663')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.24.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.22.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.17.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.16.0', type=('build', 'run'))
-
     depends_on('r-annotate', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-annotationdbi', when='@2.16.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@2.16.0:', type=('build', 'run'))

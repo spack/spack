@@ -24,16 +24,11 @@ class RAnaquin(RPackage):
     version('2.2.0', commit='739f4ed2b73c43f934fd65a993ecb48242a5d5da')
     version('1.2.0', commit='584d1970cc9dc1d354f9a6d7c1306bd7e8567119')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.8.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.6.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.2.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.2.0', type=('build', 'run'))
-
     depends_on('r-deseq2', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-knitr', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-locfit', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-plyr', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-qvalue', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r@3.3:', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-rocr', when='@1.2.0:', type=('build', 'run'))

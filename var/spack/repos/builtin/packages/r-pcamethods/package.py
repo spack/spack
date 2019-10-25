@@ -28,12 +28,6 @@ class RPcamethods(RPackage):
     version('1.70.0', commit='3368fad48ea930775505fd26e4179d7714d633d8')
     version('1.68.0', commit='c8d7c93dcaf7ef728f3d089ae5d55771b320bdab')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.76.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.74.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.72.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.70.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.68.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.68.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.68.0:', type=('build', 'run'))
     depends_on('r-mass', when='@1.68.0:', type=('build', 'run'))

@@ -20,11 +20,5 @@ class RA4core(RPackage):
     version('1.26.0', commit='e7be935f20b486165a2b27dbbf9e99ba07151bcd')
     version('1.24.0', commit='c871faa3e1ab6be38a9ea3018816cf31b58b0ed3')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-glmnet', when='@1.24.0:', type=('build', 'run'))

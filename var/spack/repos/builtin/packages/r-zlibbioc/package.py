@@ -22,9 +22,3 @@ class RZlibbioc(RPackage):
     version('1.26.0', commit='2e3ab097caa09a5e3ddaa3469b13e19a7224da0d')
     version('1.24.0', commit='2990059338d1b987d098c009b0bfa806bd24afec')
     version('1.22.0', commit='30377f830af2bc1ff17bbf3fdd2cb6442015fea5')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.22.0', type=('build', 'run'))

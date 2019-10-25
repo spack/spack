@@ -22,12 +22,6 @@ class RAffyqcreport(RPackage):
     version('1.56.0', commit='5c824045c7364155eafc2dd5bb342374aa1ca072')
     version('1.54.0', commit='5572e9981dc874b78b4adebf58080cac3fbb69e1')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.62.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.60.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0', type=('build', 'run'))
-
     depends_on('r-affy', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-affyplm', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-biobase@1.13.16:', when='@1.54.0:', type=('build', 'run'))

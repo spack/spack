@@ -22,10 +22,5 @@ class RAffyio(RPackage):
     version('1.48.0', commit='01727a4492c3a0d50453fc91892e04bf5f7fcadb')
     version('1.46.0', commit='977597f2772e08273d86579486f452170566c880')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.50.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.46.0', type=('build', 'run'))
-
+    depends_on('r@2.6.0:', when='@1.46.0:', type=('build', 'run'))
     depends_on('r-zlibbioc', when='@1.46.0:', type=('build', 'run'))

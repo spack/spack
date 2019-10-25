@@ -36,13 +36,8 @@ class RMulttest(RPackage):
     version('2.34.0', commit='6ef873e05e6c93ede54f3421424f56eda057cd54')
     version('2.32.0', commit='c5e890dfbffcc3a3f107303a24b6085614312f4a')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.40.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.38.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.36.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.34.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.32.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@2.32.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@2.32.0:', type=('build', 'run'))
     depends_on('r-mass', when='@2.32.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@2.32.0:', type=('build', 'run'))
     depends_on('r-survival', when='@2.32.0:', type=('build', 'run'))

@@ -20,15 +20,10 @@ class RGeneplotter(RPackage):
     version('1.56.0', commit='881d25aece3dc00cc4280457ffecdc25e93bb1f1')
     version('1.54.0', commit='efdd946e092e44e35fde1eb4bcc5ec1d52090940')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.62.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.60.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0', type=('build', 'run'))
-
     depends_on('r-annotate', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-annotationdbi', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-lattice', when='@1.54.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-rcolorbrewer', when='@1.54.0:', type=('build', 'run'))

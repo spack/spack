@@ -21,12 +21,6 @@ class RAlpine(RPackage):
     version('1.4.0', commit='c85beb208fd6bfc0a61a483a98498b589640f946')
     version('1.2.0', commit='896872e6071769e1ac2cf786974edb8b875c45eb')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.2.0', type=('build', 'run'))
-
     depends_on('r-biostrings', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-genomeinfodb', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-genomicalignments', when='@1.2.0:', type=('build', 'run'))
@@ -34,6 +28,7 @@ class RAlpine(RPackage):
     depends_on('r-genomicranges', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-graph', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r@3.3:', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-rbgl', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-rsamtools', when='@1.2.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.2.0:', type=('build', 'run'))

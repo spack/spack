@@ -23,12 +23,6 @@ class RSomaticsignatures(RPackage):
     version('2.14.0', commit='b12d24f86e96a7c6a17cbbad21ca14fa3aa7c60f')
     version('2.12.1', commit='932298c6877d076004de5541cec85a14e819517a')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.18.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.14.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.12.1', type=('build', 'run'))
-
     depends_on('r-biobase', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-biostrings', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-genomeinfodb', when='@2.12.1:', type=('build', 'run'))
@@ -39,6 +33,7 @@ class RSomaticsignatures(RPackage):
     depends_on('r-nmf', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-pcamethods', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-proxy', when='@2.12.1:', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-reshape2', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@2.12.1:', type=('build', 'run'))
     depends_on('r-variantannotation', when='@2.12.1:', type=('build', 'run'))

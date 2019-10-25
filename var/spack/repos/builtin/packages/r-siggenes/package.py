@@ -23,12 +23,6 @@ class RSiggenes(RPackage):
     version('1.52.0', commit='dc46cf4b6053ea99c6c841d661f97390653c2e71')
     version('1.50.0', commit='b1818f26e1449005ffd971df6bda8da0303080bc')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.50.0:', type=('build', 'run'))
     depends_on('r-multtest', when='@1.50.0:', type=('build', 'run'))
 

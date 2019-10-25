@@ -22,18 +22,13 @@ class RXde(RPackage):
     version('2.24.0', commit='fd5f245f82893657dc36e5a67a1d3b8255772462')
     version('2.22.0', commit='25bcec965ae42a410dd285a9db9be46d112d8e81')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.30.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.28.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.24.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.22.0', type=('build', 'run'))
-
     depends_on('r-biobase@2.5.5:', when='@2.22.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@2.22.0:', type=('build', 'run'))
     depends_on('r-genefilter', when='@2.22.0:', type=('build', 'run'))
     depends_on('r-gtools', when='@2.22.0:', type=('build', 'run'))
     depends_on('r-mergemaid', when='@2.22.0:', type=('build', 'run'))
     depends_on('r-mvtnorm', when='@2.22.0:', type=('build', 'run'))
+    depends_on('r@2.10.0:', when='@2.22.0:', type=('build', 'run'))
 
     depends_on('r-genemeta', when='@2.24.0:', type=('build', 'run'))
     depends_on('r-rcolorbrewer', when='@2.24.0:', type=('build', 'run'))

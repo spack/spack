@@ -31,8 +31,4 @@ class RGdsfmt(RPackage):
     version('1.14.1', commit='15743647b7eea5b82d3284858b4591fb6e59959d')
     version('1.12.0', commit='d705a95b0bea7be2a2b37e939f45017337ba0fb6')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.0', type=('build', 'run'))
+    depends_on('r@2.15.0:', when='@1.12.0:', type=('build', 'run'))

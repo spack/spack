@@ -20,17 +20,12 @@ class RGcrma(RPackage):
     version('2.50.0', commit='cbba460d131e1073059500b8d7b168a78f963992')
     version('2.48.0', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.54.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.50.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.48.0', type=('build', 'run'))
-
     depends_on('r-affy@1.23.2:', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-affyio@1.13.3:', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-biocinstaller', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-biostrings@2.11.32:', when='@2.48.0:', type=('build', 'run'))
+    depends_on('r@2.6.0:', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-xvector', when='@2.48.0:', type=('build', 'run'))
 
     depends_on('r-biocmanager', when='@2.54.0:', type=('build', 'run'))

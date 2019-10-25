@@ -21,12 +21,6 @@ class RCner(RPackage):
     version('1.14.0', commit='b8634d65c51728c815127e22b45eba7c9b9db897')
     version('1.12.1', commit='90d611f9cd19a73d0fe92ab03ef428519d64c017')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.16.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.1', type=('build', 'run'))
-
     depends_on('r-annotate@1.50.0:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-biostrings@2.33.4:', when='@1.12.1:', type=('build', 'run'))
@@ -39,6 +33,7 @@ class RCner(RPackage):
     depends_on('r-iranges@2.5.27:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-keggrest@1.14.0:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-powerlaw@0.60.3:', when='@1.12.1:', type=('build', 'run'))
+    depends_on('r@3.2.2:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-utils@2.3.0:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-readr@0.2.2:', when='@1.12.1:', type=('build', 'run'))
     depends_on('r-reshape2@1.4.1:', when='@1.12.1:', type=('build', 'run'))
@@ -48,3 +43,4 @@ class RCner(RPackage):
     depends_on('r-xvector@0.5.4:', when='@1.12.1:', type=('build', 'run'))
 
     depends_on('r-dbi@0.7:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@3.4:', when='@1.14.0:', type=('build', 'run'))

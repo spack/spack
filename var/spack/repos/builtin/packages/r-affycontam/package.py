@@ -21,12 +21,7 @@ class RAffycontam(RPackage):
     version('1.36.0', commit='aeb684a7d3f6fa9243f3946d214de53649fa4fd6')
     version('1.34.0', commit='03529f26d059c19e069cdda358dbf7789b6d4c40')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.42.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.40.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.38.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.36.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.34.0', type=('build', 'run'))
-
     depends_on('r-affy', when='@1.34.0:', type=('build', 'run'))
     depends_on('r-affydata', when='@1.34.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.34.0:', type=('build', 'run'))
+    depends_on('r@2.7.0:', when='@1.34.0:', type=('build', 'run'))

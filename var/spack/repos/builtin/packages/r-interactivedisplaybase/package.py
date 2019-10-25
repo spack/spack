@@ -23,11 +23,6 @@ class RInteractivedisplaybase(RPackage):
     version('1.16.0', commit='a86aa586b589497f5449d36c2ce67a6b6055026d')
     version('1.14.0', commit='e2ccc7eefdd904e3b1032dc6b3f4a28d08c1cd40')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.22.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-
     depends_on('r-biocgenerics', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-shiny', when='@1.14.0:', type=('build', 'run'))

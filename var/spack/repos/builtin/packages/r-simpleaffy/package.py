@@ -24,14 +24,9 @@ class RSimpleaffy(RPackage):
     version('2.54.0', commit='6876e028d412b14504ad3915cbec1a189e9c6478')
     version('2.52.0', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.60.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.58.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.56.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.54.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.52.0', type=('build', 'run'))
-
     depends_on('r-affy@1.33.6:', when='@2.52.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@2.52.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.1.12:', when='@2.52.0:', type=('build', 'run'))
     depends_on('r-gcrma', when='@2.52.0:', type=('build', 'run'))
     depends_on('r-genefilter', when='@2.52.0:', type=('build', 'run'))
+    depends_on('r@2.0.0:', when='@2.52.0:', type=('build', 'run'))

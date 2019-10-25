@@ -22,12 +22,6 @@ class RBiocparallel(RPackage):
     version('1.12.0', commit='2143a9addceed0151a27b95c70aadd2add5cbace')
     version('1.10.1', commit='a76c58cf99fd585ba5ea33065649e68f1afe0a7d')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.16.6', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.1', type=('build', 'run'))
-
     depends_on('r-futile-logger', when='@1.10.1:', type=('build', 'run'))
     depends_on('r-snow', when='@1.10.1:', type=('build', 'run'))
 

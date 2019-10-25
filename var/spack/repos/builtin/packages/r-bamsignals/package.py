@@ -23,15 +23,10 @@ class RBamsignals(RPackage):
     version('1.10.0', commit='7499312ce71e8680680eda10b49d7dff682fc776')
     version('1.8.0', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.16.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.14.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.12.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.10.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0', type=('build', 'run'))
-
     depends_on('r-biocgenerics', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-genomicranges', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.10.6:', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-rhtslib', when='@1.8.0:', type=('build', 'run'))
     depends_on('r-zlibbioc', when='@1.8.0:', type=('build', 'run'))

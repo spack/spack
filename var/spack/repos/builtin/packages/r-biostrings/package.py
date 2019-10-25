@@ -22,14 +22,9 @@ class RBiostrings(RPackage):
     version('2.46.0', commit='3bf6978c155498b50607d1bb471d1687d185a0fa')
     version('2.44.2', commit='e4a2b320fb21c5cab3ece7b3c6fecaedfb1e5200')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.52.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.50.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.48.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.46.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.44.2', type=('build', 'run'))
-
     depends_on('r-biocgenerics@0.15.6:', when='@2.44.2:', type=('build', 'run'))
     depends_on('r-iranges@2.9.18:', when='@2.44.2:', type=('build', 'run'))
+    depends_on('r@2.8.0:', when='@2.44.2:', type=('build', 'run'))
     depends_on('r-s4vectors@0.13.13:', when='@2.44.2:', type=('build', 'run'))
     depends_on('r-xvector@0.11.6:', when='@2.44.2:', type=('build', 'run'))
 
@@ -37,6 +32,7 @@ class RBiostrings(RPackage):
     depends_on('r-s4vectors@0.17.25:', when='@2.48.0:', type=('build', 'run'))
     depends_on('r-xvector@0.19.8:', when='@2.48.0:', type=('build', 'run'))
 
+    depends_on('r@3.5.0:', when='@2.50.2:', type=('build', 'run'))
     depends_on('r-xvector@0.21.4:', when='@2.50.2:', type=('build', 'run'))
 
     depends_on('r-s4vectors@0.21.13:', when='@2.52.0:', type=('build', 'run'))

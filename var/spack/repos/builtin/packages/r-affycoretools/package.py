@@ -22,12 +22,6 @@ class RAffycoretools(RPackage):
     version('1.50.6', commit='4be92bcb55d7bace2a110865b7530dcfac14e76e')
     version('1.48.0', commit='e0d52e34eead1ac45d3e60c59efd940e4889eb99')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.52.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.6', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0', type=('build', 'run'))
-
     depends_on('r-affy', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-annotationdbi', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.48.0:', type=('build', 'run'))

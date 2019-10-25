@@ -20,16 +20,11 @@ class RAnnotate(RPackage):
     version('1.56.2', commit='95ec3b004f5356bd78b2a60cbf7f93e0d48cf346')
     version('1.54.0', commit='860cc5b696795a31b18beaf4869f9c418d74549e')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.62.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.60.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.56.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi@1.27.5:', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.13.8:', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-dbi', when='@1.54.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-rcurl', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-xml', when='@1.54.0:', type=('build', 'run'))
     depends_on('r-xtable', when='@1.54.0:', type=('build', 'run'))

@@ -22,10 +22,4 @@ class RYaqcaffy(RPackage):
     version('1.38.0', commit='d57100862c2dc0f5e7684f318b9ceda7349352be')
     version('1.36.0', commit='4d46fe77b2c8de2230a77b0c07dd5dd726e3abd6')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.44.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.42.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.40.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.38.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.36.0', type=('build', 'run'))
-
     depends_on('r-simpleaffy@2.19.3:', when='@1.36.0:', type=('build', 'run'))

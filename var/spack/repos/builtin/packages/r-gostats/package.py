@@ -22,12 +22,6 @@ class RGostats(RPackage):
     version('2.44.0', commit='fc64ca2aa37c52656d396d6e46611f39d6efd48a')
     version('2.42.0', commit='8b29709064a3b66cf1d963b2be0c996fb48c873e')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.50.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.48.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.46.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.44.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.42.0', type=('build', 'run'))
-
     depends_on('r-annotate@1.13.2:', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-annotationdbi@0.0.89:', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-annotationforge', when='@2.42.0:', type=('build', 'run'))
@@ -35,6 +29,7 @@ class RGostats(RPackage):
     depends_on('r-category@2.3.26:', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-go-db@1.13.0:', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-graph@1.15.15:', when='@2.42.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@2.42.0:', type=('build', 'run'))
     depends_on('r-rbgl', when='@2.42.0:', type=('build', 'run'))
 
     depends_on('r-category@2.43.2:', when='@2.44.0:', type=('build', 'run'))

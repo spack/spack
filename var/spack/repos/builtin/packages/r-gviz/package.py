@@ -19,17 +19,11 @@ class RGviz(RPackage):
     homepage = "https://bioconductor.org/packages/Gviz"
     git      = "https://git.bioconductor.org/packages/Gviz.git"
 
-    version('1.28.0', commit='c51ad68d6ccee1ad1cf79ca44b22869991dfc9ce')
+    version('1.28.3', commit='20b9825af144cfc888629c34aa980b5bbd65bf86')
     version('1.26.5', commit='430310b9d2e098f9757a71d26a2f69871071f30c')
     version('1.24.0', commit='3ee1eec97a56653c07c434a97f82cfe3c4281841')
     version('1.22.3', commit='2238079d0a7017c474f010acb35d98ee7cc1c5d1')
     version('1.20.0', commit='299b8255e1b03932cebe287c3690d58c88f5ba5c')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.28.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.26.5', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.24.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.22.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.20.0', type=('build', 'run'))
 
     depends_on('r-annotationdbi@1.27.5:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-biobase@2.15.3:', when='@1.20.0:', type=('build', 'run'))
@@ -47,6 +41,7 @@ class RGviz(RPackage):
     depends_on('r-lattice', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-latticeextra@0.6-26:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-matrixstats@0.8.14:', when='@1.20.0:', type=('build', 'run'))
+    depends_on('r@2.10.0:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-rcolorbrewer', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-rsamtools@1.17.28:', when='@1.20.0:', type=('build', 'run'))
     depends_on('r-rtracklayer@1.25.13:', when='@1.20.0:', type=('build', 'run'))

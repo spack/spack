@@ -24,15 +24,10 @@ class RAffyplm(RPackage):
     version('1.54.0', commit='09cf5f6e01dd2d0aae3e9ddab27301f04bfd645c')
     version('1.52.1', commit='e8613a6018c4ee58045df6bf19128844f50a1f43')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.60.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.58.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.52.1', type=('build', 'run'))
-
     depends_on('r-affy@1.11.0:', when='@1.52.1:', type=('build', 'run'))
     depends_on('r-biobase@2.17.8:', when='@1.52.1:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.3.2:', when='@1.52.1:', type=('build', 'run'))
     depends_on('r-gcrma', when='@1.52.1:', type=('build', 'run'))
     depends_on('r-preprocesscore@1.5.1:', when='@1.52.1:', type=('build', 'run'))
+    depends_on('r@2.6.0:', when='@1.52.1:', type=('build', 'run'))
     depends_on('r-zlibbioc', when='@1.52.1:', type=('build', 'run'))

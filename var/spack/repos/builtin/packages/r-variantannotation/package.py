@@ -21,12 +21,6 @@ class RVariantannotation(RPackage):
     version('1.24.5', commit='468d7f53fd743e04c9af853d58e871b4cc13a090')
     version('1.22.3', commit='3a91b6d4297aa416d5f056dec6f8925eb1a8eaee')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.30.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.13', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.26.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.5', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.22.3', type=('build', 'run'))
-
     depends_on('r-annotationdbi@1.27.9:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.3:', when='@1.22.3:', type=('build', 'run'))
@@ -37,6 +31,7 @@ class RVariantannotation(RPackage):
     depends_on('r-genomicfeatures@1.27.4:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-genomicranges@1.27.6:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-iranges@2.3.25:', when='@1.22.3:', type=('build', 'run'))
+    depends_on('r@2.8.0:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-rsamtools@1.23.10:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-rtracklayer@1.25.16:', when='@1.22.3:', type=('build', 'run'))
     depends_on('r-s4vectors@0.13.13:', when='@1.22.3:', type=('build', 'run'))

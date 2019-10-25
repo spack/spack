@@ -20,10 +20,4 @@ class RIlluminaio(RPackage):
     version('0.20.0', commit='d226628133b2396be9e7a6bf043f0309bd70c4ec')
     version('0.18.0', commit='e6b8ab1f8eacb760aebdb4828e9cfbf07da06eda')
 
-    depends_on('r@3.6.0:3.6.9', when='@0.26.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@0.24.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@0.22.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@0.20.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@0.18.0', type=('build', 'run'))
-
     depends_on('r-base64', when='@0.18.0:', type=('build', 'run'))

@@ -20,16 +20,11 @@ class RAltcdfenvs(RPackage):
     version('2.40.0', commit='517a208f49f168bdd3cde40ed216282c417237d7')
     version('2.38.0', commit='2e92b9da76dbe50af4bf33c525134e29e9809291')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.46.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.44.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.42.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.40.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.38.0', type=('build', 'run'))
-
     depends_on('r-affy', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-biobase@2.15.1:', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.1.0:', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-biostrings', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-hypergraph', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-makecdfenv', when='@2.38.0:', type=('build', 'run'))
+    depends_on('r@2.7:', when='@2.38.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', when='@2.38.0:', type=('build', 'run'))

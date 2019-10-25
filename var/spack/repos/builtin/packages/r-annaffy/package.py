@@ -23,14 +23,9 @@ class RAnnaffy(RPackage):
     version('1.50.0', commit='a822e20f3e961a8afa5eb23536343115a33fb259')
     version('1.48.0', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi@0.1.15:', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-biobase', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-dbi', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-go-db', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-kegg-db', when='@1.48.0:', type=('build', 'run'))
+    depends_on('r@2.5.0:', when='@1.48.0:', type=('build', 'run'))

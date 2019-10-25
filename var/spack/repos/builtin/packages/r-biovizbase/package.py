@@ -23,12 +23,6 @@ class RBiovizbase(RPackage):
     version('1.26.0', commit='640742f48384f01d117b70dc5c64737e97ae9b4b')
     version('1.24.0', commit='ae9cd2ff665b74a8f45ed9c1d17fc0a778b4af6c')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.32.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.30.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.28.2', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.26.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-annotationfilter@0.99.8:', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.24.0:', type=('build', 'run'))
@@ -41,6 +35,7 @@ class RBiovizbase(RPackage):
     depends_on('r-genomicranges@1.23.21:', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-hmisc', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-iranges@1.99.28:', when='@1.24.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-rcolorbrewer', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-rsamtools@1.17.28:', when='@1.24.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', when='@1.24.0:', type=('build', 'run'))

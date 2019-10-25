@@ -28,13 +28,8 @@ class RBiomformat(RPackage):
     version('1.6.0', commit='61fb8c7b34ad561c3c46cacc0dd1957be56da85e')
     version('1.4.0', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))
-
     depends_on('r-jsonlite@0.9.16:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-matrix@1.2:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-plyr@1.8:', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r@3.2:', when='@1.4.0:', type=('build', 'run'))
     depends_on('r-rhdf5', when='@1.4.0:', type=('build', 'run'))

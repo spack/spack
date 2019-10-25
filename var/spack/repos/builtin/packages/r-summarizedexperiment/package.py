@@ -23,12 +23,6 @@ class RSummarizedexperiment(RPackage):
     version('1.8.1', commit='9d8a29aa9c78bbc7dcc6472537e13fc0d11dc1f7')
     version('1.6.5', commit='ec69cd5cfbccaef148a9f6abdfb3e22e888695d0')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.14.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.12.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.8.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.5', type=('build', 'run'))
-
     depends_on('r-biobase', when='@1.6.5:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.15.3:', when='@1.6.5:', type=('build', 'run'))
     depends_on('r-delayedarray@0.1.9:', when='@1.6.5:', type=('build', 'run'))
@@ -36,6 +30,7 @@ class RSummarizedexperiment(RPackage):
     depends_on('r-genomicranges@1.27.22:', when='@1.6.5:', type=('build', 'run'))
     depends_on('r-iranges@2.7.2:', when='@1.6.5:', type=('build', 'run'))
     depends_on('r-matrix', when='@1.6.5:', type=('build', 'run'))
+    depends_on('r@3.2:', when='@1.6.5:', type=('build', 'run'))
     depends_on('r-s4vectors@0.13.13:', when='@1.6.5:', type=('build', 'run'))
 
     depends_on('r-delayedarray@0.3.20:', when='@1.8.1:', type=('build', 'run'))

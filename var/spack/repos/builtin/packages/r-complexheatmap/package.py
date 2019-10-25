@@ -23,17 +23,12 @@ class RComplexheatmap(RPackage):
     version('1.17.1', commit='f647c97e556d9e918a17be15883a0b72a91d688f')
     version('1.14.0', commit='0acd8974fb5cedde8cd96efea6dfa39324d25b34')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.0.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.20.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.18.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.17.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0', type=('build', 'run'))
-
     depends_on('r-circlize@0.3.4:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-colorspace', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-dendextend@1.0.1:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-getoptlong', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-globaloptions@0.0.10:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r@3.1.2:', when='@1.14.0:', type=('build', 'run'))
     depends_on('r-rcolorbrewer', when='@1.14.0:', type=('build', 'run'))
 
     depends_on('r-circlize@0.4.1:', when='@1.17.1:', type=('build', 'run'))

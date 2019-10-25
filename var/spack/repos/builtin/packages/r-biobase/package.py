@@ -21,12 +21,7 @@ class RBiobase(RPackage):
     version('2.38.0', commit='83f89829e0278ac014b0bc6664e621ac147ba424')
     version('2.36.2', commit='15f50912f3fa08ccb15c33b7baebe6b8a59ce075')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.44.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.42.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.40.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.38.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.36.2', type=('build', 'run'))
-
     depends_on('r-biocgenerics@0.3.2:', when='@2.36.2:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@2.36.2:', type=('build', 'run'))
 
     depends_on('r-biocgenerics@0.27.1:', when='@2.42.0:', type=('build', 'run'))
