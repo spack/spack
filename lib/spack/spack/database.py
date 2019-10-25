@@ -51,8 +51,19 @@ _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
 # Increment by one when the database format changes.
-# versions before 5 were not integers
+# Versions before 5 were not integers.
 _db_version = Version('5')
+
+# For any version combinations here, skip reindex when upgrading.
+# Reindexing can take considerable time and is not always necessary.
+_skip_reindex = [
+    # reindexing takes a significant amount of time, and there's
+    # no reason to do it from DB version 0.9.3 to version 5. The
+    # only difference is that v5 can contain "deprecated_for"
+    # fields.  So, skip the reindex for this transition. The new
+    # version is saved to disk the first time the DB is written.
+    (Version('0.9.3'), Version('5')),
+]
 
 # Timeout for spack database locks in seconds
 _db_lock_timeout = 120
@@ -486,8 +497,19 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.store.layout)
-            installs = dict((k, v.to_dict()) for k, v in self._data.items())
+            if not any(
+                    old == version and new == _db_version
+                    for old, new in _skip_reindex
+            ):
+                tty.warn(
+                    "Spack database version changed from %s to %s. Upgrading."
+                    % (version, _db_version)
+                )
+
+                self.reindex(spack.store.layout)
+                installs = dict(
+                    (k, v.to_dict()) for k, v in self._data.items()
+                )
 
         def invalid_record(hash_key, error):
             msg = ("Invalid record in Spack database: "
