@@ -27,5 +27,5 @@ class RRocr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ROCR_1.0-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ROCR"
 
-    version('1.0-7', '46cbd43ae87fc4e1eff2109529a4820e')
+    version('1.0-7', sha256='e7ef710f847e441a48b20fdc781dbc1377f5a060a5ee635234053f7a2a435ec9')
     depends_on('r-gplots', type=('build', 'run'))

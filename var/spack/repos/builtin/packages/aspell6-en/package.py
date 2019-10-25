@@ -12,4 +12,4 @@ class Aspell6En(AspellDictPackage):
     homepage = "http://aspell.net/"
     url      = "https://ftpmirror.gnu.org/aspell/dict/en/aspell6-en-2017.01.22-0.tar.bz2"
 
-    version('2017.01.22-0', 'a6e002076574de9dc4915967032a1dab')
+    version('2017.01.22-0', sha256='93c73fae3eab5ea3ca6db3cea8770715a820f1b7d6ea2b932dd66a17f8fd55e1')

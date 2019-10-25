@@ -23,8 +23,8 @@ class EcpProxyApps(Package):
 
     version('2.1', sha256='604da008fc4ef3bdbc25505088d610333249e3e9745eac7dbfd05b91e33e218d')
     version('2.0', sha256='5f3cb3a772224e738c1dab42fb34d40f6b313af51ab1c575fb334e573e41e09a')
-    version('1.1', '15825c318acd3726fd8e72803b1c1090')
-    version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
+    version('1.1', sha256='8537e03588c0f46bebf5b7f07146c79812f2ebfb77d29e184baa4dd5f4603ee3')
+    version('1.0', sha256='13d9795494dabdb4c724d2c0f322c2149b2507d2fd386ced12b54292b7ecf595')
 
     variant('candle', default=False,
             description='Also build CANDLE Benchmarks')

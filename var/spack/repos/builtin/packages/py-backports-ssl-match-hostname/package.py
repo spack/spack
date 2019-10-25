@@ -14,4 +14,4 @@ class PyBackportsSslMatchHostname(PythonPackage):
 
     py_namespace = 'backports'
 
-    version('3.5.0.1', 'c03fc5e2c7b3da46b81acf5cbacfe1e6')
+    version('3.5.0.1', sha256='502ad98707319f4a51fa2ca1c677bd659008d27ded9f6380c79e8932e38dcdf2')

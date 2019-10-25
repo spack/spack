@@ -12,7 +12,7 @@ class Transabyss(Package):
     homepage = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss"
     url      = "http://www.bcgsc.ca/platform/bioinfo/software/trans-abyss/releases/1.5.5/transabyss-1.5.5.zip"
 
-    version('1.5.5', '9ebe0394243006f167135cac4df9bee6')
+    version('1.5.5', sha256='7804961c13296c587a1b22180dd3f02091a4494cbbd04fc33c2060599caadb0b')
 
     depends_on('abyss@1.5.2')
     depends_on('python@2.7.6:', type=('build', 'run'))

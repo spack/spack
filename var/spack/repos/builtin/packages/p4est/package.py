@@ -15,9 +15,10 @@ class P4est(AutotoolsPackage):
     maintainers = ['davydden']
 
     version('2.2', sha256='1549cbeba29bee2c35e7cc50a90a04961da5f23b6eada9c8047f511b90a8e438')
-    version('2.0', 'c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
-    version('1.1', '37ba7f4410958cfb38a2140339dbf64f')
+    version('2.0', sha256='c522c5b69896aab39aa5a81399372a19a6b03fc6200d2d5d677d9a22fe31029a')
+    version('1.1', sha256='0b5327a35f0c869bf920b8cab5f20caa4eb55692eaaf1f451d5de30285b25139')
 
+    variant('mpi', default=True, description='Enable MPI')
     variant('openmp', default=False, description='Enable OpenMP')
 
     # build dependencies
@@ -26,7 +27,7 @@ class P4est(AutotoolsPackage):
     depends_on('libtool@2.4.2:', type='build')
 
     # other dependencies
-    depends_on('mpi')
+    depends_on('mpi', when='+mpi')
     depends_on('zlib')
 
     # from sc upstream, correct the default libraries
@@ -45,17 +46,21 @@ class P4est(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            '--enable-mpi',
             '--enable-shared',
             '--disable-vtk-binary',
             '--without-blas',
             'CPPFLAGS=-DSC_LOG_PRIORITY=SC_LP_ESSENTIAL',
-            'CFLAGS=-O2',
-            'CC=%s'  % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            'FC=%s'  % self.spec['mpi'].mpifc,
-            'F77=%s' % self.spec['mpi'].mpif77
+            'CFLAGS=-O2'
         ]
+
+        if '~mpi' in self.spec:
+            args.append('--disable-mpi')
+        else:
+            args.append('--enable-mpi')
+            args.append('CC=%s'  % self.spec['mpi'].mpicc)
+            args.append('CXX=%s' % self.spec['mpi'].mpicxx)
+            args.append('FC=%s'  % self.spec['mpi'].mpifc)
+            args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         if '+openmp' in self.spec:
             try:

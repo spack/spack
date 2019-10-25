@@ -12,6 +12,6 @@ class PerlGdText(PerlPackage):
     homepage = "http://search.cpan.org/~mverb/GDTextUtil-0.86/Text.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/M/MV/MVERB/GDTextUtil-0.86.tar.gz"
 
-    version('0.86', '941ad06eadc86b47f3a32da405665c41')
+    version('0.86', sha256='886ecbf85cfe94f4135ee5689c4847a9ae783ecb99e6759e12c734f2dd6116bc')
 
     depends_on('perl-gd', type=('build', 'run'))

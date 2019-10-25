@@ -23,6 +23,7 @@ class Gurobi(Package):
     $GUROBI_HOME/docs/quickstart_linux.pdf for more details."""
 
     homepage = "http://www.gurobi.com/index"
+    manual_download = True
 
     version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
 

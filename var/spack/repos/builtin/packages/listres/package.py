@@ -13,7 +13,7 @@ class Listres(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/listres"
     url      = "https://www.x.org/archive/individual/app/listres-1.0.3.tar.gz"
 
-    version('1.0.3', '77cafc32e8e02cca2d4453e73e0c0e7d')
+    version('1.0.3', sha256='87d5698b8aa4d841e45e6556932c9914210cbd8b10003d664b31185b087981be')
 
     depends_on('libxaw')
     depends_on('libxt')

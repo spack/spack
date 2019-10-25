@@ -12,7 +12,7 @@ class PerlTestMemoryCycle(PerlPackage):
     homepage = "http://search.cpan.org/~petdance/Test-Memory-Cycle-1.06/Cycle.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PE/PETDANCE/Test-Memory-Cycle-1.06.tar.gz"
 
-    version('1.06', '397e709ba33d3883b5fb2bc49e3a70b0')
+    version('1.06', sha256='9d53ddfdc964cd8454cb0da4c695b6a3ae47b45839291c34cb9d8d1cfaab3202')
 
     depends_on('perl-padwalker', type=('build', 'run'))
     depends_on('perl-devel-cycle', type=('build', 'run'))

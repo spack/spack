@@ -14,7 +14,7 @@ class Csdp(MakefilePackage):
     homepage = "https://projects.coin-or.org/Csdp"
     url      = "http://www.coin-or.org/download/source/Csdp/Csdp-6.1.1.tgz"
 
-    version('6.1.1', '8388e8988e337bb5c1291068828de801')
+    version('6.1.1', sha256='0558a46ac534e846bf866b76a9a44e8a854d84558efa50988ffc092f99a138b9')
 
     depends_on('atlas')
 

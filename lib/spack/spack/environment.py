@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import re
 import sys
@@ -10,7 +11,6 @@ import shutil
 import copy
 import socket
 
-import ruamel.yaml
 import six
 
 from ordereddict_backport import OrderedDict
@@ -19,16 +19,20 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.concretize
 import spack.error
 import spack.hash_types as ht
 import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import spack.config
+import spack.build_environment as build_env
 
+from spack.util.prefix import Prefix
 from spack.filesystem_view import YamlFilesystemView
-from spack.util.environment import EnvironmentModifications
+import spack.util.environment
 import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
@@ -397,7 +401,7 @@ def validate(data, filename=None):
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
-    data = ruamel.yaml.load(str_or_file, ruamel.yaml.RoundTripLoader)
+    data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
     validate(data, filename)
     return data
@@ -407,8 +411,7 @@ def _write_yaml(data, str_or_file):
     """Write YAML to a file preserving comments and dict order."""
     filename = getattr(str_or_file, 'name', None)
     validate(data, filename)
-    ruamel.yaml.dump(data, str_or_file, Dumper=ruamel.yaml.RoundTripDumper,
-                     default_flow_style=False)
+    syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
 def _eval_conditional(string):
@@ -466,6 +469,23 @@ class ViewDescriptor(object):
                                   ignore_conflicts=True,
                                   projections=self.projections)
 
+    def __contains__(self, spec):
+        """Is the spec described by the view descriptor
+
+        Note: This does not claim the spec is already linked in the view.
+        It merely checks that the spec is selected if a select operation is
+        specified and is not excluded if an exclude operator is specified.
+        """
+        if self.select:
+            if not self.select_fn(spec):
+                return False
+
+        if self.exclude:
+            if not self.exclude_fn(spec):
+                return False
+
+        return True
+
     def regenerate(self, all_specs, roots):
         specs_for_view = []
         specs = all_specs if self.link == 'all' else roots
@@ -476,14 +496,8 @@ class ViewDescriptor(object):
             if spec.concrete:  # Do not link unconcretized roots
                 specs_for_view.append(spec.copy(deps=('link', 'run')))
 
-        if self.select:
-            specs_for_view = list(filter(self.select_fn, specs_for_view))
-
-        if self.exclude:
-            specs_for_view = list(filter(self.exclude_fn, specs_for_view))
-
         installed_specs_for_view = set(s for s in specs_for_view
-                                       if s.package.installed)
+                                       if s in self and s.package.installed)
 
         view = self.view()
 
@@ -514,6 +528,9 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
+        # This attribute will be set properly from configuration
+        # during concretization
+        self.concretization = None
         self.clear()
 
         if init_file:
@@ -591,6 +608,9 @@ class Environment(object):
                               for name, values in enable_view.items())
         else:
             self.views = {}
+        # Retrieve the current concretization strategy
+        configuration = config_dict(self.yaml)
+        self.concretization = configuration.get('concretization')
 
     @property
     def user_specs(self):
@@ -845,6 +865,59 @@ class Environment(object):
             self.concretized_order = []
             self.specs_by_hash = {}
 
+        # Pick the right concretization strategy
+        if self.concretization == 'together':
+            return self._concretize_together()
+        if self.concretization == 'separately':
+            return self._concretize_separately()
+
+        msg = 'concretization strategy not implemented [{0}]'
+        raise SpackEnvironmentError(msg.format(self.concretization))
+
+    def _concretize_together(self):
+        """Concretization strategy that concretizes all the specs
+        in the same DAG.
+        """
+        # Exit early if the set of concretized specs is the set of user specs
+        user_specs_did_not_change = not bool(
+            set(self.user_specs) - set(self.concretized_user_specs)
+        )
+        if user_specs_did_not_change:
+            return []
+
+        # Check that user specs don't have duplicate packages
+        counter = collections.defaultdict(int)
+        for user_spec in self.user_specs:
+            counter[user_spec.name] += 1
+
+        duplicates = []
+        for name, count in counter.items():
+            if count > 1:
+                duplicates.append(name)
+
+        if duplicates:
+            msg = ('environment that are configured to concretize specs'
+                   ' together cannot contain more than one spec for each'
+                   ' package [{0}]'.format(', '.join(duplicates)))
+            raise SpackEnvironmentError(msg)
+
+        # Proceed with concretization
+        self.concretized_user_specs = []
+        self.concretized_order = []
+        self.specs_by_hash = {}
+
+        concrete_specs = spack.concretize.concretize_specs_together(
+            *self.user_specs
+        )
+        concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
+        for abstract, concrete in concretized_specs:
+            self._add_concrete_spec(abstract, concrete)
+        return concretized_specs
+
+    def _concretize_separately(self):
+        """Concretization strategy that concretizes separately one
+        user spec after the other.
+        """
         # keep any concretized specs whose user specs are still in the manifest
         old_concretized_user_specs = self.concretized_user_specs
         old_concretized_order = self.concretized_order
@@ -875,6 +948,13 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
+        if self.concretization == 'together':
+            msg = 'cannot install a single spec in an environment that is ' \
+                  'configured to be concretized together. Run instead:\n\n' \
+                  '    $ spack add <spec>\n' \
+                  '    $ spack install\n'
+            raise SpackEnvironmentError(msg)
+
         spec = Spec(user_spec)
 
         if self.add(spec):
@@ -941,37 +1021,76 @@ class Environment(object):
         for view in self.views.values():
             view.regenerate(specs, self.roots())
 
-    def _shell_vars(self):
-        updates = [
-            ('PATH', ['bin']),
-            ('MANPATH', ['man', 'share/man']),
-            ('ACLOCAL_PATH', ['share/aclocal']),
-            ('LD_LIBRARY_PATH', ['lib', 'lib64']),
-            ('LIBRARY_PATH', ['lib', 'lib64']),
-            ('CPATH', ['include']),
-            ('PKG_CONFIG_PATH', ['lib/pkgconfig', 'lib64/pkgconfig']),
-            ('CMAKE_PREFIX_PATH', ['']),
-        ]
+    prefix_inspections = {
+        'bin': ['PATH'],
+        'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH', 'DYLD_LIBRARY_PATH'],
+        'lib64': ['LD_LIBRARY_PATH', 'LIBRARY_PATH', 'DYLD_LIBRARY_PATH'],
+        'man': ['MANPATH'],
+        'share/man': ['MANPATH'],
+        'share/aclocal': ['ACLOCAL_PATH'],
+        'include': ['CPATH'],
+        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
+        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        '': ['CMAKE_PREFIX_PATH']
+    }
 
-        path_updates = list()
-        if default_view_name in self.views:
-            for var, dirs in updates:
-                paths = [os.path.join(self.default_view.root, x) for x in dirs]
-                path_updates.append((var, paths))
-        return path_updates
+    def environment_modifications_for_spec(self, spec, view=None):
+        """List of environment modifications to be processed."""
+        spec = spec.copy()
+        if view:
+            spec.prefix = Prefix(view.view().get_projection_for_spec(spec))
+
+        # generic environment modifications determined by inspecting the spec
+        # prefix
+        env = spack.util.environment.inspect_path(
+            spec.prefix,
+            self.prefix_inspections,
+            exclude=spack.util.environment.is_system_path
+        )
+
+        # Let the extendee/dependency modify their extensions/dependents
+        # before asking for package-specific modifications
+        env.extend(
+            build_env.modifications_from_dependencies(
+                spec, context='run'
+            )
+        )
+        # Package specific modifications
+        build_env.set_module_variables_for_package(spec.package)
+        spec.package.setup_run_environment(env)
+
+        return env
 
     def add_default_view_to_shell(self, shell):
-        env_mod = EnvironmentModifications()
-        for var, paths in self._shell_vars():
-            for path in paths:
-                env_mod.prepend_path(var, path)
+        env_mod = spack.util.environment.EnvironmentModifications()
+
+        if default_view_name not in self.views:
+            # No default view to add to shell
+            return env_mod.shell_modifications(shell)
+
+        for _, spec in self.concretized_specs():
+            if spec in self.default_view:
+                env_mod.extend(self.environment_modifications_for_spec(
+                    spec, self.default_view))
+
+        # deduplicate paths from specs mapped to the same location
+        for env_var in env_mod.group_by_name():
+            env_mod.prune_duplicate_paths(env_var)
+
         return env_mod.shell_modifications(shell)
 
     def rm_default_view_from_shell(self, shell):
-        env_mod = EnvironmentModifications()
-        for var, paths in self._shell_vars():
-            for path in paths:
-                env_mod.remove_path(var, path)
+        env_mod = spack.util.environment.EnvironmentModifications()
+
+        if default_view_name not in self.views:
+            # No default view to add to shell
+            return env_mod.shell_modifications(shell)
+
+        for _, spec in self.concretized_specs():
+            if spec in self.default_view:
+                env_mod.extend(
+                    self.environment_modifications_for_spec(
+                        spec, self.default_view).reversed())
         return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
@@ -1291,7 +1410,7 @@ class Environment(object):
     def __enter__(self):
         self._previous_active = _active_environment
         activate(self)
-        return
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         deactivate()

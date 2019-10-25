@@ -12,4 +12,4 @@ class Trapproto(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/proto/trapproto"
     url      = "https://www.x.org/archive/individual/proto/trapproto-3.4.3.tar.gz"
 
-    version('3.4.3', '1344759ae8d7d923e64f5eec078a679b')
+    version('3.4.3', sha256='abfb930b5703b5a6ebafe84d0246bd8c6b099ca4a4eab06d1dc0776a8a9b87c1')

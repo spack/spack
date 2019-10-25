@@ -16,9 +16,9 @@ class FluxCore(AutotoolsPackage):
 
     version('master',  branch='master')
     version('0.11.0', sha256='a4d8ff92e79b4ca19d556395bb8c5f8dc02fd9d5a8cc38c4a2c66867a96de5ea')
-    version('0.10.0', 'a84a1ed53a69c805c253bc940540cbf667a059b2008fd2a6a9bb890a985ead08e88dcbba68c01567f887357306fbfded41b93cc33edfa7809955ba5ba5870284')
-    version('0.9.0',  '70eaec1005aa49e8d8cf397570789cebedfb5d917efe963390d456ee4c473eefb15b0c81ea83f60a1fd057fe7be356bbafdebcae64b499844d194c48f6aefa05')
-    version('0.8.0',  'b0fec05acedc530bcdf75b2477ac22f39d2adddc7af8ff76496208a5e1e8185b1b4a18677871d95c3cfbf34b05f391953651200917fe029931f4e2beb79d70df')
+    version('0.10.0', sha256='a70cdd228077af60c9443a5c69d3da932e447dd11697f5fef9028c48dabb3041')
+    version('0.9.0',  sha256='7b5b4aa72704b3c4432136b9e515e0d663568e6dbfc3ecd2f91c83b65841104e')
+    version('0.8.0',  sha256='eb4b0fe0da191acd3823ef42d415c40aae6a0c3aef62ebb27905658d045e11cc')
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543

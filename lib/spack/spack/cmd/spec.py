@@ -25,8 +25,11 @@ def setup_parser(subparser):
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
-        '-y', '--yaml', action='store_true', default=False,
-        help='print concrete spec as YAML')
+        '-y', '--yaml', action='store_const', dest='format', default=None,
+        const='yaml', help='print concrete spec as YAML')
+    subparser.add_argument(
+        '-j', '--json', action='store_const', dest='format', default=None,
+        const='json', help='print concrete spec as YAML')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -59,12 +62,15 @@ def spec(parser, args):
 
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
-        if args.yaml:
+        if args.format:
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
 
-            # use write because to_yaml already has a newline.
-            sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+            if args.format == 'yaml':
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+            else:
+                print(spec.to_json(hash=ht.build_hash))
             continue
 
         kwargs['hashes'] = False  # Always False for input spec

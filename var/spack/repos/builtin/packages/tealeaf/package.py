@@ -20,15 +20,12 @@ class Tealeaf(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0', '02a907281ad2d09e70ca0a17551c6d79')
+    version('1.0', sha256='e11799d1a3fbe76041333ba98858043b225c5d65221df8c600479bc55e7197ce')
 
     depends_on('mpi')
 
     def edit(self, spec, prefix):
-        if (spec.satisfies('target=aarch64 %gcc@:5.9')):
-            filter_file(
-                '-march=native', '', join_path('TeaLeaf_ref', 'Makefile')
-            )
+        filter_file('-march=native', '', join_path('TeaLeaf_ref', 'Makefile'))
 
     @property
     def build_targets(self):

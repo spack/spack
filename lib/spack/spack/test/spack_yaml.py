@@ -27,7 +27,7 @@ config_file:
     [ 1, 2, 3 ]
   some_key: some_string
 """
-    return syaml.load(test_file)
+    return syaml.load_config(test_file)
 
 
 def test_parse(data):

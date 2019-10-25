@@ -20,9 +20,9 @@ class Yambo(AutotoolsPackage):
     homepage = "http://www.yambo-code.org/index.php"
     url = "https://github.com/yambo-code/yambo/archive/4.2.2.tar.gz"
 
-    version('4.2.2', '97f3513bd726141be5e18072118b6fb5')
-    version('4.2.1', '99027014192c0f0f4b5d9b48414ad85d')
-    version('4.2.0', '0cbb4d7c9790596d163ebe872d95bd30')
+    version('4.2.2', sha256='86b4ebe679387233266aba49948246c85a32b1e6840d024f162962bd0112448c')
+    version('4.2.1', sha256='8ccd0ca75cc32d9266d4a37edd2a7396cf5038f3a68be07c0f0f77d1afc72bdc')
+    version('4.2.0', sha256='9f78c4237ff363ff4e9ea5eeea671b6fff783d9a6078cc31b0b1abeb1f040f4d')
 
     variant('dp', default=False, description='Enable double precision')
     variant(

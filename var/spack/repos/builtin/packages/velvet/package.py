@@ -13,12 +13,12 @@ class Velvet(MakefilePackage):
     homepage = "http://www.ebi.ac.uk/~zerbino/velvet/"
     url      = "http://www.ebi.ac.uk/~zerbino/velvet/velvet_1.2.10.tgz"
 
-    version('1.2.10', '6e28c4b9bedc5f7ab2b947e7266a02f6')
+    version('1.2.10', sha256='884dd488c2d12f1f89cdc530a266af5d3106965f21ab9149e8cb5c633c977640')
 
     depends_on('zlib')
 
     def edit(self, spec, prefix):
-        if spec.satisfies('target=aarch64'):
+        if spec.target.family == 'aarch64':
             makefile = FileFilter('Makefile')
             makefile.filter('-m64', '')
 

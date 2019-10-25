@@ -17,6 +17,6 @@ class PerlDbfile(PerlPackage):
     homepage = "https://metacpan.org/pod/DB_File"
     url      = "https://cpan.metacpan.org/authors/id/P/PM/PMQS/DB_File-1.840.tar.gz"
 
-    version('1.840', '8a2e98d457a216840ac893913c24141e')
+    version('1.840', sha256='b7864707fad0f2d1488c748c4fa08f1fb8bcfd3da247c36909fd42f20bfab2c4')
 
     depends_on('perl-extutils-makemaker', type='build')

@@ -31,7 +31,7 @@ class Npb(MakefilePackage):
     homepage = "https://www.nas.nasa.gov/publications/npb.html"
     url      = "https://www.nas.nasa.gov/assets/npb/NPB3.3.1.tar.gz"
 
-    version('3.3.1', '8e5ec2c819480759725df67833619911')
+    version('3.3.1', sha256='4a8ea679b1df69f583c544c47198b3c26a50ec2bb6f8f69aef66c04c9a747d2d')
 
     # Valid Benchmark Names
     valid_names = (

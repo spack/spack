@@ -18,7 +18,7 @@ from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.sip import SIPPackage
 
-description = 'stage and configure a package but do not install'
+description = 'DEPRECATED: stage and configure a package but do not install'
 section = "build"
 level = "long"
 
@@ -82,4 +82,7 @@ def _stop_at_phase_during_install(args, calling_fn, phase_mapping):
 
 
 def configure(parser, args):
+    tty.warn("This command is deprecated. Use `spack install --until` to"
+             " select an end phase instead. The `spack configure` command will"
+             " be removed in a future version of Spack.")
     _stop_at_phase_during_install(args, configure, build_system_to_phase)

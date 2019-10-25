@@ -105,7 +105,7 @@ class CbtfKrell(CMakePackage):
 
     depends_on("gotcha")
 
-    patch('arm.patch', when='target=aarch64')
+    patch('arm.patch', when='target=aarch64:')
 
     parallel = False
 

@@ -13,7 +13,7 @@ class AllpathsLg(AutotoolsPackage):
     homepage = "http://www.broadinstitute.org/software/allpaths-lg/blog/"
     url      = "ftp://ftp.broadinstitute.org/pub/crd/ALLPATHS/Release-LG/latest_source_code/LATEST_VERSION.tar.gz"
 
-    version('52488', 'bde9008e236d87708a48eb83af6d6d5b')
+    version('52488', sha256='035b49cb21b871a6b111976757d7aee9c2513dd51af04678f33375e620998542')
 
     # compiles with gcc 4.7.0 to 4.9.4)
     conflicts('%gcc@:4.6.4,5.1.0:')

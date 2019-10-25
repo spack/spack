@@ -6,6 +6,7 @@
 
 from spack import *
 import os
+import sys
 
 
 class Vtkm(CMakePackage, CudaPackage):
@@ -21,23 +22,24 @@ class Vtkm(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
-    version('1.3.0', "d9f6e274dec2ea01273cccaba356d23ca88c5a25")
-    version('1.2.0', "3295fed86012226c107e1f2605ca7cc583586b63")
-    version('1.1.0', "6aab1c0885f6ffaaffcf07930873d0df")
+    version('1.4.0', sha256="60e1ce73a8c6beda8aed5f2d3ae670b6b0c78c068c6eff4ece769e6d719d5065")
+    version('1.3.0', sha256="72c2c8525a77a456fe0b6a1af0328dad6b9a688f402a3d3ebfa8942e0b5dba1a")
+    version('1.2.0', sha256="9103d954284661f6f03e5b18be6d7bc94254603e6abc8fce67f617f4ad325a0e")
+    version('1.1.0', sha256="a1746b1547d6fb901ea7d7ed50834e8832d6d41ddd497c84d02e1481100d43bc")
 
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
-    variant("shared", default=True, description="build shared libs")
+    variant("shared", default=False, description="build shared libs")
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
-    variant("logging", default=False, description="build logging support")
+    variant("logging", default=True, description="build logging support")
     variant("mpi", default=False, description="build mpi support")
-    variant("openmp", default=False, description="build openmp support")
+    variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
-    variant("tbb", default=True, description="build TBB support")
+    variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
     variant("64bitids", default=False,
             description="enable 64 bits ids")
 
@@ -46,9 +48,16 @@ class Vtkm(CMakePackage, CudaPackage):
     depends_on("cuda", when="+cuda")
     depends_on("mpi", when="+mpi")
 
+    conflicts("~shared", when="~pic")
+
     def cmake_args(self):
         spec = self.spec
         options = []
+        gpu_name_table = {'20': 'fermi',
+                          '30': 'kepler',  '32': 'kepler',  '35': 'kepler',
+                          '50': 'maxwell', '52': 'maxwell', '53': 'maxwell',
+                          '60': 'pascal',  '61': 'pascal',  '62': 'pascal',
+                          '70': 'turing',  '72': 'turing',  '75': 'turing'}
         with working_dir('spack-build', create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs
@@ -60,9 +69,10 @@ class Vtkm(CMakePackage, CudaPackage):
             if "+cuda" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
                 if 'cuda_arch' in spec.variants:
-                    cuda_arch = spec.variants['cuda_arch'].value
+                    cuda_value = spec.variants['cuda_arch'].value
+                    name = gpu_name_table[cuda_value[0]]
                     options.append(
-                        '-DVTKm_CUDA_Architecture={0}'.format(cuda_arch[0]))
+                        '-DVTKm_CUDA_Architecture={0}'.format(name))
                 else:
                     # this fix is necessary if compiling platform has cuda, but
                     # no devices (this's common for front end nodes on hpc clus

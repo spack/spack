@@ -437,6 +437,16 @@ def test_025_reindex(mutable_database):
     _check_db_sanity(mutable_database)
 
 
+def test_026_reindex_after_deprecate(mutable_database):
+    """Make sure reindex works and ref counts are valid after deprecation."""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+    mutable_database.deprecate(mpich, zmpi)
+
+    spack.store.store.reindex()
+    _check_db_sanity(mutable_database)
+
+
 def test_030_db_sanity_from_another_process(mutable_database):
     def read_and_modify():
         # check that other process can read DB
@@ -456,6 +466,15 @@ def test_030_db_sanity_from_another_process(mutable_database):
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
     database._check_ref_counts()
+
+
+def test_041_ref_counts_deprecate(mutable_database):
+    """Ensure that we have appropriate ref counts after deprecating"""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+
+    mutable_database.deprecate(mpich, zmpi)
+    mutable_database._check_ref_counts()
 
 
 def test_050_basic_query(database):

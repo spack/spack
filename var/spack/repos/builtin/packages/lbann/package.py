@@ -26,9 +26,9 @@ class Lbann(CMakePackage):
     version('0.96', sha256='97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a')
     version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
     version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
-    version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
-    version('0.92', 'c0eb1595a7c74640e96f280beb497564')
-    version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
+    version('0.93', sha256='77bfd7fe52ee7495050f49bcdd0e353ba1730e3ad15042c678faa5eeed55fb8c')
+    version('0.92', sha256='9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84')
+    version('0.91', sha256='b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5')
 
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
@@ -41,8 +41,8 @@ class Lbann(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release'))
     variant('al', default=True, description='Builds with support for Aluminum Library')
-    variant('conduit', default=True, 
-            description='Builds with support for Conduit Library ' +
+    variant('conduit', default=True,
+            description='Builds with support for Conduit Library '
             '(note that for v0.99 conduit is required)')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')

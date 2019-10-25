@@ -168,6 +168,7 @@ def clean_environment():
 def set_compiler_environment_variables(pkg, env):
     assert pkg.spec.concrete
     compiler = pkg.compiler
+    spec = pkg.spec
 
     # Set compiler variables used by CMake and autotools
     assert all(key in compiler.link_paths for key in (
@@ -198,6 +199,19 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_CXX_RPATH_ARG', compiler.cxx_rpath_arg)
     env.set('SPACK_F77_RPATH_ARG', compiler.f77_rpath_arg)
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
+    env.set('SPACK_LINKER_ARG', compiler.linker_arg)
+
+    # Check whether we want to force RPATH or RUNPATH
+    if spack.config.get('config:shared_linking') == 'rpath':
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.enable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.disable_new_dtags)
+    else:
+        env.set('SPACK_DTAGS_TO_STRIP', compiler.disable_new_dtags)
+        env.set('SPACK_DTAGS_TO_ADD', compiler.enable_new_dtags)
+
+    # Set the target parameters that the compiler will add
+    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    env.set('SPACK_TARGET_ARGS', isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
@@ -217,7 +231,7 @@ def set_compiler_environment_variables(pkg, env):
                 handler = pkg.flag_handler.__func__
             else:
                 handler = pkg.flag_handler.im_func
-        injf, envf, bsf = handler(pkg, flag, pkg.spec.compiler_flags[flag])
+        injf, envf, bsf = handler(pkg, flag, spec.compiler_flags[flag])
         inject_flags[flag] = injf or []
         env_flags[flag] = envf or []
         build_system_flags[flag] = bsf or []
@@ -234,7 +248,7 @@ def set_compiler_environment_variables(pkg, env):
             env.set(flag.upper(), ' '.join(f for f in env_flags[flag]))
     pkg.flags_to_build_system_args(build_system_flags)
 
-    env.set('SPACK_COMPILER_SPEC', str(pkg.spec.compiler))
+    env.set('SPACK_COMPILER_SPEC', str(spec.compiler))
 
     env.set('SPACK_SYSTEM_DIRS', ':'.join(system_dirs))
 
@@ -348,9 +362,9 @@ def set_build_environment_variables(pkg, env, dirty):
         extra_rpaths = ':'.join(compiler.extra_rpaths)
         env.set('SPACK_COMPILER_EXTRA_RPATHS', extra_rpaths)
 
-    if compiler.implicit_rpaths:
-        implicit_rpaths = ':'.join(compiler.implicit_rpaths)
-        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', implicit_rpaths)
+    implicit_rpaths = compiler.implicit_rpaths()
+    if implicit_rpaths:
+        env.set('SPACK_COMPILER_IMPLICIT_RPATHS', ':'.join(implicit_rpaths))
 
     # Add bin directories from dependencies to the PATH for the build.
     for prefix in build_prefixes:
@@ -668,35 +682,26 @@ def load_external_modules(pkg):
 
 def setup_package(pkg, dirty):
     """Execute all environment setup routines."""
-    spack_env = EnvironmentModifications()
-    run_env = EnvironmentModifications()
+    build_env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, spack_env)
-    set_build_environment_variables(pkg, spack_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, spack_env)
+    set_compiler_environment_variables(pkg, build_env)
+    set_build_environment_variables(pkg, build_env, dirty)
+    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
 
-    # traverse in postorder so package can use vars from its dependencies
-    spec = pkg.spec
-    for dspec in pkg.spec.traverse(order='post', root=False,
-                                   deptype=('build', 'test')):
-        spkg = dspec.package
-        set_module_variables_for_package(spkg)
+    build_env.extend(
+        modifications_from_dependencies(pkg.spec, context='build')
+    )
 
-        # Allow dependencies to modify the module
-        dpkg = dspec.package
-        dpkg.setup_dependent_package(pkg.module, spec)
-        dpkg.setup_dependent_environment(spack_env, run_env, spec)
-
-    if (not dirty) and (not spack_env.is_unset('CPATH')):
+    if (not dirty) and (not build_env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-config"
                   " to assume that the package is part of the system"
                   " includes and omit it when invoked with '--cflags'.")
 
     set_module_variables_for_package(pkg)
-    pkg.setup_environment(spack_env, run_env)
+    pkg.setup_build_environment(build_env)
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -706,7 +711,7 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the spack_env object has its
+        # functions have to occur after the build_env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
@@ -722,8 +727,39 @@ def setup_package(pkg, dirty):
         load_external_modules(pkg)
 
     # Make sure nothing's strange about the Spack environment.
-    validate(spack_env, tty.warn)
-    spack_env.apply_modifications()
+    validate(build_env, tty.warn)
+    build_env.apply_modifications()
+
+
+def modifications_from_dependencies(spec, context):
+    """Returns the environment modifications that are required by
+    the dependencies of a spec and also applies modifications
+    to this spec's package at module scope, if need be.
+
+    Args:
+        spec (Spec): spec for which we want the modifications
+        context (str): either 'build' for build-time modifications or 'run'
+            for run-time modifications
+    """
+    env = EnvironmentModifications()
+    pkg = spec.package
+
+    # Maps the context to deptype and method to be called
+    deptype_and_method = {
+        'build': (('build', 'link', 'test'),
+                  'setup_dependent_build_environment'),
+        'run': (('link', 'run'), 'setup_dependent_run_environment')
+    }
+    deptype, method = deptype_and_method[context]
+
+    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+        dpkg = dspec.package
+        set_module_variables_for_package(dpkg)
+        # Allow dependencies to modify the module
+        dpkg.setup_dependent_package(pkg.module, spec)
+        getattr(dpkg, method)(env, spec)
+
+    return env
 
 
 def fork(pkg, function, dirty, fake):

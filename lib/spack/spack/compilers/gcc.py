@@ -113,6 +113,8 @@ class Gcc(Compiler):
     def pic_flag(self):
         return "-fPIC"
 
+    required_libs = ['libgcc', 'libgfortran']
+
     @classmethod
     def default_version(cls, cc):
         """Older versions of gcc use the ``-dumpversion`` option.

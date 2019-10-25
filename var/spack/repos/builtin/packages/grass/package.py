@@ -14,12 +14,12 @@ class Grass(AutotoolsPackage):
 
     homepage = "http://grass.osgeo.org"
 
-    version('7.6.1',    '9ca74f9010d013f735737a90c65d8a7f')
-    version('7.4.4',    '98ae22f8a97a83a4d99a537236639e9c')
-    version('7.4.3',    '4f4462af7a95fe84ee21f3dd585dcb05')
-    version('7.4.2',    'bb3fc005e707f762c8fee36095e1df7f')
-    version('7.4.1',    'bf7add62cbeb05a3ed5ad832344ba524')
-    version('7.4.0',    '15b9eb019d6c132c1a65455b3283cf69')
+    version('7.6.1',    sha256='9e25c99cafd16ed8f5e2dca75b5a10dc2af0568dbedf3fc39f1c5a0a9c840b0b')
+    version('7.4.4',    sha256='96a39e273103f7375a670eba94fa3e5dad2819c5c5664c9aee8f145882a94e8c')
+    version('7.4.3',    sha256='004e65693ee97fd4d5dc7ad244e3286a115dccd88964d04be61c07db6574b399')
+    version('7.4.2',    sha256='18eb19bc0aa4cd7be3f30f79ac83f9d0a29c63657f4c1b05bf4c5d5d57a8f46d')
+    version('7.4.1',    sha256='560b8669caaafa9e8dbd4bbf2b4b4bbab7dca1cc46ee828eaf26c744fe0635fc')
+    version('7.4.0',    sha256='cb6fa188e030a3a447fc5451fbe0ecbeb4069ee2fd1bf52ed8e40e9b89e293cc')
 
     variant('cxx',       default=True,  description='Add c++ functionality')
     variant('tiff',      default=True,  description='Add TIFF functionality')

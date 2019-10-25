@@ -18,27 +18,16 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     # url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
     url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.9.104.zip"
+    git = "https://github.com/rose-compiler/rose-develop.git"
 
     # --------------------------------------------------------------------------
     # ROSE Versions
     # --------------------------------------------------------------------------
-    version(
-        "0.9.10.0",
-        sha256="7b53b6913fd6ca0c5050b630dae380f3e6b0897cde6148172ba01095f71cbaca",
-    )
-    version("0.9.9.104", "b01cf9d2fd440fc0fe77a713c5f7831e")
-    version("0.9.9.0", "8f47fb8aa803d019657bd42c8b892cce")
-    version("0.9.7.0", "be0d0941ba4c0349a20d6394c20d16d7")
-    version(
-        "0.9.9.52",
-        commit="bd4fc0cc332ce62d9fa54db19879507d9e4f239b",
-        git="https://github.com/rose-compiler/rose-develop.git",
-    )
-    version(
-        "develop",
-        branch="master",
-        git="https://github.com/rose-compiler/rose-develop.git",
-    )
+    version("0.9.10.0", sha256="7b53b6913fd6ca0c5050b630dae380f3e6b0897cde6148172ba01095f71cbaca")
+
+    # git versions
+    version("0.9.9.52", commit="bd4fc0cc332ce62d9fa54db19879507d9e4f239b")
+    version("develop", branch="master")
 
     # --------------------------------------------------------------------------
     # Dependencies

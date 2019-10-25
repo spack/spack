@@ -15,7 +15,7 @@ class NetcdfCxx(AutotoolsPackage):
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx-4.2.tar.gz"
 
-    version('4.2', 'd32b20c00f144ae6565d9e98d9f6204c')
+    version('4.2', sha256='95ed6ab49a0ee001255eac4e44aacb5ca4ea96ba850c08337a3e4c9a0872ccd1')
 
     depends_on('netcdf')
 

@@ -11,7 +11,7 @@ class Nrm(PythonPackage):
 
     homepage = "https://xgitlab.cels.anl.gov/argo/nrm"
     url = "https://www.mcs.anl.gov/research/projects/argo/downloads/nrm-0.1.0.tar.gz"
-    version('0.1.0', '2135baf658355480b515c0989d019758')
+    version('0.1.0', sha256='911a848042fa50ed216c818e0667bcd3e4219687eb5a35476b7313abe12106dc')
 
     depends_on('py-setuptools', type=('build'))
 

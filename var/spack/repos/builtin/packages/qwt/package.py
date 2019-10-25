@@ -16,8 +16,8 @@ class Qwt(QMakePackage):
     homepage = "http://qwt.sourceforge.net/"
     url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
-    version('6.1.3', '19d1f5fa5e22054d22ee3accc37c54ba')
-    version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
+    version('6.1.3', sha256='f3ecd34e72a9a2b08422fb6c8e909ca76f4ce5fa77acad7a2883b701f4309733')
+    version('5.2.2', sha256='36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b')
 
     variant('designer', default=False,
             description="Build extensions to QT designer")

@@ -12,7 +12,7 @@ class PerlCarpClan(PerlPackage):
     homepage = "http://search.cpan.org/~kentnl/Carp-Clan-6.06/lib/Carp/Clan.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/K/KE/KENTNL/Carp-Clan-6.06.tar.gz"
 
-    version('6.06', 'c562a35c48f43665fab735cdc7fe3cb2')
+    version('6.06', sha256='ea4ac8f611354756d43cb369880032901e9cc4cc7e0bebb7b647186dac00c9d4')
 
     depends_on('perl-test-exception', type=('build', 'run'))
     depends_on('perl-sub-uplevel', type=('build', 'run'))

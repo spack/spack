@@ -20,6 +20,7 @@ class SspaceStandard(Package):
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/SSPACE"
     url      = "file://{0}/41SSPACE-STANDARD-3.0_linux-x86_64.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('3.0', '7e171b4861b9d514e80aafc3d9cdf554')
 
