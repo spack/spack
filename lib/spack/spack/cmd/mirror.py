@@ -265,9 +265,9 @@ def mirror_create(args):
         if not specs:
             # If nothing is passed, use environment or all if no active env
             if not args.all:
-                tty.die("No packages were specified. To mirror all packages,"
-                        " use the '--all' option (this will require"
-                        " significant time and space).")
+                tty.die("No packages were specified.",
+                        "To mirror all packages, use the '--all' option"
+                        " (this will require significant time and space).")
 
             env = ev.get_env(args, 'mirror')
             if env:
