@@ -1201,9 +1201,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @classmethod
     def all_patches(cls):
-        """Retrieve all patches associated with the package, including patches
-           on the package itself and patches on the dependencies of the
-           package."""
+        """Retrieve all patches associated with the package.
+
+        Retrieves patches on the package itself as well as patches on the
+        dependencies of the package."""
         patches = []
         for _, patch_list in cls.patches.items():
             for patch in patch_list:
