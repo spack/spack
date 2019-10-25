@@ -175,8 +175,6 @@ def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
 
     upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots(
         [roots[1]], _test=True)
-    downstream_db = spack.database.Database(
-        roots[0], upstream_dbs=upstream_dbs)
 
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('x')
@@ -230,8 +228,7 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
         assert (db_a_from_scratch.installed_relatives(spec) ==
                 set(spec.traverse(root=False)))
         assert (db_a_from_scratch.installed_relatives(
-                    spec['z'], direction='parents') ==
-                set([spec, spec['y']]))
+                spec['z'], direction='parents') == set([spec, spec['y']]))
 
 
 @pytest.fixture()
