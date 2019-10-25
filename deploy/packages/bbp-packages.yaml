@@ -46,6 +46,7 @@ packages:
       - compiler
     specs:
       - emsim
+      - meshball
 
   gnu-stable-outdated:
     target_matrix:

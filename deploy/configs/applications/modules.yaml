@@ -38,6 +38,7 @@ modules:
       - connectome-tools
       - emsim
       - functionalizer
+      - meshball
       - nest
       - 'neurodamus%intel'
       - 'neurodamus-core+common'
