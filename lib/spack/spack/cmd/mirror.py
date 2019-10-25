@@ -39,7 +39,6 @@ def setup_parser(subparser):
     create_parser.add_argument('-d', '--directory', default=None,
                                help="directory in which to create mirror")
 
-
     create_parser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help="specs of packages to put in mirror")
