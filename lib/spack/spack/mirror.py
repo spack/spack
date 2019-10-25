@@ -299,7 +299,8 @@ class MirrorReference(object):
 
 
 def mirror_archive_paths(fetcher, per_package_ref, spec=None):
-    """Get the relative path to the source archive within a mirror."""
+    """Returns a ``MirrorReference`` object which keeps track of the relative
+    storage path of the resource associated with the specified ``fetcher``."""
     ext = None
     if spec:
         ext = spec.package.versions[spec.package.version].get(
