@@ -341,7 +341,7 @@ def modify_elf_object(path_name, new_rpaths):
 
     if path_name[-13:] == "/bin/patchelf":
         bak_path = path_name + ".bak"
-        shutil.copy(path_name,bak_path)
+        shutil.copy(path_name, bak_path)
         patchelf = Executable(bak_path)
     else:
         patchelf = Executable(get_patchelf())
