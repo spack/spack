@@ -52,17 +52,12 @@ def setup_parser(subparser):
         '-f', '--file', help="file with specs of packages to put in mirror")
 
     create_parser.add_argument(
-        '-V', '--all-versions', action='store_true',
-        help="when specifying packages with a file or on the command line,"
-             " retrieve all versions of those packages (this also retrieves"
-             " package dependencies automatically)")
-    create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
     create_parser.add_argument(
-        '-n', '--versions-per-spec', type=int,
-        default=1,
-        help="the number of versions to fetch for each spec")
+        '-n', '--versions-per-spec',
+        help="the number of versions to fetch for each spec, choose 'all' to"
+             " retrieve all versions of each package")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -245,6 +240,16 @@ def mirror_create(args):
         raise SpackError("Cannot specify specs with a file ('-f') if you"
                          " chose to mirror all specs with '--all'")
 
+    if not args.versions_per_spec:
+        num_versions = 1
+    elif args.versions_per_spec == 'all':
+        num_versions = 'all'
+    else:
+        try:
+            num_versions = int(args.versions_per_spec)
+        except TypeError:
+            raise SpackError("'--versions-per-spec' must be a number or 'all'")
+
     # try to parse specs from the command line first.
     with spack.concretize.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
@@ -270,13 +275,6 @@ def mirror_create(args):
                 mirror_specs = spack.mirror.get_all_versions(specs)
                 mirror_specs.sort(
                     key=lambda s: s.format("{name}{@version}").lower())
-        elif args.all_versions:
-            base_specs = list(specs)
-            specs = list()
-            for spec in base_specs:
-                specs.extend(Spec(x) for x in
-                             spec.package.possible_dependencies())
-            mirror_specs = spack.mirror.get_all_versions(specs)
         else:
             # If the user asked for dependencies, traverse spec DAG get them.
             if args.dependencies:
@@ -295,11 +293,11 @@ def mirror_create(args):
                 msg = 'Skipping {0} as it is an external spec.'
                 tty.msg(msg.format(spec.cshort_spec))
 
-            # Get concrete specs for each matching version of these specs.
-            mirror_specs = spack.mirror.get_matching_versions(
-                specs, num_versions=(args.versions_per_spec or 1))
-            for s in mirror_specs:
-                s.concretize()
+            if num_versions == 'all':
+                mirror_specs = spack.mirror.get_all_versions(specs)
+            else:
+                mirror_specs = spack.mirror.get_matching_versions(
+                    specs, num_versions=num_versions)
 
     mirror = spack.mirror.Mirror(
         args.directory or spack.config.get('config:source_cache'))
