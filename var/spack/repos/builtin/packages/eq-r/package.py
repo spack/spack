@@ -34,11 +34,11 @@ class EqR(AutotoolsPackage):
 
     configure_directory = 'src'
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
-        spack_env.set('CXXLD', spec['mpi'].mpicxx)
+        env.set('CC', spec['mpi'].mpicc)
+        env.set('CXX', spec['mpi'].mpicxx)
+        env.set('CXXLD', spec['mpi'].mpicxx)
 
     def configure_args(self):
         args = ['--with-tcl=' + self.spec['tcl'].prefix]

@@ -25,11 +25,11 @@ class Hc(MakefilePackage):
     # /usr/bin/ld: cannot find -lggrd
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GMTHOME', self.spec['gmt'].prefix)
-        spack_env.set('NETCDFHOME', self.spec['netcdf-c'].prefix)
-        spack_env.set('HC_HOME', self.prefix)
-        spack_env.unset('ARCH')
+    def setup_build_environment(self, env):
+        env.set('GMTHOME', self.spec['gmt'].prefix)
+        env.set('NETCDFHOME', self.spec['netcdf-c'].prefix)
+        env.set('HC_HOME', self.prefix)
+        env.unset('ARCH')
 
     def install(self, spec, prefix):
         # Most files are installed during the build stage.

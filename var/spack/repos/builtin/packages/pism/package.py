@@ -116,7 +116,7 @@ class Pism(CMakePackage):
             '-DPism_USE_EVERYTRACE=%s' %
             ('YES' if '+everytrace' in spec else 'NO')]
 
-    def setup_environment(self, spack_env, env):
+    def setup_run_environment(self, env):
         env.set('PISM_PREFIX', self.prefix)
         env.set('PISM_BIN', self.prefix.bin)
 

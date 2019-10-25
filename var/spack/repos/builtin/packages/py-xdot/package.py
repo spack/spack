@@ -46,17 +46,17 @@ class PyXdot(PythonPackage):
         python3 = spec['python'].command
         python3('-m', 'compileall', dst)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['pango'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['atk'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['gdk-pixbuf'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['gtkplus'].prefix.lib,
-                                       'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['pango'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['atk'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['gdk-pixbuf'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['gtkplus'].prefix.lib,
+                                   'girepository-1.0'))

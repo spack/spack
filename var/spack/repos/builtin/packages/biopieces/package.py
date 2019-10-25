@@ -61,10 +61,10 @@ class Biopieces(Package):
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Note: user will need to set environment variables on their own,
         # dependent on where they will want data to be located:
         #    BP_DATA - Contains genomic data etc.
         #    BP_TMP - Required temporary directory
         #    BP_LOG - Required log directory
-        run_env.prepend_path('BP_DIR', prefix)
+        env.prepend_path('BP_DIR', self.prefix)

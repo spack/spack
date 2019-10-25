@@ -47,10 +47,10 @@ class Thrift(Package):
     depends_on('zlib', when='+c')
     depends_on('libevent', when='+c')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
-            spack_env.append_flags('CXXFLAGS', self.compiler.pic_flag)
+            env.append_flags('CFLAGS', self.compiler.pic_flag)
+            env.append_flags('CXXFLAGS', self.compiler.pic_flag)
 
     def install(self, spec, prefix):
         env['PY_PREFIX'] = prefix

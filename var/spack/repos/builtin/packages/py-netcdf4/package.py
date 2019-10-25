@@ -25,12 +25,12 @@ class PyNetcdf4(PythonPackage):
     depends_on('netcdf-c')
     depends_on('hdf5@1.8.0:+hl')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
         # system versions
-        spack_env.set('USE_SETUPCFG', '0')
-        spack_env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
-        spack_env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
-        spack_env.set('NETCDF4_INCDIR', self.spec['netcdf-c'].prefix.include)
-        spack_env.set('NETCDF4_LIBDIR', self.spec['netcdf-c'].prefix.lib)
+        env.set('USE_SETUPCFG', '0')
+        env.set('HDF5_INCDIR', self.spec['hdf5'].prefix.include)
+        env.set('HDF5_LIBDIR', self.spec['hdf5'].prefix.lib)
+        env.set('NETCDF4_INCDIR', self.spec['netcdf-c'].prefix.include)
+        env.set('NETCDF4_LIBDIR', self.spec['netcdf-c'].prefix.lib)

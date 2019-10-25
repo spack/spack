@@ -32,8 +32,8 @@ class QtCreator(QMakePackage):
         url = 'http://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
         return url.format(version.up_to(2), version)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('INSTALL_ROOT', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('INSTALL_ROOT', self.prefix)
 
     def qmake_args(self):
         return ['-r']

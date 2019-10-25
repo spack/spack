@@ -41,9 +41,9 @@ class Breakdancer(CMakePackage):
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # get the perl tools in the path
-        run_env.prepend_path('PATH', self.prefix.lib)
+        env.prepend_path('PATH', self.prefix.lib)
 
     def edit(self, spec, prefix):
         # perl tools end up in a silly lib subdirectory, fixing that

@@ -39,16 +39,18 @@ class Dislin(Package):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('DISLIN', self.prefix)
-        run_env.set('DISLIN', self.prefix)
-        run_env.prepend_path('PATH', self.prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['motif'].prefix.lib)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['mesa'].prefix.lib)
+    def setup_build_environment(self, env):
+        env.set('DISLIN', self.prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('DISLIN', self.prefix)
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['motif'].prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['mesa'].prefix.lib)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix)
 
     def install(self, spec, prefix):
         install = Executable('./INSTALL')

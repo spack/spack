@@ -157,12 +157,12 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.
-        spack_env.set('PREFIX', self.prefix)
-        spack_env.set('DESTDIR', '/')
+        env.set('PREFIX', self.prefix)
+        env.set('DESTDIR', '/')
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):

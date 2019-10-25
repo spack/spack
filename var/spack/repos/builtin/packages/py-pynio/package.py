@@ -50,22 +50,22 @@ class PyPynio(PythonPackage):
 
     depends_on('py-numpy', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         """
         These environment variables are how the setup.py knows which options
         to turn on, and how to find them.
         """
-        spack_env.set('F2CLIBS', 'gfortran')
-        spack_env.set('HAS_NETCDF4', '1')
-        spack_env.set('NETCDF4_PREFIX', self.spec['netcdf-c'].prefix)
+        env.set('F2CLIBS', 'gfortran')
+        env.set('HAS_NETCDF4', '1')
+        env.set('NETCDF4_PREFIX', self.spec['netcdf-c'].prefix)
         if '+hdf5' in self.spec:
-            spack_env.set('HAS_HDF5', '1')
-            spack_env.set('HDF5_PREFIX', self.spec['hdf5'].prefix)
+            env.set('HAS_HDF5', '1')
+            env.set('HDF5_PREFIX', self.spec['hdf5'].prefix)
         if '+gdal' in self.spec:
-            spack_env.set('HAS_GDAL', '1')
-            spack_env.set('GDAL_PREFIX', self.spec['gdal'].prefix)
+            env.set('HAS_GDAL', '1')
+            env.set('GDAL_PREFIX', self.spec['gdal'].prefix)
 
 #        This one is trouble - see comments above.
 #        if '+hdf4' in self.spec:
-#            spack_env.set('HAS_HDF4', '1')
-#            spack_env.set('HDF4_PREFIX', self.spec['hdf'].prefix)
+#            env.set('HAS_HDF4', '1')
+#            env.set('HDF4_PREFIX', self.spec['hdf'].prefix)

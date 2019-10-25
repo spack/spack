@@ -98,7 +98,7 @@ class Augustus(MakefilePackage):
             for file in files:
                 filter_file(pattern, repl, *files, backup=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('AUGUSTUS_CONFIG_PATH', join_path(
+    def setup_run_environment(self, env):
+        env.set('AUGUSTUS_CONFIG_PATH', join_path(
             self.prefix, 'config'))
-        run_env.prepend_path('PATH', join_path(self.prefix, 'scripts'))
+        env.prepend_path('PATH', join_path(self.prefix, 'scripts'))

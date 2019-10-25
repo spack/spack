@@ -28,8 +28,8 @@ class TrilinosCatalystIossAdapter(CMakePackage):
                                     'ioss', 'src', 'visualization',
                                     'ParaViewCatalystIossAdapter')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH', self.prefix.python)
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.python)
 
     def cmake_args(self):
         spec = self.spec

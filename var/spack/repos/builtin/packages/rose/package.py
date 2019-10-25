@@ -211,9 +211,9 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if "+codethorn" in self.spec:
-            spack_env.set("CXXFLAGS", "-std=c++11")
+            env.set("CXXFLAGS", "-std=c++11")
 
     def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.

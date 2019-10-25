@@ -44,12 +44,12 @@ class Turbine(AutotoolsPackage):
     depends_on('libtool', type='build', when='@master')
     depends_on('m4', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
 
-        spack_env.set('CC', spec['mpi'].mpicc)
-        spack_env.set('CXX', spec['mpi'].mpicxx)
-        spack_env.set('CXXLD', spec['mpi'].mpicxx)
+        env.set('CC', spec['mpi'].mpicc)
+        env.set('CXX', spec['mpi'].mpicxx)
+        env.set('CXXLD', spec['mpi'].mpicxx)
 
     @property
     def configure_directory(self):

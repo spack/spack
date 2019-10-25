@@ -43,5 +43,5 @@ class Guidance(MakefilePackage):
             install('guidance.pl', join_path(prefix.bin.www.Guidance,
                                              'guidance'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix.bin.www.Guidance)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', prefix.bin.www.Guidance)

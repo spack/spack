@@ -16,9 +16,9 @@ class Fpocket(MakefilePackage):
 
     depends_on("netcdf-c")
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.compiler.name == 'gcc':
-            spack_env.set('CXX', 'g++')
+            env.set('CXX', 'g++')
 
     def edit(self):
         makefile = FileFilter('makefile')

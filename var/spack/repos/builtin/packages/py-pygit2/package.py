@@ -24,8 +24,8 @@ class PyPygit2(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
         # http://www.pygit2.org/install.html
-        spack_env.set('LIBGIT2', spec['libgit2'].prefix)
-        spack_env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)
+        env.set('LIBGIT2', spec['libgit2'].prefix)
+        env.set('LIBGIT2_LIB', spec['libgit2'].prefix.lib)

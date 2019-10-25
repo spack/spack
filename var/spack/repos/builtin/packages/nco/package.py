@@ -45,9 +45,9 @@ class Nco(AutotoolsPackage):
         spec = self.spec
         return ['--{0}-doc'.format('enable' if '+doc' in spec else 'disable')]
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('NETCDF_INC', spec['netcdf-c'].prefix.include)
-        spack_env.set('NETCDF_LIB', spec['netcdf-c'].prefix.lib)
-        spack_env.set('ANTLR_ROOT', spec['antlr'].prefix)
-        spack_env.set('UDUNITS2_PATH', spec['udunits'].prefix)
+        env.set('NETCDF_INC', spec['netcdf-c'].prefix.include)
+        env.set('NETCDF_LIB', spec['netcdf-c'].prefix.lib)
+        env.set('ANTLR_ROOT', spec['antlr'].prefix)
+        env.set('UDUNITS2_PATH', spec['udunits'].prefix)

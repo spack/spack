@@ -20,9 +20,9 @@ class DotnetCoreSdk(Package):
     variant('telemetry', default=False,
             description='allow collection of telemetry data')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '-telemetry' in self.spec:
-            spack_env.set('DOTNET_CLI_TELEMETRY_OPTOUT', 1)
+            env.set('DOTNET_CLI_TELEMETRY_OPTOUT', 1)
 
     def install(self, spec, prefix):
         mkdirp('bin')

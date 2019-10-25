@@ -83,5 +83,5 @@ class Elmerfem(CMakePackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ELMER_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('ELMER_HOME', self.prefix)

@@ -123,8 +123,8 @@ class Ncl(Package):
         self.prepare_src_tree()
         make('Everything', parallel=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('NCARG_ROOT', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.set('NCARG_ROOT', self.spec.prefix)
 
     def prepare_site_config(self):
         fc_flags = []
