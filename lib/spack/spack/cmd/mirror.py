@@ -276,7 +276,7 @@ def mirror_create(args):
                 specs = [Spec(n) for n in spack.repo.all_package_names()]
                 mirror_specs = spack.mirror.get_all_versions(specs)
                 mirror_specs.sort(
-                    key=lambda s: s.format("{name}{@version}").lower())
+                    key=lambda s: (s.name, s.version))
         else:
             # If the user asked for dependencies, traverse spec DAG get them.
             if args.dependencies:
