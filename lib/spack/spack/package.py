@@ -663,7 +663,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def version(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Version requested for a package which"
+            raise ValueError("Version requested for a package that"
                              " does not have a concrete version.")
         return self.spec.versions[0]
 
