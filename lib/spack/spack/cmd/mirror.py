@@ -38,6 +38,8 @@ def setup_parser(subparser):
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="directory in which to create mirror")
+
+
     create_parser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help="specs of packages to put in mirror")
@@ -47,12 +49,13 @@ def setup_parser(subparser):
              " in the current environment if there is an active environment"
              " (this requires significant time and space)")
     create_parser.add_argument(
+        '-f', '--file', help="file with specs of packages to put in mirror")
+
+    create_parser.add_argument(
         '-V', '--all-versions', action='store_true',
         help="when specifying packages with a file or on the command line,"
              " retrieve all versions of those packages (this also retrieves"
              " package dependencies automatically)")
-    create_parser.add_argument(
-        '-f', '--file', help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
@@ -235,6 +238,13 @@ def _read_specs_from_file(filename):
 def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
+    if args.specs and args.all:
+        raise SpackError("Cannot specify specs on command line if you"
+                         " chose to mirror all specs with '--all'")
+    elif args.file and args.all:
+        raise SpackError("Cannot specify specs with a file ('-f') if you"
+                         " chose to mirror all specs with '--all'")
+
     # try to parse specs from the command line first.
     with spack.concretize.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
