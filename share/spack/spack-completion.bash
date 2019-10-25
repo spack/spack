@@ -1051,7 +1051,8 @@ function _spack_spec {
     if $list_options
     then
         compgen -W "-h --help -l --long -L --very-long -I --install-status
-                    -y --yaml -c --cover -N --namespaces -t --types" -- "$cur"
+                    -j --json -y --yaml -c --cover -N --namespaces
+                    -t --types" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
