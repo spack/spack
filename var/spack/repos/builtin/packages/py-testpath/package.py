@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyTestpath(PythonPackage):
-    """Testpath is a collection of utilities for Python code working with files and commands."""
+    """Testpath is a collection of utilities for Python code working with
+    files and commands."""
 
     homepage = "https://github.com/jupyter/testpath"
     url      = "https://pypi.io/packages/source/t/testpath/testpath-0.4.2.tar.gz"
