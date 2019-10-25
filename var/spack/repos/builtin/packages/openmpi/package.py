@@ -430,6 +430,12 @@ class Openmpi(AutotoolsPackage):
         # Fabrics
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
+        # The wrappers fail to automatically link libfabric. This will cause
+        # undefined references unless we add the appropriate flags.
+        if 'fabrics=libfabric' in spec:
+            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'.format(spec['libfabric'].prefix.lib))
+            config_args.append('--with-wrapper-libs=-lfabric')
+
         # Schedulers
         if 'schedulers=auto' not in spec:
             config_args.extend(self.with_or_without('schedulers'))
@@ -444,7 +450,6 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:
