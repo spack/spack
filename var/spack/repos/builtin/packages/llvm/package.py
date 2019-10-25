@@ -624,12 +624,13 @@ class Llvm(CMakePackage):
                            'for details on how to create this identity.')
             raise RuntimeError(explanation)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
 
+    def setup_run_environment(self, env):
         if '+clang' in self.spec:
-            run_env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
-            run_env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
+            env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
+            env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
 
     def cmake_args(self):
         spec = self.spec
