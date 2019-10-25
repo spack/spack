@@ -86,13 +86,22 @@ class QuantumEspresso(Package):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # HDF5 support introduced in 6.1, but the configure was quite
-    # broken and a filter_file was needed get the job done.
-    # Unfortunately, the filter_file had some undesirable side effects.
-    # For robust HDF5 support, you will need to use 6.4.1.
-    hdf5_warning = 'HDF5 support only in QE 6.4.1 and later'
-    conflicts('hdf5=parallel', when='@:6.4.0', msg=hdf5_warning)
-    conflicts('hdf5=serial', when='@:6.4.0', msg=hdf5_warning)
+    # HDF5 support introduced in 6.1.0, but the configure had some limitations.
+    # In recent tests (Oct 2019), GCC and Intel work with the HDF5 Spack
+    # package for the default variant. This is only for hdf5=parallel variant.
+    # Support, for hdf5=serial was introduced later with some limitation. See
+    # the last conflict.
+    conflicts(
+        'hdf5=parallel',
+        when='@:6.0',
+        msg='parallel HDF5 support only in QE 6.1.0 and later'
+    )
+
+    conflicts(
+        'hdf5=serial',
+        when='@:6.4.0',
+        msg='serial HDF5 support only in QE 6.4.1 and later'
+    )
 
     conflicts(
         'hdf5=parallel',
