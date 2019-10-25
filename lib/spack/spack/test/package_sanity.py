@@ -154,7 +154,8 @@ def test_api_for_build_and_run_environment():
             failing.append(pkg)
 
     msg = ('there are {0} packages using the old API to set build '
-           'and run environment [{1}]')
+           'and run environment [{1}], for further information see'
+           'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(x.name for x in failing)
     )
