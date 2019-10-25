@@ -6,6 +6,7 @@
 import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
+import llnl.util.cpu as cpu
 
 
 class Linux(Platform):
@@ -13,15 +14,14 @@ class Linux(Platform):
 
     def __init__(self):
         super(Linux, self).__init__('linux')
-        self.add_target('x86_64', Target('x86_64'))
-        self.add_target('ppc64le', Target('ppc64le'))
 
-        self.default = platform.machine()
-        self.front_end = platform.machine()
-        self.back_end = platform.machine()
+        for name in cpu.targets:
+            self.add_target(name, Target(name))
 
-        if self.default not in self.targets:
-            self.add_target(self.default, Target(self.default))
+        # Get specific default
+        self.default = cpu.host().name
+        self.front_end = self.default
+        self.back_end = self.default
 
         linux_dist = LinuxDistro()
         self.default_os = str(linux_dist)

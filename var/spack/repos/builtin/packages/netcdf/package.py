@@ -23,7 +23,7 @@ class Netcdf(AutotoolsPackage):
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.6.3.tar.gz"
+    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.7.2.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version('4.6.2'):
@@ -34,6 +34,8 @@ class Netcdf(AutotoolsPackage):
         return url.format(version.dotted)
 
     version('master', branch='master')
+    version('4.7.2',   sha256='b751cc1f314ac8357df2e0a1bacf35a624df26fe90981d3ad3fa85a5bbd8989a')
+    version('4.7.1',   sha256='5c537c585773e575a16b28c3973b9608a98fdc4cf7c42893aa5223024e0001fc')
     version('4.7.0',   sha256='a512d2b4828c6177dd4b96791c4163e4e06e6bfc7123bebfbfe01762d777d1cb')
     version('4.6.3',   sha256='335fdf16d7531f430ad75e732ed1a9a3fc83ad3ef91fb33a70119a555dd5415c')
     version('4.6.2',   sha256='c37525981167b3cd82d32e1afa3022afb94e59287db5f116c57f5ed4d9c6a638')

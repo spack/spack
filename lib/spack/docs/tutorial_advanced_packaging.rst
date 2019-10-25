@@ -90,21 +90,23 @@ like py-numpy, Spack's ``python`` package will add it to ``PYTHONPATH``
 so it is available at build time; this is required because the default setup
 that spack does is not sufficient for python to import modules.
 
-To provide environment setup for a dependent, a package can implement the
-:py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
-function. This function takes as a parameter a :py:class:`EnvironmentModifications <spack.util.environment.EnvironmentModifications>`
+Any package can override the
+:py:func:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+method to setup the build environment for a dependent.
+This method takes as an argument a :py:class:`EnvironmentModifications <spack.util.environment.EnvironmentModifications>`
 object which includes convenience methods to update the environment. For
 example, an MPI implementation can set ``MPICC`` for packages that depend on it:
 
 .. code-block:: python
 
-  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-      spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+  def setup_dependent_build_environment(self, env, dependent_spec):
+      env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
 
 In this case packages that depend on ``mpi`` will have ``MPICC`` defined in
-their environment when they build. This section is focused on modifying the
-build-time environment represented by ``spack_env``, but it's worth noting that
-modifications to ``run_env`` are included in Spack's automatically-generated
+their environment when they build. This section is focused on setting up the
+build-time environment but it's worth noting that a similar method called
+:py:func:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+can be used to code modifications that will be included in Spack's automatically-generated
 module files.
 
 We can practice by editing the ``mpich`` package to set the ``MPICC``
@@ -118,17 +120,17 @@ Once you're finished, the method should look like this:
 
 .. code-block:: python
 
-  def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-      spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-      spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-      spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-      spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+  def setup_dependent_build_environment(self, env, dependent_spec):
+      env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+      env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+      env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+      env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-      spack_env.set('MPICH_CC', spack_cc)
-      spack_env.set('MPICH_CXX', spack_cxx)
-      spack_env.set('MPICH_F77', spack_f77)
-      spack_env.set('MPICH_F90', spack_fc)
-      spack_env.set('MPICH_FC', spack_fc)
+      env.set('MPICH_CC', spack_cc)
+      env.set('MPICH_CXX', spack_cxx)
+      env.set('MPICH_F77', spack_f77)
+      env.set('MPICH_F90', spack_fc)
+      env.set('MPICH_FC', spack_fc)
 
 At this point we can, for instance, install ``netlib-scalapack`` with
 ``mpich``:
@@ -155,25 +157,32 @@ set to the correct value.
 Set environment variables in your own package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Packages can modify their own build-time environment by implementing the
-:py:func:`setup_environment <spack.package.PackageBase.setup_environment>` function.
-For ``qt`` this looks like:
+Packages can override the
+:py:func:`setup_build_environment <spack.package.PackageBase.setup_build_environment>`
+or the
+:py:func:`setup_run_environment <spack.package.PackageBase.setup_run_environment>`
+methods to modify their own build-time or run-time environment respectively.
+An example of a package that overrides both methods is ``qt``:
 
 .. code-block:: python
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
-        run_env.set('QTDIR', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('MAKEFLAGS', '-j{0}'.format(make_jobs))
 
-When ``qt`` builds, ``MAKEFLAGS`` will be defined in the environment.
+    def setup_run_environment(self, env):
+        env.set('QTDIR', self.prefix)
 
-To contrast with ``qt``'s :py:func:`setup_dependent_environment <spack.package.PackageBase.setup_dependent_environment>`
+When ``qt`` builds, ``MAKEFLAGS`` will be defined in the environment. Likewise, when a
+module file is created for ``qt`` it will contain commands to define ``QTDIR`` appropriately.
+
+To contrast with ``qt``'s
+:py:func:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
 function:
 
 .. code-block:: python
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('QTDIR', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('QTDIR', self.prefix)
 
 Let's see how it works by completing the ``elpa`` package:
 
@@ -185,16 +194,16 @@ In the end your method should look like:
 
 .. code-block:: python
 
-  def setup_environment(self, spack_env, run_env):
+  def setup_build_environment(self, env):
       spec = self.spec
 
-      spack_env.set('CC', spec['mpi'].mpicc)
-      spack_env.set('FC', spec['mpi'].mpifc)
-      spack_env.set('CXX', spec['mpi'].mpicxx)
-      spack_env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
+      env.set('CC', spec['mpi'].mpicc)
+      env.set('FC', spec['mpi'].mpifc)
+      env.set('CXX', spec['mpi'].mpicxx)
+      env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
 
-      spack_env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-      spack_env.append_flags('LIBS', spec['lapack'].libs.link_flags)
+      env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
+      env.append_flags('LIBS', spec['lapack'].libs.link_flags)
 
 At this point it's possible to proceed with the installation of ``elpa ^mpich``
 

@@ -142,6 +142,7 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
 
+    patch('arm.patch', when='target=aarch64:')
     parallel = False
 
     build_directory = 'build_openspeedshop'

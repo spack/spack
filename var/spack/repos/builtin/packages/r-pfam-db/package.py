@@ -15,7 +15,7 @@ class RPfamDb(RPackage):
 
     version('3.8.2', sha256='3a951930f6caddfef4b61cb633b4c60c3c40ec268479c2bc1f3e5af67f56c166',
             url='https://www.bioconductor.org/packages/3.9/data/annotation/src/contrib/PFAM.db_3.8.2.tar.gz')
-    version('3.4.1', '65ed35887ecc44f5ac9f9c8563e03f44')
+    version('3.4.1', sha256='fc45a0d53139daf85873f67bd3f1b68f2d883617f4447caddbd2d7dcc58a393f')
 
     depends_on('r@3.4.0:3.4.9', when='@3.4.1')
     depends_on('r@3.6.0:3.6.0', when='@3.8.2')

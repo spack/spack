@@ -14,7 +14,7 @@ class PyRsa(PythonPackage):
 
     import_modules = ['rsa']
 
-    version('3.4.2', 'b315f47882c24030ee6b5aad628cccdb')
+    version('3.4.2', sha256='25df4e10c263fb88b5ace923dd84bf9aa7f5019687b5e55382ffcdb8bede9db5')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pyasn1@0.1.3:', type=('build', 'run'))

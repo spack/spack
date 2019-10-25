@@ -12,7 +12,7 @@ class Liblas(CMakePackage):
     """
 
     homepage = "https://liblas.org/"
-    url      = "http://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
+    url      = "https://download.osgeo.org/liblas/libLAS-1.8.1.tar.bz2"
 
     version('1.8.1', sha256='9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76')
 

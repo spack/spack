@@ -14,7 +14,7 @@ class Ibmisc(CMakePackage):
 
     maintainers = ['citibeth']
 
-    version('0.1.0', '18c63db3e466c5a6fc2db3f903d06ecb')
+    version('0.1.0', sha256='38481a8680aad4b40eca6723b2898b344cf0ef891ebc3581f5e99fbe420fa0d8')
 
     variant('everytrace', default=False,
             description='Report errors through Everytrace')

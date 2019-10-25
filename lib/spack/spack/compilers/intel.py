@@ -36,6 +36,8 @@ class Intel(Compiler):
     def verbose_flag(cls):
         return "-v"
 
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
+
     @property
     def openmp_flag(self):
         if self.version < ver('16.0'):

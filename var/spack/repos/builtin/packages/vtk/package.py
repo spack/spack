@@ -23,11 +23,11 @@ class Vtk(CMakePackage):
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
-    version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
-    version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
-    version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
-    version('6.3.0', '0231ca4840408e9dd60af48b314c5b6d')
-    version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
+    version('8.0.1', sha256='49107352923dea6de05a7b4c3906aaf98ef39c91ad81c383136e768dcf304069')
+    version('7.1.0', sha256='5f3ea001204d4f714be972a810a62c0f2277fbb9d8d2f8df39562988ca37497a')
+    version('7.0.0', sha256='78a990a15ead79cdc752e86b83cfab7dbf5b7ef51ba409db02570dbdd9ec32c3')
+    version('6.3.0', sha256='92a493354c5fa66bea73b5fc014154af5d9f3f6cee8d20a826f4cd5d4b0e8a5e')
+    version('6.1.0', sha256='bd7df10a479606d529a8b71f466c44a2bdd11fd534c62ce0aa44fad91883fa34')
 
     # VTK7 defaults to OpenGL2 rendering backend
     variant('opengl2', default=True, description='Enable OpenGL2 backend')

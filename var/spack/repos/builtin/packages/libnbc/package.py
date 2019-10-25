@@ -15,6 +15,6 @@ class Libnbc(AutotoolsPackage):
     homepage = "http://unixer.de/research/nbcoll/libnbc/"
     url      = "http://unixer.de/research/nbcoll/libnbc/libNBC-1.1.1.tar.gz"
 
-    version('1.1.1', 'ece5c94992591a9fa934a90e5dbe50ce')
+    version('1.1.1', sha256='63aa5f75f84c191da0688cb551ebd0e9e46928edfba350b2a534eb0c704dd9c3')
 
     depends_on("mpi")

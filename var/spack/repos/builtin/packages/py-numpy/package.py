@@ -15,7 +15,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.1.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.3.zip"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -27,6 +27,8 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('1.17.3', sha256='a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e')
+    version('1.17.2', sha256='73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df')
     version('1.17.1', sha256='f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca')
     version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
     version('1.16.5', sha256='8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c')
@@ -39,28 +41,28 @@ class PyNumpy(PythonPackage):
     version('1.15.3', sha256='1c0c80e74759fa4942298044274f2c11b08c86230b25b8b819e55e644f5ff2b6')
     version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
     version('1.15.2', sha256='27a0d018f608a3fe34ac5e2b876f4c23c47e38295c47dd0775cc294cd2614bc1')
-    version('1.15.1', '898004d5be091fde59ae353e3008fe9b')
+    version('1.15.1', sha256='7b9e37f194f8bcdca8e9e6af92e2cbad79e360542effc2dd6b98d63955d8d8a3')
     version('1.15.0', sha256='f28e73cf18d37a413f7d5de35d024e6b98f14566a10d82100f9dc491a7d449f9')
     version('1.14.6', sha256='1250edf6f6c43e1d7823f0967416bc18258bb271dc536298eb0ea00a9e45b80a')
     version('1.14.5', sha256='a4a433b3a264dbc9aa9c7c241e87c0358a503ea6394f8737df1683c7c9a102ac')
     version('1.14.4', sha256='2185a0f31ecaa0792264fa968c8e0ba6d96acf144b26e2e1d1cd5b77fc11a691')
-    version('1.14.3', '97416212c0a172db4bc6b905e9c4634b')
-    version('1.14.2', '080f01a19707cf467393e426382c7619')
-    version('1.14.1', 'b8324ef90ac9064cd0eac46b8b388674')
-    version('1.14.0', 'c12d4bf380ac925fcdc8a59ada6c3298')
-    version('1.13.3', '300a6f0528122128ac07c6deb5c95917')
-    version('1.13.1', '2c3c0f4edf720c3a7b525dacc825b9ae')
-    version('1.13.0', 'fd044f0b8079abeaf5e6d2e93b2c1d03')
-    version('1.12.1', 'c75b072a984028ac746a6a332c209a91')
-    version('1.12.0', '33e5a84579f31829bbbba084fe0a4300')
+    version('1.14.3', sha256='9016692c7d390f9d378fc88b7a799dc9caa7eb938163dda5276d3f3d6f75debf')
+    version('1.14.2', sha256='facc6f925c3099ac01a1f03758100772560a0b020fb9d70f210404be08006bcb')
+    version('1.14.1', sha256='fa0944650d5d3fb95869eaacd8eedbd2d83610c85e271bd9d3495ffa9bc4dc9c')
+    version('1.14.0', sha256='3de643935b212307b420248018323a44ec51987a336d1d747c1322afc3c099fb')
+    version('1.13.3', sha256='36ee86d5adbabc4fa2643a073f93d5504bdfed37a149a3a49f4dde259f35a750')
+    version('1.13.1', sha256='c9b0283776085cb2804efff73e9955ca279ba4edafd58d3ead70b61d209c4fbb')
+    version('1.13.0', sha256='dcff367b725586830ff0e20b805c7654c876c2d4585c0834a6049502b9d6cf7e')
+    version('1.12.1', sha256='a65266a4ad6ec8936a1bc85ce51f8600634a31a258b722c9274a80ff189d9542')
+    version('1.12.0', sha256='ff320ecfe41c6581c8981dce892fe6d7e69806459a899e294e4bf8229737b154')
     version('1.11.3', sha256='2e0fc5248246a64628656fe14fcab0a959741a2820e003bd15538226501b82f7')
-    version('1.11.2', '8308cc97be154d2f64a2387ea863c2ac')
-    version('1.11.1', '5caa3428b24aaa07e72c79d115140e46')
-    version('1.11.0', '19ce5c4eb16d663a0713daf0018a3021')
-    version('1.10.4', '510ffc322c635511e7be95d225b6bcbb')
+    version('1.11.2', sha256='c1ed4d1d2a795409c7df1eb4bfee65c0e3326cfc7c57875fa39e5c7414116d9a')
+    version('1.11.1', sha256='4e9c289b9d764d10353a224a5286dda3e0425b13b112719bdc3e9864ae648d79')
+    version('1.11.0', sha256='9109f260850627e4b83a3c4bcef4f2f99357eb4a5eaae75dec51c32f3c197aa3')
+    version('1.10.4', sha256='8ce443dc79656a9fc97a7837f1444d324aef2c9b53f31f83441f57ad1f1f3659')
     version('1.9.3',  sha256='baa074bb1c7f9c822122fb81459b7caa5fc49267ca94cca69465c8dcfd63ac79')
-    version('1.9.2',  'e80c19d2fb25af576460bb7dac31c59a')
-    version('1.9.1',  '223532d8e1bdaff5d30936439701d6e1')
+    version('1.9.2',  sha256='e37805754f4ebb575c434d134f6bebb8b857d9843c393f6943c7be71ef57311c')
+    version('1.9.1',  sha256='2a545c0d096d86035b12160fcba5e4c0a08dcabbf902b4f867eb64deb31a2b7a')
 
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
@@ -195,14 +197,14 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/devdocs/user/building.html#accelerated-blas-lapack-libraries
         spec = self.spec
 
         # https://numpy.org/devdocs/user/building.html#blas
-        if '~blas' in spec:
+        if 'blas' not in spec:
             blas = ''
         elif spec['blas'].name == 'intel-mkl' or \
                 spec['blas'].name == 'intel-parallel-studio':
@@ -218,10 +220,10 @@ class PyNumpy(PythonPackage):
         else:
             blas = 'blas'
 
-        spack_env.set('NPY_BLAS_ORDER', blas)
+        env.set('NPY_BLAS_ORDER', blas)
 
         # https://numpy.org/devdocs/user/building.html#lapack
-        if '~lapack' in spec:
+        if 'lapack' not in spec:
             lapack = ''
         elif spec['lapack'].name == 'intel-mkl' or \
                 spec['lapack'].name == 'intel-parallel-studio':
@@ -237,7 +239,7 @@ class PyNumpy(PythonPackage):
         else:
             lapack = 'lapack'
 
-        spack_env.set('NPY_LAPACK_ORDER', lapack)
+        env.set('NPY_LAPACK_ORDER', lapack)
 
     def build_args(self, spec, prefix):
         args = []

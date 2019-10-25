@@ -12,7 +12,7 @@ class PyMachotools(PythonPackage):
     homepage = "https://pypi.python.org/pypi/machotools"
     url = "https://pypi.io/packages/source/m/machotools/machotools-0.2.0.tar.gz"
 
-    version('0.2.0', 'bcc68332c4a80b4f84ec9c8083465416')
+    version('0.2.0', sha256='e3950fa263169087d44a3d0521a3267d5128efd1b85252670c7171955939ab58')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-macholib', type=('build', 'run'))

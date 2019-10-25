@@ -12,7 +12,7 @@ class Minitri(MakefilePackage):
     homepage = "https://github.com/Mantevo/miniTri"
     url      = "https://github.com/Mantevo/miniTri/archive/v1.0.tar.gz"
 
-    version('1.0', '947e296ca408275232f47724267a85ce')
+    version('1.0', sha256='e340dbb04b7c182804ebf6f5a946a392f1c68b7f798885c091c3f0d8aaa844ce')
 
     variant('mpi', default=True, description='Build with MPI support')
 

@@ -17,7 +17,7 @@ class Amg2013(MakefilePackage):
     homepage = "https://computing.llnl.gov/projects/co-design/amg2013"
     url      = "https://computing.llnl.gov/projects/co-design/download/amg2013.tgz"
 
-    version('master', '9d918d2a69528b83e6e0aba6ba601fef',
+    version('master', sha256='b03771d84a04e3dbbbe32ba5648cd7b789e5853b938dd501e17d23d43f13c50f',
             url='https://computing.llnl.gov/projects/co-design/download/amg2013.tgz')
 
     variant('openmp', default=True, description='Build with OpenMP support')

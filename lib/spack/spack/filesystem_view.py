@@ -188,46 +188,40 @@ class YamlFilesystemView(FilesystemView):
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
-        projections_path = os.path.join(self._root, _projections_path)
+        self.projections_path = os.path.join(self._root, _projections_path)
         if not self.projections:
-            if os.path.exists(projections_path):
-                # Read projections file from view
-                with open(projections_path, 'r') as f:
-                    projections_data = s_yaml.load(f)
-                    spack.config.validate(projections_data,
-                                          spack.schema.projections.schema)
-                    self.projections = projections_data['projections']
-            else:
-                # Write projections file to new view
-                # Not strictly necessary as the empty file is the empty
-                # projection but it makes sense for consistency
-                try:
-                    mkdirp(os.path.dirname(projections_path))
-                    with open(projections_path, 'w') as f:
-                        f.write(s_yaml.dump({'projections': self.projections}))
-                except OSError as e:
-                    if self.projections:
-                        raise e
-        elif not os.path.exists(projections_path):
+            # Read projections file from view
+            self.projections = self.read_projections()
+        elif not os.path.exists(self.projections_path):
             # Write projections file to new view
-            mkdirp(os.path.dirname(projections_path))
-            with open(projections_path, 'w') as f:
-                f.write(s_yaml.dump({'projections': self.projections}))
+            self.write_projections()
         else:
             # Ensure projections are the same from each source
             # Read projections file from view
-            with open(projections_path, 'r') as f:
-                projections_data = s_yaml.load(f)
-                spack.config.validate(projections_data,
-                                      spack.schema.projections.schema)
-                if self.projections != projections_data['projections']:
-                    msg = 'View at %s has projections file' % self._root
-                    msg += ' which does not match projections passed manually.'
-                    raise ConflictingProjectionsError(msg)
+            if self.projections != self.read_projections():
+                msg = 'View at %s has projections file' % self._root
+                msg += ' which does not match projections passed manually.'
+                raise ConflictingProjectionsError(msg)
 
         self.extensions_layout = YamlViewExtensionsLayout(self, layout)
 
         self._croot = colorize_root(self._root) + " "
+
+    def write_projections(self):
+        if self.projections:
+            mkdirp(os.path.dirname(self.projections_path))
+            with open(self.projections_path, 'w') as f:
+                f.write(s_yaml.dump_config({'projections': self.projections}))
+
+    def read_projections(self):
+        if os.path.exists(self.projections_path):
+            with open(self.projections_path, 'r') as f:
+                projections_data = s_yaml.load(f)
+                spack.config.validate(projections_data,
+                                      spack.schema.projections.schema)
+                return projections_data['projections']
+        else:
+            return {}
 
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
@@ -357,6 +351,9 @@ class YamlFilesystemView(FilesystemView):
         tree.unmerge_directories(view_dst, ignore_file)
 
     def remove_file(self, src, dest):
+        if not os.path.lexists(dest):
+            tty.warn("Tried to remove %s which does not exist" % dest)
+            return
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only

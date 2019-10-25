@@ -16,7 +16,7 @@ class Fastmath(Package):
     homepage = "www.fastmath-scidac.org/"
     url = "https://github.com/citibeth/dummy/tarball/v1.0"
 
-    version('1.0', 'e2b724dfcc31d735897971db91be89ff')
+    version('1.0', sha256='402a2198e40b7e9022a99ab88ba6f0ee1c04b103fc15589b22c892859f14b60a')
 
     # BundlePackage
     depends_on('amrex')  # default is 3 dimensions

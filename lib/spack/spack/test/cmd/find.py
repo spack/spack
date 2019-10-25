@@ -50,6 +50,8 @@ def test_query_arguments():
     args = Bunch(
         only_missing=False,
         missing=False,
+        only_deprecated=False,
+        deprecated=False,
         unknown=False,
         explicit=False,
         implicit=False,
@@ -61,7 +63,7 @@ def test_query_arguments():
     assert 'installed' in q_args
     assert 'known' in q_args
     assert 'explicit' in q_args
-    assert q_args['installed'] is True
+    assert q_args['installed'] == ['installed']
     assert q_args['known'] is any
     assert q_args['explicit'] is any
     assert 'start_date' in q_args
@@ -294,3 +296,9 @@ def test_find_no_sections(database, config):
     output = find("--no-groups")
     assert "-----------" not in output
     assert "==>" not in output
+
+
+@pytest.mark.db
+def test_find_command_basic_usage(database):
+    output = find()
+    assert 'mpileaks' in output

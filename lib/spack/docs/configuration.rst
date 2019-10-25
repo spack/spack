@@ -463,7 +463,6 @@ account all scopes. For example, to see the fully merged
      module_roots:
        tcl: $spack/share/spack/modules
        lmod: $spack/share/spack/lmod
-       dotkit: $spack/share/spack/dotkit
      build_stage:
      - $tempdir/$user/spack-stage
      - ~/.spack/stage
@@ -514,7 +513,6 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
    /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
    /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
-   /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage

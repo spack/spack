@@ -21,7 +21,7 @@ class VotcaXtp(CMakePackage):
 
     version('develop', branch='master')
     version('1.5', sha256='b40b6d19e13f0650e84b8beebe86ce5c09071624f18d66df826f9d8584b4d3c8')
-    version('1.4.1', '31a2dbd8bd48bf337bc88b20ab312050')
+    version('1.4.1', sha256='4b53d371d6cf648c9e9e9bd1f104d349cafeaf10a02866e3f1d05c574b595a21')
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4.1", "1.5", "develop"]:

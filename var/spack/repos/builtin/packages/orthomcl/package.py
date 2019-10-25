@@ -13,7 +13,7 @@ class Orthomcl(Package):
     homepage = "http://orthomcl.org/orthomcl/"
     url      = "http://orthomcl.org/common/downloads/software/v2.0/orthomclSoftware-v2.0.9.tar.gz"
 
-    version('2.0.9', '2e0202ed4e36a753752c3567edb9bba9')
+    version('2.0.9', sha256='5f96d23ff255778535c4926d75b19f059db0c01be1ac599289d2431115d68640')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('blast-plus')

@@ -12,7 +12,7 @@ class PerlSoapLite(PerlPackage):
     homepage = "http://search.cpan.org/~phred/SOAP-Lite-1.20/lib/SOAP/Lite.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PH/PHRED/SOAP-Lite-1.22.tar.gz"
 
-    version('1.22', '86c31341311498a08c6309e62168f655')
+    version('1.22', sha256='92f492f8722cb3002cd1dce11238cee5599bb5bd451a062966df45223d33693a')
 
     depends_on('perl-io-sessiondata', type=('build', 'run'))
     depends_on('perl-lwp-protocol-https', type=('build', 'run'))

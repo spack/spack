@@ -14,7 +14,7 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
     url      = "https://github.com/beagle-dev/beagle-lib/archive/v3.1.2.tar.gz"
 
     version('3.1.2', sha256='dd872b484a3a9f0bce369465e60ccf4e4c0cd7bd5ce41499415366019f236275')
-    version('2.1.2', '1107614e86f652f8ee45c1c92f2af3d4',
+    version('2.1.2', sha256='82ff13f4e7d7bffab6352e4551dfa13afabf82bff54ea5761d1fc1e78341d7de',
             url='https://github.com/beagle-dev/beagle-lib/archive/beagle_release_2_1_2.tar.gz')
 
     depends_on('autoconf', type='build')

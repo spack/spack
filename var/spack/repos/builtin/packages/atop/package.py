@@ -11,7 +11,7 @@ class Atop(Package):
     homepage = "http://www.atoptool.nl/index.php"
     url      = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
-    version('2.2-3', '034dc1544f2ec4e4d2c739d320dc326d')
+    version('2.2-3', sha256='c785b8a2355be28b3de6b58a8ea4c4fcab8fadeaa57a99afeb03c66fac8e055d')
 
     depends_on('zlib')
     depends_on('ncurses')

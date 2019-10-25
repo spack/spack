@@ -13,7 +13,7 @@ class Libsvm(MakefilePackage):
     homepage = "https://www.csie.ntu.edu.tw/~cjlin/libsvm/"
     url      = "https://github.com/cjlin1/libsvm/archive/v322.tar.gz"
 
-    version('322', 'd9617d29efad013573f63ca9a517f490')
+    version('322', sha256='a3469436f795bb3f8b1e65ea761e14e5599ec7ee941c001d771c07b7da318ac6')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
