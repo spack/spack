@@ -21,11 +21,6 @@ class RGenemeta(RPackage):
     version('1.50.0', commit='0f8603653285698ed451fcbf536a4b3f90015f92')
     version('1.48.0', commit='68c65304d37f5a4722cf4c25afb23214c3a2f4c8')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.56.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.52.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0', type=('build', 'run'))
-
     depends_on('r-biobase@2.5.5:', when='@1.48.0:', type=('build', 'run'))
     depends_on('r-genefilter', when='@1.48.0:', type=('build', 'run'))
+    depends_on('r@2.10:', when='@1.48.0:', type=('build', 'run'))

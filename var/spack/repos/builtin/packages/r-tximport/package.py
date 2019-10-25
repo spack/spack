@@ -25,9 +25,3 @@ class RTximport(RPackage):
     version('1.8.0', commit='cc91b8389ca4c16b0f588bdeb63d051a11e8a705')
     version('1.6.0', commit='0b1ba6c6622e02b954812c88454c28e8efb75e0b')
     version('1.4.0', commit='bfbd2436eca21acf212b76a658b49cfb5e116d6b')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.12.3', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0', type=('build', 'run'))

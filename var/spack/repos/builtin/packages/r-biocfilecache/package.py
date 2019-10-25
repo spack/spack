@@ -23,16 +23,11 @@ class RBiocfilecache(RPackage):
     version('1.2.3', commit='d78bf5b46c8a329f5ddef879fe51230444bc42f8')
     version('1.0.1', commit='dbf4e8dd4d8d9f475066cd033481efe95c56df75')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.8.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.2.3', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.0.1', type=('build', 'run'))
-
     depends_on('r-dbi', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-dbplyr@1.0.0:', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-dplyr', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-httr', when='@1.0.1:', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-rappdirs', when='@1.0.1:', type=('build', 'run'))
     depends_on('r-rsqlite', when='@1.0.1:', type=('build', 'run'))
 

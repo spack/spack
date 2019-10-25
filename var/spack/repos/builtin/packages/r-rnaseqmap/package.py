@@ -22,12 +22,6 @@ class RRnaseqmap(RPackage):
     version('2.36.0', commit='69c46fa467be0ac30776ede85a521f7622539b7e')
     version('2.34.0', commit='7881bc00600ed824ac437edf3cfba35573261e46')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.42.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.40.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@2.38.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.36.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.34.0', type=('build', 'run'))
-
     depends_on('r-biobase', when='@2.34.0:', type=('build', 'run'))
     depends_on('r-dbi', when='@2.34.0:', type=('build', 'run'))
     depends_on('r-deseq', when='@2.34.0:', type=('build', 'run'))
@@ -35,4 +29,5 @@ class RRnaseqmap(RPackage):
     depends_on('r-genomicalignments', when='@2.34.0:', type=('build', 'run'))
     depends_on('r-genomicranges', when='@2.34.0:', type=('build', 'run'))
     depends_on('r-iranges', when='@2.34.0:', type=('build', 'run'))
+    depends_on('r@2.11.0:', when='@2.34.0:', type=('build', 'run'))
     depends_on('r-rsamtools', when='@2.34.0:', type=('build', 'run'))

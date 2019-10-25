@@ -21,10 +21,6 @@ class REnrichplot(RPackage):
     version('1.2.0', commit='2eeaafb571d35a106eba8ae7df014f3201066e8b')
     version('1.0.2', commit='ba7726fa0d4b581b7514dcbb04889cdbdd75ff29')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.2.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.0.2', type=('build', 'run'))
-
     depends_on('r-annotationdbi', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-cowplot', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-dose@3.5.1:', when='@1.0.2:', type=('build', 'run'))
@@ -33,6 +29,7 @@ class REnrichplot(RPackage):
     depends_on('r-ggridges', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-gosemsim', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-igraph', when='@1.0.2:', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-reshape2', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-upsetr', when='@1.0.2:', type=('build', 'run'))
 

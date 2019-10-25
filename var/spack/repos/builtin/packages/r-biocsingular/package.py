@@ -20,8 +20,6 @@ class RBiocsingular(RPackage):
 
     version('1.0.0', commit='d2b091c072d0312698c9bb6611eb1bdf8aebf833')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.0.0', type=('build', 'run'))
-
     depends_on('r-beachmat', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-biocparallel', when='@1.0.0:', type=('build', 'run'))

@@ -23,19 +23,16 @@ class RBeachmat(RPackage):
     version('1.2.1', commit='ebae81772045a314e568c2f7d73ea3b27e7bf7d8')
     version('1.0.2', commit='6bd57b91d6428ac916f46572d685d3cb01a757f7')
 
-    depends_on('r@3.6.0:3.6.9', when='@2.0.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.4.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.2.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.0.2', type=('build', 'run'))
-
     depends_on('r-delayedarray', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-hdf5array', when='@1.0.2:', type=('build', 'run'))
+    depends_on('r@3.4:', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.14:', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-rhdf5', when='@1.0.2:', type=('build', 'run'))
     depends_on('r-rhdf5lib', when='@1.0.2:', type=('build', 'run'))
 
     depends_on('r-delayedarray@0.5.30:', when='@1.2.1:', type=('build', 'run'))
     depends_on('r-hdf5array@1.7.3:', when='@1.2.1:', type=('build', 'run'))
+    depends_on('r@3.5:', when='@1.2.1:', type=('build', 'run'))
     depends_on('r-rhdf5lib@1.1.4:', when='@1.2.1:', type=('build', 'run'))
 
     depends_on('r-biocgenerics', when='@1.4.0:', type=('build', 'run'))

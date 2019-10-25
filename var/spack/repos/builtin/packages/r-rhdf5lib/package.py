@@ -14,12 +14,7 @@ class RRhdf5lib(RPackage):
     homepage = "https://bioconductor.org/packages/Rhdf5lib"
     git      = "https://git.bioconductor.org/packages/Rhdf5lib.git"
 
-    version('1.6.0', commit='6148d8554e777a2319cf6a9a213d29a69e77cba1')
+    version('1.6.3', commit='11ac3069f28b0068002db9c645817401f6c5b3c4')
     version('1.4.3', commit='f6be8c2659b2daa17541506058917b7981490d65')
     version('1.2.1', commit='dbf85dbedb736d5a696794d52875729c8514494e')
     version('1.0.0', commit='79608038c2016a518ba747fe6a2bf02ce53a75f9')
-
-    depends_on('r@3.6.0:3.6.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.4.3', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.2.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.0.0', type=('build', 'run'))

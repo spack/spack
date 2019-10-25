@@ -25,10 +25,8 @@ class RBiocneighbors(RPackage):
     version('1.2.0', commit='f754c6300f835142536a4594ddf750481e0fe273')
     version('1.0.0', commit='e252fc04b6d22097f2c5f74406e77d85e7060770')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.2.0', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.0.0', type=('build', 'run'))
-
     depends_on('r-biocparallel', when='@1.0.0:', type=('build', 'run'))
+    depends_on('r@3.5:', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-rcpp', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-rcppannoy', when='@1.0.0:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.0.0:', type=('build', 'run'))

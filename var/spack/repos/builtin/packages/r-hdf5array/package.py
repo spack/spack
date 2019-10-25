@@ -21,21 +21,16 @@ class RHdf5array(RPackage):
     homepage = "https://bioconductor.org/packages/HDF5Array"
     git      = "https://git.bioconductor.org/packages/HDF5Array.git"
 
-    version('1.12.2', commit='735c57e9fb9439c7462323001f43fb3af012e5a8')
+    version('1.12.3', commit='21c6077f3f789748a18f2e579110576c5522e975')
     version('1.10.1', commit='0b8ae1dfb56e4203dd8e14781850370df46a5e2c')
     version('1.8.1', commit='3c9aa23d117bf489b6341708dc80c943bd1af11a')
     version('1.6.0', commit='95f2f8d3648143abe9dc77c76340c5edf4114c82')
     version('1.4.8', commit='79ab96d123c8da8f8ead81f678fe714c0958ff45')
 
-    depends_on('r@3.6.0:3.6.9', when='@1.12.2', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.10.1', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.8.1', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.6.0', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.8', type=('build', 'run'))
-
     depends_on('r-biocgenerics', when='@1.4.8:', type=('build', 'run'))
     depends_on('r-delayedarray@0.2.4:', when='@1.4.8:', type=('build', 'run'))
     depends_on('r-iranges', when='@1.4.8:', type=('build', 'run'))
+    depends_on('r@3.4:', when='@1.4.8:', type=('build', 'run'))
     depends_on('r-rhdf5', when='@1.4.8:', type=('build', 'run'))
     depends_on('r-s4vectors', when='@1.4.8:', type=('build', 'run'))
 
@@ -47,6 +42,6 @@ class RHdf5array(RPackage):
     depends_on('r-delayedarray@0.7.41:', when='@1.10.1:', type=('build', 'run'))
     depends_on('r-rhdf5@2.25.6:', when='@1.10.1:', type=('build', 'run'))
 
-    depends_on('r-delayedarray@0.9.3:', when='@1.12.2:', type=('build', 'run'))
-    depends_on('r-rhdf5lib', when='@1.12.2:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.21.6:', when='@1.12.2:', type=('build', 'run'))
+    depends_on('r-delayedarray@0.9.3:', when='@1.12.3:', type=('build', 'run'))
+    depends_on('r-rhdf5lib', when='@1.12.3:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.21.6:', when='@1.12.3:', type=('build', 'run'))
