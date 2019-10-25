@@ -10,9 +10,8 @@ class Osqp(CMakePackage):
     """
     The OSQP (Operator Splitting Quadratic Program) solver is a numerical
     optimization package for solving problems in the form:
-     minimize        0.5 x' P x + q' x, and
-     subject to      l <= A x <= u,
-    where `x in R^n` is the optimization variable.
+    minimize 0.5 x' P x + q' x, subject to l <= A x <= u,
+    where "x in R^n" is the optimization variable.
     """
 
     homepage = "https://osqp.org"
