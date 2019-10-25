@@ -24,6 +24,14 @@ class Opengl(Package):
     if sys.platform != 'darwin':
         provides('glx@1.4')
 
+    provides('egl@1.5')
+
+    variant('glvnd',
+            default=False,
+            description="Expose Graphics APIs through libglvnd")
+
+    depends_on('libglvnd', when='+glvnd')
+
     # Override the fetcher method to throw a useful error message;
     # fixes GitHub issue (#7061) in which this package threw a
     # generic, uninformative error during the `fetch` step,
@@ -74,3 +82,17 @@ class Opengl(Package):
                                   shared=True, recursive=False)
             if libs:
                 return libs
+
+    @property
+    def egl_libs(self):
+        if '+glvnd' in self.spec:
+            return find_libraries('libEGL',
+                                  root=self.spec['libglvnd'].prefix,
+                                  shared=True,
+                                  recursive=True)
+
+        return find_libraries('libEGL',
+                              root=self.spec.prefix,
+                              shared='+shared' in self.spec,
+                              recursive=True)
+
