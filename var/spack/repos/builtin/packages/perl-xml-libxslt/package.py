@@ -14,3 +14,4 @@ class PerlXmlLibxslt(PerlPackage):
     version('1.96', sha256='2a5e374edaa2e9f9d26b432265bfea9b4bb7a94c9fbfef9047b298fce844d473')
 
     depends_on('libxslt')
+    depends_on('perl-xml-libxml')
