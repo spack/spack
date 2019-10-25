@@ -680,8 +680,8 @@ def file_is_relocatable(file):
 
     # if we're relocating patchelf itself, use it
 
-    if path_name[-13:] == "/bin/patchelf":
-        patchelf = Executable(path_name)
+    if file[-13:] == "/bin/patchelf":
+        patchelf = Executable(file)
     else:
         patchelf = Executable(get_patchelf())
 
