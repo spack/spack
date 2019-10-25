@@ -23,5 +23,5 @@ class PerlDbfile(PerlPackage):
     depends_on('berkeley-db', type='build')
 
     def patch(self):
-        filter_file('/usr/local/BerkeleyDB', \
+        filter_file('/usr/local/BerkeleyDB',
                     self.spec['berkeley-db'].prefix, 'config.in')
