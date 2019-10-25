@@ -306,7 +306,6 @@ def mirror_create(args):
 
     directory = url_util.format(mirror.push_url)
 
-    # Make sure nothing is in the way.
     existed = web_util.url_exists(directory)
 
     # Actually do the work to create the mirror
