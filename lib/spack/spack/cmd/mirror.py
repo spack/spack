@@ -247,8 +247,10 @@ def mirror_create(args):
     else:
         try:
             num_versions = int(args.versions_per_spec)
-        except TypeError:
-            raise SpackError("'--versions-per-spec' must be a number or 'all'")
+        except ValueError:
+            raise SpackError(
+                "'--versions-per-spec' must be a number or 'all',"
+                " got '{0}'".format(args.versions_per_spec))
 
     # try to parse specs from the command line first.
     with spack.concretize.disable_compiler_existence_check():
