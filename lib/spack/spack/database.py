@@ -257,11 +257,6 @@ class Database(object):
 
         self.is_upstream = is_upstream
 
-        if self.is_upstream:
-            self.lock = ForbiddenLock()
-        else:
-            self.lock = Lock(self._lock_path)
-
         # initialize rest of state.
         self.db_lock_timeout = (
             spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
@@ -273,8 +268,12 @@ class Database(object):
                               if self.package_lock_timeout else 'No timeout')
         tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
                   str(timeout_format_str)))
-        self.lock = Lock(self._lock_path,
-                         default_timeout=self.db_lock_timeout)
+
+        if self.is_upstream:
+            self.lock = ForbiddenLock()
+        else:
+            self.lock = Lock(self._lock_path,
+                             default_timeout=self.db_lock_timeout)
         self._data = {}
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
