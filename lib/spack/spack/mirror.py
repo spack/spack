@@ -324,10 +324,17 @@ def mirror_archive_paths(fetcher, per_package_ref, spec=None):
     return MirrorReference(per_package_ref, global_ref)
 
 
-def get_all_versions(base_specs):
-    version_specs = []
+def get_all_versions(specs):
+    """Given a set of initial specs, return a new set of specs that includes
+    each version of each package in the original set.
 
-    for spec in base_specs:
+    Note that if any spec in the original set specifies properties other than
+    version, this information will be omitted in the new set; for example; the
+    new set of specs will not include variant settings.
+    """
+
+    version_specs = []
+    for spec in specs:
         pkg = spec.package
 
         # Skip any package that has no known versions.
