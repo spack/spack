@@ -8,7 +8,7 @@ from spack import *
 
 
 class Scs(MakefilePackage):
-    """C package that solves convex cone problems via operator splitting"""
+    """A C package that solves convex cone problems via operator splitting"""
 
     homepage = "https://github.com/cvxgrp/scs"
     url      = "https://github.com/cvxgrp/scs/archive/2.1.1.tar.gz"
