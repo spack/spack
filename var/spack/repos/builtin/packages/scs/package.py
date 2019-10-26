@@ -21,7 +21,7 @@ class Scs(MakefilePackage):
     depends_on('lapack')
     depends_on('cuda', when='+gpu')
 
-    # make sure install_gpu target install all libs not only the gpu ones
+    # make sure install_gpu target installs all libs not only the gpu ones
     patch('make_gpu.patch')
 
     def build(self, spec, prefix):
