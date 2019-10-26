@@ -663,7 +663,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def version(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Can only get of package with concrete version.")
+            raise ValueError("Version requested for a package that"
+                             " does not have a concrete version.")
         return self.spec.versions[0]
 
     @memoized
@@ -741,19 +742,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
-        resource_mirror = spack.mirror.mirror_archive_path(
-            self.spec, fetcher, resource.name)
+        mirror_paths = spack.mirror.mirror_archive_paths(
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (resource.name, self.version)))
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
                               name=resource_stage_folder,
-                              mirror_path=resource_mirror,
+                              mirror_paths=mirror_paths,
                               path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
-        mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
+        mirror_paths = spack.mirror.mirror_archive_paths(
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (self.name, self.version)),
+            self.spec)
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
@@ -763,8 +768,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dynamic_fetcher = fs.from_list_url(self)
             return [dynamic_fetcher] if dynamic_fetcher else []
 
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
-                      search_fn=download_search)
+        stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
+                      path=self.path, search_fn=download_search)
         return stage
 
     def _make_stage(self):
@@ -794,8 +799,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         doesn't have one yet, but it does not create the Stage directory
         on the filesystem.
         """
-        if not self.spec.concrete:
-            raise ValueError("Can only get a stage for a concrete package.")
+        if not self.spec.versions.concrete:
+            raise ValueError(
+                "Cannot retrieve stage for package without concrete version.")
         if self._stage is None:
             self._stage = self._make_stage()
         return self._stage
@@ -873,8 +879,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
+            raise ValueError("Cannot retrieve fetcher for"
+                             " package without concrete version.")
         if not self._fetcher:
             self._fetcher = self._make_fetcher()
         return self._fetcher
@@ -1081,6 +1087,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for patch in self.spec.patches:
             patch.fetch(self.stage)
+            if patch.cache():
+                patch.cache().cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
@@ -1192,6 +1200,26 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             touch(good_file)
         else:
             touch(no_patches_file)
+
+    @classmethod
+    def all_patches(cls):
+        """Retrieve all patches associated with the package.
+
+        Retrieves patches on the package itself as well as patches on the
+        dependencies of the package."""
+        patches = []
+        for _, patch_list in cls.patches.items():
+            for patch in patch_list:
+                patches.append(patch)
+
+        pkg_deps = cls.dependencies
+        for dep_name in pkg_deps:
+            for _, dependency in pkg_deps[dep_name].items():
+                for _, patch_list in dependency.patches.items():
+                    for patch in patch_list:
+                        patches.append(patch)
+
+        return patches
 
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
@@ -1366,9 +1394,21 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
-        for when_spec, resource_list in self.resources.items():
-            if when_spec in self.spec:
-                resources.extend(resource_list)
+        if self.spec.concrete:
+            for when_spec, resource_list in self.resources.items():
+                if when_spec in self.spec:
+                    resources.extend(resource_list)
+        else:
+            for when_spec, resource_list in self.resources.items():
+                # Note that variant checking is always strict for specs where
+                # the name is not specified. But with strict variant checking,
+                # only variants mentioned in 'other' are checked. Here we only
+                # want to make sure that no constraints in when_spec
+                # conflict with the spec, so we need to invoke
+                # when_spec.satisfies(self.spec) vs.
+                # self.spec.satisfies(when_spec)
+                if when_spec.satisfies(self.spec, strict=False):
+                    resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another
         # resource's name in its path, it seems that should work

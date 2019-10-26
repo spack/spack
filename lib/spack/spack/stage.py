@@ -166,6 +166,14 @@ def get_stage_root():
     return _stage_root
 
 
+def _mirror_roots():
+    mirrors = spack.config.get('mirrors')
+    return [
+        sup.substitute_path_variables(root) if root.endswith(os.sep)
+        else sup.substitute_path_variables(root) + os.sep
+        for root in mirrors.values()]
+
+
 class Stage(object):
     """Manages a temporary stage directory for building.
 
@@ -216,7 +224,7 @@ class Stage(object):
 
     def __init__(
             self, url_or_fetch_strategy,
-            name=None, mirror_path=None, keep=False, path=None, lock=True,
+            name=None, mirror_paths=None, keep=False, path=None, lock=True,
             search_fn=None):
         """Create a stage object.
            Parameters:
@@ -230,10 +238,10 @@ class Stage(object):
                  stage object later).  If name is not provided, then this
                  stage will be given a unique name automatically.
 
-             mirror_path
+             mirror_paths
                  If provided, Stage will search Spack's mirrors for
-                 this archive at the mirror_path, before using the
-                 default fetch strategy.
+                 this archive at each of the provided relative mirror paths
+                 before using the default fetch strategy.
 
              keep
                  By default, when used as a context manager, the Stage
@@ -276,7 +284,7 @@ class Stage(object):
         self.name = name
         if name is None:
             self.name = stage_prefix + next(tempfile._get_candidate_names())
-        self.mirror_path = mirror_path
+        self.mirror_paths = mirror_paths
 
         # Use the provided path or construct an optionally named stage path.
         if path is not None:
@@ -350,8 +358,8 @@ class Stage(object):
             expanded = self.default_fetcher.expand_archive
             fnames.append(os.path.basename(self.default_fetcher.url))
 
-        if self.mirror_path:
-            fnames.append(os.path.basename(self.mirror_path))
+        if self.mirror_paths:
+            fnames.extend(os.path.basename(x) for x in self.mirror_paths)
 
         paths.extend(os.path.join(self.path, f) for f in fnames)
         if not expanded:
@@ -399,10 +407,14 @@ class Stage(object):
         # TODO: Or @alalazo may have some ideas about how to use a
         # TODO: CompositeFetchStrategy here.
         self.skip_checksum_for_mirror = True
-        if self.mirror_path:
-            urls = [
-                url_util.join(mirror.fetch_url, self.mirror_path)
-                for mirror in spack.mirror.MirrorCollection().values()]
+        if self.mirror_paths:
+            # Join URLs of mirror roots with mirror paths. Because
+            # urljoin() will strip everything past the final '/' in
+            # the root, so we add a '/' if it is not present.
+            urls = []
+            for mirror in spack.mirror.MirrorCollection().values():
+                for rel_path in self.mirror_paths:
+                    urls.append(url_util.join(mirror.fetch_url, rel_path))
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -428,10 +440,11 @@ class Stage(object):
                 #         url, digest, expand=expand, extension=extension))
 
             if self.default_fetcher.cachable:
-                fetchers.insert(
-                    0, spack.caches.fetch_cache.fetcher(
-                        self.mirror_path, digest, expand=expand,
-                        extension=extension))
+                for rel_path in reversed(list(self.mirror_paths)):
+                    cache_fetcher = spack.caches.fetch_cache.fetcher(
+                        rel_path, digest, expand=expand,
+                        extension=extension)
+                    fetchers.insert(0, cache_fetcher)
 
         def generate_fetchers():
             for fetcher in fetchers:
@@ -476,10 +489,24 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(self.fetcher, self.mirror_path)
+        spack.caches.fetch_cache.store(
+            self.fetcher, self.mirror_paths.storage_path)
 
-        if spack.caches.mirror_cache:
-            spack.caches.mirror_cache.store(self.fetcher, self.mirror_path)
+    def cache_mirror(self, stats):
+        """Perform a fetch if the resource is not already cached"""
+        dst_root = spack.caches.mirror_cache.root
+        absolute_storage_path = os.path.join(
+            dst_root, self.mirror_paths.storage_path)
+
+        if os.path.exists(absolute_storage_path):
+            stats.already_existed(absolute_storage_path)
+            return
+
+        self.fetch()
+        spack.caches.mirror_cache.store(
+            self.fetcher, self.mirror_paths.storage_path,
+            self.mirror_paths.cosmetic_path)
+        stats.added(absolute_storage_path)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -591,7 +618,7 @@ class ResourceStage(Stage):
 
 @pattern.composite(method_list=[
     'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'managed_by_spack'])
+    'destroy', 'cache_local', 'cache_mirror', 'managed_by_spack'])
 class StageComposite:
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
@@ -628,10 +655,6 @@ class StageComposite:
     @property
     def archive_file(self):
         return self[0].archive_file
-
-    @property
-    def mirror_path(self):
-        return self[0].mirror_path
 
 
 class DIYStage(object):
