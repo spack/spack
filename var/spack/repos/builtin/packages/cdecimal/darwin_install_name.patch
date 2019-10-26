@@ -1,0 +1,24 @@
+diff -Naur a/Makefile.in b/Makefile.in
+--- a/Makefile.in	2019-01-13 17:43:38.000000000 -0600
++++ b/Makefile.in	2019-01-13 17:44:25.000000000 -0600
+@@ -101,7 +101,7 @@
+ 	ranlib $(LIBSTATIC)
+ 
+ $(LIBSHARED): Makefile vars.mk $(OBJS)
+-	$(LD) $(LDFLAGS) -shared -Wl,-soname,$(LIBSONAME) -o $(LIBSHARED) $(OBJS) -lm
++	$(LD) $(LDFLAGS) -shared -Wl,-install_name,$(LIBSONAME) -o $(LIBSHARED) $(OBJS) -lm
+ 
+ 
+ $(NEWVARS):
+diff -Naur a/configure b/configure
+--- a/configure	2019-01-13 17:43:38.000000000 -0600
++++ b/configure	2019-01-13 17:43:56.000000000 -0600
+@@ -2385,7 +2385,7 @@
+ 
+ 
+ 
+-LIBSHARED=libmpdec.so.$PACKAGE_VERSION
++LIBSHARED=libmpdec.$PACKAGE_VERSION.dylib
+ 
+ 
+ # Language and compiler:

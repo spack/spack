@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class Mothur(MakefilePackage):
     homepage = "https://github.com/mothur/mothur"
     url      = "https://github.com/mothur/mothur/archive/v1.39.5.tar.gz"
 
-    version('1.40.5', 'd57847849fdb961c3f66c9b9fdf3057b')
-    version('1.39.5', '1f826ea4420e6822fc0db002c5940b92')
+    version('1.40.5', sha256='a0fbdfa68b966d7adc4560e3787506a0dad8b47b4b996c2663cd6c0b416d101a')
+    version('1.39.5', sha256='9f1cd691e9631a2ab7647b19eb59cd21ea643f29b22cde73d7f343372dfee342')
 
     depends_on('boost')
     depends_on('readline')

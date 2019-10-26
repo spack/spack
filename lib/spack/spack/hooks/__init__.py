@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@
       * post_uninstall(spec)
 
    This can be used to implement support for things like module
-   systems (e.g. modules, dotkit, etc.) or to add other custom
+   systems (e.g. modules, lmod, etc.) or to add other custom
    features.
 """
 import os.path
@@ -36,8 +36,14 @@ def all_hook_modules():
         mod_name = __name__ + '.' + name
         path = os.path.join(spack.paths.hooks_path, name) + ".py"
         mod = simp.load_source(mod_name, path)
-        modules.append(mod)
 
+        if name == 'write_install_manifest':
+            last_mod = mod
+        else:
+            modules.append(mod)
+
+    # put `write_install_manifest` as the last hook to run
+    modules.append(last_mod)
     return modules
 
 

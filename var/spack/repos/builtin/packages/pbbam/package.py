@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Pbbam(CMakePackage):
     homepage = "https://github.com/PacificBiosciences/pbbam"
     url      = "https://github.com/PacificBiosciences/pbbam/archive/0.18.0.tar.gz"
 
-    version('0.18.0', 'abbb687b1e7ea08916c26da828e11384')
+    version('0.18.0', sha256='45286e5f7deb7ff629e0643c8a416155915aec7b85d54c60b5cdc07f4d7b234a')
 
     depends_on('zlib')
     depends_on('boost@1.55.0:')

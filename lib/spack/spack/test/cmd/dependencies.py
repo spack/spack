@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,20 @@ def test_transitive_dependencies(mock_packages):
     expected = set(
         ['callpath', 'dyninst', 'libdwarf', 'libelf'] + mpis + mpi_deps)
     assert expected == actual
+
+
+def test_transitive_dependencies_with_deptypes(mock_packages):
+    out = dependencies('--transitive', '--deptype=link,run', 'dtbuild1')
+    deps = set(re.split(r'\s+', out.strip()))
+    assert set(['dtlink2', 'dtrun2']) == deps
+
+    out = dependencies('--transitive', '--deptype=build', 'dtbuild1')
+    deps = set(re.split(r'\s+', out.strip()))
+    assert set(['dtbuild2', 'dtlink2']) == deps
+
+    out = dependencies('--transitive', '--deptype=link', 'dtbuild1')
+    deps = set(re.split(r'\s+', out.strip()))
+    assert set(['dtlink2']) == deps
 
 
 @pytest.mark.db

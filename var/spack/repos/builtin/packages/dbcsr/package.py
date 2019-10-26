@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,12 +28,13 @@ class Dbcsr(CMakePackage):
             '-DUSE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
             '-DUSE_OPENMP=%s' % (
                 'ON' if '+openmp' in spec else 'OFF'),
-            '-DWITH_C_API=ON',
+            # C API need MPI
+            '-DWITH_C_API=%s' % ('ON' if '+mpi' in spec else 'OFF'),
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(';'),
             '-DBLAS_FOUND=true',
             '-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'),
-            '-DWITH_EXAMPLES=OFF',
+            '-DWITH_EXAMPLES=ON',
             '-DBUILD_SHARED_LIBS=ON'
         ]
 

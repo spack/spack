@@ -1,9 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import Compiler, get_compiler_version
+from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.version import ver
 
 
 class Cce(Compiler):
@@ -26,14 +27,17 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
+    link_paths = {'cc': 'cce/cc',
+                  'cxx': 'cce/case-insensitive/CC',
+                  'f77': 'cce/ftn',
+                  'fc': 'cce/ftn'}
+
+    version_argument = '-V'
+    version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
     @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
+    def verbose_flag(cls):
+        return "-v"
 
     @property
     def openmp_flag(self):
@@ -42,6 +46,26 @@ class Cce(Compiler):
     @property
     def cxx11_flag(self):
         return "-h std=c++11"
+
+    @property
+    def c99_flag(self):
+        if self.version >= ver('8.4'):
+            return '-h stc=c99,noconform,gnu'
+        if self.version >= ver('8.1'):
+            return '-h c99,noconform,gnu'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 8.1')
+
+    @property
+    def c11_flag(self):
+        if self.version >= ver('8.5'):
+            return '-h std=c11,noconform,gnu'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 8.5')
 
     @property
     def pic_flag(self):

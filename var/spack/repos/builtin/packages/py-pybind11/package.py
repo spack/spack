@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,15 +18,17 @@ class PyPybind11(CMakePackage):
     homepage = "https://pybind11.readthedocs.io"
     url      = "https://github.com/pybind/pybind11/archive/v2.1.0.tar.gz"
     git      = "https://github.com/pybind/pybind11.git"
+    maintainers = ['ax3l']
 
     version('develop', branch='master')
-    version('2.2.4', 'b69e83658513215b8d1443544d0549b7d231b9f201f6fc787a2b2218b408181e')
-    version('2.2.3', '55b637945bbf47d99d2c906bf0c13f49')
-    version('2.2.2', 'fc174e1bbfe7ec069af7eea86ec37b5c')
-    version('2.2.1', 'bab1d46bbc465af5af3a4129b12bfa3b')
-    version('2.2.0', '978b26aea1c6bfc4f88518ef33771af2')
-    version('2.1.1', '5518988698df937ccee53fb6ba91d12a')
-    version('2.1.0', '3cf07043d677d200720c928569635e12')
+    version('2.3.0', sha256='0f34838f2c8024a6765168227ba587b3687729ebf03dc912f88ff75c7aa9cfe8')
+    version('2.2.4', sha256='b69e83658513215b8d1443544d0549b7d231b9f201f6fc787a2b2218b408181e')
+    version('2.2.3', sha256='3a3b7b651afab1c5ba557f4c37d785a522b8030dfc765da26adc2ecd1de940ea')
+    version('2.2.2', sha256='b639a2b2cbf1c467849660801c4665ffc1a4d0a9e153ae1996ed6f21c492064e')
+    version('2.2.1', sha256='f8bd1509578b2a1e7407d52e6ee8afe64268909a1bbda620ca407318598927e7')
+    version('2.2.0', sha256='1b0fda17c650c493f5862902e90f426df6751da8c0b58c05983ab009951ed769')
+    version('2.1.1', sha256='f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540')
+    version('2.1.0', sha256='2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0')
 
     depends_on('py-pytest', type='test')
     depends_on('py-setuptools', type='build')

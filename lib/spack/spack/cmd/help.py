@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,9 @@ spec expression syntax:
 
   package [constraints] [^dependency [constraints] ...]
 
-  package                           any package from 'spack list'
+  package                           any package from 'spack list', or
+  @K{/hash}                             unique prefix or full hash of
+                                    installed package
 
   constraints:
     versions:
@@ -51,6 +53,8 @@ spec expression syntax:
 
     dependencies:
       ^dependency [constraints]     specify constraints on dependencies
+      ^@K{/hash}                        build with a specific installed
+                                    dependency
 
   examples:
       hdf5                          any hdf5 configuration
@@ -82,12 +86,12 @@ def setup_parser(subparser):
     help_all_group = subparser.add_mutually_exclusive_group()
     help_all_group.add_argument(
         '-a', '--all', action='store_const', const='long', default='short',
-        help='print all available commands')
+        help='list all available commands and options')
 
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
         '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='print all available commands')
+        default=None, help='help on the package specification syntax')
 
 
 def help(parser, args):

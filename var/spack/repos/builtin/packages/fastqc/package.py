@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class Fastqc(Package):
     homepage = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
     url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
-    version('0.11.7', '8fead05fa62c5e723f0d2157a9b5fcd4')
-    version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
-    version('0.11.4', '104ff2e0e9aebf5bee1f6b068a059b0d')
+    version('0.11.7', sha256='59cf50876bbe5f363442eb989e43ae3eaab8d932c49e8cff2c1a1898dd721112')
+    version('0.11.5', sha256='dd7a5ad80ceed2588cf6d6ffe35e0f161c0d9977ed08355f5e4d9473282cbd66')
+    version('0.11.4', sha256='adb233f9fae7b02fe99e716664502adfec1b9a3fbb84eed4497122d6d33d1fe7')
 
     depends_on('java', type='run')
     depends_on('perl')          # for fastqc "script", any perl will do

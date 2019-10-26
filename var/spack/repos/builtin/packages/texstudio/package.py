@@ -1,0 +1,42 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class Texstudio(QMakePackage):
+    """TeXstudio is a fully featured LaTeX editor, whose goal is to make writing
+    LaTeX documents as easy and comfortable as possible."""
+
+    homepage = "http://www.texstudio.org"
+    url      = "https://github.com/texstudio-org/texstudio/archive/2.12.16.tar.gz"
+    git      = "https://github.com/texstudio-org/texstudio.git"
+
+    version('master', branch='master')
+    version('2.12.16', sha256='a14b8912bfd15d982cfbe5f00deed37ca85fb6e38d3aa0c2dac23b4ecaab0984')
+    version('2.12.14', sha256='61df71f368bbf21f865645534f63840fd48dbd2996d6d0188aa26d3b647fede0')
+    version('2.12.12', sha256='5978daa806c616f9a1eea231bb613f0bc1037d7d2435ee5ca6b14fe88a2caa8c')
+    version('2.12.10', sha256='92cf9cbb536e58a5929611fa40438cd9d7ea6880022cd3c5de0483fd15d3df0b')
+
+    variant('poppler', default=True, description='Compile with Poppler library for internal pdf preview')
+
+    # Base dependencies
+    depends_on('poppler+qt', when="+poppler")
+    # There is a known issue with QT 5.10
+    # See https://github.com/texstudio-org/texstudio/wiki/Compiling
+    depends_on('qt@4.4.4:5.9.999,5.11.0:')
+
+    def qmake_args(self):
+        args = ['PREFIX={0}'.format(self.prefix)]
+
+        if (self.spec.satisfies('+poppler')):
+            args.append('INCLUDEPATH+={0}'.format(
+                self.spec['poppler'].prefix.include))
+            args.append('LIBS+={0}'.format(
+                self.spec['poppler'].libs.search_flags))
+        else:
+            args.append('NO_POPPLER_PREVIEW=true')
+
+        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@
 ##############################################################################
 #
 # Notes
-# - The openfoam-org package is a modified version of the openfoam-com package.
+# - The openfoam-org package is a modified version of the openfoam package.
 #   If changes are needed here, consider if they should also be applied there.
 #
 # - Building with boost/cgal is not included, since some of the logic is not
@@ -40,11 +40,11 @@ import os
 import llnl.util.tty as tty
 
 from spack import *
-from spack.pkg.builtin.openfoam_com import add_extra_files
-from spack.pkg.builtin.openfoam_com import write_environ
-from spack.pkg.builtin.openfoam_com import rewrite_environ_files
-from spack.pkg.builtin.openfoam_com import mplib_content
-from spack.pkg.builtin.openfoam_com import OpenfoamArch
+from spack.pkg.builtin.openfoam import add_extra_files
+from spack.pkg.builtin.openfoam import write_environ
+from spack.pkg.builtin.openfoam import rewrite_environ_files
+from spack.pkg.builtin.openfoam import mplib_content
+from spack.pkg.builtin.openfoam import OpenfoamArch
 
 
 class OpenfoamOrg(Package):
@@ -62,11 +62,11 @@ class OpenfoamOrg(Package):
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version('develop', branch='master')
-    version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
+    version('5.0', sha256='9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
-    version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
+    version('4.1', sha256='2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
+    version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
 
     variant('int64', default=False,
@@ -76,7 +76,6 @@ class OpenfoamOrg(Package):
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
-    provides('openfoam')
     depends_on('mpi')
     depends_on('zlib')
     depends_on('flex',  type='build')
@@ -128,7 +127,7 @@ class OpenfoamOrg(Package):
         return settings
 
     def setup_environment(self, spack_env, run_env):
-        # This should be similar to the openfoam-com package,
+        # This should be similar to the openfoam package,
         # but sourcing the etc/bashrc here seems to exit with an error.
         # ... this needs to be examined in more detail.
         #
@@ -345,7 +344,7 @@ class OpenfoamOrg(Package):
         # Make build log visible - it contains OpenFOAM-specific information
         with working_dir(self.projectdir):
             os.symlink(
-                join_path('.spack', 'build.out'),
+                join_path(os.path.relpath(self.install_log_path)),
                 join_path('log.' + str(self.foam_arch)))
 
         if not self.config['link']:

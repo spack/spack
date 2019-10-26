@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,9 @@ class Metis(Package):
     url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
     list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
-    version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
-    version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
+    version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
+    version('5.0.2', sha256='f79790676ca2ce3dfa9d5e2d74801e91d92415664ede2c2fc18fc49d4a161981')
+    version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -48,6 +48,7 @@ class Metis(Package):
     depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
+    patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
 
     def url_for_version(self, version):
         url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"

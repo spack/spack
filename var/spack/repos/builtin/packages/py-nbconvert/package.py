@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class PyNbconvert(PythonPackage):
     homepage = "https://github.com/jupyter/nbconvert"
     url      = "https://github.com/jupyter/nbconvert/archive/4.2.0.tar.gz"
 
-    version('4.2.0', '8bd88771cc00f575d5edcd0b5197f964')
-    version('4.1.0', '06655576713ba1ff7cece2b92760c187')
-    version('4.0.0', '9661620b1e10a7b46f314588d2d0932f')
+    version('4.2.0', sha256='32394be5a20f39f99fabfb9b2f2625df17f1c2a6699182ca41598e98e7cc9610')
+    version('4.1.0', sha256='459f23381411fd1ff9ec5ed71fcd56b8c080d97b3a1e47dae1c5c391f9a47266')
+    version('4.0.0', sha256='00e25eeca90523ba6b774b289073631ef5ac65bb2de9774e9b7f29604516265c')
 
     depends_on('py-pycurl', type='build')
     depends_on('python@2.7:2.8,3.3:')

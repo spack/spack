@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class Oniguruma(AutotoolsPackage):
     homepage = "https://github.com/kkos/oniguruma"
     url      = "https://github.com/kkos/oniguruma/releases/download/v6.1.3/onig-6.1.3.tar.gz"
 
-    version('6.1.3', '2d105d352c3f852d662414f639e7e859')
+    version('6.1.3', sha256='480c850cd7c7f2fcaad0942b4a488e2af01fbb8e65375d34908f558b432725cf')

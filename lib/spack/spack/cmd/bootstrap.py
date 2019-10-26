@@ -1,8 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.cpu
 import llnl.util.tty as tty
 
 import spack.repo
@@ -15,9 +16,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-j', '--jobs', action='store', type=int,
-        help="explicitly set number of make jobs (default: #cpus)")
+    arguments.add_common_arguments(subparser, ['jobs'])
     subparser.add_argument(
         '--keep-prefix', action='store_true', dest='keep_prefix',
         help="don't remove the install prefix if installation fails")
@@ -29,6 +28,17 @@ def setup_parser(subparser):
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
 
+    cache_group = subparser.add_mutually_exclusive_group()
+    cache_group.add_argument(
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
+    cache_group.add_argument(
+        '--no-cache', action='store_false', dest='use_cache', default=True,
+        help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
+
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
@@ -38,15 +48,21 @@ def bootstrap(parser, args, **kwargs):
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'install_deps': 'dependencies',
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
-        'dirty': args.dirty
+        'dirty': args.dirty,
+        'use_cache': args.use_cache,
+        'cache_only': args.cache_only
     })
 
     # Define requirement dictionary defining general specs which need
     # to be satisfied, and the specs to install when the general spec
     # isn't satisfied.
-    requirement_dict = {'environment-modules': 'environment-modules~X'}
+    requirement_dict = {
+        # Install environment-modules with generic optimizations
+        'environment-modules': 'environment-modules~X target={0}'.format(
+            llnl.util.cpu.host().family
+        )
+    }
 
     for requirement in requirement_dict:
         installed_specs = spack.store.db.query(requirement)

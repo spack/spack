@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyTappy(PythonPackage):
     # base https://pypi.python.org/pypi/cffi
     url      = "https://pypi.io/packages/source/t/tap.py/tap.py-1.6.tar.gz"
 
-    version('1.6', 'c8bdb93ad66e05f939905172a301bedf')
+    version('1.6', sha256='3ee315567cd1cf444501c405b7f7146ffdb2e630bac58d0840d378a3b9a0dbe4')
 
     extends('python', ignore='bin/nosetests|bin/pygmentize')
 

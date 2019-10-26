@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,10 @@ class Pgmath(CMakePackage):
     git      = "https://github.com/flang-compiler/flang.git"
 
     version('develop', branch='master')
-    version('20180612', '62284e26214eaaff261a922c67f6878c')
+    version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
+    version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
+    depends_on("awk", type="build")
     conflicts("%gcc@:7.1.9999")
 
     root_cmakelists_dir = 'runtime/libpgmath'

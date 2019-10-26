@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,7 +69,7 @@ def filter_shebang(path):
     if saved_mode is not None:
         os.chmod(path, saved_mode)
 
-    tty.warn("Patched overlong shebang in %s" % path)
+    tty.debug("Patched overlong shebang in %s" % path)
 
 
 def filter_shebangs_in_directory(directory, filenames=None):

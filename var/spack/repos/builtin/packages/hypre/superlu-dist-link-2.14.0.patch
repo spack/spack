@@ -1,0 +1,13 @@
+diff --git a/src/lib/Makefile b/src/lib/Makefile
+index 72875e2..3edc564 100644
+--- a/src/lib/Makefile
++++ b/src/lib/Makefile
+@@ -58,7 +58,7 @@ $(BLASFILES)\
+ $(LAPACKFILES)
+ 
+ SONAME = libHYPRE-${HYPRE_RELEASE_VERSION}.so
+-SOLIBS = ${MPILIBDIRS} ${MPILIBS} ${LAPACKLIBDIRS} ${LAPACKLIBS}\
++SOLIBS = ${DSUPERLU_LIBS} ${MPILIBDIRS} ${MPILIBS} ${LAPACKLIBDIRS} ${LAPACKLIBS}\
+  ${BLASLIBDIRS} ${BLASLIBS} ${LIBS} ${FLIBS}
+ 
+ 

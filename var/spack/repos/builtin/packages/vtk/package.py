@@ -1,10 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import os
+import sys
 from spack import *
 
 
@@ -17,12 +18,16 @@ class Vtk(CMakePackage):
     url      = "http://www.vtk.org/files/release/8.0/VTK-8.0.1.tar.gz"
     list_url = "http://www.vtk.org/download/"
 
+    maintainers = ['chuckatkins', 'danlipsa']
+
+    version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
-    version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
-    version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
-    version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
-    version('6.3.0', '0231ca4840408e9dd60af48b314c5b6d')
-    version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
+    version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
+    version('8.0.1', sha256='49107352923dea6de05a7b4c3906aaf98ef39c91ad81c383136e768dcf304069')
+    version('7.1.0', sha256='5f3ea001204d4f714be972a810a62c0f2277fbb9d8d2f8df39562988ca37497a')
+    version('7.0.0', sha256='78a990a15ead79cdc752e86b83cfab7dbf5b7ef51ba409db02570dbdd9ec32c3')
+    version('6.3.0', sha256='92a493354c5fa66bea73b5fc014154af5d9f3f6cee8d20a826f4cd5d4b0e8a5e')
+    version('6.1.0', sha256='bd7df10a479606d529a8b71f466c44a2bdd11fd534c62ce0aa44fad91883fa34')
 
     # VTK7 defaults to OpenGL2 rendering backend
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
@@ -33,41 +38,38 @@ class Vtk(CMakePackage):
     variant('ffmpeg', default=False, description='Build with FFMPEG support')
     variant('mpi', default=True, description='Enable MPI support')
 
-    # Haru causes trouble on Fedora and Ubuntu in v8.1.1
-    # See https://bugzilla.redhat.com/show_bug.cgi?id=1460059#c13
-    variant('haru', default=True, description='Enable libharu')
-
     patch('gcc.patch', when='@6.1.0')
 
     # At the moment, we cannot build with both osmesa and qt, but as of
     # VTK 8.1, that should change
     conflicts('+osmesa', when='+qt')
+    conflicts('^python@3:', when='@:8.0')
 
-    depends_on('python', when='+python')
-    depends_on('py-mpi4py', when='+mpi +python', type='run')
     extends('python', when='+python')
+
+    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python+mpi', type='run')
+
     # python3.7 compatibility patch backported from upstream
     # https://gitlab.kitware.com/vtk/vtk/commit/706f1b397df09a27ab8981ab9464547028d0c322
-    patch('python3.7-const-char.patch', when='@:8.1.1 ^python@3.7:')
+    patch('python3.7-const-char.patch', when='@7.0.0:8.1.1 ^python@3.7:')
 
     # The use of the OpenGL2 backend requires at least OpenGL Core Profile
     # version 3.2 or higher.
     depends_on('gl@3.2:', when='+opengl2')
+    depends_on('gl@1.2:', when='~opengl2')
 
-    # If you didn't ask for osmesa, then hw rendering using vendor-specific
-    # drivers is faster, but it must be done externally.
-    depends_on('opengl', when='~osmesa')
+    if sys.platform != 'darwin':
+        depends_on('glx', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
-    depends_on('mesa', when='+osmesa')
+    depends_on('mesa+osmesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
 
     depends_on('mpi', when='+mpi')
-
-    depends_on('libharu', when='+haru')
 
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
@@ -80,7 +82,7 @@ class Vtk(CMakePackage):
     depends_on('freetype')
     depends_on('glew')
     depends_on('hdf5')
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
@@ -108,21 +110,22 @@ class Vtk(CMakePackage):
             '-DBUILD_SHARED_LIBS=ON',
             '-DVTK_RENDERING_BACKEND:STRING={0}'.format(opengl_ver),
 
-            '-DVTK_USE_SYSTEM_LIBHARU=%s' % (
-                'ON' if '+haru' in spec else 'OFF'),
-
             # In general, we disable use of VTK "ThirdParty" libs, preferring
             # spack-built versions whenever possible
             '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
 
             # However, in a few cases we can't do without them yet
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
+            '-DVTK_USE_SYSTEM_LIBHARU=OFF',
             '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
             '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
             '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
+
+            # Allow downstream codes (e.g. VisIt) to override VTK's classes
+            '-DVTK_ALL_NEW_OBJECT_FACTORY:BOOL=ON',
 
             # Disable wrappers for other languages.
             '-DVTK_WRAP_JAVA=OFF',
@@ -143,8 +146,9 @@ class Vtk(CMakePackage):
             cmake_args.extend([
                 '-DVTK_WRAP_PYTHON=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON'
             ])
+            if '+mpi' in spec:
+                cmake_args.append('-DVTK_USE_SYSTEM_MPI4PY:BOOL=ON')
         else:
             cmake_args.append('-DVTK_WRAP_PYTHON=OFF')
 
@@ -201,34 +205,32 @@ class Vtk(CMakePackage):
             if '+mpi' in spec:
                 cmake_args.extend(["-DModule_vtkIOParallelXdmf3:BOOL=ON"])
 
+        cmake_args.append('-DVTK_RENDERING_BACKEND:STRING=' + opengl_ver)
+
+        if spec.satisfies('@:8.1.0'):
+            cmake_args.append('-DVTK_USE_SYSTEM_GLEW:BOOL=ON')
+
         if '+osmesa' in spec:
-            prefix = spec['mesa'].prefix
-            osmesa_include_dir = prefix.include
-            osmesa_library = os.path.join(prefix.lib, 'libOSMesa.so')
-
-            use_param = 'VTK_USE_X'
-            if 'darwin' in spec.architecture:
-                use_param = 'VTK_USE_COCOA'
-
             cmake_args.extend([
-                '-D{0}:BOOL=OFF'.format(use_param),
-                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON',
-                '-DOSMESA_INCLUDE_DIR:PATH={0}'.format(osmesa_include_dir),
-                '-DOSMESA_LIBRARY:FILEPATH={0}'.format(osmesa_library),
-            ])
+                '-DVTK_USE_X:BOOL=OFF',
+                '-DVTK_USE_COCOA:BOOL=OFF',
+                '-DVTK_OPENGL_HAS_OSMESA:BOOL=ON'])
+
         else:
-            prefix = spec['opengl'].prefix
+            cmake_args.append('-DVTK_OPENGL_HAS_OSMESA:BOOL=OFF')
+            if spec.satisfies('@:7.9.9'):
+                # This option is gone in VTK 8.1.2
+                cmake_args.append('-DOpenGL_GL_PREFERENCE:STRING=LEGACY')
 
-            opengl_include_dir = prefix.include
-            opengl_library = os.path.join(prefix.lib, 'libGL.so')
             if 'darwin' in spec.architecture:
-                opengl_include_dir = prefix
-                opengl_library = prefix
+                cmake_args.extend([
+                    '-DVTK_USE_X:BOOL=OFF',
+                    '-DVTK_USE_COCOA:BOOL=ON'])
 
-            cmake_args.extend([
-                '-DOPENGL_INCLUDE_DIR:PATH={0}'.format(opengl_include_dir),
-                '-DOPENGL_gl_LIBRARY:FILEPATH={0}'.format(opengl_library)
-            ])
+            elif 'linux' in spec.architecture:
+                cmake_args.extend([
+                    '-DVTK_USE_X:BOOL=ON',
+                    '-DVTK_USE_COCOA:BOOL=OFF'])
 
         if spec.satisfies('@:6.1.0'):
             cmake_args.extend([
@@ -258,6 +260,11 @@ class Vtk(CMakePackage):
             if (self.spec.satisfies('%clang') and
                 self.compiler.is_apple and
                 self.compiler.version >= Version('5.1.0')):
-                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS=""'])
+                cmake_args.extend(['-DVTK_REQUIRED_OBJCXX_FLAGS='])
+
+            # A bug in tao pegtl causes build failures with intel compilers
+            if '%intel' in spec and spec.version >= Version('8.2'):
+                cmake_args.append(
+                    '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
 
         return cmake_args

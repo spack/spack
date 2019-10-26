@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class Opam(AutotoolsPackage):
     homepage = "https://opam.ocaml.org/"
     url      = "https://github.com/ocaml/opam/releases/download/1.2.2/opam-full-1.2.2.tar.gz"
 
-    version('1.2.2', '7d348c2898795e9f325fb80eaaf5eae8')
-    version('1.2.1', '04e8823a099ab631943952e4c2ab18fc')
+    version('1.2.2', sha256='15e617179251041f4bf3910257bbb8398db987d863dd3cfc288bdd958de58f00')
+    version('1.2.1', sha256='f210ece7a2def34b486c9ccfb75de8febd64487b2ea4a14a7fa0358f37eacc3b')
 
     depends_on('ocaml')  # Not a strict dependency, but recommended
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,14 +13,8 @@ class Mxnet(MakefilePackage):
     homepage = "http://mxnet.io"
     url      = "https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz"
 
-    version('1.3.0', 'c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2',
+    version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2',
             url='https://github.com/apache/incubator-mxnet/releases/download/1.3.0/apache-mxnet-src-1.3.0-incubating.tar.gz')
-    version('0.10.0.post2',  '7819d511cf4a6efad681e6662fa966e4',
-            url="https://github.com/apache/incubator-mxnet/archive/0.10.0.post2.tar.gz")
-    version('0.10.0.post1',  '16d540f407cd22285555b3ab22040032',
-            url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.post1.tar.gz")
-    version('0.10.0', '2d0c83c33eda729932d620cca3078826',
-            url="https://github.com/apache/incubator-mxnet/archive/v0.10.0.tar.gz")
 
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencv', default=True, description='Enable OpenCV support')

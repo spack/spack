@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,12 @@ class Bcftools(AutotoolsPackage):
     url      = "https://github.com/samtools/bcftools/releases/download/1.3.1/bcftools-1.3.1.tar.bz2"
 
     version('1.9', sha256='6f36d0e6f16ec4acf88649fb1565d443acf0ba40f25a9afd87f14d14d13070c8')
-    version('1.8', 'ba6c2fb7eb6dcb208f00ab8b22df475c')
-    version('1.7', 'c972db68d17af9da3a18963f4e5aeca8')
-    version('1.6', 'c4dba1e8cb55db0f94b4c47724b4f9fa')
-    version('1.4', '50ccf0a073bd70e99cdb3c8be830416e')
-    version('1.3.1', '575001e9fca37cab0c7a7287ad4b1cdb')
-    version('1.2', '8044bed8fce62f7072fc6835420f0906')
+    version('1.8', sha256='4acbfd691f137742e0be63d09f516434f0faf617a5c60f466140e0677915fced')
+    version('1.7', sha256='dd4f63d91b0dffb0f0ce88ac75c2387251930c8063f7799611265083f8d302d1')
+    version('1.6', sha256='293010736b076cf684d2873928924fcc3d2c231a091084c2ac23a8045c7df982')
+    version('1.4', sha256='8fb1b0a47ed4e1f9d7c70129d7993aa650da1688fd931b10646d1c4707ae234d')
+    version('1.3.1', sha256='12c37a4054cbf1980223e2b3a80a7fdb3fd850324a4ba6832e38fdba91f1b924')
+    version('1.2', sha256='53c628339020dd45334a007c9cefdaf1cba3f1032492ec813b116379fa684fd6')
 
     depends_on('libzip', when='@1.8:')
 
@@ -32,3 +32,9 @@ class Bcftools(AutotoolsPackage):
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
     depends_on('htslib@1.2', when='@1.2')
+
+    def configure_args(self):
+        args = []
+        args.append('--with-htslib={0}'.format(self.spec['htslib'].prefix))
+
+        return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class Units(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/units/"
     url      = "https://ftpmirror.gnu.org/units/units-2.13.tar.gz"
 
-    version('2.13', '5cbf2a6af76e94ba0ac55fc8d99d5a3e')
+    version('2.13', sha256='0ba5403111f8e5ea22be7d51ab74c8ccb576dc30ddfbf18a46cb51f9139790ab')
 
     depends_on('python', type=('build', 'run'))

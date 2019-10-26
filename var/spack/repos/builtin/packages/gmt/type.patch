@@ -1,0 +1,17 @@
+Without this patch, I see compilation errors like:
+
+gmtdigitize.c:83:2: error: unknown type name 'gid_t'; did you mean 'pid_t'?
+gmtdigitize.c:84:2: error: unknown type name 'uid_t'; did you mean 'pid_t'?
+
+Suggestion comes from https://stackoverflow.com/a/32282782/5828163
+--- a/src/misc/gmtdigitize.c    2018-11-07 12:30:46.000000000 -0600
++++ b/src/misc/gmtdigitize.c    2018-11-07 12:31:36.000000000 -0600
+@@ -38,6 +38,8 @@
+  */
+  
+ #include "gmt.h"
++#include <sys/types.h>
++#include <unistd.h>
+ 
+ #ifndef WIN32
+ #include <termios.h>

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Polymake(Package):
     homepage = "https://polymake.org/doku.php"
     url      = "https://polymake.org/lib/exe/fetch.php/download/polymake-3.0r1.tar.bz2"
 
-    version('3.0r2', '08584547589f052ea50e2148109202ab')
-    version('3.0r1', '63ecbecf9697c6826724d8a041d2cac0')
+    version('3.0r2', sha256='e7c0f8e3a45ea288d2fb4ae781a1dcea913ef9c275fed401632cdb11a672d6dc')
+    version('3.0r1', sha256='cdc223716b1cc3f4f3cc126089a438f9d12390caeed78291a87565717c7b504d')
 
     # Note: Could also be built with nauty instead of bliss
 

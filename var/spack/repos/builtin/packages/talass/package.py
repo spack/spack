@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Talass(CMakePackage):
     homepage = "http://www.cedmav.org/research/project/16-talass.html"
     git      = "git@bitbucket.org:cedmav/talass.git"
 
-    version('2018-09-21', commit='bf7da9bb54a026d8cb575b5be28b9c88095cb307')
+    version('2018-10-29', commit='5d459c0dd89e733fa301391908a5b79fe2850ad7')
 
     # The default precision and index space sizes
     variant('precision', default='32', values=('32', '64'),

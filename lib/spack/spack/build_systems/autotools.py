@@ -1,14 +1,16 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 import inspect
+import fileinput
 import os
 import os.path
 import shutil
 import stat
+import sys
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -56,6 +58,9 @@ class AutotoolsPackage(PackageBase):
     build_system_class = 'AutotoolsPackage'
     #: Whether or not to update ``config.guess`` on old architectures
     patch_config_guess = True
+    #: Whether or not to update ``libtool``
+    #: (currently only for Arm/Clang/Fujitsu compilers)
+    patch_libtool = True
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
     #: phase
@@ -87,8 +92,9 @@ class AutotoolsPackage(PackageBase):
         config.guess fails for PPC64LE for version prior to a 2013-06-10
         build date (automake 1.13.4) and for ARM (aarch64)."""
 
-        if not self.patch_config_guess or (not self.spec.satisfies(
-                'target=ppc64le') and not self.spec.satisfies('target=aarch64')
+        if not self.patch_config_guess or (
+                not self.spec.satisfies('target=ppc64le:') and
+                not self.spec.satisfies('target=aarch64:')
         ):
             return
         my_config_guess = None
@@ -113,8 +119,8 @@ class AutotoolsPackage(PackageBase):
                 check_call([my_config_guess], stdout=PIPE, stderr=PIPE)
                 # The package's config.guess already runs OK, so just use it
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
         else:
             return
 
@@ -142,10 +148,29 @@ class AutotoolsPackage(PackageBase):
                 os.chmod(my_config_guess, mod)
                 shutil.copyfile(config_guess, my_config_guess)
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                tty.debug(e)
 
         raise RuntimeError('Failed to find suitable config.guess')
+
+    @run_after('configure')
+    def _do_patch_libtool(self):
+        """If configure generates a "libtool" script that does not correctly
+        detect the compiler (and patch_libtool is set), patch in the correct
+        flags for the Arm, Clang/Flang, and Fujitsu compilers."""
+
+        libtool = os.path.join(self.build_directory, "libtool")
+        if self.patch_libtool and os.path.exists(libtool):
+            if self.spec.satisfies('%arm') or self.spec.satisfies('%clang') \
+                    or self.spec.satisfies('%fj'):
+                for line in fileinput.input(libtool, inplace=True):
+                    # Replace missing flags with those for Arm/Clang
+                    if line == 'wl=""\n':
+                        line = 'wl="-Wl,"\n'
+                    if line == 'pic_flag=""\n':
+                        line = 'pic_flag="{0}"\n'\
+                               .format(self.compiler.pic_flag)
+                    sys.stdout.write(line)
 
     @property
     def configure_directory(self):
@@ -191,10 +216,6 @@ class AutotoolsPackage(PackageBase):
         tty.warn('*********************************************************')
         with working_dir(self.configure_directory):
             m = inspect.getmodule(self)
-            # This part should be redundant in principle, but
-            # won't hurt
-            m.libtoolize()
-            m.aclocal()
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
@@ -359,9 +380,17 @@ class AutotoolsPackage(PackageBase):
             options = [(name, condition in spec)]
         else:
             condition = '{name}={value}'
+            # "feature_values" is used to track values which correspond to
+            # features which can be enabled or disabled as understood by the
+            # package's build system. It excludes values which have special
+            # meanings and do not correspond to features (e.g. "none")
+            feature_values = getattr(
+                self.variants[name].values, 'feature_values', None
+            ) or self.variants[name].values
+
             options = [
                 (value, condition.format(name=name, value=value) in spec)
-                for value in self.variants[name].values
+                for value in feature_values
             ]
 
         # For each allowed value in the list of values

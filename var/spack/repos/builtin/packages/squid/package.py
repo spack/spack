@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,4 +11,4 @@ class Squid(AutotoolsPackage):
 
     homepage = "http://eddylab.org/software.html"
 
-    version('1.9g', 'b9bf480c65d01417b7894c82d094ce07', url='http://eddylab.org/software/squid/squid.tar.gz')
+    version('1.9g', sha256='302f42e8794aa4dbcfa0996c14fb7a70a7c4397fc45c2bbd2748055460d8dca7', url='http://eddylab.org/software/squid/squid.tar.gz')

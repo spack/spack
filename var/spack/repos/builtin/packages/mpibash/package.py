@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Mpibash(AutotoolsPackage):
     homepage = "https://github.com/lanl/MPI-Bash"
     url      = "https://github.com/lanl/MPI-Bash/releases/download/v1.2/mpibash-1.2.tar.gz"
 
-    version('1.2', 'b81001fb234ed79c4e5bf2f7efee3529')
+    version('1.2', sha256='5c2faaa74464111205dbae4799bd89c2425810ec3708d004237b42d620c8be57')
 
     depends_on('bash@4.4:')
     # uses MPI_Exscan which is in MPI-1.2 and later

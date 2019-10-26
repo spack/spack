@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,17 +34,14 @@ def canonical_deptype(deptype):
             raise ValueError('Invalid dependency type: %s' % deptype)
         return (deptype,)
 
-    elif isinstance(deptype, (tuple, list)):
+    elif isinstance(deptype, (tuple, list, set)):
         bad = [d for d in deptype if d not in all_deptypes]
         if bad:
             raise ValueError(
                 'Invalid dependency types: %s' % ','.join(str(t) for t in bad))
         return tuple(sorted(deptype))
 
-    elif deptype is None:
-        raise ValueError('Invalid dependency type: None')
-
-    return deptype
+    raise ValueError('Invalid dependency type: %s' % repr(deptype))
 
 
 class Dependency(object):

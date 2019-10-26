@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,12 +7,14 @@
 import os
 
 import llnl.util.lang
+from llnl.util.filesystem import mkdirp
 
+import spack.error
 import spack.paths
 import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
-from spack.util.path import canonicalize_path
+import spack.util.path
 
 
 def _misc_cache():
@@ -24,7 +26,7 @@ def _misc_cache():
     path = spack.config.get('config:misc_cache')
     if not path:
         path = os.path.join(spack.paths.user_config_path, 'cache')
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.util.file_cache.FileCache(path)
 
@@ -42,10 +44,35 @@ def _fetch_cache():
     path = spack.config.get('config:source_cache')
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.fetch_strategy.FsCache(path)
 
 
+class MirrorCache(object):
+    def __init__(self, root):
+        self.root = os.path.abspath(root)
+
+    def store(self, fetcher, relative_dest, cosmetic_path=None):
+        # Note this will archive package sources even if they would not
+        # normally be cached (e.g. the current tip of an hg/git branch)
+        dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        fetcher.archive(dst)
+
+        # Add a symlink path that a human can read to understand what resource
+        # the archive path refers to
+        if not cosmetic_path:
+            return
+        cosmetic_path = os.path.join(self.root, cosmetic_path)
+        relative_dst = os.path.relpath(
+            dst, start=os.path.dirname(cosmetic_path))
+        if not os.path.exists(cosmetic_path):
+            mkdirp(os.path.dirname(cosmetic_path))
+            os.symlink(relative_dst, cosmetic_path)
+
+
 #: Spack's local cache for downloaded source archives
 fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
+
+mirror_cache = None

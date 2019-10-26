@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.repo
+import spack.stage
 import spack.util.crypto
-import spack.util.web
 from spack.util.naming import valid_fully_qualified_module_name
 from spack.version import ver, Version
 
@@ -56,7 +56,7 @@ def checksum(parser, args):
         if not url_dict:
             tty.die("Could not find any versions for {0}".format(pkg.name))
 
-    version_lines = spack.util.web.get_checksums_for_versions(
+    version_lines = spack.stage.get_checksums_for_versions(
         url_dict, pkg.name, keep_stage=args.keep_stage)
 
     print()

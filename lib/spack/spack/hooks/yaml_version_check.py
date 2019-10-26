@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ def check_compiler_yaml_version():
         data = None
         if os.path.isfile(file_name):
             with open(file_name) as f:
-                data = syaml.load(f)
+                data = syaml.load_config(f)
 
         if data:
             compilers = data.get('compilers')

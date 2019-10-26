@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyMeep(PythonPackage):
     homepage = "https://launchpad.net/python-meep"
     url      = "https://launchpad.net/python-meep/1.4/1.4/+download/python-meep-1.4.2.tar"
 
-    version('1.4.2', 'f8913542d18b0dda92ebc64f0a10ce56')
+    version('1.4.2', sha256='d91428aa4727c308383cea31ca9cdacee409320c686e9a8368769933e56c8762')
 
     variant('mpi', default=True, description='Enable MPI support')
 
@@ -38,7 +38,10 @@ class PyMeep(PythonPackage):
     def common_args(self, spec, prefix):
         include_dirs = [
             spec['meep'].prefix.include,
-            spec['py-numpy'].include
+            os.path.join(
+                spec['py-numpy'].prefix,
+                spec['python'].package.python_include_dir
+            )
         ]
 
         library_dirs = [

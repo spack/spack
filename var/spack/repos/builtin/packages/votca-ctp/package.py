@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,14 @@ class VotcaCtp(CMakePackage):
        This package contains the VOTCA charge transport engine.
     """
     homepage = "http://www.votca.org"
+    url      = "https://github.com/votca/ctp/tarball/v1.5"
     git      = "https://github.com/votca/ctp.git"
 
     version('develop', branch='master')
+    version('1.5', sha256='31eb6bcc9339e575116f0c91fe7a4ce7d4189f31f0640329c993fea911401d65')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-csg@develop", when='@develop')
+    for v in ["1.5", "develop"]:
+        depends_on('votca-tools@%s' % v, when="@%s" % v)
+        depends_on('votca-csg@%s' % v, when="@%s" % v)
     depends_on("gsl")

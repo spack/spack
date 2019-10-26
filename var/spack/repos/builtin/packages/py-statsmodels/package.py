@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyStatsmodels(PythonPackage):
     homepage = "http://www.statsmodels.org"
     url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-0.8.0.tar.gz"
 
-    version('0.8.0', 'b3e5911cc9b00b71228d5d39a880bba0')
+    version('0.8.0', sha256='26431ab706fbae896db7870a0892743bfbb9f5c83231644692166a31d2d86048')
 
     variant('plotting', default=False, description='With matplotlib')
 

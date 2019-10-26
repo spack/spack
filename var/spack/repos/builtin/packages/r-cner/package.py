@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,5 +33,5 @@ class RCner(RPackage):
     depends_on('r-annotate@1.50.0:', type=('build', 'run'))
     depends_on('r-go-db@3.3.0:', type=('build', 'run'))
     depends_on('r-keggrest@1.14.0:', type=('build', 'run'))
-    depends_on('r-utils@2.3.0:', type=('build', 'run'))
+    depends_on('r-r-utils@2.3.0:', type=('build', 'run'))
     depends_on('r@3.4.3:3.4.9', when='@1.14.0')

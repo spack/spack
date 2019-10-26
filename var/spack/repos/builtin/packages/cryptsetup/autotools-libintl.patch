@@ -1,0 +1,11 @@
+--- a/Makefile.am	2019-09-11 10:38:34.587418453 -0700
++++ b/Makefile.am	2019-09-11 10:32:45.715961308 -0700
+@@ -13,7 +13,7 @@
+         -DSYSCONFDIR=\""$(sysconfdir)"\"        \
+         -DVERSION=\""$(VERSION)"\"
+ AM_CFLAGS = -Wall
+-AM_LDFLAGS =
++AM_LDFLAGS = @LTLIBINTL@
+ 
+ tmpfilesddir = @DEFAULT_TMPFILESDIR@
+ 

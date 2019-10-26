@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,9 +25,9 @@ class Sz(AutotoolsPackage):
     version('1.4.12.3', sha256='c1413e1c260fac7a48cb11c6dd705730525f134b9f9b244af59885d564ac7a6f')
     version('1.4.12.1', sha256='98289d75481a6e407e4027b5e23013ae83b4aed88b3f150327ea711322cd54b6')
     version('1.4.11.1', sha256='6cbc5b233a3663a166055f1874f17c96ba29aa5a496d352707ab508288baa65c')
-    version('1.4.11.0', '10dee28b3503821579ce35a50e352cc6')
-    version('1.4.10.0', '82e23dc5a51bcce1f70ba7e3b68a5965')
-    version('1.4.9.2',  '028ce90165b7a4c4051d4c0189f193c0')
+    version('1.4.11.0', sha256='52ff03c688522ebe085caa7a5f73ace28d8eaf0eb9a161a34a9d90cc5672ff8c')
+    version('1.4.10.0', sha256='cf23cf1ffd7c69c3d3128ae9c356b6acdc03a38f92c02db5d9bfc04f3fabc506')
+    version('1.4.9.2',  sha256='9dc785274d068d04c2836955fc93518a9797bfd409b46fea5733294b7c7c18f8')
 
     variant('fortran', default=False,
             description='Enable fortran compilation')

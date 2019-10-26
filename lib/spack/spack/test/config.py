@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ from six import StringIO
 from llnl.util.filesystem import touch, mkdirp
 
 import pytest
-import ruamel.yaml as yaml
 
 import spack.paths
 import spack.config
+import spack.main
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -56,7 +56,7 @@ def write_config_file(tmpdir):
         config_yaml = tmpdir.join(scope, config + '.yaml')
         config_yaml.ensure()
         with config_yaml.open('w') as f:
-            yaml.dump(data, f)
+            syaml.dump_config(data, f)
     return _write
 
 
@@ -506,6 +506,7 @@ def test_keys_are_ordered():
         'include',
         'lib/pkgconfig',
         'lib64/pkgconfig',
+        'share/pkgconfig',
         ''
     )
 
@@ -593,6 +594,7 @@ def test_bad_config_section(mock_config):
         spack.config.get('foobar')
 
 
+@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_config):
     cfg = spack.config.Configuration()
 
@@ -616,13 +618,58 @@ def test_bad_command_line_scopes(tmpdir, mock_config):
 def test_add_command_line_scopes(tmpdir, mutable_config):
     config_yaml = str(tmpdir.join('config.yaml'))
     with open(config_yaml, 'w') as f:
-            f.write("""\
+        f.write("""\
 config:
     verify_ssl: False
     dirty: False
 """)
 
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
+
+
+def test_nested_override():
+    """Ensure proper scope naming of nested overrides."""
+    base_name = spack.config.overrides_base_name
+
+    def _check_scopes(num_expected, debug_values):
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+
+        for i in range(num_expected):
+            name = '{0}{1}'.format(base_name, i)
+            assert name in scope_names
+
+            data = spack.config.config.get_config('config', name)
+            assert data['debug'] == debug_values[i]
+
+    # Check results from single and nested override
+    with spack.config.override('config:debug', True):
+        with spack.config.override('config:debug', False):
+            _check_scopes(2, [True, False])
+
+        _check_scopes(1, [True])
+
+
+def test_alternate_override(monkeypatch):
+    """Ensure proper scope naming of override when conflict present."""
+    base_name = spack.config.overrides_base_name
+
+    def _matching_scopes(regexpr):
+        return [spack.config.InternalConfigScope('{0}1'.format(base_name))]
+
+    # Check that the alternate naming works
+    monkeypatch.setattr(spack.config.config, 'matching_scopes',
+                        _matching_scopes)
+
+    with spack.config.override('config:debug', False):
+        name = '{0}2'.format(base_name)
+
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+        assert name in scope_names
+
+        data = spack.config.config.get_config('config', name)
+        assert data['debug'] is False
 
 
 def test_immutable_scope(tmpdir):
@@ -673,11 +720,45 @@ env:
             '/x/y/z', '$spack/var/spack/repos/builtin']
 
 
+def test_single_file_scope_section_override(tmpdir, config):
+    """Check that individual config sections can be overridden in an
+    environment config. The config here primarily differs in that the
+    ``packages`` section is intended to override all other scopes (using the
+    "::" syntax).
+    """
+    env_yaml = str(tmpdir.join("env.yaml"))
+    with open(env_yaml, 'w') as f:
+        f.write("""\
+env:
+    config:
+        verify_ssl: False
+    packages::
+        libelf:
+            compiler: [ 'gcc@4.5.3' ]
+    repos:
+        - /x/y/z
+""")
+
+    scope = spack.config.SingleFileScope(
+        'env', env_yaml, spack.schema.env.schema, ['env'])
+
+    with spack.config.override(scope):
+        # from the single-file config
+        assert spack.config.get('config:verify_ssl') is False
+        assert spack.config.get('packages:libelf:compiler') == ['gcc@4.5.3']
+
+        # from the lower config scopes
+        assert spack.config.get('config:checksum') is True
+        assert not spack.config.get('packages:externalmodule')
+        assert spack.config.get('repos') == [
+            '/x/y/z', '$spack/var/spack/repos/builtin']
+
+
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)
-    data = syaml.load(f)
-    spack.config._validate(data, name)
+    data = syaml.load_config(f)
+    spack.config.validate(data, name)
 
 
 def test_good_env_yaml(tmpdir):
@@ -759,3 +840,19 @@ compilers:
     - compiler:
          fenfironfent: /bad/value
 """)
+
+
+@pytest.mark.regression('13045')
+def test_dotkit_in_config_does_not_raise(
+        mock_config, write_config_file, capsys
+):
+    write_config_file('config',
+                      {'config': {'module_roots': {'dotkit': '/some/path'}}},
+                      'high')
+    spack.main.print_setup_info('sh')
+    captured = capsys.readouterr()
+
+    # Check that we set the variables we expect and that
+    # we throw a a deprecation warning without raising
+    assert '_sp_sys_type' in captured[0]  # stdout
+    assert 'Warning' in captured[1]  # stderr

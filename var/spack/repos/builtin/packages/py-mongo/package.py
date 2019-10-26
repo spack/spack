@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class PyMongo(PythonPackage):
     homepage = "http://github.com/mongodb/mongo-python-driver"
     url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.6.0.tar.gz"
 
-    version('3.6.0', '2f64fa7691c77535b72050704cc12afb')
-    version('3.3.0', '42cd12a5014fb7d3e1987ca04f5c651f')
+    version('3.6.0', sha256='c6de26d1e171cdc449745b82f1addbc873d105b8e7335097da991c0fc664a4a8')
+    version('3.3.0', sha256='3d45302fc2622fabf34356ba274c69df41285bac71bbd229f1587283b851b91e')
 
     depends_on('python@2.6:2.8,3.3:')
 

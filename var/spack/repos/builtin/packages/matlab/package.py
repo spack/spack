@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,9 @@ class Matlab(Package):
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
-    homepage = "https://www.mathworks.com/products/matlab.html" 
+    homepage = "https://www.mathworks.com/products/matlab.html"
+    manual_download = True
+
     version('R2018b', sha256='8cfcddd3878d3a69371c4e838773bcabf12aaf0362cc2e1ae7e8820845635cac')
     version('R2016b', 'b0e0b688894282139fa787b5a86a5cf7')
 
@@ -35,7 +37,7 @@ class Matlab(Package):
 
     variant(
         'key',
-        default='',
+        default='<installation-key-here>',
         values=lambda x: True,  # Anything goes as a key
         description='The file installation key to use'
     )

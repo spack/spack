@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,16 +22,17 @@ class Papi(Package):
     homepage = "http://icl.cs.utk.edu/papi/index.html"
 
     url      = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
-    version('5.6.0', 'fdd075860b2bc4b8de8b8b5c3abf594a')
-    version('5.5.1', '86a8a6f3d0f34cd83251da3514aae15d')
-    version('5.5.0', '5e1244a04ca031d4cc29b46ce3dd05b5')
-    version('5.4.3', '3211b5a5bb389fe692370f5cf4cc2412')
-    version('5.4.1', '9134a99219c79767a11463a76b0b01a2')
-    version('5.3.0', '367961dd0ab426e5ae367c2713924ffb')
+    version('5.7.0', sha256='d1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589')
+    version('5.6.0', sha256='49b7293f9ca2d74d6d80bd06b5c4be303663123267b4ac0884cbcae4c914dc47')
+    version('5.5.1', sha256='49dc2c2323f6164c4a7e81b799ed690ee73158671205e71501f849391dd2c2d4')
+    version('5.5.0', sha256='3ea15e6cc2354017335b659c1635409ddab1414e70573aa4df91fd892e99f98d')
+    version('5.4.3', sha256='3aefd581e274f0a103f001f1ffd1009019b297c637e97f4b8c5fc13fa5a1e675')
+    version('5.4.1', sha256='e131c1449786fe870322a949e44f974a5963824f683232e653fb570cc65d4e87')
+    version('5.3.0', sha256='99f2f36398b370e75d100b4a189d5bc0ac4f5dd66df44d441f88fd32e1421524')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
-    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8')
+    patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
     def install(self, spec, prefix):
         with working_dir("src"):

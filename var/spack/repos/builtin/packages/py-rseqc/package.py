@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyRseqc(PythonPackage):
     homepage = "http://rseqc.sourceforge.net"
     url      = "https://pypi.io/packages/source/R/RSeQC/RSeQC-2.6.4.tar.gz"
 
-    version('2.6.4', '935779c452ffc84f3b8b9fb3d485c782')
+    version('2.6.4', sha256='e11df661bda1c24fc950f0bce06f586a68ab5f4a2c356f43e4a0dfdc1e184315')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-bx-python',  type=('build', 'run'))

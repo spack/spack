@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import os
 import platform
 
 
-class Hpl(MakefilePackage):
+class Hpl(AutotoolsPackage):
     """HPL is a software package that solves a (random) dense linear system
     in double precision (64 bits) arithmetic on distributed-memory computers.
     It can thus be regarded as a portable as well as freely available
@@ -17,20 +17,31 @@ class Hpl(MakefilePackage):
     homepage = "http://www.netlib.org/benchmark/hpl/"
     url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
-    version('2.2', '0eb19e787c3dc8f4058db22c9e0c5320')
+    # Note: HPL uses autotools starting with 2.3
+
+    version('2.3', sha256='32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830')
+    version('2.2', sha256='ac7534163a09e21a5fa763e4e16dfc119bc84043f6e6a807aba666518f8df440')
 
     variant('openmp', default=False, description='Enable OpenMP support')
 
     depends_on('mpi@1.1:')
     depends_on('blas')
 
+    # 2.3 adds support for openmpi 4
+    conflicts('openmpi@4.0.0:', when='@:2.2')
+
     parallel = False
 
     arch = '{0}-{1}'.format(platform.system(), platform.processor())
-
     build_targets = ['arch={0}'.format(arch)]
 
-    def edit(self, spec, prefix):
+    @when('@:2.2')
+    def autoreconf(self, spec, prefix):
+        # Prevent sanity check from killing the build
+        touch('configure')
+
+    @when('@:2.2')
+    def configure(self, spec, prefix):
         # List of configuration options
         # Order is important
         config = []
@@ -88,9 +99,31 @@ class Hpl(MakefilePackage):
             for var in config:
                 makefile.write('{0}\n'.format(var))
 
+    @when('@2.3:')
+    def configure_args(self):
+        config = [
+            'CFLAGS=-O3'
+        ]
+
+        if (self.spec.satisfies('^intel-mkl') or
+            self.spec.satisfies('^intel-parallel-studio+mkl')):
+            config.append('LDFLAGS={0}'.format(
+                self.spec['blas'].libs.ld_flags))
+
+        return config
+
+    @when('@:2.2')
     def install(self, spec, prefix):
         # Manual installation
         install_tree(join_path('bin', self.arch), prefix.bin)
         install_tree(join_path('lib', self.arch), prefix.lib)
         install_tree(join_path('include', self.arch), prefix.include)
         install_tree('man', prefix.man)
+
+    @run_after('install')
+    def copy_dat(self):
+        if self.spec.satisfies('@2.3:'):
+            # The pre-2.3 makefile would include a default HPL.dat config
+            # file in the bin directory
+            install('./testing/ptest/HPL.dat',
+                    join_path(self.prefix.bin, 'HPL.dat'))

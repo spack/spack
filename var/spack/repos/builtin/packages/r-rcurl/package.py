@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,11 +18,14 @@ class RRcurl(RPackage):
        SSL/HTTPS, telnet, dict, ldap, and also supports cookies, redirects,
        authentication, etc."""
 
-    homepage = "https://cran.rstudio.com/web/packages/RCurl/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/RCurl_1.95-4.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RCurl"
+    homepage = "https://cloud.r-project.org/package=RCurl"
+    url      = "https://cloud.r-project.org/src/contrib/RCurl_1.95-4.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RCurl"
 
-    version('1.95-4.8', '9c8aaff986eb2792c89dd3ae54d21580')
+    version('1.95-4.12', sha256='393779efafdf40823dac942a1e028905d65c34f3d41cfd21bcd225e411385ff4')
+    version('1.95-4.8', sha256='e72243251bbbec341bc5864305bb8cc23d311d19c5d0d9310afec7eb35aa2bfb')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-bitops', type=('build', 'run'))
     depends_on('curl')
+    depends_on('gmake', type='build')

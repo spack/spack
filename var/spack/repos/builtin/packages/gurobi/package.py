@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Gurobi(Package):
     $GUROBI_HOME/docs/quickstart_linux.pdf for more details."""
 
     homepage = "http://www.gurobi.com/index"
+    manual_download = True
 
     version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
 

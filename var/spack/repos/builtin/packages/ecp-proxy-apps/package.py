@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,16 +17,21 @@ class EcpProxyApps(Package):
     tags = ['proxy-app', 'ecp-proxy-app']
     maintainers = ['bhatele']
 
-    homepage = "https://exascaleproject.github.io/proxy-apps"
+    homepage = "https://proxyapps.exascaleproject.org"
     # Dummy url
     url = 'https://github.com/exascaleproject/proxy-apps/archive/v1.0.tar.gz'
 
+    version('2.1', sha256='604da008fc4ef3bdbc25505088d610333249e3e9745eac7dbfd05b91e33e218d')
     version('2.0', sha256='5f3cb3a772224e738c1dab42fb34d40f6b313af51ab1c575fb334e573e41e09a')
-    version('1.1', '15825c318acd3726fd8e72803b1c1090')
-    version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
+    version('1.1', sha256='8537e03588c0f46bebf5b7f07146c79812f2ebfb77d29e184baa4dd5f4603ee3')
+    version('1.0', sha256='13d9795494dabdb4c724d2c0f322c2149b2507d2fd386ced12b54292b7ecf595')
 
     variant('candle', default=False,
             description='Also build CANDLE Benchmarks')
+
+    # Added with release 2.1
+    depends_on('amg@1.2', when='@2.1:')
+    depends_on('miniamr@1.4.3', when='@2.1:')
 
     # Added with release 2.0
     depends_on('ember@1.0.0', when='@2.0:')
@@ -35,13 +40,15 @@ class EcpProxyApps(Package):
     depends_on('picsarlite@0.1', when='@2.0:')
     depends_on('thornado-mini@1.0', when='@2.0:')
 
-    depends_on('amg@1.1', when='@2.0:')
     depends_on('candle-benchmarks@0.1', when='+candle @2.0:')
-    depends_on('laghos@1.1', when='@2.0:')
+    depends_on('laghos@2.0', when='@2.0:')
     depends_on('macsio@1.1', when='@2.0:')
-    depends_on('miniamr@1.4.1', when='@2.0:')
     depends_on('sw4lite@1.1', when='@2.0:')
     depends_on('xsbench@18', when='@2.0:')
+
+    # Dependencies for version 2.0
+    depends_on('amg@1.1', when='@2.0')
+    depends_on('miniamr@1.4.1', when='@2.0')
 
     # Added with release 1.1
     depends_on('examinimd@1.0', when='@1.1:')

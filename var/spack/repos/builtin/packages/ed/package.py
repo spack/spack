@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class Ed(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/ed"
     url      = "https://ftpmirror.gnu.org/ed/ed-1.4.tar.gz"
 
-    version('1.4', 'da0ddc0e0b0bec2da4b13b0d0d1bce2b')
+    version('1.4', sha256='db36da85ee1a9d8bafb4b041bd4c8c11becba0c43ec446353b67045de1634fda')
 
     parallel = False

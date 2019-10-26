@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,10 @@ class PyRequestsToolbelt(PythonPackage):
     python-requests"""
 
     homepage = "https://toolbelt.readthedocs.org/"
-    url      = "https://github.com/requests/toolbelt/archive/0.8.0.tar.gz"
+    url      = "https://github.com/requests/toolbelt/archive/0.9.1.tar.gz"
 
-    version('0.8.0', 'de9bf7fbcc6ae341a5c4fd9f8912bcac')
+    version('0.9.1', sha256='c8e68e537e87ae088e3a0eb6d80ed5b7cf5d6df503d0e843e0a5e47283db487b')
+    version('0.8.0', sha256='f151c07e88148dc05b6f31cc75dfb7a6770968e4a5c8e6690325eed4e79160a1')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-requests@2.0.1:3.0.0', type=('build', 'run'))
+    depends_on('py-requests@2.0.1:2.999', type=('build', 'run'))

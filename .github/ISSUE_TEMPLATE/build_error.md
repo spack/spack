@@ -1,7 +1,7 @@
 ---
 name: Build error 
 about: Some package in Spack didn't build correctly  
-
+labels: "build-error"
 ---
 
 *Thanks for taking the time to report this build failure. To proceed with the

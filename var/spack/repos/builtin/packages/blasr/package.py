@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Blasr(Package):
     homepage = "https://github.com/PacificBiosciences/blasr/wiki"
     url      = "https://github.com/PacificBiosciences/blasr/archive/5.3.1.tar.gz"
 
-    version('5.3.1', '53c93f499aa4bc10781c87bafc33df2a') 
+    version('5.3.1', sha256='ff7da5a03096294572e6c64340354da5c5ee1c86c277e7b899f2c170c1ac4049')
 
     depends_on('ncurses')
     depends_on('hdf5+cxx@1.8.12:1.8.99')

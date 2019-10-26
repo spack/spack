@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Cpprestsdk(CMakePackage):
     homepage = "https://github.com/Microsoft/cpprestsdk"
     url      = "https://github.com/Microsoft/cpprestsdk/archive/v2.9.1.tar.gz"
 
-    version('2.9.1', 'c3dd67d8cde8a65c2e994e2ede4439a2')
+    version('2.9.1', sha256='537358760acd782f4d2ed3a85d92247b4fc423aff9c85347dc31dbb0ab9bab16')
 
     depends_on('boost')
 

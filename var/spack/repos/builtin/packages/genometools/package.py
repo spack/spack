@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Genometools(MakefilePackage):
     homepage = "http://genometools.org/"
     url      = "http://genometools.org/pub/genometools-1.5.9.tar.gz"
 
-    version('1.5.9', 'e400d69092f9f13db09b33f9dea39d2e')
+    version('1.5.9', sha256='36923198a4214422886fd1425ef986bd7e558c73b94194982431cfd3dc7eb387')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('cairo')

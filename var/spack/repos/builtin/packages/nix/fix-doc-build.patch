@@ -1,0 +1,31 @@
+diff -ru nix-2.0.4-orig/doc/manual/local.mk nix-2.0.4/doc/manual/local.mk
+--- nix-2.0.4-orig/doc/manual/local.mk	2018-07-20 11:12:18.121540267 +0200
++++ nix-2.0.4/doc/manual/local.mk	2018-07-20 11:43:58.514090409 +0200
+@@ -1,7 +1,7 @@
+ 
+ ifeq ($(doc_generate),yes)
+ 
+-XSLTPROC = $(xsltproc) --nonet $(xmlflags) \
++XSLTPROC = $(xsltproc) $(xmlflags) \
+   --param section.autolabel 1 \
+   --param section.label.includes.component.label 1 \
+   --param html.stylesheet \'style.css\' \
+@@ -21,7 +21,7 @@
+ 
+ # Do XInclude processing / RelaxNG validation
+ $(d)/manual.xmli: $(d)/manual.xml $(MANUAL_SRCS) $(d)/version.txt
+-	$(trace-gen) $(xmllint) --nonet --xinclude $< -o $@.tmp
++	$(trace-gen) $(xmllint) --xinclude $< -o $@.tmp
+ 	@mv $@.tmp $@
+ 
+ $(d)/version.txt:
+@@ -29,9 +29,6 @@
+ 
+ # Note: RelaxNG validation requires xmllint >= 2.7.4.
+ $(d)/manual.is-valid: $(d)/manual.xmli
+-	$(trace-gen) $(XSLTPROC) --novalid --stringparam profile.condition manual \
+-	  $(docbookxsl)/profiling/profile.xsl $< 2> /dev/null | \
+-	  $(xmllint) --nonet --noout --relaxng $(docbookrng) -
+ 	@touch $@
+ 
+ clean-files += $(d)/manual.xmli $(d)/version.txt $(d)/manual.is-valid

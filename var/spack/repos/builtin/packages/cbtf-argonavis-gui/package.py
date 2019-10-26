@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,9 @@ class CbtfArgonavisGui(QMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
 
-    depends_on('qt@5.10.0:', when='@develop')
-    depends_on('qt@5.10.0', when='@1.3.0.0:9999')
+    depends_on('qt@5.10.0:')
 
-    depends_on("boost@1.66.0:")
+    depends_on("boost@1.66.0:1.69.0")
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop')

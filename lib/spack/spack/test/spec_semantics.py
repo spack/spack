@@ -1,60 +1,62 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.architecture
+import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError
-from spack.spec import substitute_abstract_variants, parse_anonymous_spec
+from spack.spec import Spec, UnsatisfiableSpecError, SpecError
+from spack.spec import substitute_abstract_variants
+from spack.spec import SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError
 from spack.variant import MultipleValuesInExclusiveVariantError
 
+import spack.architecture
+import spack.directives
+import spack.error
 
-def target_factory(spec_string, target_concrete):
-    spec = Spec(spec_string)
 
-    if target_concrete:
+def make_spec(spec_like, concrete):
+    if isinstance(spec_like, Spec):
+        return spec_like
+
+    spec = Spec(spec_like)
+    if concrete:
         spec._mark_concrete()
         substitute_abstract_variants(spec)
-
     return spec
 
 
-def argument_factory(argument_spec, left):
-    try:
-        # If it's not anonymous, allow it
-        right = target_factory(argument_spec, False)
-    except Exception:
-        right = parse_anonymous_spec(argument_spec, left.name)
-    return right
+def _specify(spec_like):
+    if isinstance(spec_like, Spec):
+        return spec_like
+
+    return Spec(spec_like)
 
 
-def check_satisfies(target_spec, argument_spec, target_concrete=False):
+def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
-    left = target_factory(target_spec, target_concrete)
-    right = argument_factory(argument_spec, left)
+    target = make_spec(target_spec, target_concrete)
+    constraint = _specify(constraint_spec)
 
     # Satisfies is one-directional.
-    assert left.satisfies(right)
-    assert left.satisfies(argument_spec)
+    assert target.satisfies(constraint)
 
-    # If left satisfies right, then we should be able to constrain
-    # right by left.  Reverse is not always true.
-    right.copy().constrain(left)
+    # If target satisfies constraint, then we should be able to constrain
+    # constraint by target.  Reverse is not always true.
+    constraint.copy().constrain(target)
 
 
-def check_unsatisfiable(target_spec, argument_spec, target_concrete=False):
+def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
 
-    left = target_factory(target_spec, target_concrete)
-    right = argument_factory(argument_spec, left)
+    target = make_spec(target_spec, target_concrete)
+    constraint = _specify(constraint_spec)
 
-    assert not left.satisfies(right)
-    assert not left.satisfies(argument_spec)
+    assert not target.satisfies(constraint)
 
     with pytest.raises(UnsatisfiableSpecError):
-        right.copy().constrain(left)
+        constraint.copy().constrain(target)
 
 
 def check_constrain(expected, spec, constraint):
@@ -90,6 +92,34 @@ class TestSpecSematics(object):
     def test_satisfies(self):
         check_satisfies('libelf@0.8.13', '@0:1')
         check_satisfies('libdwarf^libelf@0.8.13', '^libelf@0:1')
+
+    def test_empty_satisfies(self):
+        # Basic satisfaction
+        check_satisfies('libelf', Spec())
+        check_satisfies('libdwarf', Spec())
+        check_satisfies('%intel', Spec())
+        check_satisfies('^mpi', Spec())
+        check_satisfies('+debug', Spec())
+        check_satisfies('@3:', Spec())
+
+        # Concrete (strict) satisfaction
+        check_satisfies('libelf', Spec(), True)
+        check_satisfies('libdwarf', Spec(), True)
+        check_satisfies('%intel', Spec(), True)
+        check_satisfies('^mpi', Spec(), True)
+        # TODO: Variants can't be called concrete while anonymous
+        # check_satisfies('+debug', Spec(), True)
+        check_satisfies('@3:', Spec(), True)
+
+        # Reverse (non-strict) satisfaction
+        check_satisfies(Spec(), 'libelf')
+        check_satisfies(Spec(), 'libdwarf')
+        check_satisfies(Spec(), '%intel')
+        check_satisfies(Spec(), '^mpi')
+        # TODO: Variant matching is auto-strict
+        # we should rethink this
+        # check_satisfies(Spec(), '+debug')
+        check_satisfies(Spec(), '@3:')
 
     def test_satisfies_namespace(self):
         check_satisfies('builtin.mpich', 'mpich')
@@ -153,13 +183,13 @@ class TestSpecSematics(object):
 
         check_unsatisfiable(
             'foo platform=linux',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
         check_unsatisfiable(
             'foo os=redhat6',
             'platform=test os=debian6 target=x86_64')
         check_unsatisfiable(
             'foo target=x86_64',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
 
         check_satisfies(
             'foo arch=test-None-None',
@@ -187,8 +217,8 @@ class TestSpecSematics(object):
             'foo platform=test target=default_target os=default_os',
             'platform=test os=default_os')
         check_unsatisfiable(
-            'foo platform=test target=x86_32 os=redhat6',
-            'platform=linux target=x86_32 os=redhat6')
+            'foo platform=test target=x86 os=redhat6',
+            'platform=linux target=x86 os=redhat6')
 
     def test_satisfies_dependencies(self):
         check_satisfies('mpileaks^mpich', '^mpich')
@@ -309,8 +339,8 @@ class TestSpecSematics(object):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = target_factory(
-            'multivalue_variant foo="bar"', target_concrete=True
+        a = make_spec(
+            'multivalue_variant foo="bar"', concrete=True
         )
         spec_str = 'multivalue_variant foo="bar,baz"'
         b = Spec(spec_str)
@@ -329,8 +359,8 @@ class TestSpecSematics(object):
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-        a = target_factory(
-            'multivalue_variant foo="bar,baz"', target_concrete=True
+        a = make_spec(
+            'multivalue_variant foo="bar,baz"', concrete=True
         )
         spec_str = 'multivalue_variant foo="bar,baz,quux"'
         b = Spec(spec_str)
@@ -382,13 +412,13 @@ class TestSpecSematics(object):
 
         check_unsatisfiable(
             target_spec='multivalue_variant foo="bar"',
-            argument_spec='multivalue_variant +foo',
+            constraint_spec='multivalue_variant +foo',
             target_concrete=True
         )
 
         check_unsatisfiable(
             target_spec='multivalue_variant foo="bar"',
-            argument_spec='multivalue_variant ~foo',
+            constraint_spec='multivalue_variant ~foo',
             target_concrete=True
         )
 
@@ -665,6 +695,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         check_constrain_changed('libelf^foo', 'libelf^foo~debug')
+        check_constrain_changed('libelf', '^foo')
 
         platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
@@ -703,28 +734,133 @@ class TestSpecSematics(object):
             Spec('libelf foo')
 
     def test_spec_formatting(self):
+        spec = Spec("multivalue_variant cflags=-O2")
+        spec.concretize()
+
+        # Since the default is the full spec see if the string rep of
+        # spec is the same as the output of spec.format()
+        # ignoring whitespace (though should we?) and ignoring dependencies
+        spec_string = str(spec)
+        idx = spec_string.index(' ^')
+        assert spec_string[:idx] == spec.format().strip()
+
+        # Testing named strings ie {string} and whether we get
+        # the correct component
+        # Mixed case intentional to test both
+        package_segments = [("{NAME}", "name"),
+                            ("{VERSION}", "versions"),
+                            ("{compiler}", "compiler"),
+                            ("{compiler_flags}", "compiler_flags"),
+                            ("{variants}", "variants"),
+                            ("{architecture}", "architecture")]
+
+        sigil_package_segments = [("{@VERSIONS}", '@' + str(spec.version)),
+                                  ("{%compiler}", '%' + str(spec.compiler)),
+                                  ("{arch=architecture}",
+                                   ' arch=' + str(spec.architecture))]
+
+        compiler_segments = [("{compiler.name}", "name"),
+                             ("{compiler.version}", "versions")]
+
+        sigil_compiler_segments = [("{%compiler.name}",
+                                    '%' + spec.compiler.name),
+                                   ("{@compiler.version}",
+                                    '@' + str(spec.compiler.version))]
+
+        architecture_segments = [("{architecture.platform}", "platform"),
+                                 ("{architecture.os}", "os"),
+                                 ("{architecture.target}", "target")]
+
+        other_segments = [('{spack_root}', spack.paths.spack_root),
+                          ('{spack_install}', spack.store.layout.root),
+                          ('{hash:7}', spec.dag_hash(7)),
+                          ('{/hash}', '/' + spec.dag_hash())]
+
+        for named_str, prop in package_segments:
+            expected = getattr(spec, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in sigil_package_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+        compiler = spec.compiler
+        for named_str, prop in compiler_segments:
+            expected = getattr(compiler, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in sigil_compiler_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+        arch = spec.architecture
+        for named_str, prop in architecture_segments:
+            expected = getattr(arch, prop, "")
+            actual = spec.format(named_str)
+            assert str(expected) == actual
+
+        for named_str, expected in other_segments:
+            actual = spec.format(named_str)
+            assert expected == actual
+
+    def test_spec_formatting_escapes(self):
+        spec = Spec('multivalue_variant cflags=-O2')
+        spec.concretize()
+
+        sigil_mismatches = [
+            '{@name}',
+            '{@version.concrete}',
+            '{%compiler.version}',
+            '{/hashd}',
+            '{arch=architecture.os}'
+        ]
+
+        for fmt_str in sigil_mismatches:
+            with pytest.raises(SpecFormatSigilError):
+                spec.format(fmt_str)
+
+        bad_formats = [
+            r'{}',
+            r'name}',
+            r'\{name}',
+            r'{name',
+            r'{name\}',
+            r'{_concrete}',
+            r'{dag_hash}',
+            r'{foo}',
+            r'{+variants.debug}'
+        ]
+
+        for fmt_str in bad_formats:
+            with pytest.raises(SpecFormatStringError):
+                spec.format(fmt_str)
+
+    def test_spec_deprecated_formatting(self):
         spec = Spec("libelf cflags=-O2")
         spec.concretize()
 
         # Since the default is the full spec see if the string rep of
         # spec is the same as the output of spec.format()
         # ignoring whitespace (though should we?)
-        assert str(spec) == spec.format().strip()
+        assert str(spec) == spec.format('$_$@$%@+$+$=').strip()
 
-        # Testing named strings ie ${STRING} and whether we get
+        # Testing named strings ie {string} and whether we get
         # the correct component
+        # Mixed case intentional for testing both
         package_segments = [("${PACKAGE}", "name"),
                             ("${VERSION}", "versions"),
-                            ("${COMPILER}", "compiler"),
-                            ("${COMPILERFLAGS}", "compiler_flags"),
-                            ("${OPTIONS}", "variants"),
-                            ("${ARCHITECTURE}", "architecture")]
+                            ("${compiler}", "compiler"),
+                            ("${compilerflags}", "compiler_flags"),
+                            ("${options}", "variants"),
+                            ("${architecture}", "architecture")]
 
-        compiler_segments = [("${COMPILERNAME}", "name"),
-                             ("${COMPILERVER}", "versions")]
+        compiler_segments = [("${compilername}", "name"),
+                             ("${compilerver}", "versions")]
 
         architecture_segments = [("${PLATFORM}", "platform"),
-                                 ("${OS}", "platform_os"),
+                                 ("${OS}", "os"),
                                  ("${TARGET}", "target")]
 
         for named_str, prop in package_segments:
@@ -743,3 +879,105 @@ class TestSpecSematics(object):
             expected = getattr(arch, prop, "")
             actual = spec.format(named_str)
             assert str(expected) == actual
+
+    @pytest.mark.regression('9908')
+    def test_spec_flags_maintain_order(self):
+        # Spack was assembling flags in a manner that could result in
+        # different orderings for repeated concretizations of the same
+        # spec and config
+        spec_str = 'libelf %gcc@4.7.2 os=redhat6'
+        for _ in range(25):
+            s = Spec(spec_str).concretized()
+            assert all(
+                s.compiler_flags[x] == ['-O0', '-g']
+                for x in ('cflags', 'cxxflags', 'fflags')
+            )
+
+    def test_any_combination_of(self):
+        # Test that using 'none' and another value raise during concretization
+        spec = Spec('multivalue_variant foo=none,bar')
+        with pytest.raises(spack.error.SpecError) as exc_info:
+            spec.concretize()
+
+        assert "is mutually exclusive with any of the" in str(exc_info.value)
+
+    @pytest.mark.skipif(
+        sys.version_info[0] == 2, reason='__wrapped__ requires python 3'
+    )
+    def test_errors_in_variant_directive(self):
+        variant = spack.directives.variant.__wrapped__
+
+        class Pkg(object):
+            name = 'PKG'
+
+        # We can't use names that are reserved by Spack
+        fn = variant('patches')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "The name 'patches' is reserved" in str(exc_info.value)
+
+        # We can't have conflicting definitions for arguments
+        fn = variant(
+            'foo', values=spack.variant.any_combination_of('fee', 'foom'),
+            default='bar'
+        )
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert " it is handled by an attribute of the 'values' " \
+               "argument" in str(exc_info.value)
+
+        # We can't leave None as a default value
+        fn = variant('foo', default=None)
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "either a default was not explicitly set, or 'None' was used"\
+               in str(exc_info.value)
+
+        # We can't use an empty string as a default value
+        fn = variant('foo', default='')
+        with pytest.raises(spack.directives.DirectiveError) as exc_info:
+            fn(Pkg())
+        assert "the default cannot be an empty string" in str(exc_info.value)
+
+    def test_abstract_spec_prefix_error(self):
+        spec = Spec('libelf')
+
+        with pytest.raises(SpecError):
+            spec.prefix
+
+    def test_forwarding_of_architecture_attributes(self):
+        spec = Spec('libelf').concretized()
+
+        # Check that we can still access each member through
+        # the architecture attribute
+        assert 'test' in spec.architecture
+        assert 'debian' in spec.architecture
+        assert 'x86_64' in spec.architecture
+
+        # Check that we forward the platform and os attribute correctly
+        assert spec.platform == 'test'
+        assert spec.os == 'debian6'
+
+        # Check that the target is also forwarded correctly and supports
+        # all the operators we expect
+        assert spec.target == 'x86_64'
+        assert spec.target.family == 'x86_64'
+        assert 'avx512' not in spec.target
+        assert spec.target < 'broadwell'
+
+    @pytest.mark.parametrize('spec,constraint,expected_result', [
+        ('libelf target=haswell', 'target=broadwell', False),
+        ('libelf target=haswell', 'target=haswell', True),
+        ('libelf target=haswell', 'target=x86_64:', True),
+        ('libelf target=haswell', 'target=:haswell', True),
+        ('libelf target=haswell', 'target=icelake,:nocona', False),
+        ('libelf target=haswell', 'target=haswell,:nocona', True),
+        # Check that a single target is not treated as the start
+        # or the end of an open range
+        ('libelf target=haswell', 'target=x86_64', False),
+        ('libelf target=x86_64', 'target=haswell', False),
+    ])
+    @pytest.mark.regression('13111')
+    def test_target_constraints(self, spec, constraint, expected_result):
+        s = Spec(spec)
+        assert s.satisfies(constraint) is expected_result

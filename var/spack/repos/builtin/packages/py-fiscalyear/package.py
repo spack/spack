@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyFiscalyear(PythonPackage):
     import_modules = ['fiscalyear']
 
     version('master', branch='master')
-    version('0.1.0', '30e36b259f3e72e4929abbf259335742')
+    version('0.1.0', sha256='3fde4a12eeb72da446beb487e078adf1223a92d130520e589b82d7d1509701a2')
 
     depends_on('python@2.5:')
     depends_on('py-setuptools', type='build')

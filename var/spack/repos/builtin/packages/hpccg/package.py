@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hpccg(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0', '2e99da1a89de5ef0844da5e6ffbf39dc')
+    version('1.0', sha256='5be1b8cc3246811bfc9d6d7072be29455777d61b585675512ae52043ea64cefc')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=True, description='Build with OpenMP support')

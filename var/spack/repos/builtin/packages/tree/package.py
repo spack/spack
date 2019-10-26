@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Tree(Package):
     homepage = "http://mama.indstate.edu/users/ice/tree/"
     url      = "http://mama.indstate.edu/users/ice/tree/src/tree-1.7.0.tgz"
 
-    version('1.7.0', 'abe3e03e469c542d8e157cdd93f4d8a6')
+    version('1.7.0', sha256='6957c20e82561ac4231638996e74f4cfa4e6faabc5a2f511f0b4e3940e8f7b12')
 
     def install(self, spec, prefix):
         objs = [

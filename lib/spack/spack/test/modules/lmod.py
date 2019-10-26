@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,7 +124,7 @@ class TestLmod(object):
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
 
         content = modulefile_content(
-            'libdwarf %clang platform=test target=x86_32'
+            'libdwarf %clang platform=test target=x86'
         )
 
         assert len(
@@ -262,3 +262,19 @@ class TestLmod(object):
         # Assert we have core compilers now
         writer, _ = factory(mpileaks_spec_string)
         assert writer.conf.core_compilers
+
+    @pytest.mark.parametrize('spec_str', [
+        'mpileaks target=nocona',
+        'mpileaks target=core2',
+        'mpileaks target=x86_64',
+    ])
+    @pytest.mark.regression('13005')
+    def test_only_generic_microarchitectures_in_root(
+            self, spec_str, factory, module_configuration
+    ):
+        module_configuration('complex_hierarchy')
+        writer, spec = factory(spec_str)
+
+        assert str(spec.target.family) in writer.layout.arch_dirname
+        if spec.target.family != spec.target:
+            assert str(spec.target) not in writer.layout.arch_dirname

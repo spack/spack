@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class Clustalo(AutotoolsPackage):
     homepage = "http://www.clustal.org/omega/"
     url      = "http://www.clustal.org/omega/clustal-omega-1.2.4.tar.gz"
 
-    version('1.2.4', '6c0459f4c463a30e942ce7e0efc91422')
+    version('1.2.4', sha256='8683d2286d663a46412c12a0c789e755e7fd77088fb3bc0342bb71667f05a3ee')
 
     depends_on('argtable')

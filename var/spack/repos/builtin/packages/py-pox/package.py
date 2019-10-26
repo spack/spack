@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class PyPox(PythonPackage):
     homepage = "https://github.com/uqfoundation/pox"
     url      = "https://pypi.io/packages/source/p/pox/pox-0.2.3.zip"
 
-    version('0.2.3', 'fcdfd9a9ab0f72367258b675554f6a83')
-    version('0.2.2', 'e1e2ce99a63d7226ea3c1a2ce389610d')
-    version('0.2.1', '517dc13c2bc2429d36a0c636f3ce42db')
+    version('0.2.3', sha256='d3e8167a1ebe08ae56262a0b9359118d90bc4648cd284b5d10ae240343100a75')
+    version('0.2.2', sha256='c0b88e59ef0e4f2fa4839e11bf90d2c32d6ceb5abaf01f0c8138f7558e6f87c1')
+    version('0.2.1', sha256='580bf731fee233c58eac0974011b5bf0698efb7337b0a1696d289043b4fcd7f4')
 
     depends_on('python@2.5:2.8,3.1:')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,10 @@ class Libiberty(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/binutils/"
     url      = "https://ftpmirror.gnu.org/binutils/binutils-2.31.1.tar.xz"
 
-    version('2.31.1', '5b7c9d4ce96f507d95c1b9a255e52418')
-    version('2.30',   'ffc476dd46c96f932875d1b2e27e929f')
-    version('2.29.1', 'acc9cd826edb9954ac7cecb81c727793')
-    version('2.28.1', 'a3bf359889e4b299fce1f4cb919dc7b6')
+    version('2.31.1', sha256='5d20086ecf5752cc7d9134246e9588fa201740d540f7eb84d795b1f7a93bca86')
+    version('2.30',   sha256='6e46b8aeae2f727a36f0bd9505e405768a72218f1796f0d09757d45209871ae6')
+    version('2.29.1', sha256='e7010a46969f9d3e53b650a518663f98a5dde3c3ae21b7d71e5e6803bc36b577')
+    version('2.28.1', sha256='16328a906e55a3c633854beec8e9e255a639b366436470b4f6245eb0d2fde942')
 
     variant('pic', default=False,
             description='Compile with position independent code.')

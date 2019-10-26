@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,12 @@ class SuiteSparse(Package):
     url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
 
     version('5.3.0', sha256='90e69713d8c454da5a95a839aea5d97d8d03d00cc1f667c4bdfca03f640f963d')
-    version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
-    version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
-    version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
-    version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
-    version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
-    version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
+    version('5.2.0', sha256='3c46c035ea8217649958a0f73360e825b0c9dcca4e32a9349d2c7678c0d48813')
+    version('5.1.0', sha256='1b1371074224c6844697f3a55024d185b7ff6ffa49ac141d433fbb1aadf426f5')
+    version('4.5.5', sha256='b9a98de0ddafe7659adffad8a58ca3911c1afa8b509355e7aa58b02feb35d9b6')
+    version('4.5.4', sha256='698b5c455645bb1ad29a185f0d52025f3bd7cb7261e182c8878b0eb60567a714')
+    version('4.5.3', sha256='6199a3a35fbce82b155fd2349cf81d2b7cddaf0dac218c08cb172f9bc143f37a')
+    version('4.5.1', sha256='ac4524b9f69c4f8c2652d720b146c92a414c1943f86d46df49b4ff8377ae8752')
 
     variant('tbb',  default=False, description='Build with Intel TBB')
     variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
@@ -37,7 +37,7 @@ class SuiteSparse(Package):
 
     depends_on('cuda', when='+cuda')
 
-    patch('tbb_453.patch', when='@4.5.3:+tbb')
+    patch('tbb_453.patch', when='@4.5.3:4.5.5+tbb')
 
     # This patch removes unsupported flags for pgi compiler
     patch('pgi.patch', when='%pgi')
@@ -111,8 +111,16 @@ class SuiteSparse(Package):
         if 'tbb' in spec:
             make_args += [
                 'SPQR_CONFIG=-DHAVE_TBB',
-                'TBB=-L%s -ltbb' % spec['tbb'].prefix.lib,
+                'TBB=%s' % spec['tbb'].libs.ld_flags,
             ]
+
+        if '@5.3:' in spec:
+            # Without CMAKE_LIBRARY_PATH defined, the CMake file in the
+            # Mongoose directory finds libsuitesparseconfig.so in system
+            # directories like /usr/lib.
+            make_args += [
+                'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
+                ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
         make('install', *make_args)
 

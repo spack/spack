@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyMethylcode(PythonPackage):
     homepage = "https://github.com/brentp/methylcode"
     url      = "https://github.com/brentp/methylcode/archive/master.zip"
 
-    version('1.0.0', 'd0ba07c1ab2c74adddd1b23f8e5823e7')
+    version('1.0.0', sha256='30f707a690a887e3161c8debba3c322bd313865df40212275b02203c52a416ae')
 
     depends_on('python@2.7.0:2.7.999')
     depends_on('py-six')

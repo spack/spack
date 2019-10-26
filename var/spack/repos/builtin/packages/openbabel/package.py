@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Openbabel(CMakePackage):
     homepage = "http://openbabel.org/wiki/Main_Page"
     url      = "https://sourceforge.net/projects/openbabel/files/openbabel/2.4.1/openbabel-2.4.1.tar.gz"
 
-    version('2.4.1', 'd9defcd7830b0592fece4fe54a137b99')
+    version('2.4.1', sha256='204136582cdfe51d792000b20202de8950218d617fd9c6e18cee36706a376dfc')
 
     variant('python', default=True, description='Build Python bindings')
 

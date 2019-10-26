@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,12 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
 
-    version('6.1', '98c889aaf8d23910d2b92d65be2e737a')
-    version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
-    version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
+    version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
+    version('6.0', sha256='f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260')
+    version('5.9', sha256='9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b')
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
@@ -33,10 +34,17 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
+    def setup_environment(self, spack_env, run_env):
+        spack_env.unset('TERMINFO')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags' or name == 'cxxflags':
+            flags.append(self.compiler.pic_flag)
+
+        return (flags, None, None)
+
     def configure(self, spec, prefix):
         opts = [
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag),
             '--with-shared',
             '--with-cxx-shared',
             '--enable-overwrite',
@@ -49,7 +57,9 @@ class Ncurses(AutotoolsPackage):
                       '--without-manpages',
                       '--without-tests']
 
-        wide_opts = ['--enable-widec']
+        wide_opts = ['--enable-widec',
+                     '--without-manpages',
+                     '--without-tests']
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')

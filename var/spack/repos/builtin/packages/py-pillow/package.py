@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,20 +14,20 @@ class PyPillow(PythonPackage):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url = "https://pypi.io/packages/source/P/Pillow/Pillow-5.1.0.tar.gz"
+    url = "https://pypi.io/packages/source/P/Pillow/Pillow-6.2.0.tar.gz"
 
-    version('5.1.0', '308f9c13b376abce96ab6ebd6c889cc4')
-    version('3.2.0', '7cfd093c11205d9e2ebe3c51dfcad510')
-    version('3.0.0', 'fc8ac44e93da09678eac7e30c9b7377d')
+    version('6.2.0', sha256='4548236844327a718ce3bb182ab32a16fa2050c61e334e959f554cac052fb0df')
+    version('5.4.1', sha256='5233664eadfa342c639b9b9977190d64ad7aca4edc51a966394d7e08e7f38a9f')
+    version('5.1.0', sha256='cee9bc75bff455d317b6947081df0824a8f118de2786dc3d74a3503fd631f4ef')
+    version('3.2.0', sha256='64b0a057210c480aea99406c9391180cd866fc0fd8f0b53367e3af21b195784a')
+    version('3.0.0', sha256='ad50bef540fe5518a4653c3820452a881b6a042cb0f8bb7657c491c6bd3654bb')
 
     provides('pil')
 
     # These defaults correspond to Pillow defaults
-    variant('jpeg', default=True, description='Provide JPEG functionality')
-    variant('zlib', default=True, description='Access to compressed PNGs')
-    variant('tiff', default=False, description='Access to TIFF files')
+    variant('tiff',     default=False, description='Access to TIFF files')
     variant('freetype', default=False, description='Font related services')
-    variant('lcms', default=False, description='Color management')
+    variant('lcms',     default=False, description='Color management')
     variant('jpeg2000', default=False, description='Provide JPEG 2000 functionality')
 
     # Spack does not (yet) support these modes of building
@@ -39,11 +39,10 @@ class PyPillow(PythonPackage):
 
     # Required dependencies
     depends_on('binutils', type='build', when=sys.platform != 'darwin')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    # Recommended dependencies
-    depends_on('jpeg', when='+jpeg')
-    depends_on('zlib', when='+zlib')
+    depends_on('jpeg')
+    depends_on('zlib')
 
     # Optional dependencies
     depends_on('libtiff', when='+tiff')
@@ -65,16 +64,14 @@ class PyPillow(PythonPackage):
         spec = self.spec
         setup = FileFilter('setup.py')
 
-        if '+jpeg' in spec:
-            setup.filter('JPEG_ROOT = None',
-                         'JPEG_ROOT=("{0}","{1}")'.format(
-                             spec['jpeg'].libs.directories[0],
-                             spec['jpeg'].prefix.include))
-        if '+zlib' in spec:
-            setup.filter('ZLIB_ROOT = None',
-                         'ZLIB_ROOT = ("{0}", "{1}")'.format(
-                             spec['zlib'].prefix.lib,
-                             spec['zlib'].prefix.include))
+        setup.filter('JPEG_ROOT = None',
+                     'JPEG_ROOT=("{0}","{1}")'.format(
+                         spec['jpeg'].libs.directories[0],
+                         spec['jpeg'].prefix.include))
+        setup.filter('ZLIB_ROOT = None',
+                     'ZLIB_ROOT = ("{0}", "{1}")'.format(
+                         spec['zlib'].prefix.lib,
+                         spec['zlib'].prefix.include))
         if '+tiff' in spec:
             setup.filter('TIFF_ROOT = None',
                          'TIFF_ROOT = ("{0}", "{1}")'.format(
