@@ -357,17 +357,17 @@ class Ascent(Package):
             mpicxx_path = spec['mpi'].mpicxx
             mpifc_path = spec['mpi'].mpifc
             # if we are using compiler wrappers on cray systems
-            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx 
-            # etc make return the spack compiler wrappers 
+            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
+            # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
             if cpp_compiler == "CC":
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
-            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path ))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path ))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path ))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
