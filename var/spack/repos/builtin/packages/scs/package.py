@@ -25,8 +25,8 @@ class Scs(MakefilePackage):
     patch('make_gpu.patch')
 
     def build(self, spec, prefix):
-        filter_file(r'-lblas',spec['blas'].libs.ld_flags,'scs.mk')
-        filter_file(r'-llapack',spec['lapack'].libs.ld_flags,'scs.mk')
+        filter_file(r'-lblas', spec['blas'].libs.ld_flags, 'scs.mk')
+        filter_file(r'-llapack', spec['lapack'].libs.ld_flags, 'scs.mk')
         if '+cuda' in spec:
             make('default', 'gpu')
         else:
@@ -34,6 +34,6 @@ class Scs(MakefilePackage):
 
     def install(self, spec, prefix):
         if '+cuda' in spec:
-            make('PREFIX='+prefix, 'install_gpu')
+            make('PREFIX=' + prefix, 'install_gpu')
         else:
-            make('PREFIX='+prefix,'install')
+            make('PREFIX=' + prefix, 'install')
