@@ -11,7 +11,12 @@ class PyXarray(PythonPackage):
 
     homepage = "https://github.com/pydata/xarray"
     url      = "https://pypi.io/packages/source/x/xarray/xarray-0.9.1.tar.gz"
+    git      = "https://github.com/pydata/xarray.git"
 
+    version('0.14.0', tag='v0.14.0')
+    version('0.13.0', tag='v0.13.0')
+    version('0.12.0', tag='v0.12.0')
+    version('0.11.0', tag='v0.11.0')
     version('0.9.1', sha256='89772ed0e23f0e71c3fb8323746374999ecbe79c113e3fadc7ae6374e6dc0525')
 
     depends_on('py-setuptools',      type='build')
