@@ -26,6 +26,7 @@ class Beast1(Package):
 
     def setup_environment(self, spack_env, run_env):
         run_env.set('BEAST1', self.prefix)
+        run_env.set('BEAST_LIB', self.prefix.lib)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
