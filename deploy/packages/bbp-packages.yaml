@@ -37,6 +37,7 @@ packages:
       - py-jupyter-notebook@4.2.3
       - brion@3.0.0 +python ^boost@1.65.0
       - py-bbp-analysis-framework@1.6.39
+      - py-morph-tool@0.1.14
 
   gnu-stable-serial-ophiophob:
     target_matrix:

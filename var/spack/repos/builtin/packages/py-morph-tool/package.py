@@ -13,7 +13,8 @@ class PyMorphTool(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/morph-tool"
 
     version('develop', branch='master')
-    version('0.1.3', tag='morph-tool-v0.1.3', preferred=True)
+    version('0.1.14', tag='morph-tool-v0.1.14')
+    version('0.1.3', tag='morph-tool-v0.1.3')
 
     variant('neuron', default=False, description='Neuron-based functionality')
 
