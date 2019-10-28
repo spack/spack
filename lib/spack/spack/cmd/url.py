@@ -434,36 +434,9 @@ def name_parsed_correctly(pkg, name):
     Returns:
         bool: True if the name was correctly parsed, else False
     """
-    pkg_name = pkg.name
+    pkg_name = remove_prefix(pkg.name)
 
     name = simplify_name(name)
-
-    # After determining a name, `spack create` determines a build system.
-    # Some build systems prepend a special string to the front of the name.
-    # Since this can't be guessed from the URL, it would be unfair to say
-    # that these names are incorrectly parsed, so we remove them.
-    if pkg_name.startswith('r-'):
-        pkg_name = pkg_name[2:]
-    elif pkg_name.startswith('py-'):
-        pkg_name = pkg_name[3:]
-    elif pkg_name.startswith('tcl-'):
-        pkg_name = pkg_name[4:]
-    elif pkg_name.startswith('lua-'):
-        pkg_name = pkg_name[4:]
-    elif pkg_name.startswith('perl-'):
-        pkg_name = pkg_name[5:]
-    elif pkg_name.startswith('ruby-'):
-        pkg_name = pkg_name[5:]
-    elif pkg_name.startswith('llvm-'):
-        pkg_name = pkg_name[5:]
-    elif pkg_name.startswith('intel-'):
-        pkg_name = pkg_name[6:]
-    elif pkg_name.startswith('votca-'):
-        pkg_name = pkg_name[6:]
-    elif pkg_name.startswith('octave-'):
-        pkg_name = pkg_name[7:]
-    elif pkg_name.startswith('gtkorvo-'):
-        pkg_name = pkg_name[8:]
 
     return name == pkg_name
 
@@ -489,8 +462,32 @@ def version_parsed_correctly(pkg, version):
     return False
 
 
+def remove_prefix(pkg_name):
+    """Remove build system prefix ('py-', 'perl-', etc.) from a package name.
+
+    After determining a name, `spack create` determines a build system.
+    Some build systems prepend a special string to the front of the name.
+    Since this can't be guessed from the URL, it would be unfair to say
+    that these names are incorrectly parsed, so we remove them.
+
+    Args:
+        pkg_name (str): the name of the package
+
+    Returns:
+        str: the name of the package with any build system prefix removed
+    """
+    prefixes = [
+        'r-', 'py-', 'tcl-', 'lua-', 'perl-', 'ruby-', 'llvm-',
+        'intel-', 'votca-', 'octave-', 'gtkorvo-'
+    ]
+
+    prefix = next((p for p in prefixes if pkg_name.startswith(p)), '')
+
+    return pkg_name[len(prefix):]
+
+
 def remove_separators(version):
-    """Removes separator characters ('.', '_', and '-') from a version.
+    """Remove separator characters ('.', '_', and '-') from a version.
 
     A version like 1.2.3 may be displayed as 1_2_3 in the URL.
     Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.
