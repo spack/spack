@@ -7,9 +7,7 @@ from spack import *
 
 
 class RA4base(RPackage):
-    """Automated Affymetrix Array Analysis Base Package.
-
-       Automated Affymetrix Array Analysis"""
+    """Automated Affymetrix Array Analysis Base Package."""
 
     homepage = "https://bioconductor.org/packages/a4Base"
     git      = "https://git.bioconductor.org/packages/a4Base.git"

@@ -7,9 +7,7 @@ from spack import *
 
 
 class RA4preproc(RPackage):
-    """Automated Affymetrix Array Analysis Preprocessing Package.
-
-       Automated Affymetrix Array Analysis Preprocessing Package"""
+    """Automated Affymetrix Array Analysis Preprocessing Package."""
 
     homepage = "https://bioconductor.org/packages/a4Preproc"
     git      = "https://git.bioconductor.org/packages/a4Preproc.git"

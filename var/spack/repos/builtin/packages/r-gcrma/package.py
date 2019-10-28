@@ -7,9 +7,7 @@ from spack import *
 
 
 class RGcrma(RPackage):
-    """Background Adjustment Using Sequence Information.
-
-       Background adjustment using sequence information"""
+    """Background Adjustment Using Sequence Information."""
 
     homepage = "https://bioconductor.org/packages/gcrma"
     git      = "https://git.bioconductor.org/packages/gcrma.git"

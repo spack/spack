@@ -7,9 +7,7 @@ from spack import *
 
 
 class RGeneplotter(RPackage):
-    """Graphics related functions for Bioconductor.
-
-       Functions for plotting genomic data"""
+    """Graphics related functions for Bioconductor."""
 
     homepage = "https://bioconductor.org/packages/geneplotter"
     git      = "https://git.bioconductor.org/packages/geneplotter.git"

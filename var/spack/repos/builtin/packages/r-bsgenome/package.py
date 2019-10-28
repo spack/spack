@@ -8,10 +8,7 @@ from spack import *
 
 class RBsgenome(RPackage):
     """Software infrastructure for efficient representation of full genomes and
-       their SNPs.
-
-       Infrastructure shared by all the Biostrings-based genome data
-       packages."""
+       their SNPs."""
 
     homepage = "https://bioconductor.org/packages/BSgenome"
     git      = "https://git.bioconductor.org/packages/BSgenome.git"

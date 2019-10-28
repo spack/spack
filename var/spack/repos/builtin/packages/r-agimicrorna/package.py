@@ -8,9 +8,7 @@ from spack import *
 
 class RAgimicrorna(RPackage):
     """Processing and Differential Expression Analysis of Agilent microRNA
-       chips.
-
-       Processing and Analysis of Agilent microRNA data"""
+       chips."""
 
     homepage = "https://bioconductor.org/packages/AgiMicroRna"
     git      = "https://git.bioconductor.org/packages/AgiMicroRna.git"

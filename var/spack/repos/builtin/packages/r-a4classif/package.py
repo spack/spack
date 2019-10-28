@@ -7,9 +7,7 @@ from spack import *
 
 
 class RA4classif(RPackage):
-    """Automated Affymetrix Array Analysis Classification Package.
-
-       Automated Affymetrix Array Analysis Classification Package"""
+    """Automated Affymetrix Array Analysis Classification Package."""
 
     homepage = "https://bioconductor.org/packages/a4Classif"
     git      = "https://git.bioconductor.org/packages/a4Classif.git"

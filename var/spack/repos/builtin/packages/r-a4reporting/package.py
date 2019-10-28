@@ -7,9 +7,7 @@ from spack import *
 
 
 class RA4reporting(RPackage):
-    """Automated Affymetrix Array Analysis Reporting Package.
-
-       Automated Affymetrix Array Analysis Reporting Package"""
+    """Automated Affymetrix Array Analysis Reporting Package."""
 
     homepage = "https://bioconductor.org/packages/a4Reporting"
     git      = "https://git.bioconductor.org/packages/a4Reporting.git"

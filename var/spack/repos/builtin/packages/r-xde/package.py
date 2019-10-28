@@ -8,10 +8,7 @@ from spack import *
 
 class RXde(RPackage):
     """XDE: a Bayesian hierarchical model for cross-study analysis of
-       differential gene expression.
-
-       Multi-level model for cross-study detection of differential gene
-       expression."""
+       differential gene expression."""
 
     homepage = "https://bioconductor.org/packages/XDE"
     git      = "https://git.bioconductor.org/packages/XDE.git"

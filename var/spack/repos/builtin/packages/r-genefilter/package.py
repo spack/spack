@@ -8,9 +8,7 @@ from spack import *
 
 class RGenefilter(RPackage):
     """genefilter: methods for filtering genes from high-throughput
-       experiments.
-
-       Some basic functions for filtering genes."""
+       experiments."""
 
     homepage = "https://bioconductor.org/packages/genefilter"
     git      = "https://git.bioconductor.org/packages/genefilter.git"
