@@ -112,7 +112,7 @@ class Lbann(CMakePackage):
     depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99:')
     depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99:')
     depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99:')
-    depends_on('py-pytest', type='run', when='@:0.90,0.99:')
+    depends_on('py-pytest', type='test', when='@:0.90,0.99:')
     depends_on('py-protobuf+cpp', type='run', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')

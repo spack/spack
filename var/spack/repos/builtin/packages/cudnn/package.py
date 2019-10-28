@@ -13,9 +13,9 @@ class Cudnn(Package):
 
     homepage = "https://developer.nvidia.com/cudnn"
 
-    version('7.6.3-10.1-x86_64', '463a4258c007599b42f04f5008116e40',
+    version('7.6.3-10.1-x86_64', sha256='352557346d8111e2f954c494be1a90207103d316b8777c33e62b3a7f7b708961',
             url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.6.3/cudnn-10.1-linux-x64-v7.6.3.30.tgz')
-    version('7.6.3-10.1-ppc64le', 'ba686187b30f6fbb99d6e8cee8582435',
+    version('7.6.3-10.1-ppc64le', sha256='f274735a8fc31923d3623b1c3d2b1d0d35bb176687077c6a4d4353c6b900d8ee',
             url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.6.3/cudnn-10.1-linux-ppc64le-v7.6.3.30.tgz')
     version('7.5.1-10.1-x86_64', sha256='2c833f43c9147d9a25a20947a4c5a5f5c33b2443240fd767f63b330c482e68e0',
             url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.5.1/cudnn-10.1-linux-x64-v7.5.1.10.tgz')
