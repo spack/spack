@@ -24,9 +24,11 @@ class Scs(MakefilePackage):
     # make sure install_gpu target installs all libs not only the gpu ones
     patch('make_gpu.patch')
 
-    def build(self, spec, prefix):
+    def edit(self, spec, prefix):
         filter_file(r'-lblas', spec['blas'].libs.ld_flags, 'scs.mk')
         filter_file(r'-llapack', spec['lapack'].libs.ld_flags, 'scs.mk')
+
+    def build(self, spec, prefix):
         if '+cuda' in spec:
             make('default', 'gpu')
         else:
