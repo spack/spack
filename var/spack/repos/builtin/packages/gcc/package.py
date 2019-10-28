@@ -424,7 +424,7 @@ class Gcc(AutotoolsPackage):
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, spack_env, run_env):
         # Search prefix directory for possibly modified compiler names
         from spack.compilers.gcc import Gcc as Compiler
 
