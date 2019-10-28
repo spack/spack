@@ -44,15 +44,15 @@ class Libbeagle(AutotoolsPackage, CudaPackage):
                         'configure.ac', string=True)
 
     def configure_args(self):
-        args = []
+        args = [
+            # Since spack will inject architecture flags turn off -march=native
+            # when building libbeagle.
+            '--disable-march-native',
+        ]
 
         if '+cuda' in self.spec:
-            args.append('--with-cuda=%s' % spec['cuda'].prefix)
+            args.append('--with-cuda=%s' % self.spec['cuda'].prefix)
         else:
             args.append('--without-cuda')
 
         return args
-
-    def setup_environment(self, spack_env, run_env):
-        prefix = self.prefix
-        run_env.prepend_path('BEAST_LIB', prefix.lib)
