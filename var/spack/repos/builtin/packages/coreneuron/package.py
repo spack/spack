@@ -209,7 +209,7 @@ class Coreneuron(CMakePackage):
 
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
-            options.append('-DCORENRN_NMODL_ROOT=%s' % spec['nmodl'].prefix)
+            options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
             flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
 
         nmodl_options = 'codegen --force passes --verbatim-rename --inline'
