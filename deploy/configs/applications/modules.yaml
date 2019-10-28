@@ -58,6 +58,7 @@ modules:
       - py-efel
       - py-entity-management
       - py-jupyter-notebook
+      - py-morph-tool
       - py-simwriter
       - py-pytouchreader
       - reportinglib

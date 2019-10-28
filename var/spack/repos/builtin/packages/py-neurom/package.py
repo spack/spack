@@ -12,7 +12,8 @@ class PyNeurom(PythonPackage):
     homepage = "https://github.com/BlueBrain/NeuroM"
     url = "https://pypi.io/packages/source/n/neurom/neurom-1.4.10.tar.gz"
 
-    version('1.4.10', sha256='c94823133bb15b5756c22391e05948871ff77c0212e91ad375903ca437e18aeb', preferred=True)
+    version('1.4.14', sha256='e541f6c8a11826caa2b2d1cf18015a10ec7009f12813edfc2655084c7cf5021b')
+    version('1.4.10', sha256='c94823133bb15b5756c22391e05948871ff77c0212e91ad375903ca437e18aeb')
 
     variant('plotly', default=False, description="Enable plotly support")
 
@@ -31,4 +32,4 @@ class PyNeurom(PythonPackage):
     def patch(self):
         if self.spec.satisfies('^python@:3.0'):
             filter_file(r'matplotlib>=1.3.1', r'matplotlib<3.0', "setup.py")
-            filter_file(r'scipy>=0.17.0', r'scipy<1.3', "setup.py")
+            filter_file(r"'scipy>=.*'", r"'scipy<1.3'", "setup.py")
