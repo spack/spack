@@ -424,7 +424,7 @@ class Gcc(AutotoolsPackage):
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
 
-    def setup_run_environment(self, run_env):
+    def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
         from spack.compilers.gcc import Gcc as Compiler
 
@@ -450,6 +450,6 @@ class Gcc(AutotoolsPackage):
                     continue
 
                 # Set the proper environment variable
-                run_env.set(lang.upper(), abspath)
+                env.set(lang.upper(), abspath)
                 # Stop searching filename/regex combos for this language
                 break
