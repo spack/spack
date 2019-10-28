@@ -56,7 +56,7 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    arch_platform = ' arch=x86_64 platform=linux'
+    arch_platform = ' target=x86_64: platform=linux'
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%gcc@6:', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%gcc@7:', when='+cuda ^cuda@:9.1' + arch_platform)
