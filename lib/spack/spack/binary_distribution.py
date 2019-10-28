@@ -271,7 +271,7 @@ def generate_package_index(cache_prefix):
 
     Creates (or replaces) the "index.html" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and signing key (*.key) under cache_prefix.
+    and public key (*.key) under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
     try:
