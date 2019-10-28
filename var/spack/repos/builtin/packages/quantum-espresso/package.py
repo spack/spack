@@ -86,10 +86,22 @@ class QuantumEspresso(Package):
         msg='elpa is a parallel library and needs MPI support'
     )
 
-    # HDF5 support introduced in 6.1
-    hdf5_warning = 'HDF5 support only in QE 6.1 and later'
-    conflicts('hdf5=parallel', when='@:6.0', msg=hdf5_warning)
-    conflicts('hdf5=serial', when='@:6.0', msg=hdf5_warning)
+    # HDF5 support introduced in 6.1.0, but the configure had some limitations.
+    # In recent tests (Oct 2019), GCC and Intel work with the HDF5 Spack
+    # package for the default variant. This is only for hdf5=parallel variant.
+    # Support, for hdf5=serial was introduced later with some limitation. See
+    # the last conflict.
+    conflicts(
+        'hdf5=parallel',
+        when='@:6.0',
+        msg='parallel HDF5 support only in QE 6.1.0 and later'
+    )
+
+    conflicts(
+        'hdf5=serial',
+        when='@:6.4.0',
+        msg='serial HDF5 support only in QE 6.4.1 and later'
+    )
 
     conflicts(
         'hdf5=parallel',
@@ -99,8 +111,8 @@ class QuantumEspresso(Package):
 
     conflicts(
         'hdf5=serial',
-        when='~mpi @6.1:6.3',
-        msg='serial HDF5 in serial QE only works in develop version'
+        when='~mpi',
+        msg='serial HDF5 detection with serial QE is broken'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
@@ -235,31 +247,6 @@ class QuantumEspresso(Package):
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
         configure(*options)
-
-        # Apparently the build system of QE is so broken that
-        # make_inc needs to be modified manually:
-        #
-        # 1. The variable reported on stdout as HDF5_LIBS is actually
-        #    called HDF5_LIB (singular)
-        # 2. The link flags omit a few `-L` from the line, and this
-        #    causes the linker to break
-        # 3. Serial HDF5 case is supported both with and without MPI.
-        #
-        # Below we try to match the entire HDF5_LIB line and substitute
-        # with the list of libraries that needs to be linked.
-        if spec.variants['hdf5'].value != 'none':
-            make_inc = join_path(self.stage.source_path, 'make.inc')
-            hdf5_libs = ' '.join(spec['hdf5:hl,fortran'].libs)
-            filter_file(r'HDF5_LIB([\s]*)=([\s\w\-\/.,]*)',
-                        'HDF5_LIB = {0}'.format(hdf5_libs),
-                        make_inc)
-            if spec.variants['hdf5'].value == 'serial':
-                # Note that there is a benign side effect with this filter
-                # file statement. It replaces an instance of MANUAL_DFLAGS
-                # that is a comment in make.inc.
-                filter_file(r'MANUAL_DFLAGS([\s]*)=([\s]*)',
-                            'MANUAL_DFLAGS = -D__HDF5_SERIAL',
-                            make_inc)
 
         if '+epw' in spec:
             make('all', 'epw')
