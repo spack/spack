@@ -25,6 +25,7 @@ class Spfft(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo'))
     depends_on('fftw')
     depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
 
     def cmake_args(self):
         args = []
