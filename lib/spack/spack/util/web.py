@@ -208,9 +208,8 @@ def warn_no_ssl_cert_checking():
              "your Python to enable certificate verification.")
 
 
-def push_to_url(local_file_path, remote_path, **kwargs):
-    keep_original = kwargs.get('keep_original', True)
-
+def push_to_url(local_file_path, remote_path,
+        keep_original=True, extra_args=None):
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 
@@ -235,7 +234,8 @@ def push_to_url(local_file_path, remote_path, **kwargs):
                     os.remove(local_file_path)
 
     elif remote_url.scheme == 's3':
-        extra_args = kwargs.get('extra_args', {})
+        if extra_args is None:
+            extra_args = {}
 
         remote_path = remote_url.path
         while remote_path.startswith('/'):
