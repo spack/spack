@@ -54,8 +54,7 @@ def _s3_open(url):
 
     # NOTE(opadron): Apply workaround here (see above)
     stream = WrapStream(obj['Body'])
-    headers = web_util.standardize_header_names(
-        obj['ResponseMetadata']['HTTPHeaders'])
+    headers = obj['ResponseMetadata']['HTTPHeaders']
 
     return url, headers, stream
 
