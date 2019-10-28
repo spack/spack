@@ -121,8 +121,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     # a consistent/compat. combination is pulled in to the dependency graph.
     depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
     depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
-    # to get JSON-based UPF format support used in combination with SIRIUS
-    depends_on('json-fortran', when='+sirius')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     depends_on('py-numpy', when='@7:+cuda', type='build')
@@ -369,10 +367,6 @@ class Cp2k(MakefilePackage, CudaPackage):
             cppflags.append('-D__SIRIUS')
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
             libs += list(sirius.libs)
-
-            cppflags.append('-D__JSON')
-            fcflags += ['$(shell pkg-config --cflags json-fortran)']
-            libs += ['$(shell pkg-config --libs json-fortran)']
 
         if self.spec.satisfies('+cuda'):
             cppflags += ['-D__ACC']
