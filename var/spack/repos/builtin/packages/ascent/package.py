@@ -72,7 +72,7 @@ class Ascent(Package):
     # package dependencies
     ###########################################################################
 
-    depends_on("cmake@3.9.2:3.9.999", type='build')
+    depends_on("cmake@3.14:", type='build')
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
@@ -120,8 +120,8 @@ class Ascent(Package):
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
+    def setup_build_environment(self, env):
+        env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
     def install(self, spec, prefix):
         """
@@ -353,12 +353,21 @@ class Ascent(Package):
         cfg.write("# MPI Support\n")
 
         if "+mpi" in spec:
+            mpicc_path = spec['mpi'].mpicc
+            mpicxx_path = spec['mpi'].mpicxx
+            mpifc_path = spec['mpi'].mpifc
+            # if we are using compiler wrappers on cray systems
+            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
+            # etc make return the spack compiler wrappers
+            # which can trip up mpi detection in CMake 3.14
+            if cpp_compiler == "CC":
+                mpicc_path = "cc"
+                mpicxx_path = "CC"
+                mpifc_path = "ftn"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
-            cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
-                                        spec['mpi'].mpicxx))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                        spec['mpi'].mpifc))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
