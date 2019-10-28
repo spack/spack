@@ -72,7 +72,7 @@ class Ascent(Package):
     # package dependencies
     ###########################################################################
 
-    depends_on("cmake@3.14.5", type='build')
+    depends_on("cmake@3.14:", type='build')
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
@@ -120,7 +120,7 @@ class Ascent(Package):
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env, run_env):
         spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
     def install(self, spec, prefix):

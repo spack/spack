@@ -148,7 +148,7 @@ class Conduit(Package):
     # build phases used by this package
     phases = ["configure", "build", "install"]
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env, run_env):
         spack_env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
     def url_for_version(self, version):
