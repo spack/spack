@@ -207,7 +207,7 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
         enable_or_disable('gloo', newer=True)
-        enable_or_disable('gloo', var='GLOO_IBVERBS', newer=True)
+        enable_or_disable('gloo', var='IBVERBS', newer=True)
         enable_or_disable('opencv', newer=True)
         enable_or_disable('openmp', newer=True)
         enable_or_disable('ffmpeg', newer=True)
