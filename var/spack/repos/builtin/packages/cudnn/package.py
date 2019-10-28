@@ -13,6 +13,10 @@ class Cudnn(Package):
 
     homepage = "https://developer.nvidia.com/cudnn"
 
+    version('7.6.3-10.1-x86_64', sha256='352557346d8111e2f954c494be1a90207103d316b8777c33e62b3a7f7b708961',
+            url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.6.3/cudnn-10.1-linux-x64-v7.6.3.30.tgz')
+    version('7.6.3-10.1-ppc64le', sha256='f274735a8fc31923d3623b1c3d2b1d0d35bb176687077c6a4d4353c6b900d8ee',
+            url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.6.3/cudnn-10.1-linux-ppc64le-v7.6.3.30.tgz')
     version('7.5.1-10.1-x86_64', sha256='2c833f43c9147d9a25a20947a4c5a5f5c33b2443240fd767f63b330c482e68e0',
             url='https://developer.download.nvidia.com/compute/redist/cudnn/v7.5.1/cudnn-10.1-linux-x64-v7.5.1.10.tgz')
     version('7.5.1-10.1-ppc64le', sha256='a9e23bc83c970daec20874ccd1d8d80b648adf15440ecd0164818b330b1e2663',
@@ -41,7 +45,7 @@ class Cudnn(Package):
     depends_on('cuda@8:', when='@5.1:@7')
     depends_on('cuda@9:', when='@7.2:@7.4')
     depends_on('cuda@10:', when='@7.5.0-10.0-ppc64le,7.5.0-10.0-x86_64,7.5.1-10.0-ppc64le,7.5.1-10.0-x86_64')
-    depends_on('cuda@10.1:', when='@7.5.0-10.1-ppc64le,7.5.0-10.1-x86_64,7.5.1-10.1-ppc64le,7.5.1-10.1-x86_64')
+    depends_on('cuda@10.1:', when='@7.5.0-10.1-ppc64le,7.5.0-10.1-x86_64,7.5.1-10.1-ppc64le,7.5.1-10.1-x86_64,7.6.3-10.1-ppc64le,7.6.3-10.1-x86_64')
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
