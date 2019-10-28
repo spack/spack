@@ -20,3 +20,8 @@ class PerlDbfile(PerlPackage):
     version('1.840', sha256='b7864707fad0f2d1488c748c4fa08f1fb8bcfd3da247c36909fd42f20bfab2c4')
 
     depends_on('perl-extutils-makemaker', type='build')
+    depends_on('berkeley-db', type='build')
+
+    def patch(self):
+        filter_file('/usr/local/BerkeleyDB',
+                    self.spec['berkeley-db'].prefix, 'config.in')
