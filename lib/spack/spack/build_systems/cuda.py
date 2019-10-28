@@ -60,7 +60,7 @@ class CudaPackage(PackageBase):
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%gcc@6:', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%gcc@7:', when='+cuda ^cuda@:9.1' + arch_platform)
-    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@:10.2' + arch_platform)
     conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27' + arch_platform)
     conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5' + arch_platform)
     conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8' + arch_platform)
