@@ -31,10 +31,10 @@ class RBiomart(RPackage):
     version('2.34.2', commit='a7030915fbc6120cc6812aefdedba423a207459b')
     version('2.32.1', commit='f84d74424fa599f6d08f8db4612ca09914a9087f')
 
-    depends_on('r-annotationdbi', when='@2.32.1:', type=('build', 'run'))
-    depends_on('r-rcurl', when='@2.32.1:', type=('build', 'run'))
-    depends_on('r-xml', when='@2.32.1:', type=('build', 'run'))
+    depends_on('r-xml', type=('build', 'run'))
+    depends_on('r-rcurl', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
 
-    depends_on('r-httr', when='@2.34.2:', type=('build', 'run'))
     depends_on('r-progress', when='@2.34.2:', type=('build', 'run'))
     depends_on('r-stringr', when='@2.34.2:', type=('build', 'run'))
+    depends_on('r-httr', when='@2.34.2:', type=('build', 'run'))

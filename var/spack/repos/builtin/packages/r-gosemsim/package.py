@@ -26,9 +26,9 @@ class RGosemsim(RPackage):
     version('2.4.1', commit='0656e845860d14e054670ffc246a1c53f699299c')
     version('2.2.0', commit='247434790e6c8cf99e5643f569390362b8c87c52')
 
-    depends_on('r-annotationdbi', when='@2.2.0:', type=('build', 'run'))
-    depends_on('r-go-db', when='@2.2.0:', type=('build', 'run'))
-    depends_on('r@3.3.2:', when='@2.2.0:', type=('build', 'run'))
-    depends_on('r-rcpp', when='@2.2.0:', type=('build', 'run'))
+    depends_on('r@3.3.2:', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))
 
     depends_on('r@3.4.0:', when='@2.8.0:', type=('build', 'run'))

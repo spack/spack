@@ -22,18 +22,18 @@ class RXvector(RPackage):
     version('0.18.0', commit='27acf47282c9880b54d04dff46c1e50f0c87fa6b')
     version('0.16.0', commit='54615888e1a559da4a81de33e934fc0f1c3ad99f')
 
-    depends_on('r-biocgenerics@0.19.2:', when='@0.16.0:', type=('build', 'run'))
-    depends_on('r-iranges@2.9.18:', when='@0.16.0:', type=('build', 'run'))
-    depends_on('r@2.8.0:', when='@0.16.0:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.13.13:', when='@0.16.0:', type=('build', 'run'))
-    depends_on('r-zlibbioc', when='@0.16.0:', type=('build', 'run'))
+    depends_on('r@2.8.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.19.2:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
+    depends_on('r-iranges@2.9.18:', type=('build', 'run'))
+    depends_on('r-zlibbioc', type=('build', 'run'))
 
     depends_on('r-s4vectors@0.15.14:', when='@0.18.0:', type=('build', 'run'))
 
-    depends_on('r-iranges@2.13.16:', when='@0.20.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.17.24:', when='@0.20.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.13.16:', when='@0.20.0:', type=('build', 'run'))
 
-    depends_on('r-iranges@2.15.12:', when='@0.22.0:', type=('build', 'run'))
     depends_on('r-s4vectors@0.19.15:', when='@0.22.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.15.12:', when='@0.22.0:', type=('build', 'run'))
 
     depends_on('r-s4vectors@0.21.13:', when='@0.24.0:', type=('build', 'run'))

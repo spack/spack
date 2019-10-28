@@ -21,6 +21,6 @@ class RSpem(RPackage):
     version('1.18.0', commit='3ab425dd9889885eac328d26b73366a875cd250b')
     version('1.16.0', commit='9c0a96374086765db9c81e36a662999067fa4cc7')
 
-    depends_on('r-biobase', when='@1.16.0:', type=('build', 'run'))
-    depends_on('r@2.15.1:', when='@1.16.0:', type=('build', 'run'))
-    depends_on('r-rsolnp', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r@2.15.1:', type=('build', 'run'))
+    depends_on('r-rsolnp', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))

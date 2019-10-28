@@ -21,4 +21,4 @@ class RAneufinderdata(RPackage):
     version('1.6.0', commit='8fe5b221619aab75fe84c9094708d240dd1e6730')
     version('1.4.0', commit='55c8807ee4a37a2eb6d0defafaf843f980b22c40')
 
-    depends_on('r@3.3:', when='@1.4.0:', type=('build', 'run'))
+    depends_on('r@3.3:', type=('build', 'run'))

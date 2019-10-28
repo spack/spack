@@ -22,6 +22,6 @@ class RAnnotationfilter(RPackage):
     version('1.2.0', commit='744b82915d7b85031de462d9d0a2bf9fdfd0e29d')
     version('1.0.0', commit='a9f79b26defe3021eea60abe16ce1fa379813ec9')
 
-    depends_on('r-genomicranges', when='@1.0.0:', type=('build', 'run'))
-    depends_on('r-lazyeval', when='@1.0.0:', type=('build', 'run'))
-    depends_on('r@3.4.0:', when='@1.0.0:', type=('build', 'run'))
+    depends_on('r@3.4.0:', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-lazyeval', type=('build', 'run'))

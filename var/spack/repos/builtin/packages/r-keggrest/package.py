@@ -22,6 +22,6 @@ class RKeggrest(RPackage):
     version('1.18.1', commit='580c126eabc3c52145967708f67a428ca46b23b2')
     version('1.16.1', commit='ed48de0def57a909894e237fa4731c4a052d8849')
 
-    depends_on('r-biostrings', when='@1.16.1:', type=('build', 'run'))
-    depends_on('r-httr', when='@1.16.1:', type=('build', 'run'))
-    depends_on('r-png', when='@1.16.1:', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-png', type=('build', 'run'))
+    depends_on('r-biostrings', type=('build', 'run'))

@@ -26,9 +26,9 @@ class REdger(RPackage):
     version('3.20.9', commit='acbcbbee939f399673678653678cd9cb4917c4dc')
     version('3.18.1', commit='101106f3fdd9e2c45d4a670c88f64c12e97a0495')
 
-    depends_on('r-limma', when='@3.18.1:', type=('build', 'run'))
-    depends_on('r-locfit', when='@3.18.1:', type=('build', 'run'))
-    depends_on('r@2.15.0:', when='@3.18.1:', type=('build', 'run'))
+    depends_on('r@2.15.0:', type=('build', 'run'))
+    depends_on('r-limma', type=('build', 'run'))
+    depends_on('r-locfit', type=('build', 'run'))
 
     depends_on('r-limma@3.34.5:', when='@3.20.9:', type=('build', 'run'))
     depends_on('r-rcpp', when='@3.20.9:', type=('build', 'run'))

@@ -29,5 +29,5 @@ class RAcde(RPackage):
     version('1.8.0', commit='f7fc3e1dce958445f920d3b28b56abde70bfb9de')
     version('1.6.0', commit='244c81f435a077bf7895ea565fa6695e8b079f67')
 
-    depends_on('r-boot@1.3:', when='@1.6.0:', type=('build', 'run'))
-    depends_on('r@3.3:', when='@1.6.0:', type=('build', 'run'))
+    depends_on('r@3.3:', type=('build', 'run'))
+    depends_on('r-boot@1.3:', type=('build', 'run'))

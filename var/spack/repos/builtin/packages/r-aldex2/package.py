@@ -30,10 +30,10 @@ class RAldex2(RPackage):
     version('1.10.0', commit='e43f99e4009ad4d5ed200cc8a19faf7091c0c98a')
     version('1.8.0', commit='24104824ca2402ad4f54fbf1ed9cee7fac2aaaf1')
 
-    depends_on('r-biocparallel', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-genomicranges', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-s4vectors', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-summarizedexperiment', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-summarizedexperiment', type=('build', 'run'))
+    depends_on('r-biocparallel', type=('build', 'run'))
 
     depends_on('r-multtest', when='@1.10.0:', type=('build', 'run'))

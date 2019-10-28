@@ -26,11 +26,11 @@ class RMzr(RPackage):
     version('2.12.0', commit='f05eb27ae31c3d019cca10fc3b9ee513cbcdfc5a')
     version('2.10.0', commit='a6168b68e48c281e88de9647254a8db1e21df388')
 
-    depends_on('r-biobase', when='@2.10.0:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.13.6:', when='@2.10.0:', type=('build', 'run'))
-    depends_on('r-protgenerics', when='@2.10.0:', type=('build', 'run'))
-    depends_on('r-rcpp@0.10.1:', when='@2.10.0:', type=('build', 'run'))
-    depends_on('r-zlibbioc', when='@2.10.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.10.1:', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.13.6:', type=('build', 'run'))
+    depends_on('r-protgenerics', type=('build', 'run'))
+    depends_on('r-zlibbioc', type=('build', 'run'))
 
     depends_on('r-protgenerics@1.9.1:', when='@2.12.0:', type=('build', 'run'))
 

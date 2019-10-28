@@ -27,4 +27,4 @@ class RAbadata(RPackage):
     version('1.8.0', commit='181a4af1af349064eb432255970e925ae2564e1a')
     version('1.6.0', commit='517c18a3d1809dde0291eeb47dd2545c7cfcdabe')
 
-    depends_on('r@3.2:', when='@1.6.0:', type=('build', 'run'))
+    depends_on('r@3.2:', type=('build', 'run'))

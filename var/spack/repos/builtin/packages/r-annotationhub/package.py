@@ -27,19 +27,19 @@ class RAnnotationhub(RPackage):
     version('2.10.1', commit='b7cb668de9b9625ac2beb3dcde1fa39e289eec29')
     version('2.8.3', commit='8aa9c64262a8d708d2bf1c82f82dfc3d7d4ccc0c')
 
-    depends_on('r-annotationdbi@1.31.19:', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.15.10:', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-biocinstaller', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-httr', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-interactivedisplaybase', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-rsqlite', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-s4vectors', when='@2.8.3:', type=('build', 'run'))
-    depends_on('r-yaml', when='@2.8.3:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
+    depends_on('r-rsqlite', type=('build', 'run'))
+    depends_on('r-biocinstaller', type=('build', 'run'))
+    depends_on('r-annotationdbi@1.31.19:', type=('build', 'run'))
+    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-interactivedisplaybase', type=('build', 'run'))
+    depends_on('r-httr', type=('build', 'run'))
+    depends_on('r-yaml', type=('build', 'run'))
 
     depends_on('r-curl', when='@2.10.1:', type=('build', 'run'))
 
     depends_on('r-biocmanager', when='@2.14.5:', type=('build', 'run'))
 
     depends_on('r-biocfilecache@1.5.1:', when='@2.16.1:', type=('build', 'run'))
-    depends_on('r-dplyr', when='@2.16.1:', type=('build', 'run'))
     depends_on('r-rappdirs', when='@2.16.1:', type=('build', 'run'))
+    depends_on('r-dplyr', when='@2.16.1:', type=('build', 'run'))

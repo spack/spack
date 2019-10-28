@@ -21,4 +21,4 @@ class RCtc(RPackage):
     version('1.52.0', commit='ffff8693cab5ebad610d139367f089418f1830a1')
     version('1.50.0', commit='4ee7519c3e5172e140c2658b4cf5271d229acc7e')
 
-    depends_on('r-amap', when='@1.50.0:', type=('build', 'run'))
+    depends_on('r-amap', type=('build', 'run'))

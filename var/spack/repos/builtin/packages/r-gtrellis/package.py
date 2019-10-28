@@ -25,10 +25,10 @@ class RGtrellis(RPackage):
     version('1.11.1', commit='ff47d99743fd697d5c724f7bb18131dfe76dee71')
     version('1.8.0', commit='f813b420a008c459f63a2a13e5e64c5507c4c472')
 
-    depends_on('r-circlize@0.3.3:', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-genomicranges', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-getoptlong', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r-iranges', when='@1.8.0:', type=('build', 'run'))
-    depends_on('r@3.1.2:', when='@1.8.0:', type=('build', 'run'))
+    depends_on('r@3.1.2:', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-genomicranges', type=('build', 'run'))
+    depends_on('r-circlize@0.3.3:', type=('build', 'run'))
+    depends_on('r-getoptlong', type=('build', 'run'))
 
     depends_on('r-circlize@0.4.8:', when='@1.16.1:', type=('build', 'run'))

@@ -26,7 +26,7 @@ class RRhdf5(RPackage):
     version('2.22.0', commit='4431bdc0a2bcbb8086ee08a0f2300129b808d1be')
     version('2.20.0', commit='37b5165325062728bbec9167f89f5f4b794f30bc')
 
-    depends_on('r-zlibbioc', when='@2.20.0:', type=('build', 'run'))
+    depends_on('r-zlibbioc', type=('build', 'run'))
 
     depends_on('r-rhdf5lib', when='@2.24.0:', type=('build', 'run'))
 

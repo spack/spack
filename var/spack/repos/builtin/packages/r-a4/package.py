@@ -20,8 +20,8 @@ class RA4(RPackage):
     version('1.26.0', commit='e6af2cba5b684f81cc6e44dbc432916f75a2f774')
     version('1.24.0', commit='79b5143652176787c85a0d587b3bbfad6b4a19f4')
 
-    depends_on('r-a4base', when='@1.24.0:', type=('build', 'run'))
-    depends_on('r-a4classif', when='@1.24.0:', type=('build', 'run'))
-    depends_on('r-a4core', when='@1.24.0:', type=('build', 'run'))
-    depends_on('r-a4preproc', when='@1.24.0:', type=('build', 'run'))
-    depends_on('r-a4reporting', when='@1.24.0:', type=('build', 'run'))
+    depends_on('r-a4base', type=('build', 'run'))
+    depends_on('r-a4preproc', type=('build', 'run'))
+    depends_on('r-a4classif', type=('build', 'run'))
+    depends_on('r-a4core', type=('build', 'run'))
+    depends_on('r-a4reporting', type=('build', 'run'))

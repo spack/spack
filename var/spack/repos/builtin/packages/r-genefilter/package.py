@@ -21,8 +21,8 @@ class RGenefilter(RPackage):
     version('1.60.0', commit='c98f695253c330a9380b2b4ffa27f3b7d66773e4')
     version('1.58.1', commit='ace2556049677f60882adfe91f8cc96791556fc2')
 
-    depends_on('r-annotate', when='@1.58.1:', type=('build', 'run'))
-    depends_on('r-annotationdbi', when='@1.58.1:', type=('build', 'run'))
-    depends_on('r-biobase', when='@1.58.1:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.9.42:', when='@1.58.1:', type=('build', 'run'))
-    depends_on('r-survival', when='@1.58.1:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.9.42:', type=('build', 'run'))
+    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r-annotate', type=('build', 'run'))
+    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))

@@ -21,13 +21,13 @@ class RAnnotationdbi(RPackage):
     version('1.40.0', commit='e34dff07e10402eecbf95604a512bc1fc4edb127')
     version('1.38.2', commit='67d46facba8c15fa5f0eb47c4e39b53dbdc67c36')
 
-    depends_on('r-biobase@1.17.0:', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r-biocgenerics@0.15.10:', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r-dbi', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r-iranges', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r@2.7.0:', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r-rsqlite', when='@1.38.2:', type=('build', 'run'))
-    depends_on('r-s4vectors@0.9.25:', when='@1.38.2:', type=('build', 'run'))
+    depends_on('r@2.7.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
+    depends_on('r-biobase@1.17.0:', type=('build', 'run'))
+    depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'))
+    depends_on('r-rsqlite', type=('build', 'run'))
+    depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
 
     depends_on('r-biocgenerics@0.23.1:', when='@1.40.0:', type=('build', 'run'))
 

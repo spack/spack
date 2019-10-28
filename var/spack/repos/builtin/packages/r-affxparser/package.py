@@ -27,4 +27,4 @@ class RAffxparser(RPackage):
     version('1.50.0', commit='01ef641727eadc2cc17b5dbb0b1432364436e3d5')
     version('1.48.0', commit='2461ea88f310b59c4a9a997a4b3dadedbd65a4aa')
 
-    depends_on('r@2.14.0:', when='@1.48.0:', type=('build', 'run'))
+    depends_on('r@2.14.0:', type=('build', 'run'))
