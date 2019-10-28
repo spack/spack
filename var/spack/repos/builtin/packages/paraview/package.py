@@ -148,7 +148,7 @@ class Paraview(CMakePackage, CudaPackage):
 
         env.set('ParaView_DIR', self.prefix)
         env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+                join_path(lib_dir, 'cmake', self.paraview_subdir))
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, self.paraview_subdir)
