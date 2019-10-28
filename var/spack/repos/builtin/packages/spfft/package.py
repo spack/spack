@@ -26,16 +26,6 @@ class Spfft(CMakePackage):
     depends_on('fftw')
     depends_on('mpi', when='+mpi')
 
-    @property
-    def libs(self):
-
-        libraries = ['libspfft']
-
-        return find_libraries(
-            libraries, root=self.prefix,
-            shared=self.spec.satisfies('~static'), recursive=True
-        )
-
     def cmake_args(self):
         args = []
         if self.spec.satisfies('+openmp'):
