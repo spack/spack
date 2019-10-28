@@ -33,7 +33,7 @@ class Gmt(Package):
     depends_on('ghostscript')
     depends_on('subversion')
     depends_on('cmake@2.8.5:', type='build', when='@5:')
-    depends_on('etcdf-c@4:')
+    depends_on('netcdf-c@4:')
     depends_on('curl', when='@5.4:')
 
     # Optional dependencies
