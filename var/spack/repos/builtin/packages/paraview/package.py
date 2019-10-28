@@ -12,7 +12,7 @@ class Paraview(CMakePackage, CudaPackage):
     visualization application."""
 
     homepage = 'https://www.paraview.org'
-    url      = "https://www.paraview.org/files/v5.6/ParaView-v5.6.2.tar.xz"
+    url      = "https://www.paraview.org/files/v5.7/ParaView-v5.7.0.tar.xz"
     list_url = "https://www.paraview.org/files"
     list_depth = 1
     git      = "https://gitlab.kitware.com/paraview/paraview.git"
@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
     version('5.6.0', sha256='cb8c4d752ad9805c74b4a08f8ae6e83402c3f11e38b274dba171b99bb6ac2460')
     version('5.5.2', sha256='64561f34c4402b88f3cb20a956842394dde5838efd7ebb301157a837114a0e2d')
@@ -126,16 +127,16 @@ class Paraview(CMakePackage, CudaPackage):
         """The paraview subdirectory name as paraview-major.minor"""
         return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
             lib_dir = self.prefix.lib
-        spack_env.set('ParaView_DIR', self.prefix)
-        spack_env.set('PARAVIEW_VTK_DIR',
-                      join_path(lib_dir, 'cmake', self.paraview_subdir))
+        env.set('ParaView_DIR', self.prefix)
+        env.set('PARAVIEW_VTK_DIR',
+                join_path(lib_dir, 'cmake', self.paraview_subdir))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib
@@ -145,31 +146,31 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             lib_dir = self.prefix.lib
 
-        run_env.set('ParaView_DIR', self.prefix)
-        run_env.set('PARAVIEW_VTK_DIR',
-                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        env.set('ParaView_DIR', self.prefix)
+        env.set('PARAVIEW_VTK_DIR',
+                join_path(lib_dir, 'cmake', self.paraview_subdir))
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, self.paraview_subdir)
 
-        run_env.prepend_path('LIBRARY_PATH', lib_dir)
-        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+        env.prepend_path('LIBRARY_PATH', lib_dir)
+        env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
         if '+python' in self.spec or '+python3' in self.spec:
             if self.spec.version <= Version('5.4.1'):
                 pv_pydir = join_path(lib_dir, 'site-packages')
-                run_env.prepend_path('PYTHONPATH', pv_pydir)
-                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtk'))
+                env.prepend_path('PYTHONPATH', pv_pydir)
+                env.prepend_path('PYTHONPATH', join_path(pv_pydir, 'vtk'))
             else:
                 python_version = self.spec['python'].version.up_to(2)
                 pv_pydir = join_path(lib_dir,
                                      'python{0}'.format(python_version),
                                      'site-packages')
-                run_env.prepend_path('PYTHONPATH', pv_pydir)
+                env.prepend_path('PYTHONPATH', pv_pydir)
                 # The Trilinos Catalyst adapter requires
                 # the vtkmodules directory in PYTHONPATH
-                run_env.prepend_path('PYTHONPATH', join_path(pv_pydir,
-                                                             'vtkmodules'))
+                env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                         'vtkmodules'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
