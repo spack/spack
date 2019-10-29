@@ -78,9 +78,7 @@ class Qt(Package):
     variant('xcb', default=True, description="enable qt-xcb")
     variant('webengine', default=False, description="Enable webengine")
 
-    conflicts('+webengine', when='~webkit')
     conflicts('+webengine', when='~opengl')
-#    conflicts('+webengine', when='~sql')
 
     # Patches for qt@3
     patch('qt3-accept.patch', when='@3')
@@ -176,8 +174,8 @@ class Qt(Package):
     depends_on("pciutils", when="+webengine")
     depends_on("ruby", when="+webkit", type='build')
     depends_on("libxslt", when="+webkit")
-    #depends_on("gcc", type=('build', 'link'))
     depends_on("gettext", when="+webengine")
+    depends_on("nss", when="+webengine")  # for chromium
 
     # gcc@4 is not supported as of Qt@5.14
     # https://doc.qt.io/qt-5.14/supported-platforms.html
@@ -190,6 +188,7 @@ class Qt(Package):
         depends_on("libxcb", when="~xcb")
         depends_on("libxkbcommon")
         conflicts('+webengine', when='~dbus')
+        conflicts('+webengine', when='+xcb')
         depends_on("fontconfig", when="+webengine")
         depends_on("xcb-util-image", when="~xcb")
         depends_on("xcb-util-keysyms", when="~xcb")
