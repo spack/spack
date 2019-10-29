@@ -18,9 +18,11 @@ class Brion(CMakePackage):
     version('3.0.0', tag='3.0.0', submodules=True, preferred=True)
 
     variant('python', default=False, description='Build Python wrapping')
+    variant('doc', default=False, description='Build documentation')
 
     depends_on('cmake@3.1:', type='build')
     depends_on('ninja', type='build')
+    depends_on('doxygen', type='build')
 
     depends_on('python', type=('build', 'run'), when='+python')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
@@ -45,3 +47,9 @@ class Brion(CMakePackage):
             pathname = os.path.join(target, *site_dir)
             if os.path.isdir(pathname):
                 run_env.prepend_path('PYTHONPATH', pathname)
+
+    def build(self, spec, prefix):
+        with working_dir(self.build_directory):
+            ninja()
+            if '+doc' in self.spec:
+                ninja('doxygen', 'doxycopy')
