@@ -11,7 +11,7 @@ class PyScs(PythonPackage):
     """SCS: splitting conic solver"""
 
     homepage = "https://github.com/cvxgrp/scs"
-    url      = "https://files.pythonhosted.org/packages/f2/6e/dbdd778c64c1920ae357a2013ea655d65a1f8b60f397d6e5549e4aafe8ec/scs-2.1.1-2.tar.gz"
+    url      = "https://www.pypi.io/packages/source/s/scs/scs-2.1.1-2.tar.gz"
 
     version('2.1.1-2', sha256='f816cfe3d4b4cff3ac2b8b96588c5960ddd2a3dc946bda6b09db04e7bc6577f2')
 
