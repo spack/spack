@@ -24,5 +24,5 @@ class PyCvxpy(PythonPackage):
     depends_on('py-scs@1.1.3:',        type=('build', 'run'))
     depends_on('py-osqp@0.4.1',        type=('build', 'run'))
 
-    depends_on('py-multiprocess', type='run')
-    depends_on('py-six', type='run')
+    depends_on('py-multiprocess', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
