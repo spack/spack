@@ -51,7 +51,7 @@ def local_file_path(url):
 
 
 def parse(url, scheme='file'):
-    """Parse a mirror url.
+    """Parse a url.
 
     For file:// URLs, the netloc and path components are concatenated and
     passed through spack.util.path.canoncalize_path().
@@ -168,7 +168,12 @@ def join(base_url, path, *extra, **kwargs):
                         paths[j], scheme=None, allow_fragments=False)
 
                     if obj.scheme:
-                        paths[i] = urllib_parse.urljoin(paths[j], paths[i])
+                        paths[i] = '{SM}://{NL}{PATH}'.format(
+                            SM=obj.scheme,
+                            NL=(
+                                (obj.netloc + '/')
+                                if obj.scheme != 's3' else ''),
+                            PATH=paths[i][1:])
 
             last_abs_component = i
             break
