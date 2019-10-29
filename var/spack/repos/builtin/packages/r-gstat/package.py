@@ -12,7 +12,7 @@ class RGstat(RPackage):
 
     homepage = "https://github.com/r-spatial/gstat/"
     url      = "https://cran.r-project.org/src/contrib/gstat_2.0-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gstat"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gstat"
 
     version('2.0-3', sha256='20a93fe6bf89221a5888de273bddf9a98187806d507cd3cd6297c2b13e7acce1')
 
