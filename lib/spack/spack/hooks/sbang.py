@@ -33,8 +33,8 @@ def shebang_too_long(path):
 
 def filter_shebang(path):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
-    with open(path, 'r') as original_file:
-        original = original_file.read()
+    with open(path, 'rb') as original_file:
+        original = original_file.read().decode(encoding='UTF-8')
 
     # This line will be prepended to file
     new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
@@ -61,9 +61,9 @@ def filter_shebang(path):
         saved_mode = st.st_mode
         os.chmod(path, saved_mode | stat.S_IWRITE)
 
-    with open(path, 'w') as new_file:
-        new_file.write(new_sbang_line)
-        new_file.write(original)
+    with open(path, 'wb') as new_file:
+        new_file.write(new_sbang_line.encode(encoding='UTF-8'))
+        new_file.write(original.encode(encoding='UTF-8'))
 
     # Restore original permissions.
     if saved_mode is not None:
