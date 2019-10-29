@@ -152,9 +152,9 @@ def join(base_url, path, *extra, **kwargs):
     n = len(paths)
     last_abs_component = None
     scheme = None
-    for i in range(n-1, -1, -1):
+    for i in range(n - 1, -1, -1):
         obj = urllib_parse.urlparse(
-                paths[i], scheme=None, allow_fragments=False)
+            paths[i], scheme=None, allow_fragments=False)
 
         scheme = obj.scheme
 
@@ -163,9 +163,9 @@ def join(base_url, path, *extra, **kwargs):
             if scheme is None:
                 # Without a scheme, we have to go back looking for the
                 # next-last component that specifies a scheme.
-                for j in range(i-1, -1, -1):
+                for j in range(i - 1, -1, -1):
                     obj = urllib_parse.urlparse(
-                            paths[j], scheme=None, allow_fragments=False)
+                        paths[j], scheme=None, allow_fragments=False)
 
                     if obj.scheme:
                         paths[i] = urllib_parse.urljoin(paths[j], paths[i])
@@ -177,7 +177,7 @@ def join(base_url, path, *extra, **kwargs):
         paths = paths[last_abs_component:]
         if len(paths) == 1:
             return urllib_parse.urlparse(
-                    paths[0], scheme='file', allow_fragments=False).geturl()
+                paths[0], scheme='file', allow_fragments=False).geturl()
 
     return _join(*paths, **kwargs)
 
