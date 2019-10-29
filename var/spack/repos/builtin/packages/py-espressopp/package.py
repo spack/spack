@@ -14,7 +14,7 @@ class PyEspressopp(CMakePackage):
        atomistic or bead-spring models as they are used in soft matter research
     """
     homepage = "https://espressopp.github.io"
-    url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4.1"
+    url      = "https://github.com/espressopp/espressopp/tarball/v2.0.2"
     git      = "https://github.com/espressopp/espressopp.git"
 
     version('develop', branch='master')

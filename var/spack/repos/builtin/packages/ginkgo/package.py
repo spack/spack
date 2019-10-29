@@ -12,7 +12,6 @@ class Ginkgo(CMakePackage, CudaPackage):
     with a focus on sparse solution of linear systems."""
 
     homepage = "https://ginkgo-project.github.io/"
-    url      = "https://github.com/ginkgo-project/ginkgo.git"
     git      = "https://github.com/ginkgo-project/ginkgo.git"
 
     maintainers = ['tcojean', 'hartwiganzt']

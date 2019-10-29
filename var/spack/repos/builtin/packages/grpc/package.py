@@ -20,7 +20,7 @@ class Grpc(CMakePackage):
     depends_on('protobuf')
     depends_on('openssl')
     depends_on('zlib')
-    depends_on('cares')
+    depends_on('c-ares')
 
     def cmake_args(self):
         args = [

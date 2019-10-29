@@ -297,8 +297,8 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi')
-    depends_on('netcdf+mpi', when="~pnetcdf")
-    depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
+    depends_on('netcdf-c+mpi', when="~pnetcdf")
+    depends_on('netcdf-c+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
@@ -505,7 +505,7 @@ class Trilinos(CMakePackage):
             '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
+            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf-c'].prefix,
             '-DTPL_ENABLE_X11:BOOL=%s' % (
                 'ON' if '+x11' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Gtest:BOOL=%s' % (

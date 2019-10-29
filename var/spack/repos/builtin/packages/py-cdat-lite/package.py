@@ -17,7 +17,7 @@ class PyCdatLite(PythonPackage):
 
     version('6.0.1', sha256='092ae4ff1fb03dee00096e8dd595b769b422759ce972d96525950adf8e1c9374')
 
-    depends_on("netcdf")
+    depends_on("netcdf-c")
     depends_on("python@2.5:2.8", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))
     depends_on('py-setuptools', type='build')

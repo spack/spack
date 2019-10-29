@@ -75,7 +75,7 @@ class Octave(AutotoolsPackage):
     depends_on('glpk',         when='+glpk')
     depends_on('gl2ps',        when='+gl2ps')
     depends_on('gnuplot',      when='+gnuplot')
-    depends_on('image-magick',  when='+magick')
+    depends_on('imagemagick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
     depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
@@ -156,7 +156,7 @@ class Octave(AutotoolsPackage):
 
         if '+magick' in spec:
             config_args.append("--with-magick=%s"
-                               % spec['image-magick'].prefix.lib)
+                               % spec['imagemagick'].prefix.lib)
         else:
             config_args.append("--without-magick")
 

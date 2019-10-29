@@ -57,7 +57,7 @@ class Gdl(CMakePackage):
     depends_on('libsm')
     depends_on('libxinerama')
     depends_on('libxxf86vm')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('pslib')
     depends_on('readline')
 
