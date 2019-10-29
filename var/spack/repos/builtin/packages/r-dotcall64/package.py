@@ -7,7 +7,8 @@ from spack import *
 
 
 class RDotcall64(RPackage):
-    """dotCall64: Enhanced Foreign Function Interface Supporting Long Vectors"""
+    """dotCall64: Enhanced Foreign Function Interface Supporting Long
+       Vectors."""
 
     homepage = "https://git.math.uzh.ch/reinhard.furrer/dotCall64"
     url      = "https://cloud.r-project.org/src/contrib/dotCall64_1.0-0.tar.gz"
