@@ -26,4 +26,4 @@ class RDada2(RPackage):
     depends_on('r-xvector@0.16.0:', type=('build', 'run'))
     depends_on('r-biocgenerics@0.22.0:', type=('build', 'run'))
 
-    depends_on('gmake')
+    depends_on('gmake', type='build')
