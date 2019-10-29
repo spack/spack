@@ -14,14 +14,9 @@ class PyWradlib(PythonPackage):
     attenuation) and visualising the data."""
 
     homepage = "https://docs.wradlib.org"
-    git = "https://github.com/wradlib/wradlib.git"
+    url      = "https://pypi.io/packages/source/w/wradlib/wradlib-1.5.0.tar.gz"
 
-    version('1.5', branch='release/1.5')
-    version('1.4', branch='release/1.4')
-    version('1.3', branch='release/1.3')
-    version('1.2', branch='release/1.2')
-    version('1.1', branch='release/1.1')
-    version('1.0', branch='release/1.0')
+    version('1.5.0', sha256='9bf0742d7235ea830e83c2269f6b5d1afd83d92696efce0a7bcdb0c4f6604784')
 
     depends_on('py-setuptools', type='build')
 

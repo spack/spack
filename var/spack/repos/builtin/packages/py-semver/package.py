@@ -11,13 +11,8 @@ class PySemver(PythonPackage):
     Simplifies comparing versions."""
 
     homepage = "https://semver.org/"
-    git      = "https://github.com/k-bx/python-semver.git"
+    url      = "https://pypi.io/packages/source/s/semver/semver-2.8.1.tar.gz"
 
-    version('2.8.1', tag='2.8.1')
-    version('2.8.0', tag='2.8.0')
-    version('2.7.0', tag='2.7.0')
-    version('2.6.0', tag='2.6.0')
-    version('2.5.0', tag='2.5.0')
-    version('2.4.1', tag='2.4.1')
+    version('2.8.1', sha256='5b09010a66d9a3837211bb7ae5a20d10ba88f8cb49e92cb139a69ef90d5060d8')
 
     depends_on('py-setuptools', type='build')
