@@ -88,4 +88,4 @@ class Brayns(CMakePackage):
                 ninja('braynsOptixEngine')
             ninja()
             if '+doc' in self.spec:
-                ninja('doxygen')
+                ninja('doxygen', 'doxycopy')
