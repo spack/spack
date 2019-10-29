@@ -64,7 +64,7 @@
         "clang": {
           "versions": ":",
           "family": "x86-64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-march={family}"
         },
         "intel": {
           "versions": ":",
