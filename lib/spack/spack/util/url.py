@@ -105,6 +105,9 @@ def join(base_url, path, *extra, **kwargs):
     If resolve_href is False (default), then the URL path components are joined
     as in os.path.join().
 
+    Note: file:// URL path components are not canonicalized as part of this
+    operation.  To canonicalize, pass the joined url to format().
+
     Examples:
       base_url = 's3://bucket/index.html'
       body = fetch_body(prefix)
@@ -127,7 +130,59 @@ def join(base_url, path, *extra, **kwargs):
       # correct - simply append additional URL path components
       spack.util.url.join(prefix, 'my-package', resolve_href=False) # default
       'https://mirror.spack.io/build_cache/my-package'
+
+      # For canonicalizing file:// URLs, take care to explicitly differentiate
+      # between absolute and relative join components.
+
+      # '$spack' is not an absolute path component
+      join_result = spack.util.url.join('/a/b/c', '$spack') ; join_result
+      'file:///a/b/c/$spack'
+      spack.util.url.format(join_result)
+      'file:///a/b/c/opt/spack'
+
+      # '/$spack' *is* an absolute path component
+      join_result = spack.util.url.join('/a/b/c', '/$spack') ; join_result
+      'file:///$spack'
+      spack.util.url.format(join_result)
+      'file:///opt/spack'
     """
+    paths = [
+        (x if isinstance(x, string_types) else x.geturl())
+        for x in itertools.chain((base_url, path), extra)]
+    n = len(paths)
+    last_abs_component = None
+    scheme = None
+    for i in range(n-1, -1, -1):
+        obj = urllib_parse.urlparse(
+                paths[i], scheme=None, allow_fragments=False)
+
+        scheme = obj.scheme
+
+        # in either case the component is absolute
+        if scheme is not None or obj.path.startswith('/'):
+            if scheme is None:
+                # Without a scheme, we have to go back looking for the
+                # next-last component that specifies a scheme.
+                for j in range(i-1, -1, -1):
+                    obj = urllib_parse.urlparse(
+                            paths[j], scheme=None, allow_fragments=False)
+
+                    if obj.scheme:
+                        paths[i] = urllib_parse.urljoin(paths[j], paths[i])
+
+            last_abs_component = i
+            break
+
+    if last_abs_component is not None:
+        paths = paths[last_abs_component:]
+        if len(paths) == 1:
+            return urllib_parse.urlparse(
+                    paths[0], scheme='file', allow_fragments=False).geturl()
+
+    return _join(*paths, **kwargs)
+
+
+def _join(base_url, path, *extra, **kwargs):
     base_url = parse(base_url)
     resolve_href = kwargs.get('resolve_href', False)
 
