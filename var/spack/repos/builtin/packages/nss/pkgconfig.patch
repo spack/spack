@@ -1,0 +1,30 @@
+diff -Naurp nss-3.46.1.ori/pkgconfig/nspr.pc nss-3.46.1/pkgconfig/nspr.pc
+--- nss-3.46.1.ori/pkgconfig/nspr.pc	1970-01-01 01:00:00.000000000 +0100
++++ nss-3.46.1/pkgconfig/nspr.pc	2019-10-29 15:24:45.002273718 +0100
+@@ -0,0 +1,10 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: NSPR
++Description: The Netscape Portable Runtime
++Version: @NSPR_MAJOR_VERSION@.@NSPR_MINOR_VERSION@.@NSPR_PATCH_VERSION@
++Libs: -L${libdir} -lplds@NSPR_MAJOR_VERSION@ -lplc@NSPR_MAJOR_VERSION@ -lnspr@NSPR_MAJOR_VERSION@
++Cflags: -I${includedir}
+diff -Naurp nss-3.46.1.ori/pkgconfig/nss.pc nss-3.46.1/pkgconfig/nss.pc
+--- nss-3.46.1.ori/pkgconfig/nss.pc	1970-01-01 01:00:00.000000000 +0100
++++ nss-3.46.1/pkgconfig/nss.pc	2019-10-29 15:24:45.002273718 +0100
+@@ -0,0 +1,12 @@
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: NSS
++Description: Network Security Services
++Version: @NSS_MAJOR_VERSION@.@NSS_MINOR_VERSION@.@NSS_PATCH_VERSION@
++Requires: nspr >= @NSPR_MIN_VERSION@
++Libs: -L${libdir} -lnss@NSS_MAJOR_VERSION@ -lnssutil@NSS_MAJOR_VERSION@ -lsmime@NSS_MAJOR_VERSION@ -lssl@NSS_MAJOR_VERSION@ -lsoftokn@NSS_MAJOR_VERSION@
++Cflags: -I${includedir}
++
