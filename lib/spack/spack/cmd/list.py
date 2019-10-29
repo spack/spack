@@ -22,7 +22,7 @@ import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
 
-if sys.version_info > (3, 2):
+if sys.version_info > (3, 1):
     from html import escape
 else:
     from cgi import escape
