@@ -1247,10 +1247,14 @@ class Database(object):
         return results
 
     def query_local(self, *args, **kwargs):
+        """Query only the local Spack database."""
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
+    query_local.__doc__ += _query.__doc__[_query.__doc__.index('\n'):]
+
     def query(self, *args, **kwargs):
+        """Query the Spack database including all upstream databases."""
         upstream_results = []
         for upstream_db in self.upstream_dbs:
             # queries for upstream DBs need to *not* lock - we may not
@@ -1264,6 +1268,8 @@ class Database(object):
             x for x in upstream_results if x not in local_results)
 
         return sorted(results)
+
+    query.__doc__ += _query.__doc__[_query.__doc__.index('\n'):]
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.
