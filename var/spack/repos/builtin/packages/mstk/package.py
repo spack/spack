@@ -34,7 +34,7 @@ class Mstk(CMakePackage):
     variant('use_markers', default=True, description="Enable MSTK to use markers")
 
 
-    depends_on("cmake@3.8:")
+    depends_on("cmake@3.8:", type='build')
 
     # Parallel variant
     depends_on("mpi", when='parallel=metis')
