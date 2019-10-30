@@ -66,9 +66,8 @@ class Timemory(CMakePackage):
         ]
 
         if '+python' in spec:
-            args.append(
-                '-DPYTHON_EXECUTABLE={}'.format(
-                    os.path.join(spec['python'].prefix, "bin", "python")))
+            args.append('-DPYTHON_EXECUTABLE={0}'.format(
+                spec['python'].command.path))
             args.append('-DTIMEMORY_BUILD_PYTHON=ON')
             args.append("-DTIMEMORY_TLS_MODEL='global-dynamic'")
         else:
