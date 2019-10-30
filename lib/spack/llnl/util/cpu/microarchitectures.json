@@ -1162,7 +1162,7 @@
       }
     },
     "thunderx2": {
-      "from": aarch64,
+      "from": "aarch64",
       "vendor": "generic",
       "features": [
         "fp",
@@ -1176,10 +1176,21 @@
         "atomics",
         "cpuid",
         "asimdrdm"
-      ]
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.8.0:",
+          "flags": "-march=armv8-a -mtune=generic"
+        },
+        "clang": {
+          "versions": ":",
+          "family": "aarch64",
+          "flags": "-march={family} -mcpu=generic"
+        }
+      }
     },
     "a64fx": {
-      "from": aarch64,
+      "from": "aarch64",
       "vendor": "fujitsu",
       "features": [
         "fp",
@@ -1198,7 +1209,18 @@
         "fcma",
         "dcpop",
         "sve"
-      ]
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.8.0:",
+          "flags": "-march=armv8-a -mtune=generic"
+        },
+        "clang": {
+          "versions": ":",
+          "family": "aarch64",
+          "flags": "-march={family} -mcpu=generic"
+        }
+      }
     },
     "arm": {
       "from": null,

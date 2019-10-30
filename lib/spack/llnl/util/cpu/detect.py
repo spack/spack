@@ -224,6 +224,7 @@ def compatibility_check_for_x86_64(info, target):
         and (target.vendor == vendor or target.vendor == 'generic') \
         and target.features.issubset(features)
 
+
 @compatibility_check(architecture_family='aarch64')
 def compatibility_check_for_aarch64(info, target):
     basename = 'aarch64'
