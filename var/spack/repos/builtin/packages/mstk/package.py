@@ -27,7 +27,7 @@ class Mstk(CMakePackage):
     version('master', branch='master')
 
     variant('parallel', default='none', description='Enable Parallel Support',
-            values=('none','metis','zoltan','parmetis'),multi=True)
+            values=('none', 'metis', 'zoltan', 'parmetis'), multi=True)
     variant('exodusii', default=False, description='Enable ExodusII')
     variant('use_markers', default=True, description="Enable MSTK to use markers")
 
@@ -69,7 +69,8 @@ class Mstk(CMakePackage):
         else:
             options.append('-DENABLE_PARALLEL=OFF')
 
-        if "parmetis" in self.spec or "zoltan" in self.spec and "+exodusii" in self.spec:
+        if ("parmetis" in self.spec or "zoltan" in self.spec and 
+            "+exodusii" in self.spec):
             options.append("-DENABLE_METIS=ON")
             options.append("-DENABLE_ZOLTAN=ON")
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
