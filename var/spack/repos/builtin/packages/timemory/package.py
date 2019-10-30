@@ -33,7 +33,7 @@ class Timemory(CMakePackage):
     version('master', branch='master', submodules=True)
 
     variant('python', default=True, description="Enable Python support")
-    variant('mpi', default=False, description="Enable MPI support")
+    variant('mpi', default=True, description="Enable MPI support")
     variant('papi', default=True, description="Enable PAPI support")
     variant('cuda', default=True, description="Enable CUDA support")
     variant('caliper', default=True, description="Enable Caliper support")
