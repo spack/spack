@@ -311,16 +311,16 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
@@ -430,6 +430,13 @@ class Openmpi(AutotoolsPackage):
         # Fabrics
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
+        # The wrappers fail to automatically link libfabric. This will cause
+        # undefined references unless we add the appropriate flags.
+        if 'fabrics=libfabric' in spec:
+            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'
+                               .format(spec['libfabric'].prefix.lib))
+            config_args.append('--with-wrapper-libs=-lfabric')
+
         # Schedulers
         if 'schedulers=auto' not in spec:
             config_args.extend(self.with_or_without('schedulers'))
@@ -444,7 +451,6 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:
