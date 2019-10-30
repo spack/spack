@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+#
 # ----------------------------------------------------------------------------
 # If you submit this package back to Spack as a pull request,
 # please first remove this boilerplate and all FIXME comments.
@@ -25,7 +25,7 @@ import os
 
 
 class Timemory(CMakePackage):
-    """Timing + Memory + Hardware Counter Utilities for C / C++ / CUDA / Python"""
+    """Timing + Memory + Hardware Counter Utilities for C/C++/CUDA/Python"""
 
     homepage = "https://timemory.readthedocs.io/en/latest/"
     git = "https://github.com/NERSC/timemory.git"
@@ -33,14 +33,14 @@ class Timemory(CMakePackage):
     version('master', branch='master', submodules=True)
 
     variant('python', default=True, description="Enable Python support")
-    variant('mpi', default=True, description="Enable MPI support")
+    variant('mpi', default=False, description="Enable MPI support")
     variant('papi', default=True, description="Enable PAPI support")
     variant('cuda', default=True, description="Enable CUDA support")
     variant('caliper', default=True, description="Enable Caliper support")
     variant('gperftools', default=True, description="Enable gperftools support")
     variant('cupti', default=True, description="Enable CUPTI support")
 
-    extends('python', when="+python")
+    extends('python', when="+python", type=('build', 'run'))
     depends_on('python@3:', when="+python")
     depends_on('py-pip', when='+python')
     depends_on('mpi', when='+mpi')
@@ -49,39 +49,9 @@ class Timemory(CMakePackage):
     depends_on('gperftools', when='+gperftools')
     depends_on('caliper', when='+caliper')
     depends_on('gperftools', when='+gperftools')
-
-    parallel = True
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Set PYTHONPATH to include the site-packages directory for the
-        extension and any other python extensions it depends on."""
-
-        if '+python' in self.spec:
-            # If we set PYTHONHOME, we must also ensure that the corresponding
-            # python is found in the build environment. This to prevent cases
-            # where a system provided python is run against the standard libraries
-            # of a Spack built python. See issue #7128
-            spack_env.set('PYTHONHOME', self.home)
-
-            path = os.path.dirname(self.command.path)
-            if not is_system_path(path):
-                spack_env.prepend_path('PATH', path)
-
-            python_paths = []
-            for d in dependent_spec.traverse(
-                    deptype=('build', 'run', 'test')):
-                if d.package.extends(self.spec):
-                    python_paths.append(join_path(d.prefix,
-                                                  self.site_packages_dir))
-
-            pythonpath = ':'.join(python_paths)
-            spack_env.set('PYTHONPATH', pythonpath)
-
-            # For run time environment set only the path for
-            # dependent_spec and prepend it to PYTHONPATH
-            if dependent_spec.package.extends(self.spec):
-                run_env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, self.site_packages_dir))
+    depends_on('py-numpy', when='+python')
+    depends_on('py-pillow', when='+python')
+    depends_on('py-matplotlib', when='+python')
 
     def cmake_args(self):
         spec = self.spec
@@ -95,14 +65,12 @@ class Timemory(CMakePackage):
             "-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON",
         ]
 
-        print("{}".format(self.spec))
-
         if '+python' in spec:
             args.append(
-                '-DPYTHON_EXECUTABLE={}'.format(os.path.join(spec['python'].prefix, "bin", "python")))
+                '-DPYTHON_EXECUTABLE={}'.format(
+                    os.path.join(spec['python'].prefix, "bin", "python")))
             args.append('-DTIMEMORY_BUILD_PYTHON=ON')
             args.append("-DTIMEMORY_TLS_MODEL='global-dynamic'")
-            python("-m", "pip", "install", "matplotlib", "numpy", "pillow")
         else:
             args.append('-DTIMEMORY_BUILD_PYTHON=OFF')
 
