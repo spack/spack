@@ -118,7 +118,7 @@ class FluxCore(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         #  Ensure ./fluxometer.lua can be found during flux's make check
-        spack_env.append_path('LUA_PATH', './?.lua', separator=';')
+        env.append_path('LUA_PATH', './?.lua', separator=';')
 
     def setup_run_environment(self, env):
         env.prepend_path(
