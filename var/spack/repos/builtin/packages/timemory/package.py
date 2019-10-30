@@ -40,8 +40,8 @@ class Timemory(CMakePackage):
     variant('gperftools', default=True, description="Enable gperftools support")
     variant('cupti', default=True, description="Enable CUPTI support")
 
-    extends('python', when="+python", type=('build', 'run'))
-    depends_on('python@3:', when="+python")
+    extends('python', when="+python")
+    depends_on('python@3:', when="+python", type=('build', 'run'))
     depends_on('py-pip', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('papi', when='+papi')
