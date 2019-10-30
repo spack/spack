@@ -12,7 +12,7 @@ class Armadillo(CMakePackage):
     ease of use."""
 
     homepage = "http://arma.sourceforge.net/"
-    url = "http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz"
+    url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
     version('8.100.1', sha256='54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d')
     version('7.950.1', sha256='a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b')

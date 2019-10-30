@@ -22,4 +22,4 @@ class PyPerformance(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-perf', type=('build', 'run'))
+    depends_on('py-pyperf', type=('build', 'run'))

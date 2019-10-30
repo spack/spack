@@ -19,5 +19,5 @@ class Libnrm(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
 
-    depends_on('zeromq')
+    depends_on('libzmq')
     depends_on('mpich')

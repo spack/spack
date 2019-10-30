@@ -113,7 +113,7 @@ class PyMatplotlib(PythonPackage):
     # Optional dependencies
     depends_on('ffmpeg', when='+movies')
     # depends_on('libav', when='+movies')
-    depends_on('image-magick', when='+animation')
+    depends_on('imagemagick', when='+animation')
     depends_on('py-pillow@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
     depends_on('ghostscript@0.9:', when='+latex', type='run')

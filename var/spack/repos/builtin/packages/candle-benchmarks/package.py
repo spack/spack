@@ -10,7 +10,7 @@ class CandleBenchmarks(Package):
     """ECP-CANDLE Benchmarks"""
 
     homepage = "https://github.com/ECP-CANDLE/Benchmarks"
-    url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v1.0.tar.gz"
+    url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v0.1.tar.gz"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 

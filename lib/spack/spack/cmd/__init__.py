@@ -174,7 +174,7 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env, local=False):
+def disambiguate_spec(spec, env, local=False, installed=True):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -182,12 +182,17 @@ def disambiguate_spec(spec, env, local=False):
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
         local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
     if local:
-        matching_specs = spack.store.db.query_local(spec, hashes=hashes)
+        matching_specs = spack.store.db.query_local(spec, hashes=hashes,
+                                                    installed=installed)
     else:
-        matching_specs = spack.store.db.query(spec, hashes=hashes)
+        matching_specs = spack.store.db.query(spec, hashes=hashes,
+                                              installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 

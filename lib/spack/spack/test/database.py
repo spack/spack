@@ -160,6 +160,31 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
 
 
 @pytest.mark.usefixtures('config')
+def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
+    roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
+    layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
+
+    x = MockPackage('x', [], [])
+    mock_repo = MockPackageMultiRepo([x])
+
+    # Instantiate the database that will be used as the upstream DB and make
+    # sure it has an index file
+    upstream_db_independent = spack.database.Database(roots[1])
+    with upstream_db_independent.write_transaction():
+        pass
+
+    upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots(
+        [roots[1]], _test=True)
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+
+        with pytest.raises(spack.database.ForbiddenLockError):
+            upstream_dbs[0].add(spec, layouts[1])
+
+
+@pytest.mark.usefixtures('config')
 def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
@@ -183,22 +208,27 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
         db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
         db_a.add(spec['x'], layouts[0])
 
-        dbs = spack.store._construct_upstream_dbs_from_install_roots(
-            roots, _test=True)
+        upstream_dbs_from_scratch = (
+            spack.store._construct_upstream_dbs_from_install_roots(
+                [roots[1], roots[2]], _test=True))
+        db_a_from_scratch = spack.database.Database(
+            roots[0], upstream_dbs=upstream_dbs_from_scratch)
 
-        assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
-        assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
-        assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+        assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (
+            db_a_from_scratch)
+        assert db_a_from_scratch.db_for_spec_hash(spec['y'].dag_hash()) == (
+            upstream_dbs_from_scratch[0])
+        assert db_a_from_scratch.db_for_spec_hash(spec['z'].dag_hash()) == (
+            upstream_dbs_from_scratch[1])
 
-        dbs[0]._check_ref_counts()
-        dbs[1]._check_ref_counts()
-        dbs[2]._check_ref_counts()
+        db_a_from_scratch._check_ref_counts()
+        upstream_dbs_from_scratch[0]._check_ref_counts()
+        upstream_dbs_from_scratch[1]._check_ref_counts()
 
-        assert (dbs[0].installed_relatives(spec) ==
+        assert (db_a_from_scratch.installed_relatives(spec) ==
                 set(spec.traverse(root=False)))
-        assert (dbs[0].installed_relatives(spec['z'], direction='parents') ==
-                set([spec, spec['y']]))
-        assert not dbs[2].installed_relatives(spec['z'], direction='parents')
+        assert (db_a_from_scratch.installed_relatives(
+                spec['z'], direction='parents') == set([spec, spec['y']]))
 
 
 @pytest.fixture()
@@ -437,6 +467,16 @@ def test_025_reindex(mutable_database):
     _check_db_sanity(mutable_database)
 
 
+def test_026_reindex_after_deprecate(mutable_database):
+    """Make sure reindex works and ref counts are valid after deprecation."""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+    mutable_database.deprecate(mpich, zmpi)
+
+    spack.store.store.reindex()
+    _check_db_sanity(mutable_database)
+
+
 def test_030_db_sanity_from_another_process(mutable_database):
     def read_and_modify():
         # check that other process can read DB
@@ -456,6 +496,15 @@ def test_030_db_sanity_from_another_process(mutable_database):
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
     database._check_ref_counts()
+
+
+def test_041_ref_counts_deprecate(mutable_database):
+    """Ensure that we have appropriate ref counts after deprecating"""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+
+    mutable_database.deprecate(mpich, zmpi)
+    mutable_database._check_ref_counts()
 
 
 def test_050_basic_query(database):

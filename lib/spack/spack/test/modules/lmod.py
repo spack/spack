@@ -264,7 +264,7 @@ class TestLmod(object):
         assert writer.conf.core_compilers
 
     @pytest.mark.parametrize('spec_str', [
-        'mpileaks target=haswell',
+        'mpileaks target=nocona',
         'mpileaks target=core2',
         'mpileaks target=x86_64',
     ])

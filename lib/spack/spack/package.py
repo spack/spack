@@ -663,7 +663,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def version(self):
         if not self.spec.versions.concrete:
-            raise ValueError("Can only get of package with concrete version.")
+            raise ValueError("Version requested for a package that"
+                             " does not have a concrete version.")
         return self.spec.versions[0]
 
     @memoized
@@ -741,19 +742,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def _make_resource_stage(self, root_stage, fetcher, resource):
         resource_stage_folder = self._resource_stage(resource)
-        resource_mirror = spack.mirror.mirror_archive_path(
-            self.spec, fetcher, resource.name)
+        mirror_paths = spack.mirror.mirror_archive_paths(
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (resource.name, self.version)))
         stage = ResourceStage(resource.fetcher,
                               root=root_stage,
                               resource=resource,
                               name=resource_stage_folder,
-                              mirror_path=resource_mirror,
+                              mirror_paths=mirror_paths,
                               path=self.path)
         return stage
 
     def _make_root_stage(self, fetcher):
         # Construct a mirror path (TODO: get this out of package.py)
-        mp = spack.mirror.mirror_archive_path(self.spec, fetcher)
+        mirror_paths = spack.mirror.mirror_archive_paths(
+            fetcher,
+            os.path.join(self.name, "%s-%s" % (self.name, self.version)),
+            self.spec)
         # Construct a path where the stage should build..
         s = self.spec
         stage_name = "{0}{1}-{2}-{3}".format(stage_prefix, s.name, s.version,
@@ -763,8 +768,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             dynamic_fetcher = fs.from_list_url(self)
             return [dynamic_fetcher] if dynamic_fetcher else []
 
-        stage = Stage(fetcher, mirror_path=mp, name=stage_name, path=self.path,
-                      search_fn=download_search)
+        stage = Stage(fetcher, mirror_paths=mirror_paths, name=stage_name,
+                      path=self.path, search_fn=download_search)
         return stage
 
     def _make_stage(self):
@@ -794,8 +799,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         doesn't have one yet, but it does not create the Stage directory
         on the filesystem.
         """
-        if not self.spec.concrete:
-            raise ValueError("Can only get a stage for a concrete package.")
+        if not self.spec.versions.concrete:
+            raise ValueError(
+                "Cannot retrieve stage for package without concrete version.")
         if self._stage is None:
             self._stage = self._make_stage()
         return self._stage
@@ -873,8 +879,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def fetcher(self):
         if not self.spec.versions.concrete:
-            raise ValueError(
-                "Can only get a fetcher for a package with concrete versions.")
+            raise ValueError("Cannot retrieve fetcher for"
+                             " package without concrete version.")
         if not self._fetcher:
             self._fetcher = self._make_fetcher()
         return self._fetcher
@@ -1046,7 +1052,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise ValueError("Can only fetch concrete packages.")
 
         if not self.has_code:
-            raise InvalidPackageOpError("Can only fetch a package with a URL.")
+            tty.msg(
+                "No fetch required for %s: package has no code." % self.name
+            )
 
         start_time = time.time()
         checksum = spack.config.get('config:checksum')
@@ -1079,6 +1087,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for patch in self.spec.patches:
             patch.fetch(self.stage)
+            if patch.cache():
+                patch.cache().cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
@@ -1190,6 +1200,26 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             touch(good_file)
         else:
             touch(no_patches_file)
+
+    @classmethod
+    def all_patches(cls):
+        """Retrieve all patches associated with the package.
+
+        Retrieves patches on the package itself as well as patches on the
+        dependencies of the package."""
+        patches = []
+        for _, patch_list in cls.patches.items():
+            for patch in patch_list:
+                patches.append(patch)
+
+        pkg_deps = cls.dependencies
+        for dep_name in pkg_deps:
+            for _, dependency in pkg_deps[dep_name].items():
+                for _, patch_list in dependency.patches.items():
+                    for patch in patch_list:
+                        patches.append(patch)
+
+        return patches
 
     def content_hash(self, content=None):
         """Create a hash based on the sources and logic used to build the
@@ -1364,9 +1394,21 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def _get_needed_resources(self):
         resources = []
         # Select the resources that are needed for this build
-        for when_spec, resource_list in self.resources.items():
-            if when_spec in self.spec:
-                resources.extend(resource_list)
+        if self.spec.concrete:
+            for when_spec, resource_list in self.resources.items():
+                if when_spec in self.spec:
+                    resources.extend(resource_list)
+        else:
+            for when_spec, resource_list in self.resources.items():
+                # Note that variant checking is always strict for specs where
+                # the name is not specified. But with strict variant checking,
+                # only variants mentioned in 'other' are checked. Here we only
+                # want to make sure that no constraints in when_spec
+                # conflict with the spec, so we need to invoke
+                # when_spec.satisfies(self.spec) vs.
+                # self.spec.satisfies(when_spec)
+                if when_spec.satisfies(self.spec, strict=False):
+                    resources.extend(resource_list)
         # Sorts the resources by the length of the string representing their
         # destination. Since any nested resource must contain another
         # resource's name in its path, it seems that should work
@@ -2112,14 +2154,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise NotImplementedError(msg)
 
     @staticmethod
-    def uninstall_by_spec(spec, force=False):
+    def uninstall_by_spec(spec, force=False, deprecator=None):
         if not os.path.isdir(spec.prefix):
             # prefix may not exist, but DB may be inconsistent. Try to fix by
             # removing, but omit hooks.
             specs = spack.store.db.query(spec, installed=True)
             if specs:
-                spack.store.db.remove(specs[0])
-                tty.msg("Removed stale DB entry for %s" % spec.short_spec)
+                if deprecator:
+                    spack.store.db.deprecate(specs[0], deprecator)
+                    tty.msg("Deprecating stale DB entry for "
+                            "%s" % spec.short_spec)
+                else:
+                    spack.store.db.remove(specs[0])
+                    tty.msg("Removed stale DB entry for %s" % spec.short_spec)
                 return
             else:
                 raise InstallError(str(spec) + " is not installed.")
@@ -2130,7 +2177,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if dependents:
                 raise PackageStillNeededError(spec, dependents)
 
-        # Try to get the pcakage for the spec
+        # Try to get the package for the spec
         try:
             pkg = spec.package
         except spack.repo.UnknownEntityError:
@@ -2146,11 +2193,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             if not spec.external:
                 msg = 'Deleting package prefix [{0}]'
                 tty.debug(msg.format(spec.short_spec))
-                spack.store.layout.remove_install_directory(spec)
+                # test if spec is already deprecated, not whether we want to
+                # deprecate it now
+                deprecated = bool(spack.store.db.deprecator(spec))
+                spack.store.layout.remove_install_directory(spec, deprecated)
             # Delete DB entry
-            msg = 'Deleting DB entry [{0}]'
-            tty.debug(msg.format(spec.short_spec))
-            spack.store.db.remove(spec)
+            if deprecator:
+                msg = 'deprecating DB entry [{0}] in favor of [{1}]'
+                tty.debug(msg.format(spec.short_spec, deprecator.short_spec))
+                spack.store.db.deprecate(spec, deprecator)
+            else:
+                msg = 'Deleting DB entry [{0}]'
+                tty.debug(msg.format(spec.short_spec))
+                spack.store.db.remove(spec)
 
         if pkg is not None:
             spack.hooks.post_uninstall(spec)
@@ -2161,6 +2216,64 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """Uninstall this package by spec."""
         # delegate to instance-less method.
         Package.uninstall_by_spec(self.spec, force)
+
+    def do_deprecate(self, deprecator, link_fn):
+        """Deprecate this package in favor of deprecator spec"""
+        spec = self.spec
+
+        # Check whether package to deprecate has active extensions
+        if self.extendable:
+            view = spack.filesystem_view.YamlFilesystemView(spec.prefix,
+                                                            spack.store.layout)
+            active_exts = view.extensions_layout.extension_map(spec).values()
+            if active_exts:
+                short = spec.format('{name}/{hash:7}')
+                m = "Spec %s has active extensions\n" % short
+                for active in active_exts:
+                    m += '        %s\n' % active.format('{name}/{hash:7}')
+                    m += "Deactivate extensions before deprecating %s" % short
+                tty.die(m)
+
+        # Check whether package to deprecate is an active extension
+        if self.is_extension:
+            extendee = self.extendee_spec
+            view = spack.filesystem_view.YamlFilesystemView(extendee.prefix,
+                                                            spack.store.layout)
+
+            if self.is_activated(view):
+                short = spec.format('{name}/{hash:7}')
+                short_ext = extendee.format('{name}/{hash:7}')
+                msg = "Spec %s is an active extension of %s\n" % (short,
+                                                                  short_ext)
+                msg += "Deactivate %s to be able to deprecate it" % short
+                tty.die(msg)
+
+        # Install deprecator if it isn't installed already
+        if not spack.store.db.query(deprecator):
+            deprecator.package.do_install()
+
+        old_deprecator = spack.store.db.deprecator(spec)
+        if old_deprecator:
+            # Find this specs yaml file from its old deprecation
+            self_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                                old_deprecator)
+        else:
+            self_yaml = spack.store.layout.spec_file_path(spec)
+
+        # copy spec metadata to "deprecated" dir of deprecator
+        depr_yaml = spack.store.layout.deprecated_file_path(spec,
+                                                            deprecator)
+        fs.mkdirp(os.path.dirname(depr_yaml))
+        shutil.copy2(self_yaml, depr_yaml)
+
+        # Any specs deprecated in favor of this spec are re-deprecated in
+        # favor of its new deprecator
+        for deprecated in spack.store.db.specs_deprecated_by(spec):
+            deprecated.package.do_deprecate(deprecator, link_fn)
+
+        # Now that we've handled metadata, uninstall and replace with link
+        Package.uninstall_by_spec(spec, force=True, deprecator=deprecator)
+        link_fn(deprecator.prefix, spec.prefix)
 
     def _check_extendable(self):
         if not self.extendable:

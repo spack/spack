@@ -14,6 +14,4 @@ class PyArgparse(PythonPackage):
 
     version('1.4.0', sha256='62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4')
 
-    depends_on('python@2.3:')
-
     depends_on('py-setuptools', type='build')

@@ -169,6 +169,11 @@ class PyTorch(PythonPackage):
                 else:
                     env.set('NO_' + var, 'ON')
 
+        # Build system has problems locating MKL libraries
+        # See https://github.com/pytorch/pytorch/issues/24334
+        if 'mkl' in self.spec:
+            env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
+
         env.set('MAX_JOBS', make_jobs)
 
         enable_or_disable('cuda')
@@ -207,7 +212,7 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
         enable_or_disable('gloo', newer=True)
-        enable_or_disable('gloo', var='GLOO_IBVERBS', newer=True)
+        enable_or_disable('gloo', var='IBVERBS', newer=True)
         enable_or_disable('opencv', newer=True)
         enable_or_disable('openmp', newer=True)
         enable_or_disable('ffmpeg', newer=True)

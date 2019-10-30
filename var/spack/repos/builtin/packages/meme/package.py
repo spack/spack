@@ -25,7 +25,7 @@ class Meme(AutotoolsPackage):
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
-    depends_on('image-magick', type=('build', 'run'), when='+image-magick')
+    depends_on('imagemagick', type=('build', 'run'), when='+image-magick')
     depends_on('perl-xml-parser', type=('build', 'run'))
 
     def configure_args(self):

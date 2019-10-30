@@ -13,6 +13,7 @@ class Hpx(CMakePackage, CudaPackage):
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
 
+    version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
     version('1.2.1', sha256='8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a')
     version('1.2.0', sha256='20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170')
@@ -20,7 +21,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     variant('cxxstd',
             default='17',
-            values=('98', '11', '14', '17'),
+            values=('11', '14', '17'),
             description='Use the specified C++ standard when building.')
 
     variant(
@@ -33,9 +34,14 @@ class Hpx(CMakePackage, CudaPackage):
         'apex', 'google_perftools', 'papi', 'valgrind'
     ), description='Add support for various kind of instrumentation')
 
-    variant('networking', default=True,
-            description='Support for networking and multi=node runs')
+    variant(
+        "networking",
+        values=any_combination_of("tcp", "mpi").with_default("tcp"),
+        description="Support for networking through parcelports",
+    )
+
     variant('tools', default=False, description='Build HPX tools')
+    variant('examples', default=False, description='Build examples')
 
     depends_on('boost')
     depends_on('hwloc')
@@ -53,7 +59,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('hwloc@1.6:', when='@:1.1.0')
 
     # CXX Standard
-    depends_on('boost cxxstd=98', when='cxxstd=98')
     depends_on('boost cxxstd=11', when='cxxstd=11')
     depends_on('boost cxxstd=14', when='cxxstd=14')
     depends_on('boost cxxstd=17', when='cxxstd=17')
@@ -62,6 +67,9 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('gperftools', when='malloc=tcmalloc')
     depends_on('jemalloc', when='malloc=jemalloc')
     depends_on('tbb', when='malloc=tbbmalloc')
+
+    # MPI
+    depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
     depends_on('apex', when='instrumentation=apex')
@@ -76,7 +84,6 @@ class Hpx(CMakePackage, CudaPackage):
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
-        value = '0X' if value == '98' else value
         return '-DHPX_WITH_CXX{0}=ON'.format(value)
 
     def instrumentation_args(self):
@@ -104,7 +111,13 @@ class Hpx(CMakePackage, CudaPackage):
 
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(
-            'ON' if '+networking' in spec else 'OFF'
+            'OFF' if 'networking=none' in spec else 'ON'
+        ))
+        args.append('-DHPX_WITH_PARCELPORT_TCP={0}'.format(
+            'ON' if 'networking=tcp' in spec else 'OFF'
+        ))
+        args.append('-DHPX_WITH_PARCELPORT_MPI={0}'.format(
+            'ON' if 'networking=mpi' in spec else 'OFF'
         ))
 
         # Cuda support
@@ -115,6 +128,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Tools
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
+        ))
+
+        # Examples
+        args.append('-DHPX_WITH_EXAMPLES={0}'.format(
+            'ON' if '+examples' in spec else 'OFF'
         ))
 
         args.extend([

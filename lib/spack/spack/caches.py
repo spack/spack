@@ -15,7 +15,6 @@ import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
 import spack.util.path
-import spack.util.url as url_util
 
 
 def _misc_cache():
@@ -52,25 +51,25 @@ def _fetch_cache():
 
 class MirrorCache(object):
     def __init__(self, root):
-        self.root = url_util.local_file_path(root)
-        if not self.root:
-            raise spack.error.SpackError(
-                'MirrorCaches only work with file:// URLs')
+        self.root = os.path.abspath(root)
 
-        self.new_resources = set()
-        self.existing_resources = set()
-
-    def store(self, fetcher, relative_dest):
+    def store(self, fetcher, relative_dest, cosmetic_path=None):
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
         dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        fetcher.archive(dst)
 
-        if os.path.exists(dst):
-            self.existing_resources.add(relative_dest)
-        else:
-            self.new_resources.add(relative_dest)
-            mkdirp(os.path.dirname(dst))
-            fetcher.archive(dst)
+        # Add a symlink path that a human can read to understand what resource
+        # the archive path refers to
+        if not cosmetic_path:
+            return
+        cosmetic_path = os.path.join(self.root, cosmetic_path)
+        relative_dst = os.path.relpath(
+            dst, start=os.path.dirname(cosmetic_path))
+        if not os.path.exists(cosmetic_path):
+            mkdirp(os.path.dirname(cosmetic_path))
+            os.symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

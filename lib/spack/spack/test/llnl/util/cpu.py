@@ -26,10 +26,15 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-rhel7-ivybridge',
     'linux-rhel7-haswell',
     'linux-rhel7-zen',
+    'linux-scientific7-k10',
+    'linux-scientificfermi6-bulldozer',
+    'linux-scientificfermi6-piledriver',
+    'linux-scientific7-piledriver',
     'linux-rhel6-piledriver',
     'linux-centos7-power8le',
     'darwin-mojave-ivybridge',
-    'darwin-mojave-broadwell',
+    'darwin-mojave-haswell',
+    'darwin-mojave-skylake',
     'bgq-rhel6-power7'
 ])
 def expected_target(request, monkeypatch):
@@ -67,7 +72,7 @@ def expected_target(request, monkeypatch):
                 key, value = line.split(':')
                 info[key.strip()] = value.strip()
 
-        def _check_output(args):
+        def _check_output(args, env):
             current_key = args[-1]
             return info[current_key]
 
@@ -156,6 +161,7 @@ def test_architecture_family(target_name, expected_family):
     ('skylake', 'sse3'),
     ('power8', 'altivec'),
     ('broadwell', 'sse4.1'),
+    ('skylake', 'clflushopt'),
     ('aarch64', 'neon')
 ])
 def test_features_query(target_name, feature):

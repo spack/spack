@@ -16,7 +16,7 @@ class Ntpoly(CMakePackage):
     """
 
     homepage = "https://william-dawson.github.io/NTPoly/"
-    url      = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1-alpha.tar.gz"
+    url      = "https://github.com/william-dawson/NTPoly/archive/ntpoly-v2.3.1.tar.gz"
 
     version('2.3.1', sha256='af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e')
 

@@ -11,7 +11,7 @@ class Homer(Package):
     """Software for motif discovery and next generation sequencing analysis"""
 
     homepage = "http://homer.ucsd.edu/homer"
-    url      = "http://homer.ucsd.edu/homer/data/software/homer.v4.9.zip"
+    url      = "http://homer.ucsd.edu/homer/data/software/homer.v4.9.1.zip"
 
     version('4.9.1', sha256='ad1303b0b0400dc8a88dbeae1ee03a94631977b751a3d335326c4febf0eec3a9')
 

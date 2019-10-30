@@ -122,7 +122,7 @@ class Mysql(CMakePackage):
             options.append('-DWITHOUT_SERVER:BOOL=ON')
         return options
 
-    def _fix_dtrace_shebang(self, spack_env):
+    def _fix_dtrace_shebang(self, build_env):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
@@ -135,27 +135,28 @@ class Mysql(CMakePackage):
         copy(dtrace, dtrace_copy)
         filter_file(
             '^#!/usr/bin/python',
-            '#!/usr/bin/env python',
+            '#!/usr/bin/env {0}'.format(
+                os.path.basename(self.spec['python'].command)),
             dtrace_copy
         )
         # To have our own copy of dtrace in PATH, we need to
         # prepend to PATH the temporary folder where it resides.
-        spack_env.prepend_path('PATH', dtrace_copy_path)
+        build_env.prepend_path('PATH', dtrace_copy_path)
 
     @run_before('cmake')
     def _maybe_fix_dtrace_shebang(self):
         if 'python' in self.spec.flat_dependencies() and \
            self.spec.satisfies('@:7.99.99'):
-            self._fix_dtrace_shebang(spack_env)
+            self._fix_dtrace_shebang(build_env)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         cxxstd = self.spec.variants['cxxstd'].value
         flag = getattr(self.compiler, 'cxx{0}_flag'.format(cxxstd))
         if flag:
-            spack_env.append_flags('CXXFLAGS', flag)
+            env.append_flags('CXXFLAGS', flag)
         if cxxstd != '98':
             if int(cxxstd) > 11:
-                spack_env.append_flags('CXXFLAGS',
-                                       '-Wno-deprecated-declarations')
+                env.append_flags('CXXFLAGS',
+                                 '-Wno-deprecated-declarations')
             if int(cxxstd) > 14:
-                spack_env.append_flags('CXXFLAGS', '-Wno-error=register')
+                env.append_flags('CXXFLAGS', '-Wno-error=register')

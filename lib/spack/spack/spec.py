@@ -79,7 +79,6 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import sys
 import collections
-import ctypes
 import hashlib
 import itertools
 import os
@@ -88,6 +87,7 @@ import re
 import six
 
 from operator import attrgetter
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
@@ -184,9 +184,6 @@ _separators = '[\\%s]' % '\\'.join(color_formats.keys())
 #: Versionlist constant so we don't have to build a list
 #: every time we call str()
 _any_version = VersionList([':'])
-
-#: Max integer helps avoid passing too large a value to cyaml.
-maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
 
 default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
@@ -1366,8 +1363,8 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        yaml_text = syaml.dump(self.to_node_dict(hash=hash),
-                               default_flow_style=True, width=maxint)
+        yaml_text = syaml.dump(
+            self.to_node_dict(hash=hash), default_flow_style=True)
         sha = hashlib.sha1(yaml_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
@@ -1937,7 +1934,7 @@ class Spec(object):
         stream -- string or file object to read from.
         """
         try:
-            data = syaml.load(stream)
+            data = yaml.load(stream)
             return Spec.from_dict(data)
         except MarkedYAMLError as e:
             raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
@@ -2243,6 +2240,21 @@ class Spec(object):
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
+
+        # If any spec in the DAG is deprecated, throw an error
+        deprecated = []
+        for x in self.traverse():
+            _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+            if rec and rec.deprecated_for:
+                deprecated.append(rec)
+        if deprecated:
+            msg = "\n    The following specs have been deprecated"
+            msg += " in favor of specs with the hashes shown:\n"
+            for rec in deprecated:
+                msg += '        %s  --> %s\n' % (rec.spec, rec.deprecated_for)
+            msg += '\n'
+            msg += "    For each package listed, choose another spec\n"
+            raise SpecDeprecatedError(msg)
 
         # Now that the spec is concrete we should check if
         # there are declared conflicts
@@ -4496,3 +4508,7 @@ class ConflictsInSpecError(SpecError, RuntimeError):
 class SpecDependencyNotFoundError(SpecError):
     """Raised when a failure is encountered writing the dependencies of
     a spec."""
+
+
+class SpecDeprecatedError(SpecError):
+    """Raised when a spec concretizes to a deprecated spec or dependency."""

@@ -173,7 +173,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
 
 @pytest.mark.parametrize('compiler_spec,target_name,expected_flags', [
     # Check compilers with version numbers from a single toolchain
-    ('gcc@4.7.2', 'haswell', '-march=core-avx2 -mtune=core-avx2'),
+    ('gcc@4.7.2', 'ivybridge', '-march=core-avx-i -mtune=core-avx-i'),
     # Check mixed toolchains
     ('clang@8.0.0', 'broadwell', ''),
     # Check clang compilers with 'apple' suffix

@@ -54,3 +54,7 @@ class Nag(spack.compiler.Compiler):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-Wl,,-rpath,,'
+
+    @property
+    def linker_arg(self):
+        return '-Wl,-Wl,,'

@@ -100,7 +100,8 @@ class Glib(AutotoolsPackage):
         files = ['gobject/glib-genmarshal.in', 'gobject/glib-mkenums.in']
 
         filter_file('^#!/usr/bin/env @PYTHON@',
-                    '#!/usr/bin/env python',
+                    '#!/usr/bin/env {0}'.format(
+                        os.path.basename(self.spec['python'].command.path)),
                     *files)
 
     @run_before('configure')
@@ -119,7 +120,8 @@ class Glib(AutotoolsPackage):
             copy(dtrace, dtrace_copy)
             filter_file(
                 '^#!/usr/bin/python',
-                '#!/usr/bin/env python',
+                '#!/usr/bin/env {0}'.format(
+                    os.path.basename(self.spec['python'].command.path)),
                 dtrace_copy
             )
 
@@ -135,7 +137,8 @@ class Glib(AutotoolsPackage):
         # this after install because otherwise the install target will try
         # to rebuild files as filter_file updates the timestamps)
         if self.spec.satisfies('@2.53.4:'):
-            pattern = '^#!/usr/bin/env python'
+            pattern = '^#!/usr/bin/env {0}'.format(
+                os.path.basename(self.spec['python'].command.path))
             repl = '#!{0}'.format(self.spec['python'].command.path)
             files = ['glib-genmarshal', 'glib-mkenums']
         else:

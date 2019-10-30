@@ -18,5 +18,9 @@ class BppPhyl(CMakePackage):
     depends_on('bpp-core')
     depends_on('bpp-seq')
 
+    # Clarify isnan's namespace, because Fujitsu compiler can't
+    # resolve ambiguous of 'isnan' function.
+    patch('clarify_isnan.patch', when='%fj')
+
     def cmake_args(self):
         return ['-DBUILD_TESTING=FALSE']

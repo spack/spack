@@ -13,7 +13,6 @@ class Xdmf3(CMakePackage):
     """
 
     homepage = "http://xdmf.org"
-    url      = "https://gitlab.kitware.com/xdmf/xdmf/-/archive/master/xdmf-master.tar.bz2"
     git      = "https://gitlab.kitware.com/xdmf/xdmf.git"
 
     # There is no official release of XDMF and development has largely ceased,

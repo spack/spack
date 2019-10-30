@@ -18,9 +18,6 @@ class Alglib(MakefilePackage):
 
     version('3.11.0', sha256='34e391594aac89fb354bdaf58c42849489cd1199197398ba98bb69961f42bdb0')
 
-    def url_for_version(self, version):
-        return 'http://www.alglib.net/translator/re/alglib-{0}.cpp.gpl.tgz'.format(version.dotted)
-
     build_directory = 'src'
 
     def edit(self, spec, prefix):
