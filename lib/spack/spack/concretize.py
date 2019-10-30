@@ -544,6 +544,11 @@ class Concretizer(object):
                     continue
 
                 if candidate is not None:
+                    msg = ('{0.name}@{0.version} cannot build optimized '
+                           'binaries for "{1}". Using best target possible: '
+                           '"{2}"')
+                    msg = msg.format(spec.compiler, current_target, candidate)
+                    tty.warn(msg)
                     spec.architecture.target = candidate
                     return True
             else:
