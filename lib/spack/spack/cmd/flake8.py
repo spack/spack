@@ -182,7 +182,7 @@ def filter_file(source, dest, output=False):
     # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
     # Starting with Python 3.8, it must be placed on the `def` line
     # https://gitlab.com/pycqa/flake8/issues/583
-    ignore_F811_on_previous_line = False
+    ignore_f811_on_previous_line = False
 
     with open(source) as infile:
         parent = os.path.dirname(dest)
@@ -204,10 +204,10 @@ def filter_file(source, dest, output=False):
                                 break
 
                 if 'F811' in line_errors:
-                    ignore_F811_on_previous_line = True
-                elif ignore_F811_on_previous_line:
+                    ignore_f811_on_previous_line = True
+                elif ignore_f811_on_previous_line:
                     line_errors.append('F811')
-                    ignore_F811_on_previous_line = False
+                    ignore_f811_on_previous_line = False
 
                 if line_errors:
                     line = add_pattern_exemptions(line, line_errors)
