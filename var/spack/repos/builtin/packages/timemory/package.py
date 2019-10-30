@@ -96,6 +96,4 @@ class Timemory(CMakePackage):
         else:
             args.append('-DTIMEMORY_USE_CUPTI=OFF')
 
-        args.append("-DCMAKE_BUILD_TYPE:STRING=Release")
-
         return args
