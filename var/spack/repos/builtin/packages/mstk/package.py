@@ -24,6 +24,8 @@ class Mstk(CMakePackage):
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
 
+    maintainers = ['julienloiseau']
+
     version('master', branch='master')
 
     variant('parallel', default='none', description='Enable Parallel Support',
@@ -31,7 +33,6 @@ class Mstk(CMakePackage):
     variant('exodusii', default=False, description='Enable ExodusII')
     variant('use_markers', default=True, description="Enable MSTK to use markers")
 
-    maintainers = ['julienloiseau']
 
     depends_on("cmake@3.8:")
 
@@ -59,7 +60,6 @@ class Mstk(CMakePackage):
         else:
             options.append('-DMSTK_USE_MARKERS=OFF')
 
-        print(self.spec)
         # Parallel variant
         if not self.spec.satisfies('parallel=none'):
             # Use mpi for compilation
@@ -69,20 +69,26 @@ class Mstk(CMakePackage):
         else:
             options.append('-DENABLE_PARALLEL=OFF')
 
-        if ("parmetis" in self.spec or "zoltan" in self.spec and 
+        if ("parmetis" in self.spec or "zoltan" in self.spec and
             "+exodusii" in self.spec):
             options.append("-DENABLE_METIS=ON")
             options.append("-DENABLE_ZOLTAN=ON")
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
         else:
-            if "zoltan" in self.spec: options.append("-DENABLE_ZOLTAN=ON")
-            else: options.append("-DENABLE_ZOLTAN=OFF")
-            if "metis" in self.spec: options.append("-DENABLE_METIS=ON")
-            else: options.append("-DENABLE_METIS=OFF")
+            if "zoltan" in self.spec:
+                options.append("-DENABLE_ZOLTAN=ON")
+            else:
+                options.append("-DENABLE_ZOLTAN=OFF")
+            if "metis" in self.spec:
+                options.append("-DENABLE_METIS=ON")
+            else:
+                options.append("-DENABLE_METIS=OFF")
             options.append('-DZOLTAN_NEEDS_ParMETIS=OFF')
 
         # ExodusII variant
-        if '+exodusii' in self.spec: options.append('-DENABLE_ExodusII=ON')
-        else: options.append('-DENABLE_ExodusII=OFF')
+        if '+exodusii' in self.spec:
+            options.append('-DENABLE_ExodusII=ON')
+        else:
+            options.append('-DENABLE_ExodusII=OFF')
 
         return options
