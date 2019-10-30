@@ -27,24 +27,25 @@ class Mstk(CMakePackage):
     version('master', branch='master')
 
     variant('parallel', default='none', description='Enable Parallel Support',
-            values=(
-                'none',
-                'metis',
-                'zoltan', 'zoltan_parmetis'), multi=True)
-    variant('exodusii', default=False,
-            description='Enable ExodusII')
+            values=('none','metis','zoltan','parmetis'),multi=True)
+    variant('exodusii', default=False, description='Enable ExodusII')
     variant('use_markers', default=True, description="Enable MSTK to use markers")
+
+    maintainers = ['julienloiseau']
 
     depends_on("cmake@3.8:")
 
     # Parallel variant
     depends_on("mpi", when='parallel=metis')
-    depends_on("metis", when='parallel=metis')
     depends_on("mpi", when='parallel=zoltan')
-    depends_on("mpi", when='parallel=zoltan_parmetis')
-
+    depends_on("mpi", when='parallel=parmetis')
     depends_on("zoltan -fortran", when='parallel=zoltan')
-    depends_on("zoltan -fortran +parmetis", when='parallel=zoltan_parmetis')
+    depends_on("zoltan -fortran +parmetis", when='parallel=parmetis')
+    depends_on("zoltan -fortran +parmetis", when="parallel=zoltan +exodusii")
+    depends_on("metis", when="parallel=zoltan +exodusii")
+
+    depends_on("metis", when='parallel=metis')
+    depends_on("metis", when='parallel=parmetis')
 
     # Exodusii variant
     # The default exodusii build with mpi support
@@ -52,42 +53,35 @@ class Mstk(CMakePackage):
     depends_on("exodusii", when='+exodusii')
 
     def cmake_args(self):
-        options = ['']
+        options = []
         if '+use_markers' in self.spec:
             options.append('-DMSTK_USE_MARKERS=ON')
+        else:
+            options.append('-DMSTK_USE_MARKERS=OFF')
 
+        print(self.spec)
         # Parallel variant
         if not self.spec.satisfies('parallel=none'):
             # Use mpi for compilation
             options.append('-DCMAKE_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
             options.append('-DCMAKE_C_COMPILER=' + self.spec['mpi'].mpicc)
-            options.append('-DCMAKE_FORTRAN_COMPILER='
-                           + self.spec['mpi'].mpifort)
             options.append('-DENABLE_PARALLEL=ON')
         else:
-            options.append('-ENABLE_PARALLEL=OFF')
+            options.append('-DENABLE_PARALLEL=OFF')
 
-        if 'parallel=metis' in self.spec:
-            options.append('-DENABLE_METIS=ON')
-        else:
-            options.append('-DENABLE_METIS=OFF')
-
-        if 'parallel=zoltan' in self.spec:
-            options.append('-DENABLE_ZOLTAN=ON')
-        else:
-            options.append('-DENABLE_ZOLTAN=OFF')
-
-        if 'parallel=zoltan_parametis' in self.spec:
-            options.append('-DENABLE_ZOLTAN=ON')
+        if "parmetis" in self.spec or "zoltan" in self.spec and "+exodusii" in self.spec:
+            options.append("-DENABLE_METIS=ON")
+            options.append("-DENABLE_ZOLTAN=ON")
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
         else:
-            options.append('-DENABLE_ZOLTAN=OFF')
+            if "zoltan" in self.spec: options.append("-DENABLE_ZOLTAN=ON")
+            else: options.append("-DENABLE_ZOLTAN=OFF")
+            if "metis" in self.spec: options.append("-DENABLE_METIS=ON")
+            else: options.append("-DENABLE_METIS=OFF")
             options.append('-DZOLTAN_NEEDS_ParMETIS=OFF')
 
         # ExodusII variant
-        if '+exodusii' in self.spec:
-            options.append('-DENABLE_ExodusII=ON')
-        else:
-            options.append('-DENABLE_ExodusII=OFF')
+        if '+exodusii' in self.spec: options.append('-DENABLE_ExodusII=ON')
+        else: options.append('-DENABLE_ExodusII=OFF')
 
         return options
