@@ -33,7 +33,6 @@ class Mstk(CMakePackage):
     variant('exodusii', default=False, description='Enable ExodusII')
     variant('use_markers', default=True, description="Enable MSTK to use markers")
 
-
     depends_on("cmake@3.8:", type='build')
 
     # Parallel variant
