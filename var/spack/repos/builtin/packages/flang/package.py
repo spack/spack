@@ -13,10 +13,12 @@ class Flang(CMakePackage):
 
     homepage = "https://github.com/flang-compiler/flang"
 
-    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
+    url      = "https://github.com/flang-compiler/flang/archive/flang_20190329.tar.gz"
     git      = "https://github.com/flang-compiler/flang.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('20190329', sha256='b8c621da53829f8c53bad73125556fb1839c9056d713433b05741f7e445199f2')
+    version('20181216', sha256='00e716bea258c3bb60d6a5bb0c82bc79f67000062dc89939693e75f501883c36')
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
