@@ -30,17 +30,15 @@ class Timemory(CMakePackage):
     homepage = "https://timemory.readthedocs.io/en/latest/"
     git = "https://github.com/NERSC/timemory.git"
 
-    version('develop', branch='papi-google-tests', submodules=True)
+    version('master', branch='master', submodules=True)
 
     variant('python', default=True, description="Enable Python support")
-    variant('mpi', default=True, description="Enable MPI support")
-    variant('papi', default=True, description="Enable PAPI")
-    variant('cuda', default=True, description="Enable CUDA")
-    variant('caliper', default=True, description="Enable caliper component")
-    variant('gperftools', default=True,
-            description="Enable (optional) gperftools interface library")
-    variant('cupti', default=True,
-            description="Enable CUPTI (requires libcuda.so")
+    variant('mpi', default=False, description="Enable MPI support")
+    variant('papi', default=True, description="Enable PAPI support")
+    variant('cuda', default=True, description="Enable CUDA support")
+    variant('caliper', default=True, description="Enable Caliper support")
+    variant('gperftools', default=True, description="Enable gperftools support")
+    variant('cupti', default=True, description="Enable CUPTI support")
 
     extends('python', when="+python")
     depends_on('python@3:', when="+python")
@@ -50,6 +48,7 @@ class Timemory(CMakePackage):
     depends_on('cuda', when='+cuda')
     depends_on('gperftools', when='+gperftools')
     depends_on('caliper', when='+caliper')
+    depends_on('gperftools', when='+gperftools')
 
     parallel = True
 
