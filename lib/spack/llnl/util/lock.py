@@ -327,11 +327,8 @@ class Lock(object):
             self._unlock()      # can raise LockError.
             self._released_debug(lock_type)
             return True
-        elif self._reads >= 1:
-            self._reads -= 1
-            return False
         else:
-            self._unreleased_warning(lock_type)
+            self._reads -= 1
             return False
 
     def release_write(self):
@@ -341,7 +338,7 @@ class Lock(object):
         there are still outstanding locks.
 
         Does limited correctness checking: if a read lock is released
-        when none are held, this will generate a warning.
+        when none are held, this will raise an assertion error.
 
         """
         assert self._writes > 0
@@ -353,11 +350,8 @@ class Lock(object):
             self._unlock()      # can raise LockError.
             self._released_debug(lock_type)
             return True
-        elif self._writes >= 1:
-            self._writes -= 1
-            return False
         else:
-            self._unreleased_warning(lock_type)
+            self._writes -= 1
             return False
 
     def _debug(self, *args):
@@ -390,9 +384,6 @@ class Lock(object):
         status_desc = '[{0}] ({1})'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
             lock_type, self, status_desc)
-
-    def _unreleased_warning(self, lock_type):
-        tty.warn(self._status_msg(lock_type, 'No lock to release'))
 
 
 class LockTransaction(object):
