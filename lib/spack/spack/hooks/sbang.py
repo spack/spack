@@ -36,7 +36,7 @@ def filter_shebang(path):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
     with open(path, 'rb') as original_file:
         original = original_file.read()
-        if sys.version_info > (2.6):
+        if sys.version_info >= (2, 7):
             original = original.decode(encoding='UTF-8')
         else:
             original = original.decode('UTF-8')
@@ -67,7 +67,7 @@ def filter_shebang(path):
         os.chmod(path, saved_mode | stat.S_IWRITE)
 
     with open(path, 'wb') as new_file:
-        if sys.version_info > (2.6):
+        if sys.version_info >= (2, 7):
             new_file.write(new_sbang_line.encode(encoding='UTF-8'))
             new_file.write(original.encode(encoding='UTF-8'))
         else:
