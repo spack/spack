@@ -81,7 +81,7 @@ class Timemory(CMakePackage):
 
         if '+papi' in spec:
             args.append('-DTIMEMORY_USE_PAPI=ON')
-            args.append('-DPAPI_ROOT_DIR={}'.format(spec['papi'].prefix))
+            args.append('-DPAPI_ROOT_DIR={0}'.format(spec['papi'].prefix))
         else:
             args.append('-DTIMEMORY_USE_PAPI=OFF')
 
