@@ -149,7 +149,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.7.2
+      - neurodamus-core+common@2.7.3
       - ultraliser
 
   intel-stable-parallel:
