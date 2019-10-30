@@ -177,9 +177,9 @@ class Mumps(Package):
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
-                ["CC = cc",
-                 "FC = fc",
-                 "FL = fc",
+                ["CC = {0}".format(spack_cc),
+                 "FC = {0}".format(spack_fc),
+                 "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
 
         # TODO: change the value to the correct one according to the
