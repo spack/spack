@@ -178,6 +178,12 @@ def add_pattern_exemptions(line, codes):
 
 def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in pattern_exemptions."""
+
+    # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
+    # Starting with Python 3.8, it must be placed on the `def` line
+    # https://gitlab.com/pycqa/flake8/issues/583
+    ignore_f811_on_previous_line = False
+
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
@@ -196,6 +202,12 @@ def filter_file(source, dest, output=False):
                             if pattern.search(line):
                                 line_errors.append(code)
                                 break
+
+                if 'F811' in line_errors:
+                    ignore_f811_on_previous_line = True
+                elif ignore_f811_on_previous_line:
+                    line_errors.append('F811')
+                    ignore_f811_on_previous_line = False
 
                 if line_errors:
                     line = add_pattern_exemptions(line, line_errors)
