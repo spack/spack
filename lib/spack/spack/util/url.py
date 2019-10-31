@@ -174,6 +174,7 @@ def join(base_url, path, *extra, **kwargs):
                                 (obj.netloc + '/')
                                 if obj.scheme != 's3' else ''),
                             PATH=paths[i][1:])
+                        break
 
             last_abs_component = i
             break
@@ -181,8 +182,22 @@ def join(base_url, path, *extra, **kwargs):
     if last_abs_component is not None:
         paths = paths[last_abs_component:]
         if len(paths) == 1:
-            return urllib_parse.urlparse(
-                paths[0], scheme='file', allow_fragments=False).geturl()
+            result = urllib_parse.urlparse(
+                paths[0], scheme='file', allow_fragments=False)
+
+            # another subtlety: If the last argument to join() is an absolute
+            # file:// URL component with a relative path, the relative path
+            # needs to be resolved.
+            if result.scheme == 'file' and result.netloc:
+                result = urllib_parse.ParseResult(
+                    scheme=result.scheme,
+                    netloc='',
+                    path=os.path.abspath(result.netloc + result.path),
+                    params=result.params,
+                    query=result.query,
+                    fragment=None)
+
+            return result.geturl()
 
     return _join(*paths, **kwargs)
 
