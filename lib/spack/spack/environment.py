@@ -1038,7 +1038,7 @@ class Environment(object):
         """List of environment (shell) modifications to be processed for view.
 
         This list does not depend on the specs in this environment"""
-        env = spack.util.EnvironmentModifications()
+        env = spack.util.environment.EnvironmentModifications()
 
         for subdir, vars in self.prefix_inspections.items():
             full_subdir = os.path.join(view.root, subdir)
