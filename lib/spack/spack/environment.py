@@ -1085,7 +1085,7 @@ class Environment(object):
             return env_mod.shell_modifications(shell)
 
         env_mod.extend(self.unconditional_environment_modifications(
-                self.default_view))
+            self.default_view))
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
@@ -1106,7 +1106,7 @@ class Environment(object):
             return env_mod.shell_modifications(shell)
 
         env_mod.extend(self.unconditional_environment_modifications(
-                self.default_view).reversed())
+            self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
