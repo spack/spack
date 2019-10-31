@@ -1704,8 +1704,8 @@ def test_env_activate_csh_prints_shell_output(
 
 
 @pytest.mark.regression('12719')
-def test_env_activate_default_view_root_unconditional(
-    env_deactivate, mutable_mock_env_path):
+def test_env_activate_default_view_root_unconditional(env_deactivate,
+                                                      mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
     env('create', 'test', add_view=True)
