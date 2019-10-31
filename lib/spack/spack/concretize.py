@@ -281,25 +281,7 @@ class Concretizer(object):
             else:
                 # To get default platform, consider package prefs
                 if PackagePrefs.has_preferred_targets(spec.name):
-                    target_prefs = PackagePrefs(spec.name, 'target')
-                    target_specs = [spack.spec.Spec('target=%s' % tname)
-                                    for tname in cpu.targets]
-
-                    def tspec_filter(s):
-                        # Filter target specs by whether the architecture
-                        # family is the current machine type. This ensures
-                        # we only consider x86_64 targets when on an
-                        # x86_64 machine, etc. This may need to change to
-                        # enable setting cross compiling as a default
-                        target = cpu.targets[str(s.architecture.target)]
-                        arch_family_name = target.family.name
-                        return arch_family_name == platform.machine()
-
-                    # Sort filtered targets by package prefs
-                    target_specs = list(filter(tspec_filter, target_specs))
-                    target_specs.sort(key=target_prefs)
-
-                    new_target = target_specs[0].architecture.target
+                    new_target = self.target_from_package_preferences(spec)
                 else:
                     new_target = new_plat.target('default_target')
 
@@ -309,6 +291,33 @@ class Concretizer(object):
         spec_changed = new_arch != spec.architecture
         spec.architecture = new_arch
         return spec_changed
+
+    def target_from_package_preferences(self, spec):
+        """Returns the preferred target from the package preferences if
+        there's any.
+
+        Args:
+            spec: abstract spec to be concretized
+        """
+        target_prefs = PackagePrefs(spec.name, 'target')
+        target_specs = [spack.spec.Spec('target=%s' % tname)
+                        for tname in cpu.targets]
+
+        def tspec_filter(s):
+            # Filter target specs by whether the architecture
+            # family is the current machine type. This ensures
+            # we only consider x86_64 targets when on an
+            # x86_64 machine, etc. This may need to change to
+            # enable setting cross compiling as a default
+            target = cpu.targets[str(s.architecture.target)]
+            arch_family_name = target.family.name
+            return arch_family_name == platform.machine()
+
+        # Sort filtered targets by package prefs
+        target_specs = list(filter(tspec_filter, target_specs))
+        target_specs.sort(key=target_prefs)
+        new_target = target_specs[0].architecture.target
+        return new_target
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
@@ -526,7 +535,12 @@ class Concretizer(object):
         current_platform = spack.architecture.get_platform(
             spec.architecture.platform
         )
-        if current_target != current_platform.target('default_target') or \
+
+        default_target = current_platform.target('default_target')
+        if PackagePrefs.has_preferred_targets(spec.name):
+            default_target = self.target_from_package_preferences(spec)
+
+        if current_target != default_target or \
             (self.abstract_spec.architecture is not None and
              self.abstract_spec.architecture.target is not None):
             return False
