@@ -31,7 +31,8 @@ class PyWradlib(PythonPackage):
     depends_on('py-netcdf4@1.4.2:', type=('build', 'run'))
     depends_on('py-xarray@0.11.3:', type=('build', 'run'))
     depends_on('py-xmltodict@0.11:', type=('build', 'run'))
-    depends_on('py-pygdal@2.4.0:', type=('build', 'run'))
     depends_on('py-semver', type=('build', 'run'))
     depends_on('py-deprecation', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
+
+    depends_on('gdal@2.4.0:+python', type=('build', 'run'))
