@@ -66,7 +66,7 @@ class Kokkos(Package):
             description="set rdc Kokkos CUDA option")
     variant('enable_lambda', default=False,
             description="set enable_lambda Kokkos CUDA option")
-    
+ 
     host_values = ('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
                    'Power7', 'Power8', 'Power9',
                    'WSM', 'SNB', 'HSW', 'BDW', 'SKX',
