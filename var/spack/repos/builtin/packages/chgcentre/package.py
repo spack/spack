@@ -8,7 +8,7 @@ from spack import *
 
 
 class Chgcentre(CMakePackage):
-    """The chgcentre tool can be used 
+    """The chgcentre tool can be used
     to change the phase centre of a measurement set."""
 
     homepage = "https://sourceforge.net/p/wsclean/wiki/chgcentre/"
@@ -18,4 +18,3 @@ class Chgcentre(CMakePackage):
 
     depends_on('casacore')
     depends_on('gsl')
-
