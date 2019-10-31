@@ -109,3 +109,42 @@ def _construct_upstream_dbs_from_install_roots(
         accumulated_upstream_dbs.insert(0, next_db)
 
     return accumulated_upstream_dbs
+
+
+def unused_specs():
+    """Returns a list of all the specs that are currently installed but
+    unused.
+    """
+    # Create a scratch duplicate of the database. It will be useful to
+    # perform a dry run and compute the specs that are to be returned.
+    import tempfile
+    import llnl.util.filesystem as fs
+    tmpdir = tempfile.mkdtemp()
+    scratch_db = spack.database.Database(tmpdir)
+
+    # Copy index.json in the correct place for the scratch DB
+    fs.mkdirp(os.path.dirname(scratch_db._index_path))
+    fs.copy(db._index_path, scratch_db._index_path)
+
+    # Get all the implicit specs available and start building the
+    # list of unused specs
+    implicit_specs = scratch_db.query_local(explicit=False)
+    unused = []
+
+    while True:
+        # Try to discover new unused specs
+        discovered = [s for s in implicit_specs
+                      if scratch_db.get_record(s).ref_count == 0]
+        if not discovered:
+            break
+        unused.extend(discovered)
+
+        # Now uninstall the newly discovered specs from the scratch_db and
+        # iterate again
+        for s in discovered:
+            scratch_db.remove(s)
+
+        # Update the current list of implicit specs
+        implicit_specs = [x for x in implicit_specs if x not in discovered]
+
+    return unused
