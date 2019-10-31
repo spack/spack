@@ -4436,3 +4436,33 @@ subclassing ``StagedPackage`` directly.
    Local Variables:
    fill-column: 79
    End:
+
+-----------------
+Coupling Packages
+-----------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Reducing Code Duplication
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When writing a custom ``package.py`` it may prove useful to access
+objects defined in other ``package.py`` files, especially if they
+are dependent packages. For example, to avoid code duplication and
+retain access to the latest ``host_arch`` variant of the
+``kokkos`` package one might use an approach such as this:
+
+   .. code-block:: python
+
+      import spack.repo
+
+      class MyPackage(Package):
+
+          # retrieve pertinent data from kokkos package.py
+          kokkos_pkg = spack.repo.get('kokkos')
+          allowed_vals = kokkos_pkg.variants['host_arch'].allowed_values
+
+          # access the full set of properties and methods
+          # available from the other package
+          avail_objects = dir(kokkos_pkg)
+
+          ...
