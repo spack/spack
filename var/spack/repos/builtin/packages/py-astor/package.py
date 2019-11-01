@@ -17,6 +17,6 @@ class PyAstor(PythonPackage):
     version('0.6', sha256='175ec395cde36aa0178c5a3120d03954c65d1ef4bb19ec4aa30e9d7a7cc426c4')
 
     depends_on('python@2.7:2.8,3.4:')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@:41.0.1', type='build')
     depends_on('py-nose', type='test')
     depends_on('py-astunparse', type='test')
