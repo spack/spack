@@ -10,9 +10,10 @@ class Libxc(AutotoolsPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
-    homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
-    url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
+    homepage = "http://tddft.org/programs/libxc/"
+    url      = "http://www.tddft.org/programs/libxc/down.php?file=4.3.2/libxc-4.3.2.tar.gz"
 
+    version('4.3.4', sha256='a8ee37ddc5079339854bd313272856c9d41a27802472ee9ae44b58ee9a298337')
     version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
     version('4.2.3', sha256='02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
     version('3.0.0', sha256='5542b99042c09b2925f2e3700d769cda4fb411b476d446c833ea28c6bfa8792a')
@@ -22,13 +23,8 @@ class Libxc(AutotoolsPackage):
     patch('configure_add_fj.patch')
 
     def url_for_version(self, version):
-        if version < Version('3.0.0'):
-            return ("http://www.tddft.org/programs/octopus/"
-                    "down.php?file=libxc/libxc-{0}.tar.gz"
-                    .format(version))
-
-        return ("http://www.tddft.org/programs/octopus/"
-                "down.php?file=libxc/{0}/libxc-{0}.tar.gz"
+        return ("http://www.tddft.org/programs/libxc/"
+                "down.php?file={0}/libxc-{0}.tar.gz"
                 .format(version))
 
     @property
