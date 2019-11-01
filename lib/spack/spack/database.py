@@ -1296,6 +1296,23 @@ class Database(object):
         return record and not record.installed
 
 
+class ScratchDatabase(Database):
+    """Database that doesn't lock and reads information from file only once."""
+    def __init__(self, *args, **kwargs):
+        super(ScratchDatabase, self).__init__(*args, **kwargs)
+        self.lock._enable = False
+
+    def _read(self):
+        if self._data:
+            return
+        super(ScratchDatabase, self)._read()
+
+    def _write(self, type, value, traceback):
+        if self._data:
+            return
+        super(ScratchDatabase, self)._write()
+
+
 class UpstreamDatabaseLockingError(SpackError):
     """Raised when an operation would need to lock an upstream database"""
 

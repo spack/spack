@@ -120,7 +120,7 @@ def unused_specs():
     import tempfile
     import llnl.util.filesystem as fs
     tmpdir = tempfile.mkdtemp()
-    scratch_db = spack.database.Database(tmpdir)
+    scratch_db = spack.database.ScratchDatabase(tmpdir)
 
     # Copy index.json in the correct place for the scratch DB
     fs.mkdirp(os.path.dirname(scratch_db._index_path))
@@ -145,6 +145,6 @@ def unused_specs():
             scratch_db.remove(s)
 
         # Update the current list of implicit specs
-        implicit_specs = [x for x in implicit_specs if x not in discovered]
+        implicit_specs = scratch_db.query_local(explicit=False)
 
     return unused
