@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 import spack.store
 import spack.cmd.common.arguments
 import spack.cmd.uninstall
@@ -18,9 +20,12 @@ def setup_parser(subparser):
 
 def autoremove(parser, args):
     specs = spack.store.unused_specs()
-    # Mock the attributes that spack uninstall expects
-    args.all = False
-    args.force = False
-    args.dependents = False
-    args.packages = []
-    spack.cmd.uninstall.uninstall_specs(args, specs)
+    if not specs:
+        msg = "There are no unused specs. Spack's store is clean."
+        tty.msg(msg)
+        return
+
+    if not args.yes_to_all:
+        spack.cmd.uninstall.confirmation_before_removal(specs)
+
+    spack.cmd.uninstall.do_uninstall(None, specs, force=False)
