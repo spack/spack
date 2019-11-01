@@ -1442,7 +1442,8 @@ class Environment(object):
         # construct garbage path to ensure we don't find a manifest by accident
         bare_env = Environment(os.path.join(self.manifest_path, 'garbage'),
                                with_view=self.view_path_default)
-        for key in yaml_dict:
+        keys_present = list(yaml_dict.keys())
+        for key in keys_present:
             if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
                 if key not in raw_yaml_dict:
                     del yaml_dict[key]
