@@ -13,12 +13,11 @@ class Xdmf3(CMakePackage):
     """
 
     homepage = "http://xdmf.org"
-    url      = "https://gitlab.kitware.com/xdmf/xdmf/-/archive/master/xdmf-master.tar.bz2"
     git      = "https://gitlab.kitware.com/xdmf/xdmf.git"
 
     # There is no official release of XDMF and development has largely ceased,
     # but the current version, 3.x, is maintained on the master branch.
-    version('2019-01-14', '8d9c98081d89ac77a132d56bc8bef53581db4078')
+    version('2019-01-14', commit='8d9c98081d89ac77a132d56bc8bef53581db4078')
 
     variant('shared', default=True, description='Enable shared libraries')
     variant('mpi', default=True, description='Enable MPI')

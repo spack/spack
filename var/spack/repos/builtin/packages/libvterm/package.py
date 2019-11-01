@@ -11,7 +11,7 @@ class Libvterm(Package):
     homepage = "http://www.leonerd.org.uk/code/libvterm/"
     url      = "http://www.leonerd.org.uk/code/libvterm/libvterm-0+bzr681.tar.gz"
 
-    version('681', '7a4325a7350b7092245c04e8ee185ac3')
+    version('681', sha256='abea46d1b0b831dec2af5d582319635cece63d260f8298d9ccce7c1c2e62a6e8')
 
     depends_on('libtool', type='build')
 

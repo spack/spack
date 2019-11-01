@@ -40,8 +40,17 @@ def update_kwargs_from_args(args, kwargs):
         'dirty': args.dirty,
         'use_cache': args.use_cache,
         'install_global': args.install_global,
-        'upstream': args.upstream
+        'upstream': args.upstream,
+        'cache_only': args.cache_only,
+        'explicit': True,  # Always true for install command
+        'stop_at': args.until
     })
+
+    kwargs.update({
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install)
+    })
+
     if hasattr(args, 'setup'):
         setups = set()
         for arglist_s in args.setup:
@@ -62,6 +71,9 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
+    subparser.add_argument(
+        '-u', '--until', type=str, dest='until', default=None,
+        help="phase to stop after when installing (default None)")
     arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
         '--overwrite', action='store_true',
@@ -83,6 +95,9 @@ the dependencies"""
     cache_group.add_argument(
         '--no-cache', action='store_false', dest='use_cache', default=True,
         help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
 
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
@@ -105,7 +120,7 @@ the dependencies"""
         dest='specfiles', metavar='SPEC_YAML_FILE',
         help="install from file. Read specs to install from .yaml files")
     subparser.add_argument(
-        '-u', '--upstream', action='store', default=None,
+        '--upstream', action='store', default=None,
         dest='upstream', metavar='UPSTREAM_NAME',
         help='specify which upstream spack to install too')
     subparser.add_argument(
@@ -197,8 +212,8 @@ def default_log_file(spec):
 def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
-    # handle active environment, if any
-    def install(spec, kwargs):
+    try:
+        # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
 
         if env:
@@ -210,17 +225,6 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                          scope='user')
         spack.config.set('config:active_upstream', None,
                          scope='user')
-
-    try:
-        if cli_args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                install(s, kwargs)
-        else:
-            kwargs['explicit'] = True
-            install(spec, kwargs)
 
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
@@ -281,10 +285,6 @@ def install(parser, args, **kwargs):
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     update_kwargs_from_args(args, kwargs)
-    kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
-        'install_package': ('package' in args.things_to_install)
-    })
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")

@@ -90,7 +90,6 @@ class Hpctoolkit(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        target = spec.architecture.target
 
         args = [
             '--with-binutils=%s'     % spec['binutils'].prefix,
@@ -117,7 +116,7 @@ class Hpctoolkit(AutotoolsPackage):
         if spec.satisfies('@gpu'):
             args.append('--with-mbedtls=%s' % spec['mbedtls'].prefix)
 
-        if target == 'x86_64':
+        if spec.target.family == 'x86_64':
             args.append('--with-xed=%s' % spec['intel-xed'].prefix)
 
         if '+papi' in spec:

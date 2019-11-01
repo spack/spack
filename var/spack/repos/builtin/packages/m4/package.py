@@ -12,8 +12,8 @@ class M4(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/m4/m4.html"
     url      = "https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz"
 
-    version('1.4.18', 'a077779db287adf4e12a035029002d28')
-    version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
+    version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
+    version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')

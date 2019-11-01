@@ -20,7 +20,7 @@ class PyWand(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     # provides libmagickwand
-    depends_on('image-magick')
+    depends_on('imagemagick')
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
 
     depends_on('py-sphinx@1:', type='build', when='+docs')

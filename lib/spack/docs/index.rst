@@ -55,7 +55,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-   tutorial
+   Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    known_issues
 
 .. toctree::

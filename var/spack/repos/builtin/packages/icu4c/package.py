@@ -16,10 +16,10 @@ class Icu4c(AutotoolsPackage):
     list_url = "http://download.icu-project.org/files/icu4c"
     list_depth = 2
 
-    version('64.1', 'f150be2231c13bb45206d79e0242372b')
-    version('60.1', '3d164a2d1bcebd1464c6160ebb8315ef')
-    version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
-    version('57.1', '976734806026a4ef8bdd17937c8898b9')
+    version('64.1', sha256='92f1b7b9d51b396679c17f35a2112423361b8da3c1b9de00aa94fd768ae296e6')
+    version('60.1', sha256='f8f5a6c8fbf32c015a467972bdb1477dc5f5d5dfea908b6ed218715eeb5ee225')
+    version('58.2', sha256='2b0a4410153a9b20de0e20c7d8b66049a72aef244b53683d0d7521371683da0c')
+    version('57.1', sha256='ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581')
 
     variant('cxxstd',
             default='11',

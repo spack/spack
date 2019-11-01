@@ -291,7 +291,7 @@ class Concretizer(object):
                         # we only consider x86_64 targets when on an
                         # x86_64 machine, etc. This may need to change to
                         # enable setting cross compiling as a default
-                        target = cpu.targets[s.architecture.target]
+                        target = cpu.targets[str(s.architecture.target)]
                         arch_family_name = target.family.name
                         return arch_family_name == platform.machine()
 

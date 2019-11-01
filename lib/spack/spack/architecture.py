@@ -58,6 +58,7 @@ will be responsible for compiler detection.
 """
 import functools
 import inspect
+import warnings
 
 import six
 
@@ -184,8 +185,39 @@ class Target(object):
         return cpu_flag in self.microarchitecture
 
     def optimization_flags(self, compiler):
+        """Returns the flags needed to optimize for this target using
+        the compiler passed as argument.
+
+        Args:
+            compiler (CompilerSpec or Compiler): object that contains both the
+                name and the version of the compiler we want to use
+        """
+        # Mixed toolchains are not supported yet
+        import spack.compilers
+        if isinstance(compiler, spack.compiler.Compiler):
+            if spack.compilers.is_mixed_toolchain(compiler):
+                msg = ('microarchitecture specific optimizations are not '
+                       'supported yet on mixed compiler toolchains [check'
+                       ' {0.name}@{0.version} for further details]')
+                warnings.warn(msg.format(compiler))
+                return ''
+
+        # Try to check if the current compiler comes with a version number or
+        # has an unexpected suffix. If so, treat it as a compiler with a
+        # custom spec.
+        compiler_version = compiler.version
+        version_number, suffix = cpu.version_components(compiler.version)
+        if not version_number or suffix not in ('', 'apple'):
+            # Try to deduce the correct version. Depending on where this
+            # function is called we might get either a CompilerSpec or a
+            # fully fledged compiler object
+            import spack.spec
+            if isinstance(compiler, spack.spec.CompilerSpec):
+                compiler = spack.compilers.compilers_for_spec(compiler).pop()
+            compiler_version = compiler.cc_version(compiler.cc)
+
         return self.microarchitecture.optimization_flags(
-            compiler.name, str(compiler.version)
+            compiler.name, str(compiler_version)
         )
 
 
@@ -493,3 +525,15 @@ def sys_type():
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
+
+
+@memoized
+def compatible_sys_types():
+    """Returns a list of all the systypes compatible with the current host."""
+    compatible_archs = []
+    current_host = cpu.host()
+    compatible_targets = [current_host] + current_host.ancestors
+    for target in compatible_targets:
+        arch = Arch(platform(), 'default_os', target)
+        compatible_archs.append(str(arch))
+    return compatible_archs

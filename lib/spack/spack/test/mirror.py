@@ -52,46 +52,50 @@ def check_mirror():
         mirrors = {'spack-mirror-test': 'file://' + mirror_root}
         spack.config.set('mirrors', mirrors)
         with spack.config.override('config:checksum', False):
-            spack.mirror.create(mirror_root, repos)
+            specs = [Spec(x).concretized() for x in repos]
+            spack.mirror.create(mirror_root, specs)
 
         # Stage directory exists
         assert os.path.isdir(mirror_root)
 
-        # check that there are subdirs for each package
-        for name in repos:
-            subdir = os.path.join(mirror_root, name)
-            assert os.path.isdir(subdir)
+        for spec in specs:
+            fetcher = spec.package.fetcher[0]
+            per_package_ref = os.path.join(
+                spec.name, '-'.join([spec.name, str(spec.version)]))
+            mirror_paths = spack.mirror.mirror_archive_paths(
+                fetcher,
+                per_package_ref)
+            expected_path = os.path.join(
+                mirror_root, mirror_paths.storage_path)
+            assert os.path.exists(expected_path)
 
-            files = os.listdir(subdir)
-            assert len(files) == 1
+        # Now try to fetch each package.
+        for name, mock_repo in repos.items():
+            spec = Spec(name).concretized()
+            pkg = spec.package
 
-            # Now try to fetch each package.
-            for name, mock_repo in repos.items():
-                spec = Spec(name).concretized()
-                pkg = spec.package
+            with spack.config.override('config:checksum', False):
+                with pkg.stage:
+                    pkg.do_stage(mirror_only=True)
 
-                with spack.config.override('config:checksum', False):
-                    with pkg.stage:
-                        pkg.do_stage(mirror_only=True)
+                    # Compare the original repo with the expanded archive
+                    original_path = mock_repo.path
+                    if 'svn' in name:
+                        # have to check out the svn repo to compare.
+                        original_path = os.path.join(
+                            mock_repo.path, 'checked_out')
 
-                        # Compare the original repo with the expanded archive
-                        original_path = mock_repo.path
-                        if 'svn' in name:
-                            # have to check out the svn repo to compare.
-                            original_path = os.path.join(
-                                mock_repo.path, 'checked_out')
+                        svn = which('svn', required=True)
+                        svn('checkout', mock_repo.url, original_path)
 
-                            svn = which('svn', required=True)
-                            svn('checkout', mock_repo.url, original_path)
+                    dcmp = filecmp.dircmp(
+                        original_path, pkg.stage.source_path)
 
-                        dcmp = filecmp.dircmp(
-                            original_path, pkg.stage.source_path)
-
-                        # make sure there are no new files in the expanded
-                        # tarball
-                        assert not dcmp.right_only
-                        # and that all original files are present.
-                        assert all(l in exclude for l in dcmp.left_only)
+                    # make sure there are no new files in the expanded
+                    # tarball
+                    assert not dcmp.right_only
+                    # and that all original files are present.
+                    assert all(l in exclude for l in dcmp.left_only)
 
 
 def test_url_mirror(mock_archive):
@@ -109,7 +113,8 @@ def test_git_mirror(mock_git_repository):
 
 
 @pytest.mark.skipif(
-    not which('svn'), reason='requires subversion to be installed')
+    not which('svn') or not which('svnadmin'),
+    reason='requires subversion to be installed')
 def test_svn_mirror(mock_svn_repository):
     set_up_package('svn-test', mock_svn_repository, 'svn')
     check_mirror()
@@ -147,7 +152,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
 
     files_cached_in_mirror = set()
 
-    def record_store(_class, fetcher, relative_dst):
+    def record_store(_class, fetcher, relative_dst, cosmetic_path=None):
         files_cached_in_mirror.add(os.path.basename(relative_dst))
 
     def successful_fetch(_class):
@@ -177,5 +182,7 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
         with spack.config.override('config:checksum', False):
             spack.mirror.create(mirror_root, list(spec.traverse()))
 
-        assert not (set(['urlpatch.patch', 'urlpatch2.patch.gz']) -
-                    files_cached_in_mirror)
+        assert not (set([
+            'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
+            'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'  # NOQA: ignore=E501
+        ]) - files_cached_in_mirror)

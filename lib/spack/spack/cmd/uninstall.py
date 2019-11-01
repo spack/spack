@@ -16,6 +16,7 @@ import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
 import spack.spec
+from spack.database import InstallStatuses
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
@@ -123,7 +124,9 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.store.db.query_local(spec, hashes=hashes)
+        install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
+        matching = spack.store.db.query_local(spec, hashes=hashes,
+                                              installed=install_query)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:

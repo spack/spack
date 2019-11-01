@@ -16,10 +16,10 @@ class Bowtie2(Package):
 
     version('2.3.5.1', sha256='335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f')
     version('2.3.5', sha256='2b6b2c46fbb5565ba6206b47d07ece8754b295714522149d92acebefef08347b')
-    version('2.3.4.1', '8371bbb6eb02ae99c5cf633054265cb9')
-    version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
-    version('2.3.0', '3ab33f30f00f3c30fec1355b4e569ea2')
-    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
+    version('2.3.4.1', sha256='a1efef603b91ecc11cfdb822087ae00ecf2dd922e03c85eea1ed7f8230c119dc')
+    version('2.3.1', sha256='33bd54f5041a31878e7e450cdcf0afba08345fa1133ce8ac6fd00bf7e521a443')
+    version('2.3.0', sha256='f9f841e780e78b1ae24b17981e2469e6d5add90ec22ef563af23ae2dd5ca003c')
+    version('2.2.5', sha256='e22766dd9421c10e82a3e207ee1f0eb924c025b909ad5fffa36633cd7978d3b0')
 
     depends_on('tbb', when='@2.3.0:')
     depends_on('readline', when='@2.3.1:')

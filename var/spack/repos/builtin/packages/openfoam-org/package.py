@@ -62,11 +62,11 @@ class OpenfoamOrg(Package):
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version('develop', branch='master')
-    version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
+    version('5.0', sha256='9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
-    version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
+    version('4.1', sha256='2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
+    version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
 
     variant('int64', default=False,

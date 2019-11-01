@@ -12,7 +12,7 @@ class Lsof(Package):
     homepage = "https://people.freebsd.org/~abe/"
     url      = "https://www.mirrorservice.org/sites/lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_4.89.tar.gz"
 
-    version('4.89', '8afbaff3ee308edc130bdc5df0801c8f')
+    version('4.89', sha256='ff4ac555966b587f06338475c8fcc0f41402b4c8e970e730f6f83b62be8b5c0d')
 
     def install(self, spec, prefix):
         tar = which('tar')

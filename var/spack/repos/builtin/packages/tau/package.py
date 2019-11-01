@@ -8,6 +8,7 @@ import os
 import fnmatch
 import glob
 import platform
+import sys
 from llnl.util.filesystem import join_path
 
 
@@ -22,32 +23,37 @@ class Tau(Package):
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
-    version('2.28.2', '64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
-    version('2.28.1', '4e48fb477250f201ab00381cb43afea6')
-    version('2.28', '68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
-    version('2.27.2p1', 'b9cc42ee8afdcfefe5104ab0a8f23a23')
-    version('2.27.2', 'b264ab0df78112f9a529e59a5f4dc191')
-    version('2.27.1', '4f98ff67ae5ab1ff2712f694bdec1fa9')
-    version('2.27', '76602d35fc96f546b5b9dcaf09158651')
-    version('2.26.3', '4ec14e85b8f3560b58628512c7b49e17')
-    version('2.26.2', '8a5908c35dac9406c9220b8098c70c1c')
-    version('2.26.1', 'cc13df9d6ad19bca9a8e55a9e7d0341e')
-    version('2.26', '2af91f02ad26d5bf0954146c56a8cdfa')
-    version('2.25', '46cd48fa3f3c4ce0197017b3158a2b43')
-    version('2.24.1', '6635ece6d1f08215b02f5d0b3c1e971b')
-    version('2.24', '57ce33539c187f2e5ec68f0367c76db4')
-    version('2.23.1', '6593b47ae1e7a838e632652f0426fe72')
+    version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
+    version('2.28.1', sha256='b262e5c9977471e9f5a8d729b3db743012df9b0ab8244da2842039f8a3b98b34')
+    version('2.28', sha256='68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
+    version('2.27.2p1', sha256='3256771fb71c2b05932b44d0650e6eadc712f1bdedf4c0fb2781db3b266225dd')
+    version('2.27.2', sha256='d319a4588ad303b71082254f4f40aa76f6183a01b5bc4bd987f76e1a6026efa1')
+    version('2.27.1', sha256='315babab4da25dd08633ad8dbf33d93db77f57d240bcbd3527ed5b8710cb9d8f')
+    version('2.27', sha256='d48fdca49cda2d9f25a0cf5dbd961201c8a2b1f025bcbb121d96ad43f211f1a7')
+    version('2.26.3', sha256='bd785ed47f20e6b8b2a1d99ce383d292f70b1fb9e2eaab21f5eaf8e64b28e990')
+    version('2.26.2', sha256='92ca68db51fd5bd026187e70b397bcd1db9bfb07008d7e8bc935411a97978834')
+    version('2.26.1', sha256='d084ff87e5f9fe640a3fc48aa5c8c52f586e7b739787f2bb9a4249005e459896')
+    version('2.26', sha256='458228646a13a228841d4133f24af14cc182f4978eb15ef6244d71735abe8d16')
+    version('2.25', sha256='ab8a8c15a075af69aa23b4790b4e2d9dffc3b880fc1ff806c21535ab69b6a088')
+    version('2.24.1', sha256='bc27052c36377e4b8fc0bbb4afaa57eaa8bcb3f5e5066e576b0f40d341c28a0e')
+    version('2.24', sha256='5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2')
+    version('2.23.1', sha256='31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88')
+
+    # Disable some default dependencies on Darwin/OSX
+    darwin_default = False
+    if sys.platform != 'darwin':
+        darwin_default = True
 
     variant('scorep', default=False, description='Activates SCOREP support')
     variant('openmp', default=False, description='Use OpenMP threads')
     variant('pthreads', default=True, description='Use POSIX threads')
     variant('mpi', default=False, description='Specify use of TAU MPI wrapper library')
     variant('phase', default=False, description='Generate phase based profiles')
-    variant('papi', default=True, description='Activates Performance API')
+    variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
-    variant('libdwarf', default=True, description='Activates support of libdwarf')
-    variant('libelf', default=True, description='Activates support of libelf')
-    variant('libunwind', default=True, description='Activates support of libunwind')
+    variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
+    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
     variant('comm', default=False, description=' Generate profiles with MPI communicator info')
@@ -58,7 +64,7 @@ class Tau(Package):
     variant('shmem', default=False, description='Activates SHMEM support')
     variant('gasnet', default=False, description='Activates GASNET support')
     variant('cuda', default=False, description='Activates CUDA support')
-    variant('fortran', default=True, description='Activates Fortran support')
+    variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
 
     # Support cross compiling.

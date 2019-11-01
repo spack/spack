@@ -14,7 +14,7 @@ class Nauty(AutotoolsPackage):
     homepage = "http://pallini.di.uniroma1.it/index.html"
     url      = "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"
 
-    version('2.6r7', 'b2b18e03ea7698db3fbe06c5d76ad8fe')
+    version('2.6r7', sha256='97b5648de17645895cbd56a9a0b3e23cf01f5332c476d013ea459f1a0363cdc6')
 
     # Debian/ Fedora patches for @2.6r7:
     urls_for_patches = {
@@ -48,8 +48,8 @@ class Nauty(AutotoolsPackage):
     }
     # Iterate over patches
     for condition, urls in urls_for_patches.items():
-        for url, sha256 in urls:
-            patch(url, when=condition, level=1, sha256=sha256)
+        for path, sha256 in urls:
+            patch(path, when=condition, level=1, sha256=sha256)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')

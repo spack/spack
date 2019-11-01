@@ -20,6 +20,7 @@ class Fsl(Package):
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
     url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('5.0.10', '64823172a08aad679833240ba64c8e30')
 

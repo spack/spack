@@ -21,7 +21,7 @@ class Cloverleaf3d(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0', '2e86cadd7612487f9da4ddeb1a6de939')
+    version('1.0', sha256='78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef')
 
     variant('openacc', default=False, description='Enable OpenACC Support')
 

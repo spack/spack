@@ -18,8 +18,6 @@ class PySip(Package):
     version('develop', hg=hg)  # wasn't actually able to clone this
     version('4.19.18', sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e')
     version('4.19.13', sha256='e353a7056599bf5fbd5d3ff9842a6ab2ea3cf4e0304a0f925ec5862907c0d15e')
-    version('4.16.7', '32abc003980599d33ffd789734de4c36')
-    version('4.16.5', '6d01ea966a53e4c7ae5c5e48c40e49e5')
 
     variant('module', default='sip', description='Name of private SIP module',
             values=str, multi=False)

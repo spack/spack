@@ -15,7 +15,7 @@ class Xtrans(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libxtrans"
     url      = "https://www.x.org/archive//individual/lib/xtrans-1.3.5.tar.gz"
 
-    version('1.3.5', '6e4eac1b7c6591da0753052e1eccfb58')
+    version('1.3.5', sha256='b7a577c1b6c75030145e53b4793db9c88f9359ac49e7d771d4385d21b3e5945d')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

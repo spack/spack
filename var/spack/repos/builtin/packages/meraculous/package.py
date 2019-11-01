@@ -15,7 +15,7 @@ class Meraculous(CMakePackage):
     git      = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
     version('2.2.5.1', branch='release-2.2.5.1')
-    version('2.2.4', '349feb6cb178643a46e4b092c87bad3a')
+    version('2.2.4', sha256='3b4b8848232be902af9ebc77b38b83bcc531f12120115be089bdd6371ad2bf5b')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('boost@1.5.0:')

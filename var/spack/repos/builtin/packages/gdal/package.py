@@ -114,7 +114,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
@@ -157,12 +157,12 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.
-        spack_env.set('PREFIX', self.prefix)
-        spack_env.set('DESTDIR', '/')
+        env.set('PREFIX', self.prefix)
+        env.set('DESTDIR', '/')
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -299,7 +299,7 @@ class Gdal(AutotoolsPackage):
 
         # https://trac.osgeo.org/gdal/wiki/NetCDF
         if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf'].prefix))
+            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
         else:
             args.append('--with-netcdf=no')
 

@@ -31,11 +31,11 @@ class Legion(CMakePackage):
     version('19.04.0', sha256='279bbc8dcdab4c75be570318989a9fc9821178143e9db9c3f62e58bf9070b5ac')
     version('18.12.0', sha256='71f2c409722975c0ad92f2caffcc9eaa9260f7035e2b55b731d819eb6a94016c')
     version('18.09.0', sha256='58c5a3072d2b5086225982563c23524692ca5758cbfda8d0f0a4f00ef17b3b8d')
-    version('18.05.0', 'ab5ac8cd4aa4c91e6187bf1333a031bf')
-    version('18.02.0', '14937b386100347b051a5fc514636353')
-    version('17.10.0', 'ebfc974dc82a9d7f3ba53242ecae62e1')
-    version('17.08.0', 'acc1ea8c564c4a382a015e0c9cf94574')
-    version('17.02.0', '31ac3004e2fb0996764362d2b6f6844a')
+    version('18.05.0', sha256='4c3cef548b3a459827e4c36b5963c06b6fcf0a4ca1800fbb0f73e6ba3b1cced4')
+    version('18.02.0', sha256='e08aeef98003593391a56f11a99d9d65af49647fe87a2a5e8837c8682a337a60')
+    version('17.10.0', sha256='af4f1e9215e57c4aac4805ae2bf53defe13eeaf192576bf5a702978f43171b1e')
+    version('17.08.0', sha256='20aabdb0fabb1e32aa713cd5fa406525093f8dad33fca5d23046408d42d3c7b3')
+    version('17.02.0', sha256='423d8699729b0e7fef663740e239aa722cca544f6bda8c9f782eaba4274bf60a')
 
     variant('mpi', default=True,
             description='Build on top of mpi conduit for mpi inoperability')

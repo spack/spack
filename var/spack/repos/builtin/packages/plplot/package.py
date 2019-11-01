@@ -12,9 +12,9 @@ class Plplot(CMakePackage):
     homepage = "http://plplot.sourceforge.net/"
     url      = "https://sourceforge.net/projects/plplot/files/plplot/5.13.0%20Source/plplot-5.13.0.tar.gz/download"
 
-    version('5.13.0', 'bfefeae7fb9a23377c6dc37b44a7da8a')
-    version('5.12.0', '998a05be218e5de8f2faf988b8dbdc51')
-    version('5.11.0', '632c9e13b09f4e2b2517b3567bc3cece')
+    version('5.13.0', sha256='ec36bbee8b03d9d1c98f8fd88f7dc3415560e559b53eb1aa991c2dcf61b25d2b')
+    version('5.12.0', sha256='8dc5da5ef80e4e19993d4c3ef2a84a24cc0e44a5dade83201fca7160a6d352ce')
+    version('5.11.0', sha256='bfa8434e6e1e7139a5651203ec1256c8581e2fac3122f907f7d8d25ed3bd5f7e')
 
     variant('java', default=False, description='Enable Java binding')
     variant('lua', default=False, description='Enable Lua binding')

@@ -37,7 +37,7 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
         add('git-test')
         concretize()
         with spack.config.override('config:checksum', False):
-            mirror('create', '-d', mirror_dir)
+            mirror('create', '-d', mirror_dir, '--all')
 
     e = ev.read(env_name)
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])

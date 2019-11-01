@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.util.web
 import spack.repo
+import spack.stage
 from spack.spec import Spec
 from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
@@ -56,7 +57,7 @@ class {class_name}({base_class_name}):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://www.example.com"
 {url_def}
 
 {versions}
@@ -618,7 +619,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.util.web.get_checksums_for_versions(
+        versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
     else:

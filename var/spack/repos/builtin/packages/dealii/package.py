@@ -137,7 +137,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
-    depends_on('netcdf+mpi',       when='+netcdf+mpi')
+    depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
     depends_on('oce',              when='+oce')
     depends_on('p4est',            when='+p4est+mpi')
@@ -277,13 +277,10 @@ class Dealii(CMakePackage, CudaPackage):
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
-            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
@@ -396,13 +393,13 @@ class Dealii(CMakePackage, CudaPackage):
 
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec and '+mpi' in spec:
-            netcdf = spec['netcdf-cxx'].libs + spec['netcdf'].libs
+            netcdf = spec['netcdf-cxx'].libs + spec['netcdf-c'].libs
             options.extend([
                 '-DNETCDF_FOUND=true',
                 '-DNETCDF_LIBRARIES=%s' % netcdf.joined(';'),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
                     spec['netcdf-cxx'].prefix.include,
-                    spec['netcdf'].prefix.include),
+                    spec['netcdf-c'].prefix.include),
             ])
         else:
             options.extend([
@@ -450,5 +447,5 @@ class Dealii(CMakePackage, CudaPackage):
 
         return options
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('DEAL_II_DIR', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('DEAL_II_DIR', self.prefix)

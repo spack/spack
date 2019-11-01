@@ -12,7 +12,7 @@ class PyPythonqwt(PythonPackage):
     homepage = "https://github.com/PierreRaybaut/PythonQwt"
     url      = "https://pypi.io/packages/source/P/PythonQwt/PythonQwt-0.5.5.zip"
 
-    version('0.5.5', 'a60c7da9fbca667337d14aca094b6fda')
+    version('0.5.5', sha256='1f13cc8b555a57f8fe0f806d6c2f6d847050e4d837649503932b81316d12788a')
 
     variant('doc', default=False, description="Build documentation.")
 

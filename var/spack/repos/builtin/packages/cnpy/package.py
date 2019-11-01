@@ -16,6 +16,8 @@ class Cnpy(CMakePackage):
 
     version('master', branch='master')
 
+    depends_on('zlib', type='link')
+
     def cmake_args(self):
         args = []
         if sys.platform == 'darwin':

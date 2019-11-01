@@ -655,4 +655,4 @@ def release_jobs(parser, args):
     output_object['stages'] = stage_names
 
     with open(args.output_file, 'w') as outf:
-        outf.write(syaml.dump(output_object))
+        outf.write(syaml.dump_config(output_object, default_flow_style=True))

@@ -21,6 +21,6 @@ class RRMethodss3(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/R.methodsS3_1.7.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/R.methodsS3"
 
-    version('1.7.1', 'c88e815837f268affd4f2a39c737d969')
+    version('1.7.1', sha256='44b840399266cd27f8f9157777b4d9d85ab7bd31bfdc143b3fc45079a2d8e687')
 
     depends_on('r@2.13.0:', type=('build', 'run'))

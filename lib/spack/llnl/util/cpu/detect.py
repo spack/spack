@@ -4,10 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
 import functools
+import os
 import platform
 import re
 import subprocess
-import sys
+import warnings
 
 import six
 
@@ -75,34 +76,38 @@ def proc_cpuinfo():
     return info
 
 
-def check_output(args):
-    if sys.version_info[:2] == (2, 6):
-        return subprocess.run(
-            args, check=True, stdout=subprocess.PIPE).stdout  # nopyqver
-    else:
-        return subprocess.check_output(args)  # nopyqver
+def check_output(args, env):
+    output = subprocess.Popen(
+        args, stdout=subprocess.PIPE, env=env
+    ).communicate()[0]
+    return six.text_type(output.decode('utf-8'))
 
 
 @info_dict(operating_system='Darwin')
-def sysctl():
+def sysctl_info_dict():
     """Returns a raw info dictionary parsing the output of sysctl."""
+    # Make sure that /sbin and /usr/sbin are in PATH as sysctl is
+    # usually found there
+    child_environment = dict(os.environ.items())
+    search_paths = child_environment.get('PATH', '').split(os.pathsep)
+    for additional_path in ('/sbin', '/usr/sbin'):
+        if additional_path not in search_paths:
+            search_paths.append(additional_path)
+    child_environment['PATH'] = os.pathsep.join(search_paths)
 
-    info = {}
-    info['vendor_id'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.vendor']
-    ).strip()
-    info['flags'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.features']
-    ).strip().lower()
-    info['flags'] += ' ' + check_output(
-        ['sysctl', '-n', 'machdep.cpu.leaf7_features']
-    ).strip().lower()
-    info['model'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.model']
-    ).strip()
-    info['model name'] = check_output(
-        ['sysctl', '-n', 'machdep.cpu.brand_string']
-    ).strip()
+    def sysctl(*args):
+        return check_output(
+            ['sysctl'] + list(args), env=child_environment
+        ).strip()
+
+    flags = (sysctl('-n', 'machdep.cpu.features').lower() + ' '
+             + sysctl('-n', 'machdep.cpu.leaf7_features').lower())
+    info = {
+        'vendor_id': sysctl('-n', 'machdep.cpu.vendor'),
+        'flags': flags,
+        'model': sysctl('-n', 'machdep.cpu.model'),
+        'model name': sysctl('-n', 'machdep.cpu.brand_string')
+    }
 
     # Super hacky way to deal with slight representation differences
     # Would be better to somehow consider these "identical"
@@ -112,6 +117,10 @@ def sysctl():
         info['flags'] += ' sse4_2'
     if 'avx1.0' in info['flags']:
         info['flags'] += ' avx'
+    if 'clfsopt' in info['flags']:
+        info['flags'] += ' clflushopt'
+    if 'xsave' in info['flags']:
+        info['flags'] += ' xsavec xsaveopt'
 
     return info
 
@@ -126,8 +135,8 @@ def raw_info_dictionary():
     for factory in info_factory[platform.system()]:
         try:
             info = factory()
-        except Exception:
-            pass
+        except Exception as e:
+            warnings.warn(str(e))
 
         if info:
             break

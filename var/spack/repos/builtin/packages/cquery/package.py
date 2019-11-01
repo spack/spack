@@ -11,10 +11,10 @@ class Cquery(CMakePackage):
     """
 
     homepage = "https://github.com/cquery-project/cquery"
-    url      = "https://github.com/cquery-project/cquery/archive/v20180718.tar.gz"
+    git      = "https://github.com/cquery-project/cquery.git"
 
-    version('v20180823', commit='70c755b2e390d3edfb594a84a7531beb26b2bc07',
-            submodules=True, git='https://github.com/cquery-project/cquery')
+    version('2018-08-23', commit='70c755b2e390d3edfb594a84a7531beb26b2bc07',
+            submodules=True)
 
     depends_on('llvm')
 

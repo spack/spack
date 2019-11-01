@@ -584,9 +584,13 @@ class TestConcretize(object):
             Spec(spec).concretized()
 
     @pytest.mark.parametrize('spec, best_achievable', [
+        ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
-        ('mpileaks%gcc@5.3.0', 'skylake_avx512')
+        ('mpileaks%gcc@5.3.0', 'broadwell'),
+        # Apple's clang always falls back to x86-64 for now
+        ('mpileaks%clang@9.1.0-apple', 'x86_64')
     ])
+    @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
             self, spec, best_achievable, current_host
     ):

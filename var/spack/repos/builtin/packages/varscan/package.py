@@ -14,7 +14,7 @@ class Varscan(Package):
     homepage = "http://dkoboldt.github.io/varscan/"
     url      = "https://github.com/dkoboldt/varscan/releases/download/2.4.2/VarScan.v2.4.2.jar"
 
-    version('2.4.2', '4b810741505a8145a7f8f9f6791bbacf', expand=False)
+    version('2.4.2', sha256='34ff6462f91fb6ed3f11e867ab4a179efae5dd8214b97fa261fc616f23d4d031', expand=False)
 
     depends_on('java', type=('build', 'run'))
 

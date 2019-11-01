@@ -114,3 +114,28 @@ def test_schema_validation(meta_schema, config_name):
 
     # If this validation throws the test won't pass
     jsonschema.validate(schema, meta_schema)
+
+
+def test_deprecated_properties(module_suffixes_schema):
+    # Test that an error is reported when 'error: True'
+    module_suffixes_schema['deprecatedProperties'] = {
+        'properties': ['tcl'],
+        'message': '{property} not allowed',
+        'error': True
+    }
+    v = spack.schema.Validator(module_suffixes_schema)
+    data = {'tcl': {'all': {'suffixes': {'^python': 'py'}}}}
+
+    with pytest.raises(jsonschema.ValidationError, match='tcl not allowed'):
+        v.validate(data)
+
+    # Test that just a warning is reported when 'error: False'
+    module_suffixes_schema['deprecatedProperties'] = {
+        'properties': ['tcl'],
+        'message': '{property} not allowed',
+        'error': False
+    }
+    v = spack.schema.Validator(module_suffixes_schema)
+    data = {'tcl': {'all': {'suffixes': {'^python': 'py'}}}}
+    # The next validation doesn't raise anymore
+    v.validate(data)
