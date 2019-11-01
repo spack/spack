@@ -181,7 +181,8 @@ def read_from_url(url, accept_content_type=None):
     try:
         response = _urlopen(req, timeout=_timeout, context=context)
     except URLError as err:
-        raise SpackWebError(err)
+        raise SpackWebError('Download failed: {ERROR}'.format(
+            ERROR=str(err)))
 
     if accept_content_type and not is_web_url:
         content_type = response.headers.get('Content-type')
