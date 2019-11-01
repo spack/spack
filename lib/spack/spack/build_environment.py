@@ -613,6 +613,9 @@ def get_rpaths(pkg):
     # module show output.
     if pkg.compiler.modules and len(pkg.compiler.modules) > 1:
         rpaths.append(get_path_from_module(pkg.compiler.modules[1]))
+
+    rpaths.extend(pkg.compiler.extra_rpaths)
+
     return rpaths
 
 
