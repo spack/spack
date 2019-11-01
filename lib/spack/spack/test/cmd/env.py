@@ -1703,6 +1703,20 @@ def test_env_activate_csh_prints_shell_output(
     assert "alias despacktivate" in out
 
 
+@pytest.mark.regression('12719')
+def test_env_activate_default_view_root_unconditional(env_deactivate,
+                                                      mutable_mock_env_path):
+    """Check that the root of the default view in the environment is added
+    to the shell unconditionally."""
+    env('create', 'test', add_view=True)
+
+    with ev.read('test') as e:
+        viewdir = e.default_view.root
+
+    out = env('activate', '--sh', 'test')
+    assert 'PATH=%s' % os.path.join(viewdir, 'bin') in out
+
+
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'

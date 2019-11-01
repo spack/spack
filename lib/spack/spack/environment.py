@@ -1034,8 +1034,24 @@ class Environment(object):
         '': ['CMAKE_PREFIX_PATH']
     }
 
+    def unconditional_environment_modifications(self, view):
+        """List of environment (shell) modifications to be processed for view.
+
+        This list does not depend on the specs in this environment"""
+        env = spack.util.environment.EnvironmentModifications()
+
+        for subdir, vars in self.prefix_inspections.items():
+            full_subdir = os.path.join(view.root, subdir)
+            for var in vars:
+                env.prepend_path(var, full_subdir)
+
+        return env
+
     def environment_modifications_for_spec(self, spec, view=None):
-        """List of environment modifications to be processed."""
+        """List of environment (shell) modifications to be processed for spec.
+
+        This list is specific to the location of the spec or its projection in
+        the view."""
         spec = spec.copy()
         if view:
             spec.prefix = Prefix(view.view().get_projection_for_spec(spec))
@@ -1068,6 +1084,9 @@ class Environment(object):
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
 
+        env_mod.extend(self.unconditional_environment_modifications(
+            self.default_view))
+
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
                 env_mod.extend(self.environment_modifications_for_spec(
@@ -1085,6 +1104,9 @@ class Environment(object):
         if default_view_name not in self.views:
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
+
+        env_mod.extend(self.unconditional_environment_modifications(
+            self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
