@@ -32,7 +32,6 @@ import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
 import six.moves.urllib.parse as urllib_parse
-import six.moves.urllib.error as urllib_error
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -1138,10 +1137,7 @@ class S3FetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            try:
-                _, headers, stream = web_util.read_from_url(self.url)
-            except urllib_error.URLError as err:
-                raise FailedDownloadError(self.url, err)
+            _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)

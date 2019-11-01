@@ -177,7 +177,11 @@ def read_from_url(url, accept_content_type=None):
 
     # Do the real GET request when we know it's just HTML.
     req.get_method = lambda: "GET"
-    response = _urlopen(req, timeout=_timeout, context=context)
+
+    try:
+        response = _urlopen(req, timeout=_timeout, context=context)
+    except urllib_error.URLError as err:
+        raise SpackWebError(err)
 
     if accept_content_type and not is_web_url:
         content_type = response.headers.get('Content-type')
