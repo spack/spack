@@ -10,8 +10,7 @@ import collections
 
 import spack.spec
 import spack.modules.tcl
-from spack.modules.common import (
-    UpstreamModuleIndex, ModuleNotFoundError)
+from spack.modules.common import UpstreamModuleIndex
 
 import spack.error
 

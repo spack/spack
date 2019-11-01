@@ -133,7 +133,7 @@ def loads(module_type, specs, args, out=sys.stdout):
     modules = list(
         (spec,
          spack.modules.common.get_module(
-            module_type, spec, get_full_path=False, required=False))
+             module_type, spec, get_full_path=False, required=False))
         for spec in specs)
     modules = list((spec, module) for spec, module in modules if module)
 
