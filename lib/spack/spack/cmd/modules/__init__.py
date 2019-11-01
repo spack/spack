@@ -131,8 +131,11 @@ def loads(module_type, specs, args, out=sys.stdout):
             )
 
     modules = list(
-        (spec, spack.modules.common.get_module(module_type, spec, False))
+        (spec,
+         spack.modules.common.get_module(
+            module_type, spec, get_full_path=False, required=False))
         for spec in specs)
+    modules = list((spec, module) for spec, module in modules if module)
 
     module_commands = {
         'tcl': 'module load ',
@@ -161,16 +164,23 @@ def find(module_type, specs, args):
     single_spec = one_spec_or_raise(specs)
 
     if args.recurse_dependencies:
-        specs_to_retrieve = list(
-            single_spec.traverse(order='post', cover='nodes',
+        dependency_specs_to_retrieve = list(
+            single_spec.traverse(root=False, order='post', cover='nodes',
                                  deptype=('link', 'run')))
     else:
-        specs_to_retrieve = [single_spec]
+        dependency_specs_to_retrieve = []
 
     try:
-        modules = [spack.modules.common.get_module(module_type, spec,
-                                                   args.full_path)
-                   for spec in specs_to_retrieve]
+        modules = [
+            spack.modules.common.get_module(
+                module_type, single_spec, args.full_path, required=True)]
+
+        modules.extend(
+            spack.modules.common.get_module(
+                module_type, spec, args.full_path, required=False)
+            for spec in dependency_specs_to_retrieve)
+
+        modules = list(x for x in modules if x)
     except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
     print(' '.join(modules))

@@ -312,20 +312,33 @@ class UpstreamModuleIndex(object):
         module_index = self.module_indices[db_index]
         module_type_index = module_index.get(module_type, {})
         if not module_type_index:
-            raise ModuleNotFoundError(
+            tty.debug(
                 "No {0} modules associated with the Spack instance where"
                 " {1} is installed".format(module_type, spec))
+            return
         if spec.dag_hash() in module_type_index:
             return module_type_index[spec.dag_hash()]
         else:
-            raise ModuleNotFoundError(
+            tty.debug(
                 "No module is available for upstream package {0}".format(spec))
+            return
 
 
-def get_module(module_type, spec, get_full_path):
+def get_module(module_type, spec, get_full_path, required=True):
+    """Retrieve the module file for a given spec and module type. If
+    ``required`` is set, then an exception will be raised if the module is
+    not found and the Spec is not blacklisted in the module configuration.
+    The upstream module index does not record whether a module is blacklisted:
+    if it is missing it is assumed to have been omitted purposefully. If the
+    module is not available (and it is not required or it is blacklisted), then
+    this function returns ``None``.
+    """
     if spec.package.installed_upstream:
-        module = spack.modules.common.upstream_module_index.upstream_module(
-            spec, module_type)
+        module = (spack.modules.common.upstream_module_index
+                  .upstream_module(spec, module_type))
+        if not module:
+            return
+
         if get_full_path:
             return module.path
         else:
@@ -333,10 +346,17 @@ def get_module(module_type, spec, get_full_path):
     else:
         writer = spack.modules.module_types[module_type](spec)
         if not os.path.isfile(writer.layout.filename):
-            err_msg = "No module available for package {0} at {1}".format(
-                spec, writer.layout.filename
-            )
-            raise ModuleNotFoundError(err_msg)
+            if not writer.conf.blacklisted:
+                err_msg = "No module available for package {0} at {1}".format(
+                    spec, writer.layout.filename
+                )
+                raise ModuleNotFoundError(err_msg)
+            elif required:
+                tty.debug("The module configuration has blacklisted {0}: "
+                          "omitting it".format(spec))
+            else:
+                return
+
         if get_full_path:
             return writer.layout.filename
         else:
