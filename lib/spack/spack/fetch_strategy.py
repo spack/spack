@@ -32,6 +32,7 @@ import xml.etree.ElementTree
 from functools import wraps
 from six import string_types, with_metaclass
 import six.moves.urllib.parse as urllib_parse
+import six.moves.urllib.error as urllib_error
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import (
@@ -1129,7 +1130,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != 's3':
-            raise ValueError(
+            raise FetchError(
                 'S3FetchStrategy can only fetch from s3:// urls.')
 
         tty.msg("Fetching %s" % self.url)
@@ -1137,7 +1138,10 @@ class S3FetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            _, headers, stream = web_util.read_from_url(self.url)
+            try:
+                _, headers, stream = web_util.read_from_url(self.url)
+            except urllib_error.URLError as err:
+                raise FailedDownloadError(self.url, err)
 
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)
@@ -1395,7 +1399,7 @@ class NoCacheError(FetchError):
 
 
 class FailedDownloadError(FetchError):
-    """Raised wen a download fails."""
+    """Raised when a download fails."""
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)
