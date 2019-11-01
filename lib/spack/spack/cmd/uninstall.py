@@ -49,11 +49,6 @@ def add_common_arguments(subparser):
 def setup_parser(subparser):
     add_common_arguments(subparser)
     subparser.add_argument(
-        '--autoremove', action='store_true',
-        help='Removes implicit dependencies that are not needed anymore.'
-    )
-
-    subparser.add_argument(
         '-a', '--all', action='store_true', dest='all',
         help="USE CAREFULLY. Remove ALL installed packages that match each "
         "supplied spec. i.e., if you `uninstall --all libelf`,"
@@ -344,21 +339,10 @@ def uninstall_specs(args, specs):
 
 
 def uninstall(parser, args):
-    if not args.packages and not (args.all or args.autoremove):
+    if not args.packages and not args.all:
         tty.die('uninstall requires at least one package argument.',
-                '  Use `spack uninstall --all` to uninstall all packages or'
-                ' `spack uninstall --autoremove` to uninstall unused '
-                'packages.')
-
-    if args.autoremove and (args.force or args.dependents
-                            or args.all or args.packages):
-        msg = ('the --autoremove argument cannot be called with --force,'
-               ' --dependents, --all or explicit packages')
-        tty.die(msg)
+                '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     # [any] here handles the --all case by forcing all specs to be returned
     specs = spack.cmd.parse_specs(args.packages) if args.packages else [any]
-    if args.autoremove:
-        specs = spack.store.unused_specs()
-
     uninstall_specs(args, specs)
