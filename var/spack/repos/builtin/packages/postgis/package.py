@@ -44,7 +44,8 @@ class Postgis(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        args.append('--with-sfcgal='+str(self.spec['sfcgal'].prefix.bin)+'/sfcgal-config')
+        args.append('--with-sfcgal=' + str(self.spec['sfcgal'].prefix.bin) +
+                    '/sfcgal-config')
         if '+gui' in self.spec:
             args.append('--with-gui')
         return args
