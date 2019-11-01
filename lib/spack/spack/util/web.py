@@ -180,7 +180,7 @@ def read_from_url(url, accept_content_type=None):
 
     try:
         response = _urlopen(req, timeout=_timeout, context=context)
-    except urllib_error.URLError as err:
+    except URLError as err:
         raise SpackWebError(err)
 
     if accept_content_type and not is_web_url:
