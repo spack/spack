@@ -18,4 +18,4 @@ class PerlLwpProtocolHttps(PerlPackage):
     depends_on('perl-io-socket-ssl', type=('build', 'run'))
     depends_on('perl-net-http', type=('build', 'run'))
     depends_on('perl-mozilla-ca', type=('build', 'run'))
-    depends_on('perl-lwp', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))

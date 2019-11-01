@@ -11,7 +11,7 @@ class Simulationio(CMakePackage):
     """SimulationIO: Efficient and convenient I/O for large PDE simulations"""
 
     homepage = "https://github.com/eschnett/SimulationIO"
-    url      = "https://github.com/eschnett/SimulationIO/archive/version/0.1.0.tar.gz"
+    url      = "https://github.com/eschnett/SimulationIO/archive/version/9.0.1.tar.gz"
     git      = "https://github.com/eschnett/SimulationIO.git"
 
     version('develop', branch='master')

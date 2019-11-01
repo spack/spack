@@ -24,4 +24,4 @@ class PyJupyterClient(PythonPackage):
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))
-    depends_on('py-zmq@13:', type=('build', 'run'))
+    depends_on('py-pyzmq@13:', type=('build', 'run'))

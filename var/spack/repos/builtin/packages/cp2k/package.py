@@ -50,7 +50,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('cuda_arch',
             description='CUDA architecture',
             default='none',
-            values=('none', '35', '37', '60'),
+            values=('none', '35', '37', '60', '70'),
             multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
@@ -121,8 +121,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     # a consistent/compat. combination is pulled in to the dependency graph.
     depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
     depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
-    # to get JSON-based UPF format support used in combination with SIRIUS
-    depends_on('json-fortran', when='+sirius')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     depends_on('py-numpy', when='@7:+cuda', type='build')
@@ -370,10 +368,6 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
             libs += list(sirius.libs)
 
-            cppflags.append('-D__JSON')
-            fcflags += ['$(shell pkg-config --cflags json-fortran)']
-            libs += ['$(shell pkg-config --libs json-fortran)']
-
         if self.spec.satisfies('+cuda'):
             cppflags += ['-D__ACC']
             libs += ['-lcudart', '-lnvrtc', '-lcuda']
@@ -394,6 +388,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                     '35': 'K40',
                     '37': 'K80',
                     '60': 'P100',
+                    '70': 'V100',
                 }[cuda_arch]
 
                 if (cuda_arch == '35'

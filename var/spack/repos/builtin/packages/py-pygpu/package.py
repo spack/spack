@@ -28,4 +28,4 @@ class PyPygpu(PythonPackage):
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mako', type=('build', 'run'))
-    depends_on('libcheck')
+    depends_on('check')

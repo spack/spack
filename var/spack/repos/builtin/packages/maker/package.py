@@ -55,7 +55,7 @@ class Maker(Package):
     depends_on('perl-inline-c', type=('build', 'run'))
     depends_on('perl-io-all', type=('build', 'run'))
     depends_on('perl-io-prompt', type=('build', 'run'))
-    depends_on('perl-bio-perl', type=('build', 'run'))
+    depends_on('perl-bioperl', type=('build', 'run'))
     depends_on('blast-plus')
     depends_on('snap-korf')
     depends_on('repeatmasker')

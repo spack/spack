@@ -225,6 +225,9 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a source id."""
         return ''
 
+    def mirror_id(self):
+        """BundlePackages don't have a mirror id."""
+
 
 @pattern.composite(interface=FetchStrategy)
 class FetchStrategyComposite(object):

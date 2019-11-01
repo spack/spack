@@ -477,7 +477,6 @@ def spider(root, depth=0):
        performance over a sequential fetch.
 
     """
-
     root = url_util.parse(root)
     pages, links = _spider(root, set(), root, 0, depth, False)
     return pages, links

@@ -27,7 +27,7 @@ class FluxCore(AutotoolsPackage):
     variant('docs', default=False, description='Build flux manpages')
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("zeromq@4.0.4:")
+    depends_on("libzmq@4.0.4:")
     depends_on("czmq")
     depends_on("czmq@2.2:3.99", when="@0.1:0.6.99")
     depends_on("czmq@3.0.1:", when="@0.7:,master")
@@ -95,28 +95,29 @@ class FluxCore(AutotoolsPackage):
     def lua_lib_dir(self):
         return os.path.join('lib', 'lua', str(self.lua_version))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         #  Ensure ./fluxometer.lua can be found during flux's make check
         spack_env.append_path('LUA_PATH', './?.lua', separator=';')
 
-        run_env.prepend_path(
+    def setup_run_environment(self, env):
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_CPATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'PYTHONPATH',
             os.path.join(
                 self.spec.prefix.lib,
                 "python{0}".format(self.spec['python'].version.up_to(2)),
                 "site-packages"),
         )
-        run_env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
-        run_env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        run_env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
+        env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
+        env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
+        env.prepend_path('FLUX_RC_PATH', self.prefix.etc.flux)
 
     def configure_args(self):
         args = ['--enable-pylint=no']
