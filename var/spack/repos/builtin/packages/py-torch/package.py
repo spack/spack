@@ -122,7 +122,6 @@ class PyTorch(PythonPackage):
     depends_on('mkl', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     depends_on('nnpack', when='+nnpack')
-    # TODO: add dependency: https://github.com/pytorch/QNNPACK
     depends_on('qnnpack', when='+qnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
@@ -201,6 +200,8 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')
+        # Never use vendored copy of QNNPACK
+        env.set('USE_PYTORCH_QNNPACK=OFF')
         enable_or_disable('distributed')
 
         enable_or_disable('nccl')
