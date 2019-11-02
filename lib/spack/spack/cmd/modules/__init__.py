@@ -173,12 +173,12 @@ def find(module_type, specs, args):
     try:
         modules = [
             spack.modules.common.get_module(
-                module_type, single_spec, args.full_path, required=True)]
-
-        modules.extend(
-            spack.modules.common.get_module(
                 module_type, spec, args.full_path, required=False)
-            for spec in dependency_specs_to_retrieve)
+            for spec in dependency_specs_to_retrieve]
+
+        modules.append(
+            spack.modules.common.get_module(
+                module_type, single_spec, args.full_path, required=True))
 
         modules = list(x for x in modules if x)
     except spack.modules.common.ModuleNotFoundError as e:
