@@ -66,6 +66,11 @@ class FluxCore(AutotoolsPackage):
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
 
+    # Testing Dependencies
+    depends_on("mpich pmi=pmi", type="test")
+    depends_on("valgrind", type="test")
+    depends_on("jq", type="test", when='@0.12.0:')
+
     def url_for_version(self, version):
         '''
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
