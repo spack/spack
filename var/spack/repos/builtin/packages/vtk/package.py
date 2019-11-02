@@ -58,10 +58,10 @@ class Vtk(CMakePackage):
     # version 3.2 or higher.
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
-    depends_on('libxt', when='+opengl2')
 
     if sys.platform != 'darwin':
         depends_on('glx', when='~osmesa')
+        depends_on('libxt', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
