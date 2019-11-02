@@ -106,18 +106,18 @@ class FluxSched(AutotoolsPackage):
     def lua_lib_dir(self):
         return os.path.join('lib', 'lua', str(self.lua_version))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
+    def setup_run_environment(self, env):
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_CPATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
             separator=';')
 
-        run_env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
-        run_env.prepend_path('FLUX_MODULE_PATH',
-                             self.prefix.lib.flux.modules.sched)
-        run_env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        run_env.prepend_path('FLUX_RC_EXTRA', self.prefix.etc.flux)
+        env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
+        env.prepend_path('FLUX_MODULE_PATH',
+                         self.prefix.lib.flux.modules.sched)
+        env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
+        env.prepend_path('FLUX_RC_EXTRA', self.prefix.etc.flux)
