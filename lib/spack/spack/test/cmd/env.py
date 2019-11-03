@@ -1763,3 +1763,13 @@ def test_duplicate_packages_raise_when_concretizing_together():
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
         e.concretize()
+
+
+def test_env_write_only_non_default():
+    print(env('create', 'test'))
+
+    e = ev.read('test')
+    with open(e.manifest_path, 'r') as f:
+        yaml = f.read()
+
+    assert yaml == ev.default_manifest_yaml
