@@ -107,5 +107,5 @@ class SagaGis(AutotoolsPackage):
 
     def setup_environment(self, spack_env, run_env):
         # Point saga to its tool set, will be loaded during runtime
-        run_env.set("SAGA_MLB", join_path(self.prefix.lib, "saga"))
+        env.set("SAGA_MLB", self.prefix.lib.saga)
         run_env.set("SAGA_TLB", join_path(self.prefix.lib, "saga"))
