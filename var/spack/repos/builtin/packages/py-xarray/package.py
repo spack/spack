@@ -18,6 +18,17 @@ class PyXarray(PythonPackage):
     version('0.11.0', sha256='636964baccfca0e5d69220ac4ecb948d561addc76f47704064dcbe399e03a818')
     version('0.9.1', sha256='89772ed0e23f0e71c3fb8323746374999ecbe79c113e3fadc7ae6374e6dc0525')
 
-    depends_on('py-setuptools',      type='build')
-    depends_on('py-pandas@0.15.0:',  type=('build', 'run'))
-    depends_on('py-numpy@1.7:',      type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:',   when='@0.11:',  type=('build', 'run'))
+    depends_on('python@3.5:',           when='@0.12',   type=('build', 'run'))
+    depends_on('python@3.5.3:',         when='@0.13',   type=('build', 'run'))
+    depends_on('python@3.6:',           when='@0.14:',  type=('build', 'run'))
+
+    depends_on('py-setuptools', type='build')
+
+    depends_on('py-pandas@0.15.0:0.19.1',   when='@0.9.1',      type=('build', 'run'))
+    depends_on('py-pandas@0.19.2:0.23',     when='@0.11:0.13',  type=('build', 'run'))
+    depends_on('py-pandas@0.24:',           when='@0.14:',      type=('build', 'run'))
+
+    depends_on('py-numpy@1.7:1.11',     when='@0.9.1',      type=('build', 'run'))
+    depends_on('py-numpy@1.12:1.13',    when='@0.11:0.13',  type=('build', 'run'))
+    depends_on('py-numpy@1.14:',        when='@0.14:',      type=('build', 'run'))

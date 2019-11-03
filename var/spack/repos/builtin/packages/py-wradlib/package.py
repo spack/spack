@@ -20,9 +20,6 @@ class PyWradlib(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    # https://docs.wradlib.org/en/stable/index.html
-    conflicts('^python@:2.999', when='@1.3:')
-
     # recommended versions from https://docs.wradlib.org/en/stable/installation.html#dependencies
     depends_on('py-numpy@1.16:', type=('build', 'run'))
     depends_on('py-matplotlib@3.0.2:', type=('build', 'run'))
