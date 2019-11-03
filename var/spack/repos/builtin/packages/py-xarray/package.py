@@ -25,10 +25,10 @@ class PyXarray(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-pandas@0.15.0:0.19.1',   when='@0.9.1',      type=('build', 'run'))
-    depends_on('py-pandas@0.19.2:0.23',     when='@0.11:0.13',  type=('build', 'run'))
-    depends_on('py-pandas@0.24:',           when='@0.14:',      type=('build', 'run'))
+    depends_on('py-pandas@0.15.0:', when='@0.9.1',      type=('build', 'run'))
+    depends_on('py-pandas@0.19.2:', when='@0.11:0.13',  type=('build', 'run'))
+    depends_on('py-pandas@0.24:',   when='@0.14:',      type=('build', 'run'))
 
-    depends_on('py-numpy@1.7:1.11',     when='@0.9.1',      type=('build', 'run'))
-    depends_on('py-numpy@1.12:1.13',    when='@0.11:0.13',  type=('build', 'run'))
-    depends_on('py-numpy@1.14:',        when='@0.14:',      type=('build', 'run'))
+    depends_on('py-numpy@1.7:',     when='@0.9.1',      type=('build', 'run'))
+    depends_on('py-numpy@1.12:',    when='@0.11:0.13',  type=('build', 'run'))
+    depends_on('py-numpy@1.14:',    when='@0.14:',      type=('build', 'run'))
