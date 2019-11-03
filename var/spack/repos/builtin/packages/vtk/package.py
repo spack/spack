@@ -61,6 +61,7 @@ class Vtk(CMakePackage):
 
     if sys.platform != 'darwin':
         depends_on('glx', when='~osmesa')
+        depends_on('libxt', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
@@ -81,7 +82,8 @@ class Vtk(CMakePackage):
     depends_on('expat')
     depends_on('freetype')
     depends_on('glew')
-    depends_on('hdf5')
+    # set hl variant explicitly, similar to issue #7145
+    depends_on('hdf5+hl')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
