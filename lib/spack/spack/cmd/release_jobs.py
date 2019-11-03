@@ -409,9 +409,7 @@ def find_matching_config(spec, ci_mappings):
 def release_jobs(parser, args):
     env = ev.get_env(args, 'release-jobs', required=True)
 
-    # FIXME: What's the difference between one that opens with 'spack'
-    # and one that opens with 'env'?  This will only handle the former.
-    yaml_root = env.yaml['spack']
+    yaml_root = ev.config_dict(env.yaml)
 
     if 'gitlab-ci' not in yaml_root:
         tty.die('Environment yaml does not have "gitlab-ci" section')
