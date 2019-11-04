@@ -16,7 +16,10 @@ class PyPyzmq(PythonPackage):
     version('16.0.2', sha256='717dd902c3cf432b1c68e7b299ad028b0de0d0a823858e440b81d5f1baa2b1c1')
     version('14.7.0', sha256='809a5fcc720d286c840f7f64696e60322b5b2544795a73db626f09b344d16a15')
 
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'), when='@18:')
     depends_on('py-cython@0.16:', type=('build', 'run'))
+    depends_on('py-cython@0.20:', type=('build', 'run'), when='@18:')
+    # these dependencies might only be needed for pypy
     depends_on('py-py', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
     depends_on('libzmq')
