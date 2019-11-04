@@ -360,17 +360,12 @@ def replace_prefix_text(path_name, old_dir, new_dir):
     Replace old install prefix with new install prefix
     in text files using utf-8 encoded strings.
     """
-
-    def replace(match):
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8'))
     with open(path_name, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        pat = re.compile(old_dir.encode('utf-8'))
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
+        pat = re.compile(rb'(?<![\w\-_/])[\w\-_]*?%s([\w\-_/]*)' % old_dir.encode('utf-8'))
+        repl = rb'%s\1' % new_dir.encode('utf-8')
+        ndata = re.sub(pat, repl, data)
         f.write(ndata)
         f.truncate()
 

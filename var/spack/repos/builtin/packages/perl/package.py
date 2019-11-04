@@ -169,8 +169,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
-        perl_bin_dirs = []
+        perl_lib_dirs = [join_path(self.spec.prefix.lib, str(self.spec.version))]
+        perl_bin_dirs = [self.spec.prefix.bin]
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
