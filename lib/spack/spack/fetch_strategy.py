@@ -671,7 +671,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             with working_dir(self.stage.path):
                 cloned = False
                 # Yet more efficiency, only download a 1-commit deep tree
-                if self.git_version >= ver('1.7.1'):
+                # If clean=False don't optimize, we may need tags
+                if self.git_version >= ver('1.7.1') and self.clean:
                     try:
                         git(*(args + ['--depth', '1', self.url]))
                         cloned = True
