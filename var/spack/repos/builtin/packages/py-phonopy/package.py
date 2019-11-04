@@ -12,7 +12,7 @@ class PyPhonopy(PythonPackage):
     homepage = "http://atztogo.github.io/phonopy/index.html"
     url      = "http://sourceforge.net/projects/phonopy/files/phonopy/phonopy-1.10/phonopy-1.10.0.tar.gz"
 
-    version('1.10.0', '973ed1bcea46e21b9bf747aab9061ff6')
+    version('1.10.0', sha256='6b7c540bbbb033203c45b8472696db02a3a55913a0e5eb23de4dc9a3bee473f7')
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))

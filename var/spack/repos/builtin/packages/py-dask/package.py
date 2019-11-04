@@ -14,8 +14,8 @@ class PyDask(PythonPackage):
 
     version('1.1.2', sha256='93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256')
     version('1.1.0', sha256='e76088e8931b326c05a92d2658e07b94a6852b42c13a7560505a8b2354871454')
-    version('0.17.4', '4a7b9c5d7ddf52639b1c6b9e8a68d146')
-    version('0.8.1',  '5dd8e3a3823b3bc62c9a6d192e2cb5b4')
+    version('0.17.4', sha256='c111475a3d1f8cba41c8094e1fb1831c65015390dcef0308042a11a9606a2f6d')
+    version('0.8.1',  sha256='43deb1934cd033668e5e60b735f45c9c3ee2813f87bd51c243f975e55267fa43')
 
     variant('array',       default=True, description='Install requirements for dask.array')
     variant('bag',         default=True, description='Install requirements for dask.bag')

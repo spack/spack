@@ -19,9 +19,9 @@ class Guile(AutotoolsPackage):
     version('2.2.3', sha256='87ee07caef33c97ddc74bf3c29ce7628cfac12061f573e4a29a3a1176754610a')
     version('2.2.2', sha256='3d9b94183b19f04dd4317da87beedafd1c947142f3d861ca1f0224e7a75127ee')
     version('2.2.1', sha256='f004b2a5e98017df80cd419773f12a77cfc7ba6069195f97d6702e3d6e487a14')
-    version('2.2.0',  '0d5de8075b965f9ee5ea04399b60a3f9')
-    version('2.0.14', '333b6eec83e779935a45c818f712484e')
-    version('2.0.11', 'e532c68c6f17822561e3001136635ddd')
+    version('2.2.0',  sha256='ef1e9544631f18029b113911350bffd5064955c208a975bfe0d27a4003d6d86b')
+    version('2.0.14', sha256='8aeb2f353881282fe01694cce76bb72f7ffdd296a12c7a1a39255c27b0dfe5f1')
+    version('2.0.11', sha256='e6786c934346fa2e38e46d8d81a622bb1c16d130153523f6129fcd79ef1fb040')
 
     variant('readline', default=True, description='Use the readline library')
     variant('threads', default=True, description='Use the thread interface')

@@ -13,4 +13,4 @@ class PaxUtils(AutotoolsPackage):
     homepage = "https://wiki.gentoo.org/index.php?title=Project:Hardened/PaX_Utilities"
     url      = "https://dev.gentoo.org/~vapier/dist/pax-utils-1.2.2.tar.xz"
 
-    version('1.2.2', 'a580468318f0ff42edf4a8cd314cc942')
+    version('1.2.2', sha256='7f4a7f8db6b4743adde7582fa48992ad01776796fcde030683732f56221337d9')

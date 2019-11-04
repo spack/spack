@@ -11,7 +11,7 @@ class Astra(Package):
 
     homepage = "http://www.desy.de/~mpyflo/"
 
-    version('2016-11-30', '17135b7a4adbacc1843a50a6a2ae2c25', expand=False,
+    version('2016-11-30', sha256='50738bf924724e2dd15f1d924b290ffb0f7c703e5d5ae02ffee2db554338801e', expand=False,
             url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/Astra')
 
     def install(self, spec, prefix):

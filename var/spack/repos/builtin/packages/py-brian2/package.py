@@ -12,8 +12,8 @@ class PyBrian2(PythonPackage):
     homepage = "http://www.briansimulator.org"
     url      = "https://pypi.io/packages/source/B/Brian2/Brian2-2.0.1.tar.gz"
 
-    version('2.0.1', 'df5990e9a71f7344887bc02f54dfd0f0')
-    version('2.0rc3', '3100c5e4eb9eb83a06ff0413a7d43152')
+    version('2.0.1', sha256='195d8ced0d20e9069917776948f92aa70b7457bbc6b5222b8199654402ee1153')
+    version('2.0rc3', sha256='05f347f5fa6b25d1ce5ec152a2407bbce033599eb6664f32f5331946eb3c7d66')
 
     variant('doc', default=False, description='Build the documentation')
 
@@ -24,6 +24,6 @@ class PyBrian2(PythonPackage):
     depends_on('py-sympy@0.7.6:',   type=('build', 'run'))
     depends_on('py-pyparsing',      type=('build', 'run'))
     depends_on('py-jinja2@2.7:',    type=('build', 'run'))
-    depends_on('py-cpuinfo@0.1.6:', type=('build', 'run'))
+    depends_on('py-py-cpuinfo@0.1.6:', type=('build', 'run'))
     depends_on('py-sphinx@1.4.2:',  type=('build', 'run'), when='+docs')
     depends_on('py-nosetests@1.0:', type='test')

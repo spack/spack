@@ -10,7 +10,7 @@ class Redset(CMakePackage):
     """Create MPI communicators for disparate redundancy sets"""
 
     homepage = "https://github.com/ECP-VeloC/redset"
-    url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.2.zip"
+    url      = "https://github.com/ECP-VeloC/redset/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/redset.git"
 
     tags = ['ecp']

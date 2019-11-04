@@ -235,7 +235,7 @@ def generate_module_index(root, modules):
     index_path = os.path.join(root, 'module-index.yaml')
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
-        syaml.dump(index, index_file, default_flow_style=False)
+        syaml.dump(index, default_flow_style=False, stream=index_file)
 
 
 def _generate_upstream_module_index():
@@ -634,23 +634,16 @@ class BaseContext(tengine.Context):
             exclude=spack.util.environment.is_system_path
         )
 
-        # Modifications that are coded at package level
-        _ = spack.util.environment.EnvironmentModifications()
-        # TODO : the code down below is quite similar to
-        # TODO : build_environment.setup_package and needs to be factored out
-        # TODO : to a single place
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
-        for item in dependencies(self.spec, 'all'):
-            package = self.spec[item.name].package
-            build_environment.set_module_variables_for_package(package)
-            package.setup_dependent_package(
-                self.spec.package.module, self.spec
+        env.extend(
+            build_environment.modifications_from_dependencies(
+                self.spec, context='run'
             )
-            package.setup_dependent_environment(_, env, self.spec)
+        )
         # Package specific modifications
         build_environment.set_module_variables_for_package(self.spec.package)
-        self.spec.package.setup_environment(_, env)
+        self.spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)

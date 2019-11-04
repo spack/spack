@@ -13,11 +13,13 @@ class Metabat(SConsPackage):
     homepage = "https://bitbucket.org/berkeleylab/metabat"
     url      = "https://bitbucket.org/berkeleylab/metabat/get/v2.12.1.tar.gz"
 
-    version('2.12.1', 'c032f47a8b24e58a5a9fefe52cb6e0f8')
+    version('2.12.1', sha256='e3aca0656f56f815135521360dc56667ec26af25143c3a31d645fef1a96abbc2')
     version('2.11.2', sha256='9baf81b385e503e71792706237c308a21ff9177a3211c79057dcecf8434e9a67')
 
     depends_on('boost@1.55.0:', type=('build', 'run'))
     depends_on('perl', type='run')
+    depends_on('zlib', type='link')
+    depends_on('ncurses', type='link')
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)

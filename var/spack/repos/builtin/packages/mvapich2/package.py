@@ -17,12 +17,11 @@ class Mvapich2(AutotoolsPackage):
     # Prefer the latest stable release
     version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf', preferred=True)
     version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
-    version('2.3rc2', '6fcf22fe2a16023b462ef57614daa357')
-    version('2.3rc1', '386d79ae36b2136d203826465ad8b6cc')
-    version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
-    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e')
-    version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
-    version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
+    version('2.3rc2', sha256='dc3801f879a54358d17002a56afd45186e2e83edc5b8367b5c317e282eb6d6bf')
+    version('2.3rc1', sha256='607d309c864a6d57f5fa78fe6dd02368919736b8be0f4ddb938aba303ef9c45c')
+    version('2.3a', sha256='7f0bc94265de9f66af567a263b1be6ef01755f7f6aedd25303d640cc4d8b1cff')
+    version('2.2', sha256='791a6fc2b23de63b430b3e598bf05b1b25b82ba8bf7e0622fc81ba593b3bb131')
+    version('2.1', sha256='49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29')
 
     provides('mpi')
     provides('mpi@:3.0')

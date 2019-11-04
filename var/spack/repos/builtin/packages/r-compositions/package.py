@@ -13,7 +13,7 @@ class RCompositions(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/compositions_1.40-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/compositions"
 
-    version('1.40-2', 'ad87efe2fb303d95472e73c8ca8d9a01')
+    version('1.40-2', sha256='110d71ae000561987cb73fc76cd953bd69d37562cb401ed3c36dca137d01b78a')
 
     depends_on('r@2.2.0:', type=('build', 'run'))
     depends_on('r-tensora', type=('build', 'run'))

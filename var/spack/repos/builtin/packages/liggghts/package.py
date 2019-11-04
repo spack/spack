@@ -16,15 +16,15 @@ class Liggghts(MakefilePackage):
     url = 'https://github.com/CFDEMproject/LIGGGHTS-PUBLIC/archive/3.8.0.tar.gz'
     git = 'git@github.com:CFDEMproject/LIGGGHTS-PUBLIC.git'
 
-    version('3.8.0', 'dabd019e0ea0260ebb96df2cc4703e14d77498e6')
+    version('3.8.0', sha256='9cb2e6596f584463ac2f80e3ff7b9588b7e3638c44324635b6329df87b90ab03')
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('jpeg', default=True, description='Enable JPEG support')
     variant('gzip', default=True,
             description='Enable GZIP for some input and output files')
-    variant('debug', default=False, 
+    variant('debug', default=False,
             description='Builds a debug version of the executable')
-    variant('profile', default=False, 
+    variant('profile', default=False,
             description='Generate profiling code')
 
     depends_on('vtk')

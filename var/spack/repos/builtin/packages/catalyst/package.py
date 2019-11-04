@@ -22,16 +22,16 @@ class Catalyst(CMakePackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('5.6.0', sha256='5b49cb96ab78eee0427e25200530ac892f9a3da7725109ce1790f8010cb5b377')
-    version('5.5.2', '7eb93c31a1e5deb7098c3b4275e53a4a')
-    version('5.5.1', 'a7d92a45837b67c3371006cc45163277')
-    version('5.5.0', 'a8f2f41edadffdcc89b37fdc9aa7f005')
-    version('5.4.1', '4030c70477ec5a85aa72d6fc86a30753')
-    version('5.4.0', 'b92847605bac9036414b644f33cb7163')
-    version('5.3.0', '68fbbbe733aa607ec13d1db1ab5eba71')
-    version('5.2.0', '4570d1a2a183026adb65b73c7125b8b0')
-    version('5.1.2', '44fb32fc8988fcdfbc216c9e40c3e925')
-    version('5.0.1', 'fdf206113369746e2276b95b257d2c9b')
-    version('4.4.0', 'fa1569857dd680ebb4d7ff89c2227378')
+    version('5.5.2', sha256='64561f34c4402b88f3cb20a956842394dde5838efd7ebb301157a837114a0e2d')
+    version('5.5.1', sha256='a6e67a95a7a5711a2b5f95f38ccbff4912262b3e1b1af7d6b9afe8185aa85c0d')
+    version('5.5.0', sha256='1b619e326ff574de808732ca9a7447e4cd14e94ae6568f55b6581896cd569dff')
+    version('5.4.1', sha256='390d0f5dc66bf432e202a39b1f34193af4bf8aad2355338fa5e2778ea07a80e4')
+    version('5.4.0', sha256='f488d84a53b1286d2ee1967e386626c8ad05a6fe4e6cbdaa8d5e042f519f94a9')
+    version('5.3.0', sha256='046631bbf00775edc927314a3db207509666c9c6aadc7079e5159440fd2f88a0')
+    version('5.2.0', sha256='894e42ef8475bb49e4e7e64f4ee2c37c714facd18bfbb1d6de7f69676b062c96')
+    version('5.1.2', sha256='ff02b7307a256b7c6e8ad900dee5796297494df7f9a0804fe801eb2f66e6a187')
+    version('5.0.1', sha256='caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb')
+    version('4.4.0', sha256='c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73')
 
     variant('python', default=False, description='Enable Python support')
     variant('python3', default=False, description='Enable Python3 support')
@@ -225,8 +225,7 @@ class Catalyst(CMakePackage):
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        arch = spec.architecture
-        if(arch.platform == 'linux' and arch.target == 'aarch64'):
+        if spec.platform == 'linux' and spec.target == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

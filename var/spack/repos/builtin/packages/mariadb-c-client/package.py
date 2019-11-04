@@ -22,6 +22,7 @@ class MariadbCClient(CMakePackage):
     list_url = "https://downloads.mariadb.com/Connectors/c/"
     list_depth = 1
 
+    version('3.1.4', sha256='7a1a72fee00e4c28060f96c3efbbf38aabcbbab17903e82fce85a85002565316')
     version('3.0.9', sha256='7277c0caba6f50b1d07e1d682baf0b962a63e2e6af9e00e09b8dcf36a7858641')
     version('3.0.8', sha256='2ca368fd79e87e80497a5c9fd18922d8316af8584d87cecb35bd5897cb1efd05')
     version('3.0.7', sha256='f63883c9360675d111646fba5c97feb0d08e0def5873dd189d78bafbb75fa004')

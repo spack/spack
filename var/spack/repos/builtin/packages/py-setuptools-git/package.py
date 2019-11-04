@@ -12,7 +12,7 @@ class PySetuptoolsGit(PythonPackage):
     homepage = "https://pypi.python.org/pypi/setuptools-git"
     url      = "https://pypi.io/packages/source/s/setuptools-git/setuptools-git-1.2.tar.gz"
 
-    version('1.2', '40b2ef7687a384ea144503c2e5bc67e2')
+    version('1.2', sha256='ff64136da01aabba76ae88b050e7197918d8b2139ccbf6144e14d472b9c40445')
 
     depends_on('py-setuptools', type='build')
     depends_on('git')

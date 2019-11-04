@@ -6,7 +6,7 @@
 import os
 
 import spack.paths
-from spack.compiler import _parse_implicit_rpaths
+from spack.compiler import _parse_non_system_link_dirs
 
 #: directory with sample compiler data
 datadir = os.path.join(spack.paths.test_path, 'data',
@@ -16,7 +16,7 @@ datadir = os.path.join(spack.paths.test_path, 'data',
 def check_link_paths(filename, paths):
     with open(os.path.join(datadir, filename)) as file:
         output = file.read()
-    detected_paths = _parse_implicit_rpaths(output)
+    detected_paths = _parse_non_system_link_dirs(output)
 
     actual = detected_paths
     expected = paths

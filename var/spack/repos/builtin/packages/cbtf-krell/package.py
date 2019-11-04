@@ -83,12 +83,12 @@ class CbtfKrell(CMakePackage):
     depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime', type=('build', 'link', 'run'))
 
     # for services and collectors
-    depends_on("libmonitor@2013.02.18+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch", type=('build', 'link', 'run'))
 
     depends_on("libunwind", when='@develop')
     depends_on("libunwind@1.2.1", when='@1.9.1.0:9999')
 
-    depends_on("papi@5.4.1:")
+    depends_on("papi@5.4.1:", type=('build', 'link', 'run'))
 
     depends_on("llvm-openmp-ompt@tr6_forwards+standalone")
 
@@ -105,7 +105,7 @@ class CbtfKrell(CMakePackage):
 
     depends_on("gotcha")
 
-    patch('arm.patch', when='target=aarch64')
+    patch('arm.patch', when='target=aarch64:')
 
     parallel = False
 
@@ -229,15 +229,15 @@ class CbtfKrell(CMakePackage):
 
         return cmake_args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set up the compile and runtime environments for a package."""
 
         # Environment settings for cbtf-krell, bin is automatically
         # added to the path in the module file
-        run_env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path('PATH', self.prefix.sbin)
 
-        run_env.set('XPLAT_RSH', 'ssh')
-        run_env.set('MRNET_COMM_PATH', self.prefix.sbin.cbtf_mrnet_commnode)
+        env.set('XPLAT_RSH', 'ssh')
+        env.set('MRNET_COMM_PATH', self.prefix.sbin.cbtf_mrnet_commnode)
 
         # Set CBTF_MPI_IMPLEMENTATON to the appropriate mpi implementation
         # This is needed by CBTF tools to deploy the correct
@@ -246,19 +246,23 @@ class CbtfKrell(CMakePackage):
         # manually if multiple mpi's are specified in the build
 
         if self.spec.satisfies('+mpich'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mpich")
 
         if self.spec.satisfies('+mvapich'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mvapich")
 
         if self.spec.satisfies('+mvapich2'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mvapich2")
 
         if self.spec.satisfies('+mpt'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
+            env.set('CBTF_MPI_IMPLEMENTATION', "mpt")
 
         if self.spec.satisfies('+openmpi'):
-            run_env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
+            env.set('CBTF_MPI_IMPLEMENTATION', "openmpi")
 
-        run_env.set('CBTF_MRNET_BACKEND_PATH',
-                    self.prefix.sbin.cbtf_libcbtf_mrnet_backend)
+        env.set('CBTF_MRNET_BACKEND_PATH',
+                self.prefix.sbin.cbtf_libcbtf_mrnet_backend)
+
+        env.prepend_path('PATH', self.spec['libmonitor'].prefix.bin)
+        env.prepend_path('PATH', self.spec['papi'].prefix.bin)
+        env.prepend_path('PATH', self.spec['mrnet'].prefix.bin)

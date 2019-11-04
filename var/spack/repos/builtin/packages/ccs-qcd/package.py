@@ -33,16 +33,16 @@ class CcsQcd(MakefilePackage):
     version('master', branch='master')
     version('1.2.1', commit='d7c6b6923f35a824e997ba8db5bd12dc20dda45c')
 
-    variant(
-        'class', values=int, default=1,
-        description='This miniapp has five problem classes, for which the' +
-            ' first three are relatively small problems just for testing' +
-            ' this miniapp itself. The remaining two are the target problem' +
+    variant('class', values=int, default=1,
+            description='This miniapp has five problem classes, for which the'
+            ' first three are relatively small problems just for testing'
+            ' this miniapp itself. The remaining two are the target problem'
             ' sizes for the HPCI FS evaluation.',
-        multi=False, validator=class_validator
-    )
+            multi=False, validator=class_validator)
 
     depends_on('mpi')
+
+    parallel = False
 
     def edit(self, spec, prefix):
         if '%fj' in spec:
@@ -55,8 +55,6 @@ class CcsQcd(MakefilePackage):
     def build(self, spec, prefix):
         ccs_class = 'CLASS=' + spec.variants['class'].value
         with working_dir('src'):
-            make('CONFIG_GEN', ccs_class)
-
             if '%fj' in spec:
                 make('MAKE_INC=make.fx10.inc', ccs_class)
             else:

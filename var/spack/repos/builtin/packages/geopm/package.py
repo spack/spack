@@ -31,9 +31,9 @@ class Geopm(AutotoolsPackage):
     version('0.6.1', sha256='0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9')
     version('0.6.0', sha256='95ccf256c2b7cb35838978152479569d154347c3065af1639ed17be1399182d3')
     version('0.5.1', sha256='db247af55f7000b6e4628af099956349b68a637500b9d4fe8d8fb13687124d53')
-    version('0.5.0', '61b454bc74d4606fe84818aef16c1be4')
-    version('0.4.0', 'd4cc8fffe521296dab379857d7e2064d')
-    version('0.3.0', '568fd37234396fff134f8d57b60f2b83')
+    version('0.5.0', sha256='cdc123ea68b6d918dcc578a39a7a38275a5d711104364eb889abed15029f4060')
+    version('0.4.0', sha256='7d165f5a5fe0f19ca586bd81a4631202effb542e9d762cc9cc86ad6ef7afcad9')
+    version('0.3.0', sha256='73b45d36e7d2431d308038fc8c50a521a1d214c5ce105a17fba440f28509d907')
 
     # Variants reflecting most ./configure --help options
     variant('debug', default=False, description='Enable debug.')

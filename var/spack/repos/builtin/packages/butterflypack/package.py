@@ -22,12 +22,13 @@ class Butterflypack(CMakePackage):
 
     homepage = "https://github.com/liuyangzhuan/ButterflyPACK"
     git      = "https://github.com/liuyangzhuan/ButterflyPACK.git"
-    url      = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v1.0.0.tar.gz"
+    url      = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v1.0.3.tar.gz"
     maintainers = ['liuyangzhuan']
 
     version('master', branch='master')
     version('1.0.0', sha256='86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232')
     version('1.0.1', sha256='e8ada37466a19f49e13456b150700d4c3afaad2ddbe3678f4e933f9d556a24a5')
+    version('1.0.3', sha256='acf9bc98dd7fea31ab73756b68b3333228b53ab0e85400a8250fcc749a1a6656')
 
     variant('shared', default=True, description='Build shared libraries')
 

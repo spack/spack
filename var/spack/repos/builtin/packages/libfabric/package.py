@@ -15,16 +15,18 @@ class Libfabric(AutotoolsPackage):
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('develop', branch='master')
+    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88',
+       url='https://github.com/ofiwg/libfabric/releases/download/v1.8.1/libfabric-1.8.1.tar.bz2')
     version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37',
        url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2')
     version('1.7.1', sha256='312e62c57f79b7274f89c41823932c00b15f1cc8de9c1f8dce17cd7fdae66fa1')
     version('1.7.0', sha256='9d7059e2ef48341f967f2a20ee215bc50f9079b32aad485f654098f83040e4be')
     version('1.6.2', sha256='b1a9cf8c47189a1c918f8b5710d05cb50df6b47a1c9b2ba51d927e97503b4df0')
-    version('1.6.1', 'ff78dc9fcbf273a119c737a4e1df46d1')
-    version('1.6.0', '91d63ab3c0b9724a4db660019f928cab')
-    version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')
-    version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
-    version('1.4.2', '2009c8e0817060fb99606ddbf6c5ccf8')
+    version('1.6.1', sha256='ac85f18bbf09226e868d72771ecba39cfdb7915aab3aeb855c95f8be7817f8bc')
+    version('1.6.0', sha256='cd7d4543cf706820e4a33003457eff97336b5160f35d0e8b001aea18b5470423')
+    version('1.5.3', sha256='770e505185074b4c66a0c33ac2155670142746a71a6299c286f6d5cd220cbff8')
+    version('1.5.0', sha256='f62709e70fab6abea719402da854f3c6ab60369be6b1e31e4f77554c7454da28')
+    version('1.4.2', sha256='858e30d92b69ee5e47ac10a8ac0c731b491d75a6e28267a128f3d6eb43f940a1')
 
     fabrics = ('psm',
                'psm2',
@@ -40,13 +42,11 @@ class Libfabric(AutotoolsPackage):
                'tcp',
                'efa')
 
-    variant(
-       'fabrics',
-       default='sockets',
-       description='A list of enabled fabrics',
-       values=fabrics,
-       multi=True
-    )
+    variant('fabrics',
+            default='sockets',
+            description='A list of enabled fabrics',
+            values=fabrics,
+            multi=True)
 
     # NOTE: the 'kdreg' variant enables use of the special /dev/kdreg file to
     #   assist in memory registration caching in the GNI provider.  This

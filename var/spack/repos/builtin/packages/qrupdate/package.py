@@ -15,7 +15,7 @@ class Qrupdate(MakefilePackage):
     homepage = "http://sourceforge.net/projects/qrupdate/"
     url      = "https://downloads.sourceforge.net/qrupdate/qrupdate-1.1.2.tar.gz"
 
-    version('1.1.2', '6d073887c6e858c24aeda5b54c57a8c4')
+    version('1.1.2', sha256='e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08')
 
     depends_on("blas")
     depends_on("lapack")

@@ -45,7 +45,7 @@ def flake8_package():
 
 
 def test_changed_files(parser, flake8_package):
-    args = parser.parse_args()
+    args = parser.parse_args([])
 
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.

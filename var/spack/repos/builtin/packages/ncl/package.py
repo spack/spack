@@ -19,9 +19,9 @@ class Ncl(Package):
 
     url = "https://github.com/NCAR/ncl/archive/6.4.0.tar.gz"
 
-    version('6.6.2', 'cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
-    version('6.5.0', '133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
-    version('6.4.0', 'd891452cda7bb25afad9b6c876c73986')
+    version('6.6.2', sha256='cad4ee47fbb744269146e64298f9efa206bc03e7b86671e9729d8986bb4bc30e')
+    version('6.5.0', sha256='133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591')
+    version('6.4.0', sha256='0962ae1a1d716b182b3b27069b4afe66bf436c64c312ddfcf5f34d4ec60153c8')
 
     patch('spack_ncl.patch')
     # Make ncl compile with hdf5 1.10 (upstream as of 6.5.0)
@@ -42,7 +42,7 @@ class Ncl(Package):
 
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('cairo+X+pdf')
 
     # Extra dependencies that may be missing from build system:
@@ -65,7 +65,7 @@ class Ncl(Package):
     depends_on('bzip2')
     depends_on('freetype')
 
-    # In Spack, we do not have an option to compile netcdf without netcdf-4
+    # In Spack, we do not have an option to compile netcdf-c without netcdf-4
     # support, so we will tell the ncl configuration script that we want
     # support for netcdf-4, but the script assumes that hdf5 is compiled with
     # szip support. We introduce this restriction with the following dependency
@@ -76,20 +76,20 @@ class Ncl(Package):
     # ESMF is only required at runtime (for ESMF_regridding.ncl)
     depends_on('esmf', type='run')
 
-    # In Spack, we also do not have an option to compile netcdf without DAP
+    # In Spack, we also do not have an option to compile netcdf-c without DAP
     # support, so we will tell the ncl configuration script that we have it.
 
     # Some of the optional dependencies according to the manual:
     depends_on('hdf', when='+hdf4')
     depends_on('gdal+proj@:2.4', when='+gdal')
-    depends_on('udunits2', when='+udunits2')
+    depends_on('udunits', when='+udunits2')
 
     # We need src files of triangle to appear in ncl's src tree if we want
     # triangle's features.
     resource(
         name='triangle',
         url='http://www.netlib.org/voronoi/triangle.zip',
-        md5='10aff8d7950f5e0e2fb6dd2e340be2c9',
+        sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480',
         placement='triangle_src',
         when='+triangle')
 
@@ -123,8 +123,8 @@ class Ncl(Package):
         self.prepare_src_tree()
         make('Everything', parallel=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('NCARG_ROOT', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.set('NCARG_ROOT', self.spec.prefix)
 
     def prepare_site_config(self):
         fc_flags = []

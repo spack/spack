@@ -7,7 +7,6 @@ import argparse
 
 import llnl.util.tty as tty
 
-import spack.cmd.modules.dotkit
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
@@ -23,7 +22,6 @@ _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='module_command')
-    spack.cmd.modules.dotkit.add_command(sp, _subcommands)
     spack.cmd.modules.lmod.add_command(sp, _subcommands)
     spack.cmd.modules.tcl.add_command(sp, _subcommands)
 

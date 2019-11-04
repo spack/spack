@@ -13,7 +13,7 @@ class Nut(CMakePackage):
     and performance issues."""
 
     homepage = "https://github.com/lanl/NuT"
-    url      = "https://github.com/lanl/NuT/archive/0.1.0.tar.gz"
+    url      = "https://github.com/lanl/NuT/archive/0.1.1.tar.gz"
     git      = "https://github.com/lanl/NuT.git"
 
     tags = ['proxy-app']
@@ -29,10 +29,10 @@ class Nut(CMakePackage):
     conflicts('%xl', when='@serial')
     conflicts('%nag', when='@serial')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('RANDOM123_DIR', self.spec['random123'].prefix)
-
     build_targets = ['VERBOSE=on']
+
+    def setup_build_environment(self, env):
+        env.set('RANDOM123_DIR', self.spec['random123'].prefix)
 
     def install(self, spec, prefix):
         install('README.md', prefix)
