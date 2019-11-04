@@ -28,3 +28,4 @@ class RDirichletmultinomial(RPackage):
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('gsl')
