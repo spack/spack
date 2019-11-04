@@ -422,6 +422,11 @@ def set_build_environment_variables(pkg, env, dirty):
 
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
+    # This function is very time expensive, so check if module
+    # has already one of the attribute set here and return
+    # early to save time.
+    if hasattr(module, 'dso_suffix'):
+        return
 
     jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
