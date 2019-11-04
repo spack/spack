@@ -274,10 +274,25 @@ def remove_url(url):
     # Don't even try for other URL schemes.
 
 
-def _list_s3_objects(client, url, num_entries, start_after=None):
+def _iter_s3_contents(contents, prefix):
+    for entry in contents:
+        key = entry['Key']
+
+        if not key.startswith('/'):
+            key = '/' + key
+
+        key = os.path.relpath(key, prefix)
+
+        if key == '.':
+            continue
+
+        yield key
+
+
+def _list_s3_objects(client, bucket, prefix, num_entries, start_after=None):
     list_args = dict(
-        Bucket=url.netloc,
-        Prefix=url.path,
+        Bucket=bucket,
+        Prefix=prefix[1:],
         MaxKeys=num_entries)
 
     if start_after is not None:
@@ -289,21 +304,19 @@ def _list_s3_objects(client, url, num_entries, start_after=None):
     if result['IsTruncated']:
         last_key = result['Contents'][-1]['Key']
 
-    iter = (key for key in
-            (
-                os.path.relpath(entry['Key'], url.path)
-                for entry in result['Contents']
-            )
-            if key != '.')
+    iter = _iter_s3_contents(result['Contents'], prefix)
 
     return iter, last_key
 
 
 def _iter_s3_prefix(client, url, num_entries=1024):
     key = None
+    bucket = url.netloc
+    prefix = re.sub(r'^/*', '/', url.path)
+
     while True:
         contents, key = _list_s3_objects(
-            client, url, num_entries, start_after=key)
+            client, bucket, prefix, num_entries, start_after=key)
 
         for x in contents:
             yield x
