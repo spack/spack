@@ -21,7 +21,6 @@ class RGgforce(RPackage):
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-polyclip', type=('build', 'run'))
     depends_on('r-rcpp@0.12.2:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rcppeigen', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-scales', type=('build', 'run'))
