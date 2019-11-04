@@ -163,6 +163,9 @@ class Python(AutotoolsPackage):
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
 
+    # Used to cache home locations, since computing them might be expensive
+    _homes = {}
+
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
@@ -622,8 +625,11 @@ class Python(AutotoolsPackage):
         ``packages.yaml`` unknowingly. Query the python executable to
         determine exactly where it is installed."""
 
-        prefix = self.get_config_var('prefix')
-        return Prefix(prefix)
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._homes:
+            prefix = self.get_config_var('prefix')
+            self._homes[dag_hash] = Prefix(prefix)
+        return self._homes[dag_hash]
 
     @property
     def libs(self):
