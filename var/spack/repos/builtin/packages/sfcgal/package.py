@@ -26,10 +26,14 @@ class Sfcgal(CMakePackage):
     depends_on('mpfr')
     depends_on('gmp')
 
+    # It seems viewer is discontinued as of v1.3.0
+    # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
     depends_on('openscenegraph@3.1:', type=('build', 'link', 'run'), when='+viewer')
 
     def cmake_args(self):
         args = []
-        if '+viewer' in self.spec:
+        if '+viewer' in self.spec and self.spec.satisfies('@:1.3.0'):
             args.append('-DSFCGAL_BUILD_VIEWER=ON')
+        else:
+            args.append('-DSFCGAL_BUILD_VIEWER=OFF')
         return args
