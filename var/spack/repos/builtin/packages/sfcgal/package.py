@@ -28,6 +28,7 @@ class Sfcgal(CMakePackage):
 
     # It seems viewer is discontinued as of v1.3.0
     # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
+    # Also, see https://github.com/Oslandia/SFCGAL-viewer
     depends_on('openscenegraph@3.1:', type=('build', 'link', 'run'), when='+viewer')
 
     def cmake_args(self):
