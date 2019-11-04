@@ -12,6 +12,7 @@ class PyColorama(PythonPackage):
     homepage = "https://github.com/tartley/colorama"
     url      = "https://pypi.io/packages/source/c/colorama/colorama-0.3.7.tar.gz"
 
+    version('0.4.1', sha256='05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d')
     version('0.3.7', sha256='e043c8d32527607223652021ff648fbb394d5e19cba9f1a698670b338c9d782b')
 
     depends_on('py-setuptools', type='build')
