@@ -19,6 +19,6 @@ class PyAstor(PythonPackage):
     depends_on('python@2.7:2.8,3.4:')
     # Build fails with py-setuptools@41.4.0
     # https://github.com/berkerpeksag/astor/issues/162
-    depends_on('py-setuptools@:41.0.1', type='build')
+    depends_on('py-setuptools@:41.3', type='build')
     depends_on('py-nose', type='test')
     depends_on('py-astunparse', type='test')
