@@ -1103,7 +1103,7 @@ class Environment(object):
             )
         )
         # Package specific modifications
-        build_env.set_module_variables_for_package(spec.package)
+        build_env.set_module_variables_for_package(spec.package, context='run')
         spec.package.setup_run_environment(env)
 
         return env

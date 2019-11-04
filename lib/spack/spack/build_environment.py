@@ -420,12 +420,52 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
-def _set_variables_for_single_module(pkg, module):
+def _set_run_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
     # This function is very time expensive, so check if module
-    # has already one of the attribute set here and return
-    # early to save time.
-    if hasattr(module, 'dso_suffix'):
+    # has called it already and return early
+    marker = '_set_run_already_called'
+    if getattr(module, marker, False):
+        return
+
+    m = module
+
+    # easy shortcut to os.environ
+    m.env = os.environ
+
+    # Emulate some shell commands for convenience
+    m.pwd = os.getcwd
+    m.cd = os.chdir
+    m.mkdir = os.mkdir
+    m.makedirs = os.makedirs
+    m.remove = os.remove
+    m.removedirs = os.removedirs
+    m.symlink = os.symlink
+
+    m.mkdirp = mkdirp
+    m.install = install
+    m.install_tree = install_tree
+    m.rmtree = shutil.rmtree
+    m.move = shutil.move
+
+    # Useful directories within the prefix are encapsulated in
+    # a Prefix object.
+    m.prefix = pkg.prefix
+
+    # Platform-specific library suffix.
+    m.dso_suffix = dso_suffix
+
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    setattr(m, marker, True)
+
+
+def _set_build_variables_for_single_module(pkg, module):
+    """Helper function to set module variables for single module."""
+    # This function is very time expensive, so check if module
+    # has called it already and return early
+    marker = '_set_build_already_called'
+    if getattr(module, marker, False):
         return
 
     jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
@@ -463,28 +503,6 @@ def _set_variables_for_single_module(pkg, module):
     m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
     m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
 
-    # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = os.symlink
-
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
-
-    # Useful directories within the prefix are encapsulated in
-    # a Prefix object.
-    m.prefix = pkg.prefix
-
-    # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
-
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
         compiler_path = kwargs.get('compiler', m.spack_cc)
         compiler = Executable(compiler_path)
@@ -494,10 +512,22 @@ def _set_variables_for_single_module(pkg, module):
 
     m.static_to_shared_library = static_to_shared_library
 
+    # The run variable in this function might be useful also at build time
+    _set_run_variables_for_single_module(pkg, module)
 
-def set_module_variables_for_package(pkg):
-    """Populate the module scope of install() with some useful functions.
-       This makes things easier for package writers.
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    setattr(m, marker, True)
+
+
+def set_module_variables_for_package(pkg, context):
+    """Populate the module scope os a package with some useful attributes to
+    make things easier for package writers.
+
+    Args:
+        pkg: package whose module needs to be populated with variables
+        context (str): either 'build' for build-time modifications or 'run'
+            for run-time modifications
     """
     # If a user makes their own package repo, e.g.
     # spack.pkg.mystuff.libelf.Libelf, and they inherit from an existing class
@@ -505,8 +535,14 @@ def set_module_variables_for_package(pkg):
     # for both classes so the parent class can still use them if it gets
     # called. parent_class_modules includes pkg.module.
     modules = parent_class_modules(pkg.__class__)
+    if context not in ('run', 'build'):
+        msg = 'context must be either "run" or "build"'
+        raise ValueError(msg)
+    fn = _set_run_variables_for_single_module
+    if context == 'build':
+        fn = _set_build_variables_for_single_module
     for mod in modules:
-        _set_variables_for_single_module(pkg, mod)
+        fn(pkg, mod)
 
 
 def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
@@ -705,7 +741,7 @@ def setup_package(pkg, dirty):
                   " to assume that the package is part of the system"
                   " includes and omit it when invoked with '--cflags'.")
 
-    set_module_variables_for_package(pkg)
+    set_module_variables_for_package(pkg, context='build')
     pkg.setup_build_environment(build_env)
 
     # Loading modules, in particular if they are meant to be used outside
@@ -759,7 +795,7 @@ def modifications_from_dependencies(spec, context):
 
     for dspec in spec.traverse(order='post', root=False, deptype=deptype):
         dpkg = dspec.package
-        set_module_variables_for_package(dpkg)
+        set_module_variables_for_package(dpkg, context=context)
         # Allow dependencies to modify the module
         dpkg.setup_dependent_package(pkg.module, spec)
         getattr(dpkg, method)(env, spec)
