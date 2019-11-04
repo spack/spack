@@ -21,6 +21,7 @@ class Sfcgal(CMakePackage):
 
     variant('viewer', default=False, description='Build viewer and support for 3D format export')
 
+    # Ref: http://oslandia.github.io/SFCGAL/installation.html
     depends_on('cgal@4.3 +core')
     depends_on('boost@1.54.0:1.69.0')
     depends_on('mpfr@2.2.1:')
