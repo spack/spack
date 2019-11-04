@@ -13,9 +13,7 @@ class Arbor(CMakePackage):
     homepage = "https://github.com/arbor-sim/arbor/"
     url      = "https://github.com/arbor-sim/arbor/archive/v0.2.tar.gz"
 
-    version('0.2', git='https://github.com/arbor-sim/arbor.git',
-            commit='6f70bfee22415fc8cca5f12ab7f3917a043bddb3',
-            submodules=True)
+    version('0.2', sha256='43c9181c03be5f3c9820b2b50592d7b41344f37e1200980119ad347eb7bcf4eb')
 
     variant('vectorize', default=False,
             description='Enable vectorization of computational kernels')
@@ -34,7 +32,10 @@ class Arbor(CMakePackage):
     depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
 
     depends_on('cmake@3.9:', type='build')
-    depends_on('git@2.0:', type='build')
+    # mentioned in documentation but shouldn't be necessary when
+    # using the archive
+    # depends_on('git@2.0:', type='build')
+
     # compiler dependencies
     # depends_on(C++14)
     # depends_on('gcc@6.1.0:', type='build')
