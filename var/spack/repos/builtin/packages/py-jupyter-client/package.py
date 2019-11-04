@@ -22,8 +22,11 @@ class PyJupyterClient(PythonPackage):
     version('4.1.0', sha256='ecf76a159381ec9880fd2c31388c6983b1d855f92f0292cf0667a90dd63f51c0')
     version('4.0.0', sha256='33b15abb1307d8d3716b0d3b5d07aa22fdfbbf65a9f1aedf478a274a6adc11c0')
 
-    depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@5:')
     depends_on('py-traitlets', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))
     depends_on('py-pyzmq@13:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'), when='@5:')
+    depends_on('py-tornado@4.1:', type=('build', 'run'), when='@5:')
     depends_on('py-setuptools', type='build', when='@5:')
