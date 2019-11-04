@@ -16,17 +16,17 @@ class Relion(CMakePackage, CudaPackage):
     git      = "https://github.com/3dem/relion.git"
 
     # 3.1 is beta but referenced in published papers
-    # won't yet compile!
+    # prefer stable 3.0 until no longer beta
     version('3.1_beta', branch='ver3.1')
 
-    # 3.0.8 latest [stable] release in 3.0 branch
-    # we prefer this for now
+    # 3.0.8 latest release in 3.0 branch
+    # prefer for now
     version('3.0.8', tag='3.0.8', preferred=True)
+    version('3.0.7', tag='3.0.7')
 
-    # relion has no develop branch though pulling from master
-    # should be considered the same as develop
-    # as of now develop contains 3.0 code
-    version('develop', branch='master')
+    # relion master contains development code
+    # contains 3.0 branch code
+    version('master')
 
     variant('gui', default=True, description="build the gui")
     variant('cuda', default=True, description="enable compute on gpu")
@@ -42,6 +42,7 @@ class Relion(CMakePackage, CudaPackage):
                     'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')
     depends_on('fftw precision=float,double')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
