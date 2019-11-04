@@ -10,14 +10,17 @@ class Libxc(AutotoolsPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
-    homepage = "https://tddft.org/programs/libxc/"
-    url      = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
+    homepage = "https://gitlab.com/libxc"
+    url      = "https://gitlab.com/libxc/libxc/-/archive/2.2.2/libxc-2.2.2.tar.gz"
 
-    version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
-    version('4.2.3', sha256='02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
-    version('3.0.0', sha256='5542b99042c09b2925f2e3700d769cda4fb411b476d446c833ea28c6bfa8792a')
-    version('2.2.2', sha256='6ca1d0bb5fdc341d59960707bc67f23ad54de8a6018e19e02eee2b16ea7cc642')
-    version('2.2.1', sha256='ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
+    version('4.3.4', sha256='2d5878dd69f0fb68c5e97f46426581eed2226d1d86e3080f9aa99af604c65647')
+    version('4.3.2', sha256='3bbe01971d0a43fb63b5c17d922388a39a3f0ae3bd37ae5f6fe31bca9ab63f3c')
+    version('4.2.3', sha256='869ca4967cd255097fd2dc31664f30607e81f5abcf5f9c89bd467dc0bf93e5aa')
+    version('3.0.0', sha256='df2362351280edaf2233f3b2c8eb8e6dd6c68105f152897a4cc629fa346a7396')
+    version('2.2.2', sha256='6ffaad40505dbe8f155049448554b54ea31d31babf74ccf6b7935bfe55eeafd8')
+    version('2.2.1', sha256='c8577ba1ddd5c28fd0aa7c579ae65ab990eb7cb51ecf9f8175f9251f6deb9a06')
+
+    depends_on('autoconf', type='build')
 
     @property
     def libs(self):
@@ -48,6 +51,10 @@ class Libxc(AutotoolsPackage):
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
         )
+
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('autoreconf', '-i')
 
     def setup_build_environment(self, spack_env):
         optflags = '-O2'
