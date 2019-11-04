@@ -13,8 +13,11 @@ class PyPyarrow(PythonPackage):
     """
 
     homepage = "http://arrow.apache.org"
-    url      = "https://pypi.org/packages/source/p/pyarrow/pyarrow-0.9.0.tar.gz"
+    url = 'https://www.apache.org/dyn/closer.cgi/arrow/arrow-0.15.0/apache-arrow-0.15.0.tar.gz'
 
+    version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
+    version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
+    version('0.14.1', sha256='69d9de9ec60a3080543b28a5334dbaf892ca34235b8bd8f8c1c01a33253926c1')
     version('0.12.1', sha256='10db6e486c918c3af999d0114a22d92770687e3a6607ea3f14e6748854824c2a')
     version('0.11.0', sha256='07a6fd71c5d7440f2c42383dd2c5daa12d7f0a012f1e88288ed08a247032aead')
     version('0.9.0', sha256='7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242')
@@ -26,11 +29,13 @@ class PyPyarrow(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
-    for v in ('@0.9.0', '@0.11.0', '@0.12.1'):
+    for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.14.1', '@0.15.0'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
 
     phases = ['build_ext', 'install']
+
+    build_directory = 'python'
 
     def build_ext_args(self, spec, prefix):
         args = []
