@@ -22,7 +22,7 @@ class Arbor(CMakePackage):
     variant('gpu', default=False, description='Enable GPU support')
     variant('mpi', default=False, description='Enable MPI support')
     variant('python', default=False,
-            description='Enable python frontend support')
+            description='Enable Python frontend support')
     variant('unwind', default=False,
             description='Enable libunwind for pretty stack traces')
 
@@ -33,8 +33,16 @@ class Arbor(CMakePackage):
     extends('python@3.6:', when='+python')
     depends_on('py-mpi4py', when='+mpi+python', type=('build', 'run'))
 
+    depends_on('cmake@3.9:', type='build')
+    depends_on('git@2.0:', type='build')
+    # compiler dependencies
+    # depends_on(C++14)
+    # depends_on('gcc@6.1.0:', type='build')
+    # depends_on('llvm@4:', type='build')
+    # depends_on('clang-apple@9:', type='build')
+
     # when building documentation
-    # depends_on('py-sphinx')
+    depends_on('py-sphinx', type='build')
 
     def patch(self):
         filter_file(
@@ -49,12 +57,11 @@ class Arbor(CMakePackage):
         )
 
     def cmake_args(self):
-        args = []
-        args.extend([
+        args = [
             '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),      # noqa
             '-DARB_WITH_GPU=' + ('ON' if '+gpu' in self.spec else 'OFF'),
             '-DARB_WITH_PYTHON=' + ('ON' if '+python' in self.spec else 'OFF'),
-        ])
+        ]
 
         if '+unwind' in self.spec:
             args.append('-DUnwind_ROOT_DIR={}'.format(self.spec['libunwind'].prefix))  # noqa
