@@ -42,7 +42,7 @@ class Relion(CMakePackage, CudaPackage):
                     'Profiling', 'Benchmarking'))
 
     depends_on('mpi')
-    depends_on('cmake@2.8:', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('fftw precision=float,double')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
