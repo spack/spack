@@ -21,10 +21,10 @@ class Sfcgal(CMakePackage):
 
     variant('viewer', default=False, description='Build viewer and support for 3D format export')
 
-    depends_on('cgal+core')
-    depends_on('boost@:1.69.0')
-    depends_on('mpfr')
-    depends_on('gmp')
+    depends_on('cgal@4.3 +core')
+    depends_on('boost@1.54.0:1.69.0')
+    depends_on('mpfr@2.2.1:')
+    depends_on('gmp@4.2:')
 
     # It seems viewer is discontinued as of v1.3.0
     # https://github.com/Oslandia/SFCGAL/releases/tag/v1.3.0
