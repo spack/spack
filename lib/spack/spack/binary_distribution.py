@@ -679,7 +679,7 @@ def get_specs(force=False):
         return _cached_specs
 
     if not spack.mirror.MirrorCollection():
-        tty.warn("No Spack mirrors are currently configured")
+        tty.debug("No Spack mirrors are currently configured")
         return {}
 
     urls = set()
