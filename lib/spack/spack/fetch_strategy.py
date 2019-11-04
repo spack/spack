@@ -1126,7 +1126,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != 's3':
-            raise ValueError(
+            raise FetchError(
                 'S3FetchStrategy can only fetch from s3:// urls.')
 
         tty.msg("Fetching %s" % self.url)
@@ -1392,7 +1392,7 @@ class NoCacheError(FetchError):
 
 
 class FailedDownloadError(FetchError):
-    """Raised wen a download fails."""
+    """Raised when a download fails."""
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)
