@@ -185,7 +185,8 @@ class PyTorch(PythonPackage):
         env.set('USE_PYTORCH_QNNPACK', 'OFF')
         env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
         env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
-        env.set('pybind11_INCLUDE_DIR', self.spec['py-pybind11'].prefix.include)
+        env.set('pybind11_INCLUDE_DIR',
+                self.spec['py-pybind11'].prefix.include)
 
         enable_or_disable('cuda')
         if '+cuda' in self.spec:
