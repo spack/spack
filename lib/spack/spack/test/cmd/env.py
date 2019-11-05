@@ -615,6 +615,17 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     assert 'used by the following environments' in out
 
 
+def test_roots_display_with_variants():
+    env('create', 'test')
+    with ev.read('test'):
+        add('boost+shared')
+
+    with ev.read('test'):
+        out = find(output=str)
+
+    assert "boost +shared" in out
+
+
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
