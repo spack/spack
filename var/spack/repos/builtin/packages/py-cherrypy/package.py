@@ -15,4 +15,4 @@ class PyCherrypy(PythonPackage):
     depends_on('py-zc-lockfile',       type=('build', 'run'))
     depends_on('py-cheroot@6.2.4:', type=('build', 'run'))
     depends_on('py-tempora',           type=('build', 'run'))
-    depends_on('py-portend',           type=('build', 'run'))
+    depends_on('py-portend@2.1.1:', type=('build', 'run'))
