@@ -229,7 +229,7 @@ class Coreneuron(CMakePackage):
 
         options.append('-DCORENRN_NMODL_FLAGS=%s' % nmodl_options)
 
-        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
+        if spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture:
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         if spec.satisfies('+gpu'):
@@ -270,7 +270,8 @@ class Coreneuron(CMakePackage):
         """
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
         spec = self.spec
-        is_shared = spec.satisfies('+shared') and spec.satisfies('~gpu')
+        # opposite of how static linkage is used
+        is_shared = not (spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture)
         for path, recursive in search_paths:
             libs = find_libraries(['libcoreneuron', 'libcorenrnmech'], root=path,
                                   shared=is_shared, recursive=False)

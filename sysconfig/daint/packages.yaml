@@ -41,12 +41,12 @@ packages:
         version: [system]
     cmake:
         paths:
-            cmake@3.8.1: /apps/common/UES/jenkins/SLES12/easybuild/software/CMake/3.8.1
+            cmake@3.12.4: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/CMake/3.12.4
         buildable: False
-        version: [3.8.1]
+        version: [3.12.4]
     boost:
-        modules:
-            boost@1.67.0: Boost/1.67.0-CrayGNU-18.08
+        paths:
+            boost@1.67.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/Boost/1.67.0-CrayGNU-18.08
         buildable: False
         version: [1.67.0]
     ncurses:
@@ -56,8 +56,8 @@ packages:
         version: [6.1]
     hdf5:
         paths:
-            hdf5@1.8.16~mpi arch=cray-cnl6-haswell: /opt/cray/pe/hdf5/1.8.16/GNU/5.1
-            hdf5@1.8.16+mpi arch=cray-cnl6-haswell: /opt/cray/pe/hdf5-parallel/1.8.16/GNU/5.1
+            hdf5@1.8.16~mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5/1.8.16/GNU/5.1
+            hdf5@1.8.16+mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5-parallel/1.8.16/GNU/5.1
         buildable: False
         version: [1.8.16]
     zlib:
@@ -69,6 +69,26 @@ packages:
         paths:
             python@2.7.15.1: /opt/python/2.7.15.1
         version: [2.7.15.1]
+    py-h5py:
+        paths:
+            py-h5py~mpi@2.8.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/h5py/2.8.0-CrayGNU-18.08-python2-serial
+        version: [2.8.0]
+    py-matplotlib:
+        paths:
+            py-matplotlib@2.2.2: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/PyExtensions/2.7.15.1-CrayGNU-18.08
+        version: [2.2.2]
+    py-numpy:
+        paths:
+            py-numpy@1.14.3: /opt/python/2.7.15.1
+        version: [1.14.3]
+    py-pandas:
+        paths:
+            py-pandas@0.23.2: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/PyExtensions/2.7.15.1-CrayGNU-18.08
+        version: [0.23.2]
+    py-scipy:
+        paths:
+            py-scipy@1.1.0: /opt/python/2.7.15.1
+        version: [1.1.0]
     neuron:
         variants: +mpi +cross-compile
     reportinglib:
