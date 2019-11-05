@@ -521,8 +521,6 @@ def relocate_package(workdir, spec, allow_root):
     old_prefix = str(buildinfo.get('spackprefix',
                                    '/not/in/buildinfo/dictionary'))
     rel = buildinfo.get('relative_rpaths', False)
-    if rel:
-        return
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
