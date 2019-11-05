@@ -55,6 +55,8 @@ class NetcdfC(AutotoolsPackage):
     # configure fails if curl is not installed.
     # See https://github.com/Unidata/netcdf-c/issues/1390
     patch('https://github.com/Unidata/netcdf-c/commit/e5315da1e748dc541d50796fb05233da65e86b6b.patch', sha256='10a1c3f7fa05e2c82457482e272bbe04d66d0047b237ad0a73e87d63d848b16c', when='@4.7.0')
+    # fix headers
+    patch('https://github.com/Unidata/netcdf-c/pull/1505.patch', sha256='f52db13c61b9c19aafe03c2a865163b540e9f6dee36e3a5f808f05fac59f2030', when='@4.7.2')
 
     variant('mpi', default=True,
             description='Enable parallel I/O for netcdf-4')
