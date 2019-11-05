@@ -27,7 +27,7 @@ class PyIcs(PythonPackage):
     """
 
     homepage = "https://github.com/C4ptainCrunch/ics.py"
-    url      = "https://github.com/C4ptainCrunch/ics.py/archive/v0.5.tar.gz"
+    url      = "https://github.com/C4ptainCrunch/ics.py/archive/v0.6.tar.gz"
 
     version('0.6', sha256='4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830')
 
