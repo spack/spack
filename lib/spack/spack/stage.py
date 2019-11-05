@@ -434,11 +434,9 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
-                fetchers.append(fs.from_url_scheme(
-                    url, digest, expand=expand, extension=extension))
-                # fetchers.insert(
-                #     0, fs.URLFetchStrategy(
-                #         url, digest, expand=expand, extension=extension))
+                fetchers.insert(
+                    0, fs.from_url_scheme(
+                        url, digest, expand=expand, extension=extension))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):

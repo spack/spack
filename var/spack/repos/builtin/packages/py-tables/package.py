@@ -11,12 +11,13 @@ class PyTables(PythonPackage):
     efficiently and easily cope with extremely large amounts of data."""
 
     homepage = "http://www.pytables.org/"
-    url      = "https://pypi.io/packages/source/t/tables/tables-3.6.0.tar.gz"
+    url      = "https://pypi.io/packages/source/t/tables/tables-3.6.1.tar.gz"
 
     import_modules = [
         'tables', 'tables.misc', 'tables.nodes', 'tables.scripts'
     ]
 
+    version('3.6.1', sha256='49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49')
     version('3.6.0', sha256='db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d')
     version('3.5.2', sha256='b220e32262bab320aa41d33125a7851ff898be97c0de30b456247508e2cc33c2')
     version('3.4.4', sha256='bdc5c073712af2a43babd139c4855fc99496bb2c3f3f5d1b4770a985e6f9ce29')

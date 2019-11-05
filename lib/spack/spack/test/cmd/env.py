@@ -615,6 +615,17 @@ def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     assert 'used by the following environments' in out
 
 
+def test_roots_display_with_variants():
+    env('create', 'test')
+    with ev.read('test'):
+        add('boost+shared')
+
+    with ev.read('test'):
+        out = find(output=str)
+
+    assert "boost +shared" in out
+
+
 def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
@@ -1703,6 +1714,20 @@ def test_env_activate_csh_prints_shell_output(
     assert "alias despacktivate" in out
 
 
+@pytest.mark.regression('12719')
+def test_env_activate_default_view_root_unconditional(env_deactivate,
+                                                      mutable_mock_env_path):
+    """Check that the root of the default view in the environment is added
+    to the shell unconditionally."""
+    env('create', 'test', add_view=True)
+
+    with ev.read('test') as e:
+        viewdir = e.default_view.root
+
+    out = env('activate', '--sh', 'test')
+    assert 'PATH=%s' % os.path.join(viewdir, 'bin') in out
+
+
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
@@ -1749,3 +1774,13 @@ def test_duplicate_packages_raise_when_concretizing_together():
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
         e.concretize()
+
+
+def test_env_write_only_non_default():
+    print(env('create', 'test'))
+
+    e = ev.read('test')
+    with open(e.manifest_path, 'r') as f:
+        yaml = f.read()
+
+    assert yaml == ev.default_manifest_yaml

@@ -63,6 +63,7 @@ schema = {
                 {
                     'include': {
                         'type': 'array',
+                        'default': [],
                         'items': {
                             'type': 'string'
                         },

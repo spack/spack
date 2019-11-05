@@ -242,6 +242,7 @@ class PythonPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
+    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
@@ -454,7 +455,7 @@ class BuildSystemGuesser:
         the contents of its archive or the URL it was downloaded from."""
 
         # Most octave extensions are hosted on Octave-Forge:
-        #     http://octave.sourceforge.net/index.html
+        #     https://octave.sourceforge.net/index.html
         # They all have the same base URL.
         if url is not None and 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
@@ -567,7 +568,7 @@ def get_url(args):
     """
 
     # Default URL
-    url = 'http://www.example.com/example-1.2.3.tar.gz'
+    url = 'https://www.example.com/example-1.2.3.tar.gz'
 
     if args.url:
         # Use a user-supplied URL if one is present
