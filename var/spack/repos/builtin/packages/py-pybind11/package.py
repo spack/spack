@@ -60,3 +60,14 @@ class PyPybind11(CMakePackage):
         super(PyPybind11, self).install(spec, prefix)
         setup_py('install', '--single-version-externally-managed', '--root=/',
                  '--prefix={0}'.format(prefix))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        with working_dir('spack-test', create=True):
+            # test include helper points to right location
+            python = Executable(self.spec['python'].command.path)
+            inc = python('-c',
+                         'import pybind11 as py; print(py.get_include())',
+                         output=str)
+            assert inc.strip() == str(self.prefix.include)
