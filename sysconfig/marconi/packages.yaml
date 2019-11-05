@@ -16,7 +16,7 @@ packages:
         version: [2.7]
     cmake:
         paths:
-            cmake@3.5.2: /cineca/prod/opt/tools/cmake/3.5.2/none
+            cmake@3.12.0: /cineca/prod/opt/tools/cmake/3.12.0/none
         buildable: False
         version: [3.5.2]
     flex:
@@ -26,15 +26,15 @@ packages:
         version: [2.5.37]
     hdf5:
         paths:
-            hdf5@1.8.17: /cineca/prod/opt/libraries/hdf5/1.8.17/intelmpi--2017--binary
+            hdf5@1.8.18: /cineca/prod/opt/libraries/hdf5/1.8.18/intelmpi--2018--binary
         variants: ~fortran ~cxx
         buildable: False
         version: [1.8.17]
     intel-mpi-external:
         paths:
-            intel-mpi-external@2017: /cineca/prod/opt/compilers/intel/pe-xe-2017/binary/impi/2017.3.196
+            intel-mpi-external@2018: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/impi/2018.4.274
         buildable: False
-        version: [2017]
+        version: [2018]
     libtool:
         paths:
             libtool@2.4.2: /usr
@@ -57,9 +57,9 @@ packages:
         version: [2.7.12]
     zlib:
         paths:
-            zlib@1.2.8: /cineca/prod/opt/libraries/zlib/1.2.8/gnu--6.1.0
+            zlib@1.2.11: /cineca/prod/opt/libraries/zlib/1.2.11/intel--pe-xe-2018--binary
         buildable: False
-        version: [1.2.8]
+        version: [1.2.11]
     all:
         compiler: [intel]
         providers:
