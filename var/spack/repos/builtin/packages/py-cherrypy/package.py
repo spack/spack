@@ -1,5 +1,6 @@
 from spack import *
 
+
 class PyCherrypy(PythonPackage):
     """CherryPy is a pythonic, object-oriented HTTP framework."""
 
@@ -9,7 +10,6 @@ class PyCherrypy(PythonPackage):
     version('18.1.1', '76e5d3c6b7be845345f871c604cfdf58')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-docutils', type='build')
     depends_on('py-more-itertools',    type=('build', 'run'))
     depends_on('py-zc-buildout',       type=('build', 'run'))
     depends_on('py-zc-lockfile',       type=('build', 'run'))
