@@ -833,8 +833,16 @@ class Environment(object):
 
         if not matches:
             # concrete specs match against concrete specs in the env
+            # by *dag hash*, not build hash.
+            dag_hashes_in_order = [
+                self.specs_by_hash[build_hash].dag_hash()
+                for build_hash in self.concretized_order
+            ]
+
             specs_hashes = zip(
-                self.concretized_user_specs, self.concretized_order)
+                self.concretized_user_specs, dag_hashes_in_order
+            )
+
             matches = [
                 s for s, h in specs_hashes
                 if query_spec.dag_hash() == h
