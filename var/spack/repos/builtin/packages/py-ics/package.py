@@ -32,7 +32,7 @@ class PyIcs(PythonPackage):
     version('0.6', sha256='4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-arrow@0.11:0.14.99', type=('build', 'run'))
     depends_on('py-six@1.5:', type=('build', 'run'))
