@@ -14,7 +14,7 @@ class PyDateparser(PythonPackage):
 
     version('0.7.2', sha256='e1eac8ef28de69a554d5fcdb60b172d526d61924b1a40afbbb08df459a36006b')
 
-    variant('calendars', default=True, help='Add calendar libraries')
+    variant('calendars', default=True, description='Add calendar libraries')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
