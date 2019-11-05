@@ -13,7 +13,7 @@ class PyPyarrow(PythonPackage):
     """
 
     homepage = "http://arrow.apache.org"
-    url = 'https://www.apache.org/dyn/closer.cgi/arrow/arrow-0.15.0/apache-arrow-0.15.0.tar.gz'
+    url = 'https://pypi.org/packages/source/p/pyarrow/pyarrow-0.15.1.tar.gz'
 
     version('0.15.1', sha256='ab1c0d371a10b615eccfcead71bb79832245d788f4834cc6b278c03c3872d593')
     version('0.15.0', sha256='d1072d8c4bf9166949f4b722a89350a88b7c8912f51642a5d52283448acdfd58')
@@ -29,7 +29,7 @@ class PyPyarrow(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
 
-    for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.14.1', '@0.15.0'):
+    for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.14.1', '@0.15.0', '@0.15.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
 
