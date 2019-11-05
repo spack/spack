@@ -608,6 +608,12 @@ def _add_platform_scope(cfg, scope_type, name, path):
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
+def _add_os_scope(cfg, scope_type, name, path):
+    """Add a platform-specific subdirectory for the current platform."""
+    os = spack.architecture.sys_type().split('-')[1]
+    os_name = '%s/%s' % (name, os)
+    os_path = os.path.join(path, os)
+    cfg.push_scope(scope_type(os_name, os_path))
 
 def _add_command_line_scopes(cfg, command_line_scopes):
     """Add additional scopes from the --config-scope argument.
@@ -626,6 +632,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         name = 'cmd_scope_%d' % i
         cfg.push_scope(ImmutableConfigScope(name, path))
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
+        _add_os_scope(cfg, ImmutableConfigScope, name, path)
 
 
 def _config():
@@ -651,6 +658,7 @@ def _config():
 
         # Each scope can have per-platfom overrides in subdirectories
         _add_platform_scope(cfg, ConfigScope, name, path)
+        _add_os_scope(cfg, ConfigScope, name, path)
 
     # add command-line scopes
     _add_command_line_scopes(cfg, command_line_scopes)
