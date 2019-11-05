@@ -371,8 +371,9 @@ def replace_prefix_text(path_name, old_dir, new_dir):
         # Ensures we only match the old_dir if it's precedeed by a flag or by
         # characters not legal in a path, but not if it's preceeded by other
         # components of a path.
-        pat = rb'(?<![\w\-_/])([\w\-_]*?)%s([\w\-_/]*)' % old_dir.encode('utf-8')
-        repl = rb'\1%s\2' % new_dir.encode('utf-8')
+        old_bytes = old_dir.encode('utf-8')
+        pat = b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes
+        repl = b'\\1%s\\2' % new_dir.encode('utf-8')
         ndata = re.sub(pat, repl, data)
         f.write(ndata)
         f.truncate()
