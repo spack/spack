@@ -15,9 +15,6 @@ import ssl
 import sys
 import traceback
 
-from itertools import product
-
-import six
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import multiprocessing.pool
@@ -52,6 +49,7 @@ _timeout = 10
 
 # See docstring for get_header()
 _UNFUZZ_HEADER = lambda header: re.sub(r'[ _-]', '', header).lower()
+
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -186,8 +184,8 @@ def warn_no_ssl_cert_checking():
              "your Python to enable certificate verification.")
 
 
-def push_to_url(local_file_path, remote_path,
-        keep_original=True, extra_args=None):
+def push_to_url(
+        local_file_path, remote_path, keep_original=True, extra_args=None):
     remote_url = url_util.parse(remote_path)
     verify_ssl = spack.config.get('config:verify_ssl')
 

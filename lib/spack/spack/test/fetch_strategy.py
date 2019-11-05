@@ -13,4 +13,5 @@ def test_fetchstrategy_bad_url_scheme():
     unsupported scheme fails as expected."""
 
     with pytest.raises(ValueError):
-        fetcher = from_url_scheme('bogus-scheme://example.com/a/b/c')
+        fetcher = from_url_scheme(  # noqa: F841
+            'bogus-scheme://example.com/a/b/c')

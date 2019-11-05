@@ -43,4 +43,3 @@ def test_build_tarball_overwrite(install_mockery, mock_fetch, monkeypatch):
 
     with pytest.raises(spack.binary_distribution.NoOverwriteException):
         spack.binary_distribution.build_tarball(spec, outdir, unsigned=True)
-

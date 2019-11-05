@@ -27,8 +27,8 @@ def tmp_scope():
 
     base_name = 'internal-testing-scope'
     current_overrides = set(
-            s.name for x in
-            spack.config.config.matching_scopes(r'^{0}'.format(base_name)))
+        x.name for x in
+        spack.config.config.matching_scopes(r'^{0}'.format(base_name)))
 
     num_overrides = 0
     scope_name = base_name
