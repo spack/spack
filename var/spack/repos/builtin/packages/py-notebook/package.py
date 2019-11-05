@@ -22,9 +22,8 @@ class PyNotebook(PythonPackage):
     version('4.0.4', sha256='a57852514bce1b1cf41fa0311f6cf894960cf68b083b55e6c408316b598d5648')
     version('4.0.2', sha256='8478d7e2ab474855b0ff841f693983388af8662d3af1adcb861acb900274f22a')
 
-    variant('terminal', default=False, description="Enable terminal functionality")
-
-    depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'), when='@6:')
     depends_on('py-setuptools', type='build', when='@6:')
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-tornado@5.0:', type=('build', 'run'))
@@ -36,7 +35,6 @@ class PyNotebook(PythonPackage):
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))
     depends_on('py-ipykernel@5.1.0:', when='@4.2.0:', type=('build', 'run'))
-    depends_on('py-terminado@0.3.3:', when="+terminal", type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
     # required for 6.0.1, not sure about 5.x.x, as there is no version in spack
     # right now treat them as 6-or-newer dependencies
