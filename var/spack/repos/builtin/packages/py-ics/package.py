@@ -27,13 +27,9 @@ class PyIcs(PythonPackage):
     """
 
     homepage = "https://github.com/C4ptainCrunch/ics.py"
-    git      = "git@github.com:C4ptainCrunch/ics.py.git"
+    url      = "https://github.com/C4ptainCrunch/ics.py/archive/v0.5.tar.gz"
 
-    # for some reason only a .egg version is published on pypi and
-    # github's archive link doesn't fetch for some reason, so use
-    # the commit for the associated release
-    version('0.6', commit='74d7b24cb1639d2cd027e502d5f16ea68b5e5b12')
-    version('0.5', commit='8ac7db18d365d74ce6524a441a4c4548df3349ee')
+    version('0.6', sha256='4947263136202d0489d4f5e5c7175dfd2db5d3508b8b003ddeaef96347f68830')
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
