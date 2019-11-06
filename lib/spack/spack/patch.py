@@ -184,6 +184,8 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
+        self.stage = None
+
     # TODO: this function doesn't use the stage arg
     def fetch(self, stage):
         """Retrieve the patch in a temporary stage and compute self.path
@@ -243,7 +245,8 @@ class UrlPatch(Patch):
         return self.stage
 
     def clean(self):
-        self.stage.destroy()
+        if self.stage:
+            self.stage.destroy()
 
     def to_dict(self):
         data = super(UrlPatch, self).to_dict()
