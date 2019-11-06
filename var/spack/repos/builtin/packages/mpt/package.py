@@ -6,11 +6,11 @@
 from spack import *
 import os
 
-class Hmpt(Package):
-    """HMPT is HPE's implementation of 
+ass mpt(Package):
+    """HPE MPI is HPE's implementation of 
     the Message Passing Interface (MPI) standard.
  
-    Note: HMPT is proprietry software. Spack will search your
+    Note: HPE MPI is proprietry software. Spack will search your
     current directory for the download file. Alternatively, add this file to a
     mirror so that Spack can find it. For instructions on how to set up a
     mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
@@ -18,7 +18,7 @@ class Hmpt(Package):
     homepage = ""
 
     provides('mpi')
-    provides('mpi@:3.0', when='@3:')
+    provides('mpi@:3.1', when='@3:')
     provides('mpi@:1.3', when='@1:')
 
     filter_compiler_wrappers(
@@ -49,16 +49,16 @@ class Hmpt(Package):
 
     @property
     def fetcher(self):
-        msg = """This package is intended to be a placeholder for HPE's
-        system-provided, MPT MPI library
+        msg = """This package is a placeholder for HPE MPI, a
+        system-provided, proprietary MPI implementation.
 
         Add to your packages.yaml (changing the /opt/ path to match 
-        where MPT is actually installed):
+        where HPE MPI is actually installed):
 
         packages:
-          hmpt:
+          mpt:
             paths:
-              hmpt@2.20: /opt/
+              mpt@2.20: /opt/
             buildable: False
 
         """
