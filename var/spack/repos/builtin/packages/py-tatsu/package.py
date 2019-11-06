@@ -16,10 +16,10 @@ class PyTatsu(PythonPackage):
 
     version('4.4.0', sha256='80713413473a009f2081148d0f494884cabaf9d6866b71f2a68a92b6442f343d')
 
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-colorama@0.4:', type=('build', 'run'))
+    # part of the standard lib in python@3.7.0
     depends_on('py-dataclasses@0.6:', type=('build', 'run'), when='^python@3.6.0:3.6.99')
-    depends_on('py-mypy@0.641:', type=('build', 'run'))
-    depends_on('py-pyyaml@3.12:', type=('build', 'run'))
+    depends_on('py-mypy@0.641:', type='test')
+    # optional dependency, otherwise falls back to standard implementation
     depends_on('py-regex@2018.8:', type=('build', 'run'))
-    depends_on('py-typing@3.6:', type=('build', 'run'), when='^python@:3.4.99')
