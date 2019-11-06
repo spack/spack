@@ -73,8 +73,10 @@ class PyPybind11(CMakePackage):
     def test(self):
         with working_dir('spack-test', create=True):
             # test include helper points to right location
-            python = Executable(self.spec['python'].command.path)
-            inc = python('-c',
-                         'import pybind11 as py; print(py.get_include())',
-                         output=str)
+            python = self.spec['python'].command
+            inc = python(
+                '-c',
+                'import pybind11 as py; ' +
+                self.spec['python'].package.print_string('py.get_include()'),
+                output=str)
             assert inc.strip() == str(self.prefix.include)
