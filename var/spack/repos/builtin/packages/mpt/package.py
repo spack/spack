@@ -26,6 +26,19 @@ class Mpt(Package):
         relative_root='bin'
     )
 
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
+
+
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  self.prefix.bin.mpicc)
         spack_env.set('MPICXX', self.prefix.bin.mpicxx)
@@ -47,6 +60,7 @@ class Mpt(Package):
             self.spec.mpicxx = self.prefix.bin.mpicxx
             self.spec.mpifc = self.prefix.bin.mpifc
             self.spec.mpif77 = self.prefix.bin.mpif77
+
 
     @property
     def fetcher(self):
