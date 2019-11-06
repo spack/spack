@@ -399,16 +399,17 @@ def spack_is_git_repo():
         return os.path.isdir('.git')
 
 
-def changed_files(**kwargs):
+def changed_files(base=None, untracked=True, all_files=False):
     with working_dir(spack.paths.prefix):
-        return _changed_files(**kwargs)
+        return _changed_files(
+            base=base, untracked=untracked, all_files=all_files)
 
 
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
 
-def _changed_files(base=None, untracked=True, all_files=False):
+def _changed_files(base, untracked, all_files):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
