@@ -32,8 +32,8 @@ error_message = """You can either:
 # Arguments for display_specs when we find ambiguity
 display_args = {
     'long': True,
-    'show_flags': True,
-    'variants': True,
+    'show_flags': False,
+    'variants': False,
     'indent': 4,
 }
 
@@ -344,6 +344,7 @@ def confirmation_before_removal(specs):
     """
     tty.msg('The following packages will be uninstalled:\n')
     spack.cmd.display_specs(specs, **display_args)
+    print('')
     answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
     if not answer:
         tty.msg('Aborting uninstallation')
