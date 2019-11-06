@@ -15,6 +15,7 @@ class PyPreCommit(PythonPackage):
 
     version('1.20.0', sha256='9f152687127ec90642a2cc3e4d9e1e6240c4eb153615cb02aa1ad41d331cbb6e')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-aspy-yaml', type=('build', 'run'))
     depends_on('py-cfgv@2.0.0:', type=('build', 'run'))
