@@ -22,7 +22,7 @@ class RAnimation(RPackage):
 
     depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-magick', when='@2.6:', type=('build', 'run'))
-    depends_on('image-magick')
+    depends_on('imagemagick')
     depends_on('ffmpeg')
     depends_on('swftools')
     depends_on('texlive')

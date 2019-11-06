@@ -60,6 +60,15 @@ def test_file_is_relocatable(source_file, is_relocatable):
     assert spack.relocate.file_is_relocatable(executable) is is_relocatable
 
 
+@pytest.mark.requires_executables(
+    'patchelf', 'strings', 'file'
+)
+def test_patchelf_is_relocatable():
+    patchelf = spack.relocate.get_patchelf()
+    assert spack.relocate.is_binary(patchelf)
+    assert spack.relocate.file_is_relocatable(patchelf)
+
+
 @pytest.mark.skipif(
     platform.system().lower() != 'linux',
     reason='implementation for MacOS still missing'

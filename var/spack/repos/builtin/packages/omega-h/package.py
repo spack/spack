@@ -12,7 +12,7 @@ class OmegaH(CMakePackage):
     """
 
     homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/SNLComputation/omega_h/archive/v9.13.4.tar.gz"
+    url      = "https://github.com/SNLComputation/omega_h/archive/v9.29.0.tar.gz"
     git      = "https://github.com/SNLComputation/omega_h.git"
 
     maintainers = ['ibaned']

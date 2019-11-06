@@ -17,6 +17,6 @@ class PsLite(CMakePackage):
     version('20170328', commit='acdb698fa3bb80929ef83bb37c705f025e119b82')
 
     depends_on('protobuf@3:')
-    depends_on('zeromq')
+    depends_on('libzmq')
 
     patch('cmake.patch')

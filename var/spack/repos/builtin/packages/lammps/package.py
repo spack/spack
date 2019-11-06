@@ -74,7 +74,7 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
     depends_on('voropp+pic', when='+voronoi')
-    depends_on('netcdf+mpi', when='+user-netcdf')
+    depends_on('netcdf-c+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
     depends_on('latte@1.0.1', when='@:20180222+latte')

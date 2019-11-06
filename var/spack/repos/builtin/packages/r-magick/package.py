@@ -27,4 +27,4 @@ class RMagick(RPackage):
     depends_on('r-rcpp@0.12.12:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-curl', type=('build', 'run'))
-    depends_on('image-magick')
+    depends_on('imagemagick')

@@ -24,7 +24,7 @@ class Wireshark(CMakePackage):
     variant('headers',  default=True, description='Install headers')
 
     depends_on('bison',     type='build')
-    depends_on('cares')
+    depends_on('c-ares')
     depends_on('doxygen',   type='build')
     depends_on('flex',      type='build')
     depends_on('git',       type='build')

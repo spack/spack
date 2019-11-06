@@ -78,9 +78,10 @@ class Openmpi(AutotoolsPackage):
     version('develop', branch='master')
 
     # Current
-    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
 
     # Still supported
+    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
     version('3.1.4', preferred=True, sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
     version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
@@ -311,16 +312,16 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
@@ -430,6 +431,13 @@ class Openmpi(AutotoolsPackage):
         # Fabrics
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
+        # The wrappers fail to automatically link libfabric. This will cause
+        # undefined references unless we add the appropriate flags.
+        if 'fabrics=libfabric' in spec:
+            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'
+                               .format(spec['libfabric'].prefix.lib))
+            config_args.append('--with-wrapper-libs=-lfabric')
+
         # Schedulers
         if 'schedulers=auto' not in spec:
             config_args.extend(self.with_or_without('schedulers'))
@@ -444,7 +452,6 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:

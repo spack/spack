@@ -17,7 +17,7 @@ class Gmsh(CMakePackage):
     """
 
     homepage = 'http://gmsh.info'
-    url = 'http://gmsh.info/src/gmsh-2.11.0-source.tgz'
+    url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
 
     version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
     version('4.2.2', sha256='e9ee9f5c606bbec5f2adbb8c3d6023c4e2577f487fa4e4ecfcfc94a241cc8dcc')

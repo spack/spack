@@ -17,7 +17,7 @@ class Likwid(Package):
     for information."""
 
     homepage = "https://github.com/RRZE-HPC/likwid"
-    url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
+    url      = "https://github.com/RRZE-HPC/likwid/archive/4.3.4.tar.gz"
 
     version('4.3.4', sha256='5c0d1c66b25dac8292a02232f06454067f031a238f010c62f40ef913c6609a83')
     version('4.3.3', sha256='a681378cd66c1679ca840fb5fac3136bfec93c01b3d78cc1d00a641db325a9a3')

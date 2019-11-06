@@ -602,7 +602,7 @@ class Llvm(CMakePackage):
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.
-    patch('constexpr_longdouble.patch', when='@7:8+libcxx')
+    patch('constexpr_longdouble.patch', when='@6:8+libcxx')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):

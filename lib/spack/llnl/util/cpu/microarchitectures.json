@@ -61,11 +61,18 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-        "clang": {
-          "versions": ":",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu=generic"
-        },
+        "clang": [
+          {
+            "versions": "0.0.0-apple:",
+            "family": "x86-64",
+            "flags": "-march={family}"
+          },
+          {
+            "versions": ":",
+            "family": "x86-64",
+            "flags": "-march={family} -mcpu=generic"
+          }
+        ],
         "intel": {
           "versions": ":",
           "name": "pentium4",

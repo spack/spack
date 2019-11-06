@@ -11,7 +11,6 @@ class CBlosc2(CMakePackage):
        other bells and whistles"""
 
     homepage = "http://www.blosc.org"
-    url      = "https://github.com/Blosc/c-blosc2/archive/v2.0.0-beta.1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 
     maintainers = ['ax3l']

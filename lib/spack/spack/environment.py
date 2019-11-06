@@ -70,8 +70,7 @@ default_manifest_yaml = """\
 # configuration settings.
 spack:
   # add package specs to the `specs` list
-  specs:
-  -
+  specs: []
   view: true
 """
 #: regex for validating enviroment names
@@ -391,20 +390,31 @@ def all_environments():
 
 
 def validate(data, filename=None):
+    # validating changes data by adding defaults. Return validated data
+    validate_data = copy.deepcopy(data)
+    # HACK to fully copy ruamel CommentedMap that doesn't provide copy method
+    import ruamel.yaml as yaml
+    setattr(
+        validate_data,
+        yaml.comments.Comment.attrib,
+        getattr(data, yaml.comments.Comment.attrib, yaml.comments.Comment())
+    )
+
     import jsonschema
     try:
-        spack.schema.Validator(spack.schema.env.schema).validate(data)
+        spack.schema.Validator(spack.schema.env.schema).validate(validate_data)
     except jsonschema.ValidationError as e:
         raise spack.config.ConfigFormatError(
             e, data, filename, e.instance.lc.line + 1)
+    return validate_data
 
 
 def _read_yaml(str_or_file):
     """Read YAML from a file for round-trip parsing."""
     data = syaml.load_config(str_or_file)
     filename = getattr(str_or_file, 'name', None)
-    validate(data, filename)
-    return data
+    default_data = validate(data, filename)
+    return (data, default_data)
 
 
 def _write_yaml(data, str_or_file):
@@ -443,6 +453,13 @@ class ViewDescriptor(object):
         self.exclude_fn = lambda x: not any(x.satisfies(e)
                                             for e in self.exclude)
         self.link = link
+
+    def __eq__(self, other):
+        return all([self.root == other.root,
+                    self.projections == other.projections,
+                    self.select == other.select,
+                    self.exclude == other.exclude,
+                    self.link == other.link])
 
     def to_dict(self):
         ret = {'root': self.root}
@@ -540,7 +557,7 @@ class Environment(object):
                     self._read_lockfile(f)
                     self._set_user_specs_from_lockfile()
                 else:
-                    self._read_manifest(f)
+                    self._read_manifest(f, raw_yaml=default_manifest_yaml)
         else:
             default_manifest = not os.path.exists(self.manifest_path)
             if default_manifest:
@@ -573,9 +590,13 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
-    def _read_manifest(self, f):
+    def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
-        self.yaml = _read_yaml(f)
+        if raw_yaml:
+            _, self.yaml = _read_yaml(f)
+            self.raw_yaml, _ = _read_yaml(raw_yaml)
+        else:
+            self.raw_yaml, self.yaml = _read_yaml(f)
 
         self.spec_lists = OrderedDict()
 
@@ -812,8 +833,16 @@ class Environment(object):
 
         if not matches:
             # concrete specs match against concrete specs in the env
+            # by *dag hash*, not build hash.
+            dag_hashes_in_order = [
+                self.specs_by_hash[build_hash].dag_hash()
+                for build_hash in self.concretized_order
+            ]
+
             specs_hashes = zip(
-                self.concretized_user_specs, self.concretized_order)
+                self.concretized_user_specs, dag_hashes_in_order
+            )
+
             matches = [
                 s for s, h in specs_hashes
                 if query_spec.dag_hash() == h
@@ -1034,8 +1063,24 @@ class Environment(object):
         '': ['CMAKE_PREFIX_PATH']
     }
 
+    def unconditional_environment_modifications(self, view):
+        """List of environment (shell) modifications to be processed for view.
+
+        This list does not depend on the specs in this environment"""
+        env = spack.util.environment.EnvironmentModifications()
+
+        for subdir, vars in self.prefix_inspections.items():
+            full_subdir = os.path.join(view.root, subdir)
+            for var in vars:
+                env.prepend_path(var, full_subdir)
+
+        return env
+
     def environment_modifications_for_spec(self, spec, view=None):
-        """List of environment modifications to be processed."""
+        """List of environment (shell) modifications to be processed for spec.
+
+        This list is specific to the location of the spec or its projection in
+        the view."""
         spec = spec.copy()
         if view:
             spec.prefix = Prefix(view.view().get_projection_for_spec(spec))
@@ -1068,6 +1113,9 @@ class Environment(object):
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
 
+        env_mod.extend(self.unconditional_environment_modifications(
+            self.default_view))
+
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
                 env_mod.extend(self.environment_modifications_for_spec(
@@ -1085,6 +1133,9 @@ class Environment(object):
         if default_view_name not in self.views:
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
+
+        env_mod.extend(self.unconditional_environment_modifications(
+            self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view:
@@ -1311,6 +1362,9 @@ class Environment(object):
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
 
+        yaml_dict = config_dict(self.yaml)
+        raw_yaml_dict = config_dict(self.raw_yaml)
+
         if self.specs_by_hash:
             # ensure the prefix/.env directory exists
             fs.mkdirp(self.env_subdir_path)
@@ -1345,8 +1399,7 @@ class Environment(object):
                 # The primary list is handled differently
                 continue
 
-            conf = config_dict(self.yaml)
-            active_yaml_lists = [l for l in conf.get('definitions', [])
+            active_yaml_lists = [l for l in yaml_dict.get('definitions', [])
                                  if name in l and
                                  _eval_conditional(l.get('when', 'True'))]
 
@@ -1370,10 +1423,11 @@ class Environment(object):
         # put the new user specs in the YAML.
         # This can be done directly because there can't be multiple definitions
         # nor when clauses for `specs` list.
-        yaml_spec_list = config_dict(self.yaml).setdefault(user_speclist_name,
-                                                           [])
+        yaml_spec_list = yaml_dict.setdefault(user_speclist_name,
+                                              [])
         yaml_spec_list[:] = self.user_specs.yaml_list
 
+        # Construct YAML representation of view
         default_name = default_view_name
         if self.views and len(self.views) == 1 and default_name in self.views:
             path = self.default_view.root
@@ -1390,18 +1444,26 @@ class Environment(object):
         else:
             view = False
 
-        yaml_dict = config_dict(self.yaml)
-        if view is not True:
-            # The default case is to keep an active view inside of the
-            # Spack environment directory. To avoid cluttering the config,
-            # we omit the setting in this case.
-            yaml_dict['view'] = view
-        elif 'view' in yaml_dict:
-            del yaml_dict['view']
+        yaml_dict['view'] = view
+
+        # Remove yaml sections that are shadowing defaults
+        # construct garbage path to ensure we don't find a manifest by accident
+        bare_env = Environment(os.path.join(self.manifest_path, 'garbage'),
+                               with_view=self.view_path_default)
+        keys_present = list(yaml_dict.keys())
+        for key in keys_present:
+            if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
+                if key not in raw_yaml_dict:
+                    del yaml_dict[key]
 
         # if all that worked, write out the manifest file at the top level
-        with fs.write_tmp_and_move(self.manifest_path) as f:
-            _write_yaml(self.yaml, f)
+        # Only actually write if it has changed or was never written
+        changed = self.yaml != self.raw_yaml
+        written = os.path.exists(self.manifest_path)
+        if changed or not written:
+            self.raw_yaml = copy.deepcopy(self.yaml)
+            with fs.write_tmp_and_move(self.manifest_path) as f:
+                _write_yaml(self.yaml, f)
 
         # TODO: for operations that just add to the env (install etc.) this
         # could just call update_view

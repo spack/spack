@@ -10,7 +10,7 @@ class PyMacholib(PythonPackage):
     """Python package for Mach-O header analysis and editing"""
 
     homepage = "https://pypi.python.org/pypi/macholib"
-    url = "https://pypi.io/packages/source/m/macholib/macholib-1.8.tar.gz"
+    url = "https://pypi.io/packages/source/m/macholib/macholib-1.11.tar.gz"
 
     version('1.11', 'c4180ffc6f909bf8db6cd81cff4b6f601d575568f4d5dee148c830e9851eb9db')
 
