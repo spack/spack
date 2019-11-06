@@ -22,7 +22,7 @@ class Mpt(Package):
     provides('mpi@:1.3', when='@1:')
 
     filter_compiler_wrappers(
-        'mpicc','mpicxx','mpif77','mpif90','mpif77','mpif08',
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif77', 'mpif08', 
         relative_root='bin'
     )
 
@@ -37,7 +37,6 @@ class Mpt(Package):
         return find_libraries(
             libraries, root=self.prefix, shared=True, recursive=True
         )
-
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  self.prefix.bin.mpicc)
@@ -60,7 +59,6 @@ class Mpt(Package):
             self.spec.mpicxx = self.prefix.bin.mpicxx
             self.spec.mpifc = self.prefix.bin.mpifc
             self.spec.mpif77 = self.prefix.bin.mpif77
-
 
     @property
     def fetcher(self):
