@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyJdatetime(PythonPackage):
-    """jdatetime is Jalali implementation of Python’s datetime module"""
+    """jdatetime is Jalali implementation of Python's datetime module"""
 
     homepage = "https://github.com/slashmili/python-jalali"
     url      = "https://pypi.io/packages/source/j/jdatetime/jdatetime-3.6.2.tar.gz"
