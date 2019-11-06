@@ -1202,15 +1202,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             touch(no_patches_file)
 
     @classmethod
-    def all_patches(cls):
+    def patches_for_spec(cls, spec):
         """Retrieve all patches associated with the package.
 
         Retrieves patches on the package itself as well as patches on the
         dependencies of the package."""
         patches = []
-        for _, patch_list in cls.patches.items():
-            for patch in patch_list:
-                patches.append(patch)
+        for when_spec, patch_list in cls.patches.items():
+            if spec.satisfies(when_spec):
+                for patch in patch_list:
+                    patches.append(patch)
 
         pkg_deps = cls.dependencies
         for dep_name in pkg_deps:
