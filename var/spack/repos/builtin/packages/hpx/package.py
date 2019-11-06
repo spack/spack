@@ -40,10 +40,10 @@ class Hpx(CMakePackage, CudaPackage):
         description="Support for networking through parcelports",
     )
 
+    variant('tests', default=False, description='Build HPX tests')
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
 
-    depends_on('boost')
     depends_on('hwloc')
     depends_on('python', type=('build', 'test', 'run'))
     depends_on('pkgconfig', type='build')
@@ -76,11 +76,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('gperftools', when='instrumentation=google_perftools')
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
-
-    # TODO: hpx can build perfectly fine in parallel, except that each
-    # TODO: process might need more than 2GB to compile. This is just the
-    # TODO: most conservative approach to ensure a sane build.
-    parallel = False
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
@@ -123,6 +118,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Cuda support
         args.append('-DHPX_WITH_CUDA={0}'.format(
             'ON' if '+cuda' in spec else 'OFF'
+        ))
+
+        # Tests
+        args.append('-DHPX_WITH_TESTS={0}'.format(
+            'ON' if '+tests' in spec else 'OFF'
         ))
 
         # Tools
