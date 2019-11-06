@@ -13,5 +13,5 @@ class PyTempora(PythonPackage):
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'))
-    depends_on('py-jaraco-functools@1.20', type=('build', 'run'))
+    depends_on('py-jaraco-functools@1.20:', type=('build', 'run'))
     depends_on('python@2.7', type=('build', 'run'))
