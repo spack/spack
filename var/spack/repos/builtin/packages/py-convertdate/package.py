@@ -7,8 +7,9 @@ from spack import *
 
 
 class PyConvertdate(PythonPackage):
-    """The convertdate package was originally developed as "Python Date
-    Utils" by Phil Schwartz. It had been significantly updated and expanded."""
+    """Converts between Gregorian dates and other calendar
+    systems.Calendars included: Baha'i, French Republican, Hebrew,
+    Indian Civil, Islamic, ISO, Julian, Mayan and Persian."""
 
     homepage = "https://github.com/fitnr/convertdate/"
     url      = "https://pypi.io/packages/source/c/convertdate/convertdate-2.2.0.tar.gz"
