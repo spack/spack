@@ -6,7 +6,7 @@
 from spack import *
 import os
 
-ass mpt(Package):
+class mpt(Package):
     """HPE MPI is HPE's implementation of 
     the Message Passing Interface (MPI) standard.
  
@@ -66,4 +66,3 @@ ass mpt(Package):
 
     def install(self, spec, prefix):
         pass
-
