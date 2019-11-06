@@ -33,9 +33,6 @@ def is_package(f):
     return f.startswith('var/spack/repos/') or 'docs/tutorial/examples' in f
 
 
-#: List of directories to exclude from checks.
-exclude_directories = [spack.paths.external_path]
-
 #: max line length we're enforcing (note: this duplicates what's in .flake8)
 max_line_length = 79
 

@@ -25,6 +25,7 @@ import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.string
+from spack.util.executable import which
 from spack.error import SpackError
 
 
@@ -401,6 +402,10 @@ def spack_is_git_repo():
 def changed_files(**kwargs):
     with working_dir(spack.paths.prefix):
         return _changed_files(**kwargs)
+
+
+#: List of directories to exclude from checks.
+exclude_directories = [spack.paths.external_path]
 
 
 def _changed_files(base=None, untracked=True, all_files=False):
