@@ -22,7 +22,7 @@ class Mpt(Package):
     provides('mpi@:1.3', when='@1:')
 
     filter_compiler_wrappers(
-        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif77', 'mpif08', 
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif77', 'mpif08',
         relative_root='bin'
     )
 
