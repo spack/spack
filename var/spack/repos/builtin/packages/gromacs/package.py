@@ -25,9 +25,12 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
+    version('2019.4', sha256='ba4366eedfc8a1dbf6bddcef190be8cd75de53691133f305a7f9c296e5ca1867')
+    version('2019.3', sha256='4211a598bf3b7aca2b14ad991448947da9032566f13239b1a05a2d4824357573')
     version('2019.2', sha256='bcbf5cc071926bc67baa5be6fb04f0986a2b107e1573e15fadcb7d7fc4fb9f7e')
     version('2019.1', sha256='b2c37ed2fcd0e64c4efcabdc8ee581143986527192e6e647a197c76d9c4583ec')
     version('2019', sha256='c5b281a5f0b5b4eeb1f4c7d4dc72f96985b566561ca28acc9c7c16f6ee110d0b')
+    version('2018.5', sha256='32261df6f7ec4149fc0508f9af416953d056e281590359838c1ed6644ba097b8')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
     version('2018.3', sha256='4423a49224972969c52af7b1f151579cea6ab52148d8d7cbae28c183520aa291')
     version('2018.2', sha256='4bdde8120c510b6543afb4b18f82551fddb11851f7edbd814aa24022c5d37857')
@@ -74,7 +77,7 @@ class Gromacs(CMakePackage):
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
-    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:^cmake@3.14.0:')
+    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
 
     def patch(self):
