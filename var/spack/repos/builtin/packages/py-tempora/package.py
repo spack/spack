@@ -10,4 +10,8 @@ class PyTempora(PythonPackage):
     version('1.14.1', sha256='cb60b1d2b1664104e307f8e5269d7f4acdb077c82e35cd57246ae14a3427d2d6')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-jaraco-functools', type='build')
+    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-pytz', type=('build', 'run'))
+    depends_on('py-jaraco-functools@1.20', type=('build', 'run'))
+    depends_on('python@2.7', type=('build', 'run'))
