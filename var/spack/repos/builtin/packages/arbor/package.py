@@ -65,6 +65,6 @@ class Arbor(CMakePackage):
         ]
 
         if '+unwind' in self.spec:
-            args.append('-DUnwind_ROOT_DIR={}'.format(self.spec['libunwind'].prefix))  # noqa
+            args.append('-DUnwind_ROOT_DIR={0}'.format(self.spec['libunwind'].prefix))  # noqa
 
         return args
