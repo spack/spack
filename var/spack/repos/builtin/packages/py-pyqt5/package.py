@@ -5,7 +5,6 @@
 
 from spack import *
 
-
 class PyPyqt5(SIPPackage):
     """PyQt is a set of Python v2 and v3 bindings for The Qt Company's Qt
     application framework and runs on all platforms supported by Qt including
@@ -37,20 +36,33 @@ class PyPyqt5(SIPPackage):
 
     depends_on('qscintilla', when='+qsci')
 
+    # For building Qscintilla python bindings
+    resource(name='qscintilla',
+             url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.10.2/QScintilla_gpl-2.10.2.tar.gz',
+             sha256='14b31d20717eed95ea9bea4cd16e5e1b72cee7ebac647cba878e0f6db6a65ed0',
+             destination='spack-resource-qscintilla',
+             when='^qscintilla@2.10.2'
+    )
+
     # https://www.riverbankcomputing.com/static/Docs/PyQt5/installation.html
     def configure_args(self):
-        return [
+        args = [
             '--pyuic5-interpreter', self.spec['python'].command.path,
             '--sipdir', self.prefix.share.sip.PyQt5,
             '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
-            if '+qsci' in self.spec:
-                '--qsci-api-destdir', self.prefix.share+'/qsci'
         ]
+        if '+qsci' in self.spec:
+            args.extend(['--qsci-api-destdir', self.prefix.share+'/qsci'])
+        return args
+
 
     @run_after('install')
     def make_qsci(self):
         if '+qsci' in self.spec:
-            with working_dir(str(self.spec['qscintilla'].prefix)+'/share/qscintilla/src/Python'):
+            rsrc_py_path = str(self.stage.source_path) +\
+                '/spack-resource-qscintilla/QScintilla_gpl-' +\
+                str(self.spec['qscintilla'].version) + '/Python'
+            with working_dir(rsrc_py_path):
                 pydir = join_path(site_packages_dir, 'PyQt5')
                 python = which('python')
                 python('configure.py', '--pyqt=PyQt5',
