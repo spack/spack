@@ -20,7 +20,7 @@ class IntelLlvm(CMakePackage):
     depends_on('cmake@3.4.3:', type='build')
 
     # It doesn't seem possible to use != in a conflicts statement
-    # conflicts('target = x86_64',
+    # conflicts('target != x86_64',
     #            msg='Intel LLVM compiler currently only works for x86')
 
     def setup_environment(self, spack_env, run_env):
@@ -30,7 +30,7 @@ class IntelLlvm(CMakePackage):
             run_env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
             run_env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
 
-    root_cmakelists_dir = join_path('llvm')
+    root_cmakelists_dir = 'llvm'
 
     def cmake_args(self):
 
