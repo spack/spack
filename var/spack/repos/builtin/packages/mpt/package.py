@@ -4,9 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
-class mpt(Package):
+
+class Mpt(Package):
     """HPE MPI is HPE's implementation of 
     the Message Passing Interface (MPI) standard.
  
@@ -26,10 +26,10 @@ class mpt(Package):
     )
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        spack_env.set('MPICC',  self.prefix.bin.mpicc)
+        spack_env.set('MPICXX', self.prefix.bin.mpicxx)
+        spack_env.set('MPIF77', self.prefix.bin.mpif77)
+        spack_env.set('MPIF90', self.prefix.bin.mpifc)
 
         spack_env.set('MPICC_CC', spack_cc)
         spack_env.set('MPICXX_CXX', spack_cxx)
@@ -42,10 +42,10 @@ class mpt(Package):
             self.spec.mpifc = spack_fc
             self.spec.mpif77 = spack_f77
         else:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+            self.spec.mpicc = self.prefix.bin.mpicc
+            self.spec.mpicxx = self.prefix.bin.mpicxx
+            self.spec.mpifc = self.prefix.bin.mpifc
+            self.spec.mpif77 = self.prefix.bin.mpif77
 
     @property
     def fetcher(self):
@@ -63,6 +63,3 @@ class mpt(Package):
 
         """
         raise InstallError(msg)
-
-    def install(self, spec, prefix):
-        pass
