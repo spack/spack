@@ -452,6 +452,7 @@ def _changed_files(base=None, untracked=True, all_files=False):
 
             changed.add(f)
 
+    changed = list(os.path.abspath(os.path.realpath(p)) for p in changed)
     return sorted(changed)
 
 

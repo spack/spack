@@ -198,15 +198,12 @@ def flake8(parser, args):
     try:
         file_list = args.files
         if file_list:
-            def prefix_relative(path):
-                return os.path.relpath(
-                    os.path.abspath(os.path.realpath(path)),
-                    spack.paths.prefix)
-
-            file_list = [prefix_relative(p) for p in file_list]
+            file_list = [os.path.abspath(os.path.realpath(p))
+                         for p in file_list]
         else:
             file_list = spack.cmd.changed_files(
                 args.base, args.untracked, args.all)
+        file_list = [os.path.relpath(p, spack.paths.prefix) for p in file_list]
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')
