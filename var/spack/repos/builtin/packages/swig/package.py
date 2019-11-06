@@ -52,7 +52,6 @@ class Swig(AutotoolsPackage):
         with working_dir(self.prefix.bin):
             os.symlink('swig', 'swig{0}'.format(self.spec.version.up_to(2)))
 
-    for _version in ['@fortran', '@master']:
-        @when(_version)
-        def autoreconf(self, spec, prefix):
-            which('sh')('./autogen.sh')
+    @when('@fortran,master')
+    def autoreconf(self, spec, prefix):
+        which('sh')('./autogen.sh')

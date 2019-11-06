@@ -22,3 +22,6 @@ spack flake8
 
 # verify that the license headers are present
 spack license verify
+
+# check that Spack can construct content hash from all packages
+spack package-ast-check

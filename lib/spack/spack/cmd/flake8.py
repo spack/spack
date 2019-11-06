@@ -93,53 +93,6 @@ pattern_exemptions = dict(
     for file_pattern, error_dict in pattern_exemptions.items())
 
 
-def changed_files(base=None, untracked=True, all_files=False):
-    """Get list of changed files in the Spack repository."""
-
-    git = which('git', required=True)
-
-    if base is None:
-        base = os.environ.get('TRAVIS_BRANCH', 'develop')
-
-    range = "{0}...".format(base)
-
-    git_args = [
-        # Add changed files committed since branching off of develop
-        ['diff', '--name-only', '--diff-filter=ACMR', range],
-        # Add changed files that have been staged but not yet committed
-        ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
-        # Add changed files that are unstaged
-        ['diff', '--name-only', '--diff-filter=ACMR'],
-    ]
-
-    # Add new files that are untracked
-    if untracked:
-        git_args.append(['ls-files', '--exclude-standard', '--other'])
-
-    # add everything if the user asked for it
-    if all_files:
-        git_args.append(['ls-files', '--exclude-standard'])
-
-    excludes = [os.path.realpath(f) for f in exclude_directories]
-    changed = set()
-
-    for arg_list in git_args:
-        files = git(*arg_list, output=str).split('\n')
-
-        for f in files:
-            # Ignore non-Python files
-            if not (f.endswith('.py') or f == 'bin/spack'):
-                continue
-
-            # Ignore files in the exclude locations
-            if any(os.path.realpath(f).startswith(e) for e in excludes):
-                continue
-
-            changed.add(f)
-
-    return sorted(changed)
-
-
 def add_pattern_exemptions(line, codes):
     """Add a flake8 exemption to a line."""
     if line.startswith('#'):
@@ -254,10 +207,9 @@ def flake8(parser, args):
                     spack.paths.prefix)
 
             file_list = [prefix_relative(p) for p in file_list]
-
-        with working_dir(spack.paths.prefix):
-            if not file_list:
-                file_list = changed_files(args.base, args.untracked, args.all)
+        else:
+            file_list = spack.cmd.changed_files(
+                args.base, args.untracked, args.all)
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')
