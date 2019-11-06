@@ -31,7 +31,7 @@ class PyPyarrow(PythonPackage):
     depends_on('py-pytest', type='test', when='@0.15.0:')
     depends_on('py-pandas', type='test', when='@0.15.0:')
     depends_on('py-hypothesis', type='test', when='@0.15.0:')
-    depends_on('py-pathlib2', type='test', when='@0.15.0^python@:3.3.99')
+    depends_on('py-pathlib2', type='test', when='@0.15.0: ^python@:3.3.99')
     depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-six@1.0.0:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1.99')
