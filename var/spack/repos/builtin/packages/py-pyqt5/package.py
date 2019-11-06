@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyPyqt5(SIPPackage):
     """PyQt is a set of Python v2 and v3 bindings for The Qt Company's Qt
     application framework and runs on all platforms supported by Qt including
@@ -52,9 +53,8 @@ class PyPyqt5(SIPPackage):
             '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
         ]
         if '+qsci' in self.spec:
-            args.extend(['--qsci-api-destdir', self.prefix.share+'/qsci'])
+            args.extend(['--qsci-api-destdir', self.prefix.share + '/qsci'])
         return args
-
 
     @run_after('install')
     def make_qsci(self):
@@ -73,24 +73,24 @@ class PyPyqt5(SIPPackage):
                        '--apidir=' + self.prefix + '/share/qsci',
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--sip-incdir=' + self.prefix + '/include/python'+str(self.spec['python'].version.up_to(2)),
-                       '--stubsdir='+pydir)
+                       '--sip-incdir=' + self.prefix + '/include/python' + str(self.spec['python'].version.up_to(2)),
+                       '--stubsdir=' + pydir)
 
                 # Fix build errors
                 # "QAbstractScrollArea: No such file or directory"
                 # "qprinter.h: No such file or directory"
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro = FileFilter('Qsci/Qsci.pro')
-                link_qscilibs = 'LIBS += -L'+self.prefix.lib+' -lqscintilla2_qt5'
+                link_qscilibs = 'LIBS += -L' + self.prefix.lib + ' -lqscintilla2_qt5'
                 qscipro.filter('TEMPLATE = lib',
-                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n'+link_qscilibs)
+                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n' + link_qscilibs)
 
                 make()
 
                 # Fix installation prefixes
                 makefile = FileFilter('Makefile')
-                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                makefile.filter(r'\$\(INSTALL_ROOT\)', '')
                 makefile = FileFilter('Qsci/Makefile')
-                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                makefile.filter(r'\$\(INSTALL_ROOT\)', '')
 
                 make('install')

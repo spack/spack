@@ -53,7 +53,7 @@ class PyPyqt4(SIPPackage):
             '--stubsdir', join_path(site_packages_dir, 'PyQt4')
         ]
         if '+qsci' in self.spec:
-            args.extend(['--qsci-api-destdir', self.prefix.share+'/qsci'])
+            args.extend(['--qsci-api-destdir', self.prefix.share + '/qsci'])
         return args
 
     @run_after('install')
@@ -73,24 +73,24 @@ class PyPyqt4(SIPPackage):
                        '--apidir=' + self.prefix + '/share/qsci',
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt4,
-                       '--sip-incdir=' + self.prefix + '/include/python'+str(self.spec['python'].version.up_to(2)),
-                       '--stubsdir='+pydir)
+                       '--sip-incdir=' + self.prefix + '/include/python' + str(self.spec['python'].version.up_to(2)),
+                       '--stubsdir=' + pydir)
 
                 # Fix build errors
                 # "QAbstractScrollArea: No such file or directory"
                 # "qprinter.h: No such file or directory"
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro = FileFilter('Qsci/Qsci.pro')
-                link_qscilibs = 'LIBS += -L'+self.prefix.lib+' -lqscintilla2_qt4'
+                link_qscilibs = 'LIBS += -L' + self.prefix.lib + ' -lqscintilla2_qt4'
                 qscipro.filter('TEMPLATE = lib',
-                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n'+link_qscilibs)
+                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n' + link_qscilibs)
 
                 make()
 
                 # Fix installation prefixes
                 makefile = FileFilter('Makefile')
-                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                makefile.filter(r'\$\(INSTALL_ROOT\)', '')
                 makefile = FileFilter('Qsci/Makefile')
-                makefile.filter(r'\$\(INSTALL_ROOT\)','')
+                makefile.filter(r'\$\(INSTALL_ROOT\)', '')
 
                 make('install')
