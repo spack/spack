@@ -14,5 +14,4 @@ class PyNodeenv(PythonPackage):
 
     version('1.3.3', sha256='ad8259494cf1c9034539f6cced78a1da4840a4b157e23640bc4a0c0546b0cb7a')
 
-    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
