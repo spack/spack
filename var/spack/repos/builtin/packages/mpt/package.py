@@ -38,7 +38,7 @@ class Mpt(Package):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_build_environment(self, spack_env, run_env,
+    def setup_dependent_build_environment(self, spack_env,
                                           dependent_spec):
         spack_env.set('MPICC',  self.prefix.bin.mpicc)
         spack_env.set('MPICXX', self.prefix.bin.mpicxx)
