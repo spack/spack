@@ -60,19 +60,19 @@ class Mpt(Package):
 #            self.spec.mpifc = self.prefix.bin.mpifc
 #            self.spec.mpif77 = self.prefix.bin.mpif77
 
-#    @property
-#    def fetcher(self):
-#        msg = """This package is a placeholder for HPE MPI, a
-#        system-provided, proprietary MPI implementation.
-#
-#        Add to your packages.yaml (changing the /opt/ path to match
-#        where HPE MPI is actually installed):
-#
-#        packages:
-#          mpt:
-#            paths:
-#              mpt@2.20: /opt/
-#            buildable: False
-#
-#        """
-#        raise InstallError(msg)
+    @property
+    def fetcher(self):
+        msg = """This package is a placeholder for HPE MPI, a
+        system-provided, proprietary MPI implementation.
+
+        Add to your packages.yaml (changing the /opt/ path to match
+        where HPE MPI is actually installed):
+
+        packages:
+          mpt:
+            paths:
+              mpt@2.20: /opt/
+            buildable: False
+
+        """
+        raise InstallError(msg)
