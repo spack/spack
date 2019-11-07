@@ -61,6 +61,8 @@ def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256):
 
     # make a stage
     with Stage(url) as stage:  # TODO: url isn't used; maybe refactor Stage
+        stage.mirror_path = mock_patch_stage
+
         mkdirp(stage.source_path)
         with working_dir(stage.source_path):
             # write a file to be patched
@@ -77,7 +79,7 @@ first line
 third line
 """)
         # apply the patch and compare files
-        patch.fetch('1.0')
+        patch.fetch(stage)
         patch.apply(stage)
         patch.clean()
 

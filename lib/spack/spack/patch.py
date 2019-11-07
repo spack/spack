@@ -184,7 +184,8 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    def fetch(self, version):
+    # TODO: this function doesn't use the stage arg
+    def fetch(self, stage):
         """Retrieve the patch in a temporary stage and compute self.path
 
         Args:
@@ -199,8 +200,7 @@ class UrlPatch(Patch):
                                       expand=bool(self.archive_sha256))
 
         per_package_ref = os.path.join(
-            self.owner.split('.')[-1],
-            "{0}-{1}".format(os.path.basename(self.url), str(version)))
+            self.owner.split('.')[-1], os.path.basename(self.url))
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(
             fetcher, per_package_ref)
