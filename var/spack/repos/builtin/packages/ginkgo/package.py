@@ -32,6 +32,8 @@ class Ginkgo(CMakePackage, CudaPackage):
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
 
+    conflicts('%gcc@:5.2.9')
+
     def cmake_args(self):
         spec = self.spec
         return [
