@@ -43,9 +43,23 @@ def python_name(cmd_name):
     return cmd_name.replace("-", "_")
 
 
+def require_python_name(pname):
+    """Require that the provided name is a valid python name (per
+    python_name())."""
+    if python_name(pname) != pname:
+        raise PythonNameError(pname)
+
+
 def cmd_name(python_name):
     """Convert module name (with ``_``) to command name (with ``-``)."""
     return python_name.replace('_', '-')
+
+
+def require_cmd_name(cname):
+    """Require that the provided name is a valid command name (per
+    cmd_name())."""
+    if cmd_name(cname) != cname:
+        raise CommandNameError(cname)
 
 
 #: global, cached list of all commands -- access through all_commands()
@@ -91,6 +105,7 @@ def get_module(cmd_name):
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
 
     try:
@@ -102,8 +117,6 @@ def get_module(cmd_name):
         tty.debug('Imported {0} from built-in commands'.format(pname))
     except ImportError:
         module = spack.extensions.get_module(cmd_name)
-        if not module:
-            raise
 
     attr_setdefault(module, SETUP_PARSER, lambda *args: None)  # null-op
     attr_setdefault(module, DESCRIPTION, "")
@@ -116,14 +129,15 @@ def get_module(cmd_name):
 
 
 def get_command(cmd_name):
-    """Imports the command's function from a module and returns it.
+    """Imports the command's eponymous function from a module and returns it.
 
     Args:
         cmd_name (str): name of the command for which to get a module
             (contains ``-``, not ``_``).
     """
+    require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
-    return getattr(get_module(pname), pname)
+    return getattr(get_module(cmd_name), pname)
 
 
 def parse_specs(args, **kwargs):
@@ -417,6 +431,22 @@ def spack_is_git_repo():
     """Ensure that this instance of Spack is a git clone."""
     with working_dir(spack.paths.prefix):
         return os.path.isdir('.git')
+
+
+class PythonNameError(SpackError):
+    """Exception class thrown for impermissible python names"""
+    def __init__(self, name):
+        self.name = name
+        super(PythonNameError, self).__init__(
+            '{0} is not a permissible Python name.'.format(name))
+
+
+class CommandNameError(SpackError):
+    """Exception class thrown for impermissible command names"""
+    def __init__(self, name):
+        self.name = name
+        super(CommandNameError, self).__init__(
+            '{0} is not a permissible Spack command name.'.format(name))
 
 
 ########################################
