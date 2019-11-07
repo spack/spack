@@ -33,6 +33,7 @@ modules:
       - python
       - snakemake
       - spark
+      - virtualgl
     blacklist:
       - '%gcc'
       - '%intel'
