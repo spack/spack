@@ -6,7 +6,7 @@ class PyUwsgi(PythonPackage):
     """Web Application framework for low overhead web services"""
 
     homepage = "https://github.com/unbit/uwsgi/"
-    url      = "https://files.pythonhosted.org/packages/e7/1e/3dcca007f974fe4eb369bf1b8629d5e342bb3055e2001b2e5340aaefae7a/uwsgi-2.0.18.tar.gz"
+    url      = "https://pypi.org/packages/source/u/uwsgi/uwsgi-2.0.18.tar.gz"
 
     version('2.0.18', sha256='4972ac538800fb2d421027f49b4a1869b66048839507ccf0aa2fda792d99f583')
 
