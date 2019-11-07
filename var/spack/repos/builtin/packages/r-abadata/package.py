@@ -17,6 +17,7 @@ class RAbadata(RPackage):
     All datasets are restricted to protein coding genes."""
 
     homepage = "https://bioconductor.org/packages/ABAData/"
-    url      = "https://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.14.0.tar.gz"
+    url      = "http://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.16.0.tar.gz"
 
+    version('1.16.0', sha256='a41049ac83f6edb938ab63964ea387c84827b959f552f6b3cd0601b1eeee68d7')
     version('1.14.0', sha256='d203d968044c292cdfab57a4d6bf52dfb60470bd78b4c9bd88892577ac42b2b7')
