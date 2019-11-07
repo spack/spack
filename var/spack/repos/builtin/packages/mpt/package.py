@@ -38,8 +38,8 @@ class Mpt(Package):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-#    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-#        print("testing")
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        print("testing")
 #        spack_env.set('MPICC',  self.prefix.bin.mpicc)
 #        spack_env.set('MPICXX', self.prefix.bin.mpicxx)
 #        spack_env.set('MPIF77', self.prefix.bin.mpif77)
