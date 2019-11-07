@@ -26,17 +26,17 @@ class Mpt(Package):
         relative_root='bin'
     )
 
-#    @property
-#    def libs(self):
-#        query_parameters = self.spec.last_query.extra_parameters
-#        libraries = ['libmpi']
-#
-#        if 'cxx' in query_parameters:
-#            libraries = ['libmpicxx'] + libraries
-#
-#        return find_libraries(
-#            libraries, root=self.prefix, shared=True, recursive=True
-#        )
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
 
     def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  self.prefix.bin.mpicc)
@@ -44,9 +44,9 @@ class Mpt(Package):
         spack_env.set('MPIF77', self.prefix.bin.mpif77)
         spack_env.set('MPIF90', self.prefix.bin.mpifc)
 
-        spack_env.set('MPICC_CC', spack_cc)
-        spack_env.set('MPICXX_CXX', spack_cxx)
-        spack_env.set('MPIF90_F90', spack_fc)
+#        spack_env.set('MPICC_CC', spack_cc)
+#        spack_env.set('MPICXX_CXX', spack_cxx)
+#        spack_env.set('MPIF90_F90', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
