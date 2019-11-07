@@ -428,7 +428,9 @@ class Mfem(Package):
 
         if '+conduit' in spec:
             conduit = spec['conduit']
-            headers = HeaderList(find(conduit.prefix.include, 'conduit.hpp',
+            headers = HeaderList(find(join_path(conduit.prefix.include,
+                                                "conduit"),
+                                      'conduit.hpp',
                                       recursive=True))
             conduit_libs = ['libconduit', 'libconduit_relay',
                             'libconduit_blueprint']
