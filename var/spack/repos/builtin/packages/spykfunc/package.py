@@ -36,16 +36,9 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, clean=False)
-    version('0.11.0', tag='v0.11.0', submodules=True, clean=False)
-    version('0.12.0', tag='v0.12.0', submodules=True, clean=False)
-    version('0.12.1', tag='v0.12.1', submodules=True, clean=False)
     version('0.12.2', tag='v0.12.2', submodules=True, clean=False)
-    version('0.13.0', tag='v0.13.0', submodules=True, clean=False)
     version('0.13.1', tag='v0.13.1', submodules=True, clean=False)
-    version('0.13.2', tag='v0.13.2', submodules=True, clean=False)
-    version('0.14.1', tag='v0.14.1', submodules=True, clean=False)
-    version('0.14.2', tag='v0.14.2', submodules=True, clean=False)
-    version('0.14.3', tag='v0.14.3', submodules=True, clean=False)
+    # versions 0.13.2-0.14.x require legacy mvdtool+python
     version('0.15.0', tag='v0.15.0', submodules=True, clean=False)
     version('0.15.1', tag='v0.15.1', submodules=True, clean=False)
 
@@ -56,9 +49,7 @@ class Spykfunc(PythonPackage):
     # accessible. Add explicit dependency for now.
     depends_on('java@8', type=('build', 'run'))
 
-    depends_on('mvdtool@:1.999~mpi', when='@:0.13.1')
-    depends_on('mvdtool@:1.999~mpi+python', type=('build', 'run'), when='@0.13.2:0.14.3')
-    depends_on('py-mvdtool', type=('build', 'run'), when='@0.14.4:')
+    depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:')
 
     depends_on('python@3.6:')
     depends_on('py-cython', type='run')

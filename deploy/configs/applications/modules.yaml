@@ -32,7 +32,6 @@ modules:
       - brainbuilder
       - brayns
       - brayns-brainatlas
-      - brayns-graphs
       - brayns-topologyviewer
       - brion
       - connectome-tools
@@ -59,6 +58,7 @@ modules:
       - py-entity-management
       - py-jupyter-notebook
       - py-morph-tool
+      - 'py-mvdtool%gcc'
       - py-simwriter
       - py-pytouchreader
       - reportinglib
