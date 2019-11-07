@@ -27,3 +27,5 @@ class PyArrow(PythonPackage):
     depends_on('py-mock@3.0:', type='test')
     depends_on('py-pytz@2019.0:', type='test')
     depends_on('py-simplejson@3.16.0:', type='test')
+    depends_on('py-sphinx@1.8.0:1.99.99', type='doc', when='^python@2.7:2.8')
+    depends_on('py-sphinx@2.2.0:', type='doc', when='^python@3.5')
