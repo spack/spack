@@ -48,17 +48,17 @@ class Mpt(Package):
 #        spack_env.set('MPICXX_CXX', spack_cxx)
 #        spack_env.set('MPIF90_F90', spack_fc)
 
-#    def setup_dependent_package(self, module, dependent_spec):
-#        if 'platform=cray' in self.spec:
-#            self.spec.mpicc = spack_cc
-#            self.spec.mpicxx = spack_cxx
-#            self.spec.mpifc = spack_fc
-#            self.spec.mpif77 = spack_f77
-#        else:
-#            self.spec.mpicc = self.prefix.bin.mpicc
-#            self.spec.mpicxx = self.prefix.bin.mpicxx
-#            self.spec.mpifc = self.prefix.bin.mpifc
-#            self.spec.mpif77 = self.prefix.bin.mpif77
+    def setup_dependent_package(self, module, dependent_spec):
+        if 'platform=cray' in self.spec:
+            self.spec.mpicc = spack_cc
+            self.spec.mpicxx = spack_cxx
+            self.spec.mpifc = spack_fc
+            self.spec.mpif77 = spack_f77
+        else:
+            self.spec.mpicc = self.prefix.bin.mpicc
+            self.spec.mpicxx = self.prefix.bin.mpicxx
+            self.spec.mpifc = self.prefix.bin.mpifc
+            self.spec.mpif77 = self.prefix.bin.mpif77
 
     @property
     def fetcher(self):
