@@ -24,6 +24,8 @@ class Timemory(CMakePackage):
     variant('caliper', default=True, description='Enable Caliper support')
     variant('gperftools', default=True, description='Enable gperftools support')
 
+    depends_on('cmake@3.10:', type='build')
+
     extends('python', when='+python')
     depends_on('python@3:', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python', type=('run'))
