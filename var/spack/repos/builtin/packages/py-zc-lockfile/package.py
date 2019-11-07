@@ -11,3 +11,4 @@ class PyZcLockfile(PythonPackage):
         '1.4', sha256='95a8e3846937ab2991b61703d6e0251d5abb9604e18412e2714e1b90db173253')
 
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-zc-buildout', type=('build', 'run'))
