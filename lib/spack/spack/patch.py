@@ -200,7 +200,8 @@ class UrlPatch(Patch):
                                       expand=bool(self.archive_sha256))
 
         per_package_ref = os.path.join(
-            self.owner.split('.')[-1], os.path.basename(self.url))
+            self.owner.split('.')[-1],
+            "{0}-{1}".format(os.path.basename(self.url), fetch_digest[:7]))
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(
             fetcher, per_package_ref)
