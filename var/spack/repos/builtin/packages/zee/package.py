@@ -27,12 +27,15 @@ class Zee(CMakePackage):
             description='Compile C++ with warnings')
     variant('petsc', default=True,
             description='Compile examples using PETSc')
+    variant('codechecks', default=False,
+            description='Perform additional code checks like ' +
+                        'formatting or static analysis')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
-    depends_on('py-cmake-format', type='build', when='@develop')
-    depends_on('py-pre-commit', type='build', when='@develop')
-    depends_on('py-pyyaml', type='build', when='@develop')
-    depends_on('python@3:', type='build', when='@develop')
+    depends_on('py-cmake-format', type='build', when='+codechecks')
+    depends_on('py-pre-commit', type='build', when='+codechecks')
+    depends_on('py-pyyaml', type='build', when='+codechecks')
+    depends_on('python@3:', type='build', when='+codechecks')
     depends_on('gmsh@:3 +oce -mpi %gcc')
     depends_on('mpi')
     depends_on('omega-h+trilinos')
@@ -48,6 +51,9 @@ class Zee(CMakePackage):
                 yield '-D' + cmake_var + ':BOOL=FALSE'
         yield '-DZee_USE_PETSc:BOOL=' + ('TRUE' if '+petsc' in self.spec else 'FALSE')
         yield '-DPYTHON_EXECUTABLE:FILEPATH=' + python.path
+        if '+codechecks' in self.spec:
+            yield '-DZee_FORMATTING:BOOL=TRUE'
+            yield '-DZee_TEST_FORMATTING:BOOL=TRUE'
 
     def cmake_args(self):
         return list(self._bob_options())
