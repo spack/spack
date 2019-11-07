@@ -326,6 +326,39 @@ def test_uninstall_by_spec_errors(mutable_database):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
+@pytest.mark.disable_clean_stage_check
+def test_nosource_pkg_install(
+        install_mockery, mock_fetch, mock_packages, capfd):
+    """Test install phases with the nosource package."""
+    spec = Spec('nosource').concretized()
+    pkg = spec.package
+
+    # Make sure install works even though there is no associated code.
+    pkg.do_install()
+
+    # Also make sure an error is raised if `do_fetch` is called.
+    pkg.do_fetch()
+    assert "No fetch required for nosource" in capfd.readouterr()[0]
+
+
+def test_nosource_pkg_install_post_install(
+        install_mockery, mock_fetch, mock_packages):
+    """Test install phases with the nosource package with post-install."""
+    spec = Spec('nosource-install').concretized()
+    pkg = spec.package
+
+    # Make sure both the install and post-install package methods work.
+    pkg.do_install()
+
+    # Ensure the file created in the package's `install` method exists.
+    install_txt = os.path.join(spec.prefix, 'install.txt')
+    assert os.path.isfile(install_txt)
+
+    # Ensure the file created in the package's `post-install` method exists.
+    post_install_txt = os.path.join(spec.prefix, 'post-install.txt')
+    assert os.path.isfile(post_install_txt)
+
+
 def test_pkg_build_paths(install_mockery):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
@@ -427,11 +460,11 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     with pytest.raises(ValueError, match="only install concrete packages"):
         spec.package.do_install()
 
-    with pytest.raises(ValueError, match="fetch concrete packages"):
+    with pytest.raises(ValueError, match="only fetch concrete packages"):
         spec.package.do_fetch()
 
-    with pytest.raises(ValueError, match="stage concrete packages"):
+    with pytest.raises(ValueError, match="only stage concrete packages"):
         spec.package.do_stage()
 
-    with pytest.raises(ValueError, match="patch concrete packages"):
+    with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()

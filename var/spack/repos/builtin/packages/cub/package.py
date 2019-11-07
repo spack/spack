@@ -11,11 +11,9 @@ class Cub(Package):
     and other utilities for CUDA kernel programming."""
 
     homepage = "https://nvlabs.github.com/cub"
-    url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
+    url      = "https://github.com/NVlabs/cub/archive/1.7.1.zip"
 
-    version('1.7.1', '028ac43922a4538596338ad5aef0f0c4')
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.7.1', sha256='50b8777b83093fdfdab429a61fccdbfbbb991b3bbc08385118e5ad58e8f62e1d')
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)

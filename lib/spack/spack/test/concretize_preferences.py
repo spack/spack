@@ -29,7 +29,7 @@ def concretize_scope(config, tmpdir):
 
 @pytest.fixture()
 def configure_permissions():
-    conf = syaml.load("""\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: group
@@ -95,6 +95,26 @@ class TestConcretizePreferences(object):
         update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
         spec = concretize('mpileaks')
         assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
+
+    def test_preferred_target(self, mutable_mock_packages):
+        """Test preferred compilers are applied correctly
+        """
+        spec = concretize('mpich')
+        default = str(spec.target)
+        preferred = str(spec.target.family)
+
+        update_packages('mpich', 'target', [preferred])
+        spec = concretize('mpich')
+        assert str(spec.target) == preferred
+
+        spec = concretize('mpileaks')
+        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpich'].target) == preferred
+
+        update_packages('mpileaks', 'target', [preferred])
+        spec = concretize('mpileaks')
+        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == preferred
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
@@ -162,9 +182,9 @@ class TestConcretizePreferences(object):
         """Verify that virtuals are not allowed in packages.yaml."""
 
         # set up a packages.yaml file with a vdep as a key.  We use
-        # syaml.load here to make sure source lines in the config are
+        # syaml.load_config here to make sure source lines in the config are
         # attached to parsed strings, as the error message uses them.
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
@@ -177,7 +197,7 @@ mpi:
 
     def test_all_is_not_a_virtual(self):
         """Verify that `all` is allowed in packages.yaml."""
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
         variants: [+mpi]
 """)
@@ -194,7 +214,7 @@ all:
         assert not spec['mpi'].external
 
         # load config
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
     providers:
         mpi: [mpich]

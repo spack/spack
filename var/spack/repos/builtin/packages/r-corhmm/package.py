@@ -14,9 +14,9 @@ class RCorhmm(RPackage):
        states in a Markov process and various other functions for evaluating
        models of binary character evolution."""
 
-    homepage = "https://cran.r-project.org/package=corHMM"
-    url      = "https://cran.r-project.org/src/contrib/corHMM_1.22.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/corHMM/"
+    homepage = "https://cloud.r-project.org/package=corHMM"
+    url      = "https://cloud.r-project.org/src/contrib/corHMM_1.22.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/corHMM/"
 
     version('1.22', sha256='d262fa1183eab32087afb70f1789fabae6fb49bec01d627974c54a088a48b10d')
 

@@ -33,7 +33,7 @@ class OpenpmdApi(CMakePackage):
 
     depends_on('cmake@3.11.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
-    depends_on('catch@2.6.1: ~single_header', type='test')
+    depends_on('catch2@2.6.1: ~single_header', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
@@ -44,7 +44,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.4.0:', when='+adios2')
     depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.5.0:', when='+json')
+    depends_on('nlohmann-json@3.7.0:', when='+json')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
@@ -93,25 +93,24 @@ class OpenpmdApi(CMakePackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
-        run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
-        run_env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
+        env.prepend_path('CMAKE_PREFIX_PATH', spec['mpark-variant'].prefix)
+        env.prepend_path('CPATH', spec['mpark-variant'].prefix.include)
 
         # more deps searched in openPMDConfig.cmake
         if spec.satisfies("+mpi"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
         if spec.satisfies("+adios1"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
         if spec.satisfies("+adios2"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
         if spec.satisfies("+hdf5"):
-            run_env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
+            env.prepend_path('CMAKE_PREFIX_PATH', spec['hdf5'].prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # pre-load dependent CMake-PUBLIC header-only libs
-        spack_env.prepend_path('CMAKE_PREFIX_PATH',
-                               self.spec['mpark-variant'].prefix)
-        spack_env.prepend_path('CPATH',
-                               self.spec['mpark-variant'].prefix.include)
+        env.prepend_path('CMAKE_PREFIX_PATH',
+                         self.spec['mpark-variant'].prefix)
+        prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)

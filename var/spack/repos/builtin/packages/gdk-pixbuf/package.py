@@ -19,7 +19,7 @@ class GdkPixbuf(Package):
     list_depth = 1
 
     version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
-    version('2.31.2', '6be6bbc4f356d4b79ab4226860ab8523')
+    version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa')
 
     depends_on('meson@0.46.0:', type='build', when='@2.37.92:')
     depends_on('meson@0.45.0:', type='build', when='@2.37.0:')

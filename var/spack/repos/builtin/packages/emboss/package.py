@@ -14,7 +14,7 @@ class Emboss(AutotoolsPackage):
     homepage = "http://emboss.sourceforge.net/"
     url      = "ftp://emboss.open-bio.org/pub/EMBOSS/EMBOSS-6.6.0.tar.gz"
 
-    version('6.6.0', 'cc3fca80cb0618deb10fa0d29fe90e4b')
+    version('6.6.0', sha256='7184a763d39ad96bb598bfd531628a34aa53e474db9e7cac4416c2a40ab10c6e')
 
     depends_on('libxpm')
     depends_on('libgd')

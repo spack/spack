@@ -17,7 +17,19 @@ properties = {
         'default': {},
         'additionalProperties': False,
         'patternProperties': {
-            r'\w[\w-]*': {'type': 'string'},
+            r'\w[\w-]*': {
+                'anyOf': [
+                    {'type': 'string'},
+                    {
+                        'type': 'object',
+                        'required': ['fetch', 'push'],
+                        'properties': {
+                            'fetch': {'type': 'string'},
+                            'push': {'type': 'string'}
+                        }
+                    }
+                ]
+            },
         },
     },
 }

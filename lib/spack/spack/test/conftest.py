@@ -5,7 +5,9 @@
 
 import collections
 import copy
+import errno
 import inspect
+import itertools
 import os
 import os.path
 import shutil
@@ -16,7 +18,7 @@ import py
 import pytest
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import remove_linked_tree
+from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
 import spack.compilers
@@ -38,6 +40,14 @@ from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
 from spack.version import Version
+
+
+@pytest.fixture
+def no_path_access(monkeypatch):
+    def _can_access(path, perms):
+        return False
+
+    monkeypatch.setattr(os, 'access', _can_access)
 
 
 #
@@ -121,14 +131,33 @@ def reset_compiler_cache():
     spack.compilers._compiler_cache = {}
 
 
-@pytest.fixture(scope='session', autouse=True)
-def mock_stage(tmpdir_factory):
-    """Mocks up a fake stage directory for use by tests."""
-    stage_path = spack.paths.stage_path
-    new_stage = str(tmpdir_factory.mktemp('mock_stage'))
-    spack.paths.stage_path = new_stage
-    yield new_stage
-    spack.paths.stage_path = stage_path
+@pytest.fixture(scope='function', autouse=True)
+def mock_stage(tmpdir_factory, monkeypatch, request):
+    """Establish the temporary build_stage for the mock archive."""
+    # The approach with this autouse fixture is to set the stage root
+    # instead of using spack.config.override() to avoid configuration
+    # conflicts with dozens of tests that rely on other configuration
+    # fixtures, such as config.
+    if 'nomockstage' not in request.keywords:
+        # Set the build stage to the requested path
+        new_stage = tmpdir_factory.mktemp('mock-stage')
+        new_stage_path = str(new_stage)
+
+        # Ensure the source directory exists within the new stage path
+        source_path = os.path.join(new_stage_path,
+                                   spack.stage._source_path_subdir)
+        mkdirp(source_path)
+
+        monkeypatch.setattr(spack.stage, '_stage_root', new_stage_path)
+
+        yield new_stage_path
+
+        # Clean up the test stage directory
+        if os.path.isdir(new_stage_path):
+            shutil.rmtree(new_stage_path)
+    else:
+        # Must yield a path to avoid a TypeError on test teardown
+        yield str(tmpdir_factory)
 
 
 @pytest.fixture(scope='session')
@@ -138,7 +167,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock'])
+    return set(['.lock', spack.stage._source_path_subdir])
 
 
 def remove_whatever_it_is(path):
@@ -164,26 +193,34 @@ def working_env():
 
 @pytest.fixture(scope='function', autouse=True)
 def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
-    """Ensure that each test leaves a clean stage when done.
+    """
+    Ensure that each (mock_stage) test leaves a clean stage when done.
 
-    This can be disabled for tests that are expected to dirty the stage
-    by adding::
+    Tests that are expected to dirty the stage can disable the check by
+    adding::
 
         @pytest.mark.disable_clean_stage_check
 
-    to tests that need it.
+    and the associated stage files will be removed.
     """
+    stage_path = mock_stage
+
     yield
 
     files_in_stage = set()
-    if os.path.exists(spack.paths.stage_path):
-        files_in_stage = set(
-            os.listdir(spack.paths.stage_path)) - ignore_stage_files
+    try:
+        stage_files = os.listdir(stage_path)
+        files_in_stage = set(stage_files) - ignore_stage_files
+    except OSError as err:
+        if err.errno == errno.ENOENT:
+            pass
+        else:
+            raise
 
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
-            path = os.path.join(spack.paths.stage_path, f)
+            path = os.path.join(stage_path, f)
             remove_whatever_it_is(path)
     else:
         ignore_stage_files |= files_in_stage
@@ -460,8 +497,48 @@ def mutable_database(database, _store_dir_and_cache):
     store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
 
+@pytest.fixture()
+def dirs_with_libfiles(tmpdir_factory):
+    lib_to_libfiles = {
+        'libstdc++': ['libstdc++.so', 'libstdc++.tbd'],
+        'libgfortran': ['libgfortran.a', 'libgfortran.dylib'],
+        'libirc': ['libirc.a', 'libirc.so']
+    }
+
+    root = tmpdir_factory.mktemp('root')
+    lib_to_dirs = {}
+    i = 0
+    for lib, libfiles in lib_to_libfiles.items():
+        dirs = []
+        for libfile in libfiles:
+            root.ensure(str(i), dir=True)
+            root.join(str(i)).ensure(libfile)
+            dirs.append(str(root.join(str(i))))
+            i += 1
+        lib_to_dirs[lib] = dirs
+
+    all_dirs = list(itertools.chain.from_iterable(lib_to_dirs.values()))
+
+    yield lib_to_dirs, all_dirs
+
+
+@pytest.fixture(scope='function', autouse=True)
+def disable_compiler_execution(monkeypatch):
+    def noop(*args):
+        return []
+
+    # Compiler.determine_implicit_rpaths actually runs the compiler. So this
+    # replaces that function with a noop that simulates finding no implicit
+    # RPATHs
+    monkeypatch.setattr(
+        spack.compiler.Compiler,
+        '_get_compiler_link_paths',
+        noop
+    )
+
+
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages):
+def install_mockery(tmpdir, config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
@@ -557,8 +634,8 @@ def module_configuration(monkeypatch, request):
 ##########
 
 
-@pytest.fixture(scope='session')
-def mock_archive(tmpdir_factory):
+@pytest.fixture(scope='session', params=[('.tar.gz', 'z')])
+def mock_archive(request, tmpdir_factory):
     """Creates a very simple archive directory with a configure script and a
     makefile that installs to a prefix. Tars it up into an archive.
     """
@@ -587,8 +664,10 @@ def mock_archive(tmpdir_factory):
 
     # Archive it
     with tmpdir.as_cwd():
-        archive_name = '{0}.tar.gz'.format(spack.stage._source_path_subdir)
-        tar('-czf', archive_name, spack.stage._source_path_subdir)
+        archive_name = '{0}{1}'.format(spack.stage._source_path_subdir,
+                                       request.param[0])
+        tar('-c{0}f'.format(request.param[1]), archive_name,
+            spack.stage._source_path_subdir)
 
     Archive = collections.namedtuple('Archive',
                                      ['url', 'path', 'archive_file',
@@ -659,22 +738,28 @@ def mock_git_repository(tmpdir_factory):
 
     checks = {
         'master': Bunch(
-            revision='master', file=r0_file, args={'git': str(repodir)}
+            revision='master', file=r0_file, args={'git': url}
         ),
         'branch': Bunch(
             revision=branch, file=branch_file, args={
-                'git': str(repodir), 'branch': branch
+                'git': url, 'branch': branch
+            }
+        ),
+        'tag-branch': Bunch(
+            revision=tag_branch, file=tag_file, args={
+                'git': url, 'branch': tag_branch
             }
         ),
         'tag': Bunch(
-            revision=tag, file=tag_file, args={'git': str(repodir), 'tag': tag}
+            revision=tag, file=tag_file, args={'git': url, 'tag': tag}
         ),
         'commit': Bunch(
-            revision=r1, file=r1_file, args={'git': str(repodir), 'commit': r1}
+            revision=r1, file=r1_file, args={'git': url, 'commit': r1}
         )
     }
 
-    t = Bunch(checks=checks, url=url, hash=rev_hash, path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=rev_hash,
+              path=str(repodir), git_exe=git)
     yield t
 
 
@@ -910,3 +995,53 @@ def invalid_spec(request):
     """Specs that do not parse cleanly due to invalid formatting.
     """
     return request.param
+
+
+@pytest.fixture("module")
+def mock_test_repo(tmpdir_factory):
+    """Create an empty repository."""
+    repo_namespace = 'mock_test_repo'
+    repodir = tmpdir_factory.mktemp(repo_namespace)
+    repodir.ensure(spack.repo.packages_dir_name, dir=True)
+    yaml = repodir.join('repo.yaml')
+    yaml.write("""
+repo:
+    namespace: mock_test_repo
+""")
+
+    repo = spack.repo.RepoPath(str(repodir))
+    with spack.repo.swap(repo):
+        yield repo, repodir
+
+    shutil.rmtree(str(repodir))
+
+
+##########
+# Class and fixture to work around problems raising exceptions in directives,
+# which cause tests like test_from_list_url to hang for Python 2.x metaclass
+# processing.
+#
+# At this point only version and patch directive handling has been addressed.
+##########
+
+class MockBundle(object):
+    has_code = False
+    name = 'mock-bundle'
+    versions = {}
+
+
+@pytest.fixture
+def mock_directive_bundle():
+    """Return a mock bundle package for directive tests."""
+    return MockBundle()
+
+
+@pytest.fixture
+def clear_directive_functions():
+    """Clear all overidden directive functions for subsequent tests."""
+    yield
+
+    # Make sure any directive functions overidden by tests are cleared before
+    # proceeding with subsequent tests that may depend on the original
+    # functions.
+    spack.directives.DirectiveMeta._directives_to_be_executed = []

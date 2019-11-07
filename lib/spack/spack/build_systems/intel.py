@@ -786,7 +786,8 @@ class IntelPackage(PackageBase):
         debug_print(mkl_libs)
 
         if len(mkl_libs) < 3:
-            raise_lib_error('Cannot locate core MKL libraries:', mkl_libnames)
+            raise_lib_error('Cannot locate core MKL libraries:', mkl_libnames,
+                            'in:', self.component_lib_dir('mkl'))
 
         # The Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(

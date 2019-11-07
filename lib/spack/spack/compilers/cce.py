@@ -35,6 +35,10 @@ class Cce(Compiler):
     version_argument = '-V'
     version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         return "-h omp"

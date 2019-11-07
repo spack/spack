@@ -12,7 +12,6 @@ class OverrideModuleTemplates(Package):
 
     version('1.0', 'foobarbaz')
 
-    dotkit_template = 'override.txt'
     tcl_template = 'override.txt'
     lmod_template = 'override.txt'
 

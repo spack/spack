@@ -13,7 +13,7 @@ class AsperaCli(Package):
     homepage = "https://asperasoft.com"
     url      = "https://download.asperasoft.com/download/sw/cli/3.7.7/aspera-cli-3.7.7.608.927cce8-linux-64-release.sh"
 
-    version('3.7.7', 'e92140d809e7e65112a5d1cd49c442cf',
+    version('3.7.7', sha256='83efd03b699bdb1cac6c62befb3812342d6122217f4944f732ae7a135d578966',
             url='https://download.asperasoft.com/download/sw/cli/3.7.7/aspera-cli-3.7.7.608.927cce8-linux-64-release.sh',
             expand=False)
 
@@ -26,7 +26,8 @@ class AsperaCli(Package):
         filter_file('INSTALL_DIR=~/.aspera',
                     'INSTALL_DIR=%s' % prefix,
                     runfile,
-                    string=True)
+                    string=True,
+                    stop_at='__ARCHIVE_FOLLOWS__')
         # Install
         chmod = which('chmod')
         chmod('+x', runfile)

@@ -27,7 +27,7 @@ class Gtksourceview(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('gobject-introspection', type='build')
     depends_on('intltool', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('gettext')
     depends_on('glib@2.48.0:', when='@3.24.11:4.2.0')
     depends_on('gtkplus@3.20.0:', when='@3.24.11:4.2.0')
@@ -41,6 +41,14 @@ class Gtksourceview(AutotoolsPackage):
         url  = 'https://download.gnome.org/sources/gtksourceview/'
         url += '{0}/gtksourceview-{1}.tar.xz'
         return url.format(version.up_to(2), version)
+
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     # TODO: If https://github.com/spack/spack/pull/12344 is merged, this
     # method is unnecessary.

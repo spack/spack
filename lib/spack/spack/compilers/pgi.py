@@ -32,6 +32,10 @@ class Pgi(Compiler):
     version_argument = '-V'
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         return "-mp"
@@ -43,6 +47,8 @@ class Pgi(Compiler):
     @property
     def pic_flag(self):
         return "-fpic"
+
+    required_libs = ['libpgc', 'libpgf90']
 
     @property
     def c99_flag(self):

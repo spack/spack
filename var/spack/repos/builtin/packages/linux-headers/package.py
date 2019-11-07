@@ -14,7 +14,7 @@ class LinuxHeaders(Package):
     list_url = "https://www.kernel.org/pub/linux/kernel"
     list_depth = 2
 
-    version('4.9.10', 'ce5ab2a86c9b880617e36e84aa2deb6c')
+    version('4.9.10', sha256='bd6e05476fd8d9ea4945e11598d87bc97806bbc8d03556abbaaf809707661525')
 
     def setup_environment(self, spack_env, run_env):
         # This variable is used in the Makefile. If it is defined on the

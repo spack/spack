@@ -79,16 +79,15 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import sys
 import collections
-import ctypes
 import hashlib
 import itertools
 import os
 import re
 
+import six
+
 from operator import attrgetter
-from six import StringIO
-from six import string_types
-from six import iteritems
+import ruamel.yaml as yaml
 
 from llnl.util.filesystem import find_headers, find_libraries, is_exe
 from llnl.util.lang import key_ordering, HashableMap, ObjectWrapper, dedupe
@@ -186,9 +185,6 @@ _separators = '[\\%s]' % '\\'.join(color_formats.keys())
 #: every time we call str()
 _any_version = VersionList([':'])
 
-#: Max integer helps avoid passing too large a value to cyaml.
-maxint = 2 ** (ctypes.sizeof(ctypes.c_int) * 8 - 1) - 1
-
 default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
@@ -216,37 +212,47 @@ def colorize_spec(spec):
 
 @key_ordering
 class ArchSpec(object):
-    """ The ArchSpec class represents an abstract architecture specification
-        that a package should be built with.  At its core, each ArchSpec is
-        comprised of three elements: a platform (e.g. Linux), an OS (e.g.
-        RHEL6), and a target (e.g. x86_64).
-    """
+    def __init__(self, spec_or_platform_tuple=(None, None, None)):
+        """ Architecture specification a package should be built with.
 
-    # TODO: Formalize the specifications for architectures and then use
-    # the appropriate parser here to read these specifications.
-    def __init__(self, *args):
-        to_attr_string = lambda s: str(s) if s and s != "None" else None
+        Each ArchSpec is comprised of three elements: a platform (e.g. Linux),
+        an OS (e.g. RHEL6), and a target (e.g. x86_64).
 
-        self.platform, self.os, self.target = (None, None, None)
+        Args:
+            spec_or_platform_tuple (ArchSpec or str or tuple): if an ArchSpec
+                is passed it will be duplicated into the new instance.
+                Otherwise information on platform, OS and target should be
+                passed in either as a spec string or as a tuple.
+        """
+        # If another instance of ArchSpec was passed, duplicate it
+        if isinstance(spec_or_platform_tuple, ArchSpec):
+            self._dup(spec_or_platform_tuple)
+            return
 
-        if len(args) == 1:
-            spec_like = args[0]
-            if isinstance(spec_like, ArchSpec):
-                self._dup(spec_like)
-            elif isinstance(spec_like, string_types):
-                spec_fields = spec_like.split("-")
+        # If the argument to __init__ is a spec string, parse it
+        # and construct an ArchSpec
+        def _string_or_none(s):
+            if s and s != 'None':
+                return str(s)
+            return None
 
-                if len(spec_fields) == 3:
-                    self.platform, self.os, self.target = tuple(
-                        to_attr_string(f) for f in spec_fields)
-                else:
-                    raise ValueError("%s is an invalid arch spec" % spec_like)
-        elif len(args) == 3:
-            self.platform = to_attr_string(args[0])
-            self.os = to_attr_string(args[1])
-            self.target = to_attr_string(args[2])
-        elif len(args) != 0:
-            raise TypeError("Can't make arch spec from %s" % args)
+        if isinstance(spec_or_platform_tuple, six.string_types):
+            spec_fields = spec_or_platform_tuple.split("-")
+            msg = "invalid arch spec [{0}]"
+            assert len(spec_fields) == 3, msg.format(spec_or_platform_tuple)
+
+            platform, operating_system, target = spec_fields
+            platform_tuple = _string_or_none(platform),\
+                _string_or_none(operating_system), target
+
+        if isinstance(spec_or_platform_tuple, tuple):
+            platform, operating_system, target = spec_or_platform_tuple
+            platform_tuple = _string_or_none(platform), \
+                _string_or_none(operating_system), target
+            msg = "invalid arch spec tuple [{0}]"
+            assert len(platform_tuple) == 3, msg.format(platform_tuple)
+
+        self.platform, self.os, self.target = platform_tuple
 
     def _autospec(self, spec_like):
         if isinstance(spec_like, ArchSpec):
@@ -254,7 +260,7 @@ class ArchSpec(object):
         return ArchSpec(spec_like)
 
     def _cmp_key(self):
-        return (self.platform, self.os, self.target)
+        return self.platform, self.os, self.target
 
     def _dup(self, other):
         self.platform = other.platform
@@ -263,29 +269,29 @@ class ArchSpec(object):
 
     @property
     def platform(self):
+        """The platform of the architecture."""
         return self._platform
 
     @platform.setter
     def platform(self, value):
-        """ The platform of the architecture spec will be verified as a
-            supported Spack platform before it's set to ensure all specs
-            refer to valid platforms.
-        """
+        # The platform of the architecture spec will be verified as a
+        # supported Spack platform before it's set to ensure all specs
+        # refer to valid platforms.
         value = str(value) if value is not None else None
         self._platform = value
 
     @property
     def os(self):
+        """The OS of this ArchSpec."""
         return self._os
 
     @os.setter
     def os(self, value):
-        """ The OS of the architecture spec will update the platform field
-            if the OS is set to one of the reserved OS types so that the
-            default OS type can be resolved.  Since the reserved OS
-            information is only available for the host machine, the platform
-            will assumed to be the host machine's platform.
-        """
+        # The OS of the architecture spec will update the platform field
+        # if the OS is set to one of the reserved OS types so that the
+        # default OS type can be resolved.  Since the reserved OS
+        # information is only available for the host machine, the platform
+        # will assumed to be the host machine's platform.
         value = str(value) if value is not None else None
 
         if value in spack.architecture.Platform.reserved_oss:
@@ -305,19 +311,27 @@ class ArchSpec(object):
 
     @property
     def target(self):
+        """The target of the architecture."""
         return self._target
 
     @target.setter
     def target(self, value):
-        """ The target of the architecture spec will update the platform field
-            if the target is set to one of the reserved target types so that
-            the default target type can be resolved.  Since the reserved target
-            information is only available for the host machine, the platform
-            will assumed to be the host machine's platform.
-        """
-        value = str(value) if value is not None else None
+        # The target of the architecture spec will update the platform field
+        # if the target is set to one of the reserved target types so that
+        # the default target type can be resolved.  Since the reserved target
+        # information is only available for the host machine, the platform
+        # will assumed to be the host machine's platform.
 
-        if value in spack.architecture.Platform.reserved_targets:
+        def target_or_none(t):
+            if isinstance(t, spack.architecture.Target):
+                return t
+            if t and t != 'None':
+                return spack.architecture.Target(t)
+            return None
+
+        value = target_or_none(value)
+
+        if str(value) in spack.architecture.Platform.reserved_targets:
             curr_platform = str(spack.architecture.platform())
             self.platform = self.platform or curr_platform
 
@@ -328,25 +342,80 @@ class ArchSpec(object):
                     (value, self.platform, curr_platform))
 
             spec_platform = spack.architecture.get_platform(self.platform)
-            value = str(spec_platform.target(value))
+            value = spec_platform.target(value)
 
         self._target = value
 
     def satisfies(self, other, strict=False):
-        other = self._autospec(other)
-        sdict, odict = self.to_cmp_dict(), other.to_cmp_dict()
+        """Predicate to check if this spec satisfies a constraint.
 
-        if strict or self.concrete:
-            return all(getattr(self, attr) == getattr(other, attr)
-                       for attr in odict if odict[attr])
-        else:
-            return all(getattr(self, attr) == getattr(other, attr)
-                       for attr in odict if sdict[attr] and odict[attr])
+        Args:
+            other (ArchSpec or str): constraint on the current instance
+            strict (bool): if ``False`` the function checks if the current
+                instance *might* eventually satisfy the constraint. If
+                ``True`` it check if the constraint is satisfied right now.
+
+        Returns:
+            True if the constraint is satisfied, False otherwise.
+        """
+        other = self._autospec(other)
+
+        # Check platform and os
+        for attribute in ('platform', 'os'):
+            other_attribute = getattr(other, attribute)
+            self_attribute = getattr(self, attribute)
+            if strict or self.concrete:
+                if other_attribute and self_attribute != other_attribute:
+                    return False
+            else:
+                if other_attribute and self_attribute and \
+                        self_attribute != other_attribute:
+                    return False
+
+        # Check target
+        return self._satisfies_target(other.target, strict=strict)
+
+    def _satisfies_target(self, other_target, strict):
+        self_target = self.target
+
+        need_to_check = bool(other_target) if strict or self.concrete \
+            else bool(other_target and self_target)
+
+        # If there's no need to check we are fine
+        if not need_to_check:
+            return True
+
+        for target_range in str(other_target).split(','):
+            t_min, sep, t_max = target_range.partition(':')
+
+            # Checking against a single specific target
+            if not sep and self_target == t_min:
+                return True
+
+            if not sep and self_target != t_min:
+                return False
+
+            # Check against a range
+            min_ok = self_target.microarchitecture >= t_min if t_min else True
+            max_ok = self_target.microarchitecture <= t_max if t_max else True
+
+            if min_ok and max_ok:
+                return True
+
+        return False
 
     def constrain(self, other):
-        """ Projects all architecture fields that are specified in the given
-            spec onto the instance spec if they're missing from the instance
-            spec. This will only work if the two specs are compatible.
+        """Projects all architecture fields that are specified in the given
+        spec onto the instance spec if they're missing from the instance
+        spec.
+
+        This will only work if the two specs are compatible.
+
+        Args:
+            other (ArchSpec or str): constraints to be added
+
+        Returns:
+            True if the current instance was constrained, False otherwise.
         """
         other = self._autospec(other)
 
@@ -354,8 +423,8 @@ class ArchSpec(object):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         constrained = False
-        for attr, svalue in iteritems(self.to_cmp_dict()):
-            ovalue = getattr(other, attr)
+        for attr in ('platform', 'os', 'target'):
+            svalue, ovalue = getattr(self, attr), getattr(other, attr)
             if svalue is None and ovalue is not None:
                 setattr(self, attr, ovalue)
                 constrained = True
@@ -363,26 +432,22 @@ class ArchSpec(object):
         return constrained
 
     def copy(self):
+        """Copy the current instance and returns the clone."""
         clone = ArchSpec.__new__(ArchSpec)
         clone._dup(self)
         return clone
 
     @property
     def concrete(self):
-        return all(v for k, v in iteritems(self.to_cmp_dict()))
-
-    def to_cmp_dict(self):
-        """Returns a dictionary that can be used for field comparison."""
-        return dict([
-            ('platform', self.platform),
-            ('os', self.os),
-            ('target', self.target)])
+        """True if the spec is concrete, False otherwise"""
+        # return all(v for k, v in six.iteritems(self.to_cmp_dict()))
+        return self.platform and self.os and self.target
 
     def to_dict(self):
         d = syaml_dict([
             ('platform', self.platform),
             ('platform_os', self.os),
-            ('target', self.target)])
+            ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
     @staticmethod
@@ -400,22 +465,26 @@ class ArchSpec(object):
 
         """
         if not isinstance(d['arch'], dict):
-            return ArchSpec('spack09', 'unknown', d['arch'])
+            return ArchSpec(('spack09', 'unknown', d['arch']))
 
         d = d['arch']
-        if 'platform_os' in d:
-            return ArchSpec(d['platform'], d['platform_os'], d['target'])
-        else:
-            return ArchSpec(d['platform'], d['os'], d['target'])
+
+        operating_system = d.get('platform_os', None) or d['os']
+        target = spack.architecture.Target.from_dict_or_value(d['target'])
+
+        return ArchSpec((d['platform'], operating_system, target))
 
     def __str__(self):
         return "%s-%s-%s" % (self.platform, self.os, self.target)
 
     def __repr__(self):
+        # TODO: this needs to be changed (repr is meant to return valid
+        # TODO: Python code to return an instance equivalent to the current
+        # TODO: one).
         return str(self)
 
     def __contains__(self, string):
-        return string in str(self)
+        return string in str(self) or string in self.target
 
 
 @key_ordering
@@ -430,7 +499,7 @@ class CompilerSpec(object):
             arg = args[0]
             # If there is one argument, it's either another CompilerSpec
             # to copy or a string to parse
-            if isinstance(arg, string_types):
+            if isinstance(arg, six.string_types):
                 c = SpecParser().parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
@@ -618,7 +687,7 @@ class FlagMap(HashableMap):
         return clone
 
     def _cmp_key(self):
-        return tuple((k, tuple(v)) for k, v in sorted(iteritems(self)))
+        return tuple((k, tuple(v)) for k, v in sorted(six.iteritems(self)))
 
     def __str__(self):
         sorted_keys = [k for k in sorted(self.keys()) if self[k] != []]
@@ -945,7 +1014,7 @@ class Spec(object):
         self.external_module = external_module
         self._full_hash = full_hash
 
-        if isinstance(spec_like, string_types):
+        if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
             if len(spec_list) > 1:
                 raise ValueError("More than one spec in string: " + spec_like)
@@ -1032,9 +1101,9 @@ class Spec(object):
 
         if not self.architecture:
             new_vals = tuple(kwargs.get(arg, None) for arg in arch_attrs)
-            self.architecture = ArchSpec(*new_vals)
+            self.architecture = ArchSpec(new_vals)
         else:
-            new_attrvals = [(a, v) for a, v in iteritems(kwargs)
+            new_attrvals = [(a, v) for a, v in six.iteritems(kwargs)
                             if a in arch_attrs]
             for new_attr, new_value in new_attrvals:
                 if getattr(self.architecture, new_attr):
@@ -1186,7 +1255,7 @@ class Spec(object):
         # get initial values for kwargs
         depth = kwargs.get('depth', False)
         key_fun = kwargs.get('key', id)
-        if isinstance(key_fun, string_types):
+        if isinstance(key_fun, six.string_types):
             key_fun = attrgetter(key_fun)
         yield_root = kwargs.get('root', True)
         cover = kwargs.get('cover', 'nodes')
@@ -1294,8 +1363,8 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        yaml_text = syaml.dump(self.to_node_dict(hash=hash),
-                               default_flow_style=True, width=maxint)
+        yaml_text = syaml.dump(
+            self.to_node_dict(hash=hash), default_flow_style=True)
         sha = hashlib.sha1(yaml_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
@@ -1540,6 +1609,31 @@ class Spec(object):
 
         return syaml_dict([('spec', node_list)])
 
+    def to_record_dict(self):
+        """Return a "flat" dictionary with name and hash as top-level keys.
+
+        This is similar to ``to_node_dict()``, but the name and the hash
+        are "flattened" into the dictionary for easiler parsing by tools
+        like ``jq``.  Instead of being keyed by name or hash, the
+        dictionary "name" and "hash" fields, e.g.::
+
+            {
+              "name": "openssl"
+              "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
+              "version": "3.28.0",
+              "arch": {
+              ...
+            }
+
+        But is otherwise the same as ``to_node_dict()``.
+
+        """
+        dictionary = syaml_dict()
+        dictionary["name"] = self.name
+        dictionary["hash"] = self.dag_hash()
+        dictionary.update(self.to_node_dict()[self.name])
+        return dictionary
+
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(
             self.to_dict(hash), stream=stream, default_flow_style=False)
@@ -1634,7 +1728,7 @@ class Spec(object):
         formats so that reindex will work on old specs/databases.
         """
         for dep_name, elt in dependency_dict.items():
-            if isinstance(elt, string_types):
+            if isinstance(elt, six.string_types):
                 # original format, elt is just the dependency hash.
                 dag_hash, deptypes = elt, ['build', 'link']
             elif isinstance(elt, tuple):
@@ -1788,7 +1882,7 @@ class Spec(object):
             # Recurse on dependencies
             for s, s_dependencies in dep_like.items():
 
-                if isinstance(s, string_types):
+                if isinstance(s, six.string_types):
                     dag_node, dependency_types = name_and_dependency_types(s)
                 else:
                     dag_node, dependency_types = spec_and_dependency_types(s)
@@ -1840,7 +1934,7 @@ class Spec(object):
         stream -- string or file object to read from.
         """
         try:
-            data = syaml.load(stream)
+            data = yaml.load(stream)
             return Spec.from_dict(data)
         except MarkedYAMLError as e:
             raise syaml.SpackYAMLError("error parsing YAML spec:", str(e))
@@ -1859,7 +1953,7 @@ class Spec(object):
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
-    def _concretize_helper(self, presets=None, visited=None):
+    def _concretize_helper(self, concretizer, presets=None, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
            concretized, they're added to the presets, and ancestors
@@ -1881,8 +1975,9 @@ class Spec(object):
 
         # Concretize deps first -- this is a bottom-up process.
         for name in sorted(self._dependencies.keys()):
-            changed |= self._dependencies[
-                name].spec._concretize_helper(presets, visited)
+            changed |= self._dependencies[name].spec._concretize_helper(
+                concretizer, presets, visited
+            )
 
         if self.name in presets:
             changed |= self.constrain(presets[self.name])
@@ -1891,11 +1986,10 @@ class Spec(object):
             # to presets below, their constraints will all be merged, but we'll
             # still need to select a concrete package later.
             if not self.virtual:
-                import spack.concretize
-                concretizer = spack.concretize.concretizer
                 changed |= any(
                     (concretizer.concretize_architecture(self),
                      concretizer.concretize_compiler(self),
+                     concretizer.adjust_target(self),
                      # flags must be concretized after compiler
                      concretizer.concretize_compiler_flags(self),
                      concretizer.concretize_version(self),
@@ -1920,7 +2014,7 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes)
 
-    def _expand_virtual_packages(self):
+    def _expand_virtual_packages(self, concretizer):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
            dependencies.  Repeat until there are no virtual deps.
@@ -1960,8 +2054,6 @@ class Spec(object):
                 if not replacement:
                     # Get a list of possible replacements in order of
                     # preference.
-                    import spack.concretize
-                    concretizer = spack.concretize.concretizer
                     candidates = concretizer.choose_virtual_or_external(spec)
 
                     # Try the replacements in order, skipping any that cause
@@ -2050,12 +2142,13 @@ class Spec(object):
         force = False
 
         user_spec_deps = self.flat_dependencies(copy=False)
-
+        import spack.concretize
+        concretizer = spack.concretize.Concretizer(self.copy())
         while changed:
             changes = (self.normalize(force, tests=tests,
                                       user_spec_deps=user_spec_deps),
-                       self._expand_virtual_packages(),
-                       self._concretize_helper())
+                       self._expand_virtual_packages(concretizer),
+                       self._concretize_helper(concretizer))
             changed = any(changes)
             force = True
 
@@ -2148,6 +2241,21 @@ class Spec(object):
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
 
+        # If any spec in the DAG is deprecated, throw an error
+        deprecated = []
+        for x in self.traverse():
+            _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+            if rec and rec.deprecated_for:
+                deprecated.append(rec)
+        if deprecated:
+            msg = "\n    The following specs have been deprecated"
+            msg += " in favor of specs with the hashes shown:\n"
+            for rec in deprecated:
+                msg += '        %s  --> %s\n' % (rec.spec, rec.deprecated_for)
+            msg += '\n'
+            msg += "    For each package listed, choose another spec\n"
+            raise SpecDeprecatedError(msg)
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #
@@ -2164,6 +2272,10 @@ class Spec(object):
                             matches.append((x, conflict_spec, when, msg))
         if matches:
             raise ConflictsInSpecError(self, matches)
+
+        # Check if we can produce an optimized binary (will throw if
+        # there are declared inconsistencies)
+        self.architecture.target.optimization_flags(self.compiler)
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -2799,7 +2911,7 @@ class Spec(object):
 
             selfdeps = self.traverse(root=False)
             otherdeps = other.traverse(root=False)
-            if not all(any(d.satisfies(dep) for d in selfdeps)
+            if not all(any(d.satisfies(dep, strict=True) for d in selfdeps)
                        for dep in otherdeps):
                 return False
 
@@ -3258,7 +3370,7 @@ class Spec(object):
         color = kwargs.get('color', False)
         transform = kwargs.get('transform', {})
 
-        out = StringIO()
+        out = six.StringIO()
 
         def write(s, c=None):
             f = cescape(s)
@@ -3490,7 +3602,7 @@ class Spec(object):
             (k.upper(), v) for k, v in kwargs.get('transform', {}).items())
 
         length = len(format_string)
-        out = StringIO()
+        out = six.StringIO()
         named = escape = compiler = False
         named_str = fmt = ''
 
@@ -3765,6 +3877,20 @@ class Spec(object):
     def __repr__(self):
         return str(self)
 
+    @property
+    def platform(self):
+        return self.architecture.platform
+
+    @property
+    def os(self):
+        return self.architecture.os
+
+    @property
+    def target(self):
+        # This property returns the underlying microarchitecture object
+        # to give to the attribute the appropriate comparison semantic
+        return self.architecture.target.microarchitecture
+
 
 class LazySpecCache(collections.defaultdict):
     """Cache for Specs that uses a spec_like as key, and computes lazily
@@ -3779,10 +3905,11 @@ class LazySpecCache(collections.defaultdict):
         return value
 
 
-#
-# These are possible token types in the spec grammar.
-#
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL = range(11)
+#: These are possible token types in the spec grammar.
+HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+
+#: Regex for fully qualified spec names. (e.g., builtin.hdf5)
+spec_id_re = r'\w[\w.-]*'
 
 
 class SpecLexer(spack.parse.Lexer):
@@ -3791,7 +3918,6 @@ class SpecLexer(spack.parse.Lexer):
 
     def __init__(self):
         super(SpecLexer, self).__init__([
-            (r'/', lambda scanner, val: self.token(HASH,  val)),
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
             (r'\:', lambda scanner, val: self.token(COLON, val)),
@@ -3801,9 +3927,18 @@ class SpecLexer(spack.parse.Lexer):
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
-            # This is more liberal than identifier_re (see above).
-            # Checked by check_identifier() for better error messages.
-            (r'\w[\w.-]*', lambda scanner, val: self.token(ID,    val)),
+
+            # Filenames match before identifiers, so no initial filename
+            # component is parsed as a spec (e.g., in subdir/spec.yaml)
+            (r'[/\w.-]+\.yaml[^\b]*', lambda scanner, v: self.token(FILE, v)),
+
+            # Hash match after filename. No valid filename can be a hash
+            # (files end w/.yaml), but a hash can match a filename prefix.
+            (r'/', lambda scanner, val: self.token(HASH, val)),
+
+            # Identifiers match after filenames and hashes.
+            (spec_id_re, lambda scanner, val: self.token(ID, val)),
+
             (r'\s+', lambda scanner, val: None)],
             [EQ],
             [(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
@@ -3834,7 +3969,14 @@ class SpecParser(spack.parse.Parser):
 
         try:
             while self.next:
-                # TODO: clean this parsing up a bit
+                # Try a file first, but if it doesn't succeed, keep parsing
+                # as from_file may backtrack and try an id.
+                if self.accept(FILE):
+                    spec = self.spec_from_file()
+                    if spec:
+                        specs.append(spec)
+                        continue
+
                 if self.accept(ID):
                     self.previous = self.token
                     if self.accept(EQ):
@@ -3874,12 +4016,18 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                         specs.append(self.spec(None))
                     else:
-                        if self.accept(HASH):
+                        dep = None
+                        if self.accept(FILE):
+                            # this may return None, in which case we backtrack
+                            dep = self.spec_from_file()
+
+                        if not dep and self.accept(HASH):
                             # We're finding a dependency by hash for an
                             # anonymous spec
                             dep = self.spec_by_hash()
                             dep = dep.copy(deps=('link', 'run'))
-                        else:
+
+                        if not dep:
                             # We're adding a dependency to the last spec
                             self.expect(ID)
                             dep = self.spec(self.token.value)
@@ -3919,6 +4067,51 @@ class SpecParser(spack.parse.Parser):
                     s._set_architecture(platform=platform_default)
         return specs
 
+    def spec_from_file(self):
+        """Read a spec from a filename parsed on the input stream.
+
+        There is some care taken here to ensure that filenames are a last
+        resort, and that any valid package name is parsed as a name
+        before we consider it as a file. Specs are used in lots of places;
+        we don't want the parser touching the filesystem unnecessarily.
+
+        The parse logic is as follows:
+
+        1. We require that filenames end in .yaml, which means that no valid
+           filename can be interpreted as a hash (hashes can't have '.')
+
+        2. We avoid treating paths like /path/to/spec.yaml as hashes, or paths
+           like subdir/spec.yaml as ids by lexing filenames before hashes.
+
+        3. For spec names that match file and id regexes, like 'builtin.yaml',
+           we backtrack from spec_from_file() and treat them as spec names.
+
+        """
+        path = self.token.value
+
+        # don't treat builtin.yaml, builtin.yaml-cpp, etc. as filenames
+        if re.match(spec_id_re + '$', path):
+            self.push_tokens([spack.parse.Token(ID, self.token.value)])
+            return None
+
+        # Special case where someone omits a space after a filename. Consider:
+        #
+        #     libdwarf^/some/path/to/libelf.yamllibdwarf ^../../libelf.yaml
+        #
+        # The error is clearly an omitted space. To handle this, the FILE
+        # regex admits text *beyond* .yaml, and we raise a nice error for
+        # file names that don't end in .yaml.
+        if not path.endswith(".yaml"):
+            raise SpecFilenameError(
+                "Spec filename must end in .yaml: '{0}'".format(path))
+
+        # if we get here, we're *finally* interpreting path as a filename
+        if not os.path.exists(path):
+            raise NoSuchSpecFileError("No such spec file: '{0}'".format(path))
+
+        with open(path) as f:
+            return Spec.from_yaml(f)
+
     def parse_compiler(self, text):
         self.setup(text)
         return self.compiler()
@@ -3926,17 +4119,15 @@ class SpecParser(spack.parse.Parser):
     def spec_by_hash(self):
         self.expect(ID)
 
-        specs = spack.store.db.query()
-        matches = [spec for spec in specs if
-                   spec.dag_hash()[:len(self.token.value)] == self.token.value]
-
+        dag_hash = self.token.value
+        matches = spack.store.db.get_by_hash(dag_hash)
         if not matches:
-            raise NoSuchHashError(self.token.value)
+            raise NoSuchHashError(dag_hash)
 
         if len(matches) != 1:
             raise AmbiguousHashError(
                 "Multiple packages specify hash beginning '%s'."
-                % self.token.value, *matches)
+                % dag_hash, *matches)
 
         return matches[0]
 
@@ -4258,6 +4449,14 @@ class NoSuchHashError(SpecError):
             % hash)
 
 
+class SpecFilenameError(SpecError):
+    """Raised when a spec file name is invalid."""
+
+
+class NoSuchSpecFileError(SpecFilenameError):
+    """Raised when a spec file doesn't exist."""
+
+
 class RedundantSpecError(SpecError):
     def __init__(self, spec, addition):
         super(RedundantSpecError, self).__init__(
@@ -4309,3 +4508,7 @@ class ConflictsInSpecError(SpecError, RuntimeError):
 class SpecDependencyNotFoundError(SpecError):
     """Raised when a failure is encountered writing the dependencies of
     a spec."""
+
+
+class SpecDeprecatedError(SpecError):
+    """Raised when a spec concretizes to a deprecated spec or dependency."""

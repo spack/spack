@@ -38,6 +38,10 @@ class Gcc(Compiler):
     PrgEnv = 'PrgEnv-gnu'
     PrgEnv_compiler = 'gcc'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         return "-fopenmp"
@@ -108,6 +112,8 @@ class Gcc(Compiler):
     @property
     def pic_flag(self):
         return "-fPIC"
+
+    required_libs = ['libgcc', 'libgfortran']
 
     @classmethod
     def default_version(cls, cc):

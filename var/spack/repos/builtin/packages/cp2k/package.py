@@ -50,7 +50,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('cuda_arch',
             description='CUDA architecture',
             default='none',
-            values=('none', '35', '37', '60'),
+            values=('none', '35', '37', '60', '70'),
             multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
@@ -60,6 +60,14 @@ class Cp2k(MakefilePackage, CudaPackage):
             description=('Use CUDA also for FFTs in the PW part of CP2K'))
     variant('cuda_blas', default=False,
             description=('Use CUBLAS for general matrix operations in DBCSR'))
+
+    HFX_LMAX_RANGE = range(4, 8)
+
+    variant('lmax',
+            description='Maximum supported angular momentum (HFX and others)',
+            default='5',
+            values=list(HFX_LMAX_RANGE),
+            multi=False)
 
     depends_on('python', type='build')
 
@@ -80,11 +88,19 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
     # use pkg-config (support added in libxsmm-1.10) to link to libxsmm
     depends_on('pkgconfig', type='build', when='smm=libxsmm')
+    # ... and in CP2K 7.0+ for linking to libint2
+    depends_on('pkgconfig', type='build', when='@7.0:')
 
     # libint & libxc are always statically linked
-    depends_on('libint@1.1.4:1.2', when='@3.0:', type='build')
+    depends_on('libint@1.1.4:1.2', when='@3.0:6.9', type='build')
+    for lmax in HFX_LMAX_RANGE:
+        # libint2 can be linked dynamically again
+        depends_on('libint@2.6.0:+fortran tune=cp2k-lmax-{0}'.format(lmax),
+                   when='@7.0: lmax={0}'.format(lmax))
+
     depends_on('libxc@2.2.2:', when='+libxc@:5.5999', type='build')
-    depends_on('libxc@4.0.3:', when='+libxc@6.0:', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@6.0:6.9', type='build')
+    depends_on('libxc@4.0.3:', when='+libxc@7.0:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -105,8 +121,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     # a consistent/compat. combination is pulled in to the dependency graph.
     depends_on('sirius+fortran+vdwxc+shared+openmp', when='+sirius+openmp')
     depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
-    # to get JSON-based UPF format support used in combination with SIRIUS
-    depends_on('json-fortran', when='+sirius')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
     depends_on('py-numpy', when='@7:+cuda', type='build')
@@ -160,7 +174,6 @@ class Cp2k(MakefilePackage, CudaPackage):
         optimization_flags = {
             'gcc': [
                 '-O2',
-                '-mtune=native',
                 '-funroll-loops',
                 '-ftree-vectorize',
             ],
@@ -170,12 +183,16 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         dflags = ['-DNDEBUG']
         cppflags = [
-            '-D__FFTW3',
             '-D__LIBINT',
-            '-D__LIBINT_MAX_AM=6',
-            '-D__LIBDERIV_MAX_AM1=5',
+            '-D__FFTW3',
             fftw.headers.cpp_flags,
         ]
+
+        if '@:6.9' in spec:
+            cppflags += [
+                '-D__LIBINT_MAX_AM=6',
+                '-D__LIBDERIV_MAX_AM1=5',
+            ]
 
         if '^mpi@3:' in spec:
             cppflags.append('-D__MPI_VERSION=3')
@@ -221,14 +238,18 @@ class Cp2k(MakefilePackage, CudaPackage):
         if 'superlu-dist@4.3' in spec:
             ldflags.insert(0, '-Wl,--allow-multiple-definition')
 
-        # libint-1.x.y has to be linked statically to work around
-        # inconsistencies in its Fortran interface definition
-        # (short-int vs int) which otherwise causes segfaults at runtime
-        # due to wrong offsets into the shared library symbols.
-        libs.extend([
-            os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
-            os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
-        ])
+        if '@:6.9' in spec:
+            # libint-1.x.y has to be linked statically to work around
+            # inconsistencies in its Fortran interface definition
+            # (short-int vs int) which otherwise causes segfaults at runtime
+            # due to wrong offsets into the shared library symbols.
+            libs.extend([
+                os.path.join(spec['libint'].libs.directories[0], 'libderiv.a'),
+                os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
+            ])
+        else:
+            fcflags += ['$(shell pkg-config --cflags libint2)']
+            libs += ['$(shell pkg-config --libs libint2)']
 
         if '+plumed' in self.spec:
             dflags.extend(['-D__PLUMED2'])
@@ -287,14 +308,16 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs.append(wannier)
 
         if '+libxc' in spec:
-            libxc = spec['libxc:fortran,static']
-            cppflags += [
-                '-D__LIBXC',
-                libxc.headers.cpp_flags
-            ]
+            cppflags += ['-D__LIBXC']
 
-            ldflags.append(libxc.libs.search_flags)
-            libs.append(str(libxc.libs))
+            if '@:6.9' in spec:
+                libxc = spec['libxc:fortran,static']
+                cppflags += [libxc.headers.cpp_flags]
+                ldflags.append(libxc.libs.search_flags)
+                libs.append(str(libxc.libs))
+            else:
+                fcflags += ['$(shell pkg-config --cflags libxcf03)']
+                libs += ['$(shell pkg-config --libs libxcf03)']
 
         if '+pexsi' in self.spec:
             cppflags.append('-D__LIBPEXSI')
@@ -345,10 +368,6 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
             libs += list(sirius.libs)
 
-            cppflags.append('-D__JSON')
-            fcflags += ['$(shell pkg-config --cflags json-fortran)']
-            libs += ['$(shell pkg-config --libs json-fortran)']
-
         if self.spec.satisfies('+cuda'):
             cppflags += ['-D__ACC']
             libs += ['-lcudart', '-lnvrtc', '-lcuda']
@@ -369,6 +388,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                     '35': 'K40',
                     '37': 'K80',
                     '60': 'P100',
+                    '70': 'V100',
                 }[cuda_arch]
 
                 if (cuda_arch == '35'

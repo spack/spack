@@ -42,7 +42,11 @@ If it isn't on CRAN, try Bioconductor, another common R repository.
 For the purposes of this tutorial, we will be walking through
 `r-caret <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-caret/package.py>`_
 as an example. If you search for "CRAN caret", you will quickly find what
-you are looking for at https://cran.r-project.org/web/packages/caret/index.html.
+you are looking for at https://cran.r-project.org/package=caret.
+https://cran.r-project.org is the main CRAN website. However, CRAN also
+has a https://cloud.r-project.org site that automatically redirects to
+`mirrors around the world <https://cloud.r-project.org/mirrors.html>`_.
+For stability and performance reasons, we will use https://cloud.r-project.org/package=caret.
 If you search for "Package source", you will find the download URL for
 the latest release. Use this URL with ``spack create`` to create a new
 package.
@@ -93,8 +97,8 @@ If you look at the bottom of the page, you'll see:
    Please use the canonical form https://CRAN.R-project.org/package=caret to link to this page.
 
 Please uphold the wishes of the CRAN admins and use
-https://CRAN.R-project.org/package=caret as the homepage instead of
-https://cran.r-project.org/web/packages/caret/index.html. The latter may
+https://cloud.r-project.org/package=caret as the homepage instead of
+https://cloud.r-project.org/web/packages/caret/index.html. The latter may
 change without notice.
 
 ^^^
@@ -109,12 +113,12 @@ List URL
 ^^^^^^^^
 
 CRAN maintains a single webpage containing the latest release of every
-single package: https://cran.r-project.org/src/contrib/
+single package: https://cloud.r-project.org/src/contrib/
 
 Of course, as soon as a new release comes out, the version you were using
 in your package is no longer available at that URL. It is moved to an
 archive directory. If you search for "Old sources", you will find:
-https://cran.r-project.org/src/contrib/Archive/caret
+https://cloud.r-project.org/src/contrib/Archive/caret
 
 If you only specify the URL for the latest release, your package will
 no longer be able to fetch that version as soon as a new release comes
@@ -138,12 +142,12 @@ every R package needs this, the ``RPackage`` base class contains:
 
 
 Take a close look at the homepage for ``caret``. If you look at the
-"Depends" section, you'll notice that ``caret`` depends on "R (≥ 2.10)".
+"Depends" section, you'll notice that ``caret`` depends on "R (≥ 3.2.0)".
 You should add this to your package like so:
 
 .. code-block:: python
 
-   depends_on('r@2.10:', type=('build', 'run'))
+   depends_on('r@3.2.0:', type=('build', 'run'))
 
 
 ^^^^^^^^^^^^^^
@@ -162,7 +166,7 @@ and list all of their dependencies in the following sections:
 
 As far as Spack is concerned, all 3 of these dependency types
 correspond to ``type=('build', 'run')``, so you don't have to worry
-about them. If you are curious what they mean,
+about the details. If you are curious what they mean,
 https://github.com/spack/spack/issues/2951 has a pretty good summary:
 
    ``Depends`` is required and will cause those R packages to be *attached*,
@@ -193,6 +197,14 @@ R packages already have enough dependencies as it is, and adding
 optional dependencies can really slow down the concretization
 process. They can also introduce circular dependencies.
 
+A fifth rarely used section is:
+
+* Enhances
+
+This means that the package can be used as an optional dependency
+for another package. Again, these packages should **NOT** be listed
+as dependencies.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Core, recommended, and non-core packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,8 +220,8 @@ If you look at the ``caret`` homepage, you'll notice a few dependencies
 that don't have a link to the package, like ``methods``, ``stats``, and
 ``utils``. These packages are part of the core R distribution and are
 tied to the R version installed. You can basically consider these to be
-"R itself". These are so essential to R so it would not make sense that
-they could be updated via CRAN. If so, you would basically get a different
+"R itself". These are so essential to R that it would not make sense for
+them to be updated via CRAN. If you did, you would basically get a different
 version of R. Thus, they're updated when R is updated.
 
 You can find a list of these core libraries at:
@@ -265,7 +277,7 @@ Non-R dependencies
 
 Some packages depend on non-R libraries for linking. Check out the
 `r-stringi <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-stringi/package.py>`_
-package for an example: https://CRAN.R-project.org/package=stringi.
+package for an example: https://cloud.r-project.org/package=stringi.
 If you search for the text "SystemRequirements", you will see:
 
    ICU4C (>= 52, optional)
@@ -344,3 +356,11 @@ External documentation
 
 For more information on installing R packages, see:
 https://stat.ethz.ch/R-manual/R-devel/library/utils/html/INSTALL.html
+
+For more information on writing R packages, see:
+https://cloud.r-project.org/doc/manuals/r-release/R-exts.html
+
+In particular,
+https://cloud.r-project.org/doc/manuals/r-release/R-exts.html#Package-Dependencies
+has a great explanation of the difference between Depends, Imports,
+and LinkingTo.

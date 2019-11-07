@@ -14,7 +14,7 @@ class PyOset(PythonPackage):
 
     import_modules = ['oset']
 
-    version('0.1.3', 'f23e5a545d2c77df3916398d2d39a3ab')
+    version('0.1.3', sha256='4c1fd7dec96eeff9d3260995a8e37f9f415d0bdb79975f57824e68716ac8f904')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.5:', type=('build', 'run'))

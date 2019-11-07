@@ -13,11 +13,10 @@ class Nanoflann(CMakePackage):
     homepage = "https://github.com/jlblancoc/nanoflann"
     url      = "https://github.com/jlblancoc/nanoflann/archive/v1.2.3.tar.gz"
 
-    version('1.2.3', '92a0f44a631c41aa06f9716c51dcdb11')
+    version('1.2.3', sha256='5ef4dfb23872379fe9eb306aabd19c9df4cae852b72a923af01aea5e8d7a59c3')
 
     def patch(self):
-        if self.spec.satisfies('target=aarch64 %gcc@:5.9'):
-            filter_file('-mtune=native', '', 'CMakeLists.txt')
+        filter_file('-mtune=native', '', 'CMakeLists.txt')
 
     def cmake_args(self):
         args = ['-DBUILD_SHARED_LIBS=ON']

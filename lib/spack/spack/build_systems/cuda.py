@@ -56,11 +56,12 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    arch_platform = ' arch=x86_64 platform=linux'
+    arch_platform = ' target=x86_64: platform=linux'
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%gcc@6:', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%gcc@7:', when='+cuda ^cuda@:9.1' + arch_platform)
-    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130' + arch_platform)
+    conflicts('%gcc@9:', when='+cuda ^cuda@:10.1.243' + arch_platform)
     conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27' + arch_platform)
     conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5' + arch_platform)
     conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8' + arch_platform)
@@ -82,10 +83,11 @@ class CudaPackage(PackageBase):
     # https://docs.nvidia.com/cuda/archive/9.0/cuda-installation-guide-linux/index.html
     # https://docs.nvidia.com/cuda/archive/8.0/cuda-installation-guide-linux/index.html
 
-    arch_platform = ' arch=ppc64le platform=linux'
+    arch_platform = ' target=ppc64le: platform=linux'
     # information prior to CUDA 9 difficult to find
     conflicts('%gcc@6:', when='+cuda ^cuda@:9' + arch_platform)
-    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130' + arch_platform)
+    conflicts('%gcc@9:', when='+cuda ^cuda@:10.1.243' + arch_platform)
     conflicts('%pgi', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%pgi@:16', when='+cuda ^cuda@:9.1.185' + arch_platform)
     conflicts('%pgi@:17', when='+cuda ^cuda@:10' + arch_platform)

@@ -36,14 +36,13 @@ to help with that. Firstly, the ``install_hash_length`` parameter can
 set the length of the hash in the installation path from 1 to 32. The
 default path uses the full 32 characters.
 
-Secondly, it is
-also possible to modify the entire installation scheme. By default
-Spack uses
+Secondly, it is also possible to modify the entire installation
+scheme. By default Spack uses
 ``{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}``
 where the tokens that are available for use in this directive are the
-same as those understood by the ``Spec.format`` method. Using this parameter it
-is possible to use a different package layout or reduce the depth of
-the installation paths. For example
+same as those understood by the :meth:`~spack.spec.Spec.format`
+method. Using this parameter it is possible to use a different package
+layout or reduce the depth of the installation paths. For example
 
      .. code-block:: yaml
 
@@ -75,7 +74,6 @@ the location for each type of module.  e.g.:
    module_roots:
      tcl:    $spack/share/spack/modules
      lmod:   $spack/share/spack/lmod
-     dotkit: $spack/share/spack/dotkit
 
 See :ref:`modules` for details.
 
@@ -85,38 +83,46 @@ See :ref:`modules` for details.
 
 Spack is designed to run out of a user home directory, and on many
 systems the home directory is a (slow) network file system.  On most systems,
-building in a temporary file system results in faster builds than building
-in the home directory.  Usually, there is also more space available in
-the temporary location than in the home directory. So, Spack tries to
-create build stages in temporary space.
+building in a temporary file system is faster.  Usually, there is also more
+space available in the temporary location than in the home directory.  If the
+username is not already in the path, Spack will append the value of ``$user`` to
+the selected ``build_stage`` path.
+
+.. warning:: We highly recommend specifying ``build_stage`` paths that
+   distinguish between staging and other activities to ensure 
+   ``spack clean`` does not inadvertently remove unrelated files.
+   Spack prepends ``spack-stage-`` to temporary staging directory names to
+   reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
+   each specified path, as shown in the default settings and documented
+   examples, will add another layer of protection.
 
 By default, Spack's ``build_stage`` is configured like this:
 
 .. code-block:: yaml
 
    build_stage:
-    - $tempdir
-    - $spack/var/spack/stage
+    - $tempdir/$user/spack-stage
+    - ~/.spack/stage
 
-This is an ordered list of paths that Spack should search when trying to
+This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage.  The list is searched in
 order, and Spack will use the first directory to which it has write access.
-See :ref:`config-file-variables` for more on ``$tempdir`` and ``$spack``.
+
+Specifying `~/.spack/stage` first will ensure each user builds in their home
+directory.  The historic Spack stage path `$spack/var/spack/stage` will build
+directly inside the Spack instance.  See :ref:`config-file-variables` for more
+on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
-``build_stage``, and it creates a symbolic link to that directory in
-``$spack/var/spack/stage``. This is used to track the temporary
-directory.  After the package is successfully installed, Spack deletes
+``build_stage``.  After the package is successfully installed, Spack deletes
 the temporary directory it used to build.  Unsuccessful builds are not
 deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
 .. note::
 
-   The last item in the list is ``$spack/var/spack/stage``.  If this is the
-   only writable directory in the ``build_stage`` list, Spack will build
-   *directly* in ``$spack/var/spack/stage`` and will not link to temporary
-   space.
+   The build will fail if there is no writable directory in the ``build_stage``
+   list, where any user- and site-specific setting will be searched first.
 
 --------------------
 ``source_cache``
@@ -220,3 +226,24 @@ ccache`` to learn more about the default settings and how to change
 them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
+
+------------------
+``shared_linking``
+------------------
+
+Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
+so that they can find their dependencies. Has no effect on macOS.
+Two options are allowed:
+
+ 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker
+ 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker
+
+``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``
+and ld.so will search for libraries in transitive ``RPATHs`` of
+parent objects.
+
+``RUNPATH`` search paths have lower precedence than ``LD_LIBRARY_PATH``,
+and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
+the loading object.
+
+DO NOT MIX the two options within the same install tree.

@@ -13,7 +13,7 @@ class Libnova(AutotoolsPackage):
     homepage = "http://libnova.sourceforge.net"
     url      = "https://sourceforge.net/projects/libnova/files/libnova/v%200.15.0/libnova-0.15.0.tar.gz/download"
 
-    version('0.15.0', '756fdb55745cb78511f83a62c25f3be4')
+    version('0.15.0', sha256='7c5aa33e45a3e7118d77df05af7341e61784284f1e8d0d965307f1663f415bb1')
 
     depends_on('m4')
     depends_on('autoconf')

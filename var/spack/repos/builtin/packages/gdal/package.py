@@ -17,9 +17,9 @@ class Gdal(AutotoolsPackage):
     translation and processing.
     """
 
-    homepage   = "http://www.gdal.org/"
-    url        = "http://download.osgeo.org/gdal/3.0.1/gdal-3.0.1.tar.xz"
-    list_url   = "http://download.osgeo.org/gdal/"
+    homepage   = "https://www.gdal.org/"
+    url        = "https://download.osgeo.org/gdal/3.0.2/gdal-3.0.2.tar.xz"
+    list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
@@ -29,6 +29,7 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
     version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
@@ -61,6 +62,7 @@ class Gdal(AutotoolsPackage):
     variant('openjpeg',  default=False, description='Include JPEG-2000 support via OpenJPEG 2.x library')
     variant('xerces',    default=False, description='Use Xerces-C++ parser')
     variant('expat',     default=False, description='Use Expat XML parser')
+    variant('libkml',    default=False, description='Use Google libkml')
     variant('odbc',      default=False, description='Include ODBC support')
     variant('curl',      default=False, description='Include curl')
     variant('xml2',      default=False, description='Include libxml2')
@@ -113,11 +115,12 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
     depends_on('expat', when='+expat')
+    depends_on('libkml@1.3.0:', when='+libkml')
     depends_on('unixodbc', when='+odbc')
     depends_on('curl@7.10.8:', when='+curl')
     depends_on('libxml2', when='+xml2')
@@ -155,12 +158,12 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.
-        spack_env.set('PREFIX', self.prefix)
-        spack_env.set('DESTDIR', '/')
+        env.set('PREFIX', self.prefix)
+        env.set('DESTDIR', '/')
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -297,7 +300,7 @@ class Gdal(AutotoolsPackage):
 
         # https://trac.osgeo.org/gdal/wiki/NetCDF
         if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf'].prefix))
+            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
         else:
             args.append('--with-netcdf=no')
 
@@ -321,6 +324,13 @@ class Gdal(AutotoolsPackage):
             args.append('--with-expat={0}'.format(spec['expat'].prefix))
         else:
             args.append('--with-expat=no')
+
+        # https://trac.osgeo.org/gdal/wiki/LibKML
+        # https://gdal.org/drivers/vector/libkml.html
+        if '+libkml' in spec:
+            args.append('--with-libkml={0}'.format(spec['libkml'].prefix))
+        else:
+            args.append('--with-libkml=no')
 
         if '+odbc' in spec:
             args.append('--with-odbc={0}'.format(spec['unixodbc'].prefix))
@@ -430,8 +440,6 @@ class Gdal(AutotoolsPackage):
             '--with-mysql=no',
             # https://trac.osgeo.org/gdal/wiki/Ingres
             '--with-ingres=no',
-            # https://trac.osgeo.org/gdal/wiki/LibKML
-            '--with-libkml=no',
             '--with-dods-root=no',
             '--with-spatialite=no',
             '--with-idb=no',

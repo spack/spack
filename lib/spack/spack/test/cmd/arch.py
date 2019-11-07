@@ -44,3 +44,7 @@ def test_arch_target():
     arch('--target')
     arch('-f', '-t')
     arch('-b', '-t')
+
+
+def test_display_targets():
+    arch('--known-targets')

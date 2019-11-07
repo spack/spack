@@ -14,6 +14,8 @@ class Charliecloud(MakefilePackage):
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
+    version('0.12',   sha256='8a90f33406905cee935b5673a1159232b0b71845f4b6a26d28ca88f5d3f55891')
+    version('0.11',   sha256='942d3c7a74c978fd7420cb2b255e618f4f0acaafb6025160bc3a4deeb687ef3c')
     version('0.10',   sha256='5cf00b170e7568750ca0b828c43c0857c39674860b480d757057450d69f1a21e')
     version('0.9.10', sha256='44e821b62f9c447749d3ed0d2b2e44d374153058814704a5543e83f42db2a45a')
     version('0.9.9',  sha256='2624c5a0b19a01c9bca0acf873ceeaec401b9185a23e9108fadbcee0b9d74736')
@@ -24,7 +26,7 @@ class Charliecloud(MakefilePackage):
     version('0.9.2',  sha256='8d0e4804d412beef720a66f886a0a78bce42f3269e880ebf11f602581f8047d4')
     version('0.9.1',  sha256='8e69150a271285da71ece7a09b48251ef6593f72207c5126741d9976aa737d95')
     version('0.9.0',  sha256='7e74cb16e31fd9d502198f7509bab14d1049ec68ba90b15e277e76f805db9458')
-    version('0.2.4',  'b112de661c2c360174b42c99022c1967')
+    version('0.2.4',  sha256='b9a8ff54b9d296e30b2cf5d64a7e732ad09e14b989645aaa5eee8a1dc7ee34e5')
 
     depends_on('python@3.4:', type=('build', 'run'))
 
@@ -39,6 +41,9 @@ class Charliecloud(MakefilePackage):
     depends_on('rsync',               type='build', when='+docs')
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+
+    # bash automated testing harness (bats)
+    depends_on('bats@0.4.0', type='test')
 
     def url_for_version(self, version):
         if version >= Version('0.9.8'):

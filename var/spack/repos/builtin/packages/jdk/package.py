@@ -46,22 +46,14 @@ class Jdk(Package):
             url='http://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz')
     version('10.0.2_13', sha256='6633c20d53c50c20835364d0f3e172e0cbbce78fff81867488f22a6298fa372b', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz')
-    version('10.0.1_10', 'ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
+    version('10.0.1_10', sha256='ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz')
     version('1.8.0_202', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0', curl_options=curl_options,
             url='https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz')
-    version('1.8.0_181-b13', 'ef599e322eee42f6769991dd3e3b1a31', curl_options=curl_options,
-            url='http://download.oracle.com/otn-pub/java/jdk/8u181-b13/96a7b8442fe848ef90c96a2fad6ed6d1/jdk-8u181-linux-x64.tar.gz')
-    version('1.8.0_172-b11', 'eda2945e8c02b84adbf78f46c37b71c1', curl_options=curl_options,
-            url='http://download.oracle.com/otn-pub/java/jdk/8u172-b11/a58eab1ec242421181065cdc37240b08/jdk-8u172-linux-x64.tar.gz')
-    version('1.8.0_141-b15', '8cf4c4e00744bfafc023d770cb65328c', curl_options=curl_options,
+    version('1.8.0_141-b15', sha256='041d5218fbea6cd7e81c8c15e51d0d32911573af2ed69e066787a8dc8a39ba4f', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
-    version('1.8.0_131-b11', '75b2cb2249710d822a60f83e28860053', curl_options=curl_options,
+    version('1.8.0_131-b11', sha256='62b215bdfb48bace523723cdbb2157c665e6a25429c73828a32f00e587301236', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
-    version('1.8.0_92-b14', '65a1cc17ea362453a6e0eb4f13be76e4', curl_options=curl_options)
-    version('1.8.0_73-b02', '1b0120970aa8bc182606a16bf848a686', curl_options=curl_options)
-    version('1.8.0_66-b17', '88f31f3d642c3287134297b8c10e61bf', curl_options=curl_options)
-    version('1.7.0_80-b0', '6152f8a7561acf795ca4701daa10a965', curl_options=curl_options)
 
     provides('java')
     provides('java@12', when='@12.0:12.999')
@@ -71,8 +63,8 @@ class Jdk(Package):
     provides('java@8',  when='@1.8.0:1.8.999')
     provides('java@7',  when='@1.7.0:1.7.999')
 
-    conflicts('target=ppc64', msg='jdk is only available for x86_64')
-    conflicts('target=ppc64le', msg='jdk is only available for x86_64')
+    conflicts('target=ppc64:', msg='jdk is only available for x86_64')
+    conflicts('target=ppc64le:', msg='jdk is only available for x86_64')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('jdk')`
