@@ -46,11 +46,23 @@ class Libflame(AutotoolsPackage):
 
     # TODO: Libflame prefers to defer to an external
     # LAPACK library for small problems. Is this to be
-    # implemented in spack ?
+    # implemented in spack?
 
-    # There is a known issue with the makefile :
+    # Libflame has a secondary dependency on BLAS:
+    # https://github.com/flame/libflame/issues/24
+    depends_on('blas')
+
+    # There is a known issue with the makefile:
     # https://groups.google.com/forum/#!topic/libflame-discuss/lQKEfjyudOY
     patch('Makefile_5.1.0.patch', when='@5.1.0')
+
+    # Problems with permissions on installed libraries:
+    # https://github.com/flame/libflame/issues/24
+    patch('Makefile_5.2.0.patch', when='@5.2.0')
+
+    # Problems building on macOS:
+    # https://github.com/flame/libflame/issues/23
+    patch('Makefile_5.2.0_darwin.patch', when='@5.2.0')
 
     def flag_handler(self, name, flags):
         # -std=gnu99 at least required, old versions of GCC default to -std=c90
@@ -59,7 +71,10 @@ class Libflame(AutotoolsPackage):
         return (flags, None, None)
 
     def configure_args(self):
-        config_args = []
+        # Libflame has a secondary dependency on BLAS,
+        # but doesn't know which library name to expect:
+        # https://github.com/flame/libflame/issues/24
+        config_args = ['LIBS=' + self.spec['blas'].libs.link_flags]
 
         if '+lapack2flame' in self.spec:
             config_args.append("--enable-lapack2flame")
@@ -93,3 +108,9 @@ class Libflame(AutotoolsPackage):
         config_args.append("--enable-max-arg-list-hack")
 
         return config_args
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)

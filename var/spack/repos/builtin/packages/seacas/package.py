@@ -71,8 +71,8 @@ class Seacas(CMakePackage):
 
     # Everything should be compiled position independent (-fpic)
 
-    depends_on('netcdf@4.6.2:+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf@4.6.2:~mpi', when='~mpi')
+    depends_on('netcdf-c@4.6.2:+mpi+parallel-netcdf', when='+mpi')
+    depends_on('netcdf-c@4.6.2:~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
     depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
@@ -198,10 +198,10 @@ class Seacas(CMakePackage):
                 ])
 
         # ##################### Dependencies ##########################
-        # Always need NetCDF
+        # Always need NetCDF-C
         options.extend([
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
+            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf-c'].prefix,
         ])
 
         if '+metis' in spec:

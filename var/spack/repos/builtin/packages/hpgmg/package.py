@@ -17,15 +17,15 @@ class Hpgmg(Package):
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.4.tar.gz"
     git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
     tags = ['proxy-app']
 
     version('develop', branch='master')
-    version('0.4',          'abdabfe09453487299500b5bd8da4e6dc3d88477199bcfa38ac41d0b3c780f6f')
-    version('a0a5510df23b', 'b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
-    version('0.3',          '12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
+    version('0.4',          sha256='abdabfe09453487299500b5bd8da4e6dc3d88477199bcfa38ac41d0b3c780f6f')
+    version('a0a5510df23b', sha256='b9c50f25e541428d4735fb07344d1d0ed9fc821bdde918d8e0defa78c0d9b4f9')
+    version('0.3',          sha256='12a65da216fec91daea78594ae4b5a069c8f1a700f1ba21eed9f45a79a68c793')
 
     variant(
         'fe', default=False, description='Build finite element solver')
@@ -66,11 +66,6 @@ class Hpgmg(Package):
             cflags.append('-g')
         elif any(map(self.spec.satisfies, ['%gcc', '%clang', '%intel'])):
             cflags.append('-O3')
-            if self.compiler.target in ['x86_64']:
-                cflags.append('-march=native')
-            elif not self.spec.satisfies('target=aarch64 %gcc@:5.9'):
-                cflags.append('-mcpu=native')
-                cflags.append('-mtune=native')
         else:
             cflags.append('-O3')
 

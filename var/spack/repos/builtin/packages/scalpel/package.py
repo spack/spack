@@ -15,7 +15,7 @@ class Scalpel(MakefilePackage):
     homepage = "http://scalpel.sourceforge.net/index.html"
     url      = "https://downloads.sourceforge.net/project/scalpel/scalpel-0.5.3.tar.gz"
 
-    version('0.5.3', '682c9f1cd6ab2cb11c6866f303c673f0')
+    version('0.5.3', sha256='d45b569fe3aa5934883bc7216c243d53168351c23e020d96a46fa77a1563b65e')
 
     depends_on('perl@5.10.0:')
 

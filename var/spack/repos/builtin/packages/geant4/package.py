@@ -17,8 +17,8 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
-    version('10.04', 'b84beeb756821d0c61f7c6c93a2b83de')
-    version('10.03.p03', 'ccae9fd18e3908be78784dc207f2d73b')
+    version('10.04', sha256='f6d883132f110eb036c69da2b21df51f13c585dc7b99d4211ddd32f4ccee1670')
+    version('10.03.p03', sha256='a164f49c038859ab675eec474d08c9d02be8c4be9c0c2d3aa8e69adf89e1e138')
 
     variant('qt', default=False, description='Enable Qt support')
     variant('vecgeom', default=False, description='Enable vecgeom support')

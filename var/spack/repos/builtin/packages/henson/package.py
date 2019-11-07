@@ -10,10 +10,9 @@ class Henson(CMakePackage):
     """Cooperative multitasking for in situ processing."""
 
     homepage = "https://github.com/henson-insitu/henson"
-    url      = "https://github.com/henson-insitu/henson"
     git      = "https://github.com/henson-insitu/henson.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
     depends_on('mpi')
 

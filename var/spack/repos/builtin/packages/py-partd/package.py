@@ -14,7 +14,7 @@ class PyPartd(PythonPackage):
 
     import_modules = ['partd']
 
-    version('0.3.8', '554d0e6511c0df4c907f034858be847f')
+    version('0.3.8', sha256='67291f1c4827cde3e0148b3be5d69af64b6d6169feb9ba88f0a6cfe77089400f')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-locket', type=('build', 'run'))

@@ -14,8 +14,7 @@ class LuaBitlib(Package):
     homepage = "http://luaforge.net/projects/bitlib"
     url      = "https://luarocks.org/bitlib-23-2.src.rock"
 
-    version('23', '9fee36a6e512c54bf6364dfe97d1d871',
-            url="https://luarocks.org/bitlib-23-2.src.rock",
+    version('23-2', sha256='fe226edc2808162e67418e6b2c98befc0ed25a489ecffc6974fa153f951c0c34',
             expand=False)
 
     extends('lua')

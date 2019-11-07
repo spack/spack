@@ -12,6 +12,6 @@ class PyPickleshare(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pickleshare"
     url      = "https://pypi.io/packages/source/p/pickleshare/pickleshare-0.7.4.tar.gz"
 
-    version('0.7.4', '6a9e5dd8dfc023031f6b7b3f824cab12')
+    version('0.7.4', sha256='84a9257227dfdd6fe1b4be1319096c20eb85ff1e82c7932f36efccfe1b09737b')
 
     depends_on('py-setuptools', type='build')

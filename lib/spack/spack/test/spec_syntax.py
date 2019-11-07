@@ -3,9 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 import shlex
 
+import llnl.util.filesystem as fs
+
+import spack.hash_types as ht
+import spack.repo
 import spack.store
 import spack.spec as sp
 from spack.parse import Token
@@ -14,6 +19,7 @@ from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
 from spack.spec import DuplicateArchitectureError, DuplicateVariantError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
+from spack.spec import SpecFilenameError, NoSuchSpecFileError
 
 
 # Sample output for a complex lexing.
@@ -99,6 +105,7 @@ class TestSpecSyntax(object):
         """Check that the provided spec parses to the provided token list."""
         spec = shlex.split(str(spec))
         lex_output = sp.SpecLexer().lex(spec)
+        assert len(tokens) == len(lex_output), "unexpected number of tokens"
         for tok, spec_tok in zip(tokens, lex_output):
             if tok.type == sp.ID or tok.type == sp.VAL:
                 assert tok == spec_tok
@@ -109,6 +116,7 @@ class TestSpecSyntax(object):
     def _check_raises(self, exc_type, items):
         for item in items:
             with pytest.raises(exc_type):
+                print("CHECKING: ", item, "=======================")
                 Spec(item)
 
     # ========================================================================
@@ -177,7 +185,7 @@ class TestSpecSyntax(object):
         self.check_parse(
             "mvapich_foo"
             " ^_openmpi@1.2:1.4,1.6%intel@12.1 debug=2 ~qt_4"
-            " ^stackwalker@8.1_1e arch=test-redhat6-x86_32")
+            " ^stackwalker@8.1_1e arch=test-redhat6-x86")
 
     def test_canonicalize(self):
         self.check_parse(
@@ -433,6 +441,216 @@ class TestSpecSyntax(object):
         ]
         self._check_raises(DuplicateArchitectureError, duplicates)
 
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_simple(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        # Check an absolute path to spec.yaml by itself:
+        #     "spack spec /path/to/libdwarf.yaml"
+        specs = sp.parse(specfile.strpath)
+        assert len(specs) == 1
+
+        # Check absolute path to spec.yaml mixed with a clispec, e.g.:
+        #     "spack spec mvapich_foo /path/to/libdwarf.yaml"
+        specs = sp.parse('mvapich_foo {0}'.format(specfile.strpath))
+        assert len(specs) == 2
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_filename_missing_slash_as_spec(self, mock_packages, tmpdir):
+        """Ensure that libelf.yaml parses as a spec, NOT a file."""
+        s = Spec('libelf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        # write the file to the current directory to make sure it exists,
+        # and that we still do not parse the spec as a file.
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        # Check the spec `libelf.yaml` in the working directory, which
+        # should evaluate to a spec called `yaml` in the `libelf`
+        # namespace, NOT a spec for `libelf`.
+        with tmpdir.as_cwd():
+            specs = sp.parse("libelf.yaml")
+        assert len(specs) == 1
+
+        spec = specs[0]
+        assert spec.name == "yaml"
+        assert spec.namespace == "libelf"
+        assert spec.fullname == "libelf.yaml"
+
+        # check that if we concretize this spec, we get a good error
+        # message that mentions we might've meant a file.
+        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+            spec.concretize()
+        assert exc_info.value.long_message
+        assert ("Did you mean to specify a filename with './libelf.yaml'?"
+                in exc_info.value.long_message)
+
+        # make sure that only happens when the spec ends in yaml
+        with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
+            Spec('builtin.mock.doesnotexist').concretize()
+        assert (
+            not exc_info.value.long_message or (
+                "Did you mean to specify a filename with" not in
+                exc_info.value.long_message
+            )
+        )
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_dependency(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
+
+        print("")
+        print("")
+        print("PARSING HERE")
+
+        # Make sure we can use yaml path as dependency, e.g.:
+        #     "spack spec libdwarf ^ /path/to/libelf.yaml"
+        specs = sp.parse('libdwarf ^ {0}'.format(specfile.strpath))
+        assert len(specs) == 1
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_relative_paths(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+        parent_dir = os.path.basename(specfile.dirname)
+
+        # Relative path to specfile
+        with fs.working_dir(specfile.dirname):
+            # Test for command like: "spack spec libelf.yaml"
+            # This should parse a single spec, but should not concretize.
+            # See test_parse_filename_missing_slash_as_spec()
+            specs = sp.parse('{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Make sure this also works: "spack spec ./libelf.yaml"
+            specs = sp.parse('./{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('../{0}/{1}'.format(parent_dir, file_name))
+            assert len(specs) == 1
+
+            # Should also handle mixed clispecs and relative paths, e.g.:
+            #     "spack spec mvapich_foo ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('mvapich_foo ../{0}/{1}'.format(
+                parent_dir, file_name))
+            assert len(specs) == 2
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_relative_subdir_path(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.mkdir('subdir').join('libdwarf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+
+        # Relative path to specfile
+        with tmpdir.as_cwd():
+            assert os.path.exists('subdir/{0}'.format(file_name))
+
+            # Test for command like: "spack spec libelf.yaml"
+            specs = sp.parse('subdir/{0}'.format(file_name))
+            assert len(specs) == 1
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_dependency_relative_paths(self, mock_packages, tmpdir):
+        s = Spec('libdwarf')
+        s.concretize()
+
+        specfile = tmpdir.join('libelf.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s['libelf'].to_yaml(hash=ht.build_hash))
+
+        file_name = specfile.basename
+        parent_dir = os.path.basename(specfile.dirname)
+
+        # Relative path to specfile
+        with fs.working_dir(specfile.dirname):
+            # Test for command like: "spack spec libelf.yaml"
+            specs = sp.parse('libdwarf^{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Make sure this also works: "spack spec ./libelf.yaml"
+            specs = sp.parse('libdwarf^./{0}'.format(file_name))
+            assert len(specs) == 1
+
+            # Should also be accepted: "spack spec ../<cur-dir>/libelf.yaml"
+            specs = sp.parse('libdwarf^../{0}/{1}'.format(
+                parent_dir, file_name))
+            assert len(specs) == 1
+
+    def test_parse_yaml_error_handling(self):
+        self._check_raises(NoSuchSpecFileError, [
+            # Single spec that looks like a yaml path
+            '/bogus/path/libdwarf.yaml',
+            '../../libdwarf.yaml',
+            './libdwarf.yaml',
+            # Dependency spec that looks like a yaml path
+            'libdwarf^/bogus/path/libelf.yaml',
+            'libdwarf ^../../libelf.yaml',
+            'libdwarf^ ./libelf.yaml',
+            # Multiple specs, one looks like a yaml path
+            'mvapich_foo /bogus/path/libelf.yaml',
+            'mvapich_foo ../../libelf.yaml',
+            'mvapich_foo ./libelf.yaml',
+        ])
+
+    def test_nice_error_for_no_space_after_spec_filename(self):
+        """Ensure that omitted spaces don't give weird errors about hashes."""
+        self._check_raises(SpecFilenameError, [
+            '/bogus/path/libdwarf.yamlfoobar',
+            'libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml',
+        ])
+
+    @pytest.mark.usefixtures('config')
+    def test_yaml_spec_not_filename(self, mock_packages, tmpdir):
+        with pytest.raises(spack.repo.UnknownPackageError):
+            Spec('builtin.mock.yaml').concretize()
+
+        with pytest.raises(spack.repo.UnknownPackageError):
+            Spec('builtin.mock.yamlfoobar').concretize()
+
+    @pytest.mark.usefixtures('config')
+    def test_parse_yaml_variant_error(self, mock_packages, tmpdir):
+        s = Spec('a')
+        s.concretize()
+
+        specfile = tmpdir.join('a.yaml')
+
+        with specfile.open('w') as f:
+            f.write(s.to_yaml(hash=ht.build_hash))
+
+        with pytest.raises(RedundantSpecError):
+            # Trying to change a variant on a concrete spec is an error
+            sp.parse('{0} ~bvv'.format(specfile.strpath))
+
     # ========================================================================
     # Lex checks
     # ========================================================================
@@ -532,3 +750,16 @@ class TestSpecSyntax(object):
             "mvapich_foo debug= 4 "
             "^ _openmpi @1.2 : 1.4 , 1.6 % intel @ 12.1 : 12.6 + debug - qt_4 "
             "^ stackwalker @ 8.1_1e")
+
+    @pytest.mark.parametrize('expected_tokens,spec_string', [
+        ([Token(sp.ID, 'target'),
+          Token(sp.EQ, '='),
+          Token(sp.VAL, 'broadwell')],
+         'target=broadwell'),
+        ([Token(sp.ID, 'target'),
+          Token(sp.EQ, '='),
+          Token(sp.VAL, ':broadwell,icelake')],
+         'target=:broadwell,icelake')
+    ])
+    def test_target_tokenization(self, expected_tokens, spec_string):
+        self.check_lex(expected_tokens, spec_string)

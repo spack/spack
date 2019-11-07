@@ -4,12 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 import re
 import itertools
 import shutil
 import tempfile
 
-import llnl.util.filesystem
+import llnl.util.lang
+from llnl.util.filesystem import (
+    path_contains_subdirectory, paths_containing_libs)
 import llnl.util.tty as tty
 
 import spack.error
@@ -79,13 +82,7 @@ _LINK_DIR_ARG = re.compile(r'^-L(.:)?(?P<dir>[/\\].*)')
 _LIBPATH_ARG = re.compile(r'^[-/](LIBPATH|libpath):(?P<dir>.*)')
 
 
-def is_subdirectory(path, prefix):
-    path = os.path.abspath(path)
-    prefix = os.path.abspath(prefix) + os.path.sep
-    return path.startswith(prefix)
-
-
-def _parse_implicit_rpaths(string):
+def _parse_link_paths(string):
     """Parse implicit link paths from compiler debug output.
 
     This gives the compiler runtime library paths that we need to add to
@@ -142,16 +139,34 @@ def _parse_implicit_rpaths(string):
         if normalized_path not in visited:
             implicit_link_dirs.append(normalized_path)
             visited.add(normalized_path)
-    implicit_link_dirs = filter_system_paths(implicit_link_dirs)
-
-    # Additional filtering: we also want to exclude paths that are
-    # subdirectories of /usr/lib/ and /lib/
-    implicit_link_dirs = list(
-        path for path in implicit_link_dirs
-        if not any(is_subdirectory(path, d) for d in ['/lib/', '/usr/lib/']))
 
     tty.debug('found link dirs: %s' % ', '.join(implicit_link_dirs))
     return implicit_link_dirs
+
+
+def _parse_non_system_link_dirs(string):
+    """Parses link paths out of compiler debug output.
+
+    Args:
+        string (str): compiler debug output as a string
+
+    Returns:
+        (list of str): implicit link paths parsed from the compiler output
+    """
+    link_dirs = _parse_link_paths(string)
+
+    # Return set of directories containing needed compiler libs, minus
+    # system paths. Note that 'filter_system_paths' only checks for an
+    # exact match, while 'in_system_subdirectory' checks if a path contains
+    # a system directory as a subdirectory
+    link_dirs = filter_system_paths(link_dirs)
+    return list(p for p in link_dirs if not in_system_subdirectory(p))
+
+
+def in_system_subdirectory(path):
+    system_dirs = ['/lib/', '/lib64/', '/usr/lib/', '/usr/lib64/',
+                   '/usr/local/lib/', '/usr/local/lib64/']
+    return any(path_contains_subdirectory(path, x) for x in system_dirs)
 
 
 class Compiler(object):
@@ -187,6 +202,10 @@ class Compiler(object):
     #: Regex used to extract version from compiler's output
     version_regex = '(.*)'
 
+    # These libraries are anticipated to be required by all executables built
+    # by any compiler
+    _all_compiler_rpath_libraries = ['libc', 'libc++', 'libstdc++']
+
     # Default flags used by a compiler to set an rpath
     @property
     def cc_rpath_arg(self):
@@ -203,6 +222,24 @@ class Compiler(object):
     @property
     def fc_rpath_arg(self):
         return '-Wl,-rpath,'
+
+    @property
+    def linker_arg(self):
+        """Flag that need to be used to pass an argument to the linker."""
+        return '-Wl,'
+
+    @property
+    def disable_new_dtags(self):
+        if platform.system() == 'Darwin':
+            return ''
+        return '--disable-new-dtags'
+
+    @property
+    def enable_new_dtags(self):
+        if platform.system() == 'Darwin':
+            return ''
+        return '--enable-new-dtags'
+
     # Cray PrgEnv name that can be used to load this compiler
     PrgEnv = None
     # Name of module used to switch versions of this compiler
@@ -210,7 +247,7 @@ class Compiler(object):
 
     def __init__(self, cspec, operating_system, target,
                  paths, modules=[], alias=None, environment=None,
-                 extra_rpaths=None, implicit_rpaths=None,
+                 extra_rpaths=None, enable_implicit_rpaths=None,
                  **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
@@ -218,7 +255,7 @@ class Compiler(object):
         self.modules = modules
         self.alias = alias
         self.extra_rpaths = extra_rpaths
-        self.implicit_rpaths = implicit_rpaths
+        self.enable_implicit_rpaths = enable_implicit_rpaths
 
         def check(exe):
             if exe is None:
@@ -251,31 +288,28 @@ class Compiler(object):
     def version(self):
         return self.spec.version
 
-    @classmethod
-    def verbose_flag(cls):
+    def implicit_rpaths(self):
+        if self.enable_implicit_rpaths is False:
+            return []
+
+        exe_paths = [
+            x for x in [self.cc, self.cxx, self.fc, self.f77] if x]
+        link_dirs = self._get_compiler_link_paths(exe_paths)
+
+        all_required_libs = (
+            list(self.required_libs) + Compiler._all_compiler_rpath_libraries)
+        return list(paths_containing_libs(link_dirs, all_required_libs))
+
+    @property
+    def required_libs(self):
+        """For executables created with this compiler, the compiler libraries
+        that would be generally required to run it.
         """
-        This property should be overridden in the compiler subclass if a
-        verbose flag is available.
-
-        If it is not overridden, it is assumed to not be supported.
-        """
-
-    @classmethod
-    def parse_implicit_rpaths(cls, string):
-        """Parses link paths out of compiler debug output.
-
-        Args:
-            string (str): compiler debug output as a string
-
-        Returns:
-            (list of str): implicit link paths parsed from the compiler output
-
-        Subclasses can override this to customize.
-        """
-        return _parse_implicit_rpaths(string)
+        # By default every compiler returns the empty list
+        return []
 
     @classmethod
-    def determine_implicit_rpaths(cls, paths):
+    def _get_compiler_link_paths(cls, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
@@ -293,9 +327,22 @@ class Compiler(object):
             output = str(compiler_exe(cls.verbose_flag(), fin, '-o', fout,
                                       output=str, error=str))  # str for py2
 
-            return cls.parse_implicit_rpaths(output)
+            return _parse_non_system_link_dirs(output)
+        except spack.util.executable.ProcessError as pe:
+            tty.debug('ProcessError: Command exited with non-zero status: ' +
+                      pe.long_message)
+            return []
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+    @classmethod
+    def verbose_flag(cls):
+        """
+        This property should be overridden in the compiler subclass if a
+        verbose flag is available.
+
+        If it is not overridden, it is assumed to not be supported.
+        """
 
     # This property should be overridden in the compiler subclass if
     # OpenMP is supported by that compiler

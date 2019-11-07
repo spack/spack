@@ -15,9 +15,9 @@ class GobjectIntrospection(Package):
     homepage = "https://wiki.gnome.org/Projects/GObjectIntrospection"
     url      = "http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/1.49/gobject-introspection-1.49.2.tar.xz"
 
-    version('1.56.1', '5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b')
-    version('1.49.2', 'c47a76b05b2d8438089f519922180747')
-    version('1.48.0', '01301fa9019667d48e927353e08bc218')
+    version('1.56.1', sha256='5b2875ccff99ff7baab63a34b67f8c920def240e178ff50add809e267d9ea24b')
+    version('1.49.2', sha256='73d59470ba1a546b293f54d023fd09cca03a951005745d86d586b9e3a8dde9ac')
+    version('1.48.0', sha256='fa275aaccdbfc91ec0bc9a6fd0562051acdba731e7d584b64a277fec60e75877')
 
     depends_on("glib@2.49.2:", when="@1.49.2:")
     # version 1.48.0 build fails with glib 2.49.4

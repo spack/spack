@@ -17,7 +17,7 @@ class Libwindowswm(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libWindowsWM"
     url      = "https://www.x.org/archive/individual/lib/libWindowsWM-1.0.1.tar.gz"
 
-    version('1.0.1', 'f260e124706ff6209c566689528667c6')
+    version('1.0.1', sha256='94f9c0add3bad38ebd84bc43d854207c4deaaa74fb15339276e022546124b98a')
 
     depends_on('libx11')
     depends_on('libxext')

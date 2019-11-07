@@ -83,7 +83,7 @@ def compiler_find(args):
     compilers = [c for c in spack.compilers.find_compilers(paths)]
     new_compilers = []
     for c in compilers:
-        arch_spec = ArchSpec(None, c.operating_system, c.target)
+        arch_spec = ArchSpec((None, c.operating_system, c.target))
         same_specs = spack.compilers.compilers_for_spec(
             c.spec, arch_spec, init_config=False)
 

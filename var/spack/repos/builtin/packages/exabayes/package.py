@@ -13,7 +13,7 @@ class Exabayes(AutotoolsPackage):
     homepage = "https://sco.h-its.org/exelixis/web/software/exabayes/"
     url      = "https://sco.h-its.org/exelixis/resource/download/software/exabayes-1.5.tar.gz"
 
-    version('1.5', '6a734777b8f8eff0a520306500c8c419')
+    version('1.5', sha256='e401f1b4645e67e8879d296807131d0ab79bba81a1cd5afea14d7c3838b095a2')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
 

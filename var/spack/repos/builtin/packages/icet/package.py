@@ -15,7 +15,7 @@ class Icet(CMakePackage):
     git      = "https://gitlab.kitware.com/icet/icet.git"
 
     version('develop', branch='master')
-    version('2.1.1', '4f971c51105a64937460d482adca2a6c')
+    version('2.1.1', sha256='04cc5b7aa5b3ec95b255febdcfc2312e553ce3db5ca305526803d5737561ec32')
 
     depends_on('mpi')
 

@@ -16,6 +16,7 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
+import platform
 import os.path
 import tempfile
 import llnl.util.filesystem as fs
@@ -24,9 +25,9 @@ import llnl.util.tty as tty
 from itertools import chain
 from functools_backport import reverse_order
 from contextlib import contextmanager
-from six import iteritems
 
 import llnl.util.lang
+import llnl.util.cpu as cpu
 
 import spack.repo
 import spack.abi
@@ -40,10 +41,6 @@ from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
 
 
-#: Concretizer singleton
-concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
-
-
 #: impements rudimentary logic for ABI compatibility
 _abi = llnl.util.lang.Singleton(lambda: spack.abi.ABI())
 
@@ -52,25 +49,17 @@ class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
-    def __init__(self):
-        # controls whether we check that compiler versions actually exist
-        # during concretization. Used for testing and for mirror creation
-        self.check_for_compiler_existence = not config.get(
-            'config:install_missing_compilers', False)
+    #: Controls whether we check that compiler versions actually exist
+    #: during concretization. Used for testing and for mirror creation
+    check_for_compiler_existence = None
 
-    @contextmanager
-    def disable_compiler_existence_check(self):
-        saved = self.check_for_compiler_existence
-        self.check_for_compiler_existence = False
-        yield
-        self.check_for_compiler_existence = saved
-
-    @contextmanager
-    def enable_compiler_existence_check(self):
-        saved = self.check_for_compiler_existence
-        self.check_for_compiler_existence = True
-        yield
-        self.check_for_compiler_existence = saved
+    def __init__(self, abstract_spec=None):
+        if Concretizer.check_for_compiler_existence is None:
+            Concretizer.check_for_compiler_existence = not config.get(
+                'config:install_missing_compilers', False
+            )
+        self.abstract_spec = abstract_spec
+        self._adjust_target_answer_generator = None
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -234,31 +223,101 @@ class Concretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        try:
-            # Get the nearest architecture with any fields set
-            nearest = next(p for p in spec.traverse(direction='parents')
-                           if (p.architecture and p is not spec))
-            nearest_arch = nearest.architecture
-        except StopIteration:
-            # Default to the system architecture if nothing set
-            nearest_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-
-        spec_changed = False
-
         # ensure type safety for the architecture
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
-            spec_changed = True
 
-        # replace each of the fields (platform, os, target) separately
-        nearest_dict = nearest_arch.to_cmp_dict()
-        replacement_fields = [k for k, v in iteritems(nearest_dict)
-                              if v and not getattr(spec.architecture, k)]
-        for field in replacement_fields:
-            setattr(spec.architecture, field, getattr(nearest_arch, field))
-            spec_changed = True
+        if spec.architecture.platform and \
+                (spec.architecture.os and spec.architecture.target):
+            return False
 
+        # Get platform of nearest spec with a platform, including spec
+        # If spec has a platform, easy
+        if spec.architecture.platform:
+            new_plat = spack.architecture.get_platform(
+                spec.architecture.platform)
+        else:
+            # Else if anyone else has a platform, take the closest one
+            # Search up, then down, along build/link deps first
+            # Then any nearest. Algorithm from compilerspec search
+            platform_spec = find_spec(
+                spec, lambda x: x.architecture and x.architecture.platform
+            )
+            if platform_spec:
+                new_plat = spack.architecture.get_platform(
+                    platform_spec.architecture.platform)
+            else:
+                # If no platform anywhere in this spec, grab the default
+                new_plat = spack.architecture.platform()
+
+        # Get nearest spec with relevant platform and an os
+        # Generally, same algorithm as finding platform, except we only
+        # consider specs that have a platform
+        if spec.architecture.os:
+            new_os = spec.architecture.os
+        else:
+            new_os_spec = find_spec(
+                spec, lambda x: (x.architecture and
+                                 x.architecture.platform == str(new_plat) and
+                                 x.architecture.os)
+            )
+            if new_os_spec:
+                new_os = new_os_spec.architecture.os
+            else:
+                new_os = new_plat.operating_system('default_os')
+
+        # Get the nearest spec with relevant platform and a target
+        # Generally, same algorithm as finding os
+        if spec.architecture.target:
+            new_target = spec.architecture.target
+        else:
+            new_target_spec = find_spec(
+                spec, lambda x: (x.architecture and
+                                 x.architecture.platform == str(new_plat) and
+                                 x.architecture.target)
+            )
+            if new_target_spec:
+                new_target = new_target_spec.architecture.target
+            else:
+                # To get default platform, consider package prefs
+                if PackagePrefs.has_preferred_targets(spec.name):
+                    new_target = self.target_from_package_preferences(spec)
+                else:
+                    new_target = new_plat.target('default_target')
+
+        # Construct new architecture, compute whether spec changed
+        arch_spec = (str(new_plat), str(new_os), str(new_target))
+        new_arch = spack.spec.ArchSpec(arch_spec)
+        spec_changed = new_arch != spec.architecture
+        spec.architecture = new_arch
         return spec_changed
+
+    def target_from_package_preferences(self, spec):
+        """Returns the preferred target from the package preferences if
+        there's any.
+
+        Args:
+            spec: abstract spec to be concretized
+        """
+        target_prefs = PackagePrefs(spec.name, 'target')
+        target_specs = [spack.spec.Spec('target=%s' % tname)
+                        for tname in cpu.targets]
+
+        def tspec_filter(s):
+            # Filter target specs by whether the architecture
+            # family is the current machine type. This ensures
+            # we only consider x86_64 targets when on an
+            # x86_64 machine, etc. This may need to change to
+            # enable setting cross compiling as a default
+            target = cpu.targets[str(s.architecture.target)]
+            arch_family_name = target.family.name
+            return arch_family_name == platform.machine()
+
+        # Sort filtered targets by package prefs
+        target_specs = list(filter(tspec_filter, target_specs))
+        target_specs.sort(key=target_prefs)
+        new_target = target_specs[0].architecture.target
+        return new_target
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
@@ -316,7 +375,7 @@ class Concretizer(object):
         other_spec = spec if spec.compiler else find_spec(
             spec, lambda x: x.compiler, spec.root)
         other_compiler = other_spec.compiler
-        assert(other_spec)
+        assert other_spec
 
         # Check if the compiler is already fully specified
         if other_compiler and other_compiler.concrete:
@@ -368,7 +427,7 @@ class Concretizer(object):
             _compiler_concretization_failure(
                 other_compiler, spec.architecture)
 
-        assert(spec.compiler.concrete)
+        assert spec.compiler.concrete
         return True  # things changed.
 
     def concretize_compiler_flags(self, spec):
@@ -428,6 +487,104 @@ class Concretizer(object):
                 ret = True
 
         return ret
+
+    def adjust_target(self, spec):
+        """Adjusts the target microarchitecture if the compiler is too old
+        to support the default one.
+
+        Args:
+            spec: spec to be concretized
+
+        Returns:
+            True if spec was modified, False otherwise
+        """
+        # To minimize the impact on performance this function will attempt
+        # to adjust the target only at the very first call. It will just
+        # return False on subsequent calls. The way this is achieved is by
+        # initializing a generator and making this function return the next
+        # answer.
+        def _make_only_one_call(spec):
+            yield self._adjust_target(spec)
+            while True:
+                yield False
+
+        if self._adjust_target_answer_generator is None:
+            self._adjust_target_answer_generator = _make_only_one_call(spec)
+
+        return next(self._adjust_target_answer_generator)
+
+    def _adjust_target(self, spec):
+        """Assumes that the architecture and the compiler have been
+        set already and checks if the current target microarchitecture
+        is the default and can be optimized by the compiler.
+
+        If not, downgrades the microarchitecture until a suitable one
+        is found. If none can be found raise an error.
+
+        Args:
+            spec: spec to be concretized
+
+        Returns:
+            True if any modification happened, False otherwise
+        """
+        import llnl.util.cpu
+
+        # Try to adjust the target only if it is the default
+        # target for this platform
+        current_target = spec.architecture.target
+        current_platform = spack.architecture.get_platform(
+            spec.architecture.platform
+        )
+
+        default_target = current_platform.target('default_target')
+        if PackagePrefs.has_preferred_targets(spec.name):
+            default_target = self.target_from_package_preferences(spec)
+
+        if current_target != default_target or \
+            (self.abstract_spec.architecture is not None and
+             self.abstract_spec.architecture.target is not None):
+            return False
+
+        try:
+            current_target.optimization_flags(spec.compiler)
+        except llnl.util.cpu.UnsupportedMicroarchitecture:
+            microarchitecture = current_target.microarchitecture
+            for ancestor in microarchitecture.ancestors:
+                candidate = None
+                try:
+                    candidate = spack.architecture.Target(ancestor)
+                    candidate.optimization_flags(spec.compiler)
+                except llnl.util.cpu.UnsupportedMicroarchitecture:
+                    continue
+
+                if candidate is not None:
+                    msg = ('{0.name}@{0.version} cannot build optimized '
+                           'binaries for "{1}". Using best target possible: '
+                           '"{2}"')
+                    msg = msg.format(spec.compiler, current_target, candidate)
+                    tty.warn(msg)
+                    spec.architecture.target = candidate
+                    return True
+            else:
+                raise
+
+        return False
+
+
+@contextmanager
+def disable_compiler_existence_check():
+    saved = Concretizer.check_for_compiler_existence
+    Concretizer.check_for_compiler_existence = False
+    yield
+    Concretizer.check_for_compiler_existence = saved
+
+
+@contextmanager
+def enable_compiler_existence_check():
+    saved = Concretizer.check_for_compiler_existence
+    Concretizer.check_for_compiler_existence = True
+    yield
+    Concretizer.check_for_compiler_existence = saved
 
 
 def find_spec(spec, condition, default=None):

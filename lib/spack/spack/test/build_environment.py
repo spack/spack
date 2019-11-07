@@ -4,9 +4,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
+
 import pytest
 
 import spack.build_environment
+import spack.config
 import spack.spec
 from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
@@ -42,13 +45,24 @@ def build_environment(working_env):
     os.environ['SPACK_CXX_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_F77_RPATH_ARG'] = "-Wl,-rpath,"
     os.environ['SPACK_FC_RPATH_ARG']  = "-Wl,-rpath,"
-
+    os.environ['SPACK_LINKER_ARG'] = '-Wl,'
+    os.environ['SPACK_DTAGS_TO_ADD'] = '--disable-new-dtags'
+    os.environ['SPACK_DTAGS_TO_STRIP'] = '--enable-new-dtags'
     os.environ['SPACK_SYSTEM_DIRS'] = '/usr/include /usr/lib'
+    os.environ['SPACK_TARGET_ARGS'] = ''
 
     if 'SPACK_DEPENDENCIES' in os.environ:
         del os.environ['SPACK_DEPENDENCIES']
 
     yield {'cc': cc, 'cxx': cxx, 'fc': fc}
+
+    for name in ('SPACK_CC', 'SPACK_CXX', 'SPACK_FC', 'SPACK_PREFIX',
+                 'SPACK_ENV_PATH', 'SPACK_DEBUG_LOG_DIR',
+                 'SPACK_COMPILER_SPEC', 'SPACK_SHORT_SPEC',
+                 'SPACK_CC_RPATH_ARG', 'SPACK_CXX_RPATH_ARG',
+                 'SPACK_F77_RPATH_ARG', 'SPACK_FC_RPATH_ARG',
+                 'SPACK_TARGET_ARGS'):
+        del os.environ[name]
 
 
 def test_static_to_shared_library(build_environment):
@@ -56,9 +70,11 @@ def test_static_to_shared_library(build_environment):
 
     expected = {
         'linux': ('/bin/mycc -shared'
+                  ' -Wl,--disable-new-dtags'
                   ' -Wl,-soname,{2} -Wl,--whole-archive {0}'
                   ' -Wl,--no-whole-archive -o {1}'),
         'darwin': ('/bin/mycc -dynamiclib'
+                   ' -Wl,--disable-new-dtags'
                    ' -install_name {1} -Wl,-force_load,{0} -o {1}')
     }
 
@@ -296,3 +312,28 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
         m = AttributeHolder()
         spack.build_environment._set_variables_for_single_module(s.package, m)
         assert m.make_jobs == expected_jobs
+
+
+@pytest.mark.parametrize('config_setting,expected_flag', [
+    ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
+    ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),
+])
+def test_setting_dtags_based_on_config(
+        config_setting, expected_flag, config, mock_packages
+):
+    # Pick a random package to be able to set compiler's variables
+    s = spack.spec.Spec('cmake')
+    s.concretize()
+    pkg = s.package
+
+    env = EnvironmentModifications()
+    with spack.config.override('config:shared_linking', config_setting):
+        spack.build_environment.set_compiler_environment_variables(pkg, env)
+        modifications = env.group_by_name()
+        assert 'SPACK_DTAGS_TO_STRIP' in modifications
+        assert 'SPACK_DTAGS_TO_ADD' in modifications
+        assert len(modifications['SPACK_DTAGS_TO_ADD']) == 1
+        assert len(modifications['SPACK_DTAGS_TO_STRIP']) == 1
+
+        dtags_to_add = modifications['SPACK_DTAGS_TO_ADD'][0]
+        assert dtags_to_add.value == expected_flag

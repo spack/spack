@@ -14,7 +14,7 @@ class Mitofates(Package):
     homepage = "http://mitf.cbrc.jp/MitoFates/cgi-bin/top.cgi"
     url      = "http://mitf.cbrc.jp/MitoFates/program/MitoFates_1.2.tar.gz"
 
-    version('1.2', 'aaac42a8e8c7318a4abde9df3a4b72d1')
+    version('1.2', sha256='fafc93d8d619fe993ce747782d31ab9a89b248cd4f817e0242e4ceb5e33cf0a7')
 
     depends_on('libsvm')
     depends_on('perl', type='run')

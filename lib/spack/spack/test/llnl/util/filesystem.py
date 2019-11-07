@@ -5,10 +5,14 @@
 
 """Tests for ``llnl/util/filesystem.py``"""
 
-import llnl.util.filesystem as fs
-import os
-import stat
 import pytest
+import os
+import shutil
+import stat
+import sys
+
+import llnl.util.filesystem as fs
+import spack.paths
 
 
 @pytest.fixture()
@@ -197,6 +201,16 @@ class TestInstallTree:
             assert not os.path.islink('dest/2')
 
 
+def test_paths_containing_libs(dirs_with_libfiles):
+    lib_to_dirs, all_dirs = dirs_with_libfiles
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libgfortran'])) ==
+            set(lib_to_dirs['libgfortran']))
+
+    assert (set(fs.paths_containing_libs(all_dirs, ['libirc'])) ==
+            set(lib_to_dirs['libirc']))
+
+
 def test_move_transaction_commit(tmpdir):
 
     fake_library = tmpdir.mkdir('lib').join('libfoo.so')
@@ -296,3 +310,79 @@ def test_headers_directory_setter():
     # Setting directories to None also returns an empty list
     hl.directories = None
     assert hl.directories == []
+
+
+@pytest.mark.parametrize('path,entry,expected', [
+    ('/tmp/user/root', None,
+     (['/tmp', '/tmp/user', '/tmp/user/root'], '', [])),
+    ('/tmp/user/root', 'tmp', ([], '/tmp', ['/tmp/user', '/tmp/user/root'])),
+    ('/tmp/user/root', 'user', (['/tmp'], '/tmp/user', ['/tmp/user/root'])),
+    ('/tmp/user/root', 'root', (['/tmp', '/tmp/user'], '/tmp/user/root', [])),
+    ('relative/path', None, (['relative', 'relative/path'], '', [])),
+    ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
+    ('relative/path', 'path', (['relative'], 'relative/path', []))
+])
+def test_partition_path(path, entry, expected):
+    assert fs.partition_path(path, entry) == expected
+
+
+@pytest.mark.parametrize('path,expected', [
+    ('', []),
+    ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
+    ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
+    ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+])
+def test_prefixes(path, expected):
+    assert fs.prefixes(path) == expected
+
+
+@pytest.mark.regression('7358')
+@pytest.mark.parametrize('regex,replacement,filename,keyword_args', [
+    (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c', {}),
+    (r"CDIR", "CURRENT_DIRECTORY", 'selfextract.bsx',
+     {'stop_at': '__ARCHIVE_BELOW__'})
+])
+def test_filter_files_with_different_encodings(
+        regex, replacement, filename, tmpdir, keyword_args
+):
+    # All files given as input to this test must satisfy the pre-requisite
+    # that the 'replacement' string is not present in the file initially and
+    # that there's at least one match for the regex
+    original_file = os.path.join(
+        spack.paths.test_path, 'data', 'filter_file', filename
+    )
+    target_file = os.path.join(str(tmpdir), filename)
+    shutil.copy(original_file, target_file)
+    # This should not raise exceptions
+    fs.filter_file(regex, replacement, target_file, **keyword_args)
+    # Check the strings have been replaced
+    extra_kwargs = {}
+    if sys.version_info > (3, 0):
+        extra_kwargs = {'errors': 'surrogateescape'}
+
+    with open(target_file, mode='r', **extra_kwargs) as f:
+        assert replacement in f.read()
+
+
+def test_filter_files_multiple(tmpdir):
+    # All files given as input to this test must satisfy the pre-requisite
+    # that the 'replacement' string is not present in the file initially and
+    # that there's at least one match for the regex
+    original_file = os.path.join(
+        spack.paths.test_path, 'data', 'filter_file', 'x86_cpuid_info.c'
+    )
+    target_file = os.path.join(str(tmpdir), 'x86_cpuid_info.c')
+    shutil.copy(original_file, target_file)
+    # This should not raise exceptions
+    fs.filter_file(r'\<malloc.h\>', '<unistd.h>', target_file)
+    fs.filter_file(r'\<string.h\>', '<unistd.h>', target_file)
+    fs.filter_file(r'\<stdio.h\>',  '<unistd.h>', target_file)
+    # Check the strings have been replaced
+    extra_kwargs = {}
+    if sys.version_info > (3, 0):
+        extra_kwargs = {'errors': 'surrogateescape'}
+
+    with open(target_file, mode='r', **extra_kwargs) as f:
+        assert '<malloc.h>' not in f.read()
+        assert '<string.h>' not in f.read()
+        assert '<stdio.h>' not in f.read()

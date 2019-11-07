@@ -14,7 +14,7 @@ class Bliss(Package):
     homepage = "http://www.tcs.hut.fi/Software/bliss/"
     url = "http://www.tcs.hut.fi/Software/bliss/bliss-0.73.zip"
 
-    version('0.73', '72f2e310786923b5c398ba0fc40b42ce')
+    version('0.73', sha256='f57bf32804140cad58b1240b804e0dbd68f7e6bf67eba8e0c0fa3a62fd7f0f84')
 
     # Note: Bliss can also be built without gmp, but we don't support this yet
 

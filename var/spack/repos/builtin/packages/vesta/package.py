@@ -13,7 +13,7 @@ class Vesta(Package):
     homepage = "http://jp-minerals.org/vesta"
     url      = "https://jp-minerals.org/vesta/archives/3.4.6/VESTA-x86_64.tar.bz2"
 
-    version('3.4.6', '1d4651e86193f305831aa5db3dcfe789')
+    version('3.4.6', sha256='fb00ac9a7bf46a3d9a1d745859c5e8757ba30f017a46470eb2c123b9afcf66ee')
 
     depends_on('gtkplus@2.1.0:')
     depends_on('mesa')

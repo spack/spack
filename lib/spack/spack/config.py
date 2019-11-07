@@ -32,10 +32,10 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 import copy
 import os
+import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
-from six import string_types
 from six import iteritems
 from ordereddict_backport import OrderedDict
 
@@ -109,6 +109,9 @@ config_defaults = {
 #: this is shorter and more readable than listing all choices
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
 
+#: Base name for the (internal) overrides scope.
+overrides_base_name = 'overrides-'
+
 
 def first_existing(dictionary, keys):
     """Get the value of the first key in keys that is in the dictionary."""
@@ -151,7 +154,7 @@ class ConfigScope(object):
             mkdirp(self.path)
             with open(filename, 'w') as f:
                 validate(data, section_schemas[section])
-                syaml.dump(data, stream=f, default_flow_style=False)
+                syaml.dump_config(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -196,6 +199,22 @@ class SingleFileScope(ConfigScope):
         #      ... data ...
         #   },
         # }
+        #
+        # To preserve overrides up to the section level (e.g. to override
+        # the "packages" section with the "::" syntax), data in self.sections
+        # looks like this:
+        # {
+        #   'config': {
+        #      'config': {
+        #         ... data ...
+        #       }
+        #   },
+        #   'packages': {
+        #      'packages': {
+        #         ... data ...
+        #      }
+        #   }
+        # }
         if self._raw_data is None:
             self._raw_data = _read_config_file(self.path, self.schema)
             if self._raw_data is None:
@@ -211,29 +230,10 @@ class SingleFileScope(ConfigScope):
 
                 self._raw_data = self._raw_data[key]
 
-        # data in self.sections looks (awkwardly) like this:
-        # {
-        #   'config': {
-        #      'config': {
-        #         ... data ...
-        #       }
-        #   },
-        #   'packages': {
-        #      'packages': {
-        #         ... data ...
-        #      }
-        #   }
-        # }
-        #
-        # UNLESS there is no section, in which case it is stored as:
-        # {
-        #   'config': None,
-        #   ...
-        # }
-        value = self._raw_data.get(section)
-        self.sections.setdefault(
-            section, None if value is None else {section: value})
-        return self.sections[section]
+            for section_key, data in self._raw_data.items():
+                self.sections[section_key] = {section_key: data}
+
+        return self.sections.get(section, None)
 
     def write_section(self, section):
         validate(self.sections, self.schema)
@@ -243,7 +243,8 @@ class SingleFileScope(ConfigScope):
 
             tmp = os.path.join(parent, '.%s.tmp' % self.path)
             with open(tmp, 'w') as f:
-                syaml.dump(self.sections, stream=f, default_flow_style=False)
+                syaml.dump_config(self.sections, stream=f,
+                                  default_flow_style=False)
             os.path.move(tmp, self.path)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
@@ -353,6 +354,15 @@ class Configuration(object):
     def highest_precedence_scope(self):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
+
+    def matching_scopes(self, reg_expr):
+        """
+        List of all scopes whose names match the provided regular expression.
+
+        For example, matching_scopes(r'^command') will return all scopes
+        whose names begin with `command`.
+        """
+        return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
     def _validate_scope(self, scope):
         """Ensure that scope is valid in this configuration.
@@ -520,7 +530,7 @@ class Configuration(object):
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
-            syaml.dump(
+            syaml.dump_config(
                 data, stream=sys.stdout, default_flow_style=False, blame=blame)
         except (yaml.YAMLError, IOError):
             raise ConfigError("Error reading configuration: %s" % section)
@@ -543,9 +553,21 @@ def override(path_or_scope, value=None):
         overrides = path_or_scope
         config.push_scope(path_or_scope)
     else:
-        overrides = InternalConfigScope('overrides')
+        base_name = overrides_base_name
+        # Ensure the new override gets a unique scope name
+        current_overrides = [s.name for s in
+                             config.matching_scopes(r'^{0}'.format(base_name))]
+        num_overrides = len(current_overrides)
+        while True:
+            scope_name = '{0}{1}'.format(base_name, num_overrides)
+            if scope_name in current_overrides:
+                num_overrides += 1
+            else:
+                break
+
+        overrides = InternalConfigScope(scope_name)
         config.push_scope(overrides)
-        config.set(path_or_scope, value, scope='overrides')
+        config.set(path_or_scope, value, scope=scope_name)
 
     yield config
 
@@ -683,7 +705,7 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = _mark_overrides(syaml.load(f))
+            data = syaml.load_config(f)
 
         if data:
             validate(data, schema)
@@ -707,23 +729,6 @@ def _override(string):
 
     """
     return hasattr(string, 'override') and string.override
-
-
-def _mark_overrides(data):
-    if isinstance(data, list):
-        return syaml.syaml_list(_mark_overrides(elt) for elt in data)
-
-    elif isinstance(data, dict):
-        marked = syaml.syaml_dict()
-        for key, val in iteritems(data):
-            if isinstance(key, string_types) and key.endswith(':'):
-                key = syaml.syaml_str(key[:-1])
-                key.override = True
-            marked[key] = _mark_overrides(val)
-        return marked
-
-    else:
-        return data
 
 
 def _mark_internal(data, name):
@@ -795,9 +800,14 @@ def _merge_yaml(dest, source):
 
         # ensure that keys are marked in the destination.  the key_marks dict
         # ensures we can get the actual source key objects from dest keys
-        for dk in dest.keys():
-            if dk in key_marks:
+        for dk in list(dest.keys()):
+            if dk in key_marks and syaml.markable(dk):
                 syaml.mark(dk, key_marks[dk])
+            elif dk in key_marks:
+                # The destination key may not be markable if it was derived
+                # from a schema default. In this case replace the key.
+                val = dest.pop(dk)
+                dest[key_marks[dk]] = val
 
         return dest
 

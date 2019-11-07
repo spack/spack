@@ -11,11 +11,13 @@ import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
+from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.compilers
+import spack.platforms.test
 
 
 def check_spec(abstract, concrete):
@@ -81,6 +83,28 @@ def spec(request):
     return request.param
 
 
+@pytest.fixture(params=[
+    # Mocking the host detection
+    'haswell', 'broadwell', 'skylake', 'icelake',
+    # Using preferred targets from packages.yaml
+    'icelake-preference', 'cannonlake-preference'
+])
+def current_host(request, monkeypatch):
+    # is_preference is not empty if we want to supply the
+    # preferred target via packages.yaml
+    cpu, _, is_preference = request.param.partition('-')
+    target = llnl.util.cpu.targets[cpu]
+    if not is_preference:
+        monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
+        monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+        yield target
+    else:
+        # There's a cache that needs to be cleared for unit tests
+        PackagePrefs._packages_config_cache = None
+        with spack.config.override('packages:all', {'target': [cpu]}):
+            yield target
+
+
 @pytest.mark.usefixtures('config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
@@ -133,12 +157,12 @@ class TestConcretize(object):
         assert concrete['mpich2'].satisfies('mpich2@1.3.1:1.4')
 
     def test_concretize_enable_disable_compiler_existence_check(self):
-        with spack.concretize.concretizer.enable_compiler_existence_check():
+        with spack.concretize.enable_compiler_existence_check():
             with pytest.raises(
                     spack.concretize.UnavailableCompilerVersionError):
                 check_concretize('dttop %gcc@100.100')
 
-        with spack.concretize.concretizer.disable_compiler_existence_check():
+        with spack.concretize.disable_compiler_existence_check():
             spec = check_concretize('dttop %gcc@100.100')
             assert spec.satisfies('%gcc@100.100')
             assert spec['dtlink3'].satisfies('%gcc@100.100')
@@ -273,7 +297,7 @@ class TestConcretize(object):
 
     def test_no_matching_compiler_specs(self, mock_config):
         # only relevant when not building compilers as needed
-        with spack.concretize.concretizer.enable_compiler_existence_check():
+        with spack.concretize.enable_compiler_existence_check():
             s = Spec('a %gcc@0.0.0')
             with pytest.raises(
                     spack.concretize.UnavailableCompilerVersionError):
@@ -571,3 +595,21 @@ class TestConcretize(object):
         """Test concretization failures for no-version packages."""
         with pytest.raises(NoValidVersionError, match="no valid versions"):
             Spec(spec).concretized()
+
+    @pytest.mark.parametrize('spec, best_achievable', [
+        ('mpileaks%gcc@4.4.7', 'core2'),
+        ('mpileaks%gcc@4.8', 'haswell'),
+        ('mpileaks%gcc@5.3.0', 'broadwell'),
+        # Apple's clang always falls back to x86-64 for now
+        ('mpileaks%clang@9.1.0-apple', 'x86_64')
+    ])
+    @pytest.mark.regression('13361')
+    def test_adjusting_default_target_based_on_compiler(
+            self, spec, best_achievable, current_host
+    ):
+        best_achievable = llnl.util.cpu.targets[best_achievable]
+        expected = best_achievable if best_achievable < current_host \
+            else current_host
+        with spack.concretize.disable_compiler_existence_check():
+            s = Spec(spec).concretized()
+            assert str(s.architecture.target) == str(expected)
