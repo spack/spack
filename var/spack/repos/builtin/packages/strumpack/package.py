@@ -18,12 +18,13 @@ class Strumpack(CMakePackage):
     iterative solvers."""
 
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
-    url      = "https://github.com/pghysels/STRUMPACK/archive/v3.0.3.tar.gz"
+    url      = "https://github.com/pghysels/STRUMPACK/archive/v3.3.0.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
 
     maintainers = ['pghysels']
 
     version('master', branch='master')
+    version('3.3.0', sha256='499fd3b58656b4b6495496920e5372895861ebf15328be8a7a9354e06c734bc7')
     version('3.2.0', sha256='34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
     version('3.1.0', sha256='b4f91b7d433955518b04538be1c726afc5de4bffb163e982ef8844d391b26fa7')
@@ -62,11 +63,11 @@ class Strumpack(CMakePackage):
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
-    depends_on('butterflypack@1.0.0', when='+butterflypack+mpi')
+    depends_on('butterflypack@1.1.0', when='+butterflypack+mpi')
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
-    conflicts('+butterflypack', when='@:3.1.1')
+    conflicts('+butterflypack', when='strumpack@:3.2.0')
 
     patch('intel-19-compile.patch', when='@3.1.1')
 
@@ -104,4 +105,9 @@ class Strumpack(CMakePackage):
                 '-DSTRUMPACK_USE_PARMETIS=%s' % on_off('+parmetis'),
                 '-DSTRUMPACK_USE_SCOTCH=%s' % on_off('+scotch')
             ])
+
+        args.extend([
+            '-DBUILD_SHARED_LIBS=%s' % on_off('+shared')
+        ])
+
         return args
