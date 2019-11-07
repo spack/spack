@@ -38,15 +38,14 @@ class Mpt(Package):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_build_environment(self, spack_env,
-                                          dependent_spec):
-        spack_env.set('MPICC',  self.prefix.bin.mpicc)
-        spack_env.set('MPICXX', self.prefix.bin.mpicxx)
-        spack_env.set('MPIF77', self.prefix.bin.mpif77)
-        spack_env.set('MPIF90', self.prefix.bin.mpifc)
-        spack_env.set('MPICC_CC', spack_cc)
-        spack_env.set('MPICXX_CXX', spack_cxx)
-        spack_env.set('MPIF90_F90', spack_fc)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  self.prefix.bin.mpicc)
+        env.set('MPICXX', self.prefix.bin.mpicxx)
+        env.set('MPIF77', self.prefix.bin.mpif77)
+        env.set('MPIF90', self.prefix.bin.mpifc)
+        env.set('MPICC_CC', spack_cc)
+        env.set('MPICXX_CXX', spack_cxx)
+        env.set('MPIF90_F90', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
         if 'platform=cray' in self.spec:
