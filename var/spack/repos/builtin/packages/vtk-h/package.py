@@ -28,49 +28,45 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class VtkH(Package):
+class VtkH(Package, CudaPackage):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-h brings together several projects like VTK-m
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
 
     homepage = "https://github.com/Alpine-DAV/vtk-h"
     git      = "https://github.com/Alpine-DAV/vtk-h.git"
+
     maintainers = ['cyrush']
 
+    version('ascent_ver', commit='f67aef0b9aef7ed999cb3d3e687b837a7671be03',
+            submodules=True,
+            preferred=True)
+
     version('develop', branch='develop', submodules=True)
-    version('0.1.0', branch='develop', tag='v0.1.0', submodules=True)
 
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
-    variant("tbb", default=False, description="build tbb support")
+    variant("serial", default=True, description="build serial (non-mpi) libraries")
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
 
-    depends_on("cmake@3.8.2:", type='build')
+    depends_on("cmake@3.14.1:")
 
     depends_on("mpi", when="+mpi")
-    depends_on("intel-tbb", when="@0.1.0+tbb")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@1.2.0", when="@0.1.0")
-    depends_on("vtk-m@1.2.0+tbb", when="@0.1.0+tbb")
-    depends_on("vtk-m@1.2.0+cuda", when="@0.1.0+cuda")
-    depends_on("vtk-m@1.2.0~shared", when="@0.1.0~shared")
+    depends_on("vtk-m@1.5.0~tbb+openmp", when="+openmp")
+    depends_on("vtk-m@1.5.0~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m@master~tbb+openmp", when="@develop+openmp")
-    depends_on("vtk-m@master~tbb~openmp", when="@develop~openmp")
+    depends_on("vtk-m@1.5.0+cuda~tbb+openmp", when="+cuda+openmp")
+    depends_on("vtk-m@1.5.0+cuda~tbb~openmp", when="+cuda~openmp")
 
-    depends_on("vtk-m@master+cuda~tbb+openmp", when="@develop+cuda+openmp")
-    depends_on("vtk-m@master+cuda~tbb~openmp", when="@develop+cuda~openmp")
+    depends_on("vtk-m@1.5.0~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m@1.5.0~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m@master~tbb+openmp~shared", when="@develop+openmp~shared")
-    depends_on("vtk-m@master~tbb~openmp~shared", when="@develop~openmp~shared")
-
-    depends_on("vtk-m@master+cuda~tbb+openmp~shared", when="@develop+cuda+openmp~shared")
-    depends_on("vtk-m@master+cuda~tbb~openmp~shared", when="@develop+cuda~openmp~shared")
-
-    patch('vtkm_lagrange_cuda_fix.patch')
+    depends_on("vtk-m@1.5.0+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m@1.5.0+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
@@ -79,11 +75,15 @@ class VtkH(Package):
                           "-DENABLE_TESTS=OFF",
                           "-DBUILD_TESTING=OFF"]
 
-            # shared vs static libs
-            if "+shared" in spec:
-                cmake_args.append('-DBUILD_SHARED_LIBS=ON')
-            else:
+            # shared vs static libs logic
+            # force static when building with cuda
+            if "+cuda" in spec:
                 cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
+            else:
+                if "+shared" in spec:
+                    cmake_args.append('-DBUILD_SHARED_LIBS=ON')
+                else:
+                    cmake_args.append('-DBUILD_SHARED_LIBS=OFF')
 
             # mpi support
             if "+mpi" in spec:
@@ -94,9 +94,6 @@ class VtkH(Package):
                 mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
                 if os.path.isfile(mpiexe_bin):
                     cmake_args.append("-DMPIEXEC={0}".format(mpiexe_bin))
-            # tbb support
-            if "+tbb" in spec:
-                cmake_args.append("-DTBB_DIR={0}".format(spec["tbb"].prefix))
 
             # openmp support
             if "+openmp" in spec:
@@ -104,12 +101,13 @@ class VtkH(Package):
 
             # cuda support
             if "+cuda" in spec:
-                cmake_args.append("-DENABLE_CUDA=ON")
-                # this fix is necessary if compiling platform has cuda, but
-                # no devices (this common for front end nodes on hpc clusters)
-                # we choose kepler as a lowest common denominator
-                cmake_args.append("-DVTKm_CUDA_Architecture=kepler")
-
+                cmake_args.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
+                cmake_args.append("-DENABLE_CUDA:BOOL=ON")
+                cmake_args.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
+                                  env["SPACK_CXX"]))
+            else:
+                cmake_args.append("-DVTKm_ENABLE_CUDA:BOOL=OFF")
+                cmake_args.append("-DENABLE_CUDA:BOOL=OFF")
             # use release, instead of release with debug symbols b/c vtkh libs
             # can overwhelm compilers with too many symbols
             for arg in std_cmake_args:
@@ -117,14 +115,13 @@ class VtkH(Package):
                     cmake_args.extend(std_cmake_args)
             cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
             cmake(*cmake_args)
-            if "+cuda" in spec:
-                # avoid issues with make -j and FindCuda deps
-                # likely a ordering issue that needs to be resolved
-                # in vtk-h
-                make(parallel=False)
-            else:
-                make()
+            make()
             make("install")
+
+            host_cfg_fname = self.create_host_config(spec,
+                                                     prefix)
+
+            install(host_cfg_fname, prefix)
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
@@ -210,18 +207,36 @@ class VtkH(Package):
         #######################################################################
 
         #######################
+        # Serial
+        #######################
+
+        if "+serial" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
+
+        #######################
         # MPI
         #######################
 
         cfg.write("# MPI Support\n")
 
         if "+mpi" in spec:
+            mpicc_path = spec['mpi'].mpicc
+            mpicxx_path = spec['mpi'].mpicxx
+            mpifc_path = spec['mpi'].mpifc
+            # if we are using compiler wrappers on cray systems
+            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
+            # etc make return the spack compiler wrappers
+            # which can trip up mpi detection in CMake 3.14
+            if cpp_compiler == "CC":
+                mpicc_path = "cc"
+                mpicxx_path = "CC"
+                mpifc_path = "ftn"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
-            cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
-                                        spec['mpi'].mpicxx))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                        spec['mpi'].mpifc))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE

@@ -61,19 +61,27 @@ class VtkM(CMakePackage, CudaPackage):
                           '70': 'turing',  '72': 'turing',  '75': 'turing'}
         with working_dir('spack-build', create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
-            # shared vs static libs
-            if "+shared" in spec:
-                options.append('-DBUILD_SHARED_LIBS=ON')
-            else:
+            # shared vs static libs logic
+            # force building statically with cuda
+            if "+cuda" in spec:
                 options.append('-DBUILD_SHARED_LIBS=OFF')
+            else:
+                if "+shared" in spec:
+                    options.append('-DBUILD_SHARED_LIBS=ON')
+                else:
+                    options.append('-DBUILD_SHARED_LIBS=OFF')
             # cuda support
             if "+cuda" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
+                options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
+                               env["SPACK_CXX"]))
                 if 'cuda_arch' in spec.variants:
                     cuda_value = spec.variants['cuda_arch'].value
-                    name = gpu_name_table[cuda_value[0]]
-                    options.append(
-                        '-DVTKm_CUDA_Architecture={0}'.format(name))
+                    cuda_arch = cuda_value[0]
+                    if cuda_arch in gpu_name_table:
+                        vtkm_cuda_arch = gpu_name_table[cuda_arch]
+                        options.append('-DVTKm_CUDA_Architecture={0}'.format(
+                                       vtkm_cuda_arch))
                 else:
                     # this fix is necessary if compiling platform has cuda, but
                     # no devices (this's common for front end nodes on hpc clus
@@ -91,7 +99,8 @@ class VtkM(CMakePackage, CudaPackage):
 
             # logging support
             if "+logging" in spec:
-                if spec.satisfies('@:1.2.0'):
+                if spec.satisfies('@:1.2.0') and \
+                        spec['vtk-m'].version.string != 'master':
                     raise InstallError('logging is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=ON")
@@ -100,7 +109,8 @@ class VtkM(CMakePackage, CudaPackage):
 
             # mpi support
             if "+mpi" in spec:
-                if spec.satisfies('@:1.2.0'):
+                if spec.satisfies('@:1.2.0') and \
+                        spec['vtk-m'].version.string != 'master':
                     raise InstallError('mpi is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
@@ -110,7 +120,8 @@ class VtkM(CMakePackage, CudaPackage):
             # openmp support
             if "+openmp" in spec:
                 # openmp is added since version 1.3.0
-                if spec.satisfies('@:1.2.0'):
+                if spec.satisfies('@:1.2.0') and \
+                        spec['vtk-m'].version.string != 'master':
                     raise InstallError('OpenMP is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")

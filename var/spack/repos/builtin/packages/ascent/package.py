@@ -28,7 +28,7 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class Ascent(Package):
+class Ascent(Package, CudaPackage):
     """Ascent is an open source many-core capable lightweight in situ
     visualization and analysis infrastructure for multi-physics HPC
     simulations."""
@@ -40,7 +40,8 @@ class Ascent(Package):
 
     version('develop',
             branch='develop',
-            submodules=True)
+            submodules=True,
+            preferred=True)
 
     ###########################################################################
     # package variants
@@ -50,6 +51,7 @@ class Ascent(Package):
     variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
+    variant("serial", default=True, description="build serial (non-mpi) libraries")
 
     # variants for language support
     variant("python", default=True, description="Build Ascent Python support")
@@ -72,10 +74,13 @@ class Ascent(Package):
     # package dependencies
     ###########################################################################
 
-    depends_on("cmake@3.14:", type='build')
+    depends_on("cmake@3.14.1:")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
+    depends_on("conduit~python~mpi", when="~python~mpi")
+    depends_on("conduit+python~mpi", when="+python+shared~mpi")
+    depends_on("conduit~shared~python~mpi", when="~shared~mpi")
 
     #######################
     # Python
@@ -85,6 +90,7 @@ class Ascent(Package):
     depends_on("python+shared", when="+python+shared")
     extends("python", when="+python+shared")
     depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
+    depends_on("py-pip", when="+python+shared", type=('build', 'run'))
 
     #######################
     # MPI
@@ -96,24 +102,23 @@ class Ascent(Package):
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtk-m", when="+vtkh")
+    # ascent depends on pinned `ascent_ver` of vtk-h
+    depends_on("vtk-h@ascent_ver",             when="+vtkh")
+    depends_on("vtk-h@ascent_ver~openmp",      when="+vtkh~openmp")
+    depends_on("vtk-h@ascent_ver+cuda+openmp", when="+vtkh+cuda+openmp")
+    depends_on("vtk-h@ascent_ver+cuda~openmp", when="+vtkh+cuda~openmp")
 
-    depends_on("vtk-h@develop",             when="+vtkh")
-    depends_on("vtk-h@develop~openmp",      when="+vtkh~openmp")
-    depends_on("vtk-h@develop+cuda+openmp", when="+vtkh+cuda+openmp")
-    depends_on("vtk-h@develop+cuda~openmp", when="+vtkh+cuda~openmp")
-
-    depends_on("vtk-h@develop~shared",             when="~shared+vtkh")
-    depends_on("vtk-h@develop~shared~openmp",      when="~shared+vtkh~openmp")
-    depends_on("vtk-h@develop~shared+cuda",        when="~shared+vtkh+cuda")
-    depends_on("vtk-h@develop~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+    depends_on("vtk-h@ascent_ver~shared",             when="~shared+vtkh")
+    depends_on("vtk-h@ascent_ver~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtk-h@ascent_ver~shared+cuda",        when="~shared+vtkh+cuda")
+    depends_on("vtk-h@ascent_ver~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
 
     # mfem
-    depends_on("mfem+shared+mpi+conduit", when="+shared+mfem+mpi")
-    depends_on("mfem~shared+mpi+conduit", when="~shared+mfem+mpi")
+    depends_on("mfem+threadsafe+shared+mpi+conduit", when="+shared+mfem+mpi")
+    depends_on("mfem+threadsafe~shared+mpi+conduit", when="~shared+mfem+mpi")
 
-    depends_on("mfem+shared~mpi+conduit", when="+shared+mfem~mpi")
-    depends_on("mfem~shared~mpi+conduit", when="~shared+mfem~mpi")
+    depends_on("mfem+threadsafe+shared~mpi+conduit", when="+shared+mfem~mpi")
+    depends_on("mfem+threadsafe~shared~mpi+conduit", when="~shared+mfem~mpi")
 
     depends_on("adios", when="+adios")
 
@@ -229,7 +234,7 @@ class Ascent(Package):
 
         if self.compiler.fc:
             # even if this is set, it may not exist so do one more sanity check
-            f_compiler = which(env["SPACK_FC"])
+            f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -285,7 +290,7 @@ class Ascent(Package):
         if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
             cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
-                                        f_compiler.path))
+                                        f_compiler))
         else:
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
@@ -347,6 +352,15 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("SPHINX_EXECUTABLE", sphinx_build_exe))
         else:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
+
+        #######################
+        # Serial
+        #######################
+
+        if "+serial" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
 
         #######################
         # MPI
@@ -411,6 +425,13 @@ class Ascent(Package):
 
             cfg.write("# vtk-h from spack\n")
             cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtk-h'].prefix))
+
+            if "+cuda" in spec:
+                cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
+                cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
+                          ''.format(env["SPACK_CXX"])))
+            else:
+                cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
 
         else:
             cfg.write("# vtk-h not built by spack \n")
