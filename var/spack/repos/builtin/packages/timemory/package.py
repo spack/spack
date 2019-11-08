@@ -13,6 +13,7 @@ class Timemory(CMakePackage):
 
     homepage = 'https://timemory.readthedocs.io/en/latest/'
     git = 'https://github.com/NERSC/timemory.git'
+    maintainers = ['jrmadsen']
 
     version('master', branch='master', submodules=True)
 
