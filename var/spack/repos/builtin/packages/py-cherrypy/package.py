@@ -12,7 +12,7 @@ class PyCherrypy(PythonPackage):
     homepage = "https://cherrypy.org/"
     url      = "https://pypi.io/packages/source/C/CherryPy/CherryPy-18.1.1.tar.gz"
 
-    version('18.1.1', '76e5d3c6b7be845345f871c604cfdf58')
+    version('18.1.1', sha256='6585c19b5e4faffa3613b5bf02c6a27dcc4c69a30d302aba819639a2af6fa48b')
 
     depends_on('py-setuptools',     type='build')
     depends_on('py-setuptools-scm', type='build')
