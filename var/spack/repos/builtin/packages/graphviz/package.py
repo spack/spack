@@ -118,9 +118,9 @@ class Graphviz(AutotoolsPackage):
         bash = which('bash')
         bash('./autogen.sh', 'NOCONFIG')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+quartz' in self.spec:
-            spack_env.set('OBJC', self.compiler.cc)
+            env.set('OBJC', self.compiler.cc)
 
     @when('%clang platform=darwin')
     def patch(self):
