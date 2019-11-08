@@ -68,7 +68,7 @@ class Elpa(AutotoolsPackage):
 
         # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
         # and --enable-neon-arch64
-        simd_features = [ 'vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq' ]
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq']
 
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
@@ -77,7 +77,7 @@ class Elpa(AutotoolsPackage):
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
             options.append('--enable-generic')
- 
+
         if '+optflags' in spec:
             options.extend([
                 'FCFLAGS=-O2 -ffree-line-length-none',
@@ -87,7 +87,8 @@ class Elpa(AutotoolsPackage):
         if '+openmp' in spec:
             options.append('--enable-openmp')
 
-        options.extend(['CC={0}'.format(spec['mpi'].mpicc),
+        options.extend([
+            'CC={0}'.format(spec['mpi'].mpicc),
             'FC={0}'.format(spec['mpi'].mpifc),
             'CXX={0}'.format(spec['mpi'].mpicxx),
             'LDFLAGS={0}'.format(spec['lapack'].libs.search_flags),
