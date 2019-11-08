@@ -39,8 +39,8 @@ def single_command_extension(extension_root):
 
 
 @pytest.fixture()
-def hello_world_cmd(single_command_extension):
-    single_command_extension('hello-world', """
+def hello_world_extension(single_command_extension):
+    yield single_command_extension('hello-world', """
 description = "hello world extension command"
 section = "test command"
 level = "long"
@@ -52,6 +52,10 @@ def setup_parser(subparser):
 def hello_world(parser, args):
     print('Hello world!')
 """)
+
+
+@pytest.fixture()
+def hello_world_cmd(hello_world_extension):
     yield spack.main.SpackCommand('hello-world')
 
 
@@ -104,6 +108,22 @@ def hello_folks():
 def test_simple_command_extension(hello_world_cmd):
     output = hello_world_cmd()
     assert 'Hello world!' in output
+
+
+def test_multi_extension_search(hello_world_extension, tmpdir):
+    """Ensure we can find an extension command even if we search somewhere
+    it's isn't first.
+    """
+    extra_ext = tmpdir.mkdir('spack-testcommand2')
+    extra_ext.ensure('testcommand2', 'cmd', dir=True)
+    with spack.config.override('config:extensions',
+                               [str(extra_ext), str(hello_world_extension)]):
+        assert('Hello world') in spack.main.SpackCommand('hello-world')()
+
+
+def test_duplicate_module_load(hello_world_cmd):
+    """Ensure we correctly deal with duplicate command load attempts."""
+    spack.cmd.get_command('hello-world')
 
 
 def test_command_with_import(hello_world_with_module_in_root):
