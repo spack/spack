@@ -102,11 +102,11 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
-        for feature in simd_features:
-            if feature in spec.target:
+        for feature in self.simd_features:
+            if feature in self.spec.target:
                 options.append('-DGMX_SIMD={0}'.format(feature))
 
-        if not any(f in spec.target for f in simd_features):
+        if not any(f in self.spec.target for f in self.simd_features):
             options.append('-DGMX_SIMD:STRING=None')
 
         if '-rdtscp' in self.spec:
