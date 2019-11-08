@@ -264,7 +264,10 @@ class Openfoam(Package):
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
-    version('1906', sha256='15e38c2dc659b63753a0dd3dff913222cc46d6a40089a1b76973dd741145f61a')
+    version('master', branch='master', submodules='True')
+    version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
+    version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
+    version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')
     version('1812_190531', sha256='51f0ef49a199edf3cd94e2ccfc7330e54e93c8e4ddb29ee66fe3e6b443583b34')
     version('1812', sha256='d4d23d913419c6a364b1fe91509c1fadb5661bdf2eedb8fe9a8a005924eb2032')
     version('1806', sha256='6951aab6405294fe59cec90b0a4e425f5403043191cda02ebaaa890ce1fcc819')
@@ -368,13 +371,17 @@ class Openfoam(Package):
     #
 
     def url_for_version(self, version):
-        # Prior to 1706 had additional '+' in the naming
-        fmt = self.list_url
+        """Handles locations for patched and unpatched versions.
+        Patched version (eg '1906_191103') are located in the
+        corresponding unpatched directories (eg '1906').
+        Older versions (eg, v1612+) had additional '+' in naming
+        """
+        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
-            fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
+            fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
-            fmt += 'v{0}/OpenFOAM-v{0}.tgz'
-        return fmt.format(version, version)
+            fmt = 'v{0}/OpenFOAM-v{1}.tgz'
+        return self.list_url + fmt.format(version.up_to(1), version)
 
     def setup_minimal_environment(self, env):
         """Sets a minimal openfoam environment.
