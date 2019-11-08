@@ -100,18 +100,18 @@ class Gromacs(CMakePackage):
 
         simd_features = {
             'sse2': 'SSE2',
-            'sse4_1': 'SSE4.1', 
+            'sse4_1': 'SSE4.1',
             'avx128fma': 'AVX_128_FMA',
             'avx256': 'AVX_256',
             'axv128': 'AVX2_128',
-            'avx2_256': 'AVX2_256', 
-            'avx512': 'AVX_512', 
-            'avx512knl': 'AVX_512_KNL', 
+            'avx2_256': 'AVX2_256',
+            'avx512': 'AVX_512',
+            'avx512knl': 'AVX_512_KNL',
             'qpx': 'IBM_QPX',
-            'ace': 'Sparc64_HPC_ACE', 
-            'vmx': 'IBM_VMX', 
+            'ace': 'Sparc64_HPC_ACE',
+            'vmx': 'IBM_VMX',
             'vsx': 'IBM_VSX',
-            'neon':'ARM_NEON',
+            'neon': 'ARM_NEON',
             'neon_asimd': 'ARM_NEON_ASIMD'
         }
         for feature in simd_features:
