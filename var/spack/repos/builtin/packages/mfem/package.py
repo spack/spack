@@ -428,25 +428,8 @@ class Mfem(Package):
 
         if '+conduit' in spec:
             conduit = spec['conduit']
-
-            #
-            # We need control to add the actual path.
-            #
-            # The only way I found to make this work is by initing and
-            # adding to headers._directories, which seems evil. But sometimes
-            # evil must be deployed to fight evil regexs.
-            #
-            # Note: I also tried adding to headers.files and
-            # headers.directories, but those don't work for various reasons.
-            # For example headers.directories is property.
-            ##################
-
-            # build headers object
             headers = HeaderList(find(conduit.prefix.include, 'conduit.hpp',
                                       recursive=True))
-            # inject proper path
-            headers._directories = []
-            headers._directories.append(conduit_include_path)
             conduit_libs = ['libconduit', 'libconduit_relay',
                             'libconduit_blueprint']
             libs = find_libraries(conduit_libs, conduit.prefix.lib,
