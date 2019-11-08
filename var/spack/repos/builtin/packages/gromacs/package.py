@@ -56,12 +56,10 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('simd', default='auto',
-            description='The SIMD instruction set to use',
-            values=('auto', 'none', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
-                    'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
-                    'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
-                    'ARM_NEON', 'ARM_NEON_ASIMD'))
+    simd_features = ('SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256', 'AVX2_128',
+                     'AVX2_256', 'AVX_512', 'AVX_512_KNL', 'IBM_QPX',
+                     'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX', 'ARM_NEON',
+                     'ARM_NEON_ASIMD')
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
@@ -104,13 +102,11 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
-        simd_value = self.spec.variants['simd'].value
-        if simd_value == 'auto':
-            pass
-        elif simd_value == 'none':
+        for feature in simd_features:
+            options.append('-DGMX_SIMD={0}'.format(feature) if feature in spec.target
+        
+        if not any(f in spec.target for f in simd_features):
             options.append('-DGMX_SIMD:STRING=None')
-        else:
-            options.append('-DGMX_SIMD:STRING=' + simd_value)
 
         if '-rdtscp' in self.spec:
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
