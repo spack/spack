@@ -146,6 +146,12 @@ def test_all_mirror(
     repos.clear()
 
 
+def test_mirror_archive_paths_no_version(mock_packages, config, mock_archive):
+    spec = Spec('trivial-install-test-package@nonexistingversion')
+    fetcher = spack.fetch_strategy.URLFetchStrategy(mock_archive.url)
+    spack.mirror.mirror_archive_paths(fetcher, 'per-package-ref', spec)
+
+
 def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
     spec = Spec('patch-several-dependencies')
     spec.concretize()
