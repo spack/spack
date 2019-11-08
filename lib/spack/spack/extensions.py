@@ -37,7 +37,7 @@ def load_command_extension(command, path):
     """Loads a command extension from the path passed as argument.
 
     Args:
-        command (str): name of the command
+        command (str): name of the command (contains ``-``, not ``_``).
         path (str): base path of the command extension
 
     Returns:
@@ -48,6 +48,10 @@ def load_command_extension(command, path):
 
     # Compute the name of the module we search, exit early if already imported
     cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
+    # TODO: For consistency, the below conversion should utilize
+    #       spack.cmd.python_name(), but currently this would create a
+    #       circular relationship between spack.cmd and
+    #       spack.extensions.
     python_name = command.replace('-', '_')
     module_name = '{0}.{1}'.format(cmd_package, python_name)
     if module_name in sys.modules:
@@ -55,7 +59,7 @@ def load_command_extension(command, path):
 
     # Compute the absolute path of the file to be loaded, along with the
     # name of the python module where it will be stored
-    cmd_path = os.path.join(path, extension, 'cmd', command + '.py')
+    cmd_path = os.path.join(path, extension, 'cmd', python_name + '.py')
 
     # Short circuit if the command source file does not exist
     if not os.path.exists(cmd_path):

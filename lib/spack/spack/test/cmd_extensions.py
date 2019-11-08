@@ -25,7 +25,9 @@ def extension_root(tmpdir):
 def single_command_extension(extension_root):
     """Simple extension command with code contained in a single file."""
     def _sce(command_name, contents):
-        cmd = extension_root.ensure('testcommand', 'cmd', command_name + '.py')
+        spack.cmd.require_cmd_name(command_name)
+        python_name = spack.cmd.python_name(command_name)
+        cmd = extension_root.ensure('testcommand', 'cmd', python_name + '.py')
         cmd.write(contents)
         return extension_root
 
