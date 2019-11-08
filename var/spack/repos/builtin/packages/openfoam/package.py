@@ -376,20 +376,28 @@ class Openfoam(Package):
             fmt += 'v{0}/OpenFOAM-v{0}.tgz'
         return fmt.format(version, version)
 
-    def setup_environment(self, spack_env, run_env):
-        """Add environment variables to the generated module file.
-        These environment variables come from running:
+    def setup_minimal_environment(self, env):
+        """Sets a minimal openfoam environment.
+        """
+        tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('WM_PROJECT_DIR', self.projectdir)
+        for d in ['wmake', self.archbin]:  # bin added automatically
+            env.prepend_path('PATH', join_path(self.projectdir, d))
+
+    def setup_build_environment(self, env):
+        """Sets the build environment (prior to unpacking the sources).
+        """
+        pass
+
+    def setup_run_environment(self, env):
+        """Sets the run environment (post-installation).
+        The environment comes from running:
 
         .. code-block:: console
 
            $ . $WM_PROJECT_DIR/etc/bashrc
         """
-
-        # NOTE: Spack runs setup_environment twice.
-        # 1) pre-build to set up the build environment
-        # 2) post-install to determine runtime environment variables
-        # The etc/bashrc is only available (with corrrect content)
-        # post-installation.
 
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
@@ -427,8 +435,7 @@ class Openfoam(Package):
                         'MPI_ARCH_PATH',  # Can be needed for compilation
                     ])
 
-                run_env.extend(mods)
-                spack_env.extend(mods)
+                env.extend(mods)
                 minimal = False
                 tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
@@ -436,22 +443,23 @@ class Openfoam(Package):
 
         if minimal:
             # pre-build or minimal environment
-            tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
-            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            run_env.set('WM_PROJECT_DIR', self.projectdir)
-            spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            spack_env.set('WM_PROJECT_DIR', self.projectdir)
-            for d in ['wmake', self.archbin]:  # bin added automatically
-                run_env.prepend_path('PATH', join_path(self.projectdir, d))
-                spack_env.prepend_path('PATH', join_path(self.projectdir, d))
+            self.setup_minimal_environment(env)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Location of the OpenFOAM project directory.
-        This is identical to the WM_PROJECT_DIR value, but we avoid that
-        variable since it would mask the normal OpenFOAM cleanup of
-        previous versions.
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when building.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
         """
-        self.setup_environment(spack_env, run_env)
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when running.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
+        """
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):
