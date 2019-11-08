@@ -103,8 +103,9 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_GPU:BOOL=OFF')
 
         for feature in simd_features:
-            options.append('-DGMX_SIMD={0}'.format(feature) if feature in spec.target
-        
+            if feature in spec.target:
+                options.append('-DGMX_SIMD={0}'.format(feature))
+
         if not any(f in spec.target for f in simd_features):
             options.append('-DGMX_SIMD:STRING=None')
 
