@@ -47,7 +47,9 @@ class VtkH(Package, CudaPackage):
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
 
-    depends_on("cmake@3.14.1:")
+    # use cmake 3.14, newest that provides proper cuda support
+    # and we have seen errors with cuda in 3.15
+    depends_on("cmake@3.14.1:3.14.5")
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
