@@ -607,7 +607,7 @@ class Llvm(CMakePackage):
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
     # for a bug report about this problem in llvm master.
-    patch('llvm_py37.patch', when='@4:6.0.999 ^python@3.7:')
+    patch('llvm_py37.patch', when='@4:6 ^python@3.7:')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
