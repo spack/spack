@@ -7,6 +7,7 @@ import pytest
 
 import sys
 
+import spack.cmd
 import spack.config
 import spack.extensions
 import spack.main
@@ -131,6 +132,16 @@ def test_badly_named_extension():
     """
     with pytest.raises(spack.extensions.ExtensionNamingError):
         spack.extensions.load_command_extension("oopsie", "/my/bad/extension")
+
+
+def test_missing_command_function(single_command_extension):
+    """Ensure we die as expected if a command module does not have the
+    expected command function defined.
+    """
+    single_command_extension('bad-cmd', """
+description = "Empty command implementation"\n""")
+    with pytest.raises(SystemExit, matches="must define function 'bad-cmd'."):
+        spack.cmd.get_module('bad-cmd')
 
 
 @pytest.fixture()
