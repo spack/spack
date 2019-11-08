@@ -18,29 +18,38 @@ class PyPyside2(PythonPackage):
     # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
     version('dev', tag='dev')
-    version('5.13.2', tag='v5.13.2', submodules=True, preferred=True)
+    version('5.13.2', tag='v5.13.2', submodules=True)
     version('5.13.1', tag='v5.13.1', submodules=True)
     version('5.13.0', tag='v5.13.0', submodules=True)
     version('5.12.5', tag='v5.12.5', submodules=True)
 
-    depends_on('python@3.5:', type=('build','run'))
+    variant('doc', default=False, description='Enables the generation of html and man page documentation')
+
+    depends_on('python@2.7:2.7.99,3.5.0:3.5.99,3.6.1:')
 
     depends_on('cmake@3.1:', type='build')
-    depends_on('libxml2@2.6.32:', type='build')
-    depends_on('libxslt@1.1.19:', type='build')
     depends_on('llvm@6:', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
-    depends_on('py-sphinx', type=('build', 'run'))
-    depends_on('qt@5.12:+opengl', type=('build','run'))
-    depends_on('graphviz', type='build')
+    depends_on('qt@5.11:+opengl', type=('build', 'run'))
+
+    depends_on('graphviz', when='+doc', type='build')
+    depends_on('libxml2@2.6.32:', when='+doc', type='build')
+    depends_on('libxslt@1.1.19:', when='+doc', type='build')
+    depends_on('py-sphinx', when='+doc', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         args = [
-            'install',
+#            'install',
             '--parallel={0}'.format(make_jobs),
             '--ignore-git',
-#            '--build-tests',
-            '--qmake={0}'.format(os.path.join(spec['qt'].prefix.bin, 'qmake'))
+            '--qmake={0}'.format(spec['qt'].prefix.bin.qmake)
         ]
+        if self.run_tests:
+            args.append('--build-tests')
         return args
+
+    @run_after('build')
+    def build_docs(self):
+        if '+doc' in self.spec:
+            make('apidoc')
