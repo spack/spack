@@ -56,10 +56,6 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    simd_features = ('SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256', 'AVX2_128',
-                     'AVX2_256', 'AVX_512', 'AVX_512_KNL', 'IBM_QPX',
-                     'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX', 'ARM_NEON',
-                     'ARM_NEON_ASIMD')
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
@@ -102,11 +98,27 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
-        for feature in self.simd_features:
+        simd_features = {
+            'sse2': 'SSE2',
+            'sse4_1': 'SSE4.1', 
+            'avx128fma': 'AVX_128_FMA',
+            'avx256': 'AVX_256',
+            'axv128': 'AVX2_128',
+            'avx2_256': 'AVX2_256', 
+            'avx512': 'AVX_512', 
+            'avx512knl': 'AVX_512_KNL', 
+            'qpx': 'IBM_QPX',
+            'ace': 'Sparc64_HPC_ACE', 
+            'vmx': 'IBM_VMX', 
+            'vsx': 'IBM_VSX',
+            'neon':'ARM_NEON',
+            'neon_asimd': 'ARM_NEON_ASIMD'
+        }
+        for feature in simd_features:
             if feature in self.spec.target:
-                options.append('-DGMX_SIMD={0}'.format(feature))
+                options.append('-DGMX_SIMD={0}'.format(simd_features[feature]))
 
-        if not any(f in self.spec.target for f in self.simd_features):
+        if not any(f in self.spec.target for f in simd_features):
             options.append('-DGMX_SIMD:STRING=None')
 
         if '-rdtscp' in self.spec:
