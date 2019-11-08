@@ -20,4 +20,5 @@ class RAbadata(RPackage):
     url      = "http://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.16.0.tar.gz"
 
     version('1.16.0', sha256='a41049ac83f6edb938ab63964ea387c84827b959f552f6b3cd0601b1eeee68d7')
-    version('1.14.0', sha256='d203d968044c292cdfab57a4d6bf52dfb60470bd78b4c9bd88892577ac42b2b7')
+    version('1.14.0', preferred=True, sha256='d203d968044c292cdfab57a4d6bf52dfb60470bd78b4c9bd88892577ac42b2b7',
+            url='http://bioconductor.jp/packages/release/data/experiment/src/contrib/ABAData_1.14.0.tar.gz')
