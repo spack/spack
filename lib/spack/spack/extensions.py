@@ -14,7 +14,7 @@ import llnl.util.lang
 import spack.config
 from spack.error import SpackError
 
-_extension_regexp = re.compile(r'spack-([\w]*)')
+_extension_regexp = re.compile(r'spack-([\w]+)')
 
 
 def extension_name(path):
@@ -45,8 +45,6 @@ def load_command_extension(command, path):
     loading exceptions are passed through.
     """
     extension = extension_name(path)
-    if not extension:
-        return None
 
     # Compute the name of the module we search, exit early if already imported
     cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
