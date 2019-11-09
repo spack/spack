@@ -40,7 +40,6 @@ class Hpx(CMakePackage, CudaPackage):
         description="Support for networking through parcelports",
     )
 
-    variant('tests', default=False, description='Build HPX tests')
     variant('tools', default=False, description='Build HPX tools')
     variant('examples', default=False, description='Build examples')
 
@@ -122,7 +121,7 @@ class Hpx(CMakePackage, CudaPackage):
 
         # Tests
         args.append('-DHPX_WITH_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'
+            'ON' if self.run_tests else 'OFF'
         ))
 
         # Tools
