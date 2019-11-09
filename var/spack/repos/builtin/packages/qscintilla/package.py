@@ -45,7 +45,8 @@ class Qscintilla(QMakePackage):
     @run_after('qmake')
     def fix_install_path(self):
         makefile = FileFilter('Makefile')
-        makefile.filter(r'\$\(INSTALL_ROOT\)' + self.spec['qt'].prefix, '$(INSTALL_ROOT)')
+        makefile.filter(r'\$\(INSTALL_ROOT\)' +
+                        self.spec['qt'].prefix, '$(INSTALL_ROOT)')
 
     @run_after('install')
     def postinstall(self):
@@ -63,6 +64,7 @@ class Qscintilla(QMakePackage):
             qmake()
             make()
             makefile = FileFilter('Makefile')
-            makefile.filter(r'\$\(INSTALL_ROOT\)' + self.spec['qt'].prefix, '$(INSTALL_ROOT)')
+            makefile.filter(r'\$\(INSTALL_ROOT\)' +
+                            self.spec['qt'].prefix, '$(INSTALL_ROOT)')
             make('install')
             make('install')

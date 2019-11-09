@@ -67,13 +67,15 @@ class PyPyqt5(SIPPackage):
                 python = which('python')
                 python('configure.py', '--pyqt=PyQt5',
                        '--sip=' + self.prefix.bin + '/sip',
-                       '--qsci-incdir=' + self.spec['qscintilla'].prefix.include,
+                       '--qsci-incdir=' +
+                       self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
                        '--qsci-sipdir=' + self.prefix.share.sip.PyQt5,
                        '--apidir=' + self.prefix + '/share/qsci',
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--sip-incdir=' + self.prefix + '/include/python' + str(self.spec['python'].version.up_to(2)),
+                       '--sip-incdir=' + self.prefix + '/include/python' +
+                       str(self.spec['python'].version.up_to(2)),
                        '--stubsdir=' + pydir)
 
                 # Fix build errors
@@ -81,9 +83,11 @@ class PyPyqt5(SIPPackage):
                 # "qprinter.h: No such file or directory"
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro = FileFilter('Qsci/Qsci.pro')
-                link_qscilibs = 'LIBS += -L' + self.prefix.lib + ' -lqscintilla2_qt5'
+                link_qscilibs = 'LIBS += -L' + self.prefix.lib +\
+                    ' -lqscintilla2_qt5'
                 qscipro.filter('TEMPLATE = lib',
-                               'TEMPLATE = lib\nQT += widgets\nQT += printsupport\n' + link_qscilibs)
+                               'TEMPLATE = lib\nQT += widgets' +
+                               '\nQT += printsupport\n' + link_qscilibs)
 
                 make()
 
