@@ -25,7 +25,7 @@ class PyPyside2(PythonPackage):
 
     variant('doc', default=False, description='Enables the generation of html and man page documentation')
 
-    depends_on('python@2.7:2.7.99,3.5.0:3.5.99,3.6.1:')
+    depends_on('python@2.7:2.7.99,3.5.0:3.5.99,3.6.1:', type=('build', 'run'))
 
     depends_on('cmake@3.1:', type='build')
     depends_on('llvm@6:', type='build')
@@ -40,7 +40,6 @@ class PyPyside2(PythonPackage):
 
     def build_args(self, spec, prefix):
         args = [
-#            'install',
             '--parallel={0}'.format(make_jobs),
             '--ignore-git',
             '--qmake={0}'.format(spec['qt'].prefix.bin.qmake)
