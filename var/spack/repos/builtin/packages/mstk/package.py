@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,10 +25,9 @@ class Mstk(CMakePackage):
     git      = "https://github.com/MeshToolkit/MSTK"
     url      = "https://github.com/MeshToolkit/MSTK/archive/3.3.1.tar.gz"
 
-    maintainers = ['raovgarimella', 'julienloiseau']
+    maintainers = ['julienloiseau','raovgarimella']
 
     version('master', branch='master')
-    version('3.3.2', sha256='fb4ffa97af4d0a0d4771c8585d0b27538b013d8b1cfaff992e5e054fef62af0b')
     version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
     version('3.3.0', sha256='205c48fb5619937b5dd83788da739b7c2060155b7c41793e29ce05422b8f7dfb')
     version('3.2.1', sha256='09bc6684abb576e34c324322db6f71f8987c6ec436a54256b85ef4db40185470')
@@ -43,33 +42,30 @@ class Mstk(CMakePackage):
     version('3.0.1', sha256='d44e4bf01b118b1d19710aa839b3f5f0c1a8391264a435f641ba4bd23bcf45ec')
     version('3.0.0', sha256='d993ff5fc6c431067eb97e4089835c7790397d9c1ad88a56523c0591d451df19')
 
+    variant('parallel', default='none', description='Enable Parallel Support',
+            values=('none', 'metis', 'zoltan', 'parmetis'), multi=True)
     variant('exodusii', default=False, description='Enable ExodusII')
-    variant('use_markers', default=True, description='Enable use of markers')
-    variant('parallel', default=False, description='Enable Parallel Support')
-    variant('partitioner', default='none',
-            values=('none', 'metis', 'zoltan', 'all'),
-            multi=False, description='Choose partitioner')
-    conflicts('partitioner=none', when='+parallel')
-    conflicts('partitioner=all', when='-parallel')
-    conflicts('partitioner=zoltan', when='-parallel')
+    variant('use_markers', default=True, description='Enable MSTK to use markers')
+    variant('enable_tests', default=True, description='Enable unit testing')
 
-    # MSTK turns on METIS only for parallel builds
-    conflicts('partitioner=metis', when='-parallel')
+    depends_on("cmake@3.8:", type='build')
 
-    # dependencies
-    depends_on('cmake@3.11:', type='build')
+    # Parallel variant
+    depends_on("mpi", when='parallel=metis')
+    depends_on("mpi", when='parallel=zoltan')
+    depends_on("mpi", when='parallel=parmetis')
+    depends_on("zoltan -fortran", when='parallel=zoltan')
+    depends_on("zoltan -fortran +parmetis", when='parallel=parmetis')
+    depends_on("zoltan -fortran +parmetis", when="parallel=zoltan +exodusii")
+    depends_on("metis", when="parallel=zoltan +exodusii")
 
-    #
-    depends_on('mpi', when='+parallel')
-
-    depends_on('zoltan -fortran', when='partitioner=zoltan')
-    depends_on('zoltan -fortran', when='partitioner=all')
-    depends_on('metis', when='partitioner=metis')
-    depends_on('metis', when='partitioner=all')
+    depends_on("metis", when='parallel=metis')
+    depends_on("metis", when='parallel=parmetis')
 
     # Exodusii variant
     # The default exodusii build with mpi support
-    depends_on('exodusii', when='+exodusii')
+    # It includes netcdf which includes hdf5
+    depends_on("exodusii", when='+exodusii')
 
     # Unit testing variant
     depends_on('unittest-cpp', type='test')
@@ -85,23 +81,29 @@ class Mstk(CMakePackage):
             options.append('-DMSTK_USE_MARKERS=OFF')
 
         # Parallel variant
-        if '+parallel' in self.spec:
+        if not self.spec.satisfies('parallel=none'):
+            # Use mpi for compilation
+            options.append('-DCMAKE_CXX_COMPILER=' + self.spec['mpi'].mpicxx)
+            options.append('-DCMAKE_C_COMPILER=' + self.spec['mpi'].mpicc)
             options.append('-DENABLE_PARALLEL=ON')
         else:
             options.append('-DENABLE_PARALLEL=OFF')
 
-        if 'partitioner=none' in self.spec:
-            options.append('-DENABLE_METIS=OFF')
-            options.append('-DENABLE_ZOLTAN=OFF')
+        if ("parmetis" in self.spec or "zoltan" in self.spec and
+            "+exodusii" in self.spec):
+            options.append('-DENABLE_METIS=ON')
+            options.append('-DENABLE_ZOLTAN=ON')
+            options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
         else:
-            if 'zoltan' in self.spec:
+            if "zoltan" in self.spec:
                 options.append('-DENABLE_ZOLTAN=ON')
             else:
                 options.append('-DENABLE_ZOLTAN=OFF')
-            if 'metis' in self.spec:
+            if "metis" in self.spec:
                 options.append('-DENABLE_METIS=ON')
             else:
                 options.append('-DENABLE_METIS=OFF')
+            options.append('-DZOLTAN_NEEDS_ParMETIS=OFF')
 
         # ExodusII variant
         if '+exodusii' in self.spec:
@@ -110,9 +112,9 @@ class Mstk(CMakePackage):
             options.append('-DENABLE_ExodusII=OFF')
 
         # Unit test variant
-        if self.run_tests:
+        if '+enable_tests' in self.spec:
             options.append('-DENABLE_Tests=ON')
         else:
             options.append('-DENABLE_Tests=OFF')
-
+            
         return options
