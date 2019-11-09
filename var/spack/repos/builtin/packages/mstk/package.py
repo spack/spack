@@ -72,6 +72,9 @@ class Mstk(CMakePackage):
     # Unit testing variant
     depends_on('unittest-cpp', type='test')
 
+    # Unit testing variant
+    depends_on("unittest-cpp", when='+enable_tests')
+    
     def cmake_args(self):
         options = []
         if '+use_markers' in self.spec:
