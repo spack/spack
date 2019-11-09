@@ -70,14 +70,10 @@ class Vtk(CMakePackage):
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
 
-    depends_on('mpi', when='+mpi')
-
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
-
-    depends_on('mpi', when='+mpi')
-
     depends_on('ffmpeg', when='+ffmpeg')
+    depends_on('mpi', when='+mpi')
 
     depends_on('expat')
     depends_on('freetype')
@@ -88,7 +84,8 @@ class Vtk(CMakePackage):
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('netcdf-c')
+    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c+mpi', when='+mpi')
     depends_on('netcdf-cxx')
     depends_on('libpng')
     depends_on('libtiff')
