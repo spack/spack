@@ -16,7 +16,7 @@ class PyPyside2(PythonPackage):
     # the offical Qt umbrella.  For more information, see:
     # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
 
-    version('dev', tag='dev')
+    version('develop', tag='dev')
     version('5.13.2', tag='v5.13.2', submodules=True)
     version('5.13.1', tag='v5.13.1', submodules=True)
     version('5.13.0', tag='v5.13.0', submodules=True)
@@ -35,7 +35,7 @@ class PyPyside2(PythonPackage):
     depends_on('graphviz', when='+doc', type='build')
     depends_on('libxml2@2.6.32:', when='+doc', type='build')
     depends_on('libxslt@1.1.19:', when='+doc', type='build')
-    depends_on('py-sphinx', when='+doc', type=('build', 'run'))
+    depends_on('py-sphinx', when='+doc', type='build')
 
     def build_args(self, spec, prefix):
         args = [
