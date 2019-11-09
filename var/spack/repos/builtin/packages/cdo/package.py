@@ -79,7 +79,9 @@ class Cdo(AutotoolsPackage):
               msg='GCC 9 changed OpenMP data sharing behavior')
 
     def configure_args(self):
-        config_args = self.with_or_without('netcdf', activation_value='prefix')
+        config_args = self.with_or_without(
+            'netcdf',
+            activation_value=lambda x: self.spec['netcdf-c'].prefix)
 
         if self.spec.variants['grib2'].value == 'eccodes':
             config_args.append('--with-eccodes=' +
@@ -108,8 +110,9 @@ class Cdo(AutotoolsPackage):
         config_args += self.with_or_without('hdf5',
                                             activation_value='prefix')
 
-        config_args += self.with_or_without('udunits2',
-                                            activation_value='prefix')
+        config_args += self.with_or_without(
+            'udunits2',
+            activation_value=lambda x: self.spec['udunits'].prefix)
 
         config_args += self.with_or_without('libxml2',
                                             activation_value='prefix')

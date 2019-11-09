@@ -23,7 +23,7 @@ class Ncview(AutotoolsPackage):
 
         config_args = []
 
-        if spec.satisfies('^netcdf+mpi'):
+        if spec.satisfies('^netcdf-c+mpi'):
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
 
         return config_args

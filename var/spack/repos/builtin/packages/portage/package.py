@@ -51,6 +51,11 @@ class Portage(CMakePackage):
         else:
             options.append('-DENABLE_MPI=OFF')
 
+        options.append('-DBLA_VENDOR=' + self.spec['blas'].name.upper())
+        options.append('-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined())
+        options.append('-DLAPACK_LIBRARIES=' +
+                       self.spec['lapack'].libs.joined())
+
         options.append("-DLAPACKE_LIBRARY=" +
                        self.spec["lapack"].libs.joined(";"))
 

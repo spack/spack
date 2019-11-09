@@ -6,6 +6,7 @@
 from spack import *
 
 
+# TODO: try switching to CMakePackage for more control over build
 class PyTorch(PythonPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
@@ -50,6 +51,7 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
     version('1.1.0', tag='v1.1.0', submodules=True)
@@ -100,14 +102,21 @@ class PyTorch(PythonPackage):
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
+    # Use Ninja generator to speed up build times
+    # Automatically used if found
+    depends_on('ninja@1.5:', type='build')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('run', 'build'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-future', when='@1.1: ^python@:2', type='build')
-    depends_on('py-pyyaml', type=('run', 'build'))
-    depends_on('py-typing', when='@0.4: ^python@:3.4', type=('run', 'build'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
+    depends_on('py-pybind11', when='@0.4:', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')
+    depends_on('protobuf', when='@0.4:')
+    depends_on('eigen', when='@0.4:')
+    # TODO: replace all third_party packages with Spack packages
 
     # Optional dependencies
     depends_on('cuda@7.5:', when='+cuda', type=('build', 'link', 'run'))
@@ -122,7 +131,6 @@ class PyTorch(PythonPackage):
     depends_on('mkl', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     depends_on('nnpack', when='+nnpack')
-    # TODO: add dependency: https://github.com/pytorch/QNNPACK
     depends_on('qnnpack', when='+qnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
@@ -137,10 +145,13 @@ class PyTorch(PythonPackage):
     depends_on('tbb', when='+tbb')
 
     # Test dependencies
-    depends_on('ninja', type='test')
     depends_on('py-hypothesis', type='test')
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
+
+    # Both build and install run cmake/make/make install
+    # Only run once to speed up build times
+    phases = ['install']
 
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
@@ -174,7 +185,19 @@ class PyTorch(PythonPackage):
         if 'mkl' in self.spec:
             env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
 
+        # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)
+
+        # Spack logs have trouble handling colored output
+        env.set('COLORIZE_OUTPUT', 'OFF')
+
+        # Don't use vendored third-party libraries
+        env.set('BUILD_CUSTOM_PROTOBUF', 'OFF')
+        env.set('USE_PYTORCH_QNNPACK', 'OFF')
+        env.set('USE_SYSTEM_EIGEN_INSTALL', 'ON')
+        env.set('pybind11_DIR', self.spec['py-pybind11'].prefix)
+        env.set('pybind11_INCLUDE_DIR',
+                self.spec['py-pybind11'].prefix.include)
 
         enable_or_disable('cuda')
         if '+cuda' in self.spec:
@@ -189,7 +212,6 @@ class PyTorch(PythonPackage):
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
 
-        enable_or_disable('miopen')
         if '+miopen' in self.spec:
             env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
             env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
@@ -212,7 +234,6 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('caffe2', keyword='BUILD', var='CAFFE2_OPS')
         enable_or_disable('gloo', newer=True)
-        enable_or_disable('gloo', var='IBVERBS', newer=True)
         enable_or_disable('opencv', newer=True)
         enable_or_disable('openmp', newer=True)
         enable_or_disable('ffmpeg', newer=True)
@@ -223,15 +244,19 @@ class PyTorch(PythonPackage):
         env.set('PYTORCH_BUILD_VERSION', self.version)
         env.set('PYTORCH_BUILD_NUMBER', 0)
 
-        # BLAS to be used by Caffe2. Can be MKL, Eigen, ATLAS, or OpenBLAS.
+        # BLAS to be used by Caffe2
         if '^mkl' in self.spec:
             env.set('BLAS', 'MKL')
-        elif '^eigen' in self.spec:
-            env.set('BLAS', 'Eigen')
         elif '^atlas' in self.spec:
             env.set('BLAS', 'ATLAS')
         elif '^openblas' in self.spec:
             env.set('BLAS', 'OpenBLAS')
+        elif '^veclibfort' in self.spec:
+            env.set('BLAS', 'vecLib')
+        elif '^libflame' in self.spec:
+            env.set('BLAS', 'FLAME')
+        elif '^eigen' in self.spec:
+            env.set('BLAS', 'Eigen')
 
         enable_or_disable('redis', newer=True)
         enable_or_disable('zstd', newer=True)

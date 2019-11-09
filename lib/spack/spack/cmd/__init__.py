@@ -331,7 +331,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg('format', None)
     if format_string is None:
-        nfmt = '{namespace}.{name}' if namespace else '{name}'
+        nfmt = '{fullname}' if namespace else '{name}'
         ffmt = ''
         if full_compiler or flags:
             ffmt += '{%compiler.name}'
