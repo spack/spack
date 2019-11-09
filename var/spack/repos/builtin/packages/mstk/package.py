@@ -24,14 +24,15 @@ class Mstk(CMakePackage):
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
 
-    maintainers = ['julienloiseau']
+    maintainers = ['julienloiseau','raovgarimella']
 
     version('master', branch='master')
 
     variant('parallel', default='none', description='Enable Parallel Support',
             values=('none', 'metis', 'zoltan', 'parmetis'), multi=True)
     variant('exodusii', default=False, description='Enable ExodusII')
-    variant('use_markers', default=True, description="Enable MSTK to use markers")
+    variant('use_markers', default=True, description='Enable MSTK to use markers')
+    variant('enable_tests', default=True, description='Enable unit testing')
 
     depends_on("cmake@3.8:", type='build')
 
@@ -52,6 +53,9 @@ class Mstk(CMakePackage):
     # It includes netcdf which includes hdf5
     depends_on("exodusii", when='+exodusii')
 
+    # Unit testing variant
+    depends_on("unittest-cpp", when='+enable_tests')
+    
     def cmake_args(self):
         options = []
         if '+use_markers' in self.spec:
@@ -70,18 +74,18 @@ class Mstk(CMakePackage):
 
         if ("parmetis" in self.spec or "zoltan" in self.spec and
             "+exodusii" in self.spec):
-            options.append("-DENABLE_METIS=ON")
-            options.append("-DENABLE_ZOLTAN=ON")
+            options.append('-DENABLE_METIS=ON')
+            options.append('-DENABLE_ZOLTAN=ON')
             options.append('-DZOLTAN_NEEDS_ParMETIS=ON')
         else:
             if "zoltan" in self.spec:
-                options.append("-DENABLE_ZOLTAN=ON")
+                options.append('-DENABLE_ZOLTAN=ON')
             else:
-                options.append("-DENABLE_ZOLTAN=OFF")
+                options.append('-DENABLE_ZOLTAN=OFF')
             if "metis" in self.spec:
-                options.append("-DENABLE_METIS=ON")
+                options.append('-DENABLE_METIS=ON')
             else:
-                options.append("-DENABLE_METIS=OFF")
+                options.append('-DENABLE_METIS=OFF')
             options.append('-DZOLTAN_NEEDS_ParMETIS=OFF')
 
         # ExodusII variant
@@ -90,4 +94,10 @@ class Mstk(CMakePackage):
         else:
             options.append('-DENABLE_ExodusII=OFF')
 
+        # Unit test variant
+        if '+enable_tests' in self.spec:
+            options.append('-DENABLE_Tests=ON')
+        else:
+            options.append('-DENABLE_Tests=OFF')
+            
         return options
