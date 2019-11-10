@@ -807,7 +807,7 @@ def get_checksums_for_versions(
     ])
 
     num_hash = len(version_hashes)
-    tty.msg("Checksummed {0} version{1} of {2}".format(
+    tty.msg("Checksummed {0} version{1} of {2}:".format(
         num_hash, '' if num_hash == 1 else 's', name))
 
     return version_lines
