@@ -146,7 +146,7 @@ class Cudnn(Package):
     depends_on('cuda@10.1.0:10.1.999', when='@10.1')
     depends_on('cuda@10.0.0:10.0.999', when='@10.0')
     depends_on('cuda@9.2.0:9.2.999',   when='@9.2')
-    depends_on('cuda@9.0.0:9.0.999',   when='@9.0')
+    depends_on('cuda@9.0.0:9.1.999',   when='@9.0')
     depends_on('cuda@8.0.0:8.0.999',   when='@8.0')
 
     def install(self, spec, prefix):
