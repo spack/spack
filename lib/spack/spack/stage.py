@@ -759,8 +759,8 @@ def get_checksums_for_versions(
             "",
             *spack.cmd.elide_list(
                 ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
-                 for v in sorted_versions]))
-    tty.msg('')
+                 for v in sorted_versions]),
+            "")
 
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=1, abort='q')

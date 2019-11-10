@@ -61,3 +61,4 @@ def checksum(parser, args):
 
     print()
     print(version_lines)
+    print()
