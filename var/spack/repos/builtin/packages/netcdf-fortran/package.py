@@ -20,10 +20,17 @@ class NetcdfFortran(AutotoolsPackage):
     version('4.4.4', sha256='b2d395175f8d283e68c8be516e231a96b191ade67ad0caafaf7fa01b1e6b5d75')
     version('4.4.3', sha256='330373aa163d5931e475b5e83da5c1ad041e855185f24e6a8b85d73b48d6cda9')
 
+    variant('mpi', default=True,
+            description='Enable parallel I/O for netcdf-4')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
-    depends_on('netcdf-c')
+    # We need to build with MPI wrappers if parallel I/O features is enabled:
+    # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
+    depends_on('mpi', when='+mpi')
+
+    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c+mpi', when='+mpi')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -56,3 +63,13 @@ class NetcdfFortran(AutotoolsPackage):
         return find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
         )
+
+    def configure_args(self):
+        config_args = []
+
+        if '+mpi' in self.spec:
+            config_args.append('CC=%s' % self.spec['mpi'].mpicc)
+            config_args.append('FC=%s' % self.spec['mpi'].mpifc)
+            config_args.append('F77=%s' % self.spec['mpi'].mpif77)
+
+        return config_args

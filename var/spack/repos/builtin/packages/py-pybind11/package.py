@@ -56,7 +56,27 @@ class PyPybind11(CMakePackage):
     def setup_build_environment(self, env):
         env.set('PYBIND11_USE_CMAKE', 1)
 
+    def patch(self):
+        """ see https://github.com/spack/spack/issues/13559 """
+        filter_file('import sys',
+                    'import sys; return "{0}"'.format(self.prefix.include),
+                    'pybind11/__init__.py',
+                    string=True)
+
     def install(self, spec, prefix):
         super(PyPybind11, self).install(spec, prefix)
         setup_py('install', '--single-version-externally-managed', '--root=/',
                  '--prefix={0}'.format(prefix))
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        with working_dir('spack-test', create=True):
+            # test include helper points to right location
+            python = self.spec['python'].command
+            inc = python(
+                '-c',
+                'import pybind11 as py; ' +
+                self.spec['python'].package.print_string('py.get_include()'),
+                output=str)
+            assert inc.strip() == str(self.prefix.include)

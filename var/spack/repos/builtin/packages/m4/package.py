@@ -19,7 +19,9 @@ class M4(AutotoolsPackage):
     patch('pgi.patch', when='@1.4.17')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
-    patch('secure_snprintf.patch', when='platform_os = highsierra')
+    patch('secure_snprintf.patch', when='os = highsierra')
+    patch('secure_snprintf.patch', when='os = mojave')
+    patch('secure_snprintf.patch', when='os = catalina')
     # https://bugzilla.redhat.com/show_bug.cgi?id=1573342
     patch('https://src.fedoraproject.org/rpms/m4/raw/5d147168d4b93f38a4833f5dd1d650ad88af5a8a/f/m4-1.4.18-glibc-change-work-around.patch', sha256='fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8', when='@1.4.18')
 
