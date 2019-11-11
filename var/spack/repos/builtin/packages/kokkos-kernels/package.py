@@ -13,6 +13,8 @@ class KokkosKernels(MakefilePackage):
     homepage = "https://github.com/kokkos/kokkos-kernels"
     url      = "https://github.com/kokkos/kokkos-kernels/archive/2.7.00.tar.gz"
 
+    version('2.9.00', sha256='dafa9ebcdbcdc95641a986a80fcd3e532f1d80692c80a51cb08182c02c1added')
+    version('2.8.00', sha256='c9648dbf5b9cbddf2aa72f6d214a2c40e23e51660f903b83743617251574fe06')
     version('2.7.00', sha256='adf4af44eadbdfbeb9ec69dd5fae4e2852bd1fbe4a69213efd199e49f4098254')
     version('2.6.00', sha256='14ebf806f66b9ca73949a478b8d959be7fa1165a640935760a724d7cc0a66335')
     version('2.5.00', sha256='2c2289da3a41dafd97726e90507debafbb9f5e49ca5b0f5c8d1e044a5796f000')
@@ -24,6 +26,8 @@ class KokkosKernels(MakefilePackage):
     depends_on('kokkos@2.6.00', when='@2.6.00')
     depends_on('kokkos@2.7.00', when='@2.7.00')
     depends_on('kokkos@develop', when='@develop')
+    depends_on('kokkos@2.8.00', when='@2.8.00')
+    depends_on('kokkos@2.9.00', when='@2.9.00')
 
     patch('makefile.patch')
 
