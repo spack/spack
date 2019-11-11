@@ -170,6 +170,7 @@ class ConfigScope(object):
 
 class SingleFileScope(ConfigScope):
     """This class represents a configuration scope in a single YAML file."""
+
     def __init__(self, name, path, schema, yaml_path=None):
         """Similar to ``ConfigScope`` but can be embedded in another schema.
 
@@ -275,6 +276,7 @@ class InternalConfigScope(ConfigScope):
     config file settings are accessed the same way, and Spack can easily
     override settings from files.
     """
+
     def __init__(self, name, data=None):
         super(InternalConfigScope, self).__init__(name, None)
         self.sections = syaml.syaml_dict()
@@ -608,12 +610,14 @@ def _add_platform_scope(cfg, scope_type, name, path):
     plat_path = os.path.join(path, platform)
     cfg.push_scope(scope_type(plat_name, plat_path))
 
+
 def _add_os_scope(cfg, scope_type, name, path):
     """Add an os-specific subdirectory for the current platform."""
     os = spack.architecture.sys_type().split('-')[1]
     os_name = '%s/%s' % (name, os)
     os_path = '%s/%s' % (path, os)
     cfg.push_scope(scope_type(os_name, os_path))
+
 
 def _add_command_line_scopes(cfg, command_line_scopes):
     """Add additional scopes from the --config-scope argument.
