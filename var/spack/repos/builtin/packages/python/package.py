@@ -108,7 +108,13 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext')
+    # Note: Python depends on libintl.h which is provided by the 'gettext'
+    # package, but adding 'gettext' as a dependency creates a cyclic
+    # dependency. It should be investigated further how to resolve this
+    # conflict. In the meantime it is removed because it hasn't as of yet
+    # caused any build failures to build without it.
+    # See: https://github.com/spack/spack/issues/13637
+    # depends_on('gettext')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
