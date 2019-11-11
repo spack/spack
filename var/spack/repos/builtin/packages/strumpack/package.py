@@ -64,7 +64,7 @@ class Strumpack(CMakePackage):
     depends_on('parmetis', when='+parmetis')
     depends_on('scotch~metis', when='+scotch')
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
-    depends_on('butterflypack@1.1.0', when='+butterflypack+mpi')
+    depends_on('butterflypack@1.1.0:', when='+butterflypack+mpi')
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
