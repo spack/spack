@@ -37,6 +37,9 @@ class IntelMklDnn(CMakePackage):
                 '-DOpenMP_libomp_LIBRARY={0}'.format(
                     self.spec['llvm-openmp'].libs.libraries[0]
                 ),
+                '-DCMAKE_SHARED_LINKER_FLAGS={0}'.format(
+                    self.spec['llvm-openmp'].libs.ld_flags
+                ),
             ])
 
         return args
