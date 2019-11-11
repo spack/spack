@@ -10,7 +10,7 @@ class IntelMklDnn(CMakePackage):
     """Intel(R) Math Kernel Library for Deep Neural Networks
     (Intel(R) MKL-DNN)."""
 
-    homepage = "http://intel.github.io/mkl-dnn/"
+    homepage = "https://intel.github.io/mkl-dnn/"
     url      = "https://github.com/intel/mkl-dnn/archive/v1.1.1.tar.gz"
 
     version('1.1.1',  sha256='a31b08a89473bfe3bd6ed542503336d21b4177ebe4ccb9a97810808f634db6b6')
