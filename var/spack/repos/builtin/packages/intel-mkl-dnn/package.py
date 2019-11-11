@@ -22,6 +22,21 @@ class IntelMklDnn(CMakePackage):
 
     depends_on('cmake@2.8.11:', type='build')
     depends_on('intel-mkl')
+    depends_on('llvm-openmp', when='%clang platform=darwin')
 
-    # https://github.com/intel/mkl-dnn/issues/591
-    # depends_on('llvm-openmp', when='%clang platform=darwin')
+    def cmake_args(self):
+        args = []
+
+        # https://github.com/intel/mkl-dnn/issues/591
+        if self.spec.satisfies('%clang platform=darwin'):
+            args.extend([
+                '-DOpenMP_CXX_FLAGS={0}'.format(self.compiler.openmp_flag),
+                '-DOpenMP_C_FLAGS={0}'.format(self.compiler.openmp_flag),
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_C_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}'.format(
+                    self.spec['llvm-openmp'].libs.libraries[0]
+                ),
+            ])
+
+        return args
