@@ -35,17 +35,7 @@ class Nlopt(CMakePackage):
     depends_on('guile', when='+guile')
     depends_on('octave', when='+octave')
     depends_on('matlab', when='+matlab')
-
-    def setup_run_environment(self, env):
-        # Prepend PYTHON_PATH with NLopt Python bindings directory
-        spec = self.spec
-        if spec.satisfies("+python"):
-            lib_dir = self.prefix.lib
-            python_version = spec['python'].version.up_to(2)
-            nlopt_pydir = join_path(lib_dir,
-                                    'python{0}'.format(python_version),
-                                    "site-packages")
-            env.prepend_path('PYTHONPATH', nlopt_pydir)
+    extends('python', when='+python')
 
     def cmake_args(self):
         # Add arguments other than
