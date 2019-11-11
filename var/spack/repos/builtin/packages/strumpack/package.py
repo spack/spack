@@ -34,6 +34,7 @@ class Strumpack(CMakePackage):
     version('3.0.0', sha256='7acd9b4653b8b11380de733c80b164348ca00f9226904f5dc166a8e3db88cd20')
     version('2.2.0', sha256='8fe73875cbbb29ed1faf714e3bf13ad538eb062e39d7d5e73cb9c4aafb571e24')
 
+    variant('shared', default=True, description='Build shared libraries')
     variant('mpi', default=True, description='Use MPI')
     variant('openmp', default=True,
             description='Enable thread parallellism via tasking with OpenMP')
