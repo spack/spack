@@ -13,6 +13,8 @@ class IntelMklDnn(CMakePackage):
     homepage = "https://intel.github.io/mkl-dnn/"
     url      = "https://github.com/intel/mkl-dnn/archive/v1.1.1.tar.gz"
 
+    maintainers = ['adamjstewart']
+
     version('1.1.1',  sha256='a31b08a89473bfe3bd6ed542503336d21b4177ebe4ccb9a97810808f634db6b6')
     version('0.19',   sha256='ba39da6adb263df05c4ca2a120295641fc97be75b588922e4274cb628dbe1dcd')
     version('0.18.1', sha256='fc7506701dfece9b03c0dc83d0cda9a44a5de17cdb54bc7e09168003f02dbb70')
