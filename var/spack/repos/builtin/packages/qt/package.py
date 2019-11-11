@@ -423,8 +423,16 @@ class Qt(Package):
             ])
             if self.spec.satisfies('@:5.11'):
                 config_args.append('-no-xinput2')
-
         # FIXME: else: -system-xcb ?
+
+        platform = None
+        if MACOS_VERSION:
+            platform = 'unsupported/macx-clang-libc++'
+        elif self.compiler.name == 'clang':
+            platform = 'unsupported/linux-clang-libc++'
+
+        if platform is not None:
+            config.args.extend(['-platform', platform])
 
         return config_args
 
@@ -472,7 +480,6 @@ class Qt(Package):
             sdkpath = which('xcrun')('--show-sdk-path', output=str).strip()
             config_args.extend([
                 '-cocoa',
-                '-platform', 'unsupported/macx-clang-libc++',
                 '-sdk', sdkpath])
 
         configure(*config_args)
