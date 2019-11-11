@@ -3,17 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class PyXattr(PythonPackage):
     """A python interface to access extended file attributes,
-        sans libattr dependency"""
+    sans libattr dependency.
+    """
 
     homepage = "http://pyxattr.k1024.org/"
-    git      = "https://github.com/fwang2/pyxattr.git"
+    git      = "https://github.com/iustin/pyxattr.git"
 
-    version('develop', branch='dev')
+    version('master', branch='master')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
