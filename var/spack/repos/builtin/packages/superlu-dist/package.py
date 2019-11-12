@@ -54,6 +54,10 @@ class SuperluDist(CMakePackage):
             '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
         ]
 
+        if (spec.satisfies('%xl') or spec.satisfies('%xl_r')) and \
+           spec.satisfies('@:6.1.1'):
+            args.append('-DCMAKE_C_FLAGS=-DNoChange')
+
         if '+int64' in spec:
             args.append('-DXSDK_INDEX_SIZE=64')
         else:
