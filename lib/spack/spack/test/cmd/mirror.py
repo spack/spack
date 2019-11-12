@@ -71,31 +71,32 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
         assert mirror_res == expected
 
 
-def test_mirror_crud(tmp_scope):
-    mirror_ = curry_scope_arg(mirror, 1, tmp_scope)
+def test_mirror_crud(tmp_scope, capsys):
+    with capsys.disabled():
+        mirror_ = curry_scope_arg(mirror, 1, tmp_scope)
 
-    mirror_('add', 'mirror', 'http://spack.io')
-    output = mirror_('remove', 'mirror')
-    assert 'Removed mirror' in output
+        mirror_('add', 'mirror', 'http://spack.io')
+        output = mirror_('remove', 'mirror')
+        assert 'Removed mirror' in output
 
-    output = mirror_('add', 'mirror', 'http://spack.io')
+        mirror_('add', 'mirror', 'http://spack.io')
 
-    # no-op
-    output = mirror_('set-url', 'mirror', 'http://spack.io')
-    assert 'Url already set' in output
+        # no-op
+        output = mirror_('set-url', 'mirror', 'http://spack.io')
+        assert 'Url already set' in output
 
-    output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
-    assert 'Changed (push) url' in output
+        output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
+        assert 'Changed (push) url' in output
 
-    # no-op
-    output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
-    assert 'Url already set' in output
+        # no-op
+        output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
+        assert 'Url already set' in output
 
-    output = mirror_('remove', 'mirror')
-    assert 'Removed mirror' in output
+        output = mirror_('remove', 'mirror')
+        assert 'Removed mirror' in output
 
-    output = mirror_('list')
-    assert 'No mirrors configured' in output
+        output = mirror_('list')
+        assert 'No mirrors configured' in output
 
 
 def test_mirror_nonexisting(tmp_scope):
