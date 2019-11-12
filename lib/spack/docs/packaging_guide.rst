@@ -1464,8 +1464,7 @@ that the same package with different patches applied will have different
 hash identifiers.  To ensure that the hashing scheme is consistent, you
 must use a ``sha256`` checksum for the patch.  Patches will be fetched
 from their URLs, checked, and applied to your source code.  You can use
-the ``spack sha256`` command to generate a checksum for a patch file or
-URL.
+the GNU utils ``sha256sum`` command to generate a checksum for a patch file.
 
 Spack can also handle compressed patches.  If you use these, Spack needs
 a little more help.  Specifically, it needs *two* checksums: the
