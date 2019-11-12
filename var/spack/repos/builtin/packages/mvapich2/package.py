@@ -3,9 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os.path
 import sys
-
-from spack import *
 
 
 class Mvapich2(AutotoolsPackage):
@@ -195,34 +194,35 @@ class Mvapich2(AutotoolsPackage):
 
         return opts
 
-    def setup_environment(self, spack_env, run_env):
-        spec = self.spec
+    def setup_build_environment(self, env):
         # mvapich2 configure fails when F90 and F90FLAGS are set
-        spack_env.unset('F90')
-        spack_env.unset('F90FLAGS')
-        if 'process_managers=slurm' in spec:
-            run_env.set('SLURM_MPI_TYPE', 'pmi2')
+        env.unset('F90')
+        env.unset('F90FLAGS')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+    def setup_run_environment(self, env):
+        if 'process_managers=slurm' in self.spec:
+            env.set('SLURM_MPI_TYPE', 'pmi2')
 
-        spack_env.set('MPICH_CC', spack_cc)
-        spack_env.set('MPICH_CXX', spack_cxx)
-        spack_env.set('MPICH_F77', spack_f77)
-        spack_env.set('MPICH_F90', spack_fc)
-        spack_env.set('MPICH_FC', spack_fc)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', os.path.join(self.prefix.bin, 'mpicxx'))
+        env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
+
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
-        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
-        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
-        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        self.spec.mpicc  = os.path.join(self.prefix.bin, 'mpicc')
+        self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpicxx')
+        self.spec.mpifc  = os.path.join(self.prefix.bin, 'mpif90')
+        self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
         self.spec.mpicxx_shared_libs = [
-            join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
-            join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
+            os.path.join(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
+            os.path.join(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
     @run_before('configure')
