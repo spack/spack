@@ -22,7 +22,7 @@ class Mpt(Package):
     provides('mpi@:1.3', when='@1:')
 
     filter_compiler_wrappers(
-        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif77', 'mpif08',
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpif08',
         relative_root='bin'
     )
 
@@ -42,7 +42,7 @@ class Mpt(Package):
         env.set('MPICC',  self.prefix.bin.mpicc)
         env.set('MPICXX', self.prefix.bin.mpicxx)
         env.set('MPIF77', self.prefix.bin.mpif77)
-        env.set('MPIF90', self.prefix.bin.mpifc)
+        env.set('MPIF90', self.prefix.bin.mpif90)
         env.set('MPICC_CC', spack_cc)
         env.set('MPICXX_CXX', spack_cxx)
         env.set('MPIF90_F90', spack_fc)
@@ -56,7 +56,7 @@ class Mpt(Package):
         else:
             self.spec.mpicc = self.prefix.bin.mpicc
             self.spec.mpicxx = self.prefix.bin.mpicxx
-            self.spec.mpifc = self.prefix.bin.mpifc
+            self.spec.mpifc = self.prefix.bin.mpif90
             self.spec.mpif77 = self.prefix.bin.mpif77
 
     @property
