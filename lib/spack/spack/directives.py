@@ -19,6 +19,7 @@ The available directives are:
 
   * ``conflicts``
   * ``depends_on``
+  * ``dependcy_file``
   * ``extends``
   * ``patch``
   * ``provides``
@@ -27,7 +28,6 @@ The available directives are:
   * ``version``
 
 """
-
 import collections
 import functools
 import os.path
@@ -46,6 +46,11 @@ from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
+
+import ruamel.yaml as yaml
+import spack.schema
+import spack.schema.package_dependencies
+import spack.schema.package_versions
 
 __all__ = []
 
@@ -259,6 +264,19 @@ class DirectiveMeta(type):
 directive = DirectiveMeta.directive
 
 
+def _version(pkg, ver, checksum=None, **kwargs):
+    if checksum is not None:
+        if hasattr(pkg, 'has_code') and not pkg.has_code:
+            raise VersionChecksumError(
+                "{0}: Checksums not allowed in no-code packages"
+                "(see '{1}' version).".format(pkg.name, ver))
+
+        kwargs['checksum'] = checksum
+
+    # Store kwargs for the package to later with a fetch_strategy.
+    pkg.versions[Version(ver)] = kwargs
+
+
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
     """Adds a version and, if appropriate, metadata for fetching its code.
@@ -271,17 +289,34 @@ def version(ver, checksum=None, **kwargs):
     code packages later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        if checksum is not None:
-            if hasattr(pkg, 'has_code') and not pkg.has_code:
-                raise VersionChecksumError(
-                    "{0}: Checksums not allowed in no-code packages"
-                    "(see '{1}' version).".format(pkg.name, ver))
-
-            kwargs['checksum'] = checksum
-
-        # Store kwargs for the package to later with a fetch_strategy.
-        pkg.versions[Version(ver)] = kwargs
+        return _version(pkg, ver, checksum=checksum, **kwargs)
     return _execute_version
+
+
+@directive('versions')
+def versions_file(relative_path):
+    """Add a versions from a yaml file
+
+    Args:
+        relative_path (str): relative filename of the dependency file
+
+    This directive is a wrapper around `version`, allowing developers to put
+    their version lists in a file.
+    """
+    import jsonschema
+    def _execute_versions_file(pkg):
+        abs_path = _abs_path_from_relative_pkg_path(pkg, relative_path)
+        data = yaml.load(open(abs_path))
+        schema = spack.schema.package_versions.schema
+        try:
+            spack.schema.Validator(schema).validate(data)
+        except jsonschema.ValidationError as e:
+            raise VersionsFileError(e, data)
+        for (ver, verinfo) in data["versions"].items():
+            checksum = verinfo.pop("checksum", None)
+            kwargs = dict(verinfo)
+            _version(pkg, ver, checksum=checksum, **kwargs)
+    return _execute_versions_file
 
 
 def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
@@ -379,6 +414,36 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
     def _execute_depends_on(pkg):
         _depends_on(pkg, spec, when=when, type=type, patches=patches)
     return _execute_depends_on
+
+
+@directive(('dependencies'))
+def dependency_file(relative_path):
+    """Creates a dict of deps with specs defining when they apply.
+
+    Args:
+        relative_path (str): relative filename of the dependency file
+
+    This directive is a wrapper around depends_on, allowing developers to put
+    their dependency lists in a file.
+    @see The section "Dependency specs" in the Spack Packaging Guide.
+
+    """
+    import jsonschema
+    def _execute_dependency_file(pkg):
+        abs_path = _abs_path_from_relative_pkg_path(pkg, relative_path)
+        data = yaml.load(open(abs_path))
+        schema = spack.schema.package_dependencies.schema
+        try:
+            spack.schema.Validator(schema).validate(data)
+        except jsonschema.ValidationError as e:
+            raise DependencyFileError(e, data)
+        for (spec, depinfo) in data["dependencies"].items():
+            depinfo = depinfo or {}
+            when = depinfo.get("when", None)
+            type = depinfo.get("type", default_deptype)
+            patches = depinfo.get("patches", None)
+            _depends_on(pkg, spec, when=when, type=type, patches=patches)
+    return _execute_dependency_file
 
 
 @directive(('extendees', 'dependencies'))
@@ -641,6 +706,31 @@ def resource(**kwargs):
     return _execute_resource
 
 
+def _abs_path_from_relative_pkg_path(pkg, relative_path):
+    import inspect
+    abs_path = None
+    pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+    for cls in inspect.getmro(pkg_cls):
+        if not hasattr(cls, 'module'):
+            # We've gone too far up the MRO
+            break
+
+        # Cannot use pkg.package_dir because it's a property and we have
+        # classes, not instances.
+        pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+        path = os.path.join(pkg_dir, relative_path)
+        if os.path.exists(path):
+            abs_path = path
+            break
+
+    if abs_path is None:
+        msg = 'File %s for ' % relative_path
+        msg += 'package %s.%s does not exist.' % (pkg.namespace, pkg.name)
+        raise ValueError(msg)
+
+    return abs_path
+
+
 class DirectiveError(spack.error.SpackError):
     """This is raised when something is wrong with a package directive."""
 
@@ -655,3 +745,11 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+class DependencyFileError(DirectiveError):
+    """Raised when an reading or accessing a package's dependency file"""
+
+
+class VersionsFileError(DirectiveError):
+    """Raised when an reading or accessing a package's versions file"""
