@@ -129,6 +129,7 @@ class Ascent(Package, CudaPackage):
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
+    depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
