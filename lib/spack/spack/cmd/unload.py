@@ -3,10 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.cmd.common import print_module_placeholder_help, arguments
+import argparse
+import sys
 
-description = "remove package from environment using `module unload`"
-section = "modules"
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.util.environment
+
+description = "remove package from the user environment variables`"
+section = "user environment"
 level = "short"
 
 
@@ -15,6 +21,40 @@ def setup_parser(subparser):
        message with -h. """
     arguments.add_common_arguments(subparser, ['installed_spec'])
 
+    shells = subparser.add_mutually_exclusive_group()
+    shells.add_argument(
+        '--sh', action='store_const', dest='shell', const='sh',
+        help="print sh commands to activate the environment")
+    shells.add_argument(
+        '--csh', action='store_const', dest='shell', const='csh',
+        help="print csh commands to activate the environment")
+
+    subparser.add_argument(
+        'specs', nargs=argparse.REMAINDER,
+        help='spec of package to unload with modules')
+
 
 def unload(parser, args):
-    print_module_placeholder_help()
+    env = ev.get_env(args, 'unload')
+    specs = list(map(lambda spec: spack.cmd.disambiguate_spec(spec, env),
+                     spack.cmd.parse_specs(args.specs)))
+    if not args.shell:
+        msg = [
+            "This command works best with Spack's shell support",
+            ""
+        ] + spack.cmd.common.shell_init_instructions + [
+            'Or, if you want to use `spack load` without initializing',
+            'shell support, you can run one of these:',
+            '',
+            '    eval `spack unload --sh %s`   # for bash/sh' % ' '.join(specs),
+            '    eval `spack unload --csh %s`  # for csh/tcsh' % ' '.join(specs),
+        ]
+        tty.msg(*msg)
+        return 1
+
+    env_mod = spack.util.environment.EnvironmentModifications()
+    for spec in specs:
+        env_mod.extend(ev.environment_modifications_for_spec(spec).reversed())
+    cmds = env_mod.shell_modifications()
+
+    sys.stdout.write(cmds)
