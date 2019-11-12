@@ -141,41 +141,17 @@ spack() {
             return
             ;;
         "load"|"unload")
-            # Shift any other args for use off before parsing spec.
-            _sp_subcommand_args=""
-            _sp_module_args=""
-            while [ "${1#-}" != "${1}" ]; do
-                if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-                    command spack $_sp_flags $_sp_subcommand $_sp_subcommand_args "$@"
-                    return
-                elif [ "$1" = "-r" ] || [ "$1" = "--dependencies" ]; then
-                    _sp_subcommand_args="$_sp_subcommand_args $1"
-                else
-                    _sp_module_args="$_sp_module_args $1"
-                fi
-                shift
-            done
-
-            # Here the user has run use or unuse with a spec.  Find a matching
-            # spec using 'spack module find', then use the appropriate module
-            # tool's commands to add/remove the result from the environment.
-            # If spack module command comes back with an error, do nothing.
-            case $_sp_subcommand in
-                "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "$@"); then
-                        module load $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-                "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "$@"); then
-                        module unload $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-            esac
+            # get --sh or --csh arguments
+            _a="$@"
+            if [ "${_a#*--sh}" != "$_a" ] || \
+                [ "${_a#*--csh}" != "$_a" ];
+            then
+                # just  execute the command if --sh or --csh are provided
+                command spack $_sp_flags $_sp_subcommand "$@"
+            else
+                # no args, source the output of the command
+                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@")
+            fi
             ;;
         *)
             command spack $_sp_flags $_sp_subcommand "$@"
