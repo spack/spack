@@ -31,7 +31,7 @@ class Precice(CMakePackage):
     # Skip version 1.1.1 entirely, the cmake was lacking install.
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('petsc', default=False, description='Enable PETSc support')
+    variant('petsc', default=True, description='Enable PETSc support')
     variant('python', default=False, description='Enable Python support')
     variant('shared', default=True, description='Build shared libraries')
 
