@@ -641,7 +641,7 @@ function _spack_install {
                     -v --verbose --fake --only-concrete -f --file --clean
                     --dirty --test --run-tests --log-format --log-file
                     --cdash-upload-url --cdash-build --cdash-site --cdash-track
-                    --cdash-buildstamp -y --yes-to-all" -- "$cur"
+                    --cdash-buildstamp --help-cdash -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
