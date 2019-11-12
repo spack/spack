@@ -140,8 +140,7 @@ class Cray(Platform):
 
         def modules_in_output(output):
             """Returns a list of valid modules parsed from modulecmd output"""
-            return [i for i in re.split(r'  |\n', output)
-                    if len(i.split()) == 1]
+            return [i for i in re.split(r'\s\s+|\n', output)]
 
         def target_names_from_modules(modules):
             # Craype- module prefixes that are not valid CPU targets.
