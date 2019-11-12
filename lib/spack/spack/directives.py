@@ -304,6 +304,7 @@ def versions_file(relative_path):
     their version lists in a file.
     """
     import jsonschema
+
     def _execute_versions_file(pkg):
         abs_path = _abs_path_from_relative_pkg_path(pkg, relative_path)
         data = yaml.load(open(abs_path))
@@ -429,6 +430,7 @@ def dependency_file(relative_path):
 
     """
     import jsonschema
+
     def _execute_dependency_file(pkg):
         abs_path = _abs_path_from_relative_pkg_path(pkg, relative_path)
         data = yaml.load(open(abs_path))
