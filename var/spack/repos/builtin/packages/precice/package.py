@@ -48,6 +48,13 @@ class Precice(CMakePackage):
     # numpy 1.17+ requires Python 3
     depends_on('py-numpy@:1.16', when='+python', type=('build', 'run'))
 
+    # We require C++11 compiler support as well as
+    # library support for time manipulators (N2071, N2072)
+    conflicts('%gcc@:4')
+    conflicts('%clang@:3.7')
+    conflicts('%intel@:14')
+    conflicts('%pgi@:14')
+
     def cmake_args(self):
         """Populate cmake arguments for precice."""
         spec = self.spec
