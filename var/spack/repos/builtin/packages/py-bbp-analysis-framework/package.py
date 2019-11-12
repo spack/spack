@@ -12,6 +12,7 @@ class PyBbpAnalysisFramework(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-analysis-framework'
     git      = 'ssh://bbpcode.epfl.ch/nse/bbp-analysis-framework'
 
+    version('1.6.40', commit='66624837486d8e0783b146b208646eee55bbdb7a')
     version('1.6.39', commit='35eb9e33022bad3f73f377fdeeeabb30245229a6')
     version('0.6.39', commit='98d63428d82c6e6362d461690b084ced491b89ba')
 
