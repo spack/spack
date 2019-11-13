@@ -464,8 +464,8 @@ class Mfem(Package):
             conduit_include_path = join_path(conduit.prefix.include,
                                              "conduit")
             # add this path to the found flags
-            conduit_opt_flags = "-I{} {}".format(conduit_include_path,
-                                                 headers.cpp_flags)
+            conduit_opt_flags = "-I{0} {1}".format(conduit_include_path,
+                                                   headers.cpp_flags)
 
             options += [
                 'CONDUIT_OPT=%s' % conduit_opt_flags,
