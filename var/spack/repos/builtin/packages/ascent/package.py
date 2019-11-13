@@ -35,6 +35,7 @@ class Ascent(Package, CudaPackage):
 
     homepage = "https://github.com/Alpine-DAV/ascent"
     git      = "https://github.com/Alpine-DAV/ascent.git"
+    url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.0/ascent-v0.5.0-src-with-blt.tar.gz"
 
     maintainers = ['cyrush']
 
@@ -42,6 +43,8 @@ class Ascent(Package, CudaPackage):
             branch='develop',
             submodules=True,
             preferred=True)
+
+    version('0.5.0', sha256='e26df83d9e0b3b2ac3c56319707134f1cf7c7c5245627b944d26e1b6b636b7dc')
 
     ###########################################################################
     # package variants
