@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class PyPyqt4(SIPPackage):
     """PyQt is a set of Python v2 and v3 bindings for The Qt Company's Qt
@@ -59,9 +59,9 @@ class PyPyqt4(SIPPackage):
     @run_after('install')
     def make_qsci(self):
         if '+qsci' in self.spec:
-            rsrc_py_path = str(self.stage.source_path) +\
-                '/spack-resource-qscintilla/QScintilla_gpl-' +\
-                str(self.spec['qscintilla'].version) + '/Python'
+            rsrc_py_path = os.path.join(str(self.stage.source_path),
+                'spack-resource-qscintilla/QScintilla_gpl-',
+                str(self.spec['qscintilla'].version),'Python')
             with working_dir(rsrc_py_path):
                 pydir = join_path(site_packages_dir, 'PyQt4')
                 python = self.spec['python'].command
