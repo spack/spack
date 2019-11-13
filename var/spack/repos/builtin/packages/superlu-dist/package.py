@@ -40,8 +40,8 @@ class SuperluDist(CMakePackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
-    patch('xl-611.patch', when='%xl @:6.1.1')
-    patch('xl-611.patch', when='%xl_r @:6.1.1')
+    patch('xl-611.patch', when='@:6.1.1 %xl')
+    patch('xl-611.patch', when='@:6.1.1 %xl_r') 
 
     def cmake_args(self):
         spec = self.spec
