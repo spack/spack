@@ -9,9 +9,9 @@ import sys
 
 
 class Caliper(CMakePackage):
-    """Caliper is a program instrumentation and performance measurement 
-    framework. It is designed as a performance analysis toolbox in a 
-    library, allowing one to bake performance analysis capabilities 
+    """Caliper is a program instrumentation and performance measurement
+    framework. It is designed as a performance analysis toolbox in a
+    library, allowing one to bake performance analysis capabilities
     directly into applications and activate them at runtime.
     """
 
