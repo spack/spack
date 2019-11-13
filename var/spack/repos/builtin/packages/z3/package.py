@@ -20,8 +20,11 @@ class Z3(MakefilePackage):
 
     phases = ['bootstrap', 'build', 'install']
 
-    variant('python', default=False, description='Enable python support')
-    depends_on('python', when='+python')
+    variant('python', default=False, description='Enable python binding')
+    depends_on('python')
+
+    # Referenced: https://github.com/Z3Prover/z3/issues/1016
+    patch('fix_1016.patch')
 
     build_directory = 'build'
 
