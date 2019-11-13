@@ -28,6 +28,8 @@ class Icu4c(AutotoolsPackage):
             description='Use the specified C++ standard when building')
 
     depends_on('python', type='build', when='@64.1:')
+    # Intel 14 has immature C++11 support
+    conflicts('%intel@:14', when='@60.1:')
 
     configure_directory = 'source'
 
