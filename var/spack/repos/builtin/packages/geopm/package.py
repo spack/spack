@@ -18,13 +18,14 @@ class Geopm(AutotoolsPackage):
     msr-safe kernel module by your administrator."""
 
     homepage = "https://geopm.github.io"
-    url      = "https://github.com/geopm/geopm/releases/download/v0.4.0/geopm-0.4.0.tar.gz"
+    url      = "https://github.com/geopm/geopm/releases/download/v1.0.0/geopm-1.0.0.tar.gz"
     git      = "https://github.com/geopm/geopm.git"
 
     # Add additional proper versions and checksums here. "spack checksum geopm"
     version('develop', branch='dev')
     version('master', branch='master')
     version('1.1.0', sha256='5f9a4df37ef0d64c53d64829d46736803c9fe614afd8d2c70fe7a5ebea09f88e')
+    version('1.0.0',     sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
     version('1.0.0-rc2', sha256='c6637df54728ded31fd682f39a07dffee45883f350e6dbd13e1496dd50243ffd',
             url='https://github.com/geopm/geopm/releases/download/v1.0.0%2Brc2/geopm-1.0.0+rc2.tar.gz')
     version('1.0.0-rc1', sha256='f8a2e5c384a15e9663f409de478b6372cd63e63a28d4701a33ac043fc27905e0', 
@@ -46,13 +47,16 @@ class Geopm(AutotoolsPackage):
     variant('doc', default=True, description='Create man pages with ruby-ronn.')
     variant('openmp', default=True, description='Build with OpenMP.')
     variant('ompt', default=False, description='Use OpenMP Tools Interface.')
-    variant('hwloc', default=False, description='Build with hwloc, deprecated and ignored after v0.5.1.')
     variant('gnu-ld', default=False, description='Assume C compiler uses gnu-ld.')
 
     # Added dependencies.
+    depends_on('ruby-ronn', type='build', when='+doc')
+    depends_on('doxygen', type='build', when='+doc')
+    depends_on('mpi@2.2:', when='+mpi')
+
     depends_on('m4', type='build')
-    depends_on('automake', type='build')
     depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('ruby-ronn', type='build', when='+doc')
     depends_on('doxygen', type='build', when='+doc')
@@ -60,22 +64,26 @@ class Geopm(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hwloc@1.11.9', when='@:0.5.1+hwloc')
     depends_on('json-c', when='@:0.9.9')
-    depends_on('py-cycler@0.10.0:', when="@1.1.0:")
-    depends_on('py-pandas@0.23.0:', type='run')
-    depends_on('py-tables@3.4.3:3.5.2', when="@1.1.0:")
-    depends_on('py-cffi@1.6.0:', when="@1.1.0:")
-    depends_on('py-pyyaml@5.1.0:', when="@1.1.0:")
-    depends_on('py-mock@3.0.0:', when="@1.1.0:")
-    depends_on('py-future@0.17.1:', when="@1.1.0:")
-    depends_on('py-numpy@1.14.3:', type='run')
-    depends_on('py-setuptools@39.2.0:', when="@1.1.0:")
-    depends_on('py-natsort@5.3.2:', type='run')
-    depends_on('py-psutil@5.4.8:', when="@1.1.0:")
-    depends_on('py-pylint@1.9.5:', when="@1.1.0:")
-    depends_on('py-matplotlib@2.2.3', when="@:1.0.0-rc2", type='run')
-    depends_on('py-matplotlib@2.2.3:', when="@1.1.0:", type='run')
+    depends_on('py-cycler@0.10.0:', when="@1.0.0:", type=('build', 'run'))
+    depends_on('py-pandas@0.22.0:', type=('build', 'run'))
+    depends_on('py-tables@3.4.3:3.5.2', when="@1.0.0:", type=('build', 'run'))
+    depends_on('py-cffi@1.6.0:', when="@1.1.0:", type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.0:', when="@1.1.0:", type=('build', 'run'))
+    depends_on('py-mock@3.0.0:', when="@1.1.0:", type=('build', 'run'))
+    depends_on('py-future@0.17.1:', when="@1.1.0:", type=('build', 'run'))
+    depends_on('py-numpy@1.14.3:', type=('build', 'run'))
+    depends_on('py-setuptools@39.2.0:', when="@1.0.0:", type='build')
+    depends_on('py-natsort@5.3.2:', type=('build', 'run'))
+    depends_on('py-psutil@5.4.8:', when="@1.0.0:", type=('build', 'run'))
+    depends_on('py-pylint@1.9.5:', when="@1.1.0:", type=('build', 'run'))
+    depends_on('py-matplotlib@2.2.3', when="@:1.0.0-rc2", type=('build', 'run'))
+    depends_on('py-matplotlib@2.2.3:', when="@1.1.0:", type=('build', 'run'))
 
     parallel = False
+
+    def autoreconf(self, spec, prefix):
+        bash = which("bash")
+        bash('./autogen.sh')
 
     def configure_args(self):
         args = []
@@ -88,10 +96,6 @@ class Geopm(AutotoolsPackage):
         args.extend(self.enable_or_disable('doc'))
         args.extend(self.enable_or_disable('openmp'))
         args.extend(self.enable_or_disable('ompt'))
-        if self.version <= Version('0.5.1'):
-            args.extend(self.with_or_without(
-                'hwloc',
-                activation_value='prefix'))
         args.extend(self.with_or_without('gnu-ld'))
 
         return args
