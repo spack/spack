@@ -710,7 +710,7 @@ def file_is_relocatable(
             # One binary has the root folder not in the RPATH,
             # meaning that this spec is not relocatable
             msg = 'Found "{0}" in {1} strings'
-            tty.debug(msg.format(spack.store.layout.root, file))
+            tty.debug(msg.format(path_to_relocate, file))
             return False
 
     return True
