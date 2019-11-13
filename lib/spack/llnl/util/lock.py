@@ -17,6 +17,17 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
 
 
+def get_attempts_str(wait_time, nattempts):
+    attempts = 'attempt' if nattempts == 1 else 'attempts'
+    if nattempts > 1:
+        attempts_part = ' after {0:0.2f}s and {1:d} {2}'.format(
+            wait_time, nattempts, attempts)
+    else:
+        # Dont print anything if we succeeded immediately
+        attempts_part = ''
+    return attempts_part
+
+
 class Lock(object):
     """This is an implementation of a filesystem lock using Python's lockf.
 
@@ -136,20 +147,13 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
-        # TODO/TBD: Should max attempts be used?  Configurable?
-        max_attempts = max(int(timeout * 10) if timeout else 100, 200)
         pid = self.pid if self.pid is not None else os.getpid()
-        self._debug("PID {0} locking: timeout {1} sec, {2} max attempts".
-                    format(pid, timeout, max_attempts))
+        self._debug("PID {0} locking: timeout {1} sec".format(pid, timeout))
 
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         num_attempts = 0
-        while num_attempts < max_attempts:
-            if timeout and (time.time() - start_time) >= timeout:
-                raise LockTimeoutError("PID {0} timed out waiting for lock.".
-                                       format(pid))
-
+        while (not timeout) or (time.time() - start_time) < timeout:
             num_attempts += 1
             self._debug("PID {0} attempt #{1}: attempting a {2} lock".
                         format(pid, num_attempts, lock_type[op]))
@@ -159,9 +163,13 @@ class Lock(object):
 
             time.sleep(next(poll_intervals))
 
-        raise LockLimitError(
-            "PID {0} exceeded attempts limit ({1}) waiting for lock.".
-            format(pid, max_attempts))
+        num_attempts += 1
+        if self._poll_lock(op):
+            total_wait_time = time.time() - start_time
+            return total_wait_time, num_attempts
+
+        raise LockTimeoutError("PID {0} timed out waiting for lock."
+                               .format(pid))
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -308,6 +316,44 @@ class Lock(object):
             self._writes += 1
             return False
 
+    def downgrade_write(self, timeout=None):
+        """
+        Downgrade from an exclusive write lock to a shared read.
+
+        Raises an exception if this is an attempt at a nested transaction.
+        """
+        timeout = timeout or self.default_timeout
+
+        # self._downgrading_debug()
+        if self._writes == 1 and self._reads == 0:
+            self._downgrading_debug()
+            # can raise LockError.
+            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            self._reads = 1
+            self._writes = 0
+            self._downgraded_debug(wait_time, nattempts)
+        else:
+            raise LockDowngradeError(self.path)
+
+    def upgrade_read(self, timeout=None):
+        """
+        Attempts to upgrade from a shared read lock to an exclusive write.
+
+        Raises an exception if this is an attempt at a nested transaction.
+        """
+        timeout = timeout or self.default_timeout
+
+        # self._upgrading_debug()
+        if self._reads == 1 and self._writes == 0:
+            self._upgrading_debug()
+            # can raise LockError.
+            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            self._reads = 0
+            self._writes = 1
+            self._upgraded_debug(wait_time, nattempts)
+        else:
+            raise LockUpgradeError(self.path)
+
     def release_read(self):
         """Releases a read lock.
 
@@ -325,6 +371,7 @@ class Lock(object):
         if self._reads == 1 and self._writes == 0:
             self._releasing_debug(lock_type)
             self._unlock()      # can raise LockError.
+            self._reads = 0
             self._released_debug(lock_type)
             return True
         else:
@@ -348,6 +395,7 @@ class Lock(object):
         if self._writes == 1 and self._reads == 0:
             self._releasing_debug(lock_type)
             self._unlock()      # can raise LockError.
+            self._writes  = 0
             self._released_debug(lock_type)
             return True
         else:
@@ -357,19 +405,21 @@ class Lock(object):
     def _debug(self, *args):
         tty.debug(*args)
 
-    def _acquiring_debug(self, lock_type):
-        self._debug(self._status_msg(lock_type, 'Acquiring'))
-
     def _acquired_debug(self, lock_type, wait_time, nattempts):
-        attempts_format = 'attempt' if nattempts == 1 else 'attempts'
-        if nattempts > 1:
-            acquired_attempts_format = ' after {0:0.2f}s and {1:d} {2}'.format(
-                wait_time, nattempts, attempts_format)
-        else:
-            # Dont print anything if we succeeded immediately
-            acquired_attempts_format = ''
+        attempts_part = get_attempts_str(wait_time, nattempts)
         self._debug(self._status_msg(lock_type, 'Acquired{0}'.
-                                     format(acquired_attempts_format)))
+                                     format(attempts_part)))
+
+    def _acquiring_debug(self, lock_type):
+        self._debug(self._status_msg(lock_type, 'Acquiring{0}'))
+
+    def _downgraded_debug(self, wait_time, nattempts):
+        attempts_part = get_attempts_str(wait_time, nattempts)
+        self._debug(self._status_msg('READ LOCK', 'Acquired{0}'.
+                                     format(attempts_part)))
+
+    def _downgrading_debug(self):
+        self._debug(self._status_msg('WRITE LOCK', 'Downgrading'))
 
     def _get_counts_desc(self):
         return 'reads {0}, writes {1}'.format(self._reads, self._writes)
@@ -384,6 +434,14 @@ class Lock(object):
         status_desc = '[{0}] ({1})'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
             lock_type, self, status_desc)
+
+    def _upgraded_debug(self, wait_time, nattempts):
+        attempts_part = get_attempts_str(wait_time, nattempts)
+        self._debug(self._status_msg('WRITE LOCK', 'Acquired{0}'.
+                                     format(attempts_part)))
+
+    def _upgrading_debug(self):
+        self._debug(self._status_msg('READ LOCK', 'Upgrading'))
 
 
 class LockTransaction(object):
@@ -455,12 +513,26 @@ class LockError(Exception):
     """Raised for any errors related to locks."""
 
 
+class LockDowngradeError(LockError):
+    """Raised when unable to downgrade from a write to a read lock."""
+    def __init__(self, path):
+        msg = "Cannot downgrade lock from write to read on file: %s" % path
+        super(LockDowngradeError, self).__init__(msg)
+
+
 class LockLimitError(LockError):
     """Raised when exceed maximum attempts to acquire a lock."""
 
 
 class LockTimeoutError(LockError):
     """Raised when an attempt to acquire a lock times out."""
+
+
+class LockUpgradeError(LockError):
+    """Raised when unable to upgrade from a read to a write lock."""
+    def __init__(self, path):
+        msg = "Cannot upgrade lock from read to write on file: %s" % path
+        super(LockUpgradeError, self).__init__(msg)
 
 
 class LockPermissionError(LockError):

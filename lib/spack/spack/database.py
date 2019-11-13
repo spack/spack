@@ -44,7 +44,8 @@ from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
-from spack.util.lock import Lock, WriteTransaction, ReadTransaction, LockError
+from spack.util.lock import \
+    Lock, LockError, LockTimeoutError, WriteTransaction, ReadTransaction
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -211,6 +212,9 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
+    """Per-process failure (lock) objects for each install prefix."""
+    _prefix_failures = {}
+
     def __init__(self, root, db_dir=None, upstream_dbs=None,
                  is_upstream=False):
         """Create a Database for Spack installations under ``root``.
@@ -250,6 +254,9 @@ class Database(object):
 
         # This is for other classes to use to lock prefix directories.
         self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
+
+        # This is for other classes to use to mark prefix install failures.
+        self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
@@ -295,7 +302,70 @@ class Database(object):
         """Get a read lock context manager for use in a `with` block."""
         return ReadTransaction(self.lock, self._read)
 
-    def prefix_lock(self, spec):
+    def mark_failure(self, spec):
+        """Mark a spec as having its installation failed.
+
+        Prefix failure is a byte range lock on the nth byte of a file.
+
+        The failure file is ``spack.store.db.prefix_failures`` -- the DB
+        tells us what to call it and it lives alongside the install DB.
+
+        n is the sys.maxsize-bit prefix of the DAG hash.  This makes
+        likelihood of collision very low with no cleanup required.
+        """
+        err = 'Unable to acquire write lock to mark {0.name} as failed.'
+
+        prefix = spec.prefix
+        if prefix not in self._prefix_failures:
+            mark = Lock(
+                self.prefix_fail_path,
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=self.package_lock_timeout, desc=spec.name)
+
+            try:
+                mark.acquire_write()
+            except LockTimeoutError:
+                # Unlikely that another process failed to install at the same
+                # time but log it anyway.
+                tty.warn(err.format(spec))
+
+            # Whether we or another process marked it as a failure, track it
+            # as such locally.
+            self._prefix_failures[prefix] = mark
+
+        return self._prefix_failures[prefix]
+
+    def prefix_failed(self, spec):
+        """Return True if the prefix (installation) is marked as failed."""
+        # The failure was detected in this process.
+        if spec.prefix in self._prefix_failures:
+            return True
+
+        # Determine if the failure was detected by another process, which
+        # is assumed to be holding a write lock if that is the case.
+        mark = Lock(
+            self.prefix_fail_path,
+            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            length=1,
+            default_timeout=self.package_lock_timeout, desc=spec.name)
+
+        try:
+            mark.acquire_read()
+        except LockTimeoutError:
+            # Installation of the prefix has failed indicating that another
+            # process has the write lock as a result of its installation
+            # attempt failed.  So flag the spec as having failed.
+            self._prefix_failures[spec.prefix] = None
+            return True
+
+        # If we have a read lock then no process has a prefix lock indicating
+        # an active installation failure for the spec.  There is no reason
+        # to hang onto the read lock itself.
+        mark.release_read()
+        return False
+
+    def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
 
         NOTE: The installation directory **does not** need to exist.
@@ -310,13 +380,14 @@ class Database(object):
         readers-writer lock semantics with just a single lockfile, so no
         cleanup required.
         """
+        timeout = timeout or self.package_lock_timeout
         prefix = spec.prefix
         if prefix not in self._prefix_locks:
             self._prefix_locks[prefix] = Lock(
                 self.prefix_lock_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
-                default_timeout=self.package_lock_timeout, desc=spec.name)
+                default_timeout=timeout, desc=spec.name)
 
         return self._prefix_locks[prefix]
 
