@@ -71,7 +71,7 @@ class PyPyqt4(SIPPackage):
                        self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
                        '--qsci-sipdir=' + self.prefix.share.sip.PyQt4,
-                       '--apidir=' + self.prefix + '/share/qsci',
+                       '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt4,
                        '--sip-incdir=' + self.prefix + '/include/python' +
