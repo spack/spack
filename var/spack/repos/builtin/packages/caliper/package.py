@@ -73,6 +73,7 @@ class Caliper(CMakePackage):
 
     # sosflow support not yet in 2.0
     conflicts('+sosflow', '@2.0.0:2.2.99')
+    conflicts('+adiak', '@:2.1.99')
 
     def cmake_args(self):
         spec = self.spec
