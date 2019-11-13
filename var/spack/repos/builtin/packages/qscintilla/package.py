@@ -63,4 +63,3 @@ class Qscintilla(QMakePackage):
             makefile.filter(r'\$\(INSTALL_ROOT\)' +
                             self.spec['qt'].prefix, '$(INSTALL_ROOT)')
             make('install')
-            make('install')
