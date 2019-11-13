@@ -114,8 +114,13 @@ stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
-  - name: 'docker build'
-    if: type = push AND branch IN (develop, master)
+
+stages:
+  - 'flake8 + documentation'
+  - 'unit tests'
+  - 'build tests'
+  - name: 'unit tests - osx'
+    if: type IN (cron)
 
 
 #=============================================================================
