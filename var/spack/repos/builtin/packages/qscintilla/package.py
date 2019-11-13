@@ -50,10 +50,6 @@ class Qscintilla(QMakePackage):
 
     @run_after('install')
     def postinstall(self):
-        # Install source under prefix so that
-        # Python bindings can be built by PyQt5 later on.
-        install_tree(self.stage.source_path, prefix.share + '/qscintilla/src')
-
         # Make designer plugin
         if '+designer' in self.spec:
             os.chdir(str(self.stage.source_path) + '/designer-Qt4Qt5')
