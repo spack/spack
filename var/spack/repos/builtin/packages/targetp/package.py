@@ -18,6 +18,7 @@ class Targetp(Package):
 
     homepage = "http://www.cbs.dtu.dk/services/TargetP/"
     url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('1.1b', '80233d0056e11abfd22a4ce73d1808c6')
 

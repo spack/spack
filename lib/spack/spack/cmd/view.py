@@ -70,10 +70,11 @@ def disambiguate_in_view(specs, view):
         matching_in_view = [ms for ms in matching_specs if ms in view_specs]
 
         if len(matching_in_view) > 1:
+            spec_format = '{name}{@version}{%compiler}{arch=architecture}'
             args = ["Spec matches multiple packages.",
                     "Matching packages:"]
             args += [colorize("  @K{%s} " % s.dag_hash(7)) +
-                     s.cformat('$_$@$%@$=') for s in matching_in_view]
+                     s.cformat(spec_format) for s in matching_in_view]
             args += ["Use a more specific spec."]
             tty.die(*args)
 

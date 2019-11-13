@@ -14,4 +14,4 @@ class PyWebkitServer(PythonPackage):
     git      = "https://github.com/niklasb/webkit-server.git"
 
     version('develop', branch='master')
-    version('1.0', '8463245c2b4f0264d934c0ae20bd4654')
+    version('1.0', sha256='836dac18c823bf7737461a2d938c66c7b3601c858897e6c92c7ba0e33574a2bc')

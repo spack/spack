@@ -8,21 +8,26 @@ import os
 import filecmp
 import re
 from six.moves import builtins
+import time
 
 import pytest
 
 import llnl.util.filesystem as fs
 
 import spack.config
+import spack.hash_types as ht
 import spack.package
 import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
+import spack.environment as ev
 
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
+env = SpackCommand('env')
+add = SpackCommand('add')
 
 
 @pytest.fixture(scope='module')
@@ -124,7 +129,7 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
     pkg = spec.package
     pkg.do_install(verbose=True)
 
-    log_file = os.path.join(spec.prefix, '.spack', 'build.out')
+    log_file = pkg.build_log_path
     with open(log_file) as f:
         out = f.read()
 
@@ -192,22 +197,26 @@ def test_install_overwrite(
 
     install('libdwarf')
 
+    manifest = os.path.join(spec.prefix, spack.store.layout.metadata_dir,
+                            spack.store.layout.manifest_file_name)
+
     assert os.path.exists(spec.prefix)
-    expected_md5 = fs.hash_directory(spec.prefix)
+    expected_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
     with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_md5 = fs.hash_directory(spec.prefix)
+    bad_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
 
     assert bad_md5 != expected_md5
 
     install('--overwrite', '-y', 'libdwarf')
+
     assert os.path.exists(spec.prefix)
-    assert fs.hash_directory(spec.prefix) == expected_md5
-    assert fs.hash_directory(spec.prefix) != bad_md5
+    assert fs.hash_directory(spec.prefix, ignore=[manifest]) == expected_md5
+    assert fs.hash_directory(spec.prefix, ignore=[manifest]) != bad_md5
 
 
 def test_install_overwrite_not_installed(
@@ -237,11 +246,20 @@ def test_install_overwrite_multiple(
 
     install('cmake')
 
+    ld_manifest = os.path.join(libdwarf.prefix,
+                               spack.store.layout.metadata_dir,
+                               spack.store.layout.manifest_file_name)
+
     assert os.path.exists(libdwarf.prefix)
-    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
+                                              ignore=[ld_manifest])
+
+    cm_manifest = os.path.join(cmake.prefix,
+                               spack.store.layout.metadata_dir,
+                               spack.store.layout.manifest_file_name)
 
     assert os.path.exists(cmake.prefix)
-    expected_cmake_md5 = fs.hash_directory(cmake.prefix)
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
@@ -250,8 +268,8 @@ def test_install_overwrite_multiple(
     with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
-    bad_cmake_md5 = fs.hash_directory(cmake.prefix)
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
 
     assert bad_libdwarf_md5 != expected_libdwarf_md5
     assert bad_cmake_md5 != expected_cmake_md5
@@ -259,10 +277,13 @@ def test_install_overwrite_multiple(
     install('--overwrite', '-y', 'libdwarf', 'cmake')
     assert os.path.exists(libdwarf.prefix)
     assert os.path.exists(cmake.prefix)
-    assert fs.hash_directory(libdwarf.prefix) == expected_libdwarf_md5
-    assert fs.hash_directory(cmake.prefix) == expected_cmake_md5
-    assert fs.hash_directory(libdwarf.prefix) != bad_libdwarf_md5
-    assert fs.hash_directory(cmake.prefix) != bad_cmake_md5
+
+    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
+    cm_hash = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    assert ld_hash == expected_libdwarf_md5
+    assert cm_hash == expected_cmake_md5
+    assert ld_hash != bad_libdwarf_md5
+    assert cm_hash != bad_cmake_md5
 
 
 @pytest.mark.usefixtures(
@@ -468,14 +489,13 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
-                install(
-                    '--log-file=cdash_reports',
-                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
-                    'a')
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'a')
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Build.xml')
+            report_file = report_dir.join('a_Build.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             assert '</Build>' in content
@@ -487,22 +507,43 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
-            with pytest.raises((HTTPError, URLError)):
-                install(
-                    '--log-file=cdash_reports',
-                    '--cdash-build=my_custom_build',
-                    '--cdash-site=my_custom_site',
-                    '--cdash-track=my_custom_track',
-                    '--cdash-upload-url=http://localhost/fakeurl/submit.php?project=Spack',
-                    'a')
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                '--cdash-build=my_custom_build',
+                '--cdash-site=my_custom_site',
+                '--cdash-track=my_custom_track',
+                'a')
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Build.xml')
+            report_file = report_dir.join('a_Build.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            assert 'Site BuildName="my_custom_build"' in content
+            assert 'Site BuildName="my_custom_build - a"' in content
             assert 'Name="my_custom_site"' in content
             assert '-my_custom_track' in content
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            cdash_track = 'some_mocked_track'
+            buildstamp_format = "%Y%m%d-%H%M-{0}".format(cdash_track)
+            buildstamp = time.strftime(buildstamp_format,
+                                       time.localtime(int(time.time())))
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                '--cdash-buildstamp={0}'.format(buildstamp),
+                'a')
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('a_Build.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert buildstamp in content
 
 
 @pytest.mark.disable_clean_stage_check
@@ -519,7 +560,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
             pkg_spec.concretize()
 
             with open(spec_yaml_path, 'w') as fd:
-                fd.write(pkg_spec.to_yaml(all_deps=True))
+                fd.write(pkg_spec.to_yaml(hash=ht.build_hash))
 
             install(
                 '--log-format=cdash',
@@ -531,7 +572,7 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
 
             report_dir = tmpdir.join('cdash_reports')
             assert report_dir in tmpdir.listdir()
-            report_file = report_dir.join('Configure.xml')
+            report_file = report_dir.join('a_Configure.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
             import re
@@ -569,3 +610,57 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
         assert 'WARNING: ALL CAPITAL WARNING!' in msg
         assert 'foo.c:89: warning: some weird warning!' in msg
+
+
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    with capfd.disabled():
+        try:
+            install('--cache-only', 'libdwarf')
+            assert False
+        except spack.main.SpackCommandError:
+            pass
+
+
+def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
+                                          mutable_mock_env_path):
+    env('create', 'test')
+
+    with ev.read('test'):
+        dep = Spec('dependency-install').concretized()
+        root = Spec('dependent-install').concretized()
+
+        install('-v', '--only', 'dependencies', 'dependent-install')
+
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_of_all_in_env(
+    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
+):
+    env('create', '--without-view', 'test')
+
+    with ev.read('test'):
+        roots = [Spec('dependent-install@1.0').concretized(),
+                 Spec('dependent-install@2.0').concretized()]
+
+        add('dependent-install@1.0')
+        add('dependent-install@2.0')
+        install('--only', 'dependencies')
+
+        for root in roots:
+            assert not os.path.exists(root.prefix)
+            for dep in root.traverse(root=False):
+                assert os.path.exists(dep.prefix)

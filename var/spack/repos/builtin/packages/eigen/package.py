@@ -15,14 +15,14 @@ class Eigen(CMakePackage):
     url      = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
 
     version('3.3.7', sha256='9f13cf90dedbe3e52a19f43000d71fdf72e986beb9a5436dddcd61ff9d77a3ce')
-    version('3.3.5', 'e83549a79d1b721da0f8899ab34edf95')
-    version('3.3.4', 'a7aab9f758249b86c93221ad417fbe18')
-    version('3.3.3', 'b2ddade41040d9cf73b39b4b51e8775b')
-    version('3.3.1', 'edb6799ef413b0868aace20d2403864c')
-    version('3.2.10', 'a85bb68c82988648c3d53ba9768d7dcbcfe105f8')
-    version('3.2.9', '59ab81212f8eb2534b1545a9b42c38bf618a0d71')
-    version('3.2.8', '64f4aef8012a424c7e079eaf0be71793ab9bc6e0')
-    version('3.2.7', 'cc1bacbad97558b97da6b77c9644f184')
+    version('3.3.5', sha256='7352bff3ea299e4c7d7fbe31c504f8eb9149d7e685dec5a12fbaa26379f603e2')
+    version('3.3.4', sha256='dd254beb0bafc695d0f62ae1a222ff85b52dbaa3a16f76e781dce22d0d20a4a6')
+    version('3.3.3', sha256='a4143fc45e4454b4b98fcea3516b3a79b8cdb3bc7fadf996d088c6a0d805fea1')
+    version('3.3.1', sha256='a0b4cebaabd8f371d1b364f9723585fbcc7c9640ca60273b99835e6cf115f056')
+    version('3.2.10', sha256='760e6656426fde71cc48586c971390816f456d30f0b5d7d4ad5274d8d2cb0a6d')
+    version('3.2.9', sha256='4d1e036ec1ed4f4805d5c6752b76072d67538889f4003fadf2f6e00a825845ff')
+    version('3.2.8', sha256='722a63d672b70f39c271c5e2a4a43ba14d12015674331790414fcb167c357e55')
+    version('3.2.7', sha256='e58e1a11b23cf2754e32b3c5990f318a8461a3613c7acbf6035870daa45c2f3e')
 
     variant('metis', default=False,
             description='Enables metis permutations in sparse algebra')

@@ -24,7 +24,7 @@
 # Changes
 # 2017-03-28 Mark Olesen <mark.olesen@esi-group.com>
 #  - avoid installing intermediate targets.
-#  - reworked to mirror the openfoam-com package.
+#  - reworked to mirror the openfoam package.
 #    If changes are needed here, consider if they need applying there too.
 #
 # Known issues
@@ -37,10 +37,10 @@ import os
 
 from spack import *
 from spack.util.environment import EnvironmentModifications
-from spack.pkg.builtin.openfoam_com import OpenfoamArch
-from spack.pkg.builtin.openfoam_com import add_extra_files
-from spack.pkg.builtin.openfoam_com import write_environ
-from spack.pkg.builtin.openfoam_com import rewrite_environ_files
+from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.pkg.builtin.openfoam import add_extra_files
+from spack.pkg.builtin.openfoam import write_environ
+from spack.pkg.builtin.openfoam import rewrite_environ_files
 import llnl.util.tty as tty
 
 
@@ -78,7 +78,6 @@ class FoamExtend(Package):
     variant('source', default=True,
             description='Install library/application sources and tutorials')
 
-    provides('openfoam')
     depends_on('mpi')
     depends_on('python')
     depends_on('zlib')
@@ -426,7 +425,7 @@ class FoamExtend(Package):
         # Make build log visible - it contains OpenFOAM-specific information
         with working_dir(self.projectdir):
             os.symlink(
-                join_path('.spack', 'build.out'),
+                join_path(os.path.relpath(self.install_log_path)),
                 join_path('log.' + str(self.foam_arch)))
 
 # -----------------------------------------------------------------------------

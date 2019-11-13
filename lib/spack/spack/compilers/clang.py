@@ -12,6 +12,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.paths
+import spack.stage
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.util.executable import Executable
 from spack.version import ver
@@ -80,13 +81,14 @@ class Clang(Compiler):
         ver_string = str(self.version)
         return ver_string.endswith('-apple')
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
     @property
     def openmp_flag(self):
         if self.is_apple:
-            raise UnsupportedCompilerFlag(self,
-                                          "OpenMP",
-                                          "openmp_flag",
-                                          "Xcode {0}".format(self.version))
+            return "-Xpreprocessor -fopenmp"
         else:
             return "-fopenmp"
 
@@ -151,15 +153,31 @@ class Clang(Compiler):
                 raise UnsupportedCompilerFlag(self,
                                               "the C++17 standard",
                                               "cxx17_flag",
-                                              "< 5.0")
+                                              "< 3.5")
             elif self.version < ver('5.0'):
                 return "-std=c++1z"
             else:
                 return "-std=c++17"
 
     @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        if self.version < ver('6.1.0'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 6.1.0")
+        else:
+            return "-std=c11"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
+
+    required_libs = ['libclang']
 
     @classmethod
     @llnl.util.lang.memoized
@@ -187,9 +205,10 @@ class Clang(Compiler):
         ver = 'unknown'
         match = re.search(
             # Apple's LLVM compiler has its own versions, so suffix them.
-            r'^Apple LLVM version ([^ )]+)|'
+            r'^Apple (?:LLVM|clang) version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )]+)-[~.\w\d-]*|'
             r'clang version ([^ )]+)',
             output
         )
@@ -268,7 +287,7 @@ class Clang(Compiler):
             raise OSError(msg)
 
         real_root = os.path.dirname(os.path.dirname(real_root))
-        developer_root = os.path.join(spack.paths.stage_path,
+        developer_root = os.path.join(spack.stage.get_stage_root(),
                                       'xcode-select',
                                       self.name,
                                       str(self.version))

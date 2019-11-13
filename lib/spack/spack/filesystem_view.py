@@ -14,7 +14,8 @@ from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
 from llnl.util.lang import match_predicate, index_by
 from llnl.util.tty.color import colorize
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import (
+    mkdirp, remove_dead_links, remove_empty_directories)
 
 import spack.util.spack_yaml as s_yaml
 
@@ -187,35 +188,40 @@ class YamlFilesystemView(FilesystemView):
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
-        projections_path = os.path.join(self._root, _projections_path)
+        self.projections_path = os.path.join(self._root, _projections_path)
         if not self.projections:
-            if os.path.exists(projections_path):
-                # Read projections file from view
-                with open(projections_path, 'r') as f:
-                    projections_data = s_yaml.load(f)
-                    spack.config.validate(projections_data,
-                                          spack.schema.projections.schema)
-                    self.projections = projections_data['projections']
-            else:
-                # Write projections file to new view
-                # Not strictly necessary as the empty file is the empty
-                # projection but it makes sense for consistency
-                mkdirp(os.path.dirname(projections_path))
-                with open(projections_path, 'w') as f:
-                    f.write(s_yaml.dump({'projections': self.projections}))
-        elif not os.path.exists(projections_path):
+            # Read projections file from view
+            self.projections = self.read_projections()
+        elif not os.path.exists(self.projections_path):
             # Write projections file to new view
-            mkdirp(os.path.dirname(projections_path))
-            with open(projections_path, 'w') as f:
-                f.write(s_yaml.dump({'projections': self.projections}))
+            self.write_projections()
         else:
-            msg = 'View at %s has projections file' % self._root
-            msg += ' and was passed projections manually.'
-            raise ConflictingProjectionsError(msg)
+            # Ensure projections are the same from each source
+            # Read projections file from view
+            if self.projections != self.read_projections():
+                msg = 'View at %s has projections file' % self._root
+                msg += ' which does not match projections passed manually.'
+                raise ConflictingProjectionsError(msg)
 
         self.extensions_layout = YamlViewExtensionsLayout(self, layout)
 
         self._croot = colorize_root(self._root) + " "
+
+    def write_projections(self):
+        if self.projections:
+            mkdirp(os.path.dirname(self.projections_path))
+            with open(self.projections_path, 'w') as f:
+                f.write(s_yaml.dump_config({'projections': self.projections}))
+
+    def read_projections(self):
+        if os.path.exists(self.projections_path):
+            with open(self.projections_path, 'r') as f:
+                projections_data = s_yaml.load(f)
+                spack.config.validate(projections_data,
+                                      spack.schema.projections.schema)
+                return projections_data['projections']
+        else:
+            return {}
 
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
@@ -345,6 +351,9 @@ class YamlFilesystemView(FilesystemView):
         tree.unmerge_directories(view_dst, ignore_file)
 
     def remove_file(self, src, dest):
+        if not os.path.lexists(dest):
+            tty.warn("Tried to remove %s which does not exist" % dest)
+            return
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only
@@ -407,7 +416,7 @@ class YamlFilesystemView(FilesystemView):
         set(map(remove_extension, extensions))
         set(map(self.remove_standalone, standalones))
 
-        self.purge_empty_directories()
+        self._purge_empty_directories()
 
     def remove_extension(self, spec, with_dependents=True):
         """
@@ -556,7 +565,8 @@ class YamlFilesystemView(FilesystemView):
                 specs = index[(architecture, compiler)]
                 specs.sort()
 
-                format_string = '$_$@$%@+$+'
+                format_string = '{name}{@version}'
+                format_string += '{%compiler}{compiler_flags}{variants}'
                 abbreviated = [s.cformat(format_string) for s in specs]
 
                 # Print one spec per line along with prefix path
@@ -575,18 +585,15 @@ class YamlFilesystemView(FilesystemView):
         else:
             tty.warn(self._croot + "No packages found.")
 
-    def purge_empty_directories(self):
-        """
-            Ascend up from the leaves accessible from `path`
-            and remove empty directories.
-        """
-        for dirpath, subdirs, files in os.walk(self._root, topdown=False):
-            for sd in subdirs:
-                sdp = os.path.join(dirpath, sd)
-                try:
-                    os.rmdir(sdp)
-                except OSError:
-                    pass
+    def _purge_empty_directories(self):
+        remove_empty_directories(self._root)
+
+    def _purge_broken_links(self):
+        remove_dead_links(self._root)
+
+    def clean(self):
+        self._purge_broken_links()
+        self._purge_empty_directories()
 
     def unlink_meta_folder(self, spec):
         path = self.get_path_meta_folder(spec)

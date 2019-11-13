@@ -126,7 +126,7 @@ function _spack_add {
 
 function _spack_arch {
     compgen -W "-h --help -p --platform -o --operating-system
-                -t --target" -- "$cur"
+                -t --target --known-targets" -- "$cur"
 }
 
 function _spack_blame {
@@ -140,7 +140,8 @@ function _spack_blame {
 
 function _spack_bootstrap {
     compgen -W "-h --help -j --jobs --keep-prefix --keep-stage
-                -n --no-checksum -v --verbose --clean --dirty" -- "$cur"
+                -n --no-checksum -v --verbose --use-cache --no-cache
+                --clean --dirty" -- "$cur"
 }
 
 function _spack_build {
@@ -243,7 +244,7 @@ function _spack_clone {
 function _spack_commands {
     if $list_options
     then
-        compgen -W "-h --help --format" -- "$cur"
+        compgen -W "-h --help --format --header --update" -- "$cur"
     fi
 }
 
@@ -352,7 +353,7 @@ function _spack_create {
     if $list_options
     then
         compgen -W "-h --help --keep-stage -n --name -t --template -r --repo
-                    -N --namespace -f --force" -- "$cur"
+                    -N --namespace -f --force --skip-editor" -- "$cur"
     fi
 }
 
@@ -403,7 +404,7 @@ function _spack_diy {
         compgen -W "-h --help -j --jobs -d --source-path
                     -i --ignore-dependencies -n --no-checksum
                     --keep-prefix --skip-patch -q --quiet --clean
-                    --dirty" -- "$cur"
+                    --dirty -u --until" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -520,7 +521,8 @@ function _spack_fetch {
 function _spack_find {
     if $list_options
     then
-        compgen -W "-h --help -s --short -p --paths -d --deps -l --long
+        compgen -W "-h --help -s --short -d --deps -p --paths
+                    --format --json --groups --no-groups -l --long
                     -L --very-long -t --tags -c --show-concretized
                     -f --show-flags --show-full-compiler -x --explicit
                     -X --implicit -u --unknown -m --missing -v --variants
@@ -664,7 +666,7 @@ function _spack_license_verify {
 function _spack_list {
     if $list_options
     then
-        compgen -W "-h --help -d --search-description --format
+        compgen -W "-h --help -d --search-description --format --update
                     -t --tags" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
@@ -696,6 +698,16 @@ function _spack_log_parse {
     then
         compgen -W "-h --help --show -c --context -p --profile -w --width
                     -j --jobs" -- "$cur"
+    fi
+}
+
+function _spack_maintainers {
+    if $list_options
+    then
+        compgen -W "-h --help -a --all --maintained --unmaintained
+                    --by-user" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -748,7 +760,7 @@ function _spack_module {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "lmod tcl dotkit" -- "$cur"
+        compgen -W "lmod tcl" -- "$cur"
     fi
 }
 
@@ -800,53 +812,6 @@ function _spack_module_tcl_rm {
     fi
 }
 
-function _spack_module_dotkit {
-    if $list_options
-    then
-        compgen -W "-h --help" -- "$cur"
-    else
-        compgen -W "refresh find rm loads" -- "$cur"
-    fi
-}
-
-
-function _spack_module_dotkit_find {
-    if $list_options
-    then
-        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_dotkit_loads {
-    if $list_options
-    then
-        compgen -W "-h --help --input-only -p --prefix -x --exclude
-                    -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-
-}
-
-function _spack_module_dotkit_refresh {
-    if $list_options
-    then
-        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_dotkit_rm {
-    if $list_options
-    then
-        compgen -W "-h --help -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
 
 function _spack_module_lmod {
     if $list_options
@@ -1086,7 +1051,8 @@ function _spack_spec {
     if $list_options
     then
         compgen -W "-h --help -l --long -L --very-long -I --install-status
-                    -y --yaml -c --cover -N --namespaces -t --types" -- "$cur"
+                    -j --json -y --yaml -c --cover -N --namespaces
+                    -t --types" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -1271,7 +1237,7 @@ function _all_resource_hashes {
 }
 
 function _installed_packages {
-    spack --color=never find | grep -v "^--"
+    spack --color=never find --no-groups
 }
 
 function _installed_compilers {

@@ -5,7 +5,7 @@
 
 """Schema for config.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/config.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
 
@@ -16,6 +16,10 @@ properties = {
         'type': 'object',
         'default': {},
         'properties': {
+            'shared_linking': {
+                'type': 'string',
+                'enum': ['rpath', 'runpath']
+            },
             'install_tree': {'type': 'string'},
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},
@@ -40,6 +44,13 @@ properties = {
                     'tcl': {'type': 'string'},
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
+                },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'specifying a "{property}" module root has no '
+                               'effect [support for {property} module files'
+                               ' has been dropped]',
+                    'error': False
                 },
             },
             'source_cache': {'type': 'string'},

@@ -37,20 +37,19 @@ class Regcm(AutotoolsPackage):
     # See also discussions: #974, #9934, #10797.
     extensions = ('knl', 'skl', 'bdw', 'nhl')
     variant('extension', values=any_combination_of(*extensions),
-            description=('Build extensions for a specific architecture. Only '
-                         'available for GCC and Intel compilers; moreover, '
-                         'GCC builds only one architecture optimization.')
-    )
+            description='Build extensions for a specific architecture. Only '
+            'available for GCC and Intel compilers; moreover, '
+            'GCC builds only one architecture optimization.')
 
     variant('pnetcdf', default=False,
             description='Build NetCDF using the high performance parallel '
                         'NetCDF implementation.')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('hdf5')
     depends_on('mpi')
-    depends_on('netcdf +parallel-netcdf', when='+pnetcdf')
+    depends_on('netcdf-c +parallel-netcdf', when='+pnetcdf')
 
     intel_msg = ('Intel compiler not working with this specific version of '
                  'RegCM (generates a bug at runtime): please install a newer '

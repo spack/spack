@@ -13,8 +13,7 @@ class LuaLpeg(Package):
     homepage = "http://www.inf.puc-rio.br/~roberto/lpeg/"
     url      = "https://luarocks.org/manifests/luarocks/lpeg-0.12-1.src.rock"
 
-    version('0.12.1', 'b5778bfee67761fcbe7a2d23cb889ea8',
-            url='https://luarocks.org/manifests/luarocks/lpeg-0.12-1.src.rock',
+    version('0.12-1', sha256='3962e8d695d0f9095c9453f2a42f9f1a89fb94db9b0c3bf22934c1e8a3b0ef5a',
             expand=False)
 
     extends("lua")

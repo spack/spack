@@ -17,4 +17,4 @@ class Gmodel(CMakePackage):
     homepage = "https://github.com/ibaned/gmodel"
     url      = "https://github.com/ibaned/gmodel/archive/v2.1.0.tar.gz"
 
-    version('2.1.0', '80df0c6dc413a9ffa0f0e7b65118b05b643ba3e1bfcac28fb91d2d3ad017fda0')
+    version('2.1.0', sha256='80df0c6dc413a9ffa0f0e7b65118b05b643ba3e1bfcac28fb91d2d3ad017fda0')

@@ -10,7 +10,7 @@ class Er(CMakePackage):
     """Encoding and redundancy on a file set"""
 
     homepage = "https://github.com/ECP-VeloC/er"
-    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.2.zip"
+    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/er.git"
 
     tags = ['ecp']

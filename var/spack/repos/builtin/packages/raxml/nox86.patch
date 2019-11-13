@@ -1,0 +1,244 @@
+diff -rNu spack-src/axml.c spack-src.new/axml.c
+--- spack-src/axml.c	2017-06-28 17:39:42.000000000 +0900
++++ spack-src.new/axml.c	2019-07-31 09:56:14.337741033 +0900
+@@ -66,7 +66,7 @@
+ 
+ #endif
+ 
+-#if ! (defined(__ppc) || defined(__powerpc__) || defined(PPC))
++#if defined(__x86_64)
+ #include <xmmintrin.h>
+ /*
+   special bug fix, enforces denormalized numbers to be flushed to zero,
+@@ -13702,7 +13702,7 @@
+     
+     
+     
+-#if ! (defined(__ppc) || defined(__powerpc__) || defined(PPC))
++#if defined(__x86_64)
+     
+     /* 
+        David Defour's command  
+diff -rNu spack-src/Makefile.HYBRID.nox86.gcc spack-src.new/Makefile.HYBRID.nox86.gcc
+--- spack-src/Makefile.HYBRID.nox86.gcc	1970-01-01 09:00:00.000000000 +0900
++++ spack-src.new/Makefile.HYBRID.nox86.gcc	2019-07-31 09:58:59.087746805 +0900
+@@ -0,0 +1,51 @@
++# Makefile November 2009 by Alexandros Stamatakis
++
++CC = mpicc
++
++
++CFLAGS = -D_WAYNE_MPI -D_GNU_SOURCE -fomit-frame-pointer -funroll-loops -O2  -D_USE_PTHREADS
++
++
++LIBRARIES = -lm -pthread
++
++RM = rm -f
++
++objs    = axml.o  optimizeModel.o multiple.o searchAlgo.o topologies.o parsePartitions.o treeIO.o models.o bipartitionList.o rapidBootstrap.o evaluatePartialGenericSpecial.o evaluateGenericSpecial.o newviewGenericSpecial.o makenewzGenericSpecial.o   classify.o fastDNAparsimony.o fastSearch.o leaveDropping.o rmqs.o rogueEPA.o ancestralStates.o  mem_alloc.o eigen.o 
++
++all : clean raxmlHPC-HYBRID
++
++GLOBAL_DEPS = axml.h globalVariables.h rmq.h rmqs.h #mem_alloc.h compiler.h  /fefs/home/r0001/work/spack/lib/spack/env/gcc/gcc.h  ll_asm.h  ll_list.h
++
++raxmlHPC-HYBRID : $(objs)
++	$(CC) -o raxmlHPC-HYBRID $(objs) $(LIBRARIES) $(LDFLAGS) 
++
++rmqs.o : rmqs.c $(GLOBAL_DEPS)
++classify.o : classify.c $(GLOBAL_DEPS)
++evaluatePartialSpecialGeneric.o : evaluatePartialSpecialGeneric.c $(GLOBAL_DEPS)
++bipartitionList.o : bipartitionList.c $(GLOBAL_DEPS)
++optimizeModel.o : optimizeModel.c $(GLOBAL_DEPS)
++multiple.o : multiple.c $(GLOBAL_DEPS)
++axml.o : axml.c $(GLOBAL_DEPS)
++searchAlgo.o : searchAlgo.c $(GLOBAL_DEPS)
++topologies.o : topologies.c $(GLOBAL_DEPS)
++parsePartitions.o : parsePartitions.c $(GLOBAL_DEPS)
++treeIO.o : treeIO.c $(GLOBAL_DEPS)
++models.o : models.c $(GLOBAL_DEPS)
++rapidBootstrap.o : rapidBootstrap.c $(GLOBAL_DEPS) 
++evaluatePartialGenericSpecial.o : evaluatePartialGenericSpecial.c $(GLOBAL_DEPS)
++evaluateGenericSpecial.o : evaluateGenericSpecial.c $(GLOBAL_DEPS)
++newviewGenericSpecial.o : newviewGenericSpecial.c $(GLOBAL_DEPS)
++makenewzGenericSpecial.o : makenewzGenericSpecial.c $(GLOBAL_DEPS)
++fastDNAparsimony.o : fastDNAparsimony.c  $(GLOBAL_DEPS)
++fastSearch.o : fastSearch.c $(GLOBAL_DEPS)
++leaveDropping.o : leaveDropping.c $(GLOBAL_DEPS)
++rogueEPA.o : rogueEPA.c $(GLOBAL_DEPS)
++ancestralStates.o : ancestralStates.c $(GLOBAL_DEPS)
++ mem_alloc.o eigen.o  : mem_alloc.c  $(GLOBAL_DEPS)
++
++eigen.o : eigen.c $(GLOBAL_DEPS)
++	$(CC) -c -o eigen.o eigen.c 
++clean : 
++	$(RM) *.o raxmlHPC-HYBRID
++
++dev : raxmlHPC-HYBRID
+diff -rNu spack-src/Makefile.MPI.nox86.gcc spack-src.new/Makefile.MPI.nox86.gcc
+--- spack-src/Makefile.MPI.nox86.gcc	1970-01-01 09:00:00.000000000 +0900
++++ spack-src.new/Makefile.MPI.nox86.gcc	2019-07-31 09:59:25.937748520 +0900
+@@ -0,0 +1,51 @@
++# Makefile November 2009 by Alexandros Stamatakis
++
++CC = mpicc
++
++
++CFLAGS = -D_WAYNE_MPI -D_GNU_SOURCE -fomit-frame-pointer -funroll-loops -O2
++
++
++LIBRARIES = -lm
++
++RM = rm -f
++
++objs    = axml.o  optimizeModel.o multiple.o searchAlgo.o topologies.o parsePartitions.o treeIO.o models.o bipartitionList.o rapidBootstrap.o evaluatePartialGenericSpecial.o evaluateGenericSpecial.o newviewGenericSpecial.o makenewzGenericSpecial.o   classify.o fastDNAparsimony.o fastSearch.o leaveDropping.o rmqs.o rogueEPA.o ancestralStates.o  mem_alloc.o eigen.o 
++
++all : clean raxmlHPC-MPI
++
++GLOBAL_DEPS = axml.h globalVariables.h rmq.h rmqs.h #mem_alloc.h
++
++raxmlHPC-MPI : $(objs)
++	$(CC) -o raxmlHPC-MPI $(objs) $(LIBRARIES) $(LDFLAGS) 
++
++rmqs.o : rmqs.c $(GLOBAL_DEPS)
++classify.o : classify.c $(GLOBAL_DEPS)
++evaluatePartialSpecialGeneric.o : evaluatePartialSpecialGeneric.c $(GLOBAL_DEPS)
++bipartitionList.o : bipartitionList.c $(GLOBAL_DEPS)
++optimizeModel.o : optimizeModel.c $(GLOBAL_DEPS)
++multiple.o : multiple.c $(GLOBAL_DEPS)
++axml.o : axml.c $(GLOBAL_DEPS)
++searchAlgo.o : searchAlgo.c $(GLOBAL_DEPS)
++topologies.o : topologies.c $(GLOBAL_DEPS)
++parsePartitions.o : parsePartitions.c $(GLOBAL_DEPS)
++treeIO.o : treeIO.c $(GLOBAL_DEPS)
++models.o : models.c $(GLOBAL_DEPS)
++rapidBootstrap.o : rapidBootstrap.c $(GLOBAL_DEPS) 
++evaluatePartialGenericSpecial.o : evaluatePartialGenericSpecial.c $(GLOBAL_DEPS)
++evaluateGenericSpecial.o : evaluateGenericSpecial.c $(GLOBAL_DEPS)
++newviewGenericSpecial.o : newviewGenericSpecial.c $(GLOBAL_DEPS)
++makenewzGenericSpecial.o : makenewzGenericSpecial.c $(GLOBAL_DEPS)
++fastDNAparsimony.o : fastDNAparsimony.c  $(GLOBAL_DEPS)
++fastSearch.o : fastSearch.c $(GLOBAL_DEPS)
++leaveDropping.o : leaveDropping.c $(GLOBAL_DEPS)
++rogueEPA.o : rogueEPA.c $(GLOBAL_DEPS)
++ancestralStates.o : ancestralStates.c $(GLOBAL_DEPS)
++ mem_alloc.o eigen.o  : mem_alloc.c  $(GLOBAL_DEPS)
++
++eigen.o : eigen.c $(GLOBAL_DEPS)
++	$(CC) -c -o eigen.o eigen.c 
++clean : 
++	$(RM) *.o raxmlHPC-MPI
++
++dev : raxmlHPC-MPI
+diff -rNu spack-src/Makefile.nox86.gcc spack-src.new/Makefile.nox86.gcc
+--- spack-src/Makefile.nox86.gcc	1970-01-01 09:00:00.000000000 +0900
++++ spack-src.new/Makefile.nox86.gcc	2019-07-31 09:59:47.987749919 +0900
+@@ -0,0 +1,53 @@
++# Makefile August 2006 by Alexandros Stamatakis
++# Makefile cleanup October 2006, Courtesy of Peter Cordes <peter@cordes.ca>
++
++CC = gcc
++
++
++CFLAGS = -D_GNU_SOURCE -fomit-frame-pointer -funroll-loops -O2 #-Wall -Wunused-parameter -Wredundant-decls  -Wreturn-type  -Wswitch-default -Wunused-value -Wimplicit  -Wimplicit-function-declaration  -Wimplicit-int -Wimport  -Wunused  -Wunused-function  -Wunused-label -Wno-int-to-pointer-cast -Wbad-function-cast  -Wmissing-declarations -Wmissing-prototypes  -Wnested-externs  -Wold-style-definition -Wstrict-prototypes -Wpointer-sign -Wextra -Wredundant-decls -Wunused -Wunused-function -Wunused-parameter -Wunused-value  -Wunused-variable -Wformat  -Wformat-nonliteral -Wparentheses -Wsequence-point -Wuninitialized -Wundef -Wbad-function-cast
++
++LIBRARIES = -lm
++
++RM = rm -f
++
++objs    = axml.o  optimizeModel.o multiple.o searchAlgo.o topologies.o parsePartitions.o treeIO.o models.o bipartitionList.o rapidBootstrap.o evaluatePartialGenericSpecial.o evaluateGenericSpecial.o newviewGenericSpecial.o makenewzGenericSpecial.o   classify.o fastDNAparsimony.o fastSearch.o leaveDropping.o rmqs.o rogueEPA.o ancestralStates.o  mem_alloc.o  eigen.o
++
++all : clean raxmlHPC
++
++GLOBAL_DEPS = axml.h globalVariables.h rmq.h rmqs.h #mem_alloc.h
++
++raxmlHPC : $(objs)
++	$(CC) -o raxmlHPC $(objs) $(LIBRARIES) $(LDFLAGS) 
++
++rmqs.o : rmqs.c $(GLOBAL_DEPS)
++classify.o : classify.c $(GLOBAL_DEPS)
++evaluatePartialSpecialGeneric.o : evaluatePartialSpecialGeneric.c $(GLOBAL_DEPS)
++bipartitionList.o : bipartitionList.c $(GLOBAL_DEPS)
++optimizeModel.o : optimizeModel.c $(GLOBAL_DEPS)
++multiple.o : multiple.c $(GLOBAL_DEPS)
++axml.o : axml.c $(GLOBAL_DEPS)
++searchAlgo.o : searchAlgo.c $(GLOBAL_DEPS)
++topologies.o : topologies.c $(GLOBAL_DEPS)
++parsePartitions.o : parsePartitions.c $(GLOBAL_DEPS)
++treeIO.o : treeIO.c $(GLOBAL_DEPS)
++models.o : models.c $(GLOBAL_DEPS)
++rapidBootstrap.o : rapidBootstrap.c $(GLOBAL_DEPS) 
++evaluatePartialGenericSpecial.o : evaluatePartialGenericSpecial.c $(GLOBAL_DEPS)
++evaluateGenericSpecial.o : evaluateGenericSpecial.c $(GLOBAL_DEPS)
++newviewGenericSpecial.o : newviewGenericSpecial.c $(GLOBAL_DEPS)
++makenewzGenericSpecial.o : makenewzGenericSpecial.c $(GLOBAL_DEPS)
++fastDNAparsimony.o : fastDNAparsimony.c  $(GLOBAL_DEPS)
++fastSearch.o : fastSearch.c $(GLOBAL_DEPS)
++leaveDropping.o : leaveDropping.c $(GLOBAL_DEPS)
++rogueEPA.o : rogueEPA.c $(GLOBAL_DEPS)
++ancestralStates.o : ancestralStates.c $(GLOBAL_DEPS)
++mem_alloc.o eigen.o  : mem_alloc.c  $(GLOBAL_DEPS)
++
++
++
++eigen.o : eigen.c $(GLOBAL_DEPS)
++	$(CC) -c -o eigen.o eigen.c 
++clean : 
++	$(RM) *.o raxmlHPC
++
++dev : raxmlHPC
+diff -rNu spack-src/Makefile.PTHREADS.nox86.gcc spack-src.new/Makefile.PTHREADS.nox86.gcc
+--- spack-src/Makefile.PTHREADS.nox86.gcc	1970-01-01 09:00:00.000000000 +0900
++++ spack-src.new/Makefile.PTHREADS.nox86.gcc	2019-07-31 10:00:07.397751144 +0900
+@@ -0,0 +1,52 @@
++# Makefile August 2006 by Alexandros Stamatakis
++# Makefile cleanup October 2006, Courtesy of Peter Cordes <peter@cordes.ca>
++
++CC = gcc
++
++
++CFLAGS = -D_GNU_SOURCE -fomit-frame-pointer -funroll-loops -O2  -D_USE_PTHREADS #-Wall -Wunused-parameter -Wredundant-decls  -Wreturn-type  -Wswitch-default -Wunused-value -Wimplicit  -Wimplicit-function-declaration  -Wimplicit-int -Wimport  -Wunused  -Wunused-function  -Wunused-label -Wno-int-to-pointer-cast -Wbad-function-cast  -Wmissing-declarations -Wmissing-prototypes  -Wnested-externs  -Wold-style-definition -Wstrict-prototypes  -Wpointer-sign -Wextra -Wredundant-decls -Wunused -Wunused-function -Wunused-parameter -Wunused-value  -Wunused-variable -Wformat  -Wformat-nonliteral -Wparentheses -Wsequence-point -Wuninitialized -Wundef -Wbad-function-cast
++
++
++LIBRARIES = -lm -pthread
++
++RM = rm -f
++
++objs    = axml.o  optimizeModel.o multiple.o searchAlgo.o topologies.o parsePartitions.o treeIO.o models.o bipartitionList.o rapidBootstrap.o evaluatePartialGenericSpecial.o evaluateGenericSpecial.o newviewGenericSpecial.o makenewzGenericSpecial.o   classify.o  fastDNAparsimony.o fastSearch.o leaveDropping.o rmqs.o rogueEPA.o ancestralStates.o  mem_alloc.o eigen.o  
++
++all : clean raxmlHPC-PTHREADS
++
++GLOBAL_DEPS = axml.h globalVariables.h rmq.h rmqs.h #mem_alloc.h compiler.h  /fefs/home/r0001/work/spack/lib/spack/env/gcc/gcc.h  ll_asm.h  ll_list.h
++
++raxmlHPC-PTHREADS : $(objs)
++	$(CC) -o  raxmlHPC-PTHREADS $(objs) $(LIBRARIES) $(LDFLAGS) 
++
++rmqs.o : rmqs.c $(GLOBAL_DEPS)
++classify.o : classify.c $(GLOBAL_DEPS)
++evaluatePartialSpecialGeneric.o : evaluatePartialSpecialGeneric.c $(GLOBAL_DEPS)
++bipartitionList.o : bipartitionList.c $(GLOBAL_DEPS)
++optimizeModel.o : optimizeModel.c $(GLOBAL_DEPS)
++multiple.o : multiple.c $(GLOBAL_DEPS)
++axml.o : axml.c $(GLOBAL_DEPS)
++searchAlgo.o : searchAlgo.c $(GLOBAL_DEPS)
++topologies.o : topologies.c $(GLOBAL_DEPS)
++parsePartitions.o : parsePartitions.c $(GLOBAL_DEPS)
++treeIO.o : treeIO.c $(GLOBAL_DEPS)
++models.o : models.c $(GLOBAL_DEPS)
++rapidBootstrap.o : rapidBootstrap.c $(GLOBAL_DEPS) 
++evaluatePartialGenericSpecial.o : evaluatePartialGenericSpecial.c $(GLOBAL_DEPS)
++evaluateGenericSpecial.o : evaluateGenericSpecial.c $(GLOBAL_DEPS)
++newviewGenericSpecial.o : newviewGenericSpecial.c $(GLOBAL_DEPS)
++makenewzGenericSpecial.o : makenewzGenericSpecial.c $(GLOBAL_DEPS)
++fastDNAparsimony.o : fastDNAparsimony.c  $(GLOBAL_DEPS)
++fastSearch.o : fastSearch.c $(GLOBAL_DEPS)
++leaveDropping.o : leaveDropping.c $(GLOBAL_DEPS)
++rogueEPA.o : rogueEPA.c $(GLOBAL_DEPS)
++ancestralStates.o : ancestralStates.c $(GLOBAL_DEPS)
++mem_alloc.o eigen.o  : mem_alloc.c  $(GLOBAL_DEPS)
++
++eigen.o : eigen.c $(GLOBAL_DEPS)
++	$(CC) -c -o eigen.o eigen.c 
++clean : 
++	$(RM) *.o raxmlHPC-PTHREADS
++
++dev : raxmlHPC-PTHREADS

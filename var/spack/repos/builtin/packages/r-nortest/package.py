@@ -11,8 +11,8 @@ class RNortest(RPackage):
 
        Five omnibus tests for testing the composite hypothesis of normality."""
 
-    homepage = "https://cran.r-project.org/package=nortest"
-    url      = "https://cran.r-project.org/src/contrib/nortest_1.0-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nortest"
+    homepage = "https://cloud.r-project.org/package=nortest"
+    url      = "https://cloud.r-project.org/src/contrib/nortest_1.0-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nortest"
 
     version('1.0-4', sha256='a3850a048181d5d059c1e74903437569873b430c915b709808237d71fee5209f')

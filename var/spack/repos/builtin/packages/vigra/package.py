@@ -27,7 +27,7 @@ class Vigra(CMakePackage):
 
     depends_on('libtiff', when='+tiff')
     depends_on('libpng', when='+png')
-    depends_on('libjpeg', when='+jpeg')
+    depends_on('jpeg', when='+jpeg')
     depends_on('hdf5', when='+hdf5')
     depends_on('fftw', when='+fftw')
     depends_on('openexr', when='+exr')

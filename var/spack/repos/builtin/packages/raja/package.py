@@ -29,16 +29,15 @@ class Raja(CMakePackage):
 
     depends_on('cuda', when='+cuda')
 
-    depends_on('cmake@3.3:', type='build')
+    depends_on('cmake@3.8:', type='build')
+    depends_on('cmake@3.9:', when='+cuda', type='build')
 
     def cmake_args(self):
         spec = self.spec
 
         options = []
-
-        if '+openmp' in spec:
-            options.extend([
-                '-DENABLE_OPENMP=On'])
+        options.append('-DENABLE_OPENMP={0}'.format(
+            'On' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
             options.extend([

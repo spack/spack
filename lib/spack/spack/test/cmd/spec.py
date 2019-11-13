@@ -37,6 +37,18 @@ def test_spec_yaml():
     assert 'mpich' in mpileaks
 
 
+def test_spec_json():
+    output = spec('--json', 'mpileaks')
+
+    mpileaks = spack.spec.Spec.from_json(output)
+    assert 'mpileaks' in mpileaks
+    assert 'callpath' in mpileaks
+    assert 'dyninst' in mpileaks
+    assert 'libdwarf' in mpileaks
+    assert 'libelf' in mpileaks
+    assert 'mpich' in mpileaks
+
+
 def _parse_types(string):
     """Parse deptypes for specs from `spack spec -t` output."""
     lines = string.strip().split('\n')

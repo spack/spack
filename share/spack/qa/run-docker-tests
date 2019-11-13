@@ -32,15 +32,14 @@ ensure_docker_login() {
     return $__login_success
 }
 
-for config in share/spack/docker/config/* ; do
-    source "$config" ;
-    ./share/spack/docker/build-image.sh;
-done
+this_dir=$(cd $(dirname $0) && pwd)
+SPACK_BIN="${this_dir}/../../../bin/spack"
 
+# packages.spack.io service
+${SPACK_BIN} list --format version_json > ${this_dir}/../packages/packages.json
+./share/spack/packages/build-image.sh
 if [ "$TEST_SUITE" '=' "docker" -a \
      "$TRAVIS_EVENT_TYPE" != "pull_request" ] && ensure_docker_login ; then
-    for config in share/spack/docker/config/* ; do
-        source "$config"
-        ./share/spack/docker/push-image.sh
-    done
+    ./share/spack/packages/push-image.sh
 fi
+

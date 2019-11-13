@@ -1,0 +1,20 @@
+Common subdirectories: spack-src/cub and spack-src.mod/cub
+Common subdirectories: spack-src/example and spack-src.mod/example
+Common subdirectories: spack-src/lib_idba and spack-src.mod/lib_idba
+diff -u spack-src/Makefile spack-src.mod/Makefile
+--- spack-src/Makefile	2018-11-02 10:14:27.000000000 +0900
++++ spack-src.mod/Makefile	2019-07-09 15:53:34.685959951 +0900
+@@ -48,6 +48,12 @@
+ 	CPU_ARCH_SUFFIX = ppc64
+ 	CPU_ARCH = -mpowerpc64
+ endif
++IS_AARCH64 := $(shell echo `$(CXX) -v 2>&1 | grep aarch64 | wc -l`)
++ifneq (0, $(IS_AARCH64))
++	CPU_ARCH_SUFFIX = aarch64
++	CPU_ARCH =
++        disablempopcnt=1
++endif
+ 
+ #-------------------------------------------------------------------------------
+ # Includes
+Common subdirectories: spack-src/tools and spack-src.mod/tools

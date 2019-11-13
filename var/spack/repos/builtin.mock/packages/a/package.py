@@ -32,6 +32,8 @@ class A(AutotoolsPackage):
 
     depends_on('b', when='foobar=bar')
 
+    parallel = False
+
     def with_or_without_fee(self, activated):
         if not activated:
             return '--no-fee'

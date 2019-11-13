@@ -14,6 +14,7 @@ class Fmt(CMakePackage):
     homepage = "http://fmtlib.net/latest/index.html"
     url      = "https://github.com/fmtlib/fmt/releases/download/5.2.1/fmt-5.2.1.zip"
 
+    version('5.3.0', sha256='4c0741e10183f75d7d6f730b8708a99b329b2f942dad5a9da3385ab92bb4a15c')
     version('5.2.1', sha256='43894ab8fe561fc9e523a8024efc23018431fa86b95d45b06dbe6ddb29ffb6cd')
     version('5.2.0', sha256='c016db7f825bce487a7929e1edb747b9902a2935057af6512cad3df3a080a027')
     version('5.1.0', sha256='77ef9fea638dc846e484409fbc1ea710bb9bcea042e7b35b8805041bf7655ad5')
@@ -24,21 +25,57 @@ class Fmt(CMakePackage):
     version('3.0.1', sha256='4c9af0dc919a8ae7022b44e1a03c435e42d65c866f44667d8d920d342b098550')
     version('3.0.0', sha256='1b050b66fa31b74f1d75a14f15e99e728ab79572f176a53b2f8ad7c201c30ceb')
 
+    variant('cxxstd',
+            default='11',
+            values=('98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building')
+    variant('pic', default=True, description='Enable generation of position-independent code')
+
     depends_on('cmake@3.1.0:', type='build')
 
-    # Supported compilers are detailed here:
+    # Supported compilers/standards are detailed here:
     # http://fmtlib.net/latest/index.html#portability
     conflicts('%gcc@:4.3.999', when='@5:')
     conflicts('%llvm@:2.8.999', when='@5:')
+    # 5 and above require C++11
+    conflicts('cxxstd=98', when='@5:')
+    # 5.0.0 enables C++14 auto return types in C++11 mode
+    conflicts('cxxstd=11', when='@5.0.0')
+    # 4.1 fails with C++17 (https://github.com/fmtlib/fmt/issues/722)
+    conflicts('cxxstd=17', when='@4.1.0')
 
-    variant('pic', default=True, description='Enable generation of position-independent code')
+    # Use CMAKE_CXX_STANDARD to define C++ flag, as in later versions
+    patch('fmt-use-cmake-cxx-standard_3.0.0.patch', when='@3.0.0')
+
+    # Remove hardcoding of "-std=c++11/0x" in INTERFACE_COMPILE_OPTIONS
+    patch('fmt-no-export-cpp11flag_3.0.0.patch', when='@3.0.0:3.0.1')
+
+    # Only allow [[attributes]] on C++11 and higher
+    patch('fmt-attributes-cpp11_4.1.0.patch', when='@4.1.0')
 
     def cmake_args(self):
         spec = self.spec
         args = []
+
         if '+pic' in spec:
             args.extend([
                 '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
                 '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag)
             ])
+
+        args.append('-DCMAKE_CXX_STANDARD={0}'.format(
+                    spec.variants['cxxstd'].value))
+        # Require standard at configure time to guarantee the
+        # compiler supports the selected standard.
+        args.append('-DCMAKE_CXX_STANDARD_REQUIRED=ON')
+
+        # When cxxstd is 98, must disable FMT_USE_CPP11
+        if 'cxxstd=98' in spec:
+            args.append('-DFMT_USE_CPP11=OFF')
+
+        # Can't build docs without doxygen+python+virtualenv
+        # and call to build "doc" target
+        args.append("-DFMT_DOC=OFF")
+
         return args

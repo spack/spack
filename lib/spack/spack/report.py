@@ -126,7 +126,8 @@ class InfoCollector(object):
                     'id': pkg.spec.dag_hash(),
                     'elapsed_time': None,
                     'result': None,
-                    'message': None
+                    'message': None,
+                    'installed_from_binary_cache': False
                 }
 
                 start_time = time.time()
@@ -136,6 +137,8 @@ class InfoCollector(object):
                     value = do_install(pkg, *args, **kwargs)
                     package['result'] = 'success'
                     package['stdout'] = fetch_package_log(pkg)
+                    package['installed_from_binary_cache'] = \
+                        pkg.installed_from_binary_cache
                     if installed_on_entry:
                         return
 

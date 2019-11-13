@@ -17,7 +17,7 @@ class IbmJava(Package):
     # There are separate tar files for big and little-endian machine
     # types.  When we add more versions, then turn this into a mapping
     # from version and machine type to sha256sum.
-    mach = platform.machine()
+    mach = platform.machine() if platform.machine() == 'ppc64' else 'ppc64le'
     if mach == 'ppc64le':
         sha = 'dec6434d926861366c135aac6234fc28b3e7685917015aa3a3089c06c3b3d8f0'
     else:
@@ -27,7 +27,7 @@ class IbmJava(Package):
 
     provides('java@8')
 
-    conflicts('target=x86_64', msg='ibm-java is only available for ppc64 and ppc64le')
+    conflicts('target=x86_64:', msg='ibm-java is only available for ppc64 and ppc64le')
 
     # This assumes version numbers are 4-tuples: 8.0.5.30
     def url_for_version(self, version):

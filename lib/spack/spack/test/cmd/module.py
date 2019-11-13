@@ -19,6 +19,11 @@ def _module_files(module_type, *specs):
     return [writer_cls(spec).layout.filename for spec in specs]
 
 
+@pytest.fixture(scope='module', autouse=True)
+def ensure_module_files_are_there(database):
+    module('tcl', 'refresh', '-y')
+
+
 @pytest.fixture(
     params=[
         ['rm', 'doesnotexist'],  # Try to remove a non existing module
@@ -33,7 +38,7 @@ def failure_args(request):
 
 
 @pytest.fixture(
-    params=['dotkit', 'tcl', 'lmod']
+    params=['tcl', 'lmod']
 )
 def module_type(request):
     return request.param

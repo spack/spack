@@ -12,8 +12,10 @@ import os
 
 from collections import Iterable, Mapping
 
+import spack.hash_types as ht
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
+
 from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
@@ -96,14 +98,24 @@ def test_using_ordered_dict(mock_packages):
     for spec in specs:
         dag = Spec(spec)
         dag.normalize()
-        from pprint import pprint
-        pprint(dag.to_node_dict())
-        break
-
         level = descend_and_check(dag.to_node_dict())
 
         # level just makes sure we are doing something here
         assert level >= 5
+
+
+def test_to_record_dict(mock_packages, config):
+    specs = ['mpileaks', 'zmpi', 'dttop']
+    for name in specs:
+        spec = Spec(name).concretized()
+        record = spec.to_record_dict()
+        assert record["name"] == name
+        assert "hash" in record
+
+        node = spec.to_node_dict()
+        for key, value in node[name].items():
+            assert key in record
+            assert record[key] == value
 
 
 def test_ordered_read_not_required_for_consistent_dag_hash(
@@ -231,7 +243,7 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
         spec_a.concretize()
         b_spec = spec_a['b']
         c_spec = spec_a['c']
-        spec_a_yaml = spec_a.to_yaml(all_deps=True)
+        spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
 
         save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
 

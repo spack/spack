@@ -43,13 +43,10 @@ can take a number of specs as input.
 
 """
 import sys
-
 from heapq import heapify, heappop, heappush
-from six import iteritems
 
 from llnl.util.tty.color import ColorStream
 
-from spack.spec import Spec
 from spack.dependency import all_deptypes, canonical_deptype
 
 
@@ -499,76 +496,67 @@ def graph_dot(specs, deptype='all', static=False, out=None):
         spack graph --dot qt | dot -Tpdf > spack-graph.pdf
 
     """
+    if not specs:
+        raise ValueError("Must provide specs to graph_dot")
+
     if out is None:
         out = sys.stdout
     deptype = canonical_deptype(deptype)
 
+    def static_graph(spec, deptype):
+        pkg = spec.package
+        possible = pkg.possible_dependencies(
+            expand_virtuals=True, deptype=deptype)
+
+        nodes = set()  # elements are (node name, node label)
+        edges = set()  # elements are (src key, dest key)
+        for name, deps in possible.items():
+            nodes.add((name, name))
+            edges.update((name, d) for d in deps)
+        return nodes, edges
+
+    def dynamic_graph(spec, deptypes):
+        nodes = set()  # elements are (node key, node label)
+        edges = set()  # elements are (src key, dest key)
+        for s in spec.traverse(deptype=deptype):
+            nodes.add((s.dag_hash(), s.name))
+            for d in s.dependencies(deptype=deptype):
+                edge = (s.dag_hash(), d.dag_hash())
+                edges.add(edge)
+        return nodes, edges
+
+    nodes = set()
+    edges = set()
+    for spec in specs:
+        if static:
+            n, e = static_graph(spec, deptype)
+        else:
+            n, e = dynamic_graph(spec, deptype)
+        nodes.update(n)
+        edges.update(e)
+
     out.write('digraph G {\n')
     out.write('  labelloc = "b"\n')
     out.write('  rankdir = "TB"\n')
-    out.write('  ranksep = "5"\n')
-    out.write('node[\n')
+    out.write('  ranksep = "1"\n')
+    out.write('  edge[\n')
+    out.write('     penwidth=4')
+    out.write('  ]\n')
+    out.write('  node[\n')
     out.write('     fontname=Monaco,\n')
-    out.write('     penwidth=2,\n')
-    out.write('     fontsize=12,\n')
-    out.write('     margin=.1,\n')
+    out.write('     penwidth=4,\n')
+    out.write('     fontsize=24,\n')
+    out.write('     margin=.2,\n')
     out.write('     shape=box,\n')
     out.write('     fillcolor=lightblue,\n')
-    out.write('     style="rounded,filled"]\n')
+    out.write('     style="rounded,filled"')
+    out.write('  ]\n')
 
     out.write('\n')
-
-    def q(string):
-        return '"%s"' % string
-
-    if not specs:
-        raise ValueError("Must provide specs ot graph_dot")
-
-    # Static graph includes anything a package COULD depend on.
-    if static:
-        names = set.union(*[
-            s.package.possible_dependencies(expand_virtuals=False)
-            for s in specs])
-        specs = [Spec(name) for name in names]
-
-    labeled = set()
-
-    def label(key, label):
-        if key not in labeled:
-            out.write('  "%s" [label="%s"]\n' % (key, label))
-            labeled.add(key)
-
-    deps = set()
-    for spec in specs:
-        if static:
-            out.write('  "%s" [label="%s"]\n' % (spec.name, spec.name))
-
-            # Skip virtual specs (we'll find out about them from concrete ones.
-            if spec.virtual:
-                continue
-
-            # Add edges for each depends_on in the package.
-            for dep_name, dep in iteritems(spec.package.dependencies):
-                deps.add((spec.name, dep_name))
-
-            # If the package provides something, add an edge for that.
-            for provider in set(s.name for s in spec.package.provided):
-                deps.add((provider, spec.name))
-
-        else:
-            def key_label(s):
-                return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
-
-            for s in spec.traverse(deptype=deptype):
-                skey, slabel = key_label(s)
-                out.write('  "%s" [label="%s"]\n' % (skey, slabel))
-
-                for d in s.dependencies(deptype=deptype):
-                    dkey, _ = key_label(d)
-                    deps.add((skey, dkey))
+    for key, label in nodes:
+        out.write('  "%s" [label="%s"]\n' % (key, label))
 
     out.write('\n')
-
-    for pair in deps:
-        out.write('  "%s" -> "%s"\n' % pair)
+    for src, dest in edges:
+        out.write('  "%s" -> "%s"\n' % (src, dest))
     out.write('}\n')

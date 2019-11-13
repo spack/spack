@@ -13,7 +13,7 @@ class Amg(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://computation.llnl.gov/projects/co-design/amg2013"
+    homepage = "https://computing.llnl.gov/projects/co-design/amg2013"
     git      = "https://github.com/LLNL/AMG.git"
 
     version('develop', branch='master')

@@ -23,6 +23,7 @@ class PyEspresso(CMakePackage):
     url      = "https://github.com/espressomd/espresso/releases/download/4.0.0/espresso-4.0.0.tar.gz"
 
     version('develop', branch='python')
+    version('4.0.2', sha256='89878ab44a58e90b69d56368e961b8ca13d9307f8d4b282967a1f3071a62c740')
     version('4.0.1', sha256='17b7268eeba652a77f861bc534cdd05d206e7641d203a9dd5029b44bd422304b')
     version('4.0.0', sha256='8e128847447eebd843de24be9b4ad14aa19c028ae48879a5a4535a9683836e6b')
 

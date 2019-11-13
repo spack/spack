@@ -198,7 +198,11 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def arch_dirname(self):
         """Returns the root folder for THIS architecture"""
-        arch_folder = str(self.spec.architecture)
+        arch_folder = '-'.join([
+            str(self.spec.platform),
+            str(self.spec.os),
+            str(self.spec.target.family)
+        ])
         return os.path.join(
             self.dirname(),  # root for lmod module files
             arch_folder,  # architecture relative path
@@ -232,7 +236,7 @@ class LmodFileLayout(BaseFileLayout):
         to console to use it.
         """
         # Package name and version
-        base = os.path.join("${PACKAGE}", "${VERSION}")
+        base = os.path.join("{name}", "{version}")
         name_parts = [self.spec.format(base)]
         # The remaining elements are filename suffixes
         name_parts.extend(self.conf.suffixes)

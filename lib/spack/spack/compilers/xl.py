@@ -29,6 +29,10 @@ class Xl(Compiler):
     version_argument = '-qversion'
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
+    @classmethod
+    def verbose_flag(cls):
+        return "-V"
+
     @property
     def openmp_flag(self):
         return "-qsmp=omp"
@@ -42,6 +46,28 @@ class Xl(Compiler):
                                           "< 13.1")
         else:
             return "-qlanglvl=extended0x"
+
+    @property
+    def c99_flag(self):
+        if self.version >= ver('13.1.1'):
+            return '-std=gnu99'
+        if self.version >= ver('10.1'):
+            return '-qlanglvl=extc99'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 10.1')
+
+    @property
+    def c11_flag(self):
+        if self.version >= ver('13.1.2'):
+            return '-std=gnu11'
+        if self.version >= ver('12.1'):
+            return '-qlanglvl=extc1x'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 12.1')
 
     @property
     def pic_flag(self):

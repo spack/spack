@@ -21,6 +21,8 @@ class Dealii(CMakePackage, CudaPackage):
     transitive_rpaths = False
 
     version('develop', branch='master')
+    version('9.1.1', sha256='fc5b483f7fe58dfeb52d05054011280f115498e337af3e085bf272fd1fd81276')
+    version('9.1.0', sha256='5b070112403f8afbb72345c1bb24d2a38d11ce58891217e353aab97957a04600')
     version('9.0.1', sha256='df2f0d666f2224be07e3741c0e8e02132fd67ea4579cd16a2429f7416146ee64')
     version('9.0.0', sha256='c918dc5c1a31d62f6eea7b524dcc81c6d00b3c378d4ed6965a708ab548944f08')
     version('8.5.1', sha256='d33e812c21a51f7e5e3d3e6af86aec343155650b611d61c1891fbc3cabce09ae')
@@ -41,7 +43,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Adol-c')
     variant('doc',      default=False,
             description='Compile with documentation')
-    variant('ginkgo',   default=False, description='Compile wit Ginkgo')
+    variant('ginkgo',   default=True, description='Compile with Ginkgo')
     variant('gmsh',     default=True,  description='Compile with GMSH')
     variant('gsl',      default=True,  description='Compile with GSL')
     variant('hdf5',     default=True,
@@ -62,7 +64,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Sundials')
     variant('slepc',    default=True,
             description='Compile with Slepc (only with Petsc and MPI)')
-    variant('symengine', default=False,
+    variant('symengine', default=True,
             description='Compile with SymEngine')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
@@ -135,7 +137,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('metis@5:~int64',   when='+metis~int64')
     depends_on('muparser', when='+muparser')
     depends_on('nanoflann',        when='@9.0:+nanoflann')
-    depends_on('netcdf+mpi',       when='+netcdf+mpi')
+    depends_on('netcdf-c+mpi',     when='+netcdf+mpi')
     depends_on('netcdf-cxx',       when='+netcdf+mpi')
     depends_on('oce',              when='+oce')
     depends_on('p4est',            when='+p4est+mpi')
@@ -148,7 +150,15 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
-    depends_on('symengine@0.3:', when='@9.1:+symengine')
+    # Both Trilinos and SymEngine bundle the Teuchos RCP library.
+    # This leads to conflicts between macros defined in the included
+    # headers when they are not compiled in the same mode.
+    # See https://github.com/symengine/symengine/issues/1516
+    # FIXME: uncomment when the following is fixed
+    # https://github.com/spack/spack/issues/11160
+    # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
+    # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
+    depends_on('symengine@0.4:', when='@9.1:+symengine')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -162,6 +172,11 @@ class Dealii(CMakePackage, CudaPackage):
     patch('https://github.com/dealii/dealii/commit/a89d90f9993ee9ad39e492af466b3595c06c3e25.patch',
           sha256='4282b32e96f2f5d376eb34f3fddcc4615fcd99b40004cca784eb874288d1b31c',
           when='@9.0.1')
+
+    # https://github.com/dealii/dealii/pull/7935
+    patch('https://github.com/dealii/dealii/commit/f8de8c5c28c715717bf8a086e94f071e0fe9deab.patch',
+          sha256='61f217744b70f352965be265d2f06e8c1276685e2944ca0a88b7297dd55755da',
+          when='@9.0.1 ^boost@1.70.0:')
 
     # check that the combination of variants makes sense
     # 64-bit BLAS:
@@ -187,6 +202,10 @@ class Dealii(CMakePackage, CudaPackage):
     conflicts('+slepc', when='~petsc',
               msg='It is not possible to enable slepc interfaces '
                   'without petsc.')
+
+    conflicts('+adol-c', when='^trilinos+chaco',
+              msg='symbol clash between the ADOL-C library and '
+                  'Trilinos SEACAS Chaco.')
 
     # interfaces added in 8.5.0:
     for p in ['gsl', 'python']:
@@ -224,10 +243,22 @@ class Dealii(CMakePackage, CudaPackage):
                 lapack_blas_headers.directories),
             '-DLAPACK_LIBRARIES=%s' % lapack_blas_libs.joined(';'),
             '-DUMFPACK_DIR=%s' % spec['suite-sparse'].prefix,
-            '-DTBB_DIR=%s' % spec['tbb'].prefix,
             '-DZLIB_DIR=%s' % spec['zlib'].prefix,
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')):
+            # deal.II/cmake will have hard time picking up TBB from Intel.
+            tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
+            options.extend([
+                '-DTBB_FOUND=true',
+                '-DTBB_VERSION=%s' % tbb_ver,
+                '-DTBB_INCLUDE_DIRS=%s' % ';'.join(
+                    spec['tbb'].headers.directories),
+                '-DTBB_LIBRARIES=%s' % spec['tbb'].libs.joined(';')
+            ])
+        else:
+            options.append('-DTBB_DIR=%s' % spec['tbb'].prefix)
 
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
@@ -246,13 +277,10 @@ class Dealii(CMakePackage, CudaPackage):
         # https://groups.google.com/forum/?fromgroups#!topic/dealii/3Yjy8CBIrgU
         if spec.satisfies('%gcc'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%intel'):
             cxx_flags_release.extend(['-O3'])
-            cxx_flags.extend(['-march=native'])
         elif spec.satisfies('%clang'):
             cxx_flags_release.extend(['-O3', '-ffp-contract=fast'])
-            cxx_flags.extend(['-march=native'])
 
         # Python bindings
         if spec.satisfies('@8.5.0:'):
@@ -365,13 +393,13 @@ class Dealii(CMakePackage, CudaPackage):
 
         # since Netcdf is spread among two, need to do it by hand:
         if '+netcdf' in spec and '+mpi' in spec:
-            netcdf = spec['netcdf-cxx'].libs + spec['netcdf'].libs
+            netcdf = spec['netcdf-cxx'].libs + spec['netcdf-c'].libs
             options.extend([
                 '-DNETCDF_FOUND=true',
                 '-DNETCDF_LIBRARIES=%s' % netcdf.joined(';'),
                 '-DNETCDF_INCLUDE_DIRS=%s;%s' % (
                     spec['netcdf-cxx'].prefix.include,
-                    spec['netcdf'].prefix.include),
+                    spec['netcdf-c'].prefix.include),
             ])
         else:
             options.extend([
@@ -419,5 +447,5 @@ class Dealii(CMakePackage, CudaPackage):
 
         return options
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('DEAL_II_DIR', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('DEAL_II_DIR', self.prefix)

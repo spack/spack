@@ -12,8 +12,8 @@ class PySympy(PythonPackage):
     url      = "https://pypi.io/packages/source/s/sympy/sympy-0.7.6.tar.gz"
 
     version('1.3', sha256='e1319b556207a3758a0efebae14e5e52c648fc1db8975953b05fff12b6871b54')
-    version('1.1.1', 'c410a9c2346878716d16ec873d72e72a')
-    version('1.0', '43e797de799f00f9e8fd2307dba9fab1')
-    version('0.7.6', '3d04753974306d8a13830008e17babca')
+    version('1.1.1', sha256='ac5b57691bc43919dcc21167660a57cc51797c28a4301a6144eff07b751216a4')
+    version('1.0', sha256='3eacd210d839e4db911d216a9258a3ac6f936992f66db211e22767983297ffae')
+    version('0.7.6', sha256='dfa3927e9befdfa7da7a18783ccbc2fe489ce4c46aa335a879e49e48fc03d7a7')
 
     depends_on('py-mpmath', when='@1.0:', type=('build', 'run'))

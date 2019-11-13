@@ -541,9 +541,9 @@ spec format strings, as shown in the example below.
 .. code-block:: yaml
 
    projections:
-     zlib: ${PACKAGE}-${VERSION}
-     ^mpi: ${PACKAGE}-${VERSION}/${DEP:mpi:PACKAGE}-${DEP:mpi:VERSION}-${COMPILERNAME}-${COMPILERVER}
-     all: ${PACKAGE}-${VERSION}/${COMPILERNAME}-${COMPILERVER}
+     zlib: {name}-{version}
+     ^mpi: {name}-{version}/{^mpi.name}-{^mpi.version}-{compiler.name}-{compiler.version}
+     all: {name}-{version}/{compiler.name}-{compiler.version}
 
 The entries in the projections configuration file must all be either
 specs or the keyword ``all``. For each spec, the projection used will

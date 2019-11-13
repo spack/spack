@@ -4,32 +4,13 @@ coverage:
   range: 60...90
   status:
     project:
-      default: true
-      llnl:
-        threshold: 0.5
-        paths:
-          - lib/spack/llnl
-      commands:
-        threshold: 0.5
-        paths:
-          - lib/spack/spack/cmd
-      build_systems:
-        threshold: 0.5
-        paths:
-          - lib/spack/spack/build_systems
-      modules:
-        threshold: 0.5
-        paths:
-          - lib/spack/spack/modules
-      core:
-        threshold: 0.5
-        paths:
-          - "!lib/spack/llnl"
-          - "!lib/spack/spack/cmd"
+      default: yes
 
 ignore:
   - lib/spack/spack/test/.*
   - lib/spack/docs/.*
   - lib/spack/external/.*
+  - share/spack/qa/.*
+  - share/spack/spack-completion.bash
 
 comment: off

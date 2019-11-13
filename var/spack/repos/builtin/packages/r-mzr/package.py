@@ -24,5 +24,5 @@ class RMzr(RPackage):
     depends_on('r-protgenerics', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('r@3.4.0:3.4.9', when='@2.10.0')

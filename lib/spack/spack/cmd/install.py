@@ -35,12 +35,20 @@ def update_kwargs_from_args(args, kwargs):
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
         'install_source': args.install_source,
-        'make_jobs': args.jobs,
         'verbose': args.verbose,
         'fake': args.fake,
         'dirty': args.dirty,
-        'use_cache': args.use_cache
+        'use_cache': args.use_cache,
+        'cache_only': args.cache_only,
+        'explicit': True,  # Always true for install command
+        'stop_at': args.until
     })
+
+    kwargs.update({
+        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_package': ('package' in args.things_to_install)
+    })
+
     if hasattr(args, 'setup'):
         setups = set()
         for arglist_s in args.setup:
@@ -61,6 +69,9 @@ the default is to install the package along with all its dependencies.
 alternatively one can decide to install only the package or only
 the dependencies"""
     )
+    subparser.add_argument(
+        '-u', '--until', type=str, dest='until', default=None,
+        help="phase to stop after when installing (default None)")
     arguments.add_common_arguments(subparser, ['jobs', 'install_status'])
     subparser.add_argument(
         '--overwrite', action='store_true',
@@ -82,6 +93,9 @@ the dependencies"""
     cache_group.add_argument(
         '--no-cache', action='store_false', dest='use_cache', default=True,
         help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
 
     subparser.add_argument(
         '--show-log-on-error', action='store_true',
@@ -153,11 +167,20 @@ Defaults to spec of the package to install."""
         help="""The site name that will be reported to CDash.
 Defaults to current system hostname."""
     )
-    subparser.add_argument(
+    cdash_subgroup = subparser.add_mutually_exclusive_group()
+    cdash_subgroup.add_argument(
         '--cdash-track',
         default='Experimental',
         help="""Results will be reported to this group on CDash.
 Defaults to Experimental."""
+    )
+    cdash_subgroup.add_argument(
+        '--cdash-buildstamp',
+        default=None,
+        help="""Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
     )
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 
@@ -176,25 +199,14 @@ def default_log_file(spec):
 def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
-    # handle active environment, if any
-    def install(spec, kwargs):
+    try:
+        # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
             env.install(abstract_spec, spec, **kwargs)
             env.write()
         else:
             spec.package.do_install(**kwargs)
-
-    try:
-        if cli_args.things_to_install == 'dependencies':
-            # Install dependencies as-if they were installed
-            # for root (explicit=False in the DB)
-            kwargs['explicit'] = False
-            for s in spec.dependencies():
-                install(s, kwargs)
-        else:
-            kwargs['explicit'] = True
-            install(spec, kwargs)
 
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
@@ -215,7 +227,8 @@ def install(parser, args, **kwargs):
         env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
-                env.concretize()
+                concretized_specs = env.concretize()
+                ev.display_specs(concretized_specs)
                 env.write()
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
@@ -223,20 +236,12 @@ def install(parser, args, **kwargs):
         else:
             tty.die("install requires a package argument or a spack.yaml file")
 
-    if args.jobs is not None:
-        if args.jobs <= 0:
-            tty.die("The -j option must be a positive integer!")
-
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to Package.do_install API
     update_kwargs_from_args(args, kwargs)
-    kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
-        'install_package': ('package' in args.things_to_install)
-    })
 
     if args.run_tests:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
@@ -258,6 +263,7 @@ def install(parser, args, **kwargs):
         specs = spack.cmd.parse_specs(
             args.package, concretize=True, tests=tests)
     except SpackError as e:
+        tty.debug(e)
         reporter.concretization_report(e.message)
         raise
 

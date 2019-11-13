@@ -55,7 +55,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-   tutorial
+   Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    known_issues
 
 .. toctree::
@@ -65,12 +65,15 @@ or refer to the full manual below.
    configuration
    config_yaml
    build_settings
+   environments
    mirrors
    module_file_support
    repositories
    binary_caches
    command_index
    package_list
+   chain
+   extensions
 
 .. toctree::
    :maxdepth: 2

@@ -13,7 +13,7 @@ class Gl2ps(CMakePackage):
     homepage = "http://www.geuz.org/gl2ps/"
     url      = "http://geuz.org/gl2ps/src/gl2ps-1.3.9.tgz"
 
-    version('1.3.9', '377b2bcad62d528e7096e76358f41140')
+    version('1.3.9', sha256='8a680bff120df8bcd78afac276cdc38041fed617f2721bade01213362bcc3640')
 
     variant('png',  default=True, description='Enable PNG support')
     variant('zlib', default=True, description='Enable compression using ZLIB')

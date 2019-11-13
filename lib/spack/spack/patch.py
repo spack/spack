@@ -6,6 +6,7 @@
 import hashlib
 import os
 import os.path
+import inspect
 
 import llnl.util.filesystem
 import llnl.util.lang
@@ -15,6 +16,7 @@ import spack.fetch_strategy as fs
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+import spack
 
 from spack.util.compression import allowed_archive
 from spack.util.crypto import checksum, Checker
@@ -86,6 +88,9 @@ class Patch(object):
 
         apply_patch(stage, self.path, self.level, self.working_dir)
 
+    def cache(self):
+        return None
+
     def to_dict(self):
         """Partial dictionary -- subclases should add to this."""
         return {
@@ -110,7 +115,30 @@ class FilePatch(Patch):
     def __init__(self, pkg, relative_path, level, working_dir,
                  ordering_key=None):
         self.relative_path = relative_path
-        abs_path = os.path.join(pkg.package_dir, self.relative_path)
+
+        # patches may be defined by relative paths to parent classes
+        # search mro to look for the file
+        abs_path = None
+        # At different times we call FilePatch on instances and classes
+        pkg_cls = pkg if inspect.isclass(pkg) else pkg.__class__
+        for cls in inspect.getmro(pkg_cls):
+            if not hasattr(cls, 'module'):
+                # We've gone too far up the MRO
+                break
+
+            # Cannot use pkg.package_dir because it's a property and we have
+            # classes, not instances.
+            pkg_dir = os.path.abspath(os.path.dirname(cls.module.__file__))
+            path = os.path.join(pkg_dir, self.relative_path)
+            if os.path.exists(path):
+                abs_path = path
+                break
+
+        if abs_path is None:
+            msg = 'FilePatch: Patch file %s for ' % relative_path
+            msg += 'package %s.%s does not exist.' % (pkg.namespace, pkg.name)
+            raise ValueError(msg)
+
         super(FilePatch, self).__init__(pkg, abs_path, level, working_dir)
         self.path = abs_path
         self._sha256 = None
@@ -156,6 +184,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
+    # TODO: this function doesn't use the stage arg
     def fetch(self, stage):
         """Retrieve the patch in a temporary stage and compute self.path
 
@@ -167,16 +196,19 @@ class UrlPatch(Patch):
         if self.archive_sha256:
             fetch_digest = self.archive_sha256
 
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
-        mirror = os.path.join(
-            os.path.dirname(stage.mirror_path),
-            os.path.basename(self.url))
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
+                                      expand=bool(self.archive_sha256))
 
-        self.stage = spack.stage.Stage(fetcher, mirror_path=mirror)
+        per_package_ref = os.path.join(
+            self.owner.split('.')[-1], os.path.basename(self.url))
+        # Reference starting with "spack." is required to avoid cyclic imports
+        mirror_ref = spack.mirror.mirror_archive_paths(
+            fetcher, per_package_ref)
+
+        self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
-        self.stage.cache_local()
 
         root = self.stage.path
         if self.archive_sha256:
@@ -206,6 +238,9 @@ class UrlPatch(Patch):
                 raise fs.ChecksumError(
                     "sha256 checksum failed for %s" % self.path,
                     "Expected %s but got %s" % (self.sha256, checker.sum))
+
+    def cache(self):
+        return self.stage
 
     def clean(self):
         self.stage.destroy()

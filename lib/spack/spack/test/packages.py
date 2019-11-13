@@ -12,6 +12,8 @@ from spack.paths import mock_packages_path
 from spack.util.naming import mod_to_class
 from spack.spec import Spec
 from spack.util.package_hash import package_content
+from spack.version import VersionChecksumError
+import spack.directives
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -122,6 +124,12 @@ class TestPackage(object):
         assert '^openblas' not in s
         assert '~openblas' in s
         assert 'mpi' in s
+
+    @pytest.mark.regression('11844')
+    def test_inheritance_of_patches(self):
+        s = Spec('patch-inheritance')
+        # Will error if inheritor package cannot find inherited patch files
+        s.concretize()
 
     def test_dependency_extensions(self):
         s = Spec('extension2')
@@ -353,3 +361,30 @@ def test_git_url_top_level_conflicts(mock_packages, config):
 
     with pytest.raises(spack.fetch_strategy.FetcherConflict):
         spack.fetch_strategy.for_package_version(pkg, '1.3')
+
+
+def test_rpath_args(mutable_database):
+    """Test a package's rpath_args property."""
+
+    rec = mutable_database.get_record('mpich')
+
+    rpath_args = rec.spec.package.rpath_args
+    assert '-rpath' in rpath_args
+    assert 'mpich' in rpath_args
+
+
+def test_bundle_version_checksum(mock_directive_bundle,
+                                 clear_directive_functions):
+    """Test raising exception on a version checksum with a bundle package."""
+    with pytest.raises(VersionChecksumError, match="Checksums not allowed"):
+        version = spack.directives.version('1.0', checksum='1badpkg')
+        version(mock_directive_bundle)
+
+
+def test_bundle_patch_directive(mock_directive_bundle,
+                                clear_directive_functions):
+    """Test raising exception on a patch directive with a bundle package."""
+    with pytest.raises(spack.directives.UnsupportedPackageDirective,
+                       match="Patches are not allowed"):
+        patch = spack.directives.patch('mock/patch.txt')
+        patch(mock_directive_bundle)

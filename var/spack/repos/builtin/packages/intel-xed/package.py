@@ -20,36 +20,32 @@ class IntelXed(Package):
     # the mbuild resource.  Xed doesn't have official releases, only
     # git commits.
 
-    version_list = [
-        ('2019.03.01',
-         'b7231de4c808db821d64f4018d15412640c34113',
-         '176544e1fb54b6bfb40f596111368981d287e951',
-        ),
-        ('2018.02.14',
-         '44d06033b69aef2c20ab01bfb518c52cd71bb537',
-         'bb9123152a330c7fa1ff1a502950dc199c83e177',
-        )
-    ]
+    version_list = [('2019.03.01',
+                     'b7231de4c808db821d64f4018d15412640c34113',
+                     '176544e1fb54b6bfb40f596111368981d287e951'),
+                    ('2018.02.14',
+                     '44d06033b69aef2c20ab01bfb518c52cd71bb537',
+                     'bb9123152a330c7fa1ff1a502950dc199c83e177')]
 
     version('develop', branch='master')
     resource(name='mbuild',
              git='https://github.com/intelxed/mbuild.git',
-             branch='master', destination='',
+             branch='master', placement='mbuild',
              when='@develop')
 
     for (vers, xed_hash, mbuild_hash) in version_list:
         version(vers, commit=xed_hash)
         resource(name='mbuild',
                  git='https://github.com/intelxed/mbuild.git',
-                 commit=mbuild_hash, destination='',
+                 commit=mbuild_hash,
                  when='@{0}'.format(vers))
 
     variant('debug', default=False, description='Enable debug symbols')
 
     depends_on('python@2.7:', type='build')
 
-    conflicts('target=ppc64', msg='intel-xed only runs on x86')
-    conflicts('target=ppc64le', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64:', msg='intel-xed only runs on x86')
+    conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
 
     mycflags = []
 
@@ -65,7 +61,7 @@ class IntelXed(Package):
         python_path = os.getenv('PYTHONPATH', '')
         os.environ['PYTHONPATH'] = mbuild_dir + ':' + python_path
 
-        mfile = Executable('./mfile.py')
+        mfile = Executable(join_path('.', 'mfile.py'))
 
         args = ['-j', str(make_jobs),
                 '--cc=%s' % spack_cc,

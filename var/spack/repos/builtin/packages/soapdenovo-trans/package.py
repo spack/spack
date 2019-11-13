@@ -14,7 +14,7 @@ class SoapdenovoTrans(MakefilePackage):
     homepage = "http://soap.genomics.org.cn/SOAPdenovo-Trans.html"
     url      = "https://github.com/aquaskyline/SOAPdenovo-Trans/archive/1.0.4.tar.gz"
 
-    version('1.0.4', 'a3b00b0f743b96141c4d5f1b49f2918c')
+    version('1.0.4', sha256='378a54cde0ebe240fb515ba67197c053cf95393645c1ae1399b3a611be2a9795')
 
     build_directory = 'src'
 

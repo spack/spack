@@ -23,11 +23,11 @@
                   name="{{ package.id }}"
                   time="{{ package.elapsed_time }}">
 {% if package.result == 'failure' %}
-            <failure message="{{ package.message }}">
+            <failure message="{{ package.message|e }}">
 {{ package.exception|e }}
             </failure>
 {% elif package.result == 'error' %}
-            <error message="{{ package.message }}">
+            <error message="{{ package.message|e }}">
 {{ package.exception|e }}
             </error>
 {% elif package.result == 'skipped' %}

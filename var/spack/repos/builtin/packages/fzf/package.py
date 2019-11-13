@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import shutil
+import inspect
+
 from spack import *
 
 
@@ -25,8 +29,24 @@ class Fzf(MakefilePackage):
 
     depends_on('go@1.11:')
 
-    def edit(self, spec, prefix):
-        mkdir(prefix.bin)
+    variant('vim', default=False, description='Install vim plugins for fzf')
 
-        makefile = FileFilter('Makefile')
-        makefile.filter('bin/fzf', prefix.bin + "/fzf")
+    patch("github_mirrors.patch")
+
+    def build(self, spec, prefix):
+        glide_home = os.path.join(self.build_directory, 'glide_home')
+        os.environ['GLIDE_HOME'] = glide_home
+        shutil.rmtree(glide_home, ignore_errors=True)
+        os.mkdir(glide_home)
+        super(Fzf, self).build(spec, prefix)
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            inspect.getmodule(self).make(*self.install_targets)
+
+        mkdir(prefix.bin)
+        install('bin/fzf', prefix.bin)
+
+        if '+vim' in spec:
+            mkdir(prefix.plugin)
+            install('plugin/fzf.vim', prefix.plugin)

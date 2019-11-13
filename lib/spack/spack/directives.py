@@ -17,13 +17,14 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``version``
+  * ``conflicts``
   * ``depends_on``
-  * ``provides``
   * ``extends``
   * ``patch``
-  * ``variant``
+  * ``provides``
   * ``resource``
+  * ``variant``
+  * ``version``
 
 """
 
@@ -44,7 +45,7 @@ import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version
+from spack.version import Version, VersionChecksumError
 
 __all__ = []
 
@@ -52,6 +53,48 @@ __all__ = []
 reserved_names = ['patches']
 
 _patch_order_index = 0
+
+
+def make_when_spec(value):
+    """Create a ``Spec`` that indicates when a directive should be applied.
+
+    Directives with ``when`` specs, e.g.:
+
+        patch('foo.patch', when='@4.5.1:')
+        depends_on('mpi', when='+mpi')
+        depends_on('readline', when=sys.platform() != 'darwin')
+
+    are applied conditionally depending on the value of the ``when``
+    keyword argument.  Specifically:
+
+      1. If the ``when`` argument is ``True``, the directive is always applied
+      2. If it is ``False``, the directive is never applied
+      3. If it is a ``Spec`` string, it is applied when the package's
+         concrete spec satisfies the ``when`` spec.
+
+    The first two conditions are useful for the third example case above.
+    It allows package authors to include directives that are conditional
+    at package definition time, in additional to ones that are evaluated
+    as part of concretization.
+
+    Arguments:
+        value (Spec or bool): a conditional Spec or a constant ``bool``
+           value indicating when a directive should be applied.
+
+    """
+    # Unsatisfiable conditions are discarded by the caller, and never
+    # added to the package class
+    if value is False:
+        return False
+
+    # If there is no constraint, the directive should always apply;
+    # represent this by returning the unconstrained `Spec()`, which is
+    # always satisfied.
+    if value is None or value is True:
+        return spack.spec.Spec()
+
+    # This is conditional on the spec
+    return spack.spec.Spec(value)
 
 
 class DirectiveMeta(type):
@@ -96,15 +139,10 @@ class DirectiveMeta(type):
             cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
-        # The class is being created: if it is a package we must ensure
-        # that the directives are called on the class to set it up
+        # The instance is being initialized: if it is a package we must ensure
+        # that the directives are called to set it up.
 
         if 'spack.pkg' in cls.__module__:
-            # Package name as taken
-            # from llnl.util.lang.get_calling_module_name
-            pkg_name = cls.__module__.split('.')[-1]
-            setattr(cls, 'name', pkg_name)
-
             # Ensure the presence of the dictionaries associated
             # with the directives
             for d in DirectiveMeta._directive_names:
@@ -223,16 +261,22 @@ directive = DirectiveMeta.directive
 
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
-    """Adds a version and metadata describing how to fetch its source code.
+    """Adds a version and, if appropriate, metadata for fetching its code.
 
-    Metadata is stored as a dict of ``kwargs`` in the package class's
-    ``versions`` dictionary.
+    The ``version`` directives are aggregated into a ``versions`` dictionary
+    attribute with ``Version`` keys and metadata values, where the metadata
+    is stored as a dictionary of ``kwargs``.
 
-    The ``dict`` of arguments is turned into a valid fetch strategy
-    later. See ``spack.fetch_strategy.for_package_version()``.
+    The ``dict`` of arguments is turned into a valid fetch strategy for
+    code packages later. See ``spack.fetch_strategy.for_package_version()``.
     """
     def _execute_version(pkg):
-        if checksum:
+        if checksum is not None:
+            if hasattr(pkg, 'has_code') and not pkg.has_code:
+                raise VersionChecksumError(
+                    "{0}: Checksums not allowed in no-code packages"
+                    "(see '{1}' version).".format(pkg.name, ver))
+
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
@@ -241,13 +285,9 @@ def version(ver, checksum=None, **kwargs):
 
 
 def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
-    # If when is False do nothing
-    if when is False:
+    when_spec = make_when_spec(when)
+    if not when_spec:
         return
-    # If when is None or True make sure the condition is always satisfied
-    if when is None or when is True:
-        when = pkg.name
-    when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
 
     dep_spec = spack.spec.Spec(spec)
     if pkg.name == dep_spec.name:
@@ -309,8 +349,9 @@ def conflicts(conflict_spec, when=None, msg=None):
     """
     def _execute_conflicts(pkg):
         # If when is not specified the conflict always holds
-        condition = pkg.name if when is None else when
-        when_spec = spack.spec.parse_anonymous_spec(condition, pkg.name)
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
 
         # Save in a list the conflicts and the associated custom messages
         when_spec_list = pkg.conflicts.setdefault(conflict_spec, [])
@@ -357,12 +398,11 @@ def extends(spec, **kwargs):
 
     """
     def _execute_extends(pkg):
-        # if pkg.extendees:
-        #     directive = 'extends'
-        #     msg = 'Packages can extend at most one other package.'
-        #     raise DirectiveError(directive, msg)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
 
-        when = kwargs.get('when', pkg.name)
         _depends_on(pkg, spec, when=when)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
@@ -375,8 +415,14 @@ def provides(*specs, **kwargs):
        can use the providing package to satisfy the dependency.
     """
     def _execute_provides(pkg):
-        spec_string = kwargs.get('when', pkg.name)
-        provider_spec = spack.spec.parse_anonymous_spec(spec_string, pkg.name)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        # ``when`` specs for ``provides()`` need a name, as they are used
+        # to build the ProviderIndex.
+        when_spec.name = pkg.name
 
         for string in specs:
             for provided_spec in spack.spec.parse(string):
@@ -386,7 +432,7 @@ def provides(*specs, **kwargs):
 
                 if provided_spec not in pkg.provided:
                     pkg.provided[provided_spec] = set()
-                pkg.provided[provided_spec].add(provider_spec)
+                pkg.provided[provided_spec].add(when_spec)
     return _execute_provides
 
 
@@ -412,17 +458,22 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
     """
     def _execute_patch(pkg_or_dep):
-        constraint = pkg_or_dep.name if when is None else when
-        when_spec = spack.spec.parse_anonymous_spec(
-            constraint, pkg_or_dep.name)
-
-        # if this spec is identical to some other, then append this
-        # patch to the existing list.
-        cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-
         pkg = pkg_or_dep
         if isinstance(pkg, Dependency):
             pkg = pkg.pkg
+
+        if hasattr(pkg, 'has_code') and not pkg.has_code:
+            raise UnsupportedPackageDirective(
+                'Patches are not allowed in {0}: package has no code.'.
+                format(pkg.name))
+
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
+        # If this spec is identical to some other, then append this
+        # patch to the existing list.
+        cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
 
         global _patch_order_index
         ordering_key = (pkg.name, _patch_order_index)
@@ -556,7 +607,11 @@ def resource(**kwargs):
       resource is moved into the main package stage area.
     """
     def _execute_resource(pkg):
-        when = kwargs.get('when', pkg.name)
+        when = kwargs.get('when')
+        when_spec = make_when_spec(when)
+        if not when_spec:
+            return
+
         destination = kwargs.get('destination', "")
         placement = kwargs.get('placement', None)
 
@@ -579,7 +634,6 @@ def resource(**kwargs):
             message += "\tdestination : '{dest}'\n".format(dest=destination)
             raise RuntimeError(message)
 
-        when_spec = spack.spec.parse_anonymous_spec(when, pkg.name)
         resources = pkg.resources.setdefault(when_spec, [])
         name = kwargs.get('name')
         fetcher = from_kwargs(**kwargs)
@@ -597,3 +651,7 @@ class CircularReferenceError(DirectiveError):
 
 class DependencyPatchError(DirectiveError):
     """Raised for errors with patching dependencies."""
+
+
+class UnsupportedPackageDirective(DirectiveError):
+    """Raised when an invalid or unsupported package directive is specified."""

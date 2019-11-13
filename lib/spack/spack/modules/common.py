@@ -47,6 +47,7 @@ import spack.util.path
 import spack.util.environment
 import spack.error
 import spack.util.spack_yaml as syaml
+import spack.util.file_permissions as fp
 
 #: config section for this file
 configuration = spack.config.get('modules')
@@ -59,12 +60,16 @@ prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
-    'PACKAGE',
-    'VERSION',
-    'COMPILER',
-    'COMPILERNAME',
-    'COMPILERVER',
-    'ARCHITECTURE'
+    'name',
+    'version',
+    'compiler',
+    'compiler.name',
+    'compiler.version',
+    'architecture',
+    # tokens from old-style format strings
+    'package',
+    'compilername',
+    'compilerver',
 )
 
 
@@ -80,8 +85,9 @@ def _check_tokens_are_valid(format_string, message):
             tokens are found
 
     """
-    named_tokens = re.findall(r'\${(\w*)}', format_string)
-    invalid_tokens = [x for x in named_tokens if x not in _valid_tokens]
+    named_tokens = re.findall(r'{(\w*)}', format_string)
+    invalid_tokens = [x for x in named_tokens
+                      if x.lower() not in _valid_tokens]
     if invalid_tokens:
         msg = message
         msg += ' [{0}]. '.format(', '.join(invalid_tokens))
@@ -229,7 +235,17 @@ def generate_module_index(root, modules):
     index_path = os.path.join(root, 'module-index.yaml')
     llnl.util.filesystem.mkdirp(root)
     with open(index_path, 'w') as index_file:
-        syaml.dump(index, index_file, default_flow_style=False)
+        syaml.dump(index, default_flow_style=False, stream=index_file)
+
+
+def _generate_upstream_module_index():
+    module_indices = read_module_indices()
+
+    return UpstreamModuleIndex(spack.store.db, module_indices)
+
+
+upstream_module_index = llnl.util.lang.Singleton(
+    _generate_upstream_module_index)
 
 
 ModuleIndexEntry = collections.namedtuple(
@@ -241,38 +257,90 @@ def read_module_index(root):
     if not os.path.exists(index_path):
         return {}
     with open(index_path, 'r') as index_file:
-        yaml_content = syaml.load(index_file)
-        index = {}
-        yaml_index = yaml_content['module_index']
-        for dag_hash, module_properties in yaml_index.items():
-            index[dag_hash] = ModuleIndexEntry(
-                module_properties['path'],
-                module_properties['use_name'])
-        return index
+        return _read_module_index(index_file)
+
+
+def _read_module_index(str_or_file):
+    """Read in the mapping of spec hash to module location/name. For a given
+       Spack installation there is assumed to be (at most) one such mapping
+       per module type."""
+    yaml_content = syaml.load(str_or_file)
+    index = {}
+    yaml_index = yaml_content['module_index']
+    for dag_hash, module_properties in yaml_index.items():
+        index[dag_hash] = ModuleIndexEntry(
+            module_properties['path'],
+            module_properties['use_name'])
+    return index
 
 
 def read_module_indices():
-    module_type_to_indices = {}
     other_spack_instances = spack.config.get(
         'upstreams') or {}
 
+    module_indices = []
+
     for install_properties in other_spack_instances.values():
+        module_type_to_index = {}
         module_type_to_root = install_properties.get('modules', {})
         for module_type, root in module_type_to_root.items():
-            indices = module_type_to_indices.setdefault(module_type, [])
-            indices.append(read_module_index(root))
+            module_type_to_index[module_type] = read_module_index(root)
+        module_indices.append(module_type_to_index)
 
-    return module_type_to_indices
-
-
-module_type_to_indices = read_module_indices()
+    return module_indices
 
 
-def upstream_module(spec, module_type):
-    indices = module_type_to_indices[module_type]
-    for index in indices:
-        if spec.dag_hash() in index:
-            return index[spec.dag_hash()]
+class UpstreamModuleIndex(object):
+    """This is responsible for taking the individual module indices of all
+       upstream Spack installations and locating the module for a given spec
+       based on which upstream install it is located in."""
+    def __init__(self, local_db, module_indices):
+        self.local_db = local_db
+        self.upstream_dbs = local_db.upstream_dbs
+        self.module_indices = module_indices
+
+    def upstream_module(self, spec, module_type):
+        db_for_spec = self.local_db.db_for_spec_hash(spec.dag_hash())
+        if db_for_spec in self.upstream_dbs:
+            db_index = self.upstream_dbs.index(db_for_spec)
+        elif db_for_spec:
+            raise spack.error.SpackError(
+                "Unexpected: {0} is installed locally".format(spec))
+        else:
+            raise spack.error.SpackError(
+                "Unexpected: no install DB found for {0}".format(spec))
+        module_index = self.module_indices[db_index]
+        module_type_index = module_index.get(module_type, {})
+        if not module_type_index:
+            raise ModuleNotFoundError(
+                "No {0} modules associated with the Spack instance where"
+                " {1} is installed".format(module_type, spec))
+        if spec.dag_hash() in module_type_index:
+            return module_type_index[spec.dag_hash()]
+        else:
+            raise ModuleNotFoundError(
+                "No module is available for upstream package {0}".format(spec))
+
+
+def get_module(module_type, spec, get_full_path):
+    if spec.package.installed_upstream:
+        module = spack.modules.common.upstream_module_index.upstream_module(
+            spec, module_type)
+        if get_full_path:
+            return module.path
+        else:
+            return module.use_name
+    else:
+        writer = spack.modules.module_types[module_type](spec)
+        if not os.path.isfile(writer.layout.filename):
+            err_msg = "No module available for package {0} at {1}".format(
+                spec, writer.layout.filename
+            )
+            raise ModuleNotFoundError(err_msg)
+        if get_full_path:
+            return writer.layout.filename
+        else:
+            return writer.layout.use_name
 
 
 class BaseConfiguration(object):
@@ -294,7 +362,7 @@ class BaseConfiguration(object):
         """Naming scheme suitable for non-hierarchical layouts"""
         scheme = self.module.configuration.get(
             'naming_scheme',
-            '${PACKAGE}-${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+            '{name}-{version}-{compiler.name}-{compiler.version}'
         )
 
         # Ensure the named tokens we are expanding are allowed, see
@@ -523,7 +591,7 @@ class BaseContext(tengine.Context):
             value = re.sub(r'"', "'", value)
             return value
         # Otherwise the short description is just the package + version
-        return self.spec.format("$_ $@")
+        return self.spec.format("{name} {@version}")
 
     @tengine.context_property
     def long_description(self):
@@ -566,23 +634,16 @@ class BaseContext(tengine.Context):
             exclude=spack.util.environment.is_system_path
         )
 
-        # Modifications that are coded at package level
-        _ = spack.util.environment.EnvironmentModifications()
-        # TODO : the code down below is quite similar to
-        # TODO : build_environment.setup_package and needs to be factored out
-        # TODO : to a single place
         # Let the extendee/dependency modify their extensions/dependencies
         # before asking for package-specific modifications
-        for item in dependencies(self.spec, 'all'):
-            package = self.spec[item.name].package
-            build_environment.set_module_variables_for_package(package)
-            package.setup_dependent_package(
-                self.spec.package.module, self.spec
+        env.extend(
+            build_environment.modifications_from_dependencies(
+                self.spec, context='run'
             )
-            package.setup_dependent_environment(_, env, self.spec)
+        )
         # Package specific modifications
         build_environment.set_module_variables_for_package(self.spec.package)
-        self.spec.package.setup_environment(_, env)
+        self.spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
         env.extend(self.conf.env)
@@ -745,6 +806,10 @@ class BaseModuleFileWriter(object):
         with open(self.layout.filename, 'w') as f:
             f.write(text)
 
+        # Set the file permissions of the module to match that of the package
+        if os.path.exists(self.layout.filename):
+            fp.set_permissions_by_spec(self.layout.filename, self.spec)
+
     def remove(self):
         """Deletes the module file."""
         mod_file = self.layout.filename
@@ -761,6 +826,10 @@ class BaseModuleFileWriter(object):
 
 class ModulesError(spack.error.SpackError):
     """Base error for modules."""
+
+
+class ModuleNotFoundError(ModulesError):
+    """Raised when a module cannot be found for a spec"""
 
 
 class DefaultTemplateNotDefined(AttributeError, ModulesError):

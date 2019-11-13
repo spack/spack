@@ -12,7 +12,7 @@ class Libcroco(AutotoolsPackage):
     homepage = "https://developer.gnome.org/libcroco"
     url      = "http://ftp.gnome.org/pub/gnome/sources/libcroco/0.6/libcroco-0.6.12.tar.xz"
 
-    version('0.6.12', 'bc0984fce078ba2ce29f9500c6b9ddce')
+    version('0.6.12', sha256='ddc4b5546c9fb4280a5017e2707fbd4839034ed1aba5b7d4372212f34f84f860')
 
     depends_on('glib')
     depends_on('libxml2')

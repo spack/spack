@@ -1,0 +1,49 @@
+diff -ruN spack-src/axml.c spack-src.new/axml.c
+--- spack-src/axml.c	2019-07-30 11:00:46.000000000 +0900
++++ spack-src.new/axml.c	2019-07-30 13:13:39.345602753 +0900
+@@ -48,7 +48,7 @@
+ 
+ 
+ 
+-#if ! (defined(__ppc) || defined(__powerpc__) || defined(PPC))
++#if defined(x86_64)
+ #include <xmmintrin.h>
+ 
+ #endif
+diff -ruN spack-src/Makefile.nosse spack-src.new/Makefile.nosse
+--- spack-src/Makefile.nosse	1970-01-01 09:00:00.000000000 +0900
++++ spack-src.new/Makefile.nosse	2019-07-30 14:07:03.385661664 +0900
+@@ -0,0 +1,33 @@
++# Makefile June 2011 by Alexandros Stamatakis
++
++# to compile OPENMP version use INTEL icc !
++
++CC = gcc 
++#icc
++
++
++CFLAGS = -D_GNU_SOURCE -fomit-frame-pointer -funroll-loops -O2 #-Wall -pedantic -Wunused-parameter -Wredundant-decls  -Wreturn-type  -Wswitch-default -Wunused-value -Wimplicit  -Wimplicit-function-declaration  -Wimplicit-int -Wimport  -Wunused  -Wunused-function  -Wunused-label -Wno-int-to-pointer-cast -Wbad-function-cast  -Wmissing-declarations -Wmissing-prototypes  -Wnested-externs  -Wold-style-definition -Wstrict-prototypes  -Wdeclaration-after-statement -Wpointer-sign -Wextra -Wredundant-decls -Wunused -Wunused-function -Wunused-parameter -Wunused-value  -Wunused-variable -Wformat  -Wformat-nonliteral -Wparentheses -Wsequence-point -Wuninitialized -Wundef -Wbad-function-cast
++
++LIBRARIES = -lm
++
++#Intel OPENMP flag for linking and compiling: -openmp 
++
++RM = rm -f
++
++objs    = axml.o  fastDNAparsimony.o
++
++
++all : raxmlHPC
++
++GLOBAL_DEPS = axml.h
++
++raxmlHPC : $(objs)
++	$(CC) -o parsimonator $(objs) $(LIBRARIES) 
++
++
++axml.o : axml.c $(GLOBAL_DEPS)
++fastDNAparsimony.o : fastDNAparsimony.c  $(GLOBAL_DEPS)
++
++
++clean : 
++	$(RM) *.o parsimonator

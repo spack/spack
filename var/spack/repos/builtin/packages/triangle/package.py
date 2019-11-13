@@ -16,7 +16,7 @@ class Triangle(Package):
     homepage = "http://www.cs.cmu.edu/~quake/triangle.html"
     url      = "http://www.netlib.org/voronoi/triangle.zip"
 
-    version('1.6', '10aff8d7950f5e0e2fb6dd2e340be2c9')
+    version('1.6', sha256='1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480')
 
     def install(self, spec, prefix):
         make()

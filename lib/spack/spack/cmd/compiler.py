@@ -73,16 +73,17 @@ def compiler_find(args):
        add them to Spack's configuration.
 
     """
-    paths = args.add_paths
+    # None signals spack.compiler.find_compilers to use its default logic
+    paths = args.add_paths or None
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the
     # entire process and return an empty config from all_compilers
     # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(*paths)]
+    compilers = [c for c in spack.compilers.find_compilers(paths)]
     new_compilers = []
     for c in compilers:
-        arch_spec = ArchSpec(None, c.operating_system, c.target)
+        arch_spec = ArchSpec((None, c.operating_system, c.target))
         same_specs = spack.compilers.compilers_for_spec(
             c.spec, arch_spec, init_config=False)
 
