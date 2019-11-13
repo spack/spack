@@ -39,7 +39,7 @@ class Qscintilla(QMakePackage):
     # giving 'Nothing Installed Error'
     def setup_environment(self, spack_env, run_env):
         spack_env.set('INSTALL_ROOT', self.prefix)
-        run_env.prepend_path('QT_PLUGIN_PATH', self.prefix + '/plugins')
+        run_env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
     # Fix install prefix
     @run_after('qmake')
