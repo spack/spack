@@ -43,7 +43,6 @@ class Qscintilla(QMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
-
     # Fix install prefix
     @run_after('qmake')
     def fix_install_path(self):
