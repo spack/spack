@@ -27,7 +27,7 @@ packages:
       - cudnn@7.3
       - freeimage@3.18.0
       - glew
-      - gmsh+oce~mpi@3.0.6
+      - gmsh~mpi+oce+openmp+shared@4.4.1
       - hdf5~mpi@1.10.4
       - intel-mkl@2018.1.163
       - jdk@1.8.0_191-b12

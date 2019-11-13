@@ -18,6 +18,7 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/SNLComputation/omega_h.git"
 
     version('develop', branch='master')
+    version('9.29.2', sha256='8eea6da0ebde44176a6d19fb858f89f872611cbad08cad65700757e096058465')
     version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
     version('9.28.0', sha256='681588974116025c6c1c535972386c23fe354502319fcbbbdc5b9d373429c08e')
     version('9.27.3', sha256='7c0b0c9c00cda97763be1287d3bf8b931bcdd07bf4971fc7258a3892d628cf20')
@@ -46,7 +47,7 @@ class OmegaH(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86610
-    conflicts('%gcc@8:')
+    conflicts('%gcc@8:8.2.99', when='@:9.22.1')
 
     def _bob_options(self):
         cmake_var_prefix = 'Omega_h_CXX_'

@@ -36,7 +36,7 @@ class Zee(CMakePackage):
     depends_on('py-pre-commit', type='build', when='+codechecks')
     depends_on('py-pyyaml', type='build', when='+codechecks')
     depends_on('python@3:', type='build', when='+codechecks')
-    depends_on('gmsh@:3 +oce -mpi %gcc')
+    depends_on('gmsh@4: ~mpi+oce+openmp+shared')
     depends_on('mpi')
     depends_on('omega-h+trilinos')
     depends_on('petsc +int64', when='+petsc')
