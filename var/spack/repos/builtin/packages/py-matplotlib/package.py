@@ -85,7 +85,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
-               when='@2.1.0:2.999.999')
+               when='@2.1.0:2.999.999 ^python@:2')
     depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
 
     # Optional backend dependencies
