@@ -461,8 +461,7 @@ class Mfem(Package):
             ##################
 
             # construct proper include path
-            conduit_include_path = join_path(conduit.prefix.include,
-                                             "conduit")
+            conduit_include_path = conduit.prefix.include.conduit
             # add this path to the found flags
             conduit_opt_flags = "-I{0} {1}".format(conduit_include_path,
                                                    headers.cpp_flags)
