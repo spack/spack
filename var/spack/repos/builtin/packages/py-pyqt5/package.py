@@ -54,7 +54,7 @@ class PyPyqt5(SIPPackage):
             '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
         ]
         if '+qsci' in self.spec:
-            args.extend(['--qsci-api-destdir', self.prefix.share + '/qsci'])
+            args.extend(['--qsci-api-destdir', self.prefix.share.qsci])
         return args
 
     @run_after('install')
