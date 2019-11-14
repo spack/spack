@@ -5,7 +5,7 @@
 
 generate ci jobs:
   script:
-    - "./bin/generate-gitlab-ci-yml.sh"
+    - "./share/spack/qa/gitlab/generate-gitlab-ci-yml.sh"
   tags:
     - "spack-pre-ci"
   artifacts:

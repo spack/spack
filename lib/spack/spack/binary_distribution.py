@@ -705,8 +705,11 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link):
                     urls.add(link)
 
+    tty.msg('Done spidering all the mirrors')
+
     _cached_specs = []
     for link in urls:
+        tty.msg('  link: {0}'.format(link))
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
                 os.remove(stage.save_filename)
@@ -721,6 +724,7 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
+                tty.msg('    added spec to cache: {0}'.format(spec))
                 _cached_specs.append(spec)
 
     return _cached_specs
@@ -803,10 +807,10 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     try:
         _, _, yaml_file = web_util.read_from_url(file_path)
         yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
-    except URLError as url_err:
+    except (URLError, web_util.SpackWebError) as url_err:
         err_msg = [
             'Unable to determine whether {0} needs rebuilding,',
-            ' caught URLError attempting to read from {1}.',
+            ' caught exception attempting to read from {1}.',
         ]
         tty.error(''.join(err_msg).format(spec.short_spec, file_path))
         tty.debug(url_err)
@@ -908,10 +912,15 @@ def _download_buildcache_entry(mirror_root, descriptions):
     return True
 
 
-def download_buildcache_entry(file_descriptions):
-    if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " +
+def download_buildcache_entry(file_descriptions, mirror_url=None):
+    if not mirror_url and not spack.mirror.MirrorCollection():
+        tty.die("Please provide or add a spack mirror to allow " +
                 "download of buildcache entries.")
+
+    if mirror_url:
+        mirror_root = os.path.join(
+            mirror_url, _build_cache_relative_path)
+        return _download_buildcache_entry(mirror_root, file_descriptions)
 
     for mirror in spack.mirror.MirrorCollection().values():
         mirror_root = os.path.join(
