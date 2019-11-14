@@ -20,7 +20,7 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.org/'
     git      = 'https://github.com/laristra/flecsi.git'
 
-    version('develop', branch='master', submodules=False, preferred=True)
+    version('master', branch='master', submodules=False, preferred=True)
 
     variant('build_type', default='Release', values=('Debug', 'Release'),
             description='The build type to build', multi=False)
