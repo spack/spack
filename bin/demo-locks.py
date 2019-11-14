@@ -171,7 +171,7 @@ class BuildManager(object):
         ltype, lock = self.locks[name] if name in self.locks else \
             ('write', None)
         nolock = lock is None
-        if nolock or ltype is 'read':
+        if nolock or ltype == 'read':
             msg = '{0} a write lock for {1}'
             err = 'Failed to {0} a write lock for {1} due to {2}: {3}'
 
