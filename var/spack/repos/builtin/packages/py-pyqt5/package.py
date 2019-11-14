@@ -76,8 +76,7 @@ class PyPyqt5(SIPPackage):
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--sip-incdir=' + self.prefix + '/include/python' +
-                       str(self.spec['python'].version.up_to(2)),
+                       '--sip-incdir=' + str(python_include_dir),
                        '--stubsdir=' + pydir)
 
                 # Fix build errors
