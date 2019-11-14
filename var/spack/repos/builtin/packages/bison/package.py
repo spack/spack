@@ -31,8 +31,8 @@ class Bison(AutotoolsPackage):
 
     patch('pgi.patch', when='@3.0.4')
 
-    # Intel 14 has immature C11 support
-    conflicts('%intel@:14', when='@3.4.2:')
+    conflicts('%intel@:14', when='@3.4.2:',
+              msg="Intel 14 has immature C11 support")
 
     if sys.platform == 'darwin' and macos_version() >= Version('10.13'):
         patch('secure_snprintf.patch', level=0, when='@3.0.4')

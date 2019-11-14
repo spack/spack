@@ -23,5 +23,5 @@ class Nasm(AutotoolsPackage):
     # https://bugzilla.nasm.us/show_bug.cgi?id=3392461
     patch('https://src.fedoraproject.org/rpms/nasm/raw/0cc3eb244bd971df81a7f02bc12c5ec259e1a5d6/f/0001-Remove-invalid-pure_func-qualifiers.patch', level=1, sha256='ac9f315d204afa6b99ceefa1fe46d4eed2b8a23c7315d32d33c0f378d930e950', when='@2.13.03 %gcc@8:')
 
-    # Intel 14 has immature C11 support
-    conflicts('%intel@:14', when='@2.14:')
+    conflicts('%intel@:14', when='@2.14:',
+              msg="Intel 14 has immature C11 support")
