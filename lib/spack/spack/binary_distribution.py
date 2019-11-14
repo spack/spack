@@ -534,7 +534,22 @@ def relocate_package(workdir, spec, allow_root):
                            newprefix=new_prefix)
     # If the binary files in the package were not edited to use
     # relative RPATHs, then the RPATHs need to be relocated
-    if not rel:
+    if rel:
+        if old_path != new_path:
+            files_to_relocate = list(filter(
+                lambda pathname: not relocate.file_is_relocatable(
+                    pathname, paths_to_relocate=[old_path, old_prefix]),
+                map(lambda filename: os.path.join(workdir, filename),
+                    buildinfo['relocate_binaries'])))
+
+            if len(old_path) < len(new_path) and files_to_relocate:
+                tty.debug('Cannot do a binary string replacement with padding '
+                          'for package because %s is longer than %s.' %
+                          (new_path, old_path))
+            else:
+                for path_name in files_to_relocate:
+                    relocate.replace_prefix_bin(path_name, old_path, new_path)
+    else:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(workdir, filename)
