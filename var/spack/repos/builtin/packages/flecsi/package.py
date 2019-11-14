@@ -88,7 +88,7 @@ class Flecsi(CMakePackage):
                    '-DENABLE_PARMETIS=ON',
                    '-DENABLE_COLORING=ON',
                    '-DENABLE_DEVEL_TARGETS=ON'
-                  ]
+                   ]
         options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
 
         if spec.variants['build_type'].value == 'Debug':
