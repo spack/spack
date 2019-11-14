@@ -66,7 +66,7 @@ class PyPyqt5(SIPPackage):
                 str(self.spec['qscintilla'].version), 'Python')
             with working_dir(rsrc_py_path):
                 pydir = join_path(site_packages_dir, 'PyQt5')
-                python = which('python')
+                python = self.spec['python'].command
                 python('configure.py', '--pyqt=PyQt5',
                        '--sip=' + self.prefix.bin.sip,
                        '--qsci-incdir=' +
