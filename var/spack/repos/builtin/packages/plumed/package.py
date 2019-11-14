@@ -24,7 +24,7 @@ class Plumed(AutotoolsPackage):
     url = 'https://github.com/plumed/plumed2/archive/v2.5.3.tar.gz'
     git = 'https://github.com/plumed/plumed2.git'
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('2.6b', sha256='3ecda9d46967c8ddd08e820aed974794d926cffb78b262f9d42cdbece3b15677')
     version('2.5.3', preferred=True, sha256='543288be667dc4201fc461ecd2dd4878ddfbeac682d0c021c99ea8e501c7c9dc')
     version('2.5.2', sha256='85d10cc46e2e37c7719cf51c0931278f56c2c8f8a9d86188b2bf97c2535a2ab4')
