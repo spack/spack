@@ -488,11 +488,11 @@ def make_link_relative(cur_path_names, orig_path_names):
     Change absolute links to be relative.
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        old_src = os.readlink(orig_path)
-        new_src = os.path.relpath(old_src, orig_path)
+        target = os.readlink(orig_path)
+        relative_target = os.path.relpath(target, os.path.dirname(orig_path))
 
         os.unlink(cur_path)
-        os.symlink(new_src, cur_path)
+        os.symlink(relative_target, cur_path)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
