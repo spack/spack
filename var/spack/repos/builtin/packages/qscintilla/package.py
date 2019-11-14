@@ -54,14 +54,14 @@ class Qscintilla(QMakePackage):
     def postinstall(self):
         # Make designer plugin
         if '+designer' in self.spec:
-            os.chdir(str(self.stage.source_path) + '/designer-Qt4Qt5')
-            qscipro = FileFilter('designer.pro')
-            qscipro.filter('TEMPLATE = lib',
-                           'TEMPLATE = lib\nINCLUDEPATH += ../Qt4Qt5\n')
+            with working_dir(str(self.stage.source_path) + '/designer-Qt4Qt5'):
+                qscipro = FileFilter('designer.pro')
+                qscipro.filter('TEMPLATE = lib',
+                               'TEMPLATE = lib\nINCLUDEPATH += ../Qt4Qt5\n')
 
-            qmake()
-            make()
-            makefile = FileFilter('Makefile')
-            makefile.filter(r'\$\(INSTALL_ROOT\)' +
-                            self.spec['qt'].prefix, '$(INSTALL_ROOT)')
-            make('install')
+                qmake()
+                make()
+                makefile = FileFilter('Makefile')
+                makefile.filter(r'\$\(INSTALL_ROOT\)' +
+                                self.spec['qt'].prefix, '$(INSTALL_ROOT)')
+                make('install')
