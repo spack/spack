@@ -73,7 +73,7 @@ class PyPyqt5(SIPPackage):
                        self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
                        '--qsci-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--apidir=' + self.prefix + '/share/qsci',
+                       '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
                        '--sip-incdir=' + self.prefix + '/include/python' +
