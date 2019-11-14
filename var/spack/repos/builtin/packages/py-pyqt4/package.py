@@ -62,7 +62,7 @@ class PyPyqt4(SIPPackage):
         if '+qsci' in self.spec:
             rsrc_py_path = os.path.join(
                 str(self.stage.source_path),
-                'spack-resource-qscintilla/QScintilla_gpl-',
+                'spack-resource-qscintilla/QScintilla_gpl-' +
                 str(self.spec['qscintilla'].version), 'Python')
             with working_dir(rsrc_py_path):
                 pydir = join_path(site_packages_dir, 'PyQt4')
