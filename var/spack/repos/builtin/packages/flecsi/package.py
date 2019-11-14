@@ -40,10 +40,6 @@ class Flecsi(CMakePackage):
             description='Enable documentation')
     variant('coverage', default=False,
             description='Enable coverage build')
-    variant('openmpi', default=False,
-            description='Use OpenMPI package')
-    variant('mpich', default=False,
-            description='Use MPICH package')
     variant('hdf5', default=False,
             description='Enable HDF5 Support')
     variant('caliper', default=False,
@@ -61,8 +57,6 @@ class Flecsi(CMakePackage):
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
     depends_on('mpi', when='backend=hpx')
-    depends_on('openmpi@3.1.3:3.1.4', when='+openmpi')
-    depends_on('mpich@3.2.1', when='+mpich')
     depends_on('legion@ctrl-rep +shared +mpi +hdf5', when='backend=legion +hdf5')
     depends_on('legion@ctrl-rep +shared +mpi', when='backend=legion ~hdf5')
     depends_on('hpx@1.3.0 cxxstd=14', when='backend=hpx')
