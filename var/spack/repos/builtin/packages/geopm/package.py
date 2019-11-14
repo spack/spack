@@ -25,11 +25,7 @@ class Geopm(AutotoolsPackage):
     version('develop', branch='dev')
     version('master', branch='master')
     version('1.1.0', sha256='5f9a4df37ef0d64c53d64829d46736803c9fe614afd8d2c70fe7a5ebea09f88e')
-    version('1.0.0',     sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
-    version('1.0.0-rc2', sha256='c6637df54728ded31fd682f39a07dffee45883f350e6dbd13e1496dd50243ffd',
-            url='https://github.com/geopm/geopm/releases/download/v1.0.0%2Brc2/geopm-1.0.0+rc2.tar.gz')
-    version('1.0.0-rc1', sha256='f8a2e5c384a15e9663f409de478b6372cd63e63a28d4701a33ac043fc27905e0', 
-            url='https://github.com/geopm/geopm/releases/download/v1.0.0-rc1/geopm-1.0.0+rc1.tar.gz')
+    version('1.0.0', sha256='24fe72265a7e44d62bdfe49467c49f0b7a649131ddda402d763c00a49765e1cb')
     version('0.6.1', sha256='0ca42853f90885bf213df190c3462b8675c143cc843aee0d8b8a0e30802b55a9')
     version('0.6.0', sha256='95ccf256c2b7cb35838978152479569d154347c3065af1639ed17be1399182d3')
     version('0.5.1', sha256='db247af55f7000b6e4628af099956349b68a637500b9d4fe8d8fb13687124d53')
