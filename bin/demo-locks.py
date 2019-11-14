@@ -84,19 +84,35 @@ class BuildManager(object):
         self.locks = {}
 
     def _cleanup_all_tasks(self):
-        """Cleanup all tasks by releasing their locks."""
+        """Cleanup all build tasks to include releasing their locks."""
         for spec_name in self.locks:
             self._release_lock(spec_name)
 
-        for spec_name in self.locks:
-            self._release_lock(spec_name)
+        for spec_name in self.failed:
+            self._cleanup_failed(spec_name)
 
-        for spec_name in self.build_tasks:
+        task_names = list(self.build_tasks.keys())
+        for name in task_names:
             try:
-                task = self._remove_task(spec_name)
-                del task
+                self._remove_task(name)
             except Exception:
                 pass
+
+    def _cleanup_failed(self, spec_name):
+        """Cleanup any failed mark for the spec."""
+        if spec_name in self.failed:
+            err = "{0} exception when removing failure mark for {1}: {2}"
+            msg = 'Removing failure mark on {0}'
+            lock = self.failed[spec_name]
+            if lock is not None:
+                try:
+                    tty.verbose(msg.format(spec_name))
+                    lock.release_write()
+                except AssertionError:
+                    pass
+                except Exception as exc:
+                    tty.warn(err.format(exc.__class__.__name__, spec_name,
+                                        str(exc)))
 
     def _cleanup_task(self, spec, remove_task):
         """Cleanup the build task for the spec."""
@@ -134,7 +150,7 @@ class BuildManager(object):
                     tty.debug(msg.format('Downgrading to', name))
                     op = 'downgrade to'
                     lock.downgrade_write()
-                tty.debug('{0} is now read locked: {1}'.format(name, lock))
+                tty.verbose('{0} is now read locked'.format(name))
             except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
                 tty.debug(err.format(op, spec.name, exc.__class__.__name__,
                                      str(exc)))
@@ -170,7 +186,7 @@ class BuildManager(object):
                     tty.debug(msg.format('Upgrading to', name))
                     res = 'upgrade to'
                     lock.upgrade_read()
-                tty.debug('{0} is now write locked: {1}'.format(name, lock))
+                tty.verbose('{0} is now write locked'.format(name))
             except (lk.LockTimeoutError, lk.LockUpgradeError) as exc:
                 tty.debug(err.format(res, spec.name, exc.__class__.__name__,
                                      str(exc)))
@@ -209,18 +225,18 @@ class BuildManager(object):
         try:
             prefix = spec.prefix
             if not os.path.exists(prefix):
-                tty.debug('Creating the installation directory {0}'
-                          .format(prefix))
+                tty.verbose('Creating the installation directory {0}'
+                            .format(prefix))
                 spack.store.layout.create_install_directory(spec)
             else:
                 indir = spack.store.layout.metadata_path(spec)
-                tty.debug('Setting access rights to directory {0}'
-                          .format(indir))
+                tty.verbose('Setting access rights to directory {0}'
+                            .format(indir))
 
                 # TODO: Set the group and permissions, and set perms below
                 mkdirp(indir)
 
-            tty.debug('Building {0}'.format(spec.name))
+            tty.verbose('Building {0}'.format(spec.name))
 
             # TODO: Fork the current build_process
             time.sleep(BUILD_TIME)
@@ -228,12 +244,15 @@ class BuildManager(object):
 
             if success:
                 # TODO: Add the entry to the database
-                tty.msg('  Build of {0} completed'.format(spec.name))
+
+                # TODO: Remove the following message
+                tty.debug('  Build of {0} completed'.format(spec.name))
                 self._update_installed(task)
 
                 # Perform basic task cleanup for the installed spec
                 self._cleanup_task(spec, True)
             else:
+                # TODO: Remove the following message
                 tty.msg('  Build of {0} failed'.format(spec.name))
                 self._update_failed(task, mark=True)
                 spack.store.layout.remove_install_directory(spec)
@@ -283,18 +302,18 @@ class BuildManager(object):
         isspec = isinstance(spec, Spec)
         name  = spec.name if isspec else spec
 
-        # Do not (re-)queue installed or failed specs.
+        # Ensure do not (re-)queue installed or failed specs.
         if name in self.installed:
-            tty.warn('Refusing to queue installed spec {0}'.format(name))
+            tty.warn('Refusing to retry installed spec {0}'.format(name))
             return
         elif name in self.failed:
-            tty.warn('Refusing to queue failed spec {0}'.format(name))
+            tty.warn('Refusing to retry failed spec {0}'.format(name))
             return
 
         # Remove any associated build task since its sequence will change
         self._remove_task(name)
         desc = 'Queueing' if attempts == 0 else 'Requeueing'
-        tty.debug(msg.format(desc, name, status))
+        tty.verbose(msg.format(desc, name, status))
 
         # Now add the new task to the queue with a new sequence number to
         # ensure it is the last entry popped with the same priority.  This
@@ -312,7 +331,7 @@ class BuildManager(object):
             ltype, lock = self.locks[spec_name]
             if lock is not None:
                 try:
-                    tty.debug(msg.format(ltype, spec_name))
+                    tty.verbose(msg.format(ltype, spec_name))
                     if ltype == 'read':
                         lock.release_read()
                     else:
@@ -331,8 +350,8 @@ class BuildManager(object):
         Source: Variant of function at docs.python.org/2/library/heapq.html
         """
         if spec_name in self.build_tasks:
-            tty.debug('Removing build task for {0} from list'
-                      .format(spec_name))
+            tty.verbose('Removing build task for {0} from list'
+                        .format(spec_name))
             task = self.build_tasks.pop(spec_name)
             task.status = STATUS_REMOVED
             return task
@@ -341,20 +360,19 @@ class BuildManager(object):
 
     def _update_failed(self, task, mark=False):
         """
-        Mark the task and transitive dependents as failed and remove their
-        build tasks.
+        Update the task and transitive dependents as failed; optionally mark
+        externally as failed; and remove associated build tasks.
         """
         name = task.name
-        # TODO: Change to debug once satisfied with preliminary testing
         tty.debug('Flagging {0} as failed'.format(name))
         if mark:
-            self.failed[name] = spack.store.db.mark_failure(task.spec)
+            self.failed[name] = spack.store.db.mark_failed(task.spec)
         else:
             self.failed[name] = None
         task.status = STATUS_FAILED
         for dep_name in task.dependents:
             if dep_name in self.build_tasks:
-                tty.warn('Skipping build of {0} due to install failure of {1}'
+                tty.warn('Skipping build of {0} since {1} failed'
                          .format(dep_name, name))
                 # Ensure the dependent's uninstalled dependents are
                 # up-to-date and their build tasks removed.
@@ -362,8 +380,8 @@ class BuildManager(object):
                 self._update_failed(dep_task, mark)
                 self._remove_task(dep_name)
             else:
-                tty.debug('{0} has no build task to skip due to {1}\'s failure'
-                          .format(dep_name, name))
+                tty.verbose('No build task for {0} to skip since {1} failed'
+                            .format(dep_name, name))
             self._release_lock(dep_name)  # Should not have lock but make sure
 
         self._release_lock(task.name)
@@ -413,7 +431,7 @@ class BuildManager(object):
 
             name, spec = task.name, task.spec
             desc = 'Processing' if task.attempts <= 0 else 'Reprocessing'
-            tty.debug('{0} {1}: task={2}'.format(desc, name, task))
+            tty.verbose('{0} {1}: task={2}'.format(desc, name, task))
 
             # Ensure that the current spec as NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -437,7 +455,7 @@ class BuildManager(object):
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
             if name in self.failed or spack.store.db.prefix_failed(spec):
-                tty.warn('{0} has already failed to install'.format(name))
+                tty.warn('{0} failed to install'.format(name))
                 self._update_failed(task)
                 continue
 
@@ -455,10 +473,18 @@ class BuildManager(object):
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
-            other_msg = 'Installing {0} is in progress by another process'
+
+            # TODO: Restore original other_msg
+            # other_msg = 'Installing {0} is in progress by another process'
+            from datetime import datetime
+            other_msg = 'Installing {0} in progress by another process at {1}'
             if lock is None:
                 start = task.start if task.start else time.time()
-                tty.msg(other_msg.format(name))
+
+                # TODO: Restore original other_msg
+                # tty.msg(other_msg.format(name))
+                now = datetime.now()
+                tty.msg(other_msg.format(name, now.strftime("%H:%M:%S.%f")))
                 self._push_task(task.spec, start, task.attempts,
                                 STATUS_INSTALLING)
                 continue
@@ -481,7 +507,12 @@ class BuildManager(object):
                     # established by the other process -- failed, installed,
                     # or uninstalled -- on the next pass.
                     start = task.start if task.start else time.time()
-                    tty.msg(other_msg.format(name))
+
+                    # TODO: Restore original other_msg
+                    # tty.msg(other_msg.format(name))
+                    now = datetime.now()
+                    tty.msg(other_msg.format(name,
+                                             now.strftime("%H:%M:%S.%f")))
                     self._push_task(task.spec, task.start, task.attempts,
                                     STATUS_INSTALLING)
                 continue
@@ -496,14 +527,23 @@ class BuildManager(object):
             # uninstalled -- on the next pass.
             if ltype == 'read':
                 start = task.start if task.start else time.time()
-                tty.msg(other_msg.format(name))
+
+                # TODO: Restore original other_msg
+                # tty.msg(other_msg.format(name))
+                now = datetime.now()
+                tty.msg(other_msg.format(name, now.strftime("%H:%M:%S.%f")))
                 self._push_task(task.spec, task.start, task.attempts,
                                 STATUS_INSTALLING)
                 continue
 
             # Proceed with the installation since this is the only process
             # that can work on the current spec.
-            tty.msg('Installing {0}'.format(name))
+
+            # TODO: Restore original install message
+            # tty.msg('Installing {0}'.format(name))
+            now = datetime.now()
+            tty.msg('Installing {0} at {1}'
+                    .format(name, now.strftime("%H:%M:%S.%f")))
             task.start = task.start if task.start else time.time()
             task.status = STATUS_INSTALLING
 
@@ -641,12 +681,9 @@ def main(args):
 
     spack.store.db.package_lock_timeout = args.timeout
 
-    # TODO: Adjust the db lock timeout as appropriate. The default is
-    # TODO: currently too high for testing.
-    with spack.config.override('config:db_lock_timeout', args.timeout):
-        for spec_name in args.spec:
-            mgr = BuildManager(spec_name)
-            mgr.install()
+    for spec_name in args.spec:
+        mgr = BuildManager(spec_name)
+        mgr.install()
 
 
 if __name__ == "__main__":

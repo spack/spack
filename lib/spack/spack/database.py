@@ -302,7 +302,7 @@ class Database(object):
         """Get a read lock context manager for use in a `with` block."""
         return ReadTransaction(self.lock, self._read)
 
-    def mark_failure(self, spec):
+    def mark_failed(self, spec):
         """Mark a spec as having its installation failed.
 
         Prefix failure is a byte range lock on the nth byte of a file.
@@ -313,7 +313,7 @@ class Database(object):
         n is the sys.maxsize-bit prefix of the DAG hash.  This makes
         likelihood of collision very low with no cleanup required.
         """
-        err = 'Unable to acquire write lock to mark {0.name} as failed.'
+        err = 'Unable to mark {0.name} as failed.'
 
         prefix = spec.prefix
         if prefix not in self._prefix_failures:
@@ -325,9 +325,13 @@ class Database(object):
 
             try:
                 mark.acquire_write()
+                tty.debug('PID {0} succeeded in marking failure for {1}'
+                          .format(os.getpid(), spec.name))
             except LockTimeoutError:
                 # Unlikely that another process failed to install at the same
                 # time but log it anyway.
+                tty.debug('PID {0} failed to mark install failure for {1}'
+                          .format(os.getpid(), spec.name))
                 tty.warn(err.format(spec))
 
             # Whether we or another process marked it as a failure, track it
@@ -344,25 +348,26 @@ class Database(object):
 
         # Determine if the failure was detected by another process, which
         # is assumed to be holding a write lock if that is the case.
-        mark = Lock(
+        check = Lock(
             self.prefix_fail_path,
             start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
             length=1,
             default_timeout=self.package_lock_timeout, desc=spec.name)
 
         try:
-            mark.acquire_read()
+            check.acquire_read()
+
+            # If we have a read lock then no process has a prefix lock
+            # indicating an active installation failure for the spec.  There
+            # is no reason to hang onto the read lock itself.
+            check.release_read()
+            del check
         except LockTimeoutError:
-            # Installation of the prefix has failed indicating that another
-            # process has the write lock as a result of its installation
-            # attempt failed.  So flag the spec as having failed.
-            self._prefix_failures[spec.prefix] = None
+            # Installation of the prefix has failed in another process holding
+            # a write lock.
+            tty.debug('{0} is marked as failed'.format(spec.name))
             return True
 
-        # If we have a read lock then no process has a prefix lock indicating
-        # an active installation failure for the spec.  There is no reason
-        # to hang onto the read lock itself.
-        mark.release_read()
         return False
 
     def prefix_lock(self, spec, timeout=None):

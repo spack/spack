@@ -103,6 +103,13 @@ class Lock(object):
             num_requests += 1
             yield wait_time
 
+    def __str__(self):
+        """String representation of the lock."""
+        location = '{0}[{1}:{2}]'.format(self.path, self._start, self._length)
+        timeout = 'timeout={0}'.format(self.default_timeout)
+        activity = '#reads={0}, #writes={1}'.format(self._reads, self._writes)
+        return '({0}, {1}, {2})'.format(location, timeout, activity)
+
     def _lock(self, op, timeout=None):
         """This takes a lock using POSIX locks (``fcntl.lockf``).
 
@@ -147,34 +154,41 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
-        pid = self.pid if self.pid is not None else os.getpid()
-        self._debug("PID {0} locking: timeout {1} sec".format(pid, timeout))
+        pid = os.getpid()
+        tty.debug("PID {0} {1} locking [{2}:{3}]: timeout {4} sec"
+                  .format(pid, lock_type[op], self._start, self._length,
+                          timeout))
 
+        msg = "PID {0} {1} lock attempt #{2}"
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
             num_attempts += 1
-            self._debug("PID {0} attempt #{1}: attempting a {2} lock".
-                        format(pid, num_attempts, lock_type[op]))
+            self._verbose(msg.format(pid, lock_type[op], num_attempts))
             if self._poll_lock(op):
                 total_wait_time = time.time() - start_time
                 return total_wait_time, num_attempts
 
             time.sleep(next(poll_intervals))
 
+        # TBD: Is an extra attempt after timeout needed/appropriate?
         num_attempts += 1
         if self._poll_lock(op):
+            self._verbose(msg.format(pid, lock_type[op], num_attempts))
             total_wait_time = time.time() - start_time
             return total_wait_time, num_attempts
 
-        raise LockTimeoutError("PID {0} timed out waiting for lock."
-                               .format(pid))
+        raise LockTimeoutError("PID {0} timed out waiting for a {1} lock."
+                               .format(pid, lock_type[op]))
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
+        assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
+        lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
+
         try:
             # Try to get the lock (will raise if not available.)
             fcntl.lockf(self._file, op | fcntl.LOCK_NB,
@@ -184,6 +198,9 @@ class Lock(object):
             if self.debug:
                 # All locks read the owner PID and host
                 self._read_debug_data()
+                tty.debug('PID {0} {1} locked {2} [{3}:{4}] (owner={5})'
+                          .format(os.getpid(), lock_type[op], self.path,
+                                  self._start, self._length, self.pid))
 
                 # Exclusive locks write their PID/host
                 if op == fcntl.LOCK_EX:
@@ -274,13 +291,12 @@ class Lock(object):
         timeout = timeout or self.default_timeout
 
         lock_type = 'READ LOCK'
-        # self._acquiring_debug(lock_type)
         if self._reads == 0 and self._writes == 0:
-            self._acquiring_debug(lock_type)
+            self._log_acquiring(lock_type)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
             self._reads += 1
-            self._acquired_debug(lock_type, wait_time, nattempts)
+            self._log_acquired(lock_type, wait_time, nattempts)
             return True
         else:
             # TODO/TBD: Still increment reads if have a write lock?
@@ -302,13 +318,12 @@ class Lock(object):
         timeout = timeout or self.default_timeout
 
         lock_type = 'WRITE LOCK'
-        # self._acquiring_debug(lock_type)
         if self._writes == 0:
-            self._acquiring_debug(lock_type)
+            self._log_acquiring(lock_type)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._writes += 1
-            self._acquired_debug(lock_type, wait_time, nattempts)
+            self._log_acquired(lock_type, wait_time, nattempts)
             return True
         else:
             # TODO/TBD: Still increment writes if have a write lock?
@@ -324,14 +339,13 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        # self._downgrading_debug()
         if self._writes == 1 and self._reads == 0:
-            self._downgrading_debug()
+            self._log_downgrading()
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
             self._reads = 1
             self._writes = 0
-            self._downgraded_debug(wait_time, nattempts)
+            self._log_downgraded(wait_time, nattempts)
         else:
             raise LockDowngradeError(self.path)
 
@@ -343,14 +357,13 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        # self._upgrading_debug()
         if self._reads == 1 and self._writes == 0:
-            self._upgrading_debug()
+            self._log_upgrading()
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
             self._reads = 0
             self._writes = 1
-            self._upgraded_debug(wait_time, nattempts)
+            self._log_upgraded(wait_time, nattempts)
         else:
             raise LockUpgradeError(self.path)
 
@@ -367,12 +380,11 @@ class Lock(object):
         assert self._reads > 0
 
         lock_type = 'READ LOCK'
-        # self._releasing_debug(lock_type)
         if self._reads == 1 and self._writes == 0:
-            self._releasing_debug(lock_type)
+            self._log_releasing(lock_type)
             self._unlock()      # can raise LockError.
             self._reads = 0
-            self._released_debug(lock_type)
+            self._log_released(lock_type)
             return True
         else:
             self._reads -= 1
@@ -391,12 +403,11 @@ class Lock(object):
         assert self._writes > 0
 
         lock_type = 'WRITE LOCK'
-        # self._releasing_debug(lock_type)
         if self._writes == 1 and self._reads == 0:
-            self._releasing_debug(lock_type)
+            self._log_releasing(lock_type)
             self._unlock()      # can raise LockError.
             self._writes  = 0
-            self._released_debug(lock_type)
+            self._log_released(lock_type)
             return True
         else:
             self._writes -= 1
@@ -405,43 +416,74 @@ class Lock(object):
     def _debug(self, *args):
         tty.debug(*args)
 
-    def _acquired_debug(self, lock_type, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
-        self._debug(self._status_msg(lock_type, 'Acquired{0}'.
-                                     format(attempts_part)))
-
-    def _acquiring_debug(self, lock_type):
-        self._debug(self._status_msg(lock_type, 'Acquiring{0}'))
-
-    def _downgraded_debug(self, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
-        self._debug(self._status_msg('READ LOCK', 'Acquired{0}'.
-                                     format(attempts_part)))
-
-    def _downgrading_debug(self):
-        self._debug(self._status_msg('WRITE LOCK', 'Downgrading'))
-
     def _get_counts_desc(self):
-        return 'reads {0}, writes {1}'.format(self._reads, self._writes)
+        return '(reads {0}, writes {1})'.format(self._reads, self._writes) \
+            if tty.is_verbose() else ''
 
-    def _released_debug(self, lock_type):
-        self._debug(self._status_msg(lock_type, 'Released'))
+    def _log_acquired(self, lock_type, wait_time, nattempts):
+        attempts_part = get_attempts_str(wait_time, nattempts)
+        # TODO: Replace msg with _debug once resolve prefix_failures issue
+        # self._debug(self._status_msg(lock_type, 'Acquired{0}'.
+        #                              format(attempts_part)))
+        if len(self.desc) > 0 and 'database' not in self.desc:
+            from datetime import datetime
+            now = datetime.now()
+            desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
+            tty.msg(self._status_msg(lock_type, '{0}{1}'.
+                                     format(desc, attempts_part)))
 
-    def _releasing_debug(self, lock_type):
-        self._debug(self._status_msg(lock_type, 'Releasing'))
+    def _log_acquiring(self, lock_type):
+        self._verbose(self._status_msg(lock_type, 'Acquiring{0}'))
+
+    def _log_downgraded(self, wait_time, nattempts):
+        attempts_part = get_attempts_str(wait_time, nattempts)
+        # TODO: Replace msg with _debug once resolve prefix_failures issue
+        # self._debug(self._status_msg('READ LOCK', 'Downgraded{0}'.
+        #                              format(attempts_part)))
+        if len(self.desc) > 0 and 'database' not in self.desc:
+            from datetime import datetime
+            now = datetime.now()
+            desc = 'Downgraded at %s' % now.strftime("%H:%M:%S.%f")
+            tty.msg(self._status_msg('READ LOCK', '{0}{1}'
+                                     .format(desc, attempts_part)))
+
+    def _log_downgrading(self):
+        self._verbose(self._status_msg('WRITE LOCK', 'Downgrading'))
+
+    def _log_released(self, lock_type):
+        # TODO: Replace msg with _debug once resolve prefix_failures issue
+        # self._debug(self._status_msg(lock_type, 'Released'))
+        if len(self.desc) > 0 and 'database' not in self.desc:
+            from datetime import datetime
+            now = datetime.now()
+            desc = 'Released at %s' % now.strftime("%H:%M:%S.%f")
+            tty.msg(self._status_msg(lock_type, desc))
+
+    def _log_releasing(self, lock_type):
+        self._verbose(self._status_msg(lock_type, 'Releasing'))
+
+    def _log_upgraded(self, wait_time, nattempts):
+        attempts_part = get_attempts_str(wait_time, nattempts)
+        # TODO: Replace msg with _debug once resolve prefix_failures issue
+        # self._debug(self._status_msg('WRITE LOCK', 'Upgraded{0}'.
+        #                              format(attempts_part)))
+        if len(self.desc) > 0 and 'database' not in self.desc:
+            from datetime import datetime
+            now = datetime.now()
+            desc = 'Upgraded at %s' % now.strftime("%H:%M:%S.%f")
+            tty.msg(self._status_msg('WRITE LOCK', '{0}{1}'.
+                                     format(desc, attempts_part)))
+
+    def _log_upgrading(self):
+        self._verbose(self._status_msg('READ LOCK', 'Upgrading'))
 
     def _status_msg(self, lock_type, status):
-        status_desc = '[{0}] ({1})'.format(status, self._get_counts_desc())
+        status_desc = '[{0}] {1}'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
             lock_type, self, status_desc)
 
-    def _upgraded_debug(self, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
-        self._debug(self._status_msg('WRITE LOCK', 'Acquired{0}'.
-                                     format(attempts_part)))
-
-    def _upgrading_debug(self):
-        self._debug(self._status_msg('READ LOCK', 'Upgrading'))
+    def _verbose(self, *args):
+        tty.verbose(*args)
 
 
 class LockTransaction(object):
