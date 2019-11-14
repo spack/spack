@@ -24,7 +24,8 @@ class Z3(MakefilePackage):
     depends_on('python')
 
     # Referenced: https://github.com/Z3Prover/z3/issues/1016
-    patch('fix_1016.patch')
+    patch('fix_1016_1.patch', when='@:4.4.1')
+    patch('fix_1016_2.patch', when='@4.5.0')
 
     build_directory = 'build'
 
