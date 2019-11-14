@@ -79,6 +79,7 @@ expansion when it is the first character in an id typed on the command line.
 import base64
 import sys
 import collections
+import functools
 import hashlib
 import itertools
 import os
@@ -2116,6 +2117,24 @@ class Spec(object):
 
         return changed
 
+    def embiggen_unsat_spec_error_message(function):
+        """A decorator which adds the spec being modified to the exception
+        message for functions that might throw UnsatisfiableSpecError
+        exceptions.
+        """
+
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except UnsatisfiableSpecError as e:
+                e.message += "\n\n"
+                e.message += "The spec that was in the process of being modified is:\n\n"
+                e.message += args[0].tree(indent=4)
+                raise
+        return wrapper
+
+    @embiggen_unsat_spec_error_message
     def concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
         This will ensure that this spec is concrete.
