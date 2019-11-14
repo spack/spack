@@ -54,7 +54,8 @@ class Qscintilla(QMakePackage):
     def postinstall(self):
         # Make designer plugin
         if '+designer' in self.spec:
-            with working_dir(os.path.join(self.stage.source_path, 'designer-Qt4Qt5')):
+            with working_dir(os.path.join(self.stage.source_path,
+                             'designer-Qt4Qt5')):
                 qscipro = FileFilter('designer.pro')
                 qscipro.filter('TEMPLATE = lib',
                                'TEMPLATE = lib\nINCLUDEPATH += ../Qt4Qt5\n')
