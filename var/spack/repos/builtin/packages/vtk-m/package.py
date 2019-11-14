@@ -23,10 +23,10 @@ class VtkM(CMakePackage, CudaPackage):
 
     version('master', branch='master')
     version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
-    version('1.4.0', sha256="60e1ce73a8c6beda8aed5f2d3ae670b6b0c78c068c6eff4ece769e6d719d5065")
-    version('1.3.0', sha256="72c2c8525a77a456fe0b6a1af0328dad6b9a688f402a3d3ebfa8942e0b5dba1a")
-    version('1.2.0', sha256="9103d954284661f6f03e5b18be6d7bc94254603e6abc8fce67f617f4ad325a0e")
-    version('1.1.0', sha256="a1746b1547d6fb901ea7d7ed50834e8832d6d41ddd497c84d02e1481100d43bc")
+    version('1.4.0', sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a")
+    version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
+    version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
+    version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
 
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
@@ -99,8 +99,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # logging support
             if "+logging" in spec:
-                if spec.satisfies('@:1.2.0') and \
-                        spec['vtk-m'].version.string != 'master':
+                if spec.satisfies('@:1.2.0'):
                     raise InstallError('logging is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=ON")
@@ -109,8 +108,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # mpi support
             if "+mpi" in spec:
-                if spec.satisfies('@:1.2.0') and \
-                        spec['vtk-m'].version.string != 'master':
+                if spec.satisfies('@:1.2.0'):
                     raise InstallError('mpi is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
@@ -120,8 +118,7 @@ class VtkM(CMakePackage, CudaPackage):
             # openmp support
             if "+openmp" in spec:
                 # openmp is added since version 1.3.0
-                if spec.satisfies('@:1.2.0') and \
-                        spec['vtk-m'].version.string != 'master':
+                if spec.satisfies('@:1.2.0'):
                     raise InstallError('OpenMP is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")
