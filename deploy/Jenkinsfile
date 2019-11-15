@@ -24,7 +24,7 @@ def build_and_deploy_docker() {
 def deployment_directory(parent) {
     def pull = env.ghprbPullId
     if (parent || pull == null) {
-        return "/gpfs/bbp.cscs.ch/apps/hpc/jenkins/to_be_deleted"
+        return "/gpfs/bbp.cscs.ch/apps/hpc/jenkins/two_be_deleted"
     } else {
         return "/gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/${pull}"
     }
