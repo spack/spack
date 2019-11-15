@@ -110,7 +110,7 @@ class Flecsi(CMakePackage):
             options.append('-DBUILD_SHARED_LIBS=ON')
         else:
             options.append('-DBUILD_SHARED_LIBS=OFF')
-        if '+unittest' in spec:
+        if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
         else:
             options.append('-DENABLE_UNIT_TESTS=OFF')
