@@ -1058,6 +1058,42 @@ class Spec(object):
         return dict((d.parent.name, d)
                     for d in self._find_deps(self._dependents, deptype))
 
+    def traced_concretization_step(function):
+        """Foo
+        """
+
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            if "indent" not in wrapper.__dict__:
+                wrapper.indent = 0
+            print(" " * wrapper.indent,
+                  "[trace:concretization] calling {0} for {1}".format(
+                      function.__name__, args[0].name),
+                  sep="")
+            wrapper.indent += 2
+            return_value = function(*args, **kwargs)
+            wrapper.indent -= 2
+            return return_value
+        return wrapper
+
+    def embiggen_unsat_spec_error_message(function):
+        """A decorator which adds the spec being modified to the exception
+        message for functions that might throw UnsatisfiableSpecError
+        exceptions.
+        """
+
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            try:
+                return function(*args, **kwargs)
+            except UnsatisfiableSpecError as e:
+                e.message += "\n\n"
+                e.message += "The spec that was in the "
+                e.message += "process of being modified is:\n\n"
+                e.message += args[0].tree(indent=4)
+                raise
+        return wrapper
+
     #
     # Private routines here are called by the parser when building a spec.
     #
@@ -1954,6 +1990,7 @@ class Spec(object):
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON spec:", str(e))
 
+    @traced_concretization_step
     def _concretize_helper(self, concretizer, presets=None, visited=None):
         """Recursive helper function for concretize().
            This concretizes everything bottom-up.  As things are
@@ -2015,6 +2052,7 @@ class Spec(object):
             if concrete.name not in dependent._dependencies:
                 dependent._add_dependency(concrete, deptypes)
 
+    @traced_concretization_step
     def _expand_virtual_packages(self, concretizer):
         """Find virtual packages in this spec, replace them with providers,
            and normalize again to include the provider's (potentially virtual)
@@ -2117,23 +2155,7 @@ class Spec(object):
 
         return changed
 
-    def embiggen_unsat_spec_error_message(function):
-        """A decorator which adds the spec being modified to the exception
-        message for functions that might throw UnsatisfiableSpecError
-        exceptions.
-        """
-
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            try:
-                return function(*args, **kwargs)
-            except UnsatisfiableSpecError as e:
-                e.message += "\n\n"
-                e.message += "The spec that was in the process of being modified is:\n\n"
-                e.message += args[0].tree(indent=4)
-                raise
-        return wrapper
-
+    @traced_concretization_step
     @embiggen_unsat_spec_error_message
     def concretize(self, tests=False):
         """A spec is concrete if it describes one build of a package uniquely.
@@ -2584,6 +2606,7 @@ class Spec(object):
 
         return any_change
 
+    @traced_concretization_step
     def normalize(self, force=False, tests=False, user_spec_deps=None):
         """When specs are parsed, any dependencies specified are hanging off
            the root, and ONLY the ones that were explicitly provided are there.
