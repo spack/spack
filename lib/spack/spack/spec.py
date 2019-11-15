@@ -210,6 +210,7 @@ def colorize_spec(spec):
 
     return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
+
 def traced_concretization_step(function):
     """Wrap function such that trace info is printed when
        it is invoked.
@@ -229,6 +230,7 @@ def traced_concretization_step(function):
         return return_value
     return wrapper
 
+
 def embiggen_unsat_spec_error_message(function):
     """A decorator which adds the spec being modified to the exception
     message for functions that might throw UnsatisfiableSpecError
@@ -246,7 +248,6 @@ def embiggen_unsat_spec_error_message(function):
             e.message += args[0].tree(indent=4)
             raise
     return wrapper
-
 
 
 @key_ordering
