@@ -244,7 +244,8 @@ def test_relocate_text(tmpdir):
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
         relocate_text(filenames, oldpath=old_dir, newpath=new_dir,
-                      oldprefix=old_dir, newprefix=new_dir)
+                      oldprefix=old_dir, newprefix=new_dir,
+                      oldsprefix=old_dir, newsprefix=new_dir)
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)

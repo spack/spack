@@ -390,13 +390,19 @@ def installtarball(args):
 
 def install_tarball(spec, args):
     s = Spec(spec)
-    if s.external or s.virtual:
-        tty.warn("Skipping external or virtual package %s" % spec.format())
+    if s.external:
+        tty.warn("Skipping pec marked external: %s" % spec.format())
+        return
+    if s.virtual:
+        tty.warn("Skipping spec marked virtual:  %s" % spec.format())
         return
     for d in s.dependencies(deptype=('link', 'run')):
         tty.msg("Installing buildcache for dependency spec %s" % d)
         install_tarball(d, args)
-    package = spack.repo.get(spec)
+    try:
+        package = spack.repo.get(spec)
+    except Exception as e:
+        tty.die('%s' % e)
     if s.concrete and package.installed and not args.force:
         tty.warn("Package for spec %s already installed." % spec.format())
     else:

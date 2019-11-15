@@ -425,7 +425,7 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         f.truncate()
 
 
-def relocate_macho_binaries(path_names, old_dir, new_dir, allow_root):
+def relocate_macho_binaries(path_names, old_dir, new_dir):
     """
     Change old_dir to new_dir in LC_RPATH of mach-o files (on macOS)
     Change old_dir to new_dir in LC_ID and LC_DEP of mach-o files
@@ -461,40 +461,23 @@ def relocate_macho_binaries(path_names, old_dir, new_dir, allow_root):
         else:
             modify_object_macholib(path_name, placeholder, new_dir)
             modify_object_macholib(path_name, old_dir, new_dir)
-        if len(new_dir) <= len(old_dir):
-            replace_prefix_bin(path_name, old_dir,
-                               new_dir)
-        else:
-            tty.warn('Cannot do a binary string replacement'
-                     ' with padding for %s'
-                     ' because %s is longer than %s' %
-                     (path_name, new_dir, old_dir))
 
 
-def relocate_elf_binaries(path_names, old_dir, new_dir, allow_root):
+def relocate_elf_binaries(path_names, spec):
     """
     Change old_dir to new_dir in RPATHs of elf binaries
     Account for the case where old_dir is now a placeholder
     """
-    placeholder = set_placeholder(old_dir)
+    new_rpaths = []
+    comp_path = os.path.dirname(os.path.dirname(spec.package.compiler.cc))
+    n_rpaths = spack.build_environment.get_rpaths(spec.package)
+    if comp_path not in n_rpaths:
+        new_rpaths.append(comp_path + os.sep + 'lib')
+        new_rpaths.append(comp_path + os.sep + 'lib64')
+    new_rpaths.extend(n_rpaths)
+
     for path_name in path_names:
-        orig_rpaths = get_existing_elf_rpaths(path_name)
-        if orig_rpaths:
-            # one pass to replace placeholder
-            n_rpaths = substitute_rpath(orig_rpaths,
-                                        placeholder, new_dir)
-            # one pass to replace old_dir
-            new_rpaths = substitute_rpath(n_rpaths,
-                                          old_dir, new_dir)
-            modify_elf_object(path_name, new_rpaths)
-            if not new_dir == old_dir:
-                if len(new_dir) <= len(old_dir):
-                    replace_prefix_bin(path_name, old_dir, new_dir)
-                else:
-                    tty.warn('Cannot do a binary string replacement'
-                             ' with padding for %s'
-                             ' because %s is longer than %s.' %
-                             (path_name, new_dir, old_dir))
+        modify_elf_object(path_name, new_rpaths)
 
 
 def make_link_relative(cur_path_names, orig_path_names):
@@ -509,8 +492,7 @@ def make_link_relative(cur_path_names, orig_path_names):
         os.symlink(relative_target, cur_path)
 
 
-def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
-                                 allow_root):
+def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir):
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
@@ -527,13 +509,9 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
             modify_macho_object(cur_path,
                                 rpaths, deps, idpath,
                                 new_rpaths, new_deps, new_idpath)
-        if (not allow_root and
-                not file_is_relocatable(cur_path)):
-            raise InstallRootStringException(cur_path, old_dir)
 
 
-def make_elf_binaries_relative(cur_path_names, orig_path_names, old_dir,
-                               allow_root):
+def make_elf_binaries_relative(cur_path_names, orig_path_names, old_dir):
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
@@ -543,9 +521,6 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names, old_dir,
             new_rpaths = get_relative_rpaths(orig_path, old_dir,
                                              orig_rpaths)
             modify_elf_object(cur_path, new_rpaths)
-        if (not allow_root and
-                not file_is_relocatable(cur_path)):
-            raise InstallRootStringException(cur_path, old_dir)
 
 
 def check_files_relocatable(cur_path_names, allow_root):
@@ -594,17 +569,18 @@ def relocate_links(path_names, old_dir, new_dir):
         os.symlink(new_src, path_name)
 
 
-def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix):
+def relocate_text(path_names, oldpath, newpath, oldprefix, newprefix,
+                  oldsprefix, newsprefix):
     """
     Replace old path with new path in text files
     including the path the the spack sbang script.
     """
-    sbangre = '#!/bin/bash %s/bin/sbang' % oldprefix
-    sbangnew = '#!/bin/bash %s/bin/sbang' % newprefix
+    sbangre = '#!/bin/bash %s/bin/sbang' % oldsprefix
+    sbangnew = '#!/bin/bash %s/bin/sbang' % newsprefix
     for path_name in path_names:
-        replace_prefix_text(path_name, oldpath, newpath)
-        replace_prefix_text(path_name, sbangre, sbangnew)
         replace_prefix_text(path_name, oldprefix, newprefix)
+        replace_prefix_text(path_name, sbangre, sbangnew)
+        replace_prefix_text(path_name, oldpath, newpath)
 
 
 def substitute_rpath(orig_rpath, topdir, new_root_path):
