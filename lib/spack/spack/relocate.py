@@ -651,8 +651,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(
-        file, paths_to_relocate=[spack.store.layout.root, spack.paths.prefix]):
+def file_is_relocatable(file):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -705,6 +704,7 @@ def file_is_relocatable(
             if idpath is not None:
                 set_of_strings.discard(idpath)
 
+    paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
     for path_to_relocate in paths_to_relocate:
         if any(path_to_relocate in x for x in set_of_strings):
             # One binary has the root folder not in the RPATH,
