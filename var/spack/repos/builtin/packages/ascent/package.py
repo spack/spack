@@ -41,10 +41,9 @@ class Ascent(Package, CudaPackage):
 
     version('develop',
             branch='develop',
-            submodules=True,
-            preferred=True)
+            submodules=True)
 
-    version('0.5.0', sha256='e26df83d9e0b3b2ac3c56319707134f1cf7c7c5245627b944d26e1b6b636b7dc')
+    version('0.5.0', sha256='2837b7371db3ac1bcc31a479d7cf0eb62a503cacadfa4187061502b3c4a89fa0')
 
     ###########################################################################
     # package variants
@@ -79,7 +78,7 @@ class Ascent(Package, CudaPackage):
 
     # use cmake 3.14, newest that provides proper cuda support
     # and we have seen errors with cuda in 3.15
-    depends_on("cmake@3.14.1:3.14.99")
+    depends_on("cmake@3.14.1:3.14.99", type='build')
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
@@ -434,7 +433,7 @@ class Ascent(Package, CudaPackage):
             if "+cuda" in spec:
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
-                          ''.format(env["SPACK_CXX"])))
+                          env["SPACK_CXX"]))
             else:
                 cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
 
