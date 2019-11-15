@@ -637,8 +637,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(
-        file, paths_to_relocate=[spack.store.layout.root, spack.paths.prefix]):
+def file_is_relocatable(file, paths_to_relocate=None):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -651,6 +650,8 @@ def file_is_relocatable(
 
         ValueError: if the file does not exist or the path is not absolute
     """
+    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
+    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
     if not (platform.system().lower() == 'darwin'
             or platform.system().lower() == 'linux'):
