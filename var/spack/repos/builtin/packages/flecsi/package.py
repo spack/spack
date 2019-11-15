@@ -25,7 +25,7 @@ class Flecsi(CMakePackage):
     variant('build_type', default='Release', values=('Debug', 'Release'),
             description='The build type to build', multi=False)
     variant('backend', default='mpi', values=('serial', 'mpi', 'legion', 'hpx'),
-            description='Backend runtime to use for distributed memory', multi=False)
+            description='Backend to use for distributed memory', multi=False)
     variant('minimal', default=False,
             description='Disable FindPackageMetis')
     variant('shared', default=True,
