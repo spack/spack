@@ -123,7 +123,7 @@ class Flecsi(CMakePackage):
             options.append('-DENABLE_CALIPER=ON')
         else:
             options.append('-DENABLE_CALIPER=OFF')
-        if '+tutorial' in self.spec:
+        if '+tutorial' in spec:
             options.append('-DENABLE_FLECSIT=ON')
             options.append('-DENABLE_FLECSI_TUTORIAL=ON')
         else:
