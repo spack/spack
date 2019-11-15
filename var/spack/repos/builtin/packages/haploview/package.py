@@ -14,7 +14,7 @@ class Haploview(Package):
     homepage = "http://www.broadinstitute.org/haploview/haploview"
     url      = "https://downloads.sourceforge.net/project/haploview/release/Haploview4.1.jar"
 
-    version('4.1', 'f7aa4accda5fad1be74c9c1969c6ee7d', expand=False)
+    version('4.1', sha256='b3ffe4c3d8bbab6af5eebf89a2dccdb185280088f70ae84c84be60f85f10201d', expand=False)
 
     depends_on('java', type=('build', 'run'))
 

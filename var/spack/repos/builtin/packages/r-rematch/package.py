@@ -15,4 +15,4 @@ class RRematch(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rematch_1.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rematch"
 
-    version('1.0.1', '5271666295e232931f21499522489dd3')
+    version('1.0.1', sha256='a409dec978cd02914cdddfedc974d9b45bd2975a124d8870d52cfd7d37d47578')

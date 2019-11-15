@@ -51,6 +51,8 @@ __all__ = [
     'mkdirp',
     'copy_all',
     'make_link',
+    'partition_path',
+    'prefixes',
     'remove_dead_links',
     'remove_if_dead_link',
     'remove_linked_tree',
@@ -696,7 +698,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
 
 
-def hash_directory(directory):
+def hash_directory(directory, ignore=[]):
     """Hashes recursively the content of a directory.
 
     Args:
@@ -713,11 +715,12 @@ def hash_directory(directory):
     for root, dirs, files in os.walk(directory):
         for name in sorted(files):
             filename = os.path.join(root, name)
-            # TODO: if caching big files becomes an issue, convert this to
-            # TODO: read in chunks. Currently it's used only for testing
-            # TODO: purposes.
-            with open(filename, 'rb') as f:
-                md5_hash.update(f.read())
+            if filename not in ignore:
+                # TODO: if caching big files becomes an issue, convert this to
+                # TODO: read in chunks. Currently it's used only for testing
+                # TODO: purposes.
+                with open(filename, 'rb') as f:
+                    md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
 
@@ -1663,3 +1666,70 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+def partition_path(path, entry=None):
+    """
+    Split the prefixes of the path at the first occurrence of entry and
+    return a 3-tuple containing a list of the prefixes before the entry, a
+    string of the prefix ending with the entry, and a list of the prefixes
+    after the entry.
+
+    If the entry is not a node in the path, the result will be the prefix list
+    followed by an empty string and an empty list.
+    """
+    paths = prefixes(path)
+
+    if entry is not None:
+        # Derive the index of entry within paths, which will correspond to
+        # the location of the entry in within the path.
+        try:
+            entries = path.split(os.sep)
+            i = entries.index(entry)
+            if '' in entries:
+                i -= 1
+            return paths[:i], paths[i], paths[i + 1:]
+        except ValueError:
+            pass
+
+    return paths, '', []
+
+
+def prefixes(path):
+    """
+    Returns a list containing the path and its ancestors, top-to-bottom.
+
+    The list for an absolute path will not include an ``os.sep`` entry.
+    For example, assuming ``os.sep`` is ``/``, given path ``/ab/cd/efg``
+    the resulting paths will be, in order: ``/ab``, ``/ab/cd``, and
+    ``/ab/cd/efg``
+
+    The list for a relative path starting ``./`` will not include ``.``.
+    For example, path ``./hi/jkl/mn`` results in a list with the following
+    paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
+
+    Parameters:
+        path (str): the string used to derive ancestor paths
+
+    Returns:
+        A list containing ancestor paths in order and ending with the path
+    """
+    if not path:
+        return []
+
+    parts = path.strip(os.sep).split(os.sep)
+    if path.startswith(os.sep):
+        parts.insert(0, os.sep)
+    paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
+
+    try:
+        paths.remove(os.sep)
+    except ValueError:
+        pass
+
+    try:
+        paths.remove('.')
+    except ValueError:
+        pass
+
+    return paths

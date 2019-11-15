@@ -14,6 +14,7 @@ import spack.repo
 import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 from spack.util.string import plural
+from spack.database import InstallStatuses
 
 description = "list and search installed packages"
 section = "basic"
@@ -83,6 +84,12 @@ def setup_parser(subparser):
                            action='store_true',
                            dest='only_missing',
                            help='show only missing dependencies')
+    subparser.add_argument(
+        '--deprecated', action='store_true',
+        help='show deprecated packages as well as installed specs')
+    subparser.add_argument(
+        '--only-deprecated', action='store_true',
+        help='show only deprecated packages')
     subparser.add_argument('-N', '--namespace',
                            action='store_true',
                            help='show fully qualified package names')
@@ -100,18 +107,24 @@ def setup_parser(subparser):
 
 def query_arguments(args):
     # Set up query arguments.
-    installed, known = True, any
-    if args.only_missing:
-        installed = False
-    elif args.missing:
-        installed = any
+    installed = []
+    if not (args.only_missing or args.only_deprecated):
+        installed.append(InstallStatuses.INSTALLED)
+    if (args.deprecated or args.only_deprecated) and not args.only_missing:
+        installed.append(InstallStatuses.DEPRECATED)
+    if (args.missing or args.only_missing) and not args.only_deprecated:
+        installed.append(InstallStatuses.MISSING)
+
+    known = any
     if args.unknown:
         known = False
+
     explicit = any
     if args.explicit:
         explicit = True
     if args.implicit:
         explicit = False
+
     q_args = {'installed': installed, 'known': known, "explicit": explicit}
 
     # Time window of installation
@@ -152,10 +165,18 @@ def display_env(env, args, decorator):
         tty.msg('No root specs')
     else:
         tty.msg('Root specs')
-        # TODO: Change this to not print extraneous deps and variants
+
+        # Roots are displayed with variants, etc. so that we can see
+        # specifically what the user asked for.
         cmd.display_specs(
-            env.user_specs, args,
-            decorator=lambda s, f: color.colorize('@*{%s}' % f))
+            env.user_specs,
+            args,
+            decorator=lambda s, f: color.colorize('@*{%s}' % f),
+            namespace=True,
+            show_flags=True,
+            show_full_compiler=True,
+            variants=True
+        )
         print()
 
     if args.show_concretized:

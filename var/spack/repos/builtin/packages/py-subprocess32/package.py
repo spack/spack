@@ -12,4 +12,4 @@ class PySubprocess32(PythonPackage):
     homepage = "https://pypi.python.org/pypi/subprocess32"
     url      = "https://pypi.io/packages/source/s/subprocess32/subprocess32-3.2.7.tar.gz"
 
-    version('3.2.7', '824c801e479d3e916879aae3e9c15e16')
+    version('3.2.7', sha256='1e450a4a4c53bf197ad6402c564b9f7a53539385918ef8f12bdf430a61036590')

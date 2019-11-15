@@ -25,7 +25,7 @@ class Charliecloud(MakefilePackage):
     version('0.9.2',  sha256='8d0e4804d412beef720a66f886a0a78bce42f3269e880ebf11f602581f8047d4')
     version('0.9.1',  sha256='8e69150a271285da71ece7a09b48251ef6593f72207c5126741d9976aa737d95')
     version('0.9.0',  sha256='7e74cb16e31fd9d502198f7509bab14d1049ec68ba90b15e277e76f805db9458')
-    version('0.2.4',  'b112de661c2c360174b42c99022c1967')
+    version('0.2.4',  sha256='b9a8ff54b9d296e30b2cf5d64a7e732ad09e14b989645aaa5eee8a1dc7ee34e5')
 
     depends_on('python@3.4:', type=('build', 'run'))
 

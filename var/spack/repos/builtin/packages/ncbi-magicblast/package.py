@@ -13,7 +13,7 @@ class NcbiMagicblast(AutotoolsPackage):
     homepage = "https://ncbi.github.io/magicblast/"
     url      = "ftp://ftp.ncbi.nlm.nih.gov/blast/executables/magicblast/1.3.0/ncbi-magicblast-1.3.0-src.tar.gz"
 
-    version('1.3.0', '2615b919c1fe1bf7dc3d816392ab4420')
+    version('1.3.0', sha256='47b9b65d595b5cb0c4fef22bc7f7c038fb8d4a0accdbe560d7232820575aff67')
 
     depends_on('lmdb')
     configure_directory = 'c++'

@@ -11,6 +11,7 @@ import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
+from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec
 from spack.spec import ConflictsInSpecError, SpecError
 from spack.version import ver
@@ -83,13 +84,25 @@ def spec(request):
 
 
 @pytest.fixture(params=[
-    'haswell', 'broadwell', 'skylake', 'icelake'
+    # Mocking the host detection
+    'haswell', 'broadwell', 'skylake', 'icelake',
+    # Using preferred targets from packages.yaml
+    'icelake-preference', 'cannonlake-preference'
 ])
 def current_host(request, monkeypatch):
-    target = llnl.util.cpu.targets[request.param]
-    monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
-    monkeypatch.setattr(spack.platforms.test.Test, 'default', request.param)
-    return target
+    # is_preference is not empty if we want to supply the
+    # preferred target via packages.yaml
+    cpu, _, is_preference = request.param.partition('-')
+    target = llnl.util.cpu.targets[cpu]
+    if not is_preference:
+        monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
+        monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+        yield target
+    else:
+        # There's a cache that needs to be cleared for unit tests
+        PackagePrefs._packages_config_cache = None
+        with spack.config.override('packages:all', {'target': [cpu]}):
+            yield target
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -584,9 +597,13 @@ class TestConcretize(object):
             Spec(spec).concretized()
 
     @pytest.mark.parametrize('spec, best_achievable', [
+        ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
-        ('mpileaks%gcc@5.3.0', 'skylake_avx512')
+        ('mpileaks%gcc@5.3.0', 'broadwell'),
+        # Apple's clang always falls back to x86-64 for now
+        ('mpileaks%clang@9.1.0-apple', 'x86_64')
     ])
+    @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
             self, spec, best_achievable, current_host
     ):

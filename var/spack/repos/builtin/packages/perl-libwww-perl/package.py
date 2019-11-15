@@ -15,7 +15,7 @@ class PerlLibwwwPerl(PerlPackage):
     homepage = "https://github.com/libwww-perl/libwww-perl"
     url      = "http://search.cpan.org/CPAN/authors/id/O/OA/OALDERS/libwww-perl-6.33.tar.gz"
 
-    version('6.33', '2e15c1c789ac9036c99d094e47e3da23')
+    version('6.33', sha256='97417386f11f007ae129fe155b82fd8969473ce396a971a664c8ae6850c69b99')
 
     depends_on('perl-encode-locale', type=('build', 'run'))
     depends_on('perl-file-listing', type=('build', 'run'))

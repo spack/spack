@@ -13,7 +13,7 @@ class Vmatch(Package):
     homepage = "http://www.vmatch.de/"
     url      = "http://www.vmatch.de/distributions/vmatch-2.3.0-Linux_x86_64-64bit.tar.gz"
 
-    version('2.3.0', '592a4f941239494d892f3c6ff21a1423')
+    version('2.3.0', sha256='5e18d0dddf04e86dad193fcdde6e48f3901365932634125602d8808f35acf979')
 
     def url_for_version(self, version):
         url = 'http://www.vmatch.de/distributions/vmatch-{0}-Linux_x86_64-64bit.tar.gz'

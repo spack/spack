@@ -26,19 +26,19 @@ class Cuda(Package):
             url="https://developer.download.nvidia.com/compute/cuda/10.1/Prod/local_installers/cuda_10.1.243_418.87.00_linux.run")
     version('10.0.130', sha256='92351f0e4346694d0fcb4ea1539856c9eb82060c25654463bfd8574ec35ee39a', expand=False,
             url="https://developer.nvidia.com/compute/cuda/10.0/Prod/local_installers/cuda_10.0.130_410.48_linux")
-    version('9.2.88', 'dd6e33e10d32a29914b7700c7b3d1ca0', expand=False,
+    version('9.2.88', sha256='8d02cc2a82f35b456d447df463148ac4cc823891be8820948109ad6186f2667c', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.2/Prod/local_installers/cuda_9.2.88_396.26_linux")
-    version('9.1.85', '67a5c3933109507df6b68f80650b4b4a', expand=False,
+    version('9.1.85', sha256='8496c72b16fee61889f9281449b5d633d0b358b46579175c275d85c9205fe953', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.1/Prod/local_installers/cuda_9.1.85_387.26_linux")
-    version('9.0.176', '7a00187b2ce5c5e350e68882f42dd507', expand=False,
+    version('9.0.176', sha256='96863423feaa50b5c1c5e1b9ec537ef7ba77576a3986652351ae43e66bcd080c', expand=False,
             url="https://developer.nvidia.com/compute/cuda/9.0/Prod/local_installers/cuda_9.0.176_384.81_linux-run")
-    version('8.0.61', '33e1bd980e91af4e55f3ef835c103f9b', expand=False,
+    version('8.0.61', sha256='9ceca9c2397f841024e03410bfd6eabfd72b384256fbed1c1e4834b5b0ce9dc4', expand=False,
             url="https://developer.nvidia.com/compute/cuda/8.0/Prod2/local_installers/cuda_8.0.61_375.26_linux-run")
-    version('8.0.44', '6dca912f9b7e2b7569b0074a41713640', expand=False,
+    version('8.0.44', sha256='64dc4ab867261a0d690735c46d7cc9fc60d989da0d69dc04d1714e409cacbdf0', expand=False,
             url="https://developer.nvidia.com/compute/cuda/8.0/prod/local_installers/cuda_8.0.44_linux-run")
-    version('7.5.18', '4b3bcecf0dfc35928a0898793cf3e4c6', expand=False,
+    version('7.5.18', sha256='08411d536741075131a1858a68615b8b73c51988e616e83b835e4632eea75eec', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/7.5/Prod/local_installers/cuda_7.5.18_linux.run")
-    version('6.5.14', '90b1b8f77313600cc294d9271741f4da', expand=False,
+    version('6.5.14', sha256='f3e527f34f317314fe8fcd8c85f10560729069298c0f73105ba89225db69da48', expand=False,
             url="http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.14_linux_64.run")
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA

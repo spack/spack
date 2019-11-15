@@ -21,7 +21,6 @@ def _module_files(module_type, *specs):
 
 @pytest.fixture(scope='module', autouse=True)
 def ensure_module_files_are_there(database):
-    module('dotkit', 'refresh', '-y')
     module('tcl', 'refresh', '-y')
 
 
@@ -39,7 +38,7 @@ def failure_args(request):
 
 
 @pytest.fixture(
-    params=['dotkit', 'tcl', 'lmod']
+    params=['tcl', 'lmod']
 )
 def module_type(request):
     return request.param

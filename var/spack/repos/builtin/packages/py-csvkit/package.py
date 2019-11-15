@@ -13,7 +13,7 @@ class PyCsvkit(PythonPackage):
     homepage = 'http://csvkit.rtfd.org/'
     url      = "https://pypi.io/packages/source/c/csvkit/csvkit-0.9.1.tar.gz"
 
-    version('0.9.1', '48d78920019d18846933ee969502fff6')
+    version('0.9.1', sha256='92f8b8647becb5cb1dccb3af92a13a4e85702d42ba465ce8447881fb38c9f93a')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-python-dateutil@2.2', type=('build', 'run'), when='@0.9.1')

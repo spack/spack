@@ -23,7 +23,7 @@ class Gawk(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/gawk/"
     url      = "https://ftpmirror.gnu.org/gawk/gawk-4.1.4.tar.xz"
 
-    version('4.1.4', '4e7dbc81163e60fd4f0b52496e7542c9')
+    version('4.1.4', sha256='53e184e2d0f90def9207860531802456322be091c7b48f23fdc79cda65adc266')
 
     depends_on('gettext')
     depends_on('libsigsegv')

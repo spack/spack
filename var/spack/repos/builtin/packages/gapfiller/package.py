@@ -19,6 +19,7 @@ class Gapfiller(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://www.baseclear.com/genomics/bioinformatics/basetools/gapfiller"
+    manual_download = True
 
     version('1.10', '54d5e2ada131a1305a66e41c0d380382')
 

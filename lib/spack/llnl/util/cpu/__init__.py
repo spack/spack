@@ -5,6 +5,7 @@
 
 from .microarchitecture import Microarchitecture, UnsupportedMicroarchitecture
 from .microarchitecture import targets, generic_microarchitecture
+from .microarchitecture import version_components
 from .detect import host
 
 __all__ = [
@@ -12,5 +13,6 @@ __all__ = [
     'UnsupportedMicroarchitecture',
     'targets',
     'generic_microarchitecture',
-    'host'
+    'host',
+    'version_components'
 ]

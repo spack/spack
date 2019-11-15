@@ -16,9 +16,9 @@ class Meson(PythonPackage):
 
     version('0.49.1', sha256='a944e7f25a2bc8e4ba3502ab5835d8a8b8f2530415c9d6fcffb53e0abaea2ced')
     version('0.49.0', sha256='11bc959e7173e714e4a4e85dd2bd9d0149b0a51c8ba82d5f44cc63735f603c74')
-    version('0.42.0', '9e26bf154ca439b78b1b9366c8a89437')
-    version('0.41.2', 'aa9c69ced965e47f5c75a9257ee91ce3')
-    version('0.41.1', 'c6d285b35cfd7acc8517124d417efbdc')
+    version('0.42.0', sha256='6c318a2da3859326a37f8a380e3c50e97aaabff6990067218dffffea674ed76f')
+    version('0.41.2', sha256='2daf448d3f2479d60e30617451f09bf02d26304dd1bd12ee1de936a53e42c7a4')
+    version('0.41.1', sha256='a48901f02ffeb9ff5cf5361d71b1fca202f9cd72998043ad011fc5de0294cf8b')
 
     variant('ninjabuild', default=True)
 

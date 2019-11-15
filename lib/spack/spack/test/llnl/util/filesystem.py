@@ -312,6 +312,30 @@ def test_headers_directory_setter():
     assert hl.directories == []
 
 
+@pytest.mark.parametrize('path,entry,expected', [
+    ('/tmp/user/root', None,
+     (['/tmp', '/tmp/user', '/tmp/user/root'], '', [])),
+    ('/tmp/user/root', 'tmp', ([], '/tmp', ['/tmp/user', '/tmp/user/root'])),
+    ('/tmp/user/root', 'user', (['/tmp'], '/tmp/user', ['/tmp/user/root'])),
+    ('/tmp/user/root', 'root', (['/tmp', '/tmp/user'], '/tmp/user/root', [])),
+    ('relative/path', None, (['relative', 'relative/path'], '', [])),
+    ('relative/path', 'relative', ([], 'relative', ['relative/path'])),
+    ('relative/path', 'path', (['relative'], 'relative/path', []))
+])
+def test_partition_path(path, entry, expected):
+    assert fs.partition_path(path, entry) == expected
+
+
+@pytest.mark.parametrize('path,expected', [
+    ('', []),
+    ('/tmp/user/dir', ['/tmp', '/tmp/user', '/tmp/user/dir']),
+    ('./some/sub/dir', ['./some', './some/sub', './some/sub/dir']),
+    ('another/sub/dir', ['another', 'another/sub', 'another/sub/dir'])
+])
+def test_prefixes(path, expected):
+    assert fs.prefixes(path) == expected
+
+
 @pytest.mark.regression('7358')
 @pytest.mark.parametrize('regex,replacement,filename,keyword_args', [
     (r"\<malloc\.h\>", "<stdlib.h>", 'x86_cpuid_info.c', {}),

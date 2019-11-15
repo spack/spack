@@ -17,4 +17,4 @@ class Check(AutotoolsPackage):
     homepage = "https://libcheck.github.io/check/index.html"
     url      = "https://downloads.sourceforge.net/project/check/check/0.10.0/check-0.10.0.tar.gz"
 
-    version('0.10.0', '53c5e5c77d090e103a17f3ed7fd7d8b8')
+    version('0.10.0', sha256='f5f50766aa6f8fe5a2df752666ca01a950add45079aa06416b83765b1cf71052')

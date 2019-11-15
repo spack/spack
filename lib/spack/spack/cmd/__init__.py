@@ -24,6 +24,7 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
+import spack.util.string
 from spack.error import SpackError
 
 
@@ -134,7 +135,9 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        sargs = args if isinstance(args, six.string_types) else ' '.join(args)
+        sargs = args
+        if not isinstance(args, six.string_types):
+            sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
@@ -174,16 +177,25 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env, last_installed=False):
+def disambiguate_spec(spec, env, local=False, installed=True):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
-    matching_specs = spack.store.db.query(spec, hashes=hashes)
+    if local:
+        matching_specs = spack.store.db.query_local(spec, hashes=hashes,
+                                                    installed=installed)
+    else:
+        matching_specs = spack.store.db.query(spec, hashes=hashes,
+                                              installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
     elif last_installed:
@@ -323,7 +335,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg('format', None)
     if format_string is None:
-        nfmt = '{namespace}.{name}' if namespace else '{name}'
+        nfmt = '{fullname}' if namespace else '{name}'
         ffmt = ''
         if full_compiler or flags:
             ffmt += '{%compiler.name}'

@@ -14,7 +14,7 @@ class RAda(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ada_2.0-5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ada"
 
-    version('2.0-5', '25ac0dc2650fba9e19f3d15c7c6721c1')
+    version('2.0-5', sha256='d900172059eebeef30c27944fc29737a231fc4f92e3c2661868383fbd9016ac0')
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-rpart', type=('build', 'run'))

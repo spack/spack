@@ -14,7 +14,7 @@ class Cares(CMakePackage):
     git      = "https://github.com/c-ares/c-ares.git"
 
     version('develop', branch='master')
-    version('1.13.0', 'cdb21052a7eb85261da22f83c0654cfd')
+    version('1.13.0', sha256='7c48c57706a38691041920e705d2a04426ad9c68d40edd600685323f214b2d57')
 
     def url_for_version(self, version):
         url = "https://github.com/c-ares/c-ares/archive/cares-{0}.tar.gz"

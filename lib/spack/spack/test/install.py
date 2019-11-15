@@ -9,8 +9,7 @@ import shutil
 
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
-from spack.package import \
-    InstallError, InvalidPackageOpError, PackageBase, PackageStillNeededError
+from spack.package import InstallError, PackageBase, PackageStillNeededError
 import spack.patch
 import spack.repo
 import spack.store
@@ -327,7 +326,9 @@ def test_uninstall_by_spec_errors(mutable_database):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
-def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
+@pytest.mark.disable_clean_stage_check
+def test_nosource_pkg_install(
+        install_mockery, mock_fetch, mock_packages, capfd):
     """Test install phases with the nosource package."""
     spec = Spec('nosource').concretized()
     pkg = spec.package
@@ -336,9 +337,8 @@ def test_nosource_pkg_install(install_mockery, mock_fetch, mock_packages):
     pkg.do_install()
 
     # Also make sure an error is raised if `do_fetch` is called.
-    with pytest.raises(InvalidPackageOpError,
-                       match="fetch a package with a URL"):
-        pkg.do_fetch()
+    pkg.do_fetch()
+    assert "No fetch required for nosource" in capfd.readouterr()[0]
 
 
 def test_nosource_pkg_install_post_install(
@@ -460,11 +460,11 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     with pytest.raises(ValueError, match="only install concrete packages"):
         spec.package.do_install()
 
-    with pytest.raises(ValueError, match="fetch concrete packages"):
+    with pytest.raises(ValueError, match="only fetch concrete packages"):
         spec.package.do_fetch()
 
-    with pytest.raises(ValueError, match="stage concrete packages"):
+    with pytest.raises(ValueError, match="only stage concrete packages"):
         spec.package.do_stage()
 
-    with pytest.raises(ValueError, match="patch concrete packages"):
+    with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()
