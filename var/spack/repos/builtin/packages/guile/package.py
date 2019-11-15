@@ -26,10 +26,10 @@ class Guile(AutotoolsPackage):
     variant('readline', default=True, description='Use the readline library')
     variant(
         'threads',
-         default='none',
-         values=('none', 'posix', 'dgux386'),
-         multi=False,
-         description='Use the thread interface'
+        default='none',
+        values=('none', 'posix', 'dgux386'),
+        multi=False,
+        description='Use the thread interface'
     )
 
     depends_on('bdw-gc@7.0: threads=none', when='threads=none')
@@ -60,9 +60,9 @@ class Guile(AutotoolsPackage):
         ]
 
         if 'threads=none' in spec:
-           config_args.append('--without-threads')
+            config_args.append('--without-threads')
         else:
-           config_args.append('--with-threads')
+            config_args.append('--with-threads')
 
         if '+readline' in spec:
             config_args.append('--with-libreadline-prefix={0}'.format(
