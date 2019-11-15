@@ -211,7 +211,8 @@ def colorize_spec(spec):
     return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
 def traced_concretization_step(function):
-    """Foo
+    """Wrap function such that trace info is printed when
+       it is invoked.
     """
 
     @functools.wraps(function)
