@@ -57,7 +57,7 @@ class Flecsi(CMakePackage):
     depends_on('mpi', when='backend=hpx')
     depends_on('legion@ctrl-rep +shared +mpi +hdf5', when='backend=legion +hdf5')
     depends_on('legion@ctrl-rep +shared +mpi', when='backend=legion ~hdf5')
-    depends_on('hpx@1.3.0 cxxstd=14', when='backend=hpx')
+    depends_on('hpx@stable cxxstd=14', when='backend=hpx')
     depends_on('boost@1.70.0: cxxstd=14 +program_options')
     depends_on('metis@5.1.0:')
     depends_on('parmetis@4.0.3:')
