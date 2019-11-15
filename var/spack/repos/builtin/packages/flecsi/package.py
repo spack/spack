@@ -30,8 +30,6 @@ class Flecsi(CMakePackage):
             description='Disable FindPackageMetis')
     variant('shared', default=True,
             description='Build shared libraries')
-    variant('unittest', default=False,
-            description='Enable unit testing')
     variant('flog', default=False,
             description='Enable flog testing')
     variant('doxygen', default=False,
@@ -84,11 +82,6 @@ class Flecsi(CMakePackage):
                    ]
         options.append('-DCINCH_SOURCE_DIR=' + spec['cinch'].prefix)
 
-        if spec.variants['build_type'].value == 'Debug':
-            options.append('-DCMAKE_BUILD_TYPE=Debug')
-        elif spec.variants['build_type'].value == 'Release':
-            options.append('-DCMAKE_BUILD_TYPE=Release')
-
         if spec.variants['backend'].value == 'legion':
             options.append('-DFLECSI_RUNTIME_MODEL=legion')
             options.append('-DENABLE_MPI=ON')
@@ -110,6 +103,7 @@ class Flecsi(CMakePackage):
             options.append('-DBUILD_SHARED_LIBS=ON')
         else:
             options.append('-DBUILD_SHARED_LIBS=OFF')
+
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
         else:
