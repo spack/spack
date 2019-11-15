@@ -75,8 +75,7 @@ class Flecsi(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        options = ['-DENABLE_MPI=ON',
-                   '-DENABLE_OPENMP=ON',
+        options = ['-DENABLE_OPENMP=ON',
                    '-DCXX_CONFORMANCE_STANDARD=c++17',
                    '-DENABLE_METIS=ON',
                    '-DENABLE_PARMETIS=ON',
@@ -92,10 +91,13 @@ class Flecsi(CMakePackage):
 
         if spec.variants['backend'].value == 'legion':
             options.append('-DFLECSI_RUNTIME_MODEL=legion')
+            options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'mpi':
             options.append('-DFLECSI_RUNTIME_MODEL=mpi')
+            options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'hpx':
             options.append('-DFLECSI_RUNTIME_MODEL=hpx')
+            options.append('-DENABLE_MPI=ON')
         else:
             options.append('-DFLECSI_RUNTIME_MODEL=serial')
             options.append('-DENABLE_MPI=OFF')
@@ -105,9 +107,9 @@ class Flecsi(CMakePackage):
         else:
             options.append('-DCMAKE_DISABLE_FIND_PACKAGE_METIS=OFF')
         if '+shared' in spec:
-            options.append('-DBUILD_SHARED_LIBSON')
+            options.append('-DBUILD_SHARED_LIBS=ON')
         else:
-            options.append('-DBUILD_SHARED_LIBSOFF')
+            options.append('-DBUILD_SHARED_LIBS=OFF')
         if '+unittest' in spec:
             options.append('-DENABLE_UNIT_TESTS=ON')
         else:
