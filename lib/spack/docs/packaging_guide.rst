@@ -136,7 +136,7 @@ generates a boilerplate template for your package, and opens up the new
        homepage = "http://www.example.com"
        url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
-       # FIXME: Add a list of GitHub accounts to automatically
+       # FIXME: Add a list of GitHub accounts to
        # notify when the package is updated.
        # maintainers = ['github_user1', 'github_user2']
 
@@ -191,14 +191,13 @@ The rest of the tasks you need to do are as follows:
 #. Add a comma-separated list of maintainers.
 
    The ``maintainers`` field is a list of GitHub accounts of people
-   who want to be automatically notified any time the package is
-   modified. When a pull request is submitted that updates the
-   package, these people will automatically be requested to review
-   the PR. This is useful for developers who maintain a Spack package
-   for their own software, as well as users who rely on a piece of
-   software and want to ensure that the package doesn't break. It
-   also gives users a list of people to contact for help when someone
-   reports a build error with the package.
+   who want to be notified any time the package is modified. When a
+   pull request is submitted that updates the package, these people
+   will be requested to review the PR. This is useful for developers
+   who maintain a Spack package for their own software, as well as
+   users who rely on a piece of software and want to ensure that the
+   package doesn't break. It also gives users a list of people to
+   contact for help when someone reports a build error with the package.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -1480,7 +1479,7 @@ that the same package with different patches applied will have different
 hash identifiers.  To ensure that the hashing scheme is consistent, you
 must use a ``sha256`` checksum for the patch.  Patches will be fetched
 from their URLs, checked, and applied to your source code.  You can use
-the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to 
+the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to
 generate a checksum for a patch file.
 
 Spack can also handle compressed patches.  If you use these, Spack needs
