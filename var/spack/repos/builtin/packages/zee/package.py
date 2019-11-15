@@ -36,9 +36,10 @@ class Zee(CMakePackage):
     depends_on('py-pre-commit', type='build', when='+codechecks')
     depends_on('py-pyyaml', type='build', when='+codechecks')
     depends_on('python@3:', type='build', when='+codechecks')
-    depends_on('gmsh@4: ~mpi+oce+openmp+shared')
+    depends_on('gmsh@4: +metis~mpi+oce+openmp+shared')
     depends_on('mpi')
     depends_on('omega-h+trilinos')
+    depends_on('metis+int64')
     depends_on('petsc +int64', when='+petsc')
 
     def _bob_options(self):

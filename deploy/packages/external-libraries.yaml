@@ -27,7 +27,7 @@ packages:
       - cudnn@7.3
       - freeimage@3.18.0
       - glew
-      - gmsh~mpi+oce+openmp+shared@4.4.1
+      - gmsh+metis~mpi+oce+openmp+shared@4.4.1
       - hdf5~mpi@1.10.4
       - intel-mkl@2018.1.163
       - jdk@1.8.0_191-b12
@@ -36,7 +36,7 @@ packages:
       - libjpeg-turbo@1.5.90
       - libxml2@2.9.8
       - libxslt@1.1.29
-      - metis@5.1.0
+      - metis+int64@5.1.0
       - ncurses@5.9
       - ninja@1.8.2
       - openblas@0.3.3
