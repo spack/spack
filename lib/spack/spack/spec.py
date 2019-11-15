@@ -210,6 +210,43 @@ def colorize_spec(spec):
 
     return colorize(re.sub(_separators, insert_color(), str(spec)) + '@.')
 
+def traced_concretization_step(function):
+    """Foo
+    """
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        if "indent" not in wrapper.__dict__:
+            wrapper.indent = 0
+        print(" " * wrapper.indent,
+              "[trace:concretization] calling {0} for {1}".format(
+                  function.__name__, args[0].name),
+              sep="")
+        wrapper.indent += 2
+        return_value = function(*args, **kwargs)
+        wrapper.indent -= 2
+        return return_value
+    return wrapper
+
+def embiggen_unsat_spec_error_message(function):
+    """A decorator which adds the spec being modified to the exception
+    message for functions that might throw UnsatisfiableSpecError
+    exceptions.
+    """
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        try:
+            return function(*args, **kwargs)
+        except UnsatisfiableSpecError as e:
+            e.message += "\n\n"
+            e.message += "The spec that was in the "
+            e.message += "process of being modified is:\n\n"
+            e.message += args[0].tree(indent=4)
+            raise
+    return wrapper
+
+
 
 @key_ordering
 class ArchSpec(object):
@@ -1057,42 +1094,6 @@ class Spec(object):
     def dependents_dict(self, deptype='all'):
         return dict((d.parent.name, d)
                     for d in self._find_deps(self._dependents, deptype))
-
-    def traced_concretization_step(function):
-        """Foo
-        """
-
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            if "indent" not in wrapper.__dict__:
-                wrapper.indent = 0
-            print(" " * wrapper.indent,
-                  "[trace:concretization] calling {0} for {1}".format(
-                      function.__name__, args[0].name),
-                  sep="")
-            wrapper.indent += 2
-            return_value = function(*args, **kwargs)
-            wrapper.indent -= 2
-            return return_value
-        return wrapper
-
-    def embiggen_unsat_spec_error_message(function):
-        """A decorator which adds the spec being modified to the exception
-        message for functions that might throw UnsatisfiableSpecError
-        exceptions.
-        """
-
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            try:
-                return function(*args, **kwargs)
-            except UnsatisfiableSpecError as e:
-                e.message += "\n\n"
-                e.message += "The spec that was in the "
-                e.message += "process of being modified is:\n\n"
-                e.message += args[0].tree(indent=4)
-                raise
-        return wrapper
 
     #
     # Private routines here are called by the parser when building a spec.
