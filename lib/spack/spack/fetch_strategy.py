@@ -106,16 +106,12 @@ class FetchStrategy(object):
         self.stage = None
         # Enable or disable caching for this strategy based on
         # 'no_cache' option from version directive.
-        self._cache_enabled = not kwargs.pop('no_cache', False)
+        self.cache_enabled = not kwargs.pop('no_cache', False)
 
     def set_stage(self, stage):
         """This is called by Stage before any of the fetching
            methods are called on the stage."""
         self.stage = stage
-
-    @property
-    def cache_enabled(self):
-        return self._cache_enabled
 
     # Subclasses need to implement these methods
     def fetch(self):
@@ -386,7 +382,7 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def cachable(self):
-        return self._cache_enabled and bool(self.digest)
+        return self.cache_enabled and bool(self.digest)
 
     @_needs_stage
     def expand(self):
@@ -738,7 +734,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self._cache_enabled and bool(self.commit or self.tag)
+        return self.cache_enabled and bool(self.commit or self.tag)
 
     def source_id(self):
         return self.commit or self.tag
@@ -921,7 +917,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self._cache_enabled and bool(self.revision)
+        return self.cache_enabled and bool(self.revision)
 
     def source_id(self):
         return self.revision
@@ -1035,7 +1031,7 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     @property
     def cachable(self):
-        return self._cache_enabled and bool(self.revision)
+        return self.cache_enabled and bool(self.revision)
 
     def source_id(self):
         return self.revision
