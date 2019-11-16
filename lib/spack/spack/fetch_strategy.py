@@ -108,11 +108,6 @@ class FetchStrategy(object):
         # 'no_cache' option from version directive.
         self.cache_enabled = not kwargs.pop('no_cache', False)
 
-    def set_stage(self, stage):
-        """This is called by Stage before any of the fetching
-           methods are called on the stage."""
-        self.stage = stage
-
     # Subclasses need to implement these methods
     def fetch(self):
         """Fetch source code archive or repo.
@@ -223,7 +218,6 @@ class FetchStrategyComposite(object):
     Implements the GoF composite pattern.
     """
     matches = FetchStrategy.matches
-    set_stage = FetchStrategy.set_stage
 
     def source_id(self):
         component_ids = tuple(i.source_id() for i in self)
