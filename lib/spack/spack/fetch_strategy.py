@@ -22,33 +22,30 @@ in order to build it.  They need to define the following methods:
     * archive()
         Archive a source directory, e.g. for creating a mirror.
 """
+import copy
+import functools
 import os
 import os.path
-import sys
 import re
 import shutil
-import copy
+import sys
 import xml.etree.ElementTree
-from functools import wraps
-from six import string_types
-import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import (
-    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
-
+import six
+import six.moves.urllib.parse as urllib_parse
 import spack.config
 import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
-import spack.util.web as web_util
 import spack.util.url as url_util
-
+import spack.util.web as web_util
+from llnl.util.filesystem import (
+    working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
+from spack.util.compression import decompressor_for, extension
 from spack.util.executable import which
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
-from spack.util.compression import decompressor_for, extension
-
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -69,7 +66,7 @@ def _needs_stage(fun):
     """Many methods on fetch strategies require a stage to be set
        using set_stage().  This decorator adds a check for self.stage."""
 
-    @wraps(fun)
+    @functools.wraps(fun)
     def wrapper(self, *args, **kwargs):
         if not self.stage:
             raise NoStageError(fun)
@@ -592,7 +589,7 @@ class VCSFetchStrategy(FetchStrategy):
 
         patterns = kwargs.get('exclude', None)
         if patterns is not None:
-            if isinstance(patterns, string_types):
+            if isinstance(patterns, six.string_types):
                 patterns = [patterns]
             for p in patterns:
                 tar.add_default_arg('--exclude=%s' % p)
