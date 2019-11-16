@@ -30,7 +30,7 @@ import shutil
 import copy
 import xml.etree.ElementTree
 from functools import wraps
-from six import string_types, with_metaclass
+from six import string_types
 import six.moves.urllib.parse as urllib_parse
 
 import llnl.util.tty as tty
@@ -85,18 +85,14 @@ def _ensure_one_stage_entry(stage_path):
     return os.path.join(stage_path, stage_entries[0])
 
 
-class FSMeta(type):
-    """This metaclass registers all fetch strategies in a list."""
-    def __init__(cls, name, bases, dict):
-        type.__init__(cls, name, bases, dict)
-        if cls.enabled:
-            all_strategies.append(cls)
+def fetcher(cls):
+    """Decorator used to register fetch strategies."""
+    all_strategies.append(cls)
+    return cls
 
 
-class FetchStrategy(with_metaclass(FSMeta, object)):
+class FetchStrategy(object):
     """Superclass of all fetch strategies."""
-    enabled = False  # Non-abstract subclasses should be enabled.
-
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
@@ -193,6 +189,7 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
         return cls.url_attr in args
 
 
+@fetcher
 class BundleFetchStrategy(FetchStrategy):
     """
     Fetch strategy associated with bundle, or no-code, packages.
@@ -204,9 +201,6 @@ class BundleFetchStrategy(FetchStrategy):
     TODO: Remove this class by refactoring resource handling and the link
     between composite stages and composite fetch strategies (see #11981).
     """
-    #: This is a concrete fetch strategy for no-code packages.
-    enabled = True
-
     #: There is no associated URL keyword in ``version()`` for no-code
     #: packages but this property is required for some strategy-related
     #: functions (e.g., check_pkg_attributes).
@@ -244,13 +238,13 @@ class FetchStrategyComposite(object):
             return component_ids
 
 
+@fetcher
 class URLFetchStrategy(FetchStrategy):
     """
     FetchStrategy that pulls source code from a URL for an archive, check the
     archive against a checksum, and decompresses the archive.  The destination
     for the resulting file(s) is the standard stage source path.
     """
-    enabled = True
     url_attr = 'url'
 
     # these are checksum types. The generic 'checksum' is deprecated for
@@ -522,6 +516,7 @@ class URLFetchStrategy(FetchStrategy):
             return "[no url]"
 
 
+@fetcher
 class CacheURLFetchStrategy(URLFetchStrategy):
     """The resource associated with a cache URL may be out of date."""
 
@@ -621,6 +616,7 @@ class VCSFetchStrategy(FetchStrategy):
         return "%s<%s>" % (self.__class__, self.url)
 
 
+@fetcher
 class GoFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that employs the `go get` infrastructure.
 
@@ -634,7 +630,6 @@ class GoFetchStrategy(VCSFetchStrategy):
     The fetched source will be moved to the standard stage sourcepath directory
     during the expand step.
     """
-    enabled = True
     url_attr = 'go'
 
     def __init__(self, **kwargs):
@@ -691,6 +686,7 @@ class GoFetchStrategy(VCSFetchStrategy):
         return "[go] %s" % self.url
 
 
+@fetcher
 class GitFetchStrategy(VCSFetchStrategy):
 
     """
@@ -712,7 +708,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     Repositories are cloned into the standard stage source path directory.
     """
-    enabled = True
     url_attr = 'git'
     optional_attrs = ['tag', 'branch', 'commit', 'submodules', 'get_full_repo']
 
@@ -892,6 +887,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         return '[git] {0}'.format(self._repo_info())
 
 
+@fetcher
 class SvnFetchStrategy(VCSFetchStrategy):
 
     """Fetch strategy that gets source code from a subversion repository.
@@ -906,7 +902,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
 
     Repositories are checked out into the standard stage source path directory.
     """
-    enabled = True
     url_attr = 'svn'
     optional_attrs = ['revision']
 
@@ -991,6 +986,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return "[svn] %s" % self.url
 
 
+@fetcher
 class HgFetchStrategy(VCSFetchStrategy):
 
     """
@@ -1013,7 +1009,6 @@ class HgFetchStrategy(VCSFetchStrategy):
 
     Repositories are cloned into the standard stage source path directory.
     """
-    enabled = True
     url_attr = 'hg'
     optional_attrs = ['revision']
 
@@ -1108,9 +1103,9 @@ class HgFetchStrategy(VCSFetchStrategy):
         return "[hg] %s" % self.url
 
 
+@fetcher
 class S3FetchStrategy(URLFetchStrategy):
     """FetchStrategy that pulls from an S3 bucket."""
-    enabled = True
     url_attr = 's3'
 
     def __init__(self, *args, **kwargs):
