@@ -25,7 +25,9 @@ class PyPymol(PythonPackage):
     depends_on('py-numpy', type=('build','run'))
     depends_on('tcsh', type=('build', 'run'))
     depends_on('py-pyqt5', type=('build', 'run'))
+    depends_on('py-pmw', type=('build', 'run'))
     depends_on('mesa-glu', type=('build', 'run'))
 
     depends_on('libmmtf-cpp', type=('build'))
     depends_on('msgpack-c', type=('build'))
+
