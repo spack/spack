@@ -7,7 +7,7 @@ from spack import *
 
 
 class Clara(CMakePackage):
-    """A simple to use, composable, command line parser for C++ 11 
+    """A simple to use, composable, command line parser for C++ 11
     and beyond."""
 
     homepage = "https://github.com/catchorg/Clara"
