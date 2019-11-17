@@ -136,6 +136,10 @@ generates a boilerplate template for your package, and opens up the new
        homepage = "http://www.example.com"
        url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
+       # FIXME: Add a list of GitHub accounts to
+       # notify when the package is updated.
+       # maintainers = ['github_user1', 'github_user2']
+
        version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
        version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
        version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
@@ -183,6 +187,17 @@ The rest of the tasks you need to do are as follows:
 
    The ``homepage`` is displayed when users run ``spack info`` so
    that they can learn more about your package.
+
+#. Add a comma-separated list of maintainers.
+
+   The ``maintainers`` field is a list of GitHub accounts of people
+   who want to be notified any time the package is modified. When a
+   pull request is submitted that updates the package, these people
+   will be requested to review the PR. This is useful for developers
+   who maintain a Spack package for their own software, as well as
+   users who rely on a piece of software and want to ensure that the
+   package doesn't break. It also gives users a list of people to
+   contact for help when someone reports a build error with the package.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
