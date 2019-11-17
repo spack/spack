@@ -4,7 +4,9 @@ from spack import *
 
 
 class LibmmtfCpp(CMakePackage):
-    """The macromolecular transmission format (MMTF) is a binary encoding of biological structures. This repository holds the C++-03 compatible API, encoding and decoding libraries."""
+    """The macromolecular transmission format (MMTF) is a binary encoding of 
+    biological structures. This repository holds the C++-03 compatible API,
+    encoding and decoding libraries."""
 
     homepage = "https://github.com/rcsb/mmtf-cpp"
     url      = "https://github.com/rcsb/mmtf-cpp/archive/v1.0.0.tar.gz"
