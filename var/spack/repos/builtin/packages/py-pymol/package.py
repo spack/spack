@@ -22,7 +22,7 @@ class PyPymol(PythonPackage):
     depends_on('glew')
     depends_on('glm')
     depends_on('freeglut', type=('build', 'run'))
-    depends_on('py-numpy', type=('build','run'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('tcsh', type=('build', 'run'))
     depends_on('py-pyqt5', type=('build', 'run'))
     depends_on('py-pmw', type=('build', 'run'))
