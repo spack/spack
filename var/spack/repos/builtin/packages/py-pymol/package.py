@@ -31,3 +31,4 @@ class PyPymol(PythonPackage):
     depends_on('libmmtf-cpp', type=('build'))
     depends_on('msgpack-c', type=('build'))
 
+    patch('apbstools_tcltk8.6.patch', level=0, when='@2.3.0')
