@@ -68,7 +68,7 @@ class Conduit(Package):
     variant("adios", default=False, description="Build Conduit ADIOS support")
 
     # zfp compression
-    variant("zfp", default=True, description="Build Conduit ZFP support")
+    variant("zfp", default=False, description="Build Conduit ZFP support")
 
     # variants for dev-tools (docs, etc)
     variant("doc", default=False, description="Build Conduit's documentation")
