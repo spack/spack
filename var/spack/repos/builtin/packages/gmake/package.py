@@ -22,6 +22,8 @@ class Gmake(AutotoolsPackage):
     depends_on('gettext', when='+nls')
     depends_on('guile', when='+guile')
 
+    depends_on('texinfo', type='build')
+
     build_directory = 'spack-build'
 
     patch('https://src.fedoraproject.org/rpms/make/raw/519a7c5bcbead22e6ea2d2c2341d981ef9e25c0d/f/make-4.2.1-glob-fix-2.patch', level=1, sha256='fe5b60d091c33f169740df8cb718bf4259f84528b42435194ffe0dd5b79cd125', when='@4.2.1')

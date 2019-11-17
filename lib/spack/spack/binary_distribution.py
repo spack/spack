@@ -21,6 +21,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree
 
 import spack.cmd
+import spack.config as config
 import spack.fetch_strategy as fs
 import spack.util.gpg as gpg_util
 import spack.relocate as relocate
@@ -536,7 +537,22 @@ def relocate_package(workdir, spec, allow_root):
                            newprefix=new_prefix)
     # If the binary files in the package were not edited to use
     # relative RPATHs, then the RPATHs need to be relocated
-    if not rel:
+    if rel:
+        if old_path != new_path:
+            files_to_relocate = list(filter(
+                lambda pathname: not relocate.file_is_relocatable(
+                    pathname, paths_to_relocate=[old_path, old_prefix]),
+                map(lambda filename: os.path.join(workdir, filename),
+                    buildinfo['relocate_binaries'])))
+
+            if len(old_path) < len(new_path) and files_to_relocate:
+                tty.debug('Cannot do a binary string replacement with padding '
+                          'for package because %s is longer than %s.' %
+                          (new_path, old_path))
+            else:
+                for path_name in files_to_relocate:
+                    relocate.replace_prefix_bin(path_name, old_path, new_path)
+    else:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(workdir, filename)
@@ -579,7 +595,8 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
-                Gpg.verify('%s.asc' % specfile_path, specfile_path)
+                suppress = config.get('config:suppress_gpg_warnings', False)
+                Gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
                 shutil.rmtree(tmpdir)
                 tty.die(e)

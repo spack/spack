@@ -502,11 +502,11 @@ def make_link_relative(cur_path_names, orig_path_names):
     Change absolute links to be relative.
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        old_src = os.readlink(orig_path)
-        new_src = os.path.relpath(old_src, orig_path)
+        target = os.readlink(orig_path)
+        relative_target = os.path.relpath(target, os.path.dirname(orig_path))
 
         os.unlink(cur_path)
-        os.symlink(new_src, cur_path)
+        os.symlink(relative_target, cur_path)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
@@ -651,7 +651,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(file):
+def file_is_relocatable(file, paths_to_relocate=None):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -664,6 +664,8 @@ def file_is_relocatable(file):
 
         ValueError: if the file does not exist or the path is not absolute
     """
+    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
+    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
     if not (platform.system().lower() == 'darwin'
             or platform.system().lower() == 'linux'):
@@ -704,19 +706,13 @@ def file_is_relocatable(file):
             if idpath is not None:
                 set_of_strings.discard(idpath)
 
-    if any(spack.store.layout.root in x for x in set_of_strings):
-        # One binary has the root folder not in the RPATH,
-        # meaning that this spec is not relocatable
-        msg = 'Found "{0}" in {1} strings'
-        tty.debug(msg.format(spack.store.layout.root, file))
-        return False
-
-    if any(spack.paths.prefix in x for x in set_of_strings):
-        # One binary has the root folder not in the RPATH,
-        # meaning that this spec is not relocatable
-        msg = 'Found "{0}" in {1} strings'
-        tty.debug(msg.format(spack.paths.prefix, file))
-        return False
+    for path_to_relocate in paths_to_relocate:
+        if any(path_to_relocate in x for x in set_of_strings):
+            # One binary has the root folder not in the RPATH,
+            # meaning that this spec is not relocatable
+            msg = 'Found "{0}" in {1} strings'
+            tty.debug(msg.format(path_to_relocate, file))
+            return False
 
     return True
 

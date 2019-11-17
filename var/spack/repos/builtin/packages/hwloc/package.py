@@ -2,9 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
-from spack import *
 import sys
 
 
@@ -28,7 +25,9 @@ class Hwloc(AutotoolsPackage):
     url      = "https://download.open-mpi.org/release/hwloc/v2.0/hwloc-2.0.2.tar.gz"
     list_url = "http://www.open-mpi.org/software/hwloc/"
     list_depth = 2
+    git = 'https://github.com/open-mpi/hwloc.git'
 
+    version('master', branch='master')
     version('2.0.2',  sha256='27dcfe42e3fb3422b72ce48b48bf601c0a3e46e850ee72d9bdd17b5863b6e42c')
     version('2.0.1',  sha256='f1156df22fc2365a31a3dc5f752c53aad49e34a5e22d75ed231cd97eaa437f9d')
     version('2.0.0',  sha256='a0d425a0fc7c7e3f2c92a272ffaffbd913005556b4443e1887d2e1718d902887')
@@ -59,7 +58,10 @@ class Hwloc(AutotoolsPackage):
     )
 
     depends_on('pkgconfig', type='build')
-
+    depends_on('m4', type='build', when='@master')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
     depends_on('cuda', when='+nvml')
     depends_on('cuda', when='+cuda')
     depends_on('gl', when='+gl')

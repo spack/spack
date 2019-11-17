@@ -128,7 +128,7 @@ class PyTorch(PythonPackage):
     depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
     depends_on('miopen', when='+miopen')
-    depends_on('mkl', when='+mkldnn')
+    depends_on('intel-mkl-dnn', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
@@ -219,7 +219,7 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('mkldnn')
         if '+mkldnn' in self.spec:
-            env.set('MKLDNN_HOME', self.spec['intel-mkl'].prefix)
+            env.set('MKLDNN_HOME', self.spec['intel-mkl-dnn'].prefix)
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')

@@ -1117,7 +1117,7 @@ class Environment(object):
             self.default_view))
 
         for _, spec in self.concretized_specs():
-            if spec in self.default_view:
+            if spec in self.default_view and spec.package.installed:
                 env_mod.extend(self.environment_modifications_for_spec(
                     spec, self.default_view))
 
@@ -1138,7 +1138,7 @@ class Environment(object):
             self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
-            if spec in self.default_view:
+            if spec in self.default_view and spec.package.installed:
                 env_mod.extend(
                     self.environment_modifications_for_spec(
                         spec, self.default_view).reversed())
