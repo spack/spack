@@ -18,6 +18,8 @@ class Ampliconnoise(MakefilePackage):
     depends_on('mpi@2:')
     depends_on('gsl')
 
+    patch('Fix-return-type.patch')
+
     def setup_environment(self, spack_env, run_env):
         run_env.prepend_path('PATH', self.prefix.Scripts)
         run_env.set('PYRO_LOOKUP_FILE', join_path(self.prefix, 'Data',
