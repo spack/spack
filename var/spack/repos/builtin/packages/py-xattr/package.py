@@ -10,9 +10,11 @@ class PyXattr(PythonPackage):
     """
 
     homepage = "http://pyxattr.k1024.org/"
-    git      = "https://github.com/iustin/pyxattr.git"
+    url = "https://pypi.io/packages/source/x/xattr/xattr-0.9.6.tar.gz"
+    git = "https://github.com/iustin/pyxattr.git"
 
     version('master', branch='master')
+    version('0.9.6', sha256='7cb1b28eeab4fe99cc4350e831434142fce658f7d03f173ff7722144e6a47458')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')
