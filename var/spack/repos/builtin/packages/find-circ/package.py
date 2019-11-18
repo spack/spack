@@ -7,8 +7,8 @@ from spack import *
 
 
 class FindCirc(Package):
-    """Find-circ is a collection of python scripts 
-    detecting head-to-tail spliced (back-spliced) sequencing reads, 
+    """Find-circ is a collection of python scripts
+    detecting head-to-tail spliced (back-spliced) sequencing reads,
     indicative of circular RNA (circRNA) in RNA-seq data."""
 
     homepage = "https://github.com/marvin-jens/find_circ"
