@@ -16,6 +16,11 @@
 /share/spack/dotkit
 /share/spack/modules
 /share/spack/lmod
+# Ignore everything in /share/spack/templates/modules except
+# modulefile.lua and modulefile.tcl
+/share/spack/templates/modules/*
+!/share/spack/templates/modules/modulefile.lua
+!/share/spack/templates/modules/modulefile.tcl
 /TAGS
 *.swp
 /htmlcov
