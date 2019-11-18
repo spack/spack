@@ -134,7 +134,7 @@ class Hpx(CMakePackage, CudaPackage):
         ))
 
         # MAX_CPU_COUNT
-        args.append('-DHPX_WITH_MAX_CPU_COUNT={}'.format(
+        args.append('-DHPX_WITH_MAX_CPU_COUNT={0}'.format(
             spec.variants['max_cpu_count'].value
         ))
 
