@@ -642,7 +642,7 @@ EOF
 
         # todo : patchelf recursion issue
         log "installing patchelf for buildcache"
-        spack install --no-cache -y patchelf %gcc
+        spack install --no-cache -y patchelf %gcc@${BASE_GCC_VERSION}
 
         # INSTALL
         #
