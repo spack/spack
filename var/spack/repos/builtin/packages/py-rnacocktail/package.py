@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyRnacocktail(PythonPackage):
-    """RNACocktail: A comprehensive framework 
+    """RNACocktail: A comprehensive framework
     for accurate and efficient RNA-Seq analysis."""
 
     homepage = "http://bioinform.github.io/rnacocktail/"
