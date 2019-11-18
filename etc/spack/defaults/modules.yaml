@@ -16,6 +16,7 @@
 modules:
   enable:
     - tcl
+    - lmod
   prefix_inspections:
     bin:
       - PATH
@@ -43,3 +44,5 @@ modules:
   lmod:
     hierarchy:
       - mpi
+    all:
+      autoload:  'direct'
