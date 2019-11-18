@@ -17,9 +17,9 @@ class PyRnacocktail(PythonPackage):
 
     depends_on('python@2.7:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pybedtools', type='run')
-    depends_on('py-pysam', type='run')
+    depends_on('py-pybedtools', type=('build', 'run'))
+    depends_on('py-pysam', type=('build', 'run'))
     # Higher version of py-pandas and py-numpy
     # depends on python@3: which conflicts with py-rnacocktail
-    depends_on('py-pandas@:0.24.2', type='run')
-    depends_on('py-numpy@:1.16.5', type='run')
+    depends_on('py-pandas@:0.24.2', type=('build', 'run'))
+    depends_on('py-numpy@:1.16.5', type=('build', 'run'))
