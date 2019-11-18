@@ -177,7 +177,7 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env, local=False, installed=True):
+def disambiguate_spec(spec, env, local=False, installed=True, last_installed=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
