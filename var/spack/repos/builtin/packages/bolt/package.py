@@ -20,6 +20,7 @@ class Bolt(CMakePackage):
     homepage = "http://www.bolt-omp.org/"
     url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/bolt.git"
+    maintainers = ['shintaro-iwasaki']
 
     version("master", branch="master")
     version("1.0rc3", sha256="beec522d26e74f0a562762ea5ae7805486a17b40013090ea1472f0c34c3379c8")

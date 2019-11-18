@@ -18,6 +18,7 @@ class Argobots(AutotoolsPackage):
     homepage = "http://www.argobots.org/"
     url      = "https://github.com/pmodels/argobots/releases/download/v1.0b1/argobots-1.0b1.tar.gz"
     git      = "https://github.com/pmodels/argobots.git"
+    maintainers = ['shintaro-iwasaki']
 
     version("develop", branch="master")
     version("1.0rc2", sha256="7496b8bd39930a548b01aa3b1fe8f8b582c272600ef6a05ddc4398cf21dc12a2")
