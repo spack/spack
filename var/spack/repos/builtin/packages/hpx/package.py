@@ -30,6 +30,10 @@ class Hpx(CMakePackage, CudaPackage):
         values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
     )
 
+    variant('max_cpu_count', default='64',
+            description='Max number of OS-Threads for HPX applications',
+            values=lambda x: isinstance(x, str) and x.isdigit())
+
     variant('instrumentation', values=any_combination_of(
         'apex', 'google_perftools', 'papi', 'valgrind'
     ), description='Add support for various kind of instrumentation')
@@ -127,6 +131,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Tools
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
+        ))
+
+        # MAX_CPU_COUNT
+        args.append('-DHPX_WITH_MAX_CPU_COUNT={}'.format(
+            spec.variants['max_cpu_count'].value
         ))
 
         # Examples
