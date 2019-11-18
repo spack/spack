@@ -134,7 +134,8 @@ packages:
             xz@5.2: /usr
         version: [5.2]
     all:
-        compiler: [gcc@6.4.0, intel@18.0.1]
+        compiler: [gcc@8.3.0, intel@19.0.4]
+        target: [x86_64]
         providers:
             mpi: [hpe-mpi, intel-mpi]
             scalapack: [intel-mkl, netlib-scalapack]
