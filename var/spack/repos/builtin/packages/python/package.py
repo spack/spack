@@ -718,6 +718,13 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        # For run time environment set only the path for
+        # dependent_spec and prepend it to PYTHONPATH
+        if dependent_spec.package.extends(self.spec):
+            env.prepend_path('PYTHONPATH', join_path(
+                dependent_spec.prefix, self.site_packages_dir))
+
         # For run time environment set path for all dependent_spec
         # recursively and prepend it to PYTHONPATH
         python_paths = set()
@@ -732,14 +739,7 @@ class Python(AutotoolsPackage):
                 path = join_path(d.prefix, self.site_packages_dir)
                 python_paths.add(path)
         for path in python_paths:
-            run_env.prepend_path('PYTHONPATH', path)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            env.prepend_path('PYTHONPATH', join_path(
-                dependent_spec.prefix, self.site_packages_dir))
+            env.prepend_path('PYTHONPATH', path)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
