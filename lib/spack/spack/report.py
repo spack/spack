@@ -146,8 +146,9 @@ class InfoCollector(object):
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     package['result'] = 'failure'
-                    package['stdout'] = fetch_package_log(pkg)
                     package['message'] = e.message or 'Installation failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:
