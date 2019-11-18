@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import os.path
 
 
 class Ampliconnoise(MakefilePackage):
@@ -20,12 +20,12 @@ class Ampliconnoise(MakefilePackage):
 
     patch('Fix-return-type.patch')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.Scripts)
-        run_env.set('PYRO_LOOKUP_FILE', join_path(self.prefix, 'Data',
-                    'LookUp_E123.dat'))
-        run_env.set('SEQ_LOOKUP_FILE', join_path(self.prefix, 'Data',
-                    'Tran.dat'))
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.Scripts)
+        env.set('PYRO_LOOKUP_FILE', os.path.join(self.prefix, 'Data',
+                'LookUp_E123.dat'))
+        env.set('SEQ_LOOKUP_FILE', os.path.join(self.prefix, 'Data',
+                'Tran.dat'))
 
     def install(self, spec, prefix):
         make('install')
