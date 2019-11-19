@@ -12,6 +12,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
+    maintainers = ['msimberg', 'albestro']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
