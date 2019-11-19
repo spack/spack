@@ -149,7 +149,7 @@ def read_from_url(url, accept_content_type=None):
         req.get_method = lambda: "HEAD"
         resp = _urlopen(req, timeout=_timeout, context=context)
 
-        content_type = resp.headers.get('Content-type')
+        content_type = get_header(resp.headers, 'Content-type')
 
     # Do the real GET request when we know it's just HTML.
     req.get_method = lambda: "GET"
@@ -161,7 +161,7 @@ def read_from_url(url, accept_content_type=None):
             ERROR=str(err)))
 
     if accept_content_type and not is_web_url:
-        content_type = response.headers.get('Content-type')
+        content_type = get_header(response.headers, 'Content-type')
 
     reject_content_type = (
         accept_content_type and (
