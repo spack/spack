@@ -1161,6 +1161,45 @@
         }
       }
     },
+    "thunderx2": {
+      "from": aarch64,
+      "vendor": "generic",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm"
+      ]
+    },
+    "a64fx": {
+      "from": aarch64,
+      "vendor": "fujitsu",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm",
+        "fphp",
+        "asimdhp",
+        "fcma",
+        "dcpop",
+        "sve"
+      ]
+    },
     "arm": {
       "from": null,
       "vendor": "generic",
