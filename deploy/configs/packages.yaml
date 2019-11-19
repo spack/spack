@@ -1,8 +1,4 @@
 packages:
-    atk:
-        paths:
-            atk@2.22.0: /usr
-        version: [2.22.0]
     autoconf:
         paths:
             autoconf@2.69: /usr
@@ -17,10 +13,6 @@ packages:
         version: [3.0.4]
     boost:
         variants: +pic
-    cairo:
-        paths:
-            cairo@1.8.10: /usr
-        version: [1.8.10]
     cuda:
         version: [9.2.88]
     curl:
@@ -37,10 +29,6 @@ packages:
         paths:
             fontconfig@2.10.95: /usr
         version: [2.10.95]
-    gtkplus:
-        paths:
-            gtkplus@2.24.31: /usr
-        version: [2.24.31]
     hadoop:
         version: [2.9.0]
     hdf5:
@@ -54,18 +42,6 @@ packages:
         version: [0.50.2]
     julia:
         variants: +external_llvm
-    libjpeg:
-        paths:
-            libjpeg@1.2.90: /usr
-        version: [1.2.90]
-    libgcrypt:
-        paths:
-            libgcrypt@1.5.3: /usr
-        version: [1.5.3]
-    libmng:
-        paths:
-            libmng@1.0.10: /usr
-        version: [1.0.10]
     libtool:
         paths:
             libtool@2.4.2: /usr
@@ -76,10 +52,6 @@ packages:
         paths:
             m4@1.4.16: /usr
         version: [1.4.16]
-    ncurses:
-        paths:
-            ncurses@5.9: /usr
-        version: [5.9]
     # can not be installed with python 3
     node-js:
         paths:
@@ -94,10 +66,6 @@ packages:
             opengl@4.5: /usr
         buildable: False
         version: [4.5]
-    pango:
-        paths:
-            pango@1.40.4: /usr
-        version: [1.40.4]
     perl:
         paths:
             perl@5.16.3: /usr
@@ -122,17 +90,9 @@ packages:
         paths:
             tar@1.26: /usr
         version: [1.26]
-    tk:
-        paths:
-            tk@8.5.13: /usr
-        version: [8.5.13]
     trilinos:
         variants: +kokkos+teuchos+openmp~amesos~amesos2~aztec~epetra~epetraext~hypre~ifpack~ifpack2~superlu-dist~mumps~muelu~metis~suite-sparse~tpetra~zoltan~zoltan2
         version: [xsdk-0.4.0-rc1]
-    xz:
-        paths:
-            xz@5.2: /usr
-        version: [5.2]
     all:
         compiler: [gcc@8.3.0, intel@19.0.4]
         target: [x86_64]

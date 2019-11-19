@@ -15,6 +15,8 @@ class PySpatialIndex(PythonPackage):
     version('develop', branch='master', submodules=True)
     version('0.0.1', tag='spatial-index-v0.0.1', submodules=True, preferred=True)
 
+    patch("fix-cmake.patch", when="@0.0.1")
+
     depends_on('cmake@3.2:', type='build')
     depends_on('boost@1.65:', type='build')
     depends_on('py-setuptools', type='build')

@@ -99,7 +99,7 @@ class Petsc(Package):
             description='Build for KNL')
     variant('X', default=False,
             description='Activate X support')
-    variant('batch', default=False,
+    variant('batch', default=True,
             description='Enable when mpiexec is not available to run binaries')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly

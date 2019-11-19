@@ -22,7 +22,7 @@ packages:
       - hdf5+mpi@1.10.4
       - highfive+mpi@2.0
       - parmetis@4.0.3
-      - mvdtool+mpi~python
+      - mvdtool+mpi
 
   gnu-stable-python-parallel:
     target_matrix:
@@ -59,7 +59,7 @@ packages:
       - mpi
       - python
     specs:
-      - petsc+int64+mpi@3.11.2
+      - petsc+int64+mpi@3.12.1
 
   intel-stable-parallel:
     target_matrix:

@@ -731,7 +731,7 @@ class Python(AutotoolsPackage):
         if dependent_spec.package.extends(self.spec):
             path = join_path(dependent_spec.prefix, self.site_packages_dir)
             python_paths.add(path)
-        for em in run_env.env_modifications:
+        for em in env.env_modifications:
             if em.name == 'PYTHONPATH':
                 python_paths.add(em.value)
         for d in dependent_spec.traverse(deptype=('run')):

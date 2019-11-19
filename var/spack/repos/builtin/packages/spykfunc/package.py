@@ -36,31 +36,25 @@ class Spykfunc(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
     version('develop', submodules=True, clean=False)
-    version('0.11.0', tag='v0.11.0', submodules=True, clean=False)
-    version('0.12.0', tag='v0.12.0', submodules=True, clean=False)
-    version('0.12.1', tag='v0.12.1', submodules=True, clean=False)
     version('0.12.2', tag='v0.12.2', submodules=True, clean=False)
-    version('0.13.0', tag='v0.13.0', submodules=True, clean=False)
     version('0.13.1', tag='v0.13.1', submodules=True, clean=False)
-    version('0.13.2', tag='v0.13.2', submodules=True, clean=False)
-    version('0.14.1', tag='v0.14.1', submodules=True, clean=False)
-    version('0.14.2', tag='v0.14.2', submodules=True, clean=False)
-    version('0.14.3', tag='v0.14.3', submodules=True, clean=False)
+    # versions 0.13.2-0.14.x require legacy mvdtool+python
     version('0.15.0', tag='v0.15.0', submodules=True, clean=False)
+    version('0.15.1', tag='v0.15.1', submodules=True, clean=False)
+    version('0.15.2', tag='v0.15.2', submodules=True, clean=False)
 
-    depends_on('hdf5~mpi')
-    depends_on('highfive~mpi', type='build')
+    depends_on('cmake', type='build', when='@0.16:')
+    depends_on('boost', type=('build', 'link'), when='@0.16:')
+    depends_on('morpho-kit', type=('build', 'link'), when='@0.16:')
 
     # Note : when spark is used as external package, spec['java'] is not
     # accessible. Add explicit dependency for now.
     depends_on('java@8', type=('build', 'run'))
 
-    depends_on('mvdtool@:1.999~mpi', when='@:0.13.1')
-    depends_on('mvdtool@:1.999~mpi+python', type=('build', 'run'), when='@0.13.2:0.14.3')
     depends_on('py-mvdtool', type=('build', 'run'), when='@0.14.4:')
 
     depends_on('python@3.6:')
-    depends_on('py-cython', type='run')
+    depends_on('py-cython', type='run', when='@:0.15.99')
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('spark+hadoop@2.3.2rc2:', type='run')
@@ -86,6 +80,8 @@ class Spykfunc(PythonPackage):
     def setup_environment(self, spack_env, run_env):
         # This is a rather ugly setup to run spykfunc without having to
         # activate all python packages.
+        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
+
         run_env.set('JAVA_HOME', self.spec['java'].prefix)
         run_env.set('SPARK_HOME', self.spec['spark'].prefix)
         run_env.set('HADOOP_HOME', self.spec['hadoop'].prefix)

@@ -45,13 +45,15 @@ class HpeMpi(Package):
     def unpack(self):
         rpm2cpio = spack.util.executable.which('rpm2cpio')
         cpio = spack.util.executable.which('cpio')
+        chmod = spack.util.executable.which('chmod')
 
         print(self.stage)
         for rpm_filename in find(self.stage.source_path, '*.rpm'):
             with TemporaryFile() as tmpf:
                 rpm2cpio(rpm_filename, output=tmpf)
-                tmpf.seek(0) 
-                cpio('-dium',input=tmpf)
+                tmpf.seek(0)
+                cpio('-dium', input=tmpf)
+        chmod('-R', 'u+w', self.stage.source_path)
 
     def install(self, spec, prefix):
         for mpic in find(self.stage.source_path, 'mpic*'):

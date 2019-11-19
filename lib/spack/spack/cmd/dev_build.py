@@ -7,6 +7,7 @@ import sys
 import os
 import argparse
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.config
@@ -61,6 +62,12 @@ def dev_build(self, args):
     if not spack.repo.path.exists(spec.name):
         tty.die("No package for '{0}' was found.".format(spec.name),
                 "  Use `spack create` to create a new package")
+
+    tests = False
+    if args.test == 'all':
+        tests = True
+    elif args.test == 'root':
+        tests = [spec.name]
 
     if not spec.versions.concrete:
         tty.die(

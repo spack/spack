@@ -330,6 +330,15 @@ class EnvironmentModifications(object):
         self.env_modifications.extend(other.env_modifications)
 
     @staticmethod
+    def _purge_system(name, path):
+        values = os.environ.get(name)
+        if not values:
+            return path
+        values = values.split(os.pathsep)
+        path = path.split(os.pathsep)
+        return os.pathsep.join(p for p in path if p not in values)
+
+    @staticmethod
     def _check_other(other):
         if not isinstance(other, EnvironmentModifications):
             raise TypeError(
@@ -415,6 +424,9 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be appended
         """
+        path = self._purge_system(name ,path)
+        if not path:
+            return
         kwargs.update(self._get_outside_caller_attributes())
         item = AppendPath(name, path, **kwargs)
         self.env_modifications.append(item)
@@ -426,6 +438,9 @@ class EnvironmentModifications(object):
             name: name of the path list in the environment
             path: path to be pre-pended
         """
+        path = self._purge_system(name ,path)
+        if not path:
+            return
         kwargs.update(self._get_outside_caller_attributes())
         item = PrependPath(name, path, **kwargs)
         self.env_modifications.append(item)

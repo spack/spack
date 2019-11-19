@@ -31,7 +31,7 @@ packages:
       - spykfunc@0.15.0
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
-      - py-basalt@0.2.4
+      - py-basalt@0.2.8
       - py-entity-management@1.0.12
       - py-jupyter-notebook@4.2.3
       - brion@3.0.0 +python
