@@ -811,9 +811,10 @@ class Environment(object):
                 raise SpackEnvironmentError(
                     'cannot add anonymous specs to an environment!')
             elif not spack.repo.path.exists(spec.name):
-                valid_virtuals = spack.repo.path.provider_index.providers.keys()
-                if spec.name not in valid_virtuals:
-                    raise SpackEnvironmentError('no such package: %s' % spec.name)
+                virtuals = spack.repo.path.provider_index.providers.keys()
+                if spec.name not in virtuals:
+                    msg = 'no such package: %s' % spec.name
+                    raise SpackEnvironmentError(msg)
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
