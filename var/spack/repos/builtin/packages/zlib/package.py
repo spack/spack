@@ -38,11 +38,11 @@ class Zlib(Package):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
+            env.append_flags('CFLAGS', self.compiler.pic_flag)
         if '+optimize' in self.spec:
-            spack_env.append_flags('CFLAGS', '-O2')
+            env.append_flags('CFLAGS', '-O2')
 
     def install(self, spec, prefix):
         config_args = []
