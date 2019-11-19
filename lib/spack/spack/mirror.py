@@ -522,7 +522,7 @@ def add_single_spec(spec, mirror_root, mirror_stats):
         else:
             tty.warn(
                 "Error while fetching %s" % spec.cformat('{name}{@version}'),
-                exception.message)
+                exception.message if hasattr(exception, 'message') else exception)
         mirror_stats.error()
 
 

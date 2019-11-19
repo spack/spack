@@ -498,7 +498,8 @@ class Stage(object):
         absolute_storage_path = os.path.join(
             dst_root, self.mirror_paths.storage_path)
 
-        if os.path.exists(absolute_storage_path):
+        if (os.path.exists(absolute_storage_path) and
+                os.path.exists(self.mirror_paths.cosmetic_path)):
             stats.already_existed(absolute_storage_path)
             return
 
