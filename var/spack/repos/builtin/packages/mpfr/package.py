@@ -39,10 +39,8 @@ class Mpfr(AutotoolsPackage):
     }
 
     for ver, checksum in patches.items():
-        patch(
-            'https://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
-            when='@' + ver, 
-            sha256=checksum)
+        patch('https://www.mpfr.org/mpfr-{0}/allpatches'.format(ver),
+              when='@' + ver, sha256=checksum)
 
     def flag_handler(self, name, flags):
         # Work around macOS Catalina / Xcode 11 code generation bug

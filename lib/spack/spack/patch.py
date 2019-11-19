@@ -199,11 +199,9 @@ class UrlPatch(Patch):
         fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
                                       expand=bool(self.archive_sha256))
 
-        # Patch url's can be ambiguous - The same patch name can have different
-        # versions that apply to different versions of the package. We append
-        # a bit of the hash to differentiate them. (Collision odds are exceedingly low
-        # given how few of these there should be, including b-day attack odds). 
-        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:8])
+        # The same package can have multiple patches with the same name but with 
+        # different contents, therefore apply a subset of the hash.
+        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
 
         per_package_ref = os.path.join(self.owner.split('.')[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports
