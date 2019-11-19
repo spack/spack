@@ -32,7 +32,7 @@ class Hpx(CMakePackage, CudaPackage):
     )
 
     variant('max_cpu_count', default='64',
-            description='Max number of OS-Threads for HPX applications',
+            description='Max number of OS-threads for HPX applications',
             values=lambda x: isinstance(x, str) and x.isdigit())
 
     variant('instrumentation', values=any_combination_of(
