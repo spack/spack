@@ -206,7 +206,7 @@ class UrlPatch(Patch):
         per_package_ref = os.path.join(self.owner.split('.')[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(
-            fetcher, 
+            fetcher,
             per_package_ref)
 
         self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
@@ -227,7 +227,7 @@ class UrlPatch(Patch):
             else:
                 raise NoSuchPatchError(
                     "Patch failed to download: %s" % self.url)
- 
+
         self.path = os.path.join(root, files.pop())
 
         if not os.path.isfile(self.path):
