@@ -20,7 +20,7 @@ class Diffutils(AutotoolsPackage):
 
     depends_on('libiconv')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env, run_env):
         if self.spec.satisfies('%clang@9:'):
             spack_env.append_flags('CFLAGS',
                                    '-Werror=implicit-function-declaration')
