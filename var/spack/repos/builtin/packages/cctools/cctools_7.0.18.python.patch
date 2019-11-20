@@ -1,0 +1,69 @@
+--- spack-src.org/configure	2019-11-20 16:51:17.667672077 +0900
++++ spack-src/configure	2019-11-20 16:53:21.507295667 +0900
+@@ -973,6 +973,7 @@
+ 	fi
+ fi
+ 
++PYDOC=""
+ python=0    #to be set to the python path
+ if [ $config_python_path != no ]
+ then
+@@ -982,9 +983,23 @@
+ elif check_file ${python_path}/bin/python2
+ then
+ 	python=${python_path}/bin/python2
++	if check_file ${python_path}/bin/pydoc
++	then
++			PYDOC=${python_path}/bin/pydoc
++	elif check_file ${python_path}/bin/pydoc2
++	then
++			PYDOC=${python_path}/bin/pydoc2
++	fi
+ elif check_file ${python_path}/bin/python
+ then
+ 	python=${python_path}/bin/python
++	if check_file ${python_path}/bin/pydoc
++	then
++			PYDOC=${python_path}/bin/pydoc
++	elif check_file ${python_path}/bin/pydoc2
++	then
++			PYDOC=${python_path}/bin/pydoc2
++	fi
+ else
+ 	python=0
+ fi
+@@ -1056,7 +1071,7 @@
+ fi
+ fi
+ 
+-if [ $python_dev = no ]
++if [ "$python_dev" = no ]
+ then
+ 	if [ $config_python_path = yes ]
+ 	then
+@@ -1089,6 +1104,16 @@
+ 	else
+ 		python3=0
+ 	fi
++	if [ "$PYDOC" = "" ]
++	then
++		if check_file ${python3_path}/bin/pydoc
++	    then
++			PYDOC=${python3_path}/bin/pydoc
++	    elif check_file ${python3_path}/bin/pydoc3
++		then
++			PYDOC=${python3_path}/bin/pydoc3
++	    fi
++	fi
+ 	if [ $python3 != 0 ]
+ 	then
+ 		python3_version=`${python3} -V 2>&1 | cut -d " " -f 2`
+@@ -1630,7 +1655,7 @@
+ CCTOOLS_PYTHON3_2TO3=${python3_2to3}
+ CCTOOLS_PYTHON3_PATH=\$(CCTOOLS_INSTALL_DIR)/lib/python\$(CCTOOLS_PYTHON3_VERSION)/site-packages
+ 
+-CCTOOLS_PYDOC=$(which pydoc 2> /dev/null || which pydoc2 2> /dev/null || which pydoc3 > /dev/null)
++CCTOOLS_PYDOC=${PYDOC}
+ 
+ CCTOOLS_SGE_PARAMETERS=$(echo ${sge_parameters} | sed -e 's/\$/\\\$\$/g')
+ 
