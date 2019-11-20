@@ -102,20 +102,11 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.8'
-      stage: 'docker build'
-      os: linux
-      language: python
-      env: TEST_SUITE=docker
-  allow_failures:
-    - env: TEST_SUITE=docker
 
 stages:
   - 'style checks'
   - 'unit tests + documentation'
   - 'build tests'
-  - name: 'docker build'
-    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
@@ -200,9 +191,6 @@ before_script:
 #=============================================================================
 # Building
 #=============================================================================
-services:
-  - docker
-
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
 
