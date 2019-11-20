@@ -506,7 +506,7 @@ class Stage(object):
                 self.fetcher, self.mirror_paths.storage_path)
             stats.added(absolute_storage_path)
 
-        self.caches.mirror_cache.symlink(self.mirror_paths)
+        spack.caches.mirror_cache.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
