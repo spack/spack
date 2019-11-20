@@ -1,0 +1,11 @@
+--- ParaView-5.0.1.orig/Qt/Components/CMakeLists.txt	2016-03-28 17:07:03.000000000 +0200
++++ ParaView-5.0.1/Qt/Components/CMakeLists.txt	2016-12-13 17:38:42.713553032 +0100
+@@ -656,7 +656,7 @@
+ #the pqSGExportStateWizard has subclasses that directly access
+ #the UI file, and currently we don't have a clean way to break this hard
+ #dependency, so for no we install this ui file.
+-if(PARAVIEW_INSTALL_DEVELOPMENT_FILES)
++if(PARAVIEW_INSTALL_DEVELOPMENT_FILES AND PARAVIEW_ENABLE_PYTHON)
+   install(FILES "${CMAKE_CURRENT_BINARY_DIR}/ui_pqExportStateWizard.h"
+           DESTINATION "${VTK_INSTALL_INCLUDE_DIR}")
+ endif()

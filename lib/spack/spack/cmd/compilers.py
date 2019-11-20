@@ -1,34 +1,24 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
-from llnl.util.lang import index_by
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.config
 from spack.cmd.compiler import compiler_list
 
-description = "List available compilers. Same as 'spack compiler list'."
+description = "list available compilers"
+section = "system"
+level = "short"
+
+
+def setup_parser(subparser):
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
+    subparser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        help="configuration scope to read/modify")
+
 
 def compilers(parser, args):
     compiler_list(args)

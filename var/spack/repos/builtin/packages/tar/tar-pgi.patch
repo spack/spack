@@ -1,0 +1,66 @@
+From 2be02a7c9afa5b4f01261e5b66c64217f7f3c29a Mon Sep 17 00:00:00 2001
+From: Paul Eggert <eggert@cs.ucla.edu>
+Date: Tue, 14 Feb 2017 08:55:05 -0800
+Subject: Fix incompatibility with PGI 16.10
+
+* src/tar.c (options): Fix incompatibility with the C standard,
+which says that arguments to macro calls cannot contain # directives.
+
+diff --git a/src/tar.c b/src/tar.c
+index fd29cd3..ea68c82 100644
+--- a/src/tar.c
++++ b/src/tar.c
+@@ -548,11 +548,11 @@ static struct argp_option options[] = {
+    N_("cancel the effect of --delay-directory-restore option"), GRID+1 },
+   {"sort", SORT_OPTION, N_("ORDER"), 0,
+ #if D_INO_IN_DIRENT
+-   N_("directory sorting order: none (default), name or inode"
++   N_("directory sorting order: none (default), name or inode")
+ #else
+-   N_("directory sorting order: none (default) or name"
++   N_("directory sorting order: none (default) or name")
+ #endif
+-     ), GRID+1 },
++     , GRID+1 },
+ #undef GRID
+ 
+ #define GRID 55
+@@ -1758,7 +1758,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
+     case GROUP_MAP_OPTION:
+       group_map_read (arg);
+       break;
+-      
++
+     case MODE_OPTION:
+       mode_option = mode_compile (arg);
+       if (!mode_option)
+@@ -1829,7 +1829,7 @@ parse_opt (int key, char *arg, struct argp_state *state)
+     case OWNER_MAP_OPTION:
+       owner_map_read (arg);
+       break;
+-      
++
+     case QUOTE_CHARS_OPTION:
+       for (;*arg; arg++)
+ 	set_char_quoting (NULL, *arg, 1);
+@@ -2123,7 +2123,7 @@ find_argp_option (struct argp *ap, int key)
+ {
+   struct argp_option const *p = NULL;
+   struct argp_child const *child;
+-  
++
+   p = find_argp_option_key (ap->options, key);
+   if (!p && ap->children)
+     {
+@@ -2136,7 +2136,7 @@ find_argp_option (struct argp *ap, int key)
+     }
+   return p;
+ }
+-  
++
+ static const char *tar_authors[] = {
+   "John Gilmore",
+   "Jay Fenlason",
+-- 
+cgit v1.0-41-gc330
+

@@ -1,0 +1,22 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyDecorator(PythonPackage):
+    """The aim of the decorator module it to simplify the usage of decorators
+       for the average programmer, and to popularize decorators by showing
+       various non-trivial examples."""
+
+    homepage = "https://github.com/micheles/decorator"
+    url      = "https://pypi.io/packages/source/d/decorator/decorator-4.4.0.tar.gz"
+
+    version('4.4.0', sha256='86156361c50488b84a3f148056ea716ca587df2f0de1d34750d35c21312725de')
+    version('4.3.0', sha256='c39efa13fbdeb4506c476c9b3babf6a718da943dab7811c206005a4a956c080c')
+    version('4.0.9', sha256='90022e83316363788a55352fe39cfbed357aa3a71d90e5f2803a35471de4bba8')
+
+    depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

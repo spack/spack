@@ -1,0 +1,29 @@
+From 3b21a8a4150962c6938baeceacd04f619cea2fbc Mon Sep 17 00:00:00 2001
+From: Norbert Podhorszki <pnorbert@ornl.gov>
+Date: Thu, 1 Sep 2016 16:26:23 -0400
+Subject: [PATCH] ifdef around 'bool' type. hdf5 1.10 defines bool and breaks
+ compiling bp2h5.c
+
+---
+ utils/bp2h5/bp2h5.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/utils/bp2h5/bp2h5.c b/utils/bp2h5/bp2h5.c
+index 9c500c7..fa746bd 100644
+--- a/utils/bp2h5/bp2h5.c
++++ b/utils/bp2h5/bp2h5.c
+@@ -43,9 +43,11 @@
+ #include "dmalloc.h"
+ #endif
+ 
+-typedef int bool;
+-#define false 0
+-#define true  1
++#ifndef bool
++    typedef int bool;
++#   define false 0
++#   define true  1
++#endif
+ 
+ bool noindex = false;              // do no print array indices with data
+ bool printByteAsChar = false;      // print 8 bit integer arrays as string

@@ -1,0 +1,18 @@
+--- a/examples/nvector/parhyp/test_nvector_parhyp.c
++++ b/examples/nvector/parhyp/test_nvector_parhyp.c
+@@ -24,7 +24,6 @@
+ #include "test_nvector.h"
+
+ #include <mpi.h>
+-#include <omp.h>
+
+ #if defined( SUNDIALS_HAVE_POSIX_TIMERS) && defined(_POSIX_TIMERS)
+ #include <time.h>
+@@ -74,7 +73,6 @@ int main(int argc, char *argv[])
+   /* printf("\nRunning with vector length %ld \n \n", veclen); */
+   /* Get processor number and total number of processes */
+   MPI_Init(&argc, &argv);
+-  /* omp_set_num_threads(4); */
+   comm = MPI_COMM_WORLD;
+   MPI_Comm_size(comm, &nprocs);
+   MPI_Comm_rank(comm, &myid);

@@ -1,0 +1,11 @@
+--- a/ni/src/ncl/NclNewHDF5.c	2017-04-05 12:57:52.311104685 +0200
++++ b/ni/src/ncl/NclNewHDF5.c	2017-04-05 12:58:17.634551443 +0200
+@@ -35,6 +35,8 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ 
++#define H5_USE_18_API
++
+ #include <hdf5.h>
+ 
+ #ifdef NIO_LIB_ONLY

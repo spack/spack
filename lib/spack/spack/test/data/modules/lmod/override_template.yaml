@@ -1,0 +1,10 @@
+enable:
+  - lmod
+lmod:
+  core_compilers:
+    - 'clang@3.3'
+  hierarchy:
+    - mpi
+
+  all:
+    template: 'override_from_modules.txt'

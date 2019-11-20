@@ -1,0 +1,114 @@
+--- molcas82/sbin/install_driver.sh	2017-02-14 04:35:06.000000000 -0600
++++ molcas82/sbin/install_driver.sh	2017-08-04 15:08:17.872417692 -0500
+@@ -1,110 +1,3 @@
+ #!/bin/sh
+ 
+-echo `pwd` > $HOME/.Molcas/molcas 2> /dev/null
+-
+-# current driver version
+-if [ -z "$1" ] ; then
+-  driver_file="sbin/molcas.driver"
+-else
+-  driver_file="$1"
+-fi
+-current_version=`sed -e 's/.*Molcas driver shell script version // ; tx ; d ; :x s/\.//' $driver_file`
+-
+-MOLCASDRIVER=""
+-
+-# check location of driver script in your PATH
+-installed=0
+-
+-orig_IFS=$IFS
+-IFS=':'
+-for x in $PATH; do
+-  if [ -f "$x/molcas" ]; then
+-    l=`sed -e 's/.*Molcas driver shell script version // ; tx ; d ; :x s/\.//' "$x/molcas"`
+-    if [ "$l" -lt "$current_version" ]; then
+-      echo "*** Warning! An old version of the molcas driver script was found at: $x"
+-      rm -f "$x/molcas" > /dev/null 2>&1
+-      if [ "$?" != 0 ]; then
+-        echo "*** $x/molcas is read only!"
+-        echo "*** You have to remove this file manually"
+-        echo ""
+-      else
+-        echo "    and removed..."
+-        MOLCASDRIVER="$x"
+-      fi
+-    else
+-      echo "Molcas driver has been found at: $x"
+-      MOLCASDRIVER="$x"
+-      installed=1
+-    fi
+-    break
+-  fi
+-done
+-
+-# latest version already installed, exit
+-if [ $installed = 1 ] ; then
+-  exit 0
+-fi
+-
+-# try to find proper location for molcas driver
+-if [ -z "$MOLCASDRIVER" ]; then
+-  # no existing version found, use default PATH
+-  if [ -z "$PATH" ]; then
+-    E_PATH="$HOME/bin"
+-  else
+-    E_PATH="$HOME/bin:$PATH"
+-  fi
+-else
+-  # a previous version was found, create it there
+-  E_PATH="$MOLCASDRIVER"
+-fi
+-
+-# find first writable directory
+-dir_found=0
+-for x in $E_PATH ; do
+-  if [ "$x" = "." ] ; then continue ; fi
+-  # detect if directory is writable (-w would not work, since it does not handle mount permissions)
+-  cp "$driver_file" "$x/this_is_not_molcas" > /dev/null 2>&1
+-  if [ "$?" = 0 ] ; then
+-    rm -f "$x/this_is_not_molcas" > /dev/null 2>&1
+-    MOLCASDRIVER="$x"
+-    dir_found=1
+-    break
+-  fi
+-done
+-
+-# create a default molcas driver
+-if [ $dir_found = 0 ] ; then
+-  echo "*** Warning! Could not find a proper directory to install the molcas driver"
+-  echo ""
+-  echo "*** Check that there is a directory in your PATH with write access"
+-  echo "*** (for example $HOME/bin) and restart the installation"
+-  echo ""
+-  echo "*** You have to put the molcas driver in any directory in your PATH"
+-else
+-  echo "molcas driver will be installed in $MOLCASDRIVER"
+-  echo "Is this OK?"
+-  while true; do
+-    read answer
+-    case "${answer}_" in
+-      [Yy]*|_ )
+-        cp "$driver_file" "$MOLCASDRIVER/molcas"
+-        chmod +x "$MOLCASDRIVER/molcas"
+-        # check again the driver was installed
+-        l=`sed -e 's/.*Molcas driver shell script version // ; tx ; d ; :x s/\.//' "$x/molcas"`
+-        if [ "$l" -eq "$current_version" -a -x "$MOLCASDRIVER/molcas" ] ; then
+-          echo "Driver installation successful"
+-        else
+-          echo "*** Driver installation failed!"
+-          echo ""
+-          echo "*** You have to put the molcas driver in any directory in your PATH"
+-        fi
+-        break ;;
+-      [Nn]* )
+-        echo "*** Driver installation canceled!"
+-        echo ""
+-        echo "*** You have to put the molcas driver in any directory in your PATH"
+-        break ;;
+-      * ) echo "Please answer yes or no"
+-    esac
+-  done
+-fi
++echo `Driver Will be in the sbin folder`

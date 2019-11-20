@@ -1,0 +1,135 @@
+diff --git a/boost/archive/impl/archive_serializer_map.ipp b/boost/archive/impl/archive_serializer_map.ipp
+index 7f163ec..8dabf0d 100644
+--- a/boost/archive/impl/archive_serializer_map.ipp
++++ b/boost/archive/impl/archive_serializer_map.ipp
+@@ -47,10 +47,6 @@ archive_serializer_map<Archive>::insert(const basic_serializer * bs){
+ template<class Archive>
+ BOOST_ARCHIVE_OR_WARCHIVE_DECL void
+ archive_serializer_map<Archive>::erase(const basic_serializer * bs){
+-    BOOST_ASSERT(! boost::serialization::singleton<
+-            extra_detail::map<Archive>
+-        >::is_destroyed()
+-    );
+     if(boost::serialization::singleton<
+         extra_detail::map<Archive>
+     >::is_destroyed())
+diff --git a/boost/serialization/singleton.hpp b/boost/serialization/singleton.hpp
+index 3437f38..3eac8eb 100644
+--- a/boost/serialization/singleton.hpp
++++ b/boost/serialization/singleton.hpp
+@@ -108,6 +108,29 @@ public:
+     }
+ };
+ 
++namespace detail {
++// This is the class actually instantiated and hence the real singleton.
++// So there will only be one instance of this class. This does not hold
++// for singleton<T> as a class derived from singleton<T> could be
++// instantiated multiple times.
++template<class T>
++class singleton_wrapper : public T
++{
++public:
++    singleton_wrapper(){
++        BOOST_ASSERT(!get_is_destroyed());
++    }
++    ~singleton_wrapper(){
++        get_is_destroyed() = true;
++    }
++    static bool & get_is_destroyed(){
++        // Prefer a static function member to avoid LNK1179. Note: Never reset!
++        static bool is_destroyed = false;
++        return is_destroyed;
++    }
++};
++} // detail
++
+ template <class T>
+ class singleton : public singleton_module
+ {
+@@ -116,14 +139,11 @@ private:
+     // include this to provoke instantiation at pre-execution time
+     static void use(T const *) {}
+     static T & get_instance() {
+-        // use a wrapper so that types T with protected constructors
+-        // can be used
+-        class singleton_wrapper : public T {};
+-        static singleton_wrapper t;
++        BOOST_ASSERT(!is_destroyed());
+ 
+-        // refer to instance, causing it to be instantiated (and
+-        // initialized at startup on working compilers)
+-        BOOST_ASSERT(! is_destroyed());
++        // use a wrapper so that types T with protected constructors can be used
++        // Using a static function member avoids LNK1179
++        static detail::singleton_wrapper< T > t;
+ 
+         // note that the following is absolutely essential.
+         // commenting out this statement will cause compilers to fail to
+@@ -134,10 +154,11 @@ private:
+ 
+         return static_cast<T &>(t);
+     }
+-    static bool & get_is_destroyed(){
+-        static bool is_destroyed;
+-        return is_destroyed;
+-    }
++
++protected:
++    // Do not allow instantiation of a singleton<T>. But we want to allow
++    // `class T: public singleton<T>` so we can't delete this ctor
++    BOOST_DLLEXPORT singleton(){}
+ 
+ public:
+     BOOST_DLLEXPORT static T & get_mutable_instance(){
+@@ -148,13 +169,7 @@ public:
+         return get_instance();
+     }
+     BOOST_DLLEXPORT static bool is_destroyed(){
+-        return get_is_destroyed();
+-    }
+-    BOOST_DLLEXPORT singleton(){
+-        get_is_destroyed() = false;
+-    }
+-    BOOST_DLLEXPORT ~singleton() {
+-        get_is_destroyed() = true;
++        return detail::singleton_wrapper< T >::get_is_destroyed();
+     }
+ };
+ 
+diff --git a/libs/serialization/src/extended_type_info.cpp b/libs/serialization/src/extended_type_info.cpp
+index 364fe56..13a60c3 100644
+--- a/libs/serialization/src/extended_type_info.cpp
++++ b/libs/serialization/src/extended_type_info.cpp
+@@ -125,7 +125,6 @@ BOOST_SERIALIZATION_DECL void
+ extended_type_info::key_unregister() const{
+     if(NULL == get_key())
+         return;
+-    BOOST_ASSERT(! singleton<detail::ktmap>::is_destroyed());
+     if(! singleton<detail::ktmap>::is_destroyed()){
+         detail::ktmap & x = singleton<detail::ktmap>::get_mutable_instance();
+         detail::ktmap::iterator start = x.lower_bound(this);
+diff --git a/libs/serialization/src/extended_type_info_typeid.cpp b/libs/serialization/src/extended_type_info_typeid.cpp
+index 7413d2e..af188ef 100644
+--- a/libs/serialization/src/extended_type_info_typeid.cpp
++++ b/libs/serialization/src/extended_type_info_typeid.cpp
+@@ -95,7 +95,6 @@ BOOST_SERIALIZATION_DECL void
+ extended_type_info_typeid_0::type_unregister()
+ {
+     if(NULL != m_ti){
+-        BOOST_ASSERT(! singleton<tkmap>::is_destroyed());
+         if(! singleton<tkmap>::is_destroyed()){
+             tkmap & x = singleton<tkmap>::get_mutable_instance();
+ 
+diff --git a/libs/serialization/src/void_cast.cpp b/libs/serialization/src/void_cast.cpp
+index 4051303..9009993 100644
+--- a/libs/serialization/src/void_cast.cpp
++++ b/libs/serialization/src/void_cast.cpp
+@@ -276,7 +276,6 @@ void_caster::recursive_register(bool includes_virtual_base) const {
+ 
+ BOOST_SERIALIZATION_DECL void
+ void_caster::recursive_unregister() const {
+-    BOOST_ASSERT(! void_caster_registry::is_destroyed());
+     if(void_caster_registry::is_destroyed())
+         return;
+ 

@@ -1,51 +1,69 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack.compiler import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.version import ver
+
 
 class Pgi(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['pgcc']
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = ['pgCC']
+    cxx_names = ['pgc++', 'pgCC']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['pgf77']
+    f77_names = ['pgfortran', 'pgf77']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['pgf95', 'pgf90']
+    fc_names = ['pgfortran', 'pgf95', 'pgf90']
+
+    # Named wrapper links within build_env_path
+    link_paths = {'cc': 'pgi/pgcc',
+                  'cxx': 'pgi/pgc++',
+                  'f77': 'pgi/pgfortran',
+                  'fc': 'pgi/pgfortran'}
+
+    PrgEnv = 'PrgEnv-pgi'
+    PrgEnv_compiler = 'pgi'
+
+    version_argument = '-V'
+    version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
 
     @classmethod
-    def default_version(cls, comp):
-        """The '-V' option works for all the PGI compilers.
-           Output looks like this::
+    def verbose_flag(cls):
+        return "-v"
 
-               pgf95 10.2-0 64-bit target on x86-64 Linux -tp nehalem-64
-               Copyright 1989-2000, The Portland Group, Inc.  All Rights Reserved.
-               Copyright 2000-2010, STMicroelectronics, Inc.  All Rights Reserved.
-        """
-        return get_compiler_version(
-            comp, '-V', r'pg[^ ]* ([^ ]+) \d\d\d?-bit target')
+    @property
+    def openmp_flag(self):
+        return "-mp"
 
+    @property
+    def cxx11_flag(self):
+        return "-std=c++11"
+
+    @property
+    def pic_flag(self):
+        return "-fpic"
+
+    required_libs = ['libpgc', 'libpgf90']
+
+    @property
+    def c99_flag(self):
+        if self.version >= ver('12.10'):
+            return '-c99'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 12.10')
+
+    @property
+    def c11_flag(self):
+        if self.version >= ver('15.3'):
+            return '-c11'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 15.3')

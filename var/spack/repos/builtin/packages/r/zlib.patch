@@ -1,0 +1,29 @@
+*** a/configure	2017-01-21 21:48:35.077000000 +0000
+--- b/configure	2017-01-21 21:50:50.700000000 +0000
+***************
+*** 35496,35505 ****
+  #include <string.h>
+  #include <zlib.h>
+  int main() {
+! #ifdef ZLIB_VERSION
+! /* Work around Debian bug: it uses 1.2.3.4 even though there was no such
+!    version on the master site zlib.net */
+!   exit(strncmp(ZLIB_VERSION, "1.2.5", 5) < 0);
+  #else
+    exit(1);
+  #endif
+--- 35496,35509 ----
+  #include <string.h>
+  #include <zlib.h>
+  int main() {
+! /* Checking ZLIB_VERNUM trick learned here:
+!  * https://github.com/TransitApp/protobuf/blob/master/configure.ac#L95
+!  */
+! #ifdef ZLIB_VERNUM
+!   if (ZLIB_VERNUM < 0x1250) {
+!     exit(1);
+!   }
+!   exit(0);
+  #else
+    exit(1);
+  #endif

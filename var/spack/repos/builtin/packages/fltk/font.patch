@@ -1,0 +1,44 @@
+Index: FL/x.H
+===================================================================
+--- a/FL/x.H	(revision 10476)
++++ b/FL/x.H	(working copy)
+@@ -132,6 +132,7 @@
+   XFontStruct *ptr;
+ };
+ extern FL_EXPORT Fl_XFont_On_Demand fl_xfont;
++extern FL_EXPORT XFontStruct* fl_core_font();
+
+ // this object contains all X-specific stuff about a window:
+ // Warning: this object is highly subject to change!
+Index: src/fl_font.cxx
+===================================================================
+--- a/src/fl_font.cxx	(revision 10476)
++++ b/src/fl_font.cxx	(working copy)
+@@ -55,6 +55,14 @@
+ #  include "fl_font_x.cxx"
+ #endif // WIN32
+
++#ifdef WIN32
++#elif defined(__APPLE__)
++#else
++XFontStruct *fl_core_font()
++{
++  return fl_xfont.value();
++}
++#endif
+
+ double fl_width(const char* c) {
+   if (c) return fl_width(c, (int) strlen(c));
+Index: src/gl_draw.cxx
+===================================================================
+--- a/src/gl_draw.cxx	(revision 10476)
++++ b/src/gl_draw.cxx	(working copy)
+@@ -84,7 +84,7 @@
+  * then sorting through them at draw time (for normal X rendering) to find which one can
+  * render the current glyph... But for now, just use the first font in the list for GL...
+  */
+-    XFontStruct *font = fl_xfont;
++    XFontStruct *font = fl_core_font();
+     int base = font->min_char_or_byte2;
+     int count = font->max_char_or_byte2-base+1;
+     fl_fontsize->listbase = glGenLists(256);

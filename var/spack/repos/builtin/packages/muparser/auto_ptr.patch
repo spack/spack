@@ -1,0 +1,52 @@
+diff --git a/include/muParserBase.h b/include/muParserBase.h
+index beb15bb..685f59f 100644
+--- a/include/muParserBase.h
++++ b/include/muParserBase.h
+@@ -288,7 +288,7 @@ private:
+     mutable stringbuf_type  m_vStringBuf; ///< String buffer, used for storing string function arguments
+     stringbuf_type  m_vStringVarBuf;
+ 
+-    std::auto_ptr<token_reader_type> m_pTokenReader; ///< Managed pointer to the token reader object.
++    std::unique_ptr<token_reader_type> m_pTokenReader; ///< Managed pointer to the token reader object.
+ 
+     funmap_type  m_FunDef;         ///< Map of function names and pointers.
+     funmap_type  m_PostOprtDef;    ///< Postfix operator callbacks
+diff --git a/include/muParserToken.h b/include/muParserToken.h
+index fc91d78..0cca469 100644
+--- a/include/muParserToken.h
++++ b/include/muParserToken.h
+@@ -69,7 +69,7 @@ namespace mu
+       TString m_strTok;   ///< Token string
+       TString m_strVal;   ///< Value for string variables
+       value_type m_fVal;  ///< the value 
+-      std::auto_ptr<ParserCallback> m_pCallback;
++      std::unique_ptr<ParserCallback> m_pCallback;
+ 
+   public:
+ 
+diff --git a/src/muParserTest.cpp b/src/muParserTest.cpp
+index 4006b27..8feaa2c 100644
+--- a/src/muParserTest.cpp
++++ b/src/muParserTest.cpp
+@@ -1258,7 +1258,7 @@ namespace mu
+ 
+       try
+       {
+-        std::auto_ptr<Parser> p1;
++        std::unique_ptr<Parser> p1;
+         Parser  p2, p3;   // three parser objects
+                           // they will be used for testing copy and assignment operators
+         // p1 is a pointer since i'm going to delete it in order to test if
+diff --git a/src/muParserTokenReader.cpp b/src/muParserTokenReader.cpp
+index 8da1e40..49cee68 100644
+--- a/src/muParserTokenReader.cpp
++++ b/src/muParserTokenReader.cpp
+@@ -147,7 +147,7 @@ namespace mu
+   */
+   ParserTokenReader* ParserTokenReader::Clone(ParserBase *a_pParent) const
+   {
+-    std::auto_ptr<ParserTokenReader> ptr(new ParserTokenReader(*this));
++    std::unique_ptr<ParserTokenReader> ptr(new ParserTokenReader(*this));
+     ptr->SetParent(a_pParent);
+     return ptr.release();
+   }

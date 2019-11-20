@@ -1,0 +1,11 @@
+--- boost_1_70_0/tools/build/src/tools/clang-linux.jam.back	2019-08-29 17:02:15.285225280 +0900
++++ boost_1_70_0/tools/build/src/tools/clang-linux.jam	2019-08-29 17:02:33.627143178 +0900
+@@ -52,7 +52,7 @@
+   if $(command) {    
+     local command-string = \"$(command)\" ;
+     command-string = $(command-string:J=" ") ;
+-    version ?= [ MATCH "version ([0-9.]+)"
++    version ?= [ MATCH "Compiler ([0-9.]+)"
+       : [ SHELL "$(command-string) --version" ] ] ;
+   }
+ 

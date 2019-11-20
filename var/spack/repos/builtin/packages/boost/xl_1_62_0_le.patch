@@ -1,0 +1,787 @@
+diff -uNr boost_1_62_0/boost/accumulators/statistics/p_square_cumulative_distribution.hpp boost_1_62_0/boost/accumulators/statistics/p_square_cumulative_distribution.hpp
+--- boost_1_62_0/boost/accumulators/statistics/p_square_cumulative_distribution.hpp	2015-03-23 13:17:14.000000000 -0400
++++ boost_1_62_0/boost/accumulators/statistics/p_square_cumulative_distribution.hpp	2016-01-08 13:29:52.612408601 -0500
+@@ -10,7 +10,7 @@
+ 
+ #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__DMC__)
+ #  pragma message ("Warning: This header is deprecated. Please use: boost/accumulators/statistics/p_square_cumul_dist.hpp")
+-#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
++#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #  warning "This header is deprecated. Please use: boost/accumulators/statistics/p_square_cumul_dist.hpp"
+ #endif
+ 
+diff -uNr boost_1_62_0/boost/accumulators/statistics/weighted_p_square_cumulative_distribution.hpp boost_1_62_0/boost/accumulators/statistics/weighted_p_square_cumulative_distribution.hpp
+--- boost_1_62_0/boost/accumulators/statistics/weighted_p_square_cumulative_distribution.hpp	2015-03-23 13:17:14.000000000 -0400
++++ boost_1_62_0/boost/accumulators/statistics/weighted_p_square_cumulative_distribution.hpp	2016-01-08 13:29:52.649942984 -0500
+@@ -10,7 +10,7 @@
+ 
+ #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__DMC__)
+ #  pragma message ("Warning: This header is deprecated. Please use: boost/accumulators/statistics/weighted_p_square_cumul_dist.hpp")
+-#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
++#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #  warning "This header is deprecated. Please use: boost/accumulators/statistics/weighted_p_square_cumul_dist.hpp"
+ #endif
+ 
+diff -uNr boost_1_62_0/boost/asio/detail/pop_options.hpp boost_1_62_0/boost/asio/detail/pop_options.hpp
+--- boost_1_62_0/boost/asio/detail/pop_options.hpp	2015-03-23 16:24:12.000000000 -0400
++++ boost_1_62_0/boost/asio/detail/pop_options.hpp	2016-01-08 13:29:52.725151630 -0500
+@@ -107,7 +107,7 @@
+ 
+ // MPW MrCpp or SCpp
+ 
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ 
+ // IBM Visual Age
+ 
+diff -uNr boost_1_62_0/boost/asio/detail/push_options.hpp boost_1_62_0/boost/asio/detail/push_options.hpp
+--- boost_1_62_0/boost/asio/detail/push_options.hpp	2015-03-23 16:24:12.000000000 -0400
++++ boost_1_62_0/boost/asio/detail/push_options.hpp	2016-01-08 13:29:52.779979004 -0500
+@@ -114,7 +114,7 @@
+ 
+ // MPW MrCpp or SCpp
+ 
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ 
+ // IBM Visual Age
+ 
+diff -uNr boost_1_62_0/boost/asio/impl/src.cpp boost_1_62_0/boost/asio/impl/src.cpp
+--- boost_1_62_0/boost/asio/impl/src.cpp	2015-03-23 16:24:12.000000000 -0400
++++ boost_1_62_0/boost/asio/impl/src.cpp	2016-01-08 13:29:52.855662358 -0500
+@@ -17,7 +17,7 @@
+ #elif defined(__GNUC__) \
+   || defined(__HP_aCC) \
+   || defined(__SUNPRO_CC) \
+-  || defined(__IBMCPP__)
++  || defined(__IBMCPP__) && !defined(__ibmxl__)
+ # warning "This file is deprecated."
+ # warning "Please #include <boost/asio/impl/src.hpp> instead."
+ #endif
+diff -uNr boost_1_62_0/boost/bind/bind.hpp boost_1_62_0/boost/bind/bind.hpp
+--- boost_1_62_0/boost/bind/bind.hpp	2015-05-03 18:08:08.000000000 -0400
++++ boost_1_62_0/boost/bind/bind.hpp	2016-01-08 13:29:52.921370966 -0500
+@@ -1970,7 +1970,7 @@
+     typedef void type;
+ };
+ 
+-#if !defined(__IBMCPP__) || __IBMCPP_FUNC_CV_TMPL_ARG_DEDUCTION
++#if !(defined(__IBMCPP__) && !defined(__ibmxl__)) || __IBMCPP_FUNC_CV_TMPL_ARG_DEDUCTION
+ 
+ template< class R, class T > struct add_cref< R (T::*) () const, 1 >
+ {
+diff -uNr boost_1_62_0/boost/config/requires_threads.hpp boost_1_62_0/boost/config/requires_threads.hpp
+--- boost_1_62_0/boost/config/requires_threads.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/config/requires_threads.hpp	2016-01-08 13:29:53.028994548 -0500
+@@ -70,7 +70,7 @@
+ //  HP aCC
+ #   error "Compiler threading support is not turned on. Please set the correct command line options for threading: -mt"
+ 
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ //  IBM Visual Age
+ #   error "Compiler threading support is not turned on. Please compile the code with the xlC_r compiler"
+ 
+diff -uNr boost_1_62_0/boost/config/select_compiler_config.hpp boost_1_62_0/boost/config/select_compiler_config.hpp
+--- boost_1_62_0/boost/config/select_compiler_config.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/config/select_compiler_config.hpp	2016-01-08 13:29:53.495533933 -0500
+@@ -96,7 +96,7 @@
+ // IBM XL C/C++ for Linux (Little Endian)
+ #   define BOOST_COMPILER_CONFIG "boost/config/compiler/xlcpp.hpp"
+ 
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ //  IBM Visual Age or IBM XL C/C++ for Linux (Big Endian)
+ #   define BOOST_COMPILER_CONFIG "boost/config/compiler/vacpp.hpp"
+ 
+diff -uNr boost_1_62_0/boost/config/select_platform_config.hpp boost_1_62_0/boost/config/select_platform_config.hpp
+--- boost_1_62_0/boost/config/select_platform_config.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/config/select_platform_config.hpp	2016-01-08 13:29:53.575187839 -0500
+@@ -53,7 +53,7 @@
+ // MacOS
+ #  define BOOST_PLATFORM_CONFIG "boost/config/platform/macos.hpp"
+ 
+-#elif defined(__IBMCPP__) || defined(_AIX)
++#elif (defined(__IBMCPP__) && !defined(__ibmxl__)) || defined(_AIX)
+ // IBM
+ #  define BOOST_PLATFORM_CONFIG "boost/config/platform/aix.hpp"
+ 
+diff -uNr boost_1_62_0/boost/config/select_stdlib_config.hpp boost_1_62_0/boost/config/select_stdlib_config.hpp
+--- boost_1_62_0/boost/config/select_stdlib_config.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/config/select_stdlib_config.hpp	2016-01-08 13:29:53.626526177 -0500
+@@ -37,7 +37,7 @@
+ // #include if they know whose std lib they are using.
+ #if !defined(__LIBCOMO__) && !defined(__STD_RWCOMPILER_H__) && !defined(_RWSTD_VER)\
+    && !defined(_LIBCPP_VERSION) && !defined(__GLIBCPP__) && !defined(__GLIBCXX__)\
+-   && !defined(__STL_CONFIG_H) && !defined(__MSL_CPP__) && !defined(__IBMCPP__)\
++   && !defined(__STL_CONFIG_H) && !defined(__MSL_CPP__) && !(defined(__IBMCPP__) && !defined(__ibmxl__) )\
+    && !defined(MSIPL_COMPILE_H) && !defined(_YVALS) && !defined(_CPPLIB_VER)
+ #include <utility>
+ #endif
+@@ -66,7 +66,7 @@
+ // MSL standard lib:
+ #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/msl.hpp"
+ 
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ // take the default VACPP std lib
+ #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/vacpp.hpp"
+ 
+@@ -74,7 +74,7 @@
+ // Modena C++ standard library
+ #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/modena.hpp"
+ 
+-#elif (defined(_YVALS) && !defined(__IBMCPP__)) || defined(_CPPLIB_VER)
++#elif (defined(_YVALS) && !(defined(__IBMCPP__) && !defined(__ibmxl__) )) || defined(_CPPLIB_VER)
+ // Dinkumware Library (this has to appear after any possible replacement libraries):
+ #  define BOOST_STDLIB_CONFIG "boost/config/stdlib/dinkumware.hpp"
+ 
+diff -uNr boost_1_62_0/boost/core/explicit_operator_bool.hpp boost_1_62_0/boost/core/explicit_operator_bool.hpp
+--- boost_1_62_0/boost/core/explicit_operator_bool.hpp	2015-07-20 05:32:52.000000000 -0400
++++ boost_1_62_0/boost/core/explicit_operator_bool.hpp	2016-01-08 13:29:53.895509554 -0500
+@@ -78,7 +78,7 @@
+ 
+ namespace detail {
+ 
+-#if !defined(_MSC_VER) && !defined(__IBMCPP__)
++#if !defined(_MSC_VER) && !(defined(__IBMCPP__) && !defined(__ibmxl__))
+ 
+     struct unspecified_bool
+     {
+diff -uNr boost_1_62_0/boost/cstdint.hpp boost_1_62_0/boost/cstdint.hpp
+--- boost_1_62_0/boost/cstdint.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/cstdint.hpp	2016-01-08 13:29:53.969672718 -0500
+@@ -54,7 +54,7 @@
+       // this is triggered with GCC, because it defines __cplusplus < 199707L
+ #     define BOOST_NO_INT64_T
+ #   endif
+-# elif defined(__FreeBSD__) || defined(__IBMCPP__) || defined(_AIX)
++# elif defined(__FreeBSD__) || (defined(__IBMCPP__) && !defined(__ibmxl__))|| defined(_AIX)
+ #   include <inttypes.h>
+ # else
+ #   include <stdint.h>
+diff -uNr boost_1_62_0/boost/current_function.hpp boost_1_62_0/boost/current_function.hpp
+--- boost_1_62_0/boost/current_function.hpp	2015-01-30 18:08:49.000000000 -0500
++++ boost_1_62_0/boost/current_function.hpp	2016-01-08 13:29:54.012897946 -0500
+@@ -40,7 +40,7 @@
+ 
+ # define BOOST_CURRENT_FUNCTION __FUNCSIG__
+ 
+-#elif (defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 600)) || (defined(__IBMCPP__) && (__IBMCPP__ >= 500))
++#elif (defined(__INTEL_COMPILER) && (__INTEL_COMPILER >= 600)) || (defined(__IBMCPP__) && !defined(__ibmxl__) && (__IBMCPP__ >= 500))
+ 
+ # define BOOST_CURRENT_FUNCTION __FUNCTION__
+ 
+diff -uNr boost_1_62_0/boost/detail/container_fwd.hpp boost_1_62_0/boost/detail/container_fwd.hpp
+--- boost_1_62_0/boost/detail/container_fwd.hpp	2015-04-01 11:49:11.000000000 -0400
++++ boost_1_62_0/boost/detail/container_fwd.hpp	2016-01-08 13:29:54.062758504 -0500
+@@ -70,12 +70,12 @@
+ #  elif defined(__MSL_CPP__)
+      // MSL standard lib:
+ #    define BOOST_DETAIL_NO_CONTAINER_FWD
+-#  elif defined(__IBMCPP__)
++#  elif defined(__IBMCPP__) && !defined(__ibmxl__)
+      // The default VACPP std lib, forward declaration seems to be fine.
+ #  elif defined(MSIPL_COMPILE_H)
+      // Modena C++ standard library
+ #    define BOOST_DETAIL_NO_CONTAINER_FWD
+-#  elif (defined(_YVALS) && !defined(__IBMCPP__)) || defined(_CPPLIB_VER)
++#  elif (defined(_YVALS) && !(defined(__IBMCPP__) && !defined(__ibmxl__))) || defined(_CPPLIB_VER)
+      // Dinkumware Library (this has to appear after any possible replacement
+      // libraries)
+ #  else
+diff -uNr boost_1_62_0/boost/detail/workaround.hpp boost_1_62_0/boost/detail/workaround.hpp
+--- boost_1_62_0/boost/detail/workaround.hpp	2015-08-04 07:44:49.000000000 -0400
++++ boost_1_62_0/boost/detail/workaround.hpp	2016-01-09 13:56:47.218685439 -0500
+@@ -85,7 +85,7 @@
+ #else
+ #define __GNUC_PATCHLEVEL___WORKAROUND_GUARD 0
+ #endif
+-#ifndef __IBMCPP__
++#if !defined(__IBMCPP__) || defined(__ibmxl__)
+ #define __IBMCPP___WORKAROUND_GUARD 1
+ #else
+ #define __IBMCPP___WORKAROUND_GUARD 0
+diff -uNr boost_1_62_0/boost/foreach.hpp boost_1_62_0/boost/foreach.hpp
+--- boost_1_62_0/boost/foreach.hpp	2015-03-04 15:36:38.000000000 -0500
++++ boost_1_62_0/boost/foreach.hpp	2016-01-09 13:58:39.495427757 -0500
+@@ -55,7 +55,7 @@
+   || BOOST_WORKAROUND(BOOST_MSVC, BOOST_TESTED_AT(1400))                                        \
+   || BOOST_WORKAROUND(BOOST_INTEL_WIN, BOOST_TESTED_AT(1400))                                   \
+   || (BOOST_WORKAROUND(__GNUC__, == 3) && (__GNUC_MINOR__ <= 3) && defined(__APPLE_CC__))       \
+-  || BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600))                                         \
++  || (BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600)) && (__IBMCPP__ < 1300))                \
+   || BOOST_WORKAROUND(__MWERKS__, BOOST_TESTED_AT(0x3206))                                      \
+   || BOOST_WORKAROUND(__SUNPRO_CC, >= 0x5100)                                                   \
+   || BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x590))
+diff -uNr boost_1_62_0/boost/functional/hash/detail/float_functions.hpp boost_1_62_0/boost/functional/hash/detail/float_functions.hpp
+--- boost_1_62_0/boost/functional/hash/detail/float_functions.hpp	2015-01-24 09:37:21.000000000 -0500
++++ boost_1_62_0/boost/functional/hash/detail/float_functions.hpp	2016-01-08 13:29:54.116374393 -0500
+@@ -47,7 +47,7 @@
+ #elif defined(__MSL_CPP__)
+ // MSL standard lib:
+ #   define BOOST_HASH_CONFORMANT_FLOATS 0
+-#elif defined(__IBMCPP__)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__)
+ // VACPP std lib (probably conformant for much earlier version).
+ #   if __IBMCPP__ >= 1210
+ #       define BOOST_HASH_CONFORMANT_FLOATS 1
+@@ -57,7 +57,7 @@
+ #elif defined(MSIPL_COMPILE_H)
+ // Modena C++ standard library
+ #   define BOOST_HASH_CONFORMANT_FLOATS 0
+-#elif (defined(_YVALS) && !defined(__IBMCPP__)) || defined(_CPPLIB_VER)
++#elif (defined(_YVALS) && !(defined(__IBMCPP__) && !defined(__ibmxl__))) || defined(_CPPLIB_VER)
+ // Dinkumware Library (this has to appear after any possible replacement libraries):
+ #   if _CPPLIB_VER >= 405
+ #       define BOOST_HASH_CONFORMANT_FLOATS 1
+diff -uNr boost_1_62_0/boost/graph/edmunds_karp_max_flow.hpp boost_1_62_0/boost/graph/edmunds_karp_max_flow.hpp
+--- boost_1_62_0/boost/graph/edmunds_karp_max_flow.hpp	2014-08-03 15:46:30.000000000 -0400
++++ boost_1_62_0/boost/graph/edmunds_karp_max_flow.hpp	2016-01-08 13:29:54.165330185 -0500
+@@ -10,7 +10,7 @@
+ 
+ #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__DMC__)
+ #  pragma message ("Warning: This header is deprecated. Please use: boost/graph/edmonds_karp_max_flow.hpp")
+-#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
++#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || (defined(__IBMCPP__) && !defined(__ibmxl__))
+ #  warning "This header is deprecated. Please use: boost/graph/edmonds_karp_max_flow.hpp"
+ #endif
+ 
+diff -uNr boost_1_62_0/boost/intrusive/detail/parent_from_member.hpp boost_1_62_0/boost/intrusive/detail/parent_from_member.hpp
+--- boost_1_62_0/boost/intrusive/detail/parent_from_member.hpp	2015-07-21 17:39:18.000000000 -0400
++++ boost_1_62_0/boost/intrusive/detail/parent_from_member.hpp	2016-01-08 13:29:54.266801426 -0500
+@@ -71,7 +71,7 @@
+ 
+    //This works with gcc, msvc, ac++, ibmcpp
+    #elif defined(__GNUC__)   || defined(__HP_aCC) || defined(BOOST_INTEL) || \
+-         defined(__IBMCPP__) || defined(__DECCXX)
++         defined(__IBMCPP__) && !defined(__ibmxl__) || defined(__DECCXX)
+    const Parent * const parent = 0;
+    const char *const member = static_cast<const char*>(static_cast<const void*>(&(parent->*ptr_to_member)));
+    return std::ptrdiff_t(member - static_cast<const char*>(static_cast<const void*>(parent)));
+diff -uNr boost_1_62_0/boost/iostreams/detail/add_facet.hpp boost_1_62_0/boost/iostreams/detail/add_facet.hpp
+--- boost_1_62_0/boost/iostreams/detail/add_facet.hpp	2015-01-25 14:33:40.000000000 -0500
++++ boost_1_62_0/boost/iostreams/detail/add_facet.hpp	2016-01-08 13:29:54.290652933 -0500
+@@ -23,7 +23,7 @@
+ #if (defined(__SGI_STL_PORT) || defined(_STLPORT_VERSION)) && \
+     defined(_STLP_NO_OWN_IOSTREAMS) \
+     /**/
+-#  if (defined(_YVALS) && !defined(__IBMCPP__)) || defined(_CPPLIB_VER)
++#  if (defined(_YVALS) && !(defined(__IBMCPP__) && !defined(__ibmxl__))) || defined(_CPPLIB_VER)
+ #    define BOOST_IOSTREMS_STLPORT_WITH_OLD_DINKUMWARE
+ #  endif
+ #endif
+diff -uNr boost_1_62_0/boost/iostreams/positioning.hpp boost_1_62_0/boost/iostreams/positioning.hpp
+--- boost_1_62_0/boost/iostreams/positioning.hpp	2015-01-25 14:33:40.000000000 -0500
++++ boost_1_62_0/boost/iostreams/positioning.hpp	2016-01-08 13:29:54.321832608 -0500
+@@ -82,7 +82,7 @@
+ // Converts a std::fpos_t to a stream_offset
+ inline stream_offset fpos_t_to_offset(std::fpos_t pos)
+ {
+-#  if defined(_POSIX_) || (_INTEGRAL_MAX_BITS >= 64) || defined(__IBMCPP__)
++#  if defined(_POSIX_) || (_INTEGRAL_MAX_BITS >= 64) || defined(__IBMCPP__) && !defined(__ibmxl__)
+     return pos;
+ #  else
+     return _FPOSOFF(pos);
+@@ -92,7 +92,7 @@
+ // Extracts the member _Fpos from a std::fpos
+ inline std::fpos_t streampos_to_fpos_t(std::streampos pos)
+ {
+-#  if defined (_CPPLIB_VER) || defined(__IBMCPP__)
++#  if defined (_CPPLIB_VER) || defined(__IBMCPP__) && !defined(__ibmxl__)
+     return pos.seekpos();
+ #  else
+     return pos.get_fpos_t();
+diff -uNr boost_1_62_0/boost/math/tools/config.hpp boost_1_62_0/boost/math/tools/config.hpp
+--- boost_1_62_0/boost/math/tools/config.hpp	2015-05-05 08:32:10.000000000 -0400
++++ boost_1_62_0/boost/math/tools/config.hpp	2016-01-08 13:29:54.360466863 -0500
+@@ -43,7 +43,7 @@
+ #  define BOOST_MATH_CONTROL_FP _control87(MCW_EM,MCW_EM)
+ #  include <float.h>
+ #endif
+-#ifdef __IBMCPP__
++#if defined(__IBMCPP__) && !defined(__ibmxl__) 
+ //
+ // For reasons I don't unserstand, the tests with IMB's compiler all
+ // pass at long double precision, but fail with real_concept, those tests
+@@ -98,7 +98,7 @@
+ #  define BOOST_MATH_CONTROL_FP _control87(MCW_EM,MCW_EM)
+ #endif
+ 
+-#ifdef __IBMCPP__
++#if defined(__IBMCPP__) && !defined(__ibmxl__)
+ #  define BOOST_MATH_NO_DEDUCED_FUNCTION_POINTERS
+ #endif
+ 
+@@ -336,7 +336,7 @@
+ #  endif
+ #endif
+ 
+-#if ((defined(__linux__) && !defined(__UCLIBC__) && !defined(BOOST_MATH_HAVE_FIXED_GLIBC)) || defined(__QNX__) || defined(__IBMCPP__)) && !defined(BOOST_NO_FENV_H)
++#if ((defined(__linux__) && !defined(__UCLIBC__) && !defined(BOOST_MATH_HAVE_FIXED_GLIBC)) || defined(__QNX__) || (defined(__IBMCPP__) && !defined(__ibmxl__))) && !defined(BOOST_NO_FENV_H)
+ //
+ // This code was introduced in response to this glibc bug: http://sourceware.org/bugzilla/show_bug.cgi?id=2445
+ // Basically powl and expl can return garbage when the result is small and certain exception flags are set
+diff -uNr boost_1_62_0/boost/math/tools/tuple.hpp boost_1_62_0/boost/math/tools/tuple.hpp
+--- boost_1_62_0/boost/math/tools/tuple.hpp	2015-05-05 08:32:10.000000000 -0400
++++ boost_1_62_0/boost/math/tools/tuple.hpp	2016-01-08 13:29:54.575224775 -0500
+@@ -27,7 +27,7 @@
+ 
+ }}
+ 
+-#elif (defined(__BORLANDC__) && (__BORLANDC__ <= 0x600)) || defined(__IBMCPP__)
++#elif (defined(__BORLANDC__) && (__BORLANDC__ <= 0x600)) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ 
+ #include <boost/tuple/tuple.hpp>
+ #include <boost/tuple/tuple_comparison.hpp>
+diff -uNr boost_1_62_0/boost/preprocessor/config/config.hpp boost_1_62_0/boost/preprocessor/config/config.hpp
+--- boost_1_62_0/boost/preprocessor/config/config.hpp	2015-07-17 07:45:08.000000000 -0400
++++ boost_1_62_0/boost/preprocessor/config/config.hpp	2016-01-10 01:51:46.139445697 -0500
+@@ -43,7 +43,7 @@
+ #        define BOOST_PP_CONFIG_FLAGS() (BOOST_PP_CONFIG_DMC())
+ #    elif defined(__BORLANDC__) && __BORLANDC__ >= 0x581
+ #        define BOOST_PP_CONFIG_FLAGS() (BOOST_PP_CONFIG_STRICT())
+-#    elif defined(__BORLANDC__) || defined(__IBMC__) || defined(__IBMCPP__) || defined(__SUNPRO_CC)
++#    elif defined(__BORLANDC__) || defined(__IBMC__) && !defined(__ibmxl__) || defined(__IBMCPP__) && !defined(__ibmxl__) || defined(__SUNPRO_CC)
+ #        define BOOST_PP_CONFIG_FLAGS() (BOOST_PP_CONFIG_BCC())
+ #    elif defined(_MSC_VER) && !defined(__clang__)
+ #        define BOOST_PP_CONFIG_FLAGS() (BOOST_PP_CONFIG_MSVC())
+@@ -73,7 +73,7 @@
+ # define BOOST_PP_VARIADICS_MSVC 0
+ # if !defined BOOST_PP_VARIADICS
+ #    /* variadic support explicitly disabled for all untested compilers */
+-#    if defined __GCCXML__ || defined __CUDACC__ || defined __PATHSCALE__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || ( defined __SUNPRO_CC && __SUNPRO_CC < 0x5120 ) || defined __HP_aCC && !defined __EDG__ || defined __MRC__ || defined __SC__ || defined __IBMCPP__ || defined __PGI
++#    if defined __GCCXML__ || defined __CUDACC__ || defined __PATHSCALE__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || ( defined __SUNPRO_CC && __SUNPRO_CC < 0x5120 ) || defined __HP_aCC && !defined __EDG__ || defined __MRC__ || defined __SC__ || (defined __IBMCPP__ && !defined __ibmxl__ ) || defined __PGI
+ #        define BOOST_PP_VARIADICS 0
+ #    /* VC++ (C/C++) */
+ #    elif defined _MSC_VER && _MSC_VER >= 1400 && (!defined __EDG__ || defined(__INTELLISENSE__)) && !defined __clang__
+@@ -92,7 +92,7 @@
+ # elif !BOOST_PP_VARIADICS + 1 < 2
+ #    undef BOOST_PP_VARIADICS
+ #    define BOOST_PP_VARIADICS 1
+-#    if defined _MSC_VER && _MSC_VER >= 1400 && (defined(__INTELLISENSE__) || !(defined __EDG__ || defined __GCCXML__ || defined __CUDACC__ || defined __PATHSCALE__ || defined __clang__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || defined __SUNPRO_CC || defined __HP_aCC || defined __MRC__ || defined __SC__ || defined __IBMCPP__ || defined __PGI))
++#    if defined _MSC_VER && _MSC_VER >= 1400 && (defined(__INTELLISENSE__) || !(defined __EDG__ || defined __GCCXML__ || defined __CUDACC__ || defined __PATHSCALE__ || defined __clang__ || defined __DMC__ || defined __CODEGEARC__ || defined __BORLANDC__ || defined __MWERKS__ || defined __SUNPRO_CC || defined __HP_aCC || defined __MRC__ || defined __SC__ || (defined __IBMCPP__  && !defined __ibmxl__ ) || defined __PGI))
+ #        undef BOOST_PP_VARIADICS_MSVC
+ #        define BOOST_PP_VARIADICS_MSVC 1
+ #    endif
+diff -uNr boost_1_62_0/boost/preprocessor/seq/elem.hpp boost_1_62_0/boost/preprocessor/seq/elem.hpp
+--- boost_1_62_0/boost/preprocessor/seq/elem.hpp	2015-07-17 07:45:08.000000000 -0400
++++ boost_1_62_0/boost/preprocessor/seq/elem.hpp	2016-01-10 01:53:11.941880189 -0500
+@@ -35,7 +35,7 @@
+ #    define BOOST_PP_SEQ_ELEM_III(im) BOOST_PP_SEQ_ELEM_IV(im)
+ #    define BOOST_PP_SEQ_ELEM_IV(x, _) x
+ # else
+-#    if defined(__IBMC__) || defined(__IBMCPP__)
++#    if defined(__IBMC__) && !defined(__ibmxl__) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #        define BOOST_PP_SEQ_ELEM_I(i, seq) BOOST_PP_SEQ_ELEM_II(BOOST_PP_CAT(BOOST_PP_SEQ_ELEM_ ## i, seq))
+ #    else
+ #        define BOOST_PP_SEQ_ELEM_I(i, seq) BOOST_PP_SEQ_ELEM_II(BOOST_PP_SEQ_ELEM_ ## i seq)
+diff -uNr boost_1_62_0/boost/preprocessor/seq/size.hpp boost_1_62_0/boost/preprocessor/seq/size.hpp
+--- boost_1_62_0/boost/preprocessor/seq/size.hpp	2015-07-17 07:45:08.000000000 -0400
++++ boost_1_62_0/boost/preprocessor/seq/size.hpp	2016-01-10 01:53:59.736320846 -0500
+@@ -22,7 +22,7 @@
+ # elif BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_EDG() || BOOST_PP_CONFIG_FLAGS() & BOOST_PP_CONFIG_MSVC()
+ #    define BOOST_PP_SEQ_SIZE(seq) BOOST_PP_SEQ_SIZE_I(seq)
+ #    define BOOST_PP_SEQ_SIZE_I(seq) BOOST_PP_CAT(BOOST_PP_SEQ_SIZE_, BOOST_PP_SEQ_SIZE_0 seq)
+-# elif defined(__IBMC__) || defined(__IBMCPP__)
++# elif defined(__IBMC__) && !defined(__ibmxl__) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #    define BOOST_PP_SEQ_SIZE(seq) BOOST_PP_CAT(BOOST_PP_SEQ_SIZE_, BOOST_PP_CAT(BOOST_PP_SEQ_SIZE_0, seq))
+ # else
+ #    define BOOST_PP_SEQ_SIZE(seq) BOOST_PP_CAT(BOOST_PP_SEQ_SIZE_, BOOST_PP_SEQ_SIZE_0 seq)
+diff -uNr boost_1_62_0/boost/regex/icu.hpp boost_1_62_0/boost/regex/icu.hpp
+--- boost_1_62_0/boost/regex/icu.hpp	2015-02-14 08:22:25.000000000 -0500
++++ boost_1_62_0/boost/regex/icu.hpp	2016-01-08 13:29:54.840564509 -0500
+@@ -243,7 +243,7 @@
+ //
+ namespace re_detail{
+ 
+-#if !defined(BOOST_NO_MEMBER_TEMPLATES) && !defined(__IBMCPP__)
++#if !defined(BOOST_NO_MEMBER_TEMPLATES) && !(defined(__IBMCPP__) && !defined(__ibmxl__))
+ template <class InputIterator>
+ inline u32regex do_make_u32regex(InputIterator i, 
+                               InputIterator j, 
+diff -uNr boost_1_62_0/boost/regex/v4/cpp_regex_traits.hpp boost_1_62_0/boost/regex/v4/cpp_regex_traits.hpp
+--- boost_1_62_0/boost/regex/v4/cpp_regex_traits.hpp	2015-02-14 08:22:25.000000000 -0500
++++ boost_1_62_0/boost/regex/v4/cpp_regex_traits.hpp	2016-01-08 13:29:54.936872839 -0500
+@@ -275,7 +275,7 @@
+    // we need to start by initialising our syntax map so we know which
+    // character is used for which purpose:
+ #ifndef BOOST_NO_STD_MESSAGES
+-#ifndef __IBMCPP__
++#if !defined(__IBMCPP__) || defined(__ibmxl__)
+    typename std::messages<charT>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
+ #else
+    typename std::messages<charT>::catalog cat = reinterpret_cast<std::messages<char>::catalog>(-1);
+@@ -702,7 +702,7 @@
+ void cpp_regex_traits_implementation<charT>::init()
+ {
+ #ifndef BOOST_NO_STD_MESSAGES
+-#ifndef __IBMCPP__
++#if !defined(__IBMCPP__) || defined(__ibmxl__)
+    typename std::messages<charT>::catalog cat = static_cast<std::messages<char>::catalog>(-1);
+ #else
+    typename std::messages<charT>::catalog cat = reinterpret_cast<std::messages<char>::catalog>(-1);
+diff -uNr boost_1_62_0/boost/serialization/force_include.hpp boost_1_62_0/boost/serialization/force_include.hpp
+--- boost_1_62_0/boost/serialization/force_include.hpp	2015-05-23 14:51:06.000000000 -0400
++++ boost_1_62_0/boost/serialization/force_include.hpp	2016-01-08 13:29:55.027329880 -0500
+@@ -37,7 +37,7 @@
+ #       define BOOST_DLLEXPORT __declspec(dllexport)
+ #   elif defined(__GNUC__) && (__GNUC__ >= 3)
+ #       define BOOST_USED __attribute__ ((__used__))
+-#   elif defined(__IBMCPP__) && (__IBMCPP__ >= 1110)
++#   elif defined(__IBMCPP__) && !defined(__ibmxl__) && (__IBMCPP__ >= 1110)
+ #       define BOOST_USED __attribute__ ((__used__))
+ #   elif defined(__INTEL_COMPILER) && (BOOST_INTEL_CXX_VERSION >= 800)
+ #       define BOOST_USED __attribute__ ((__used__))
+diff -uNr boost_1_62_0/boost/signal.hpp boost_1_62_0/boost/signal.hpp
+--- boost_1_62_0/boost/signal.hpp	2015-04-01 13:32:16.000000000 -0400
++++ boost_1_62_0/boost/signal.hpp	2016-01-08 13:29:55.079443080 -0500
+@@ -13,7 +13,7 @@
+ #ifndef BOOST_SIGNALS_NO_DEPRECATION_WARNING
+ # if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__DMC__)
+ #  pragma message ("Warning: Boost.Signals is no longer being maintained and is now deprecated. Please switch to Boost.Signals2. To disable this warning message, define BOOST_SIGNALS_NO_DEPRECATION_WARNING.")
+-# elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
++# elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #  warning                  "Boost.Signals is no longer being maintained and is now deprecated. Please switch to Boost.Signals2. To disable this warning message, define BOOST_SIGNALS_NO_DEPRECATION_WARNING."
+ # endif
+ #endif
+diff -uNr boost_1_62_0/boost/spirit.hpp boost_1_62_0/boost/spirit.hpp
+--- boost_1_62_0/boost/spirit.hpp	2015-07-14 18:38:56.000000000 -0400
++++ boost_1_62_0/boost/spirit.hpp	2016-01-08 13:29:55.145408036 -0500
+@@ -14,7 +14,7 @@
+ #if BOOST_VERSION >= 103800
+ #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__DMC__)
+ #  pragma message ("Warning: This header is deprecated. Please use: boost/spirit/include/classic.hpp")
+-#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__)
++#elif defined(__GNUC__) || defined(__HP_aCC) || defined(__SUNPRO_CC) || defined(__IBMCPP__) && !defined(__ibmxl__)
+ #  warning "This header is deprecated. Please use: boost/spirit/include/classic.hpp"
+ #endif
+ #endif
+diff -uNr boost_1_62_0/boost/thread/detail/platform.hpp boost_1_62_0/boost/thread/detail/platform.hpp
+--- boost_1_62_0/boost/thread/detail/platform.hpp	2015-04-18 05:56:34.000000000 -0400
++++ boost_1_62_0/boost/thread/detail/platform.hpp	2016-01-08 13:29:55.225161873 -0500
+@@ -37,7 +37,7 @@
+ #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
+ #  define BOOST_THREAD_MACOS
+ //#  define BOOST_THREAD_WAIT_BUG boost::posix_time::microseconds(1000)
+-#elif defined(__IBMCPP__) || defined(_AIX)
++#elif defined(__IBMCPP__) && !defined(__ibmxl__) || defined(_AIX)
+ #  define BOOST_THREAD_AIX
+ #elif defined(__amigaos__)
+ #  define BOOST_THREAD_AMIGAOS
+diff -uNr boost_1_62_0/boost/tr1/detail/config.hpp boost_1_62_0/boost/tr1/detail/config.hpp
+--- boost_1_62_0/boost/tr1/detail/config.hpp	2014-02-20 08:26:34.000000000 -0500
++++ boost_1_62_0/boost/tr1/detail/config.hpp	2016-01-08 13:29:55.295115823 -0500
+@@ -10,7 +10,7 @@
+ 
+ #if (defined(__GNUC__) && !(defined(linux) || defined(__linux) || defined(__linux__))) \
+    || (!defined(__FreeBSD__) && defined(__GNUC__)) \
+-   || (!defined(_AIX) && defined(__IBMCPP__)  && (__IBMCPP__ >= 800)) 
++   || (!defined(_AIX) && defined(__IBMCPP__) && !defined(__ibmxl__) && (__IBMCPP__ >= 800)) 
+    // Disable use of #include_next on Linux as typically we are installed in a 
+    // directory that is searched *after* the std lib include path.
+ #if !defined(BOOST_HAS_INCLUDE_NEXT)
+diff -uNr boost_1_62_0/boost/type_traits/extent.hpp boost_1_62_0/boost/type_traits/extent.hpp
+--- boost_1_62_0/boost/type_traits/extent.hpp	2015-05-21 13:51:23.000000000 -0400
++++ boost_1_62_0/boost/type_traits/extent.hpp	2016-01-08 13:29:55.455420729 -0500
+@@ -80,7 +80,7 @@
+    BOOST_STATIC_CONSTANT(std::size_t, value = R);
+ };
+ 
+-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840)) && !defined(__MWERKS__)
++#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !(defined(__IBMCPP__) && !defined(__ibmxl__)) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840)) && !defined(__MWERKS__)
+ template <class T, std::size_t N>
+ struct extent_imp<T[], N>
+ {
+diff -uNr boost_1_62_0/boost/type_traits/is_array.hpp boost_1_62_0/boost/type_traits/is_array.hpp
+--- boost_1_62_0/boost/type_traits/is_array.hpp	2016-07-11 13:30:44.296134002 -0400
++++ boost_1_62_0/boost/type_traits/is_array.hpp	2016-07-11 13:30:28.084752131 -0400
+@@ -28,7 +28,7 @@
+    template <class T, std::size_t N> struct is_array<T const[N]> : public true_type{};
+    template <class T, std::size_t N> struct is_array<T volatile[N]> : public true_type{};
+    template <class T, std::size_t N> struct is_array<T const volatile[N]> : public true_type{};
+-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
++#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !(defined(__IBMCPP__) && !defined(__ibmxl__)) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
+    template <class T> struct is_array<T[]> : public true_type{};
+    template <class T> struct is_array<T const[]> : public true_type{};
+    template <class T> struct is_array<T const volatile[]> : public true_type{};
+diff -uNr boost_1_62_0/boost/type_traits/is_convertible.hpp boost_1_62_0/boost/type_traits/is_convertible.hpp
+--- boost_1_62_0/boost/type_traits/is_convertible.hpp	2015-05-21 13:51:23.000000000 -0400
++++ boost_1_62_0/boost/type_traits/is_convertible.hpp	2016-01-08 13:29:55.605870032 -0500
+@@ -152,7 +152,7 @@
+ };
+ 
+ #elif (defined(__EDG_VERSION__) && (__EDG_VERSION__ >= 245) && !defined(__ICL)) \
+-      || defined(__IBMCPP__) || defined(__HP_aCC)
++      || defined(__IBMCPP__) && !defined(__ibmxl__) || defined(__HP_aCC)
+ //
+ // This is *almost* an ideal world implementation as it doesn't rely
+ // on undefined behaviour by passing UDT's through (...).
+diff -uNr boost_1_62_0/boost/type_traits/rank.hpp boost_1_62_0/boost/type_traits/rank.hpp
+--- boost_1_62_0/boost/type_traits/rank.hpp	2015-05-21 13:51:23.000000000 -0400
++++ boost_1_62_0/boost/type_traits/rank.hpp	2016-01-08 13:29:55.675140771 -0500
+@@ -49,7 +49,7 @@
+    BOOST_STATIC_CONSTANT(std::size_t, value = (::boost::detail::rank_imp<T, N+1>::value));
+ };
+ 
+-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
++#if !BOOST_WORKAROUND(__BORLANDC__, < 0x600) && !(defined(__IBMCPP__) && !defined(__ibmxl__)) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
+ template <class T, std::size_t N>
+ struct rank_imp<T[], N>
+ {
+diff -uNr boost_1_62_0/boost/type_traits/remove_all_extents.hpp boost_1_62_0/boost/type_traits/remove_all_extents.hpp
+--- boost_1_62_0/boost/type_traits/remove_all_extents.hpp	2015-05-21 13:51:23.000000000 -0400
++++ boost_1_62_0/boost/type_traits/remove_all_extents.hpp	2016-01-08 13:29:55.746149995 -0500
+@@ -22,7 +22,7 @@
+ template <class T, std::size_t N> struct remove_all_extents<T const[N]> : public remove_all_extents<T const>{};
+ template <class T, std::size_t N> struct remove_all_extents<T volatile[N]> : public remove_all_extents<T volatile>{};
+ template <class T, std::size_t N> struct remove_all_extents<T const volatile[N]> : public remove_all_extents<T const volatile>{};
+-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x610)) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
++#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x610)) && !(defined(__IBMCPP__) && !defined(__ibmxl__)) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
+ template <class T> struct remove_all_extents<T[]> : public remove_all_extents<T>{};
+ template <class T> struct remove_all_extents<T const[]> : public remove_all_extents<T const>{};
+ template <class T> struct remove_all_extents<T volatile[]> : public remove_all_extents<T volatile>{};
+diff -uNr boost_1_62_0/boost/type_traits/remove_extent.hpp boost_1_62_0/boost/type_traits/remove_extent.hpp
+--- boost_1_62_0/boost/type_traits/remove_extent.hpp	2015-05-21 13:51:23.000000000 -0400
++++ boost_1_62_0/boost/type_traits/remove_extent.hpp	2016-01-10 02:18:53.967902075 -0500
+@@ -22,7 +22,7 @@
+ template <typename T, std::size_t N> struct remove_extent<T const[N]> { typedef T const type; };
+ template <typename T, std::size_t N> struct remove_extent<T volatile [N]> { typedef T volatile type; };
+ template <typename T, std::size_t N> struct remove_extent<T const volatile [N]> { typedef T const volatile type; };
+-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x610)) && !defined(__IBMCPP__) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
++#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x610)) && !(defined(__IBMCPP__) && !defined(__ibmxl__)) &&  !BOOST_WORKAROUND(__DMC__, BOOST_TESTED_AT(0x840))
+ template <typename T> struct remove_extent<T[]> { typedef T type; };
+ template <typename T> struct remove_extent<T const[]> { typedef T const type; };
+ template <typename T> struct remove_extent<T volatile[]> { typedef T volatile type; };
+diff -uNr boost_1_62_0/bootstrap.sh boost_1_62_0/bootstrap.sh
+--- boost_1_62_0/bootstrap.sh	2015-08-11 10:00:14.000000000 -0400
++++ boost_1_62_0/bootstrap.sh	2016-01-08 12:17:34.671934715 -0500
+@@ -195,7 +195,7 @@
+ if test "x$TOOLSET" = x; then
+   guessed_toolset=`$my_dir/tools/build/src/engine/build.sh --guess-toolset`
+   case $guessed_toolset in
+-    acc | darwin | gcc | como | mipspro | pathscale | pgi | qcc | vacpp )
++    acc | darwin | gcc | como | mipspro | pathscale | pgi | qcc | vacpp | xlcpp )
+     TOOLSET=$guessed_toolset
+     ;;
+     
+diff -uNr boost_1_62_0/libs/atomic/test/Jamfile.v2 boost_1_62_0/libs/atomic/test/Jamfile.v2
+--- boost_1_62_0/libs/atomic/test/Jamfile.v2	2015-01-25 10:50:58.000000000 -0500
++++ boost_1_62_0/libs/atomic/test/Jamfile.v2	2016-01-08 12:23:33.758048088 -0500
+@@ -17,6 +17,7 @@
+       <target-os>windows:<define>BOOST_USE_WINDOWS_H
+       <target-os>windows:<define>_WIN32_WINNT=0x0500
+       <toolset>gcc,<target-os>windows:<linkflags>"-lkernel32"
++      <toolset>xlcpp:<linkflags>"-latomic"
+     ;
+ 
+ test-suite atomic
+diff -uNr boost_1_62_0/libs/context/build/Jamfile.v2 boost_1_62_0/libs/context/build/Jamfile.v2
+--- boost_1_62_0/libs/context/build/Jamfile.v2	2015-06-29 11:08:22.000000000 -0400
++++ boost_1_62_0/libs/context/build/Jamfile.v2	2016-01-08 12:24:40.614024908 -0500
+@@ -99,6 +99,11 @@
+     cpp -x assembler-with-cpp "$(>)" | as --64 -o "$(<)"
+ }
+ 
++actions gaspower64
++{
++    cpp -x assembler-with-cpp "$(>)" | as -a64 -o "$(<)"
++}
++
+ actions gasx32
+ {
+     cpp -x assembler-with-cpp "$(>)" | as --x32 -o "$(<)"
+@@ -442,9 +447,9 @@
+ # POWERPC_64
+ # POWERPC_64/SYSV/ELF
+ alias asm_context_sources
+-   : [ make asm/make_ppc64_sysv_elf_gas.o : asm/make_ppc64_sysv_elf_gas.S : @gas64 ]
+-     [ make asm/jump_ppc64_sysv_elf_gas.o : asm/jump_ppc64_sysv_elf_gas.S : @gas64 ]
+-     [ make asm/ontop_ppc64_sysv_elf_gas.o : asm/ontop_ppc64_sysv_elf_gas.S : @gas64 ]
++   : [ make asm/make_ppc64_sysv_elf_gas.o : asm/make_ppc64_sysv_elf_gas.S : @gaspower64 ]
++     [ make asm/jump_ppc64_sysv_elf_gas.o : asm/jump_ppc64_sysv_elf_gas.S : @gaspower64 ]
++     [ make asm/ontop_ppc64_sysv_elf_gas.o : asm/ontop_ppc64_sysv_elf_gas.S : @gaspower64 ]
+    : <abi>sysv
+      <address-model>64
+      <architecture>power
+diff -uNr boost_1_62_0/libs/foreach/test/Jamfile.v2 boost_1_62_0/libs/foreach/test/Jamfile.v2
+--- boost_1_62_0/libs/foreach/test/Jamfile.v2	2015-03-04 15:36:38.000000000 -0500
++++ boost_1_62_0/libs/foreach/test/Jamfile.v2	2016-01-08 12:25:51.293898849 -0500
+@@ -8,9 +8,9 @@
+ project : requirements <toolset>msvc:<asynch-exceptions>on ;
+ 
+ test-suite "foreach"
+-    : [ run stl_byval.cpp ]
++    : [ run stl_byval.cpp : : : <toolset>xlcpp:<cxxflags>-qalias=noansi ]
+       [ run stl_byref.cpp ]
+-      [ run stl_byval_r.cpp ]
++      [ run stl_byval_r.cpp : : : <toolset>xlcpp:<cxxflags>-qalias=noansi ]
+       [ run stl_byref_r.cpp ]
+       [ run array_byval.cpp ]
+       [ run array_byref.cpp ]
+@@ -25,12 +25,12 @@
+       [ run pair_byval_r.cpp ]
+       [ run pair_byref_r.cpp ]
+       [ run user_defined.cpp ]
+-      [ run call_once.cpp ]
++      [ run call_once.cpp : : : <toolset>xlcpp:<cxxflags>-qalias=noansi ]
+       [ run rvalue_const.cpp ]
+       [ run rvalue_nonconst.cpp ]
+       [ run rvalue_const_r.cpp ]
+       [ run rvalue_nonconst_r.cpp ]
+-      [ run dependent_type.cpp ]
++      [ run dependent_type.cpp : : : <toolset>xlcpp:<cxxflags>-qalias=noansi ]
+       [ run misc.cpp ]
+       [ compile noncopyable.cpp ]
+     ;
+diff -uNr boost_1_62_0/libs/geometry/test/algorithms/set_operations/intersection/Jamfile.v2 boost_1_62_0/libs/geometry/test/algorithms/set_operations/intersection/Jamfile.v2
+--- boost_1_62_0/libs/geometry/test/algorithms/set_operations/intersection/Jamfile.v2	2015-08-03 08:51:49.000000000 -0400
++++ boost_1_62_0/libs/geometry/test/algorithms/set_operations/intersection/Jamfile.v2	2016-01-08 12:29:08.081503553 -0500
+@@ -16,7 +16,7 @@
+ 
+ test-suite boost-geometry-algorithms-intersection
+     :
+-    [ run intersection.cpp                    : : : <define>BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE
++    [ run intersection.cpp                    : : : <define>BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE <toolset>xlcpp:<cxxflags>-qfloat=nomaf
+                                                     : algorithms_intersection ]
+     [ run intersection_areal_areal_linear.cpp : : : : algorithms_intersection_areal_areal_linear ]
+     [ run intersection_linear_linear.cpp      : : : : algorithms_intersection_linear_linear ]
+diff -uNr boost_1_62_0/libs/lockfree/test/Jamfile.v2 boost_1_62_0/libs/lockfree/test/Jamfile.v2
+--- boost_1_62_0/libs/lockfree/test/Jamfile.v2	2015-06-11 12:00:57.000000000 -0400
++++ boost_1_62_0/libs/lockfree/test/Jamfile.v2	2016-01-08 12:38:25.909320596 -0500
+@@ -29,6 +29,7 @@
+       : # requirements
+         <toolset>acc:<linkflags>-lrt
+         <toolset>acc-pa_risc:<linkflags>-lrt
++        <toolset>xlcpp:<linkflags>-latomic
+         <target-os>windows,<toolset>gcc:<linkflags>"-lole32 -loleaut32 -lpsapi -ladvapi32"
+         <host-os>hpux,<toolset>gcc:<linkflags>"-Wl,+as,mpas"
+         <library>../../thread/build//boost_thread/
+diff -uNr boost_1_62_0/libs/spirit/test/Jamfile boost_1_62_0/libs/spirit/test/Jamfile
+--- boost_1_62_0/libs/spirit/test/Jamfile	2015-07-14 18:38:56.000000000 -0400
++++ boost_1_62_0/libs/spirit/test/Jamfile	2016-01-08 12:52:18.540491314 -0500
+@@ -218,9 +218,9 @@
+      [ run karma/sequence1.cpp                 : : : : karma_sequence1 ]
+      [ run karma/sequence2.cpp                 : : : : karma_sequence2 ]
+      [ run karma/stream.cpp                    : : : : karma_stream ]
+-     [ run karma/symbols1.cpp                  : : : : karma_symbols1 ]
+-     [ run karma/symbols2.cpp                  : : : : karma_symbols2 ]
+-     [ run karma/symbols3.cpp                  : : : : karma_symbols3 ]
++     [ run karma/symbols1.cpp                  : : : <toolset>xlcpp:<cxxflags>-qalias=noansi : karma_symbols1 ]
++     [ run karma/symbols2.cpp                  : : : <toolset>xlcpp:<cxxflags>-qalias=noansi : karma_symbols2 ]
++     [ run karma/symbols3.cpp                  : : : <toolset>xlcpp:<cxxflags>-qalias=noansi : karma_symbols3 ]
+      [ run karma/tricky_alignment.cpp          : : : : karma_tricky_alignment ]
+      [ run karma/uint_radix.cpp                : : : : karma_uint_radix ]
+      [ run karma/utree1.cpp                    : : : : karma_utree1 ]
+diff -uNr boost_1_62_0/libs/test/test/Jamfile.v2 boost_1_62_0/libs/test/test/Jamfile.v2
+--- boost_1_62_0/libs/test/test/Jamfile.v2	2015-07-21 17:41:49.000000000 -0400
++++ boost_1_62_0/libs/test/test/Jamfile.v2	2016-01-08 12:53:36.068217432 -0500
+@@ -47,6 +47,7 @@
+                <toolset>gcc:<cxxflags>-Wno-variadic-macros
+                <toolset>clang:<cxxflags>-Wno-c99-extensions
+                <toolset>clang:<cxxflags>-Wno-variadic-macros
++               <toolset>xlcpp:<cxxflags>-std=c++11
+ #               <toolset>gcc:<cxxflags>--coverage
+                <warnings>all
+                $(extra-options)
+diff -uNr boost_1_62_0/libs/type_index/test/Jamfile.v2 boost_1_62_0/libs/type_index/test/Jamfile.v2
+--- boost_1_62_0/libs/type_index/test/Jamfile.v2	2015-07-30 16:00:41.000000000 -0400
++++ boost_1_62_0/libs/type_index/test/Jamfile.v2	2016-01-08 12:54:28.968296112 -0500
+@@ -13,9 +13,9 @@
+ 
+ # Making own `nortti` that is link compatible.
+ # We explicitly define BOOST_NO_RTTI because it sometimes can not be detected by build system.
+-nortti = <toolset>gcc:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>clang:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>intel:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>darwin:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>msvc:<cxxflags>/GR- ;
++nortti = <toolset>gcc:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>clang:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>intel:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>darwin:"<cxxflags>-fno-rtti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>msvc:<cxxflags>/GR- <toolset>xlcpp:"<cxxflags>-qnortti -DBOOST_NO_RTTI -DBOOST_NO_TYPEID" ;
+ 
+-norttidefines = <toolset>gcc:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>clang:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>intel:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>darwin:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>msvc:<cxxflags>-DBOOST_NO_RTTI ;
++norttidefines = <toolset>gcc:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>clang:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>intel:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>darwin:"<cxxflags>-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" <toolset>msvc:<cxxflags>-DBOOST_NO_RTTI <toolset>xlcpp:<cxxflags>"-DBOOST_NO_RTTI -DBOOST_NO_TYPEID" ;
+ 
+ 
+ # Making libraries that CANNOT work between rtti-on/rtti-off modules
+diff -uNr boost_1_62_0/libs/utility/test/Jamfile.v2 boost_1_62_0/libs/utility/test/Jamfile.v2
+--- boost_1_62_0/libs/utility/test/Jamfile.v2	2015-02-27 01:26:11.000000000 -0500
++++ boost_1_62_0/libs/utility/test/Jamfile.v2	2016-01-08 12:54:59.380260948 -0500
+@@ -33,7 +33,7 @@
+         [ run string_view_test1.cpp unit_test_framework ]
+         [ run string_view_test2.cpp unit_test_framework ]
+         [ run string_view_test_io.cpp unit_test_framework ]
+-        [ run ../value_init_test.cpp ]
++        [ run ../value_init_test.cpp : : : <toolset>xlcpp:<cxxflags>-qalias=noansi ]
+         [ run ../value_init_workaround_test.cpp ]
+         [ run ../initialized_test.cpp ]
+         [ compile-fail ../value_init_test_fail1.cpp ]
+diff -uNr boost_1_62_0/tools/build/src/engine/boehm_gc/os_dep.c boost_1_62_0/tools/build/src/engine/boehm_gc/os_dep.c
+--- boost_1_62_0/tools/build/src/engine/boehm_gc/os_dep.c	2015-08-11 09:53:51.000000000 -0400
++++ boost_1_62_0/tools/build/src/engine/boehm_gc/os_dep.c	2016-01-10 01:57:04.489001841 -0500
+@@ -503,7 +503,7 @@
+ 
+ # include <stddef.h>
+ 
+-# if !defined(__IBMC__) && !defined(__WATCOMC__) /* e.g. EMX */
++# if !(defined(__IBMC__)  && !defined(__ibmxl__)) && !defined(__WATCOMC__) /* e.g. EMX */
+ 
+ struct exe_hdr {
+     unsigned short      magic_number;
+diff -uNr boost_1_62_0/tools/build/src/tools/xlcpp.jam boost_1_62_0/tools/build/src/tools/xlcpp.jam
+--- boost_1_62_0/tools/build/src/tools/xlcpp.jam	2015-08-11 09:53:51.000000000 -0400
++++ boost_1_62_0/tools/build/src/tools/xlcpp.jam	2016-01-20 15:09:00.897879191 -0500
+@@ -41,7 +41,7 @@
+ 
+ # Declare flags
+ flags xlcpp CFLAGS <optimization>off : -qNOOPTimize ;
+-flags xlcpp CFLAGS <optimization>speed :  ;
++flags xlcpp CFLAGS <optimization>speed : ;
+ flags xlcpp CFLAGS <optimization>space : -O2 -qcompact ;
+ 
+ # Discretionary inlining (not recommended)
+@@ -51,8 +51,8 @@
+ flags xlcpp CFLAGS <inlining>full : ;
+ 
+ # Exception handling
+-flags xlcpp C++FLAGS <exception-handling>off : -qnoeh ;
+-flags xlcpp C++FLAGS <exception-handling>on : -qeh ;
++flags xlcpp C++FLAGS <exception-handling>off : -fno-exceptions ;
++flags xlcpp C++FLAGS <exception-handling>on : -fexceptions ;
+ 
+ # Run-time Type Identification
+ flags xlcpp C++FLAGS <rtti>off : -qnortti ;
+@@ -108,6 +108,8 @@
+ flags xlcpp HDRS <include> ;
+ flags xlcpp STDHDRS <sysinclude> ;
+ flags xlcpp.link OPTIONS <linkflags> ;
++flags xlcpp.link RPATH_LINK <xdll-path> ;
++flags xlcpp.link RPATH <xdll-path> ;
+ flags xlcpp ARFLAGS <arflags> ;
+ 
+ flags xlcpp LIBPATH <library-path> ;
+@@ -116,10 +118,10 @@
+ flags xlcpp FINDLIBS <find-static-library> ;
+ 
+ # Select the compiler name according to the threading model.
+-flags xlcpp VA_C_COMPILER  <threading>single : xlc   ;
+-flags xlcpp VA_C_COMPILER  <threading>multi : xlc ;
+-flags xlcpp VA_CXX_COMPILER <threading>single : xlC   ;
+-flags xlcpp VA_CXX_COMPILER <threading>multi : xlC ;
++flags xlcpp VA_C_COMPILER  <threading>single : xlc ;
++flags xlcpp VA_C_COMPILER  <threading>multi : xlc_r ;
++flags xlcpp VA_CXX_COMPILER <threading>single : xlC ;
++flags xlcpp VA_CXX_COMPILER <threading>multi : xlC_r ;
+ 
+ SPACE = " " ;
+ 
+@@ -127,12 +129,12 @@
+ 
+ actions xlcpp.link bind NEEDLIBS
+ {
+-    $(VA_CXX_COMPILER) $(EXE-LINKFLAGS) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
++    $(VA_CXX_COMPILER) $(EXE-LINKFLAGS) $(LINKFLAGS) -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
+ }
+ 
+ actions xlcpp.link.dll bind NEEDLIBS
+ {
+-    xlC -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
++    $(VA_CXX_COMPILER) -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
+ }
+ 
+ actions xlcpp.compile.c

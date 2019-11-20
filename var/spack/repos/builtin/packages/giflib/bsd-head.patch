@@ -1,0 +1,19 @@
+The BSD version of head does not accept the --bytes option,
+nor does it accept negative integers. Use dd instead for
+BSD support.
+
+--- a/tests/makefile	2014-05-16 05:46:53.000000000 -0500
++++ b/tests/makefile	2018-03-18 18:29:47.000000000 -0500
+@@ -103,10 +103,10 @@
+ 
+ giffix-rebuild:
+ 	@echo "Rebuilding giffix test."
+-	@head --bytes=-20 <$(PICS)/treescap.gif | $(UTILS)/giffix 2>/dev/null | $(UTILS)/gifbuild -d >giffixed.ico
++	@dd if=$(PICS)/treescap.gif bs=1 count=387 | $(UTILS)/giffix 2>/dev/null | $(UTILS)/gifbuild -d >giffixed.ico
+ giffix-regress:
+ 	@echo "giffix: Testing giffix behavior"
+-	@head --bytes=-20 <$(PICS)/treescap.gif | $(UTILS)/giffix 2>/dev/null | $(UTILS)/gifbuild -d | diff -u giffixed.ico -
++	@dd if=$(PICS)/treescap.gif bs=1 count=387 | $(UTILS)/giffix 2>/dev/null | $(UTILS)/gifbuild -d | diff -u giffixed.ico -
+ 
+ gifinto-regress:
+ 	@echo "gifinto: Checking behavior on short files."

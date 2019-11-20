@@ -1,0 +1,26 @@
+--- a/Makefile
++++ b/Makefile
+@@ -7,8 +7,7 @@
+ 
+ rebuild: clean delete cosmomc
+ 
+-cosmomc: BUILD ?= MPI
+-cosmomc_debug: BUILD ?= MPI
++BUILD ?= MPI
+ 
+ getdist: ./source/*.*90
+ 	cd ./source && make getdist BUILD=$(BUILD)
+--- a/source/Makefile
++++ b/source/Makefile
+@@ -57,11 +57,7 @@
+ #commented above is (I think) for Mac; this is standard linux (sudo apt-get install liblapack-dev)
+ LAPACKL = -lblas -llapack
+ 
+-#march native does not work on Mac, otherwise use (comment out if your cluster is inhomogeneous)
+-ifneq ($(shell uname -s),Darwin)
+-#native optimization does not work on Mac
+ FFLAGS+=-march=native
+-endif
+ 
+ endif
+ 

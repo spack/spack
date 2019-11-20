@@ -1,0 +1,20 @@
+--- libmatheval-1.1.11/Makefile.in.orig	2018-07-13 17:42:03.426339145 +0200
++++ libmatheval-1.1.11/Makefile.in	2018-07-13 17:42:24.190310979 +0200
+@@ -316,7 +316,7 @@
+ MAINTAINERCLEANFILES = Makefile.in aclocal.m4 configure config.h.in	\
+ config.log config.status stamp-h.in $(AUX_DIST)
+ 
+-SUBDIRS = doc lib tests
++SUBDIRS = doc lib 
+ pkgconfigdir = $(libdir)/pkgconfig
+ pkgconfig_DATA = libmatheval.pc
+ all: config.h
+@@ -863,7 +863,7 @@
+ .PHONY: beauty dist-hook
+ 
+ beauty:
+-	-for dir in lib tests; do cd $$dir; $(MAKE) $@; cd ..; done
++	-for dir in lib ; do cd $$dir; $(MAKE) $@; cd ..; done
+ 
+ dist-hook:
+ 	for file in $(AUX_DIST); do \

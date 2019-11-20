@@ -1,0 +1,37 @@
+From 6aec1b94fe84f2fe3a82e3ff338fd4721c84db34 Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <howardp@lanl.gov>
+Date: Mon, 12 Mar 2018 14:19:28 -0700
+Subject: [PATCH] hdf5: make docs optional
+
+With the current makefile, configuring in hdf5
+hio plugin always ends up trying to generate docs.
+Make generating hdf5/hio plugin docs optional with
+
+make docs
+
+Signed-off-by: Howard Pritchard <howardp@lanl.gov>
+
+diff --git a/hdf5-hio/Makefile.am b/hdf5-hio/Makefile.am
+index e4c93b77..1733866d 100644
+--- a/hdf5-hio/Makefile.am
++++ b/hdf5-hio/Makefile.am
+@@ -1,6 +1,6 @@
+ # -*- Makefile.am -*-
+ #
+-# Copyright (c) 2014-2016 Los Alamos National Security, LLC. All rights
++# Copyright (c) 2014-2018 Los Alamos National Security, LLC. All rights
+ #                         reserved.
+ # $COPYRIGHT$
+ #
+@@ -11,7 +11,7 @@
+ 
+ ACLOCAL_AMFLAGS=-I m4
+ 
+-SUBDIRS = src test doc
++SUBDIRS = src test
+ 
+ EXTRA_DIST =
+ DISTCLEANFILES =
+-- 
+2.4.0.rc3.16.g0ab00b9
+

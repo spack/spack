@@ -1,0 +1,16 @@
+diff --git a/config/ymake b/config/ymake
+index 7b785bc..ca24dba 100755
+--- a/config/ymake
++++ b/config/ymake
+@@ -649,6 +649,11 @@ case    UNICOS:
+         set cppopt = -N
+         breaksw
+ case    Linux:
++        set cppopt = -traditional-cpp
++        # because local libraries and includes will otherwise have this prefix 
++        # '1-rhel7-1' instead of 'linux-rhel7-x86_64'
++        set defines = "$defines -Dlinux=linux -Dx86_64=x86_64"
++        breaksw
+ case	FreeBSD:
+ case    CYGWIN:
+         set cppopt = -traditional-cpp

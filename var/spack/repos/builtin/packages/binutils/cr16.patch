@@ -1,0 +1,26 @@
+--- old/opcodes/cr16-dis.c	2014-10-14 03:32:04.000000000 -0400
++++ new/opcodes/cr16-dis.c	2016-01-14 21:54:26.000000000 -0500
+@@ -78,7 +78,7 @@
+ REG_ARG_TYPE;
+ 
+ /* Current opcode table entry we're disassembling.  */
+-const inst *instruction;
++extern const inst *instruction;
+ /* Current instruction we're disassembling.  */
+ ins cr16_currInsn;
+ /* The current instruction is read into 3 consecutive words.  */
+@@ -86,12 +86,12 @@
+ /* Contains all words in appropriate order.  */
+ ULONGLONG cr16_allWords;
+ /* Holds the current processed argument number.  */
+-int processing_argument_number;
++extern int processing_argument_number;
+ /* Nonzero means a IMM4 instruction.  */
+ int imm4flag;
+ /* Nonzero means the instruction's original size is
+    incremented (escape sequence is used).  */
+-int size_changed;
++extern int size_changed;
+ 
+ 
+ /* Print the constant expression length.  */

@@ -1,0 +1,10 @@
+--- a/Makefile.in	2016-07-21 13:03:27.861000000 -0400
++++ b/Makefile.in	2016-07-21 13:03:58.416000000 -0400
+@@ -197,6 +197,7 @@
+ 	        -e 's|@colorize@|$(COLORIZE)|g'                       	   	  \
+ 	        -e 's|@duplicate_paths@|$(DUPLICATE_PATHS)|g'      	   	  \
+ 	        -e 's|@allow_tcl_mfiles@|$(ALLOW_TCL_MFILES)|g'      	   	  \
++	        -e 's|@path_to_tclsh@|$(PATH_TO_TCLSH)|g'	      	   	  \
+ 	        -e 's|@mpath_avail@|$(MPATH_AVAIL)|g'            	   	  \
+ 	        -e 's|@short_time@|$(SHORT_TIME)|g'                   	   	  \
+ 	        -e 's|@cacheDirs@|$(SPIDER_CACHE_DIRS)|g'             	   	  \

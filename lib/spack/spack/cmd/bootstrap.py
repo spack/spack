@@ -1,80 +1,80 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import os
-from subprocess import check_call
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.cpu
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
 
-import spack
-from spack.util.executable import which
+import spack.repo
+import spack.spec
+import spack.cmd.common.arguments as arguments
 
-description = "Create a new installation of spack in another prefix"
+description = "Bootstrap packages needed for spack to run smoothly"
+section = "admin"
+level = "long"
+
 
 def setup_parser(subparser):
-    subparser.add_argument('prefix', help="names of prefix where we should install spack")
+    arguments.add_common_arguments(subparser, ['jobs'])
+    subparser.add_argument(
+        '--keep-prefix', action='store_true', dest='keep_prefix',
+        help="don't remove the install prefix if installation fails")
+    subparser.add_argument(
+        '--keep-stage', action='store_true', dest='keep_stage',
+        help="don't remove the build stage if installation succeeds")
+    arguments.add_common_arguments(subparser, ['no_checksum'])
+    subparser.add_argument(
+        '-v', '--verbose', action='store_true', dest='verbose',
+        help="display verbose build output while installing")
+
+    cache_group = subparser.add_mutually_exclusive_group()
+    cache_group.add_argument(
+        '--use-cache', action='store_true', dest='use_cache', default=True,
+        help="check for pre-built Spack packages in mirrors (default)")
+    cache_group.add_argument(
+        '--no-cache', action='store_false', dest='use_cache', default=True,
+        help="do not check for pre-built Spack packages in mirrors")
+    cache_group.add_argument(
+        '--cache-only', action='store_true', dest='cache_only', default=False,
+        help="only install package from binary mirrors")
+
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
 
-def get_origin_url():
-    git_dir = join_path(spack.prefix, '.git')
-    git = which('git', required=True)
-    origin_url = git(
-        '--git-dir=%s' % git_dir, 'config', '--get', 'remote.origin.url',
-        return_output=True)
-    return origin_url.strip()
+def bootstrap(parser, args, **kwargs):
+    kwargs.update({
+        'keep_prefix': args.keep_prefix,
+        'keep_stage': args.keep_stage,
+        'install_deps': 'dependencies',
+        'verbose': args.verbose,
+        'dirty': args.dirty,
+        'use_cache': args.use_cache,
+        'cache_only': args.cache_only
+    })
 
+    # Define requirement dictionary defining general specs which need
+    # to be satisfied, and the specs to install when the general spec
+    # isn't satisfied.
+    requirement_dict = {
+        # Install environment-modules with generic optimizations
+        'environment-modules': 'environment-modules~X target={0}'.format(
+            llnl.util.cpu.host().family
+        )
+    }
 
-def bootstrap(parser, args):
-    origin_url = get_origin_url()
-    prefix = args.prefix
-
-    tty.msg("Fetching spack from origin: %s" % origin_url)
-
-    if os.path.isfile(prefix):
-        tty.die("There is already a file at %s" % prefix)
-
-    mkdirp(prefix)
-
-    if os.path.exists(join_path(prefix, '.git')):
-        tty.die("There already seems to be a git repository in %s" % prefix)
-
-    files_in_the_way = os.listdir(prefix)
-    if files_in_the_way:
-        tty.die("There are already files there!  Delete these files before boostrapping spack.",
-                *files_in_the_way)
-
-    tty.msg("Installing:",
-            "%s/bin/spack" % prefix,
-            "%s/lib/spack/..." % prefix)
-
-    os.chdir(prefix)
-    git = which('git', required=True)
-    git('init', '--shared', '-q')
-    git('remote', 'add', 'origin', origin_url)
-    git('fetch', 'origin', 'master:refs/remotes/origin/master', '-n', '-q')
-    git('reset', '--hard', 'origin/master', '-q')
-
-    tty.msg("Successfully created a new spack in %s" % prefix,
-            "Run %s/bin/spack to use this installation." % prefix)
+    for requirement in requirement_dict:
+        installed_specs = spack.store.db.query(requirement)
+        if(len(installed_specs) > 0):
+            tty.msg("Requirement %s is satisfied with installed "
+                    "package %s" % (requirement, installed_specs[0]))
+        else:
+            # Install requirement
+            spec_to_install = spack.spec.Spec(requirement_dict[requirement])
+            spec_to_install.concretize()
+            tty.msg("Installing %s to satisfy requirement for %s" %
+                    (spec_to_install, requirement))
+            kwargs['explicit'] = True
+            package = spack.repo.get(spec_to_install)
+            package.do_install(**kwargs)

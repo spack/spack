@@ -1,0 +1,16 @@
+diff --git a/fortran/src/H5f90global.F90 b/fortran/src/H5f90global.F90
+index dd2b171..629418a 100644
+--- a/fortran/src/H5f90global.F90
++++ b/fortran/src/H5f90global.F90
+@@ -142,10 +142,7 @@ MODULE H5GLOBAL
+
+   INTEGER(HID_T), DIMENSION(PREDEF_TYPES_LEN) :: predef_types
+   EQUIVALENCE (predef_types(1), H5T_NATIVE_INTEGER_KIND(1))
+-  EQUIVALENCE (predef_types(2), H5T_NATIVE_INTEGER_KIND(2))
+-  EQUIVALENCE (predef_types(3), H5T_NATIVE_INTEGER_KIND(3))
+-  EQUIVALENCE (predef_types(4), H5T_NATIVE_INTEGER_KIND(4))
+-  EQUIVALENCE (predef_types(5), H5T_NATIVE_INTEGER_KIND(5))
++  ! EQUIVALENCE predef_types(2:5) are unnecessary and violate the standard
+   EQUIVALENCE (predef_types(6), H5T_NATIVE_INTEGER)
+   EQUIVALENCE (predef_types(7), H5T_NATIVE_REAL)
+   EQUIVALENCE (predef_types(8), H5T_NATIVE_DOUBLE)

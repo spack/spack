@@ -1,0 +1,12 @@
+diff --git a/cmake/TPLs/FindTPLUMFPACK.cmake b/cmake/TPLs/FindTPLUMFPACK.cmake
+index 963eb71..998cd02 100644
+--- a/cmake/TPLs/FindTPLUMFPACK.cmake
++++ b/cmake/TPLs/FindTPLUMFPACK.cmake
+@@ -55,6 +55,6 @@
+
+
+ TRIBITS_TPL_FIND_INCLUDE_DIRS_AND_LIBRARIES( UMFPACK
+-  REQUIRED_HEADERS umfpack.h amd.h UFconfig.h
++  REQUIRED_HEADERS umfpack.h amd.h SuiteSparse_config.h
+   REQUIRED_LIBS_NAMES umfpack amd
+   )

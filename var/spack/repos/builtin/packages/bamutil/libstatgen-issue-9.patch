@@ -1,0 +1,11 @@
+--- a/libStatGen/general/PedigreeLoader.cpp	2017-05-29 11:08:07.627528417 -0700
++++ b/libStatGen/general/PedigreeLoader.cpp	2017-05-29 11:08:36.247547411 -0700
+@@ -636,7 +636,7 @@
+             return 2;
+         default :
+         {
+-            bool result = atoi(code);
++            int result = atoi(code);
+ 
+             if (result != 0 && result != 1 && result != 2)
+             {

@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 #
 # This file is part of Spack and sets up the spack environment for
-# csh and tcsh.  This includes dotkit support, module support, and
+# csh and tcsh.  This includes environment modules and lmod support, and
 # it also puts spack in your path.  Source it like this:
 #
 #    setenv SPACK_ROOT /path/to/spack
@@ -39,9 +20,20 @@ if ($?SPACK_ROOT) then
     alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
     alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
 
-    # Set up modules and dotkit search paths in the user environment
-    # TODO: fix SYS_TYPE to something non-LLNL-specific
-    _spack_pathadd DK_NODE    "$_spack_share_dir/dotkit/$SYS_TYPE"
-    _spack_pathadd MODULEPATH "$_spack_share_dir/modules/$SYS_TYPE"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
+    # Set variables needed by this script
+    _spack_pathadd PATH "$SPACK_ROOT/bin"
+    eval `spack --print-shell-vars csh`
+
+    # Set up module search paths in the user environment
+    set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
+    set compatible_sys_types = `echo $_sp_compatible_sys_types:q | sed 's/:/ /g'`
+    foreach tcl_root ($tcl_roots:q)
+        foreach systype ($compatible_sys_types:q)
+            _spack_pathadd MODULEPATH "$tcl_root/$systype"
+        end
+    end
+
+else
+    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to "
+    echo "       the root of your spack installation."
 endif

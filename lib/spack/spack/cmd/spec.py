@@ -1,59 +1,85 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from external import argparse
-import spack.cmd
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
+
+import argparse
+import sys
 
 import llnl.util.tty as tty
 
 import spack
-import spack.url as url
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.spec
+import spack.hash_types as ht
 
-description = "print out abstract and concrete versions of a spec."
+description = "show what would be installed, given a spec"
+section = "build"
+level = "short"
+
 
 def setup_parser(subparser):
-    subparser.add_argument('-i', '--ids', action='store_true',
-                           help="show numerical ids for dependencies.")
-    subparser.add_argument('specs', nargs=argparse.REMAINDER, help="specs of packages")
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'install_status'])
+    subparser.add_argument(
+        '-y', '--yaml', action='store_const', dest='format', default=None,
+        const='yaml', help='print concrete spec as YAML')
+    subparser.add_argument(
+        '-j', '--json', action='store_const', dest='format', default=None,
+        const='json', help='print concrete spec as YAML')
+    subparser.add_argument(
+        '-c', '--cover', action='store',
+        default='nodes', choices=['nodes', 'edges', 'paths'],
+        help='how extensively to traverse the DAG (default: nodes)')
+    subparser.add_argument(
+        '-N', '--namespaces', action='store_true', default=False,
+        help='show fully qualified package names')
+
+    subparser.add_argument(
+        '-t', '--types', action='store_true', default=False,
+        help='show dependency types')
+    subparser.add_argument(
+        'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
 def spec(parser, args):
-    kwargs = { 'ids'    : args.ids,
-               'indent' : 2,
-               'color'  : True }
+    name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
+    fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
+    install_status_fn = spack.spec.Spec.install_status
+    kwargs = {
+        'cover': args.cover,
+        'format': name_fmt + fmt,
+        'hashlen': None if args.very_long else 7,
+        'show_types': args.types,
+        'status_fn': install_status_fn if args.install_status else None
+    }
+
+    if not args.specs:
+        tty.die("spack spec requires at least one spec")
 
     for spec in spack.cmd.parse_specs(args.specs):
-        print "Input spec"
-        print "------------------------------"
-        print spec.tree(**kwargs)
+        # With -y, just print YAML to output.
+        if args.format:
+            if spec.name in spack.repo.path or spec.virtual:
+                spec.concretize()
 
-        print "Normalized"
-        print "------------------------------"
-        spec.normalize()
-        print spec.tree(**kwargs)
+            if args.format == 'yaml':
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+            else:
+                print(spec.to_json(hash=ht.build_hash))
+            continue
 
-        print "Concretized"
-        print "------------------------------"
+        kwargs['hashes'] = False  # Always False for input spec
+        print("Input spec")
+        print("--------------------------------")
+        print(spec.tree(**kwargs))
+
+        kwargs['hashes'] = args.long or args.very_long
+        print("Concretized")
+        print("--------------------------------")
         spec.concretize()
-        print spec.tree(**kwargs)
+        print(spec.tree(**kwargs))

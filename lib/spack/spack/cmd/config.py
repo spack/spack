@@ -1,84 +1,134 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import sys
-from external import argparse
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
+import os
 
 import llnl.util.tty as tty
 
 import spack.config
+import spack.environment as ev
 
-description = "Get and set configuration options."
+from spack.util.editor import editor
+
+description = "get and set configuration options"
+section = "config"
+level = "long"
+
 
 def setup_parser(subparser):
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
+
     # User can only choose one
-    scope_group = subparser.add_mutually_exclusive_group()
-    scope_group.add_argument(
-        '--user', action='store_const', const='user', dest='scope',
-        help="Use config file in user home directory (default).")
-    scope_group.add_argument(
-        '--site', action='store_const', const='site', dest='scope',
-        help="Use config file in spack prefix.")
+    subparser.add_argument(
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        help="configuration scope to read/modify")
 
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='config_command')
 
-    set_parser = sp.add_parser('set', help='Set configuration values.')
-    set_parser.add_argument('key', help="Key to set value for.")
-    set_parser.add_argument('value', nargs='?', default=None,
-                            help="Value to associate with key")
+    get_parser = sp.add_parser('get', help='print configuration values')
+    get_parser.add_argument('section',
+                            help="configuration section to print. "
+                                 "options: %(choices)s",
+                            nargs='?',
+                            metavar='SECTION',
+                            choices=spack.config.section_schemas)
 
-    get_parser = sp.add_parser('get', help='Get configuration values.')
-    get_parser.add_argument('key', help="Key to get value for.")
+    blame_parser = sp.add_parser(
+        'blame', help='print configuration annotated with source file:line')
+    blame_parser.add_argument('section',
+                              help="configuration section to print. "
+                              "options: %(choices)s",
+                              metavar='SECTION',
+                              choices=spack.config.section_schemas)
 
-    edit_parser = sp.add_parser('edit', help='Edit configuration file.')
+    edit_parser = sp.add_parser('edit', help='edit configuration file')
+    edit_parser.add_argument('section',
+                             help="configuration section to edit. "
+                                  "options: %(choices)s",
+                             metavar='SECTION',
+                             nargs='?',
+                             choices=spack.config.section_schemas)
+    edit_parser.add_argument(
+        '--print-file', action='store_true',
+        help="print the file name that would be edited")
 
 
-def config_set(args):
-    # default scope for writing is 'user'
-    if not args.scope:
-        args.scope = 'user'
+def _get_scope_and_section(args):
+    """Extract config scope and section from arguments."""
+    scope = args.scope
+    section = args.section
 
-    config = spack.config.get_config(args.scope)
-    config.set_value(args.key, args.value)
-    config.write()
+    # w/no args and an active environment, point to env manifest
+    if not args.section:
+        env = ev.get_env(args, 'config edit')
+        if env:
+            scope = env.env_file_config_scope_name()
+
+    # set scope defaults
+    elif not args.scope:
+        if section == 'compilers':
+            scope = spack.config.default_modify_scope()
+        else:
+            scope = 'user'
+
+    return scope, section
 
 
 def config_get(args):
-    config = spack.config.get_config(args.scope)
-    print config.get_value(args.key)
+    """Dump merged YAML configuration for a specific section.
+
+    With no arguments and an active environment, print the contents of
+    the environment's manifest file (spack.yaml).
+
+    """
+    scope, section = _get_scope_and_section(args)
+
+    if scope and scope.startswith('env:'):
+        config_file = spack.config.config.get_config_filename(scope, section)
+        if os.path.exists(config_file):
+            with open(config_file) as f:
+                print(f.read())
+        else:
+            tty.die('environment has no %s file' % ev.manifest_name)
+
+    elif section is not None:
+        spack.config.config.print_section(section)
+
+    else:
+        tty.die('`spack config get` requires a section argument '
+                'or an active environment.')
+
+
+def config_blame(args):
+    """Print out line-by-line blame of merged YAML."""
+    spack.config.config.print_section(args.section, blame=True)
 
 
 def config_edit(args):
-    if not args.scope:
-        args.scope = 'user'
-    config_file = spack.config.get_filename(args.scope)
-    spack.editor(config_file)
+    """Edit the configuration file for a specific scope and config section.
+
+    With no arguments and an active environment, edit the spack.yaml for
+    the active environment.
+
+    """
+    scope, section = _get_scope_and_section(args)
+    if not scope and not section:
+        tty.die('`spack config edit` requires a section argument '
+                'or an active environment.')
+
+    config_file = spack.config.config.get_config_filename(scope, section)
+    if args.print_file:
+        print(config_file)
+    else:
+        editor(config_file)
 
 
 def config(parser, args):
-    action = { 'set'  : config_set,
-               'get'  : config_get,
-               'edit' : config_edit }
+    action = {'get': config_get,
+              'blame': config_blame,
+              'edit': config_edit}
     action[args.config_command](args)
-

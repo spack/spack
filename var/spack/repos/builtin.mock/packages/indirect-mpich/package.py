@@ -1,0 +1,23 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class IndirectMpich(Package):
+    """Test case for a package that depends on MPI and one of its
+       dependencies requires a *particular version* of MPI.
+    """
+
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/indirect_mpich-1.0.tar.gz"
+
+    version(1.0, 'foobarbaz')
+
+    depends_on('mpi')
+    depends_on('direct-mpich')
+
+    def install(self, spec, prefix):
+        pass

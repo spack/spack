@@ -1,55 +1,50 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import os
-from external import argparse
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import argparse
 
 import llnl.util.tty as tty
-import spack
-import spack.cmd
 
-description="Expand downloaded archive in preparation for install"
+import spack.environment as ev
+import spack.repo
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+
+description = "expand downloaded archive in preparation for install"
+section = "build"
+level = "long"
+
 
 def setup_parser(subparser):
+    arguments.add_common_arguments(subparser, ['no_checksum'])
     subparser.add_argument(
-        '-n', '--no-checksum', action='store_true', dest='no_checksum',
-        help="Do not check downloaded packages against checksum")
+        '-p', '--path', dest='path',
+        help="path to stage package, does not add to spack tree")
 
-    dir_parser = subparser.add_mutually_exclusive_group()
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages to stage")
 
 
 def stage(parser, args):
     if not args.specs:
-        tty.die("stage requires at least one package argument")
+        env = ev.get_env(args, 'stage')
+        if env:
+            tty.msg("Staging specs from environment %s" % env.name)
+            for spec in env.specs_by_hash.values():
+                for dep in spec.traverse():
+                    dep.package.do_stage()
+            return
+        else:
+            tty.die("`spack stage` requires a spec or an active environment")
 
     if args.no_checksum:
-        spack.do_checksum = False
+        spack.config.set('config:checksum', False, scope='command_line')
 
     specs = spack.cmd.parse_specs(args.specs, concretize=True)
     for spec in specs:
-        package = spack.db.get(spec)
+        package = spack.repo.get(spec)
+        if args.path:
+            package.path = args.path
         package.do_stage()
-

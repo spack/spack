@@ -1,0 +1,17 @@
+--- a/qtgamepad/src/plugins/gamepads/evdev/qevdevgamepadbackend.cpp	2016-08-08 11:34:44.517184658 -0500
++++ b/qtgamepad/src/plugins/gamepads/evdev/qevdevgamepadbackend.cpp	2016-08-08 11:36:42.371995567 -0500
+@@ -262,10 +262,10 @@
+     m_buttonsMap[BTN_TR2] = QGamepadManager::ButtonR2;
+     m_buttonsMap[BTN_THUMB] = m_buttonsMap[BTN_THUMBL] = QGamepadManager::ButtonL3;
+     m_buttonsMap[BTN_THUMBR] = QGamepadManager::ButtonR3;
+-    m_buttonsMap[BTN_TRIGGER_HAPPY1] = QGamepadManager::ButtonLeft;
+-    m_buttonsMap[BTN_TRIGGER_HAPPY2] = QGamepadManager::ButtonRight;
+-    m_buttonsMap[BTN_TRIGGER_HAPPY3] = QGamepadManager::ButtonUp;
+-    m_buttonsMap[BTN_TRIGGER_HAPPY4] = QGamepadManager::ButtonDown;
++    m_buttonsMap[0x2c0] = QGamepadManager::ButtonLeft;
++    m_buttonsMap[0x2c1] = QGamepadManager::ButtonRight;
++    m_buttonsMap[0x2c2] = QGamepadManager::ButtonUp;
++    m_buttonsMap[0x2c3] = QGamepadManager::ButtonDown;
+ 
+     if (m_productId)
+         m_backend->saveSettings(m_productId, QVariant());

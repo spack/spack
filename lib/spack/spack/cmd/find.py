@@ -1,129 +1,226 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import sys
-import collections
-import itertools
-from external import argparse
-from StringIO import StringIO
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import *
-from llnl.util.tty.color import *
-from llnl.util.lang import *
+import llnl.util.tty.color as color
+import llnl.util.lang
 
-import spack
-import spack.spec
+import spack.environment as ev
+import spack.repo
+import spack.cmd as cmd
+import spack.cmd.common.arguments as arguments
+from spack.util.string import plural
+from spack.database import InstallStatuses
 
-description ="Find installed spack packages"
+description = "list and search installed packages"
+section = "basic"
+level = "short"
+
 
 def setup_parser(subparser):
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
-        '-l', '--long', action='store_const', dest='mode', const='long',
-        help='Show dependency hashes as well as versions.')
+        "--format", action="store", default=None,
+        help="output specs with the specified format string")
     format_group.add_argument(
-        '-p', '--paths', action='store_const', dest='mode', const='paths',
-        help='Show paths to package install directories')
-    format_group.add_argument(
-        '-d', '--deps', action='store_const', dest='mode', const='deps',
-        help='Show full dependency DAG of installed packages')
+        "--json", action="store_true", default=False,
+        help="output specs as machine-readable json records")
+
+    subparser.add_argument('-d', '--deps', action='store_true',
+                           help='output dependencies along with found specs')
+
+    subparser.add_argument('-p', '--paths', action='store_true',
+                           help='show paths to package install directories')
+    subparser.add_argument(
+        '--groups', action='store_true', default=None, dest='groups',
+        help='display specs in arch/compiler groups (default on)')
+    subparser.add_argument(
+        '--no-groups', action='store_false', default=None, dest='groups',
+        help='do not group specs by arch/compiler')
+
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'tags'])
+
+    subparser.add_argument('-c', '--show-concretized',
+                           action='store_true',
+                           help='show concretized specs in an environment')
+    subparser.add_argument('-f', '--show-flags',
+                           action='store_true',
+                           dest='show_flags',
+                           help='show spec compiler flags')
+    subparser.add_argument('--show-full-compiler',
+                           action='store_true',
+                           dest='show_full_compiler',
+                           help='show full compiler specs')
+    implicit_explicit = subparser.add_mutually_exclusive_group()
+    implicit_explicit.add_argument(
+        '-x', '--explicit',
+        action='store_true',
+        help='show only specs that were installed explicitly')
+    implicit_explicit.add_argument(
+        '-X', '--implicit',
+        action='store_true',
+        help='show only specs that were installed as dependencies')
+    subparser.add_argument(
+        '-u', '--unknown',
+        action='store_true',
+        dest='unknown',
+        help='show only specs Spack does not have a package for')
+    subparser.add_argument(
+        '-m', '--missing',
+        action='store_true',
+        dest='missing',
+        help='show missing dependencies as well as installed specs')
+    subparser.add_argument(
+        '-v', '--variants',
+        action='store_true',
+        dest='variants',
+        help='show variants in output (can be long)')
+    subparser.add_argument('-M', '--only-missing',
+                           action='store_true',
+                           dest='only_missing',
+                           help='show only missing dependencies')
+    subparser.add_argument(
+        '--deprecated', action='store_true',
+        help='show deprecated packages as well as installed specs')
+    subparser.add_argument(
+        '--only-deprecated', action='store_true',
+        help='show only deprecated packages')
+    subparser.add_argument('-N', '--namespace',
+                           action='store_true',
+                           help='show fully qualified package names')
 
     subparser.add_argument(
-        'query_specs', nargs=argparse.REMAINDER,
-        help='optional specs to filter results')
+        '--start-date',
+        help='earliest date of installation [YYYY-MM-DD]'
+    )
+    subparser.add_argument(
+        '--end-date', help='latest date of installation [YYYY-MM-DD]'
+    )
+
+    arguments.add_common_arguments(subparser, ['constraint'])
 
 
-def display_specs(specs, **kwargs):
-    mode = kwargs.get('mode', 'short')
+def query_arguments(args):
+    # Set up query arguments.
+    installed = []
+    if not (args.only_missing or args.only_deprecated):
+        installed.append(InstallStatuses.INSTALLED)
+    if (args.deprecated or args.only_deprecated) and not args.only_missing:
+        installed.append(InstallStatuses.DEPRECATED)
+    if (args.missing or args.only_missing) and not args.only_deprecated:
+        installed.append(InstallStatuses.MISSING)
 
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ('architecture', 'compiler'))
+    known = any
+    if args.unknown:
+        known = False
 
-    # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
-        if i > 0: print
+    explicit = any
+    if args.explicit:
+        explicit = True
+    if args.implicit:
+        explicit = False
 
-        header = "%s{%s} / %s{%s}" % (
-            spack.spec.architecture_color, architecture,
-            spack.spec.compiler_color, compiler)
-        tty.hline(colorize(header), char='-')
+    q_args = {'installed': installed, 'known': known, "explicit": explicit}
 
-        specs = index[(architecture,compiler)]
-        specs.sort()
+    # Time window of installation
+    for attribute in ('start_date', 'end_date'):
+        date = getattr(args, attribute)
+        if date:
+            q_args[attribute] = llnl.util.lang.pretty_string_to_date(date)
 
-        abbreviated = [s.format('$_$@$+', color=True) for s in specs]
-        if mode == 'paths':
-            # Print one spec per line along with prefix path
-            width = max(len(s) for s in abbreviated)
-            width += 2
-            format = "    %-{}s%s".format(width)
+    return q_args
 
-            for abbrv, spec in zip(abbreviated, specs):
-                print format % (abbrv, spec.prefix)
 
-        elif mode == 'deps':
-            for spec in specs:
-                print spec.tree(indent=4, format='$_$@$+$#', color=True),
+def setup_env(env):
+    """Create a function for decorating specs when in an environment."""
 
-        elif mode in ('short', 'long'):
-            fmt = '$-_$@$+'
-            if mode == 'long':
-                fmt += '$#'
-            colify(s.format(fmt, color=True) for s in specs)
+    def strip_build(seq):
+        return set(s.copy(deps=('link', 'run')) for s in seq)
 
+    added = set(strip_build(env.added_specs()))
+    roots = set(strip_build(env.roots()))
+    removed = set(strip_build(env.removed_specs()))
+
+    def decorator(spec, fmt):
+        # add +/-/* to show added/removed/root specs
+        if any(spec.dag_hash() == r.dag_hash() for r in roots):
+            return color.colorize('@*{%s}' % fmt)
+        elif spec in removed:
+            return color.colorize('@K{%s}' % fmt)
         else:
-            raise ValueError(
-                "Invalid mode for display_specs: %s. Must be one of (paths, deps, short)." % mode)
+            return '%s' % fmt
 
+    return decorator, added, roots, removed
+
+
+def display_env(env, args, decorator):
+    tty.msg('In environment %s' % env.name)
+
+    if not env.user_specs:
+        tty.msg('No root specs')
+    else:
+        tty.msg('Root specs')
+
+        # Roots are displayed with variants, etc. so that we can see
+        # specifically what the user asked for.
+        cmd.display_specs(
+            env.user_specs,
+            args,
+            decorator=lambda s, f: color.colorize('@*{%s}' % f),
+            namespace=True,
+            show_flags=True,
+            show_full_compiler=True,
+            variants=True
+        )
+        print()
+
+    if args.show_concretized:
+        tty.msg('Concretized roots')
+        cmd.display_specs(
+            env.specs_by_hash.values(), args, decorator=decorator)
+        print()
 
 
 def find(parser, args):
-    # Filter out specs that don't exist.
-    query_specs = spack.cmd.parse_specs(args.query_specs)
-    query_specs, nonexisting = partition_list(
-        query_specs, lambda s: spack.db.exists(s.name))
+    q_args = query_arguments(args)
+    results = args.specs(**q_args)
 
-    if nonexisting:
-        msg = "No such package%s: " % ('s' if len(nonexisting) > 1 else '')
-        msg += ", ".join(s.name for s in nonexisting)
+    decorator = lambda s, f: f
+    added = set()
+    removed = set()
+
+    env = ev.get_env(args, 'find')
+    if env:
+        decorator, added, roots, removed = setup_env(env)
+
+    # use groups by default except with format.
+    if args.groups is None:
+        args.groups = not args.format
+
+    # Exit early with an error code if no package matches the constraint
+    if not results and args.constraint:
+        msg = "No package matches the query: {0}"
+        msg = msg.format(' '.join(args.constraint))
         tty.msg(msg)
+        return 1
 
-        if not query_specs:
-            return
+    # If tags have been specified on the command line, filter by tags
+    if args.tags:
+        packages_with_tags = spack.repo.path.packages_with_tags(*args.tags)
+        results = [x for x in results if x.name in packages_with_tags]
 
-    # Get all the specs the user asked for
-    if not query_specs:
-        specs = set(spack.db.installed_package_specs())
+    # Display the result
+    if args.json:
+        cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        results = [set(spack.db.get_installed(qs)) for qs in query_specs]
-        specs = set.union(*results)
-
-    if not args.mode:
-        args.mode = 'short'
-
-    if sys.stdout.isatty():
-        tty.msg("%d installed packages." % len(specs))
-    display_specs(specs, mode=args.mode)
-
+        if env:
+            display_env(env, args, decorator)
+        if args.groups:
+            tty.msg("%s" % plural(len(results), 'installed package'))
+        cmd.display_specs(
+            results, args, decorator=decorator, all_headers=True)

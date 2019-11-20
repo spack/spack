@@ -1,0 +1,73 @@
+# HG changeset patch
+# User Sam Gillingham <gillingham.sam@gmail.com>
+# Date 1526963592 -36000
+# Node ID d103fef327d47ba31826007f9c9ab02c1f354330
+# Parent  a4e63dbb642c83516104ea82cec0e45c4caffd54
+More work on making out of tree builds work
+
+diff --git a/trunk/CMakeLists.txt b/trunk/CMakeLists.txt
+--- a/trunk/CMakeLists.txt
++++ b/trunk/CMakeLists.txt
+@@ -20,14 +20,6 @@
+   set (WINDOWS ${WIN32})
+ endif()
+ 
+-set (PROJECT_BINARY_DIR bin)
+-set (PROJECT_LIBRARY_DIR lib)
+-set (PROJECT_SOURCE_DIR src)
+-set (PROJECT_TEST_DIR tests)
+-set (PROJECT_HEADER_DIR include)
+-set (PROJECT_TOOLS_DIR tools)
+-set (PROJECT_GDAL_DIR gdal)
+-
+ # The version number.
+ set (LIBKEA_HG_VERSION 289)
+ set (LIBKEA_VERSION_MAJOR 1)
+@@ -160,8 +152,8 @@
+ 
+ ###############################################################################
+ # Setup configure file
+-configure_file ( "${PROJECT_HEADER_DIR}/kea-config.h.in" "${PROJECT_HEADER_DIR}/libkea/kea-config.h" )
+-configure_file ( "${PROJECT_TOOLS_DIR}/kea-config.in" "${PROJECT_BINARY_DIR}/kea-config" )
++configure_file ( "${PROJECT_SOURCE_DIR}/include/kea-config.h.in" "${PROJECT_BINARY_DIR}/include/libkea/kea-config.h" )
++configure_file ( "${PROJECT_SOURCE_DIR}/tools/kea-config.in" "${PROJECT_BINARY_DIR}/bin/kea-config" )
+ ###############################################################################
+ 
+ ###############################################################################
+@@ -173,11 +165,12 @@
+ ###############################################################################
+ # Build library
+ 
+-include_directories ("${PROJECT_HEADER_DIR}")
++include_directories ("${PROJECT_SOURCE_DIR}/include")
++include_directories ("${PROJECT_BINARY_DIR}/include") # for kea-config.h
+ include_directories(${HDF5_INCLUDE_DIR})
+-add_subdirectory ("${PROJECT_SOURCE_DIR}")
++add_subdirectory ("${PROJECT_SOURCE_DIR}/src")
+ if (LIBKEA_WITH_GDAL)
+-	add_subdirectory ("${PROJECT_GDAL_DIR}")
++	add_subdirectory ("${PROJECT_SOURCE_DIR}/gdal")
+ endif(LIBKEA_WITH_GDAL)
+ ###############################################################################
+ 
+@@ -191,7 +184,7 @@
+ ###############################################################################
+ # Installation
+ 
+-install (FILES "${PROJECT_BINARY_DIR}/kea-config" DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
++install (FILES "${PROJECT_BINARY_DIR}/bin/kea-config" DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+ ###############################################################################
+ 
+ ###############################################################################
+diff --git a/trunk/src/CMakeLists.txt b/trunk/src/CMakeLists.txt
+--- a/trunk/src/CMakeLists.txt
++++ b/trunk/src/CMakeLists.txt
+@@ -38,7 +38,7 @@
+ ###############################################################################
+ # Testing
+ # exe needs to be in 'src' otherwise it doesn't work
+-add_executable (test1 ${PROJECT_TEST_DIR}/test1.cpp)
++add_executable (test1 ${PROJECT_SOURCE_DIR}/src/tests/test1.cpp)
+ target_link_libraries (test1 ${LIBKEA_LIB_NAME})
+ if(NOT WIN32)
+     # set rpath so the text exe finds hdf5. Really only needed

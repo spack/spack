@@ -1,0 +1,28 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class AtSpi2Atk(MesonPackage):
+    """The At-Spi2 Atk package contains a library that bridges ATK to
+       At-Spi2 D-Bus service."""
+
+    homepage = "http://www.linuxfromscratch.org/blfs/view/cvs/x/at-spi2-atk.html"
+    url      = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk/2.26/at-spi2-atk-2.26.1.tar.xz"
+    list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk"
+    list_depth = 1
+
+    version('2.26.2', sha256='61891f0abae1689f6617a963105a3f1dcdab5970c4a36ded9c79a7a544b16a6e')
+    version('2.26.1', sha256='b4f0c27b61dbffba7a5b5ba2ff88c8cee10ff8dac774fa5b79ce906853623b75')
+
+    depends_on('pkgconfig', type='build')
+    depends_on('at-spi2-core@2.28.0:')
+    depends_on('atk@2.28.1:')
+
+    def url_for_version(self, version):
+        """Handle gnome's version-based custom URLs."""
+        url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk'
+        return url + '/%s/at-spi2-atk-%s.tar.xz' % (version.up_to(2), version)

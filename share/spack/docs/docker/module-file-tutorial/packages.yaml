@@ -1,0 +1,9 @@
+packages:
+  git:
+    buildable: False
+    paths:
+      git@2.9.4: /usr
+  openmpi:
+    buildable: False
+    paths:
+      openmpi@1.10.2: /usr

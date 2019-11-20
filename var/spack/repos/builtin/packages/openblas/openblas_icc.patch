@@ -1,0 +1,253 @@
+diff --git a/kernel/x86_64/cscal_microk_bulldozer-2.c b/kernel/x86_64/cscal_microk_bulldozer-2.c
+index f470cf8..3abffc4 100644
+--- a/kernel/x86_64/cscal_microk_bulldozer-2.c
++++ b/kernel/x86_64/cscal_microk_bulldozer-2.c
+@@ -120,7 +120,7 @@ static void cscal_kernel_16( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -212,7 +212,7 @@ static void cscal_kernel_16_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -289,7 +289,7 @@ static void cscal_kernel_16_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -334,7 +334,7 @@ static void cscal_kernel_16_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+diff --git a/kernel/x86_64/cscal_microk_haswell-2.c b/kernel/x86_64/cscal_microk_haswell-2.c
+index 0424de3..48e3395 100644
+--- a/kernel/x86_64/cscal_microk_haswell-2.c
++++ b/kernel/x86_64/cscal_microk_haswell-2.c
+@@ -120,7 +120,7 @@ static void cscal_kernel_16( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", //"0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -212,7 +212,7 @@ static void cscal_kernel_16_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", // "0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -289,7 +289,7 @@ static void cscal_kernel_16_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -334,7 +334,7 @@ static void cscal_kernel_16_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", //"0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+diff --git a/kernel/x86_64/cscal_microk_steamroller-2.c b/kernel/x86_64/cscal_microk_steamroller-2.c
+index 763e7ad..8346e17 100644
+--- a/kernel/x86_64/cscal_microk_steamroller-2.c
++++ b/kernel/x86_64/cscal_microk_steamroller-2.c
+@@ -121,7 +121,7 @@ static void cscal_kernel_16( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", //"0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -213,7 +213,7 @@ static void cscal_kernel_16_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", //"0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -290,7 +290,7 @@ static void cscal_kernel_16_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -335,7 +335,7 @@ static void cscal_kernel_16_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "0", "1",
++	: "cc", //"0", "1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+diff --git a/kernel/x86_64/dscal.c b/kernel/x86_64/dscal.c
+index bbc1c96..b6bde6c 100644
+--- a/kernel/x86_64/dscal.c
++++ b/kernel/x86_64/dscal.c
+@@ -141,7 +141,7 @@ static void dscal_kernel_inc_8(BLASLONG n, FLOAT *alpha, FLOAT *x, BLASLONG inc_
+           "r" (alpha),  // 3
+           "r" (inc_x),  // 4
+           "r" (inc_x3)  // 5
+-        : "cc", "%0", "%1", "%2",
++        : "cc", //"%0", "%1", "%2",
+           "%xmm0", "%xmm1", "%xmm2", "%xmm3",
+           "%xmm4", "%xmm5", "%xmm6", "%xmm7",
+           "%xmm8", "%xmm9", "%xmm10", "%xmm11",
+diff --git a/kernel/x86_64/zscal_microk_bulldozer-2.c b/kernel/x86_64/zscal_microk_bulldozer-2.c
+index 28fe734..03882d6 100644
+--- a/kernel/x86_64/zscal_microk_bulldozer-2.c
++++ b/kernel/x86_64/zscal_microk_bulldozer-2.c
+@@ -120,7 +120,7 @@ static void zscal_kernel_8( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -212,7 +212,7 @@ static void zscal_kernel_8_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -289,7 +289,7 @@ static void zscal_kernel_8_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -334,7 +334,7 @@ static void zscal_kernel_8_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+diff --git a/kernel/x86_64/zscal_microk_haswell-2.c b/kernel/x86_64/zscal_microk_haswell-2.c
+index a93308e..b1a34c1 100644
+--- a/kernel/x86_64/zscal_microk_haswell-2.c
++++ b/kernel/x86_64/zscal_microk_haswell-2.c
+@@ -120,7 +120,7 @@ static void zscal_kernel_8( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -212,7 +212,7 @@ static void zscal_kernel_8_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -289,7 +289,7 @@ static void zscal_kernel_8_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -334,7 +334,7 @@ static void zscal_kernel_8_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+diff --git a/kernel/x86_64/zscal_microk_steamroller-2.c b/kernel/x86_64/zscal_microk_steamroller-2.c
+index d611bf5..97b07ad 100644
+--- a/kernel/x86_64/zscal_microk_steamroller-2.c
++++ b/kernel/x86_64/zscal_microk_steamroller-2.c
+@@ -121,7 +121,7 @@ static void zscal_kernel_8( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -213,7 +213,7 @@ static void zscal_kernel_8_zero_r( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -290,7 +290,7 @@ static void zscal_kernel_8_zero_i( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 
+@@ -335,7 +335,7 @@ static void zscal_kernel_8_zero( BLASLONG n, FLOAT *alpha, FLOAT *x)
+ 	  "r" (n),  	// 0
+           "r" (x),      // 1
+           "r" (alpha)   // 2
+-	: "cc", "%0", "%1",
++	: "cc", //"%0", "%1",
+ 	  "%xmm0", "%xmm1", "%xmm2", "%xmm3", 
+ 	  "%xmm4", "%xmm5", "%xmm6", "%xmm7", 
+ 	  "%xmm8", "%xmm9", "%xmm10", "%xmm11", 

@@ -1,0 +1,395 @@
+--- libmonitor-20130218/src/callback.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/callback.c	2013-02-18 10:34:17.839842826 -0800
+@@ -173,3 +173,18 @@
+     MONITOR_DEBUG1("(default callback)\n");
+     return 0;
+ }
++
++
++void __attribute__ ((weak))
++monitor_mpi_post_comm_rank(void)
++{
++    MONITOR_DEBUG1("(default callback)\n");
++}
++
++void __attribute__ ((weak))
++monitor_mpi_pcontrol(int level)
++{
++    MONITOR_DEBUG("(default callback) level = %d\n", level);
++} 
++
++
+--- libmonitor-20130218/src/main.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/main.c	2013-02-18 10:34:17.839842826 -0800
+@@ -230,6 +230,44 @@
+     monitor_fini_library_called = 1;
+ }
+ 
++/*
++ *  Internal monitor functions.
++ */
++
++struct monitor_thread_node * __attribute__ ((weak))
++monitor_get_tn(void)
++{
++    return &monitor_main_tn;
++}
++
++int __attribute__ ((weak))
++monitor_get_thread_num(void)
++{
++    return (0);
++}
++
++void __attribute__ ((weak))
++monitor_reset_thread_list(struct monitor_thread_node *main_tn)
++{
++    MONITOR_DEBUG1("(weak)\n");
++    return;
++}
++
++void __attribute__ ((weak))
++monitor_thread_release(void)
++{
++    MONITOR_DEBUG1("(weak)\n");
++    return;
++}
++
++void __attribute__ ((weak))
++monitor_thread_shootdown(void)
++{
++    MONITOR_DEBUG1("(weak)\n");
++    return;
++}
++
++
+ void
+ monitor_begin_process_fcn(void *user_data, int is_fork)
+ {
+@@ -625,12 +663,6 @@
+     return (monitor_main_tn.tn_user_data);
+ }
+ 
+-int __attribute__ ((weak))
+-monitor_get_thread_num(void)
+-{
+-    return (0);
+-}
+-
+ void * __attribute__ ((weak))
+ monitor_get_addr_thread_start(void)
+ {
+@@ -691,33 +723,3 @@
+     MONITOR_DEBUG1("(weak)\n");
+     return (FALSE);
+ }
+-
+-/*
+- *  Internal monitor functions.
+- */
+-struct monitor_thread_node * __attribute__ ((weak))
+-monitor_get_tn(void)
+-{
+-    return &monitor_main_tn;
+-}
+-
+-void __attribute__ ((weak))
+-monitor_reset_thread_list(struct monitor_thread_node *main_tn)
+-{
+-    MONITOR_DEBUG1("(weak)\n");
+-    return;
+-}
+-
+-void __attribute__ ((weak))
+-monitor_thread_release(void)
+-{
+-    MONITOR_DEBUG1("(weak)\n");
+-    return;
+-}
+-
+-void __attribute__ ((weak))
+-monitor_thread_shootdown(void)
+-{
+-    MONITOR_DEBUG1("(weak)\n");
+-    return;
+-}
+--- libmonitor-20130218/src/monitor.h	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/monitor.h	2013-02-18 10:34:17.840842821 -0800
+@@ -73,6 +73,11 @@
+ extern void monitor_fini_mpi(void);
+ extern void monitor_mpi_post_fini(void);
+ 
++extern void monitor_mpi_post_comm_rank(void);
++extern void monitor_mpi_pcontrol(int level);
++
++
++
+ /*
+  *  Monitor support functions.
+  */
+--- libmonitor-20130218/src/mpi_comm_c.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_comm_c.c	2013-02-18 10:34:17.878842622 -0800
+@@ -36,5 +36,8 @@
+     ret = (*real_mpi_comm_rank)(comm, rank);
+     monitor_set_mpi_size_rank(size, *rank);
+ 
++    monitor_mpi_post_comm_rank();
++
++
+     return (ret);
+ }
+--- libmonitor-20130218/src/mpi_comm_f0.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_comm_f0.c	2013-02-18 10:34:17.879842617 -0800
+@@ -34,4 +34,5 @@
+     (*real_mpi_comm_size)(comm, &size, ierror);
+     (*real_mpi_comm_rank)(comm, rank, ierror);
+     monitor_set_mpi_size_rank(size, *rank);
++    monitor_mpi_post_comm_rank();
+ }
+--- libmonitor-20130218/src/mpi_comm_f1.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_comm_f1.c	2013-02-18 10:34:17.880842612 -0800
+@@ -34,4 +34,5 @@
+     (*real_mpi_comm_size)(comm, &size, ierror);
+     (*real_mpi_comm_rank)(comm, rank, ierror);
+     monitor_set_mpi_size_rank(size, *rank);
++    monitor_mpi_post_comm_rank();
+ }
+--- libmonitor-20130218/src/mpi_comm_f2.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_comm_f2.c	2013-02-18 10:34:17.880842612 -0800
+@@ -34,4 +34,5 @@
+     (*real_mpi_comm_size)(comm, &size, ierror);
+     (*real_mpi_comm_rank)(comm, rank, ierror);
+     monitor_set_mpi_size_rank(size, *rank);
++    monitor_mpi_post_comm_rank();
+ }
+--- libmonitor-20130218/src/pmpi.c	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/pmpi.c	2013-02-18 10:34:17.881842607 -0800
+@@ -52,11 +52,15 @@
+ typedef int mpi_init_thread_fcn_t(int *, char ***, int, int *);
+ typedef int mpi_finalize_fcn_t(void);
+ typedef int mpi_comm_fcn_t(void *, int *);
++typedef int mpi_pcontrol_fcn_t(int );
++
+ 
+ typedef void f_mpi_init_fcn_t(int *);
+ typedef void f_mpi_init_thread_fcn_t(int *, int *, int *);
+ typedef void f_mpi_finalize_fcn_t(int *);
+ typedef void f_mpi_comm_fcn_t(int *, int *, int *);
++typedef int f_mpi_pcontrol_fcn_t(int );
++
+ 
+ static mpi_init_fcn_t    *real_pmpi_init = NULL;
+ static f_mpi_init_fcn_t  *real_pmpi_init_f0 = NULL;
+@@ -83,6 +87,12 @@
+ static f_mpi_comm_fcn_t  *real_pmpi_comm_rank_f1 = NULL;
+ static f_mpi_comm_fcn_t  *real_pmpi_comm_rank_f2 = NULL;
+ 
++static mpi_pcontrol_fcn_t    *real_pmpi_pcontrol = NULL;
++static f_mpi_pcontrol_fcn_t  *real_pmpi_pcontrol_f0 = NULL;
++static f_mpi_pcontrol_fcn_t  *real_pmpi_pcontrol_f1 = NULL;
++static f_mpi_pcontrol_fcn_t  *real_pmpi_pcontrol_f2 = NULL;
++
++
+ /*
+  *----------------------------------------------------------------------
+  *  PMPI_INIT OVERRIDE FUNCTIONS
+@@ -297,6 +307,7 @@
+     ret = (*real_pmpi_comm_size)(comm, &size);
+     ret = (*real_pmpi_comm_rank)(comm, rank);
+     monitor_set_mpi_size_rank(size, *rank);
++    monitor_mpi_post_comm_rank();
+ 
+     return (ret);
+ }
+@@ -308,7 +319,9 @@
+     MONITOR_GET_REAL_NAME_WRAP(rank_var, rank_fcn);	\
+     (*size_var)(comm, &size, ierror);			\
+     (*rank_var)(comm, rank, ierror);			\
+-    monitor_set_mpi_size_rank(size, *rank);
++    monitor_set_mpi_size_rank(size, *rank);             \
++    monitor_mpi_post_comm_rank();
++
+ 
+ /*
+  * In Fortran, MPI_Comm is always int.
+@@ -333,3 +346,48 @@
+     FORTRAN_COMM_RANK_BODY(real_pmpi_comm_size_f2, pmpi_comm_size__,
+ 			   real_pmpi_comm_rank_f2, pmpi_comm_rank__);
+ }
++
++
++/*
++ *----------------------------------------------------------------------
++ *  PMPI_PCONTROL OVERRIDE FUNCTIONS
++ *----------------------------------------------------------------------
++ */
++
++int
++MONITOR_WRAP_NAME(PMPI_Pcontrol)(int level)
++{
++    int ret;
++
++    MONITOR_DEBUG("level = %d\n", level);              \
++    MONITOR_GET_REAL_NAME_WRAP(real_pmpi_pcontrol, PMPI_Pcontrol);
++    ret = (*real_pmpi_pcontrol) (level) ;
++    monitor_mpi_pcontrol(level);
++
++    return (ret);
++}
++
++#define FORTRAN_PCONTROL_BODY(var_name, fcn_name)\
++    int ret;                                           \
++    MONITOR_DEBUG("level = %d\n", level);              \
++    MONITOR_GET_REAL_NAME_WRAP(var_name, fcn_name);    \
++    ret = (*var_name) (level) ;                        \
++    monitor_mpi_pcontrol(level);
++
++int
++MONITOR_WRAP_NAME(pmpi_pcontrol)(int level)
++{
++    FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f0, pmpi_pcontrol);
++}
++
++int
++MONITOR_WRAP_NAME(pmpi_pcontrol_)(int level)
++{
++    FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f1, pmpi_pcontrol_);
++}
++
++int
++MONITOR_WRAP_NAME(pmpi_pcontrol__)(int level)
++{
++    FORTRAN_PCONTROL_BODY(real_pmpi_pcontrol_f2, pmpi_pcontrol__);
++}
+--- libmonitor-20130218/src/mpi_pcontrol_c.c	1969-12-31 16:00:00.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_pcontrol_c.c	2013-02-18 10:34:17.882842602 -0800
+@@ -0,0 +1,30 @@
++/*
++ *  Override MPI_Pcontrol in C/C++.
++ *
++ *  
++ */
++
++#include "config.h"
++#include "common.h"
++#include "monitor.h"
++
++typedef int mpi_pcontrol_fcn_t(int level);
++#ifdef MONITOR_STATIC
++extern mpi_pcontrol_fcn_t  __real_MPI_Pcontrol;
++#endif
++static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
++
++int
++MONITOR_WRAP_NAME(MPI_Pcontrol)(int level)
++{
++    int ret, count;
++
++    MONITOR_DEBUG("level = %d\n", level);               \
++
++    MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, MPI_Pcontrol);
++    ret = (*real_mpi_pcontrol)(level);
++    monitor_mpi_pcontrol(level);
++
++
++    return (ret);
++}
+--- libmonitor-20130218/src/mpi_pcontrol_f0.c	1969-12-31 16:00:00.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_pcontrol_f0.c	2013-02-18 10:34:17.882842602 -0800
+@@ -0,0 +1,24 @@
++/*
++ *  Override mpi_pcontrol in Fortran.
++ *
++ */
++
++#include "config.h"
++#include "common.h"
++#include "monitor.h"
++
++typedef void mpi_pcontrol_fcn_t(int level);
++#ifdef MONITOR_STATIC
++extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol;
++#endif
++static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
++
++int
++MONITOR_WRAP_NAME(mpi_pcontrol)(int level)
++{
++    int count;
++
++    MONITOR_DEBUG1("\n");
++    MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol);
++    (*real_mpi_pcontrol)(level);
++}
+--- libmonitor-20130218/src/mpi_pcontrol_f1.c	1969-12-31 16:00:00.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_pcontrol_f1.c	2013-02-18 10:34:17.883842597 -0800
+@@ -0,0 +1,24 @@
++/*
++ *  Override mpi_pcontrol_ in Fortran.
++ *
++ */
++
++#include "config.h"
++#include "common.h"
++#include "monitor.h"
++
++typedef void mpi_pcontrol_fcn_t(int level);
++#ifdef MONITOR_STATIC
++extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol_;
++#endif
++static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
++
++int
++MONITOR_WRAP_NAME(mpi_pcontrol_)(int level)
++{
++    int count;
++
++    MONITOR_DEBUG1("\n");
++    MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol_);
++    (*real_mpi_pcontrol)(level);
++}
+--- libmonitor-20130218/src/mpi_pcontrol_f2.c	1969-12-31 16:00:00.000000000 -0800
++++ libmonitor-20130218-fixes/src/mpi_pcontrol_f2.c	2013-02-18 10:34:17.883842597 -0800
+@@ -0,0 +1,24 @@
++/*
++ *  Override mpi_pcontrol__ in Fortran.
++ *
++ */
++
++#include "config.h"
++#include "common.h"
++#include "monitor.h"
++
++typedef void mpi_pcontrol_fcn_t(int level);
++#ifdef MONITOR_STATIC
++extern mpi_pcontrol_fcn_t  __real_mpi_pcontrol__;
++#endif
++static mpi_pcontrol_fcn_t  *real_mpi_pcontrol = NULL;
++
++int
++MONITOR_WRAP_NAME(mpi_pcontrol__)(int level)
++{
++    int count;
++
++    MONITOR_DEBUG1("\n");
++    MONITOR_GET_REAL_NAME_WRAP(real_mpi_pcontrol, mpi_pcontrol__);
++    (*real_mpi_pcontrol)(level);
++}
+--- libmonitor-20130218/src/Makefile.am	2013-02-17 23:08:32.000000000 -0800
++++ libmonitor-20130218-fixes/src/Makefile.am	2013-02-18 10:34:17.931842343 -0800
+@@ -38,10 +38,11 @@
+ MONITOR_THREAD_FILES = pthread.c
+ MONITOR_SCRIPT_FILES = monitor-link monitor-run
+ MONITOR_MPI_FILES =  \
+-	mpi_init_c.c  mpi_init_thread_c.c  mpi_final_c.c  mpi_comm_c.c   \
+-	mpi_init_f0.c mpi_init_thread_f0.c mpi_final_f0.c mpi_comm_f0.c  \
+-	mpi_init_f1.c mpi_init_thread_f1.c mpi_final_f1.c mpi_comm_f1.c  \
+-	mpi_init_f2.c mpi_init_thread_f2.c mpi_final_f2.c mpi_comm_f2.c
++       mpi_init_c.c  mpi_init_thread_c.c  mpi_final_c.c  mpi_comm_c.c mpi_pcontrol_c.c  \
++       mpi_init_f0.c mpi_init_thread_f0.c mpi_final_f0.c mpi_comm_f0.c mpi_pcontrol_f0.c \
++       mpi_init_f1.c mpi_init_thread_f1.c mpi_final_f1.c mpi_comm_f1.c mpi_pcontrol_f1.c \
++       mpi_init_f2.c mpi_init_thread_f2.c mpi_final_f2.c mpi_comm_f2.c mpi_pcontrol_f2.c
++
+ 
+ include_HEADERS = monitor.h
+ bin_SCRIPTS =

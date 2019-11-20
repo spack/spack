@@ -1,0 +1,11 @@
+#!/bin/sh -eu
+
+{% for cf  in chown_files %}
+chown root {{ prefix }}/{{ cf }}
+{% endfor %}
+
+{% for sf in setuid_files %}
+chmod 4555 {{ prefix }}/{{ sf }}
+{% endfor %}
+
+# end

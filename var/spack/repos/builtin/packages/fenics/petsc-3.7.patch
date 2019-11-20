@@ -1,0 +1,394 @@
+diff -Naur dolfin-1.6.0/dolfin/common/SubSystemsManager.cpp dolfin-1.6.0.new/dolfin/common/SubSystemsManager.cpp
+--- dolfin-1.6.0/dolfin/common/SubSystemsManager.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/common/SubSystemsManager.cpp	2016-06-26 23:42:56.391929550 +0200
+@@ -179,7 +179,7 @@
+   PetscInitialized(&is_initialized);
+   if (is_initialized)
+   {
+-    PetscOptionsInsert(&argc, &argv, PETSC_NULL);
++    PetscOptionsInsert(NULL, &argc, &argv, PETSC_NULL);
+   }
+   else
+   {
+@@ -187,12 +187,12 @@
+     PetscInitializeNoArguments();
+ 
+     // Set options to avoid common failures with some 3rd party solvers
+-    PetscOptionsSetValue("-mat_mumps_icntl_7", "0");
+-    PetscOptionsSetValue("-mat_superlu_dist_colperm", "MMD_AT_PLUS_A");
++    PetscOptionsSetValue(NULL, "-mat_mumps_icntl_7", "0");
++    PetscOptionsSetValue(NULL, "-mat_superlu_dist_colperm", "MMD_AT_PLUS_A");
+ 
+     // Pass command line arguments to PETSc (will overwrite any
+     // default above)
+-    PetscOptionsInsert(&argc, &argv, PETSC_NULL);
++    PetscOptionsInsert(NULL, &argc, &argv, PETSC_NULL);
+   }
+ 
+   // Set PETSc
+diff -Naur dolfin-1.6.0/dolfin/la/PETScKrylovSolver.cpp dolfin-1.6.0.new/dolfin/la/PETScKrylovSolver.cpp
+--- dolfin-1.6.0/dolfin/la/PETScKrylovSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/PETScKrylovSolver.cpp	2016-06-26 23:33:02.418351380 +0200
+@@ -564,6 +564,11 @@
+   return solve(x, b);
+ }
+ //-----------------------------------------------------------------------------
++PetscErrorCode  PETScKrylovSolver::ksp_monitor_norm(KSP ksp, PetscInt n, PetscReal rnorm, void *vf)
++{
++  KSPMonitorTrueResidualNorm(ksp, n, rnorm, static_cast<PetscViewerAndFormat *>(vf));
++}
++//-----------------------------------------------------------------------------
+ void PETScKrylovSolver::set_petsc_ksp_options()
+ {
+   PetscErrorCode ierr;
+@@ -585,7 +590,8 @@
+   const bool monitor_convergence = parameters["monitor_convergence"];
+   if (monitor_convergence)
+   {
+-    ierr = KSPMonitorSet(_ksp, KSPMonitorTrueResidualNorm, 0, 0);
++    PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT, &_vf);
++    ierr = KSPMonitorSet(_ksp, ksp_monitor_norm, _vf, 0);
+     if (ierr != 0) petsc_error(ierr, __FILE__, "KSPMonitorSet");
+   }
+ 
+diff -Naur dolfin-1.6.0/dolfin/la/PETScKrylovSolver.h dolfin-1.6.0.new/dolfin/la/PETScKrylovSolver.h
+--- dolfin-1.6.0/dolfin/la/PETScKrylovSolver.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/PETScKrylovSolver.h	2016-06-26 23:19:40.767042975 +0200
+@@ -179,6 +179,12 @@
+     // PETSc solver pointer
+     KSP _ksp;
+ 
++    // viewer for monitoring
++    PetscViewerAndFormat* _vf;
++
++    // monitoring function
++    static PetscErrorCode ksp_monitor_norm(KSP ksp, PetscInt n, PetscReal rnorm, void *ctx);
++    
+     // DOLFIN-defined PETScUserPreconditioner
+     PETScUserPreconditioner* pc_dolfin;
+ 
+diff -Naur dolfin-1.6.0/dolfin/la/PETScLUSolver.cpp dolfin-1.6.0.new/dolfin/la/PETScLUSolver.cpp
+--- dolfin-1.6.0/dolfin/la/PETScLUSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/PETScLUSolver.cpp	2016-06-26 23:13:36.903732301 +0200
+@@ -246,14 +246,14 @@
+     if (parameters["num_threads"].is_set())
+     {
+       // Use number of threads specified for LU solver
+-      ierr = PetscOptionsSetValue("-mat_pastix_threadnbr",
++      ierr = PetscOptionsSetValue(NULL, "-mat_pastix_threadnbr",
+                            parameters["num_threads"].value_str().c_str());
+       if (ierr != 0) petsc_error(ierr, __FILE__, "PetscOptionsSetValue");
+     }
+     else
+     {
+       // Use global number of threads
+-      ierr = PetscOptionsSetValue("-mat_pastix_threadnbr",
++      ierr = PetscOptionsSetValue(NULL, "-mat_pastix_threadnbr",
+                         dolfin::parameters["num_threads"].value_str().c_str());
+       if (ierr != 0) petsc_error(ierr, __FILE__, "PetscOptionsSetValue");
+     }
+diff -Naur dolfin-1.6.0/dolfin/la/PETScOptions.cpp dolfin-1.6.0.new/dolfin/la/PETScOptions.cpp
+--- dolfin-1.6.0/dolfin/la/PETScOptions.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/PETScOptions.cpp	2016-06-26 23:37:58.613121118 +0200
+@@ -54,7 +54,7 @@
+ {
+   SubSystemsManager::init_petsc();
+   PetscErrorCode ierr;
+-  ierr = PetscOptionsClearValue(option.c_str());
++  ierr = PetscOptionsClearValue(NULL, option.c_str());
+   if (ierr != 0)
+   {
+     dolfin_error("PETScOptions.cpp",
+diff -Naur dolfin-1.6.0/dolfin/la/PETScOptions.h dolfin-1.6.0.new/dolfin/la/PETScOptions.h
+--- dolfin-1.6.0/dolfin/la/PETScOptions.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/PETScOptions.h	2016-06-26 23:37:54.352023709 +0200
+@@ -65,7 +65,7 @@
+ 
+       PetscErrorCode ierr;
+       std::string _option = "-" + option;
+-      ierr = PetscOptionsSetValue(_option.c_str(),
++      ierr = PetscOptionsSetValue(NULL, _option.c_str(),
+                            boost::lexical_cast<std::string>(value).c_str());
+       if (ierr != 0)
+       {
+diff -Naur dolfin-1.6.0/dolfin/la/SLEPcEigenSolver.cpp dolfin-1.6.0.new/dolfin/la/SLEPcEigenSolver.cpp
+--- dolfin-1.6.0/dolfin/la/SLEPcEigenSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/SLEPcEigenSolver.cpp	2016-06-26 23:35:25.930631132 +0200
+@@ -99,6 +99,19 @@
+   solve(_matA->size(0));
+ }
+ //-----------------------------------------------------------------------------
++PetscErrorCode SLEPcEigenSolver::eps_monitor(EPS eps, PetscInt its, PetscInt nconv, PetscScalar* eigr,
++					     PetscScalar* eigi, PetscReal* errest,
++					     PetscInt nest, void *vf)
++{
++  EPSMonitorAll(eps, its, nconv, eigr,	eigi, errest, nest,
++		static_cast<PetscViewerAndFormat *>(vf));
++}
++//-----------------------------------------------------------------------------
++PetscErrorCode SLEPcEigenSolver::ksp_monitor(KSP ksp, PetscInt n, PetscReal rnorm, void *vf)
++{
++  KSPMonitorDefault(ksp, n, rnorm, static_cast<PetscViewerAndFormat *>(vf));
++}
++//-----------------------------------------------------------------------------
+ void SLEPcEigenSolver::solve(std::size_t n)
+ {
+   dolfin_assert(_matA);
+@@ -139,10 +152,11 @@
+   {
+     KSP ksp;
+     ST st;
+-    EPSMonitorSet(_eps, EPSMonitorAll, NULL, NULL);
++    PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT, &_vf);
++    EPSMonitorSet(_eps, eps_monitor, _vf, NULL);
+     EPSGetST(_eps, &st);
+     STGetKSP(st, &ksp);
+-    KSPMonitorSet(ksp, KSPMonitorDefault, NULL, NULL);
++    KSPMonitorSet(ksp, ksp_monitor, _vf, NULL);
+     EPSView(_eps, PETSC_VIEWER_STDOUT_SELF);
+   }
+ 
+diff -Naur dolfin-1.6.0/dolfin/la/SLEPcEigenSolver.h dolfin-1.6.0.new/dolfin/la/SLEPcEigenSolver.h
+--- dolfin-1.6.0/dolfin/la/SLEPcEigenSolver.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/la/SLEPcEigenSolver.h	2016-06-26 23:36:08.784610612 +0200
+@@ -231,6 +231,11 @@
+     // SLEPc solver pointer
+     EPS _eps;
+ 
++    PetscViewerAndFormat* _vf;
++    static PetscErrorCode eps_monitor(EPS eps, int its, int nconv, PetscScalar *eigr,
++				      PetscScalar *eigi, PetscReal* errest,
++				      int nest, void *mctx);
++    static PetscErrorCode ksp_monitor(KSP ksp, PetscInt n, PetscReal rnorm, void *vf);
+   };
+ 
+ }
+diff -Naur dolfin-1.6.0/dolfin/nls/PETScSNESSolver.cpp dolfin-1.6.0.new/dolfin/nls/PETScSNESSolver.cpp
+--- dolfin-1.6.0/dolfin/nls/PETScSNESSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/PETScSNESSolver.cpp	2016-06-26 23:19:40.166029256 +0200
+@@ -195,6 +195,15 @@
+   return this->solve(nonlinear_problem, x);
+ }
+ //-----------------------------------------------------------------------------
++PetscErrorCode
++PETScSNESSolver::snes_monitor(SNES snes, PetscInt its,
++			      PetscReal fgnorm, void *vf)
++{
++  PetscViewerAndFormat * _vf = static_cast<PetscViewerAndFormat *>(vf);
++  SNESMonitorDefault(snes, its, fgnorm, _vf);
++  return(0);
++}
++//-----------------------------------------------------------------------------
+ void
+ PETScSNESSolver::init(NonlinearProblem& nonlinear_problem,
+                        GenericVector& x)
+@@ -237,9 +246,11 @@
+   }
+ 
+   // Set some options from the parameters
+-  if (report)
+-    SNESMonitorSet(_snes, SNESMonitorDefault, PETSC_NULL, PETSC_NULL);
+-
++  if (report) {
++    PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT, &_snes_ctx.vf);
++    SNESMonitorSet(_snes, PETScSNESSolver::snes_monitor, _snes_ctx.vf, PETSC_NULL);
++  }
++  
+   // Set the bounds, if any
+   set_bounds(x);
+ 
+@@ -293,8 +304,8 @@
+   SNESGetLineSearch(_snes, &linesearch);
+   #endif
+ 
+-  if (report)
+-    SNESLineSearchSetMonitor(linesearch, PETSC_TRUE);
++  //  if (report)
++  //    SNESLineSearchSetMonitor(linesearch, PETSC_TRUE);
+   const std::string line_search_type = std::string(parameters["line_search"]);
+   SNESLineSearchSetType(linesearch, line_search_type.c_str());
+ 
+@@ -466,6 +477,24 @@
+ }
+ #endif
+ //-----------------------------------------------------------------------------
++PetscErrorCode
++PETScSNESSolver::ksp_monitor(KSP ksp, PetscInt n,
++			      PetscReal rnorm, void *vf)
++{
++  PetscViewerAndFormat * _vf = static_cast<PetscViewerAndFormat *>(vf);
++  KSPMonitorDefault(ksp, n, rnorm, _vf);
++  return(0);
++}
++//-----------------------------------------------------------------------------
++PetscErrorCode
++PETScSNESSolver::ksp_monitor_norm(KSP ksp, PetscInt n,
++			      PetscReal rnorm, void *vf)
++{
++  PetscViewerAndFormat * _vf = static_cast<PetscViewerAndFormat *>(vf);
++  KSPMonitorTrueResidualNorm(ksp, n, rnorm, _vf);
++  return(0);
++}
++//-----------------------------------------------------------------------------
+ void PETScSNESSolver::set_linear_solver_parameters()
+ {
+   KSP ksp;
+@@ -482,7 +511,7 @@
+   PetscObjectGetComm((PetscObject)_snes, &comm);
+ 
+   if (parameters["report"])
+-    KSPMonitorSet(ksp, KSPMonitorDefault, PETSC_NULL, PETSC_NULL);
++    KSPMonitorSet(ksp, PETScSNESSolver::ksp_monitor, _snes_ctx.vf, PETSC_NULL);
+ 
+   const std::string linear_solver  = parameters["linear_solver"];
+   const std::string preconditioner = parameters["preconditioner"];
+@@ -518,7 +547,7 @@
+       KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
+ 
+     if (krylov_parameters["monitor_convergence"])
+-      KSPMonitorSet(ksp, KSPMonitorTrueResidualNorm, 0, 0);
++      KSPMonitorSet(ksp, PETScSNESSolver::ksp_monitor_norm, _snes_ctx.vf, 0);
+ 
+     // Set tolerances
+     const int max_iters = krylov_parameters["maximum_iterations"];
+diff -Naur dolfin-1.6.0/dolfin/nls/PETScSNESSolver.h dolfin-1.6.0.new/dolfin/nls/PETScSNESSolver.h
+--- dolfin-1.6.0/dolfin/nls/PETScSNESSolver.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/PETScSNESSolver.h	2016-06-26 22:31:21.554129282 +0200
+@@ -24,6 +24,7 @@
+ 
+ #include <map>
+ #include <petscsnes.h>
++#include <petscviewer.h>
+ #include <memory>
+ #include <dolfin/nls/NewtonSolver.h>
+ #include <dolfin/parameter/Parameters.h>
+@@ -124,8 +125,15 @@
+       Vec f_tmp;
+       const PETScVector* xl;
+       const PETScVector* xu;
++      PetscViewerAndFormat* vf;
+     };
+ 
++
++    // monitoring functions
++    static PetscErrorCode snes_monitor(SNES snes, PetscInt its, PetscReal fgnorm, void* ctx);
++    static PetscErrorCode ksp_monitor(KSP ksp, PetscInt n, PetscReal rnorm, void *ctx);
++    static PetscErrorCode ksp_monitor_norm(KSP ksp, PetscInt n, PetscReal rnorm, void *ctx);
++    
+     // PETSc solver pointer
+     SNES _snes;
+ 
+diff -Naur dolfin-1.6.0/dolfin/nls/PETScTAOSolver.cpp dolfin-1.6.0.new/dolfin/nls/PETScTAOSolver.cpp
+--- dolfin-1.6.0/dolfin/nls/PETScTAOSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/PETScTAOSolver.cpp	2016-06-27 19:14:47.367885081 +0200
+@@ -186,6 +186,15 @@
+   init(optimisation_problem, x.down_cast<PETScVector>(), lb, ub);
+ }
+ //-----------------------------------------------------------------------------
++PetscErrorCode
++PETScTAOSolver::ksp_monitor_norm(KSP ksp, PetscInt n,
++				 PetscReal rnorm, void * vf)
++{
++  PetscViewerAndFormat * _vf = static_cast<PetscViewerAndFormat *>(vf);
++  KSPMonitorTrueResidualNorm(ksp, n, rnorm, _vf);
++  return(0);
++}
++//-----------------------------------------------------------------------------
+ void PETScTAOSolver::init(OptimisationProblem& optimisation_problem,
+                           PETScVector& x,
+                           const PETScVector& lb,
+@@ -365,9 +374,7 @@
+   set_tao(parameters["method"]);
+ 
+   // Set tolerances
+-  TaoSetTolerances(_tao, parameters["function_absolute_tol"],
+-                         parameters["function_relative_tol"],
+-                         parameters["gradient_absolute_tol"],
++  TaoSetTolerances(_tao, parameters["gradient_absolute_tol"],
+                          parameters["gradient_relative_tol"],
+                          parameters["gradient_t_tol"]);
+ 
+@@ -490,8 +497,10 @@
+       KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
+ 
+     // KSP monitor
+-    if (krylov_parameters["monitor_convergence"])
+-      KSPMonitorSet(ksp, KSPMonitorTrueResidualNorm, 0, 0);
++    if (krylov_parameters["monitor_convergence"]) {
++      PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT, &vf);
++      KSPMonitorSet(ksp, ksp_monitor_norm, vf, 0);
++    }
+ 
+     // Get integer tolerances (to take care of casting to PetscInt)
+     const int max_iter = krylov_parameters["maximum_iterations"];
+diff -Naur dolfin-1.6.0/dolfin/nls/PETScTAOSolver.h dolfin-1.6.0.new/dolfin/nls/PETScTAOSolver.h
+--- dolfin-1.6.0/dolfin/nls/PETScTAOSolver.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/PETScTAOSolver.h	2016-06-27 19:08:00.634361160 +0200
+@@ -146,6 +146,10 @@
+     // TAO pointer
+     Tao _tao;
+ 
++    // monitoring functions
++    PetscViewerAndFormat* vf;
++    static PetscErrorCode ksp_monitor_norm(KSP ksp, PetscInt n, PetscReal rnorm, void *ctx);
++
+     // Update parameters when tao/ksp/pc_types are explictly given
+     void update_parameters(const std::string tao_type,
+                            const std::string ksp_type,
+diff -Naur dolfin-1.6.0/dolfin/nls/TAOLinearBoundSolver.cpp dolfin-1.6.0.new/dolfin/nls/TAOLinearBoundSolver.cpp
+--- dolfin-1.6.0/dolfin/nls/TAOLinearBoundSolver.cpp	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/TAOLinearBoundSolver.cpp	2016-06-27 19:17:10.390216576 +0200
+@@ -313,9 +313,7 @@
+   dolfin_assert(_tao);
+ 
+   // Set tolerances
+-  TaoSetTolerances(_tao, parameters["function_absolute_tol"],
+-		   parameters["function_relative_tol"],
+-		   parameters["gradient_absolute_tol"],
++  TaoSetTolerances(_tao, parameters["gradient_absolute_tol"],
+ 		   parameters["gradient_relative_tol"],
+ 		   parameters["gradient_t_tol"]);
+ 
+@@ -340,6 +338,15 @@
+   set_solver(method);
+ }
+ //-----------------------------------------------------------------------------
++PetscErrorCode
++TAOLinearBoundSolver::ksp_monitor_norm(KSP ksp, PetscInt n,
++				       PetscReal rnorm, void * vf)
++{
++  PetscViewerAndFormat * _vf = static_cast<PetscViewerAndFormat *>(vf);
++  KSPMonitorTrueResidualNorm(ksp, n, rnorm, _vf);
++  return(0);
++}
++//-----------------------------------------------------------------------------
+ void TAOLinearBoundSolver::set_ksp_options()
+ {
+   dolfin_assert(_tao);
+@@ -360,8 +367,10 @@
+     else
+       KSPSetInitialGuessNonzero(ksp, PETSC_FALSE);
+ 
+-    if (krylov_parameters["monitor_convergence"])
+-      KSPMonitorSet(ksp, KSPMonitorTrueResidualNorm, 0, 0);
++    if (krylov_parameters["monitor_convergence"]) {
++      PetscViewerAndFormatCreate(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_DEFAULT, &vf);
++      KSPMonitorSet(ksp, ksp_monitor_norm, vf, 0);
++    }
+ 
+     // Set tolerances
+     const int max_ksp_it = krylov_parameters["maximum_iterations"];
+diff -Naur dolfin-1.6.0/dolfin/nls/TAOLinearBoundSolver.h dolfin-1.6.0.new/dolfin/nls/TAOLinearBoundSolver.h
+--- dolfin-1.6.0/dolfin/nls/TAOLinearBoundSolver.h	2015-07-28 17:05:55.000000000 +0200
++++ dolfin-1.6.0.new/dolfin/nls/TAOLinearBoundSolver.h	2016-06-27 19:08:09.157561005 +0200
+@@ -174,6 +174,10 @@
+     // Tao solver pointer
+     Tao _tao;
+ 
++    // monitoring functions
++    PetscViewerAndFormat* vf;
++    static PetscErrorCode ksp_monitor_norm(KSP ksp, PetscInt n, PetscReal rnorm, void *ctx);
++
+     // Petsc preconditioner
+     std::shared_ptr<PETScPreconditioner> preconditioner;
+ 

@@ -30,7 +30,8 @@ import sys
 StandardModules = {
     "__future__":       (2, 1),
     "abc":              (2, 6),
-    "argparse":         (2, 7),
+# skip argparse now that it's in lib/spack/external
+#    "argparse":         (2, 7),
     "ast":              (2, 6),
     "atexit":           (2, 0),
     "bz2":              (2, 3),
@@ -165,12 +166,24 @@ class NodeChecker(object):
         def rollup(n):
             if isinstance(n, compiler.ast.Name):
                 return n.name
+            elif isinstance(n, compiler.ast.Const):
+                return type(n.value).__name__
             elif isinstance(n, compiler.ast.Getattr):
                 r = rollup(n.expr)
                 if r:
                     return r + "." + n.attrname
         name = rollup(node.node)
         if name:
+            # Special handling for empty format strings, which aren't
+            # allowed in Python 2.6
+            if name in ('unicode.format', 'str.format'):
+                n = node.node
+                if isinstance(n, compiler.ast.Getattr):
+                    n = n.expr
+                    if isinstance(n, compiler.ast.Const):
+                        if '{}' in n.value:
+                            self.add(node, (2,7), name + ' with {} format string')
+
             v = Functions.get(name)
             if v is not None:
                 self.add(node, v, name)
@@ -245,7 +258,7 @@ class NodeChecker(object):
         self.add(node, (2,2), "yield expression")
         self.default(node)
 
-def get_versions(source):
+def get_versions(source, filename=None):
     """Return information about the Python versions required for specific features.
 
     The return value is a dictionary with keys as a version number as a tuple
@@ -329,65 +342,3 @@ def qver(source):
     #(2, 6)
     """
     return max(get_versions(source).keys())
-
-
-if __name__ == '__main__':
-
-    Verbose = False
-    MinVersion = (2, 3)
-    Lint = False
-
-    files = []
-    i = 1
-    while i < len(sys.argv):
-        a = sys.argv[i]
-        if a == "--test":
-            import doctest
-            doctest.testmod()
-            sys.exit(0)
-        if a == "-v" or a == "--verbose":
-            Verbose = True
-        elif a == "-l" or a == "--lint":
-            Lint = True
-        elif a == "-m" or a == "--min-version":
-            i += 1
-            MinVersion = tuple(map(int, sys.argv[i].split(".")))
-        else:
-            files.append(a)
-        i += 1
-
-    if not files:
-        print >>sys.stderr, """Usage: %s [options] source ...
-
-        Report minimum Python version required to run given source files.
-
-        -m x.y or --min-version x.y (default 2.3)
-            report version triggers at or above version x.y in verbose mode
-        -v or --verbose
-            print more detailed report of version triggers for each version
-    """ % sys.argv[0]
-        sys.exit(1)
-
-    for fn in files:
-        try:
-            f = open(fn)
-            source = f.read()
-            f.close()
-            ver = get_versions(source)
-            if Verbose:
-                print fn
-                for v in sorted([k for k in ver.keys() if k >= MinVersion], reverse=True):
-                    reasons = [x for x in uniq(ver[v]) if x]
-                    if reasons:
-                        # each reason is (lineno, message)
-                        print "\t%s\t%s" % (".".join(map(str, v)), ", ".join([x[1] for x in reasons]))
-            elif Lint:
-                for v in sorted([k for k in ver.keys() if k >= MinVersion], reverse=True):
-                    reasons = [x for x in uniq(ver[v]) if x]
-                    for r in reasons:
-                        # each reason is (lineno, message)
-                        print "%s:%s: %s %s" % (fn, r[0], ".".join(map(str, v)), r[1])
-            else:
-                print "%s\t%s" % (".".join(map(str, max(ver.keys()))), fn)
-        except SyntaxError, x:
-            print "%s: syntax error compiling with Python %s: %s" % (fn, platform.python_version(), x)

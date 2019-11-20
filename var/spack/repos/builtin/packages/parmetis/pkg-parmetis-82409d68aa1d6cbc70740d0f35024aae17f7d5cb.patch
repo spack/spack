@@ -1,0 +1,35 @@
+From 82409d68aa1d6cbc70740d0f35024aae17f7d5cb Mon Sep 17 00:00:00 2001
+From: Sean Farley <sean@mcs.anl.gov>
+Date: Tue, 20 Mar 2012 11:59:44 -0500
+Subject: [PATCH] parmetis: fix bug reported by jfettig; '<' to '<=' in xyzpart
+
+Hg-commit: 2dd2eae596acaabbc80e0ef875182616f868dbc2
+---
+ libparmetis/xyzpart.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/libparmetis/xyzpart.c b/libparmetis/xyzpart.c
+index 307aed9..3a2c289 100644
+--- a/libparmetis/xyzpart.c
++++ b/libparmetis/xyzpart.c
+@@ -111,7 +111,7 @@ void IRBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+       /* determine bucket counts */
+       iset(nbins, 0, lcounts);
+       for (j=0, i=0; i<nvtxs;) {
+-        if (cand[i].key < emarkers[j+1]) {
++        if (cand[i].key <= emarkers[j+1]) {
+           lcounts[j]++;
+           i++;
+         }
+@@ -158,7 +158,7 @@ void IRBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+ 
+     /* assign the coordinate to the appropriate bin */
+     for (j=0, i=0; i<nvtxs;) {
+-      if (cand[i].key < emarkers[j+1]) {
++      if (cand[i].key <= emarkers[j+1]) {
+         bxyz[cand[i].val*ndims+k] = j;
+         i++;
+       }
+-- 
+2.1.1.1.g1fb337f
+

@@ -1,0 +1,12 @@
+--- a/src/cmake/cxxConfigure.cmake	2017-05-11 16:55:14.745107845 -0700
++++ b/src/cmake/cxxConfigure.cmake	2017-05-11 17:16:39.355981745 -0700
+@@ -101,6 +101,9 @@
+ if((NOT HAVE_LIBXML2) OR (NOT HAVE_LIBXSLT))
+   find_package_version(LibXml2 ${BCL2FASTQ_LIBXML2_VERSION})
+   find_package_version(LibXslt ${BCL2FASTQ_LIBXSLT_VERSION})
++  # macro isn't ONLY for redist, see its definition...
++  string(REGEX REPLACE "/include$" "" LIBEXSLT_HINT ${LIBXSLT_INCLUDE_DIR})
++  find_library_redist(LIBEXSLT ${LIBEXSLT_HINT} libexslt/exslt.h exslt)
+ endif((NOT HAVE_LIBXML2) OR (NOT HAVE_LIBXSLT))
+ 
+ if((NOT HAVE_LIBXML2) OR (NOT HAVE_LIBXSLT))

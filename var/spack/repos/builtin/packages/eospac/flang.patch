@@ -1,0 +1,62 @@
+--- a/Source/config/Makefile.-linux-gnu.detect
++++ b/Source/config/Makefile.-linux-gnu.detect
+@@ -19,7 +19,7 @@
+ # Compiler suite configurations based upon F90                 ###
+ ##################################################################
+ # Default: use the first F90 compiler found from F90_List
+-F90_List = gfortran pgfortran pgf90 lf95 f90 ifort g95 ftn pathf90
++F90_List = gfortran pgfortran pgf90 lf95 f90 ifort g95 ftn pathf90 flang
+ F90_Found_List = $(foreach compiler,$(F90_List),$(call pathsearch,$(compiler)))
+ F90 = $(firstword $(F90_Found_List))
+ F90_Key = $(strip $(firstword $(foreach compiler,$(F90_List),$(call match_r1,$(compiler),$(F90)))))
+
+--- a/Source/config/Makefile.-linux-gnu.hashes
++++ b/Source/config/Makefile.-linux-gnu.hashes
+@@ -32,6 +32,7 @@
+ $(call set,_CC,g95,        gcc                       )   # G95
+ $(call set,_CC,gfortran,   gcc                       )   # gfortran
+ $(call set,_CC,ftn,        cc        gcc             )   # Cray Computing Environment (cce)
++$(call set,_CC,flang,      clang                     )   # flang/clang
+
+ $(call set,_CXX,pgfortran, pgCC      g++             )   # PGI
+ $(call set,_CXX,pgf90,     pgCC      g++             )   # PGI
+@@ -42,6 +43,7 @@
+ $(call set,_CXX,g95,       g++                       )   # G95
+ $(call set,_CXX,gfortran,  g++                       )   # gfortran
+ $(call set,_CXX,ftn,       CC        g++             )   # Cray Computing Environment (cce)
++$(call set,_CC,flang,      clang++                   )   # flang/clang++
+
+ $(call set,_F77,pgfortran, pgfortran pgf77     pgf90 )   # PGI
+ $(call set,_F77,pgf90,     pgfortran pgf77     pgf90 )   # PGI
+@@ -52,6 +54,7 @@
+ $(call set,_F77,g95,       $(F90)                    )   # G95
+ $(call set,_F77,gfortran,  $(F90)                    )   # gfortran
+ $(call set,_F77,ftn,       $(F90)                    )   # Cray Computing Environment (cce)
++$(call set,_CC,flang,      flang                     )   # flang
+
+ ##################################################################
+ ### Define CC, CXX and  F77 according to $(F90_Key).           ###
+@@ -94,6 +97,7 @@
+ $(call set,_COMP_FLAGS,gfortran,     -I"$(INCDIR)" -Wno-c-binding-type)   # gfortran
+ $(call set,_COMP_FLAGS,ppu-gfortran, -I"$(INCDIR)"                    )   # ppu-gfortran
+ $(call set,_COMP_FLAGS,ftn,          -e m -I"$(INCDIR)" -hfp0         )   # Cray Computing Environment (cce)
++$(call set,_COMP_FLAGS,flang,        -I"$(INCDIR)"                    )   # flang
+
+ # define define_module_subdir script options
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,f90,)           # Absoft f90
+@@ -105,6 +109,7 @@
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,g95,)           # G95
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,gfortran,)      # gfortran
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,ftn,)           # Cray Computing Environment (cce)
++$(call set,_DEFINE_MODULE_SUBDIR_FLAGS,flang,)         # flang
+
+ # define define_module_subdir script patterns
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,f90,absoft)           # Absoft f90
+@@ -116,6 +121,7 @@
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,g95,$(F90_Key))       # G95
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,gfortran,gcc)         # gfortran
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,ftn,cce)              # Cray Computing Environment (cce)
++$(call set,_DEFINE_MODULE_SUBDIR_PATTS,flang,clang)          # flang/clang
+
+ # define optional modules for cross-compiling
+ X_Compile_Module_List = craype-haswell craype-mic-knl

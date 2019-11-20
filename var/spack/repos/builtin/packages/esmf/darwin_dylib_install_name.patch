@@ -1,0 +1,18 @@
+--- a/build/common.mk	2017-11-25 17:16:31.000000000 +1100
++++ b/build/common.mk	2017-11-25 17:26:20.000000000 +1100
+@@ -3415,11 +3415,11 @@
+ 		    mkdir tmp_$$NEXTLIB ;\
+ 		    cd tmp_$$NEXTLIB  ;\
+ 	                $(ESMF_AREXTRACT) ../$$NEXTLIB.a ;\
+-                    echo $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -o $(ESMF_LDIR)/$$NEXTLIB.$(ESMF_SL_SUFFIX) *.o $(ESMF_SL_LIBLIBS) ;\
+-		    $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -o $(ESMF_LDIR)/$$NEXTLIB.$(ESMF_SL_SUFFIX) *.o $(ESMF_SL_LIBLIBS) ;\
++		    echo $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -Wl,-install_name -Wl,@rpath/$$NEXTLIB.$(ESMF_SL_SUFFIX) -o $(ESMF_LDIR)/$$NEXTLIB.$(ESMF_SL_SUFFIX) *.o $(ESMF_SL_LIBLIBS) ;\
++		    $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -Wl,-install_name -Wl,@rpath/$$NEXTLIB.$(ESMF_SL_SUFFIX) -o $(ESMF_LDIR)/$$NEXTLIB.$(ESMF_SL_SUFFIX) *.o $(ESMF_SL_LIBLIBS) ;\
+ 		    echo Converting $$NEXTLIB.a to $$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) ;\
+-                    echo $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -o $(ESMF_LDIR)/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) *.o $(ESMF_CXXLINKOPTS) $(ESMF_CXXLINKPATHS) $(ESMF_CXXLINKRPATHS) $(ESMF_CXXLINKLIBS) ;\
+-		    $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -o $(ESMF_LDIR)/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) *.o $(ESMF_CXXLINKOPTS) $(ESMF_CXXLINKPATHS) $(ESMF_CXXLINKRPATHS) $(ESMF_CXXLINKLIBS) ;\
++		    echo $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -Wl,-install_name -Wl,@rpath/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) -o $(ESMF_LDIR)/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) *.o $(ESMF_CXXLINKOPTS) $(ESMF_CXXLINKPATHS) $(ESMF_CXXLINKRPATHS) $(ESMF_CXXLINKLIBS) ;\
++		    $(ESMF_SL_LIBLINKER) $(ESMF_SL_LIBOPTS) -Wl,-install_name -Wl,@rpath/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) -o $(ESMF_LDIR)/$$NEXTLIB\_fullylinked.$(ESMF_SL_SUFFIX) *.o $(ESMF_CXXLINKOPTS) $(ESMF_CXXLINKPATHS) $(ESMF_CXXLINKRPATHS) $(ESMF_CXXLINKLIBS) ;\
+ 		    cd .. ;\
+ 		    $(ESMF_RM) -r tmp_$$NEXTLIB ;\
+ 		fi ;\

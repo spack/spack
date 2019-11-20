@@ -1,0 +1,22 @@
+# HG changeset patch
+# User Sean Farley <sean@mcs.anl.gov>
+# Date 1332269671 18000
+#      Tue Mar 20 13:54:31 2012 -0500
+# Node ID b95c0c2e1d8bf8e3273f7d45e856f0c0127d998e
+# Parent  88049269953c67c3fdcc4309bf901508a875f0dc
+cmake: add gklib headers to install into include
+
+diff -r 88049269953c -r b95c0c2e1d8b libmetis/CMakeLists.txt
+Index: libmetis/CMakeLists.txt
+===================================================================
+--- a/libmetis/CMakeLists.txt Tue Mar 20 13:54:29 2012 -0500
++++ b/libmetis/CMakeLists.txt Tue Mar 20 13:54:31 2012 -0500
+@@ -12,6 +12,8 @@ endif()
+ if(METIS_INSTALL)
+   install(TARGETS metis
+     LIBRARY DESTINATION lib
+     RUNTIME DESTINATION lib
+     ARCHIVE DESTINATION lib)
++  install(FILES gklib_defs.h DESTINATION include)
++  install(FILES gklib_rename.h DESTINATION include)
+ endif()

@@ -1,41 +1,21 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import re
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
-import exceptions
-import hashlib
 import shutil
+import glob
 import tempfile
-from contextlib import closing
+import re
+from contextlib import contextmanager
 
-import llnl.util.tty as tty
-from llnl.util.lang import memoized
-from llnl.util.filesystem import join_path, mkdirp
+import ruamel.yaml as yaml
 
-import spack
-from spack.spec import Spec
+from llnl.util.filesystem import mkdirp
+
+import spack.config
+import spack.spec
 from spack.error import SpackError
 
 
@@ -51,9 +31,10 @@ class DirectoryLayout(object):
        install, and they can use this to customize the nesting structure of
        spack installs.
     """
+
     def __init__(self, root):
         self.root = root
-
+        self.check_upstream = True
 
     @property
     def hidden_file_paths(self):
@@ -67,81 +48,68 @@ class DirectoryLayout(object):
         """
         raise NotImplementedError()
 
-
     def all_specs(self):
         """To be implemented by subclasses to traverse all specs for which there is
            a directory within the root.
         """
         raise NotImplementedError()
 
-
     def relative_path_for_spec(self, spec):
         """Implemented by subclasses to return a relative path from the install
            root to a unique location for the provided spec."""
         raise NotImplementedError()
 
-
-    def make_path_for_spec(self, spec):
+    def create_install_directory(self, spec):
         """Creates the installation directory for a spec."""
         raise NotImplementedError()
 
+    def check_installed(self, spec):
+        """Checks whether a spec is installed.
 
-    def extension_map(self, spec):
-        """Get a dict of currently installed extension packages for a spec.
+        Return the spec's prefix, if it is installed, None otherwise.
 
-           Dict maps { name : extension_spec }
-           Modifying dict does not affect internals of this layout.
+        Raise an exception if the install is inconsistent or corrupt.
         """
         raise NotImplementedError()
-
-
-    def check_extension_conflict(self, spec, ext_spec):
-        """Ensure that ext_spec can be activated in spec.
-
-           If not, raise ExtensionAlreadyInstalledError or
-           ExtensionConflictError.
-        """
-        raise NotImplementedError()
-
-
-    def check_activated(self, spec, ext_spec):
-        """Ensure that ext_spec can be removed from spec.
-
-           If not, raise NoSuchExtensionError.
-        """
-        raise NotImplementedError()
-
-
-    def add_extension(self, spec, ext_spec):
-        """Add to the list of currently installed extensions."""
-        raise NotImplementedError()
-
-
-    def remove_extension(self, spec, ext_spec):
-        """Remove from the list of currently installed extensions."""
-        raise NotImplementedError()
-
 
     def path_for_spec(self, spec):
-        """Return an absolute path from the root to a directory for the spec."""
+        """Return absolute path from the root to a directory for the spec."""
         _check_concrete(spec)
+
+        if spec.external:
+            return spec.external_path
+        if self.check_upstream:
+            upstream, record = spack.store.db.query_by_spec_hash(
+                spec.dag_hash())
+            if upstream:
+                raise SpackError(
+                    "Internal error: attempted to call path_for_spec on"
+                    " upstream-installed package.")
 
         path = self.relative_path_for_spec(spec)
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
 
-
-    def remove_path_for_spec(self, spec):
+    def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
 
-        if os.path.exists(path):
+        if deprecated:
+            if os.path.exists(path):
+                try:
+                    metapath = self.deprecated_file_path(spec)
+                    os.unlink(path)
+                    os.remove(metapath)
+                except OSError as e:
+                    raise RemoveFailedError(spec, path, e)
+
+        elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
-            except exceptions.OSError, e:
+            except OSError as e:
                 raise RemoveFailedError(spec, path, e)
 
         path = os.path.dirname(path)
@@ -153,218 +121,260 @@ class DirectoryLayout(object):
             path = os.path.dirname(path)
 
 
-def traverse_dirs_at_depth(root, depth, path_tuple=(), curdepth=0):
-    """For each directory at <depth> within <root>, return a tuple representing
-       the ancestors of that directory.
+class ExtensionsLayout(object):
+    """A directory layout is used to associate unique paths with specs for
+       package extensions.
+       Keeps track of which extensions are activated for what package.
+       Depending on the use case, this can mean globally activated extensions
+       directly in the installation folder - or extensions activated in
+       filesystem views.
     """
-    if curdepth == depth and curdepth != 0:
-        yield path_tuple
-    elif depth > curdepth:
-        for filename in os.listdir(root):
-            child = os.path.join(root, filename)
-            if os.path.isdir(child):
-                child_tuple = path_tuple + (filename,)
-                for tup in traverse_dirs_at_depth(
-                        child, depth, child_tuple, curdepth+1):
-                    yield tup
+    def __init__(self, view, **kwargs):
+        self.view = view
 
+    def add_extension(self, spec, ext_spec):
+        """Add to the list of currently installed extensions."""
+        raise NotImplementedError()
 
-class SpecHashDirectoryLayout(DirectoryLayout):
-    """Lays out installation directories like this::
-           <install_root>/
-               <architecture>/
-                   <compiler>/
-                       name@version+variant-<dependency_hash>
+    def check_activated(self, spec, ext_spec):
+        """Ensure that ext_spec can be removed from spec.
 
-       Where dependency_hash is a SHA-1 hash prefix for the full package spec.
-       This accounts for dependencies.
-
-       If there is ever a hash collision, you won't be able to install a new
-       package unless you use a larger prefix.  However, the full spec is stored
-       in a file called .spec in each directory, so you can migrate an entire
-       install directory to a new hash size pretty easily.
-
-       TODO: make a tool to migrate install directories to different hash sizes.
-    """
-    def __init__(self, root, **kwargs):
-        """Prefix size is number of characters in the SHA-1 prefix to use
-           to make each hash unique.
+           If not, raise NoSuchExtensionError.
         """
-        spec_file_name = kwargs.get('spec_file_name', '.spec')
-        extension_file_name = kwargs.get('extension_file_name', '.extensions')
-        super(SpecHashDirectoryLayout, self).__init__(root)
-        self.spec_file_name = spec_file_name
-        self.extension_file_name = extension_file_name
+        raise NotImplementedError()
 
-        # Cache of already written/read extension maps.
-        self._extension_maps = {}
+    def check_extension_conflict(self, spec, ext_spec):
+        """Ensure that ext_spec can be activated in spec.
+
+           If not, raise ExtensionAlreadyInstalledError or
+           ExtensionConflictError.
+        """
+        raise NotImplementedError()
+
+    def extension_map(self, spec):
+        """Get a dict of currently installed extension packages for a spec.
+
+           Dict maps { name : extension_spec }
+           Modifying dict does not affect internals of this layout.
+        """
+        raise NotImplementedError()
+
+    def extendee_target_directory(self, extendee):
+        """Specify to which full path extendee should link all files
+        from extensions."""
+        raise NotImplementedError
+
+    def remove_extension(self, spec, ext_spec):
+        """Remove from the list of currently installed extensions."""
+        raise NotImplementedError()
+
+
+class YamlDirectoryLayout(DirectoryLayout):
+    """By default lays out installation directories like this::
+           <install root>/
+               <platform-os-target>/
+                   <compiler>-<compiler version>/
+                       <name>-<version>-<hash>
+
+       The hash here is a SHA-1 hash for the full DAG plus the build
+       spec.  TODO: implement the build spec.
+
+       The installation directory scheme can be modified with the
+       arguments hash_len and path_scheme.
+    """
+
+    def __init__(self, root, **kwargs):
+        super(YamlDirectoryLayout, self).__init__(root)
+        self.hash_len       = kwargs.get('hash_len')
+        self.path_scheme    = kwargs.get('path_scheme') or (
+            "{architecture}/"
+            "{compiler.name}-{compiler.version}/"
+            "{name}-{version}-{hash}")
+        if self.hash_len is not None:
+            if re.search(r'{hash:\d+}', self.path_scheme):
+                raise InvalidDirectoryLayoutParametersError(
+                    "Conflicting options for installation layout hash length")
+            self.path_scheme = self.path_scheme.replace(
+                "{hash}", "{hash:%d}" % self.hash_len)
+
+        # If any of these paths change, downstream databases may not be able to
+        # locate files in older upstream databases
+        self.metadata_dir        = '.spack'
+        self.deprecated_dir      = 'deprecated'
+        self.spec_file_name      = 'spec.yaml'
+        self.extension_file_name = 'extensions.yaml'
+        self.packages_dir        = 'repos'  # archive of package.py files
+        self.manifest_file_name  = 'install_manifest.json'
 
     @property
     def hidden_file_paths(self):
-        return ('.spec', '.extensions')
-
+        return (self.metadata_dir,)
 
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
-        dir_name = spec.format('$_$@$+$#')
-        return join_path(spec.architecture, spec.compiler, dir_name)
 
+        path = spec.format(self.path_scheme)
+        return path
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
-        with closing(open(path, 'w')) as spec_file:
-            spec_file.write(spec.tree(ids=False, cover='nodes'))
-
+        _check_concrete(spec)
+        with open(path, 'w') as f:
+            spec.to_yaml(f)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
-        with closing(open(path)) as spec_file:
-            # Specs from files are assumed normal and concrete
-            spec = Spec(spec_file.read().replace('\n', ''))
+        try:
+            with open(path) as f:
+                spec = spack.spec.Spec.from_yaml(f)
+        except Exception as e:
+            if spack.config.get('config:debug'):
+                raise
+            raise SpecReadError(
+                'Unable to read file: %s' % path, 'Cause: ' + str(e))
 
-        if all(spack.db.exists(s.name) for s in spec.traverse()):
-            copy = spec.copy()
-
-            # TODO: It takes a lot of time to normalize every spec on read.
-            # TODO: Storing graph info with spec files would fix this.
-            copy.normalize()
-            if copy.concrete:
-                return copy   # These are specs spack still understands.
-
-        # If we get here, either the spec is no longer in spack, or
-        # something about its dependencies has changed. So we need to
-        # just assume the read spec is correct.  We'll lose graph
-        # information if we do this, but this is just for best effort
-        # for commands like uninstall and find.  Currently Spack
-        # doesn't do anything that needs the graph info after install.
-
-        # TODO: store specs with full connectivity information, so
-        # that we don't have to normalize or reconstruct based on
-        # changing dependencies in the Spack tree.
-        spec._normal = True
-        spec._concrete = True
+        # Specs read from actual installations are always concrete
+        spec._mark_concrete()
         return spec
-
 
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        return join_path(self.path_for_spec(spec), self.spec_file_name)
+        return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    def deprecated_file_name(self, spec):
+        """Gets name of deprecated spec file in deprecated dir"""
+        _check_concrete(spec)
+        return spec.dag_hash() + '_' + self.spec_file_name
 
-    def make_path_for_spec(self, spec):
+    def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
+        """Gets full path to spec file for deprecated spec
+
+        If the deprecator_spec is provided, use that. Otherwise, assume
+        deprecated_spec is already deprecated and its prefix links to the
+        prefix of its deprecator."""
+        _check_concrete(deprecated_spec)
+        if deprecator_spec:
+            _check_concrete(deprecator_spec)
+
+        # If deprecator spec is None, assume deprecated_spec already deprecated
+        # and use its link to find the file.
+        base_dir = self.path_for_spec(
+            deprecator_spec
+        ) if deprecator_spec else os.readlink(deprecated_spec.prefix)
+
+        return os.path.join(base_dir, self.metadata_dir, self.deprecated_dir,
+                            self.deprecated_file_name(deprecated_spec))
+
+    @contextmanager
+    def disable_upstream_check(self):
+        self.check_upstream = False
+        yield
+        self.check_upstream = True
+
+    def metadata_path(self, spec):
+        return os.path.join(spec.prefix, self.metadata_dir)
+
+    def build_packages_path(self, spec):
+        return os.path.join(self.metadata_path(spec), self.packages_dir)
+
+    def create_install_directory(self, spec):
         _check_concrete(spec)
 
+        prefix = self.check_installed(spec)
+        if prefix:
+            raise InstallDirectoryAlreadyExistsError(prefix)
+
+        # Create install directory with properly configured permissions
+        # Cannot import at top of file
+        from spack.package_prefs import get_package_dir_permissions
+        from spack.package_prefs import get_package_group
+
+        # Each package folder can have its own specific permissions, while
+        # intermediate folders (arch/compiler) are set with access permissions
+        # equivalent to the root permissions of the layout.
+        group = get_package_group(spec)
+        perms = get_package_dir_permissions(spec)
+
+        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
+        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+
+        self.write_spec(spec, self.spec_file_path(spec))
+
+    def check_installed(self, spec):
+        _check_concrete(spec)
         path = self.path_for_spec(spec)
         spec_file_path = self.spec_file_path(spec)
 
-        if os.path.isdir(path):
-            if not os.path.isfile(spec_file_path):
-                raise InconsistentInstallDirectoryError(
-                    'No spec file found at path %s' % spec_file_path)
+        if not os.path.isdir(path):
+            return None
 
-            installed_spec = self.read_spec(spec_file_path)
-            if installed_spec == self.spec:
-                raise InstallDirectoryAlreadyExistsError(path)
+        if not os.path.isfile(spec_file_path):
+            raise InconsistentInstallDirectoryError(
+                'Install prefix exists but contains no spec.yaml:',
+                "  " + path)
 
-            spec_hash = self.hash_spec(spec)
-            installed_hash = self.hash_spec(installed_spec)
-            if installed_spec == spec_hash:
-                raise SpecHashCollisionError(installed_hash, spec_hash)
-            else:
-                raise InconsistentInstallDirectoryError(
-                    'Spec file in %s does not match SHA-1 hash!'
-                    % spec_file_path)
+        installed_spec = self.read_spec(spec_file_path)
+        if installed_spec == spec:
+            return path
 
-        mkdirp(path)
-        self.write_spec(spec, spec_file_path)
+        # DAG hashes currently do not include build dependencies.
+        #
+        # TODO: remove this when we do better concretization and don't
+        # ignore build-only deps in hashes.
+        elif installed_spec == spec.copy(deps=('link', 'run')):
+            return path
 
+        if spec.dag_hash() == installed_spec.dag_hash():
+            raise SpecHashCollisionError(spec, installed_spec)
+        else:
+            raise InconsistentInstallDirectoryError(
+                'Spec file in %s does not match hash!' % spec_file_path)
 
-    @memoized
     def all_specs(self):
         if not os.path.isdir(self.root):
             return []
 
-        specs = []
-        for path in traverse_dirs_at_depth(self.root, 3):
-            arch, compiler, last_dir = path
-            spec_file_path = join_path(
-                self.root, arch, compiler, last_dir, self.spec_file_name)
-            if os.path.exists(spec_file_path):
-                spec = self.read_spec(spec_file_path)
-                specs.append(spec)
-        return specs
+        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
+        path_elems += [self.metadata_dir, self.spec_file_name]
+        pattern = os.path.join(self.root, *path_elems)
+        spec_files = glob.glob(pattern)
+        return [self.read_spec(s) for s in spec_files]
+
+    def all_deprecated_specs(self):
+        if not os.path.isdir(self.root):
+            return []
+
+        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
+        path_elems += [self.metadata_dir, self.deprecated_dir,
+                       '*_' + self.spec_file_name]
+        pattern = os.path.join(self.root, *path_elems)
+        spec_files = glob.glob(pattern)
+        get_depr_spec_file = lambda x: os.path.join(
+            os.path.dirname(os.path.dirname(x)), self.spec_file_name)
+        return set((self.read_spec(s), self.read_spec(get_depr_spec_file(s)))
+                   for s in spec_files)
+
+    def specs_by_hash(self):
+        by_hash = {}
+        for spec in self.all_specs():
+            by_hash[spec.dag_hash()] = spec
+        return by_hash
 
 
-    def extension_file_path(self, spec):
-        """Gets full path to an installed package's extension file"""
-        _check_concrete(spec)
-        return join_path(self.path_for_spec(spec), self.extension_file_name)
+class YamlViewExtensionsLayout(ExtensionsLayout):
+    """Maintain extensions within a view.
+    """
+    def __init__(self, view, layout):
+        """layout is the corresponding YamlDirectoryLayout object for which
+           we implement extensions.
+        """
+        super(YamlViewExtensionsLayout, self).__init__(view)
+        self.layout = layout
+        self.extension_file_name = 'extensions.yaml'
 
-
-    def _extension_map(self, spec):
-        """Get a dict<name -> spec> for all extensions currnetly
-           installed for this package."""
-        _check_concrete(spec)
-
-        if not spec in self._extension_maps:
-            path = self.extension_file_path(spec)
-            if not os.path.exists(path):
-                self._extension_maps[spec] = {}
-
-            else:
-                exts = {}
-                with closing(open(path)) as ext_file:
-                    for line in ext_file:
-                        try:
-                            spec = Spec(line.strip())
-                            exts[spec.name] = spec
-                        except spack.error.SpackError, e:
-                            # TODO: do something better here -- should be
-                            # resilient to corrupt files.
-                            raise InvalidExtensionSpecError(str(e))
-                self._extension_maps[spec] = exts
-
-        return self._extension_maps[spec]
-
-
-    def extension_map(self, spec):
-        """Defensive copying version of _extension_map() for external API."""
-        return self._extension_map(spec).copy()
-
-
-    def check_extension_conflict(self, spec, ext_spec):
-        exts = self._extension_map(spec)
-        if ext_spec.name in exts:
-            installed_spec = exts[ext_spec.name]
-            if ext_spec == installed_spec:
-                raise ExtensionAlreadyInstalledError(spec, ext_spec)
-            else:
-                raise ExtensionConflictError(spec, ext_spec, installed_spec)
-
-
-    def check_activated(self, spec, ext_spec):
-        exts = self._extension_map(spec)
-        if (not ext_spec.name in exts) or (ext_spec != exts[ext_spec.name]):
-            raise NoSuchExtensionError(spec, ext_spec)
-
-
-    def _write_extensions(self, spec, extensions):
-        path = self.extension_file_path(spec)
-
-        # Create a temp file in the same directory as the actual file.
-        dirname, basename = os.path.split(path)
-        tmp = tempfile.NamedTemporaryFile(
-            prefix=basename, dir=dirname, delete=False)
-
-        # Write temp file.
-        with closing(tmp):
-            for extension in sorted(extensions.values()):
-                tmp.write("%s\n" % extension)
-
-        # Atomic update by moving tmpfile on top of old one.
-        os.rename(tmp.name, path)
-
+        # Cache of already written/read extension maps.
+        self._extension_maps = {}
 
     def add_extension(self, spec, ext_spec):
         _check_concrete(spec)
@@ -378,6 +388,46 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         exts[ext_spec.name] = ext_spec
         self._write_extensions(spec, exts)
 
+    def check_extension_conflict(self, spec, ext_spec):
+        exts = self._extension_map(spec)
+        if ext_spec.name in exts:
+            installed_spec = exts[ext_spec.name]
+            if ext_spec == installed_spec:
+                raise ExtensionAlreadyInstalledError(spec, ext_spec)
+            else:
+                raise ExtensionConflictError(spec, ext_spec, installed_spec)
+
+    def check_activated(self, spec, ext_spec):
+        exts = self._extension_map(spec)
+        if (ext_spec.name not in exts) or (ext_spec != exts[ext_spec.name]):
+            raise NoSuchExtensionError(spec, ext_spec)
+
+    def extension_file_path(self, spec):
+        """Gets full path to an installed package's extension file, which
+           keeps track of all the extensions for that package which have been
+           added to this view.
+        """
+        _check_concrete(spec)
+        normalize_path = lambda p: (
+            os.path.abspath(p).rstrip(os.path.sep))
+
+        view_prefix = self.view.get_projection_for_spec(spec)
+        if normalize_path(spec.prefix) == normalize_path(view_prefix):
+            # For backwards compatibility, when the view is the extended
+            # package's installation directory, do not include the spec name
+            # as a subdirectory.
+            components = [view_prefix, self.layout.metadata_dir,
+                          self.extension_file_name]
+        else:
+            components = [view_prefix, self.layout.metadata_dir, spec.name,
+                          self.extension_file_name]
+
+        return os.path.join(*components)
+
+    def extension_map(self, spec):
+        """Defensive copying version of _extension_map() for external API."""
+        _check_concrete(spec)
+        return self._extension_map(spec).copy()
 
     def remove_extension(self, spec, ext_spec):
         _check_concrete(spec)
@@ -391,69 +441,150 @@ class SpecHashDirectoryLayout(DirectoryLayout):
         del exts[ext_spec.name]
         self._write_extensions(spec, exts)
 
+    def _extension_map(self, spec):
+        """Get a dict<name -> spec> for all extensions currently
+           installed for this package."""
+        _check_concrete(spec)
+
+        if spec not in self._extension_maps:
+            path = self.extension_file_path(spec)
+            if not os.path.exists(path):
+                self._extension_maps[spec] = {}
+
+            else:
+                by_hash = self.layout.specs_by_hash()
+                exts = {}
+                with open(path) as ext_file:
+                    yaml_file = yaml.load(ext_file)
+                    for entry in yaml_file['extensions']:
+                        name = next(iter(entry))
+                        dag_hash = entry[name]['hash']
+                        prefix   = entry[name]['path']
+
+                        if dag_hash not in by_hash:
+                            raise InvalidExtensionSpecError(
+                                "Spec %s not found in %s" % (dag_hash, prefix))
+
+                        ext_spec = by_hash[dag_hash]
+                        if prefix != ext_spec.prefix:
+                            raise InvalidExtensionSpecError(
+                                "Prefix %s does not match spec hash %s: %s"
+                                % (prefix, dag_hash, ext_spec))
+
+                        exts[ext_spec.name] = ext_spec
+                self._extension_maps[spec] = exts
+
+        return self._extension_maps[spec]
+
+    def _write_extensions(self, spec, extensions):
+        path = self.extension_file_path(spec)
+
+        if not extensions:
+            # Remove the empty extensions file
+            os.remove(path)
+            return
+
+        # Create a temp file in the same directory as the actual file.
+        dirname, basename = os.path.split(path)
+        mkdirp(dirname)
+
+        tmp = tempfile.NamedTemporaryFile(
+            prefix=basename, dir=dirname, delete=False)
+
+        # write tmp file
+        with tmp:
+            yaml.dump({
+                'extensions': [
+                    {ext.name: {
+                        'hash': ext.dag_hash(),
+                        'path': str(ext.prefix)
+                    }} for ext in sorted(extensions.values())]
+            }, tmp, default_flow_style=False, encoding='utf-8')
+
+        # Atomic update by moving tmpfile on top of old one.
+        os.rename(tmp.name, path)
+
 
 class DirectoryLayoutError(SpackError):
     """Superclass for directory layout errors."""
-    def __init__(self, message):
-        super(DirectoryLayoutError, self).__init__(message)
+
+    def __init__(self, message, long_msg=None):
+        super(DirectoryLayoutError, self).__init__(message, long_msg)
 
 
 class SpecHashCollisionError(DirectoryLayoutError):
-    """Raised when there is a hash collision in an SpecHashDirectoryLayout."""
+    """Raised when there is a hash collision in an install layout."""
+
     def __init__(self, installed_spec, new_spec):
-        super(SpecHashDirectoryLayout, self).__init__(
+        super(SpecHashCollisionError, self).__init__(
             'Specs %s and %s have the same SHA-1 prefix!'
-            % installed_spec, new_spec)
+            % (installed_spec, new_spec))
 
 
 class RemoveFailedError(DirectoryLayoutError):
     """Raised when a DirectoryLayout cannot remove an install prefix."""
+
     def __init__(self, installed_spec, prefix, error):
         super(RemoveFailedError, self).__init__(
             'Could not remove prefix %s for %s : %s'
-            % prefix, installed_spec.short_spec, error)
+            % (prefix, installed_spec.short_spec, error))
         self.cause = error
 
 
 class InconsistentInstallDirectoryError(DirectoryLayoutError):
     """Raised when a package seems to be installed to the wrong place."""
-    def __init__(self, message):
-        super(InconsistentInstallDirectoryError, self).__init__(message)
+
+    def __init__(self, message, long_msg=None):
+        super(InconsistentInstallDirectoryError, self).__init__(
+            message, long_msg)
 
 
 class InstallDirectoryAlreadyExistsError(DirectoryLayoutError):
-    """Raised when make_path_for_sec is called unnecessarily."""
+    """Raised when create_install_directory is called unnecessarily."""
+
     def __init__(self, path):
         super(InstallDirectoryAlreadyExistsError, self).__init__(
-            "Install path %s already exists!")
+            "Install path %s already exists!" % path)
+
+
+class SpecReadError(DirectoryLayoutError):
+    """Raised when directory layout can't read a spec."""
+
+
+class InvalidDirectoryLayoutParametersError(DirectoryLayoutError):
+    """Raised when a invalid directory layout parameters are supplied"""
+
+    def __init__(self, message, long_msg=None):
+        super(InvalidDirectoryLayoutParametersError, self).__init__(
+            message, long_msg)
 
 
 class InvalidExtensionSpecError(DirectoryLayoutError):
     """Raised when an extension file has a bad spec in it."""
-    def __init__(self, message):
-        super(InvalidExtensionSpecError, self).__init__(message)
 
 
 class ExtensionAlreadyInstalledError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
+
     def __init__(self, spec, ext_spec):
         super(ExtensionAlreadyInstalledError, self).__init__(
-            "%s is already installed in %s" % (ext_spec.short_spec, spec.short_spec))
+            "%s is already installed in %s"
+            % (ext_spec.short_spec, spec.short_spec))
 
 
 class ExtensionConflictError(DirectoryLayoutError):
     """Raised when an extension is added to a package that already has it."""
+
     def __init__(self, spec, ext_spec, conflict):
         super(ExtensionConflictError, self).__init__(
-            "%s cannot be installed in %s because it conflicts with %s."% (
-                ext_spec.short_spec, spec.short_spec, conflict.short_spec))
+            "%s cannot be installed in %s because it conflicts with %s"
+            % (ext_spec.short_spec, spec.short_spec, conflict.short_spec))
 
 
 class NoSuchExtensionError(DirectoryLayoutError):
     """Raised when an extension isn't there on deactivate."""
+
     def __init__(self, spec, ext_spec):
         super(NoSuchExtensionError, self).__init__(
-            "%s cannot be removed from %s because it's not activated."% (
-                ext_spec.short_spec, spec.short_spec))
-
-
+            "%s cannot be removed from %s because it's not activated."
+            % (ext_spec.short_spec, spec.short_spec))

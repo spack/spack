@@ -1,0 +1,15 @@
+diff --git a/support/cmake/cxx11.cmake b/support/cmake/cxx11.cmake
+index 31ea106..8581b9a 100644
+--- a/support/cmake/cxx11.cmake
++++ b/support/cmake/cxx11.cmake
+@@ -37,6 +37,10 @@ if (FMT_USE_CPP11)
+   endif ()
+ endif ()
+ 
++if (CMAKE_CXX_STANDARD)
++  set(CPP11_FLAG )
++endif ()
++
+ set(CMAKE_REQUIRED_FLAGS ${CPP11_FLAG})
+ 
+ # Check if variadic templates are working and not affected by GCC bug 39653:

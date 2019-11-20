@@ -1,0 +1,17 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class PyBackportsAbc(PythonPackage):
+    """Backports_ABC: A backport of recent additions to the 'collections.abc'
+    module."""
+    homepage = "https://github.com/cython/backports_abc"
+    url      = "https://github.com/cython/backports_abc/archive/0.4.tar.gz"
+
+    version('0.4', sha256='2b5c4e91e37ba8bcd3fb8fecc8530f941578fc2c911497da3f09bf5fec6a6705')
+
+    depends_on('py-setuptools', type='build')

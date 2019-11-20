@@ -1,0 +1,48 @@
+diff --git a/sqlite3.c b/sqlite3.c
+index 4ec1271..8615169 100644
+--- a/sqlite3.c
++++ b/sqlite3.c
+@@ -29466,9 +29466,6 @@ SQLITE_PRIVATE int sqlite3SafetyCheckSickOrOk(sqlite3 *db){
+ ** overflow, leave *pA unchanged and return 1.
+ */
+ SQLITE_PRIVATE int sqlite3AddInt64(i64 *pA, i64 iB){
+-#if GCC_VERSION>=5004000
+-  return __builtin_add_overflow(*pA, iB, pA);
+-#else
+   i64 iA = *pA;
+   testcase( iA==0 ); testcase( iA==1 );
+   testcase( iB==-1 ); testcase( iB==0 );
+@@ -29483,12 +29480,8 @@ SQLITE_PRIVATE int sqlite3AddInt64(i64 *pA, i64 iB){
+   }
+   *pA += iB;
+   return 0; 
+-#endif
+ }
+ SQLITE_PRIVATE int sqlite3SubInt64(i64 *pA, i64 iB){
+-#if GCC_VERSION>=5004000
+-  return __builtin_sub_overflow(*pA, iB, pA);
+-#else
+   testcase( iB==SMALLEST_INT64+1 );
+   if( iB==SMALLEST_INT64 ){
+     testcase( (*pA)==(-1) ); testcase( (*pA)==0 );
+@@ -29498,12 +29491,8 @@ SQLITE_PRIVATE int sqlite3SubInt64(i64 *pA, i64 iB){
+   }else{
+     return sqlite3AddInt64(pA, -iB);
+   }
+-#endif
+ }
+ SQLITE_PRIVATE int sqlite3MulInt64(i64 *pA, i64 iB){
+-#if GCC_VERSION>=5004000
+-  return __builtin_mul_overflow(*pA, iB, pA);
+-#else
+   i64 iA = *pA;
+   if( iB>0 ){
+     if( iA>LARGEST_INT64/iB ) return 1;
+@@ -29519,7 +29508,6 @@ SQLITE_PRIVATE int sqlite3MulInt64(i64 *pA, i64 iB){
+   }
+   *pA = iA*iB;
+   return 0;
+-#endif
+ }
+ 
+ /*

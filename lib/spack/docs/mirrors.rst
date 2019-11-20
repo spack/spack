@@ -1,7 +1,13 @@
+.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _mirrors:
 
+=======
 Mirrors
-============================
+=======
 
 Some sites may not have access to the internet for fetching packages.
 These sites will need a local repository of tarballs from which they
@@ -10,27 +16,29 @@ mirror is a URL that points to a directory, either on the local
 filesystem or on some server, containing tarballs for all of Spack's
 packages.
 
-Here's an example of a mirror's directory structure::
+Here's an example of a mirror's directory structure:
 
-    mirror/
-        cmake/
-            cmake-2.8.10.2.tar.gz
-        dyninst/
-            dyninst-8.1.1.tgz
-            dyninst-8.1.2.tgz
-        libdwarf/
-            libdwarf-20130126.tar.gz
-            libdwarf-20130207.tar.gz
-            libdwarf-20130729.tar.gz
-        libelf/
-            libelf-0.8.12.tar.gz
-            libelf-0.8.13.tar.gz
-        libunwind/
-            libunwind-1.1.tar.gz
-        mpich/
-            mpich-3.0.4.tar.gz
-        mvapich2/
-            mvapich2-1.9.tgz
+.. code-block:: none
+
+   mirror/
+       cmake/
+           cmake-2.8.10.2.tar.gz
+       dyninst/
+           dyninst-8.1.1.tgz
+           dyninst-8.1.2.tgz
+       libdwarf/
+           libdwarf-20130126.tar.gz
+           libdwarf-20130207.tar.gz
+           libdwarf-20130729.tar.gz
+       libelf/
+           libelf-0.8.12.tar.gz
+           libelf-0.8.13.tar.gz
+       libunwind/
+           libunwind-1.1.tar.gz
+       mpich/
+           mpich-3.0.4.tar.gz
+       mvapich2/
+           mvapich2-1.9.tgz
 
 The structure is very simple.  There is a top-level directory.  The
 second level directories are named after packages, and the third level
@@ -38,7 +46,7 @@ contains tarballs for each package, named after each package.
 
 .. note::
 
-   Archives are **not** named exactly they were in the package's fetch
+   Archives are **not** named exactly the way they were in the package's fetch
    URL.  They have the form ``<name>-<version>.<extension>``, where
    ``<name>`` is Spack's name for the package, ``<version>`` is the
    version of the tarball, and ``<extension>`` is whatever format the
@@ -49,27 +57,16 @@ contains tarballs for each package, named after each package.
    not standardize on a particular compression algorithm, because this
    would potentially require expanding and re-compressing each archive.
 
-.. _spack-mirror:
+.. _cmd-spack-mirror:
 
+----------------
 ``spack mirror``
-----------------------------
+----------------
 
 Mirrors are managed with the ``spack mirror`` command.  The help for
-``spack mirror`` looks like this::
+``spack mirror`` looks like this:
 
-    $ spack mirror -h
-    usage: spack mirror [-h] SUBCOMMAND ...
-
-    positional arguments:
-      SUBCOMMAND
-        create           Create a directory to be used as a spack mirror, and fill
-                         it with package archives.
-        add              Add a mirror to Spack.
-        remove           Remove a mirror by name.
-        list             Print out available mirrors to the console.
-
-    optional arguments:
-      -h, --help         show this help message and exit
+.. command-output:: spack help mirror
 
 The ``create`` command actually builds a mirror by fetching all of its
 packages from the internet and checksumming them.
@@ -77,10 +74,11 @@ packages from the internet and checksumming them.
 The other three commands are for managing mirror configuration.  They
 control the URL(s) from which Spack downloads its packages.
 
-.. _spack-mirror-create:
+.. _cmd-spack-mirror-create:
 
+-----------------------
 ``spack mirror create``
-----------------------------
+-----------------------
 
 You can create a mirror using the ``spack mirror create`` command, assuming
 you're on a machine where you can access the internet.
@@ -89,8 +87,7 @@ The command will iterate through all of Spack's packages and download
 the safe ones into a directory structure like the one above.  Here is
 what it looks like:
 
-
-.. code-block:: bash
+.. code-block:: console
 
    $ spack mirror create libelf libdwarf
    ==> Created new mirror in spack-mirror-2014-06-24
@@ -124,25 +121,31 @@ what it looks like:
 Once this is done, you can tar up the ``spack-mirror-2014-06-24`` directory and
 copy it over to the machine you want it hosted on.
 
+^^^^^^^^^^^^^^^^^^^
 Custom package sets
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 Normally, ``spack mirror create`` downloads all the archives it has
 checksums for.  If you want to only create a mirror for a subset of
 packages, you can do that by supplying a list of package specs on the
 command line after ``spack mirror create``.  For example, this
-command::
+command:
 
-    $ spack mirror create libelf@0.8.12: boost@1.44:
+.. code-block:: console
+
+   $ spack mirror create libelf@0.8.12: boost@1.44:
 
 Will create a mirror for libelf versions greater than or equal to
 0.8.12 and boost versions greater than or equal to 1.44.
 
+^^^^^^^^^^^^
 Mirror files
-~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^
 
 If you have a *very* large number of packages you want to mirror, you
-can supply a file with specs in it, one per line::
+can supply a file with specs in it, one per line:
+
+.. code-block:: console
 
    $ cat specs.txt
    libdwarf
@@ -150,68 +153,98 @@ can supply a file with specs in it, one per line::
    boost@1.44:
    boost@1.39.0
    ...
-   $ spack mirror create -f specs.txt
+   $ spack mirror create --file specs.txt
    ...
 
 This is useful if there is a specific suite of software managed by
 your site.
 
-.. _spack-mirror-add:
+.. _cmd-spack-mirror-add:
 
+--------------------
 ``spack mirror add``
-----------------------------
+--------------------
 
 Once you have a mirror, you need to let spack know about it.  This is
 relatively simple.  First, figure out the URL for the mirror.  If it's
-a file, you can use a file URL like this one::
+a directory, you can use a file URL like this one:
 
-    file:///Users/gamblin2/spack-mirror-2014-06-24
+.. code-block:: none
+
+   file://$HOME/spack-mirror-2014-06-24
 
 That points to the directory on the local filesystem.  If it were on a
 web server, you could use a URL like this one:
 
-    https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
+https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 Spack will use the URL as the root for all of the packages it fetches.
 You can tell your Spack installation to use that mirror like this:
 
-.. code-block:: bash
+.. code-block:: console
 
-   $ spack mirror add local_filesystem file:///Users/gamblin2/spack-mirror-2014-06-24
+   $ spack mirror add local_filesystem file://$HOME/spack-mirror-2014-06-24
 
 Each mirror has a name so that you can refer to it again later.
 
-.. _spack-mirror-list:
+.. _cmd-spack-mirror-list:
 
+---------------------
 ``spack mirror list``
-----------------------------
+---------------------
 
-If you want to see all the mirrors Spack knows about you can run ``spack mirror list``::
+To see all the mirrors Spack knows about, run ``spack mirror list``:
+
+.. code-block:: console
 
    $ spack mirror list
-   local_filesystem    file:///Users/gamblin2/spack-mirror-2014-06-24
+   local_filesystem    file:///home/username/spack-mirror-2014-06-24
 
-.. _spack-mirror-remove:
+.. _cmd-spack-mirror-remove:
 
+-----------------------
 ``spack mirror remove``
-----------------------------
+-----------------------
 
-And, if you want to remove a mirror, just remove it by name::
+To remove a mirror by name, run:
+
+.. code-block:: console
 
    $ spack mirror remove local_filesystem
    $ spack mirror list
    ==> No mirrors configured.
 
+-----------------
 Mirror precedence
-----------------------------
+-----------------
 
-Adding a mirror really just adds a section in ``~/.spackconfig``::
+Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``:
 
-   [mirror "local_filesystem"]
-       url = file:///Users/gamblin2/spack-mirror-2014-06-24
-   [mirror "remote_server"]
-       url = https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
+.. code-block:: yaml
+
+   mirrors:
+     local_filesystem: file:///home/username/spack-mirror-2014-06-24
+     remote_server: https://example.com/some/web-hosted/directory/spack-mirror-2014-06-24
 
 If you want to change the order in which mirrors are searched for
 packages, you can edit this file and reorder the sections.  Spack will
 search the topmost mirror first and the bottom-most mirror last.
+
+.. _caching:
+
+-------------------
+Local Default Cache
+-------------------
+
+Spack caches resources that are downloaded as part of installs. The cache is
+a valid spack mirror: it uses the same directory structure and naming scheme
+as other Spack mirrors (so it can be copied anywhere and referenced with a URL
+like other mirrors). The mirror is maintained locally (within the Spack
+installation directory) at :file:`var/spack/cache/`. It is always enabled (and
+is always searched first when attempting to retrieve files for an installation)
+but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
+be deleted manually without issue.
+
+Caching includes retrieved tarball archives and source control repositories, but
+only resources with an associated digest or commit ID (e.g. a revision number
+for SVN) will be cached.

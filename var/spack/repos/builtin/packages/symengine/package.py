@@ -1,0 +1,110 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+import sys
+
+
+class Symengine(CMakePackage):
+    """SymEngine is a fast symbolic manipulation library, written in C++."""
+
+    homepage = "https://github.com/symengine/symengine"
+    url      = "https://github.com/symengine/symengine/archive/v0.2.0.tar.gz"
+    git      = "https://github.com/symengine/symengine.git"
+
+    version('develop', branch='master')
+    version('0.4.0', sha256='dd755901a9e2a49e53ba3bbe3f565f94265af05299e57a7b592186dd35916a1b')
+    version('0.3.0', sha256='591463cb9e741d59f6dfd39a7943e3865d3afe9eac47d1a9cbf5ca74b9c49476')
+    version('0.2.0', sha256='64d050b0b9decd12bf4ea3b7d18d3904dd7cb8baaae9fbac1b8068e3c59709be')
+    version('0.1.0', sha256='daba3ba0ae91983a772f66bf755b1953c354fe6dc353588b23705d9a79b011fc')
+
+    variant('boostmp',      default=False,
+            description='Compile with Boost multi-precision integer library')
+    variant('flint',        default=False,
+            description='Compile with Flint integer library')
+    variant('llvm',         default=False,
+            description='Compile with LLVM JIT compiler support')
+    variant('mpc',          default=True,
+            description='Compile with MPC library')
+    variant('mpfr',         default=True,
+            description='Compile with MPFR library')
+    variant('openmp',       default=False,
+            description='Enable OpenMP support')
+    variant('piranha',      default=False,
+            description='Compile with Piranha integer library')
+    variant('thread_safe',  default=True,
+            description='Enable thread safety option')
+    variant('shared',       default=True,
+            description='Enables the build of shared libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
+
+    # NOTE: mpir is a drop-in replacement for gmp
+    # NOTE: [mpc,mpfr,flint,piranha] could also be built against mpir
+    depends_on('boost',    when='+boostmp')
+    depends_on('gmp',      when='~boostmp')
+    depends_on('llvm',     when='+llvm')
+    depends_on('mpc',      when='+mpc~boostmp')
+    depends_on('mpfr',     when='+mpfr~boostmp')
+    depends_on('flint',    when='+flint~boostmp')
+    depends_on('piranha',  when='+piranha~flint~boostmp')
+
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+
+        # See https://github.com/symengine/symengine/blob/master/README.md
+        # for build options
+        options.extend([
+            '-DWITH_SYMENGINE_RCP:BOOL=ON',
+            '-DWITH_SYMENGINE_THREAD_SAFE:BOOL=%s' % (
+                'ON' if ('+thread_safe' or '+openmp') in spec else 'OFF'),
+            '-DBUILD_TESTS:BOOL=%s' % (
+                'ON' if self.run_tests else 'OFF'),
+            '-DBUILD_BENCHMARKS:BOOL=ON',
+            '-DWITH_LLVM:BOOL=%s' % (
+                'ON' if '+llvm' in spec else 'OFF'),
+            '-DWITH_OPENMP:BOOL=%s' % (
+                'ON' if '+openmp' in spec else 'OFF'),
+            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF'),
+        ])
+
+        if sys.platform == 'darwin':
+            options.extend([
+                '-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=on'
+            ])
+
+        if '+boostmp' in spec:
+            options.extend([
+                '-DINTEGER_CLASS:STRING=boostmp',
+                '-DBoost_INCLUDE_DIR=%s' % spec['boost'].prefix.include,
+                '-DWITH_MPC:BOOL=OFF',
+                '-DWITH_MPFR:BOOL=OFF',
+            ])
+        else:
+            options.extend([
+                '-DWITH_MPC:BOOL=%s' % (
+                    'ON' if '+mpc' in spec else 'OFF'),
+                '-DWITH_MPFR:BOOL=%s' % (
+                    'ON' if '+mpfr' in spec else 'OFF'),
+            ])
+            if '+flint' in spec:
+                options.extend([
+                    '-DWITH_FLINT:BOOL=ON',
+                    '-DINTEGER_CLASS:STRING=flint'
+                ])
+            elif '+piranha' in spec:
+                options.extend([
+                    '-DWITH_PIRANHA:BOOL=ON',
+                    '-DINTEGER_CLASS:STRING=piranha'
+                ])
+            else:
+                options.extend([
+                    '-DINTEGER_CLASS:STRING=gmp'
+                ])
+
+        return options

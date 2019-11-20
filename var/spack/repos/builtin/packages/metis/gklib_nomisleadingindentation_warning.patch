@@ -1,0 +1,12 @@
+diff -Naur metis-5.1.0/GKlib/GKlibSystem.cmake metis-5.1.0.patched/GKlib/GKlibSystem.cmake
+--- metis-5.1.0/GKlib/GKlibSystem.cmake	2013-03-30 12:24:45.000000000 -0400
++++ metis-5.1.0.patched/GKlib/GKlibSystem.cmake	2018-12-07 16:22:58.491427261 -0500
+@@ -33,7 +33,7 @@
+       set(GKlib_COPTIONS "${GKlib_COPTIONS} -fPIC")
+   endif(NOT MINGW)
+ # GCC warnings.
+-  set(GKlib_COPTIONS "${GKlib_COPTIONS} -Wall -pedantic -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unknown-pragmas")
++  set(GKlib_COPTIONS "${GKlib_COPTIONS} -Wall -pedantic -Wno-misleading-indentation -Wno-unused-but-set-variable -Wno-unused-variable -Wno-unknown-pragmas")
+ elseif(${CMAKE_C_COMPILER_ID} MATCHES "Sun")
+ # Sun insists on -xc99.
+   set(GKlib_COPTIONS "${GKlib_COPTIONS} -xc99")

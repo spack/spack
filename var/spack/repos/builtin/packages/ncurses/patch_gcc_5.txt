@@ -1,0 +1,12 @@
+diff -Naur ncurses-6.0/ncurses/Makefile.in ncurses-6.0-patched/ncurses/Makefile.in
+--- ncurses-6.0/ncurses/Makefile.in	2015-08-06 01:15:41.000000000 +0200
++++ ncurses-6.0-patched/ncurses/Makefile.in	2015-12-15 14:58:52.710199407 +0100
+@@ -219,7 +219,7 @@
+ 	$(SHELL) -e $(tinfo)/MKfallback.sh $(TERMINFO) $(TERMINFO_SRC) $(TIC_PATH) $(FALLBACK_LIST) >$@
+ 
+ ./lib_gen.c : $(base)/MKlib_gen.sh ../include/curses.h
+-	$(SHELL) -e $(base)/MKlib_gen.sh "$(CPP) $(CPPFLAGS)" "$(AWK)" generated <../include/curses.h >$@
++	$(SHELL) -e $(base)/MKlib_gen.sh "$(CPP) $(CPPFLAGS) -P" "$(AWK)" generated <../include/curses.h >$@
+ 
+ init_keytry.h: make_keys$(BUILD_EXEEXT) keys.list
+ 	./make_keys$(BUILD_EXEEXT) keys.list > $@

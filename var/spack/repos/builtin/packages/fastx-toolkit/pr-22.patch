@@ -1,0 +1,11 @@
+diff -ur fastx_toolkit-0.0.14.orig/src/fasta_formatter/fasta_formatter.cpp fastx_toolkit-0.0.14/src/fasta_formatter/fasta_formatter.cpp
+--- fastx_toolkit-0.0.14.orig/src/fasta_formatter/fasta_formatter.cpp	2014-01-05 13:10:49.000000000 -0800
++++ fastx_toolkit-0.0.14/src/fasta_formatter/fasta_formatter.cpp	2018-12-31 09:58:21.923778569 -0800
+@@ -103,6 +103,7 @@
+ 		switch(opt) {
+ 		case 'h':
+ 			usage();
++			break;
+ 		
+ 		case 'i':
+ 			input_filename = optarg;

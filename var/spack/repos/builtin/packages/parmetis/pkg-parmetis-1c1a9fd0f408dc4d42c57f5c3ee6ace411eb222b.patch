@@ -1,0 +1,77 @@
+From 1c1a9fd0f408dc4d42c57f5c3ee6ace411eb222b Mon Sep 17 00:00:00 2001
+From: Jed Brown <jed@59A2.org>
+Date: Fri, 12 Oct 2012 15:45:10 -0500
+Subject: [PATCH] ParMetis bug fixes reported by John Fettig [petsc-maint
+ #133631]
+
+'''
+I have also reported to to Karypis but have received zero
+response and he hasn't released any updates to the original release
+either.  At least he approved my forum posting so that other people
+can see the bug and the fix.
+http://glaros.dtc.umn.edu/gkhome/node/837
+'''
+
+Hg-commit: 1c2b9fe39201d404b493885093b5992028b9b8d4
+---
+ libparmetis/xyzpart.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/libparmetis/xyzpart.c b/libparmetis/xyzpart.c
+index 3a2c289..63abfcb 100644
+--- a/libparmetis/xyzpart.c
++++ b/libparmetis/xyzpart.c
+@@ -104,7 +104,7 @@ void IRBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+ 
+     for (i=0; i<nbins; i++)
+       emarkers[i] = gmin + (gmax-gmin)*i/nbins;
+-    emarkers[nbins] = gmax*(1.0+2.0*REAL_EPSILON);
++    emarkers[nbins] = gmax*(1.0+copysign(1.0,gmax)*2.0*REAL_EPSILON);
+ 
+     /* get into a iterative backet boundary refinement */
+     for (l=0; l<5; l++) {
+@@ -152,7 +152,7 @@ void IRBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+         }
+       }
+       nemarkers[0]     = gmin;
+-      nemarkers[nbins] = gmax*(1.0+2.0*REAL_EPSILON);
++      nemarkers[nbins] = gmax*(1.0+copysign(1.0,gmax)*2.0*REAL_EPSILON);
+       rcopy(nbins+1, nemarkers, emarkers);
+     }
+ 
+@@ -218,7 +218,7 @@ void RBBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+ 
+     emarkers[0] = gmin;
+     emarkers[1] = gsum/gnvtxs;
+-    emarkers[2] = gmax*(1.0+2.0*REAL_EPSILON);
++    emarkers[2] = gmax*(1.0+(gmax < 0 ? -1. : 1.)*2.0*REAL_EPSILON);
+     cnbins = 2;
+ 
+     /* get into a iterative backet boundary refinement */
+@@ -227,7 +227,7 @@ void RBBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+       iset(cnbins, 0, lcounts);
+       rset(cnbins, 0, lsums);
+       for (j=0, i=0; i<nvtxs;) {
+-        if (cand[i].key < emarkers[j+1]) {
++        if (cand[i].key <= emarkers[j+1]) {
+           lcounts[j]++;
+           lsums[j] += cand[i].key;
+           i++;
+@@ -272,12 +272,12 @@ void RBBinCoordinates(ctrl_t *ctrl, graph_t *graph, idx_t ndims, real_t *xyz,
+       
+       rsorti(cnbins, nemarkers);
+       rcopy(cnbins, nemarkers, emarkers);
+-      emarkers[cnbins] = gmax*(1.0+2.0*REAL_EPSILON);
++      emarkers[cnbins] = gmax*(1.0+(gmax < 0 ? -1. : 1.)*2.0*REAL_EPSILON);
+     }
+ 
+     /* assign the coordinate to the appropriate bin */
+     for (j=0, i=0; i<nvtxs;) {
+-      if (cand[i].key < emarkers[j+1]) {
++      if (cand[i].key <= emarkers[j+1]) {
+         bxyz[cand[i].val*ndims+k] = j;
+         i++;
+       }
+-- 
+2.1.1.1.g1fb337f
+

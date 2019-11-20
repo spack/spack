@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 def comma_list(sequence, article=''):
     if type(sequence) != list:
@@ -32,7 +13,7 @@ def comma_list(sequence, article=''):
     elif len(sequence) == 1:
         return sequence[0]
     else:
-        out =  ', '.join(str(s) for s in sequence[:-1])
+        out = ', '.join(str(s) for s in sequence[:-1])
         if len(sequence) != 2:
             out += ','   # oxford comma
         out += ' '
@@ -41,9 +22,36 @@ def comma_list(sequence, article=''):
         out += str(sequence[-1])
         return out
 
+
 def comma_or(sequence):
     return comma_list(sequence, 'or')
 
 
 def comma_and(sequence):
     return comma_list(sequence, 'and')
+
+
+def quote(sequence, q="'"):
+    return ['%s%s%s' % (q, e, q) for e in sequence]
+
+
+def plural(n, singular, plural=None, show_n=True):
+    """Pluralize <singular> word by adding an s if n != 1.
+
+    Arguments:
+        n (int): number of things there are
+        singular (str): singular form of word
+        plural (str, optional): optional plural form, for when it's not just
+            singular + 's'
+        show_n (bool): whether to include n in the result string (default True)
+
+    Returns:
+        (str): "1 thing" if n == 1 or "n things" if n != 1
+    """
+    number = '%s ' % n if show_n else ''
+    if n == 1:
+        return "%s%s" % (number, singular)
+    elif plural is not None:
+        return "%s%s" % (number, plural)
+    else:
+        return "%s%ss" % (number, singular)

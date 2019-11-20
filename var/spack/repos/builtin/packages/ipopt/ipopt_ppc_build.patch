@@ -1,0 +1,26 @@
+--- ipopt/config.guess	2017-06-20 14:49:19.618016003 -0700
++++ ipopt/config.guess.new	2017-06-20 14:50:35.678878802 -0700
+@@ -908,6 +908,9 @@
+     ppc:Linux:*:*)
+ 	echo powerpc-unknown-linux-gnu
+ 	exit ;;
++    ppc64le:Linux:*:*)
++        echo powerpc64-unknown-linux-gnu
++        exit ;;
+     ppc64:Linux:*:*)
+ 	echo powerpc64-unknown-linux-gnu
+ 	exit ;;
+
+
+--- ipopt/Ipopt/config.guess	2017-06-20 14:49:19.618016003 -0700
++++ ipopt/Ipopt/config.guess.new	2017-06-20 14:50:35.678878802 -0700
+@@ -908,6 +908,9 @@
+     ppc:Linux:*:*)
+ 	echo powerpc-unknown-linux-gnu
+ 	exit ;;
++    ppc64le:Linux:*:*)
++        echo powerpc64-unknown-linux-gnu
++        exit ;;
+     ppc64:Linux:*:*)
+ 	echo powerpc64-unknown-linux-gnu
+ 	exit ;;

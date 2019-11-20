@@ -1,0 +1,35 @@
+diff --git a/Makefile.system b/Makefile.system
+index b89f60e..2dbdad0 100644
+--- a/Makefile.system
++++ b/Makefile.system
+@@ -139,6 +139,10 @@ NO_PARALLEL_MAKE=0
+ endif
+ GETARCH_FLAGS  += -DNO_PARALLEL_MAKE=$(NO_PARALLEL_MAKE)
+ 
++ifdef MAKE_NO_J
++GETARCH_FLAGS += -DMAKE_NO_J=$(MAKE_NO_J)
++endif
++
+ ifdef MAKE_NB_JOBS
+ GETARCH_FLAGS += -DMAKE_NB_JOBS=$(MAKE_NB_JOBS)
+ endif
+diff --git a/getarch.c b/getarch.c
+index f9c49e6..dffad70 100644
+--- a/getarch.c
++++ b/getarch.c
+@@ -1012,6 +1012,7 @@ int main(int argc, char *argv[]){
+ #endif
+ #endif
+ 
++#ifndef MAKE_NO_J
+ #ifdef MAKE_NB_JOBS
+     printf("MAKE += -j %d\n", MAKE_NB_JOBS);
+ #elif NO_PARALLEL_MAKE==1
+@@ -1021,6 +1022,7 @@ int main(int argc, char *argv[]){
+     printf("MAKE += -j %d\n", get_num_cores());
+ #endif
+ #endif
++#endif
+ 
+     break;
+ 

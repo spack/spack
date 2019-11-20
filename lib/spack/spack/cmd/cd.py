@@ -1,31 +1,16 @@
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import spack.cmd.location
-import spack.modules
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-description="cd to spack directories in the shell."
+from spack.cmd.common import print_module_placeholder_help
+
+import spack.cmd.location
+
+description = "cd to spack directories in the shell"
+section = "developer"
+level = "long"
+
 
 def setup_parser(subparser):
     """This is for decoration -- spack cd is used through spack's
@@ -35,4 +20,4 @@ def setup_parser(subparser):
 
 
 def cd(parser, args):
-    spack.modules.print_help()
+    print_module_placeholder_help()

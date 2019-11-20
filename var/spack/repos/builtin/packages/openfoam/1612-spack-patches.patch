@@ -1,0 +1,876 @@
+#############################################################################
+# This patch for OpenFOAM-1612 comprises the following changes:
+#
+# bin/foamEtcFile
+# - Adjust to cope with spack naming (eg, openfoam-com-1612-abcxzy).
+#   Lets us avoid a needless directory layer.
+#
+# etc/bashrc
+# - improved robustness when sourcing.
+# - source top-level prefs.sh first (for sysadmin changes)
+#
+# etc/config.*/settings
+# - write job control information to the user directory
+# - site/ directory under the OpenFOAM project dir, not its parent dir
+#
+# etc/config.*/mpi
+# - added USERMPI as place for spack mpi information
+#
+# mgridgen, zoltan:
+# - make location configurable
+#
+# metis, scotch:
+# - also check lib path (not just lib64)
+#
+# All issues patched here are addressed in OpenFOAM-1706 and later.
+#
+# <Mark.Olesen@esi-group.com>   ESI-OpenCFD   www.openfoam.com
+#
+#############################################################################
+--- OpenFOAM-v1612+.orig/bin/foamEtcFile	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-plus/bin/foamEtcFile	2017-12-18 17:48:35.043291205 +0100
+@@ -4,164 +4,235 @@
+ # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+ #  \\    /   O peration     |
+ #   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+-#    \\/     M anipulation  |
++#    \\/     M anipulation  | Copyright (C) 2017 OpenCFD Ltd.
+ #-------------------------------------------------------------------------------
+ # License
+-#     This file is part of OpenFOAM.
+-#
+-#     OpenFOAM is free software: you can redistribute it and/or modify it
+-#     under the terms of the GNU General Public License as published by
+-#     the Free Software Foundation, either version 3 of the License, or
+-#     (at your option) any later version.
+-#
+-#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+-#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+-#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+-#     for more details.
+-#
+-#     You should have received a copy of the GNU General Public License
+-#     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
++#     This file is part of OpenFOAM, licensed under GNU General Public License
++#     <http://www.gnu.org/licenses/>.
+ #
+ # Script
+ #     foamEtcFile
+ #
+ # Description
+-#     Locate user/group/shipped file with semantics similar to the
+-#     ~OpenFOAM/fileName expansion.
++#     Locate user/group/other file as per '#includeEtc'.
++#
++#     The -mode option can be used to allow chaining from personal settings
++#     to site-wide settings.
+ #
+-#     The -mode option can be used to allow chaining from
+-#     personal settings to site-wide settings.
++#     For example, within the user ~/.OpenFOAM/<VER>/config.sh/compiler:
++#     \code
++#        eval $(foamEtcFile -sh -mode=go config.sh/compiler)
++#     \endcode
+ #
+-#     For example, within the user ~/.OpenFOAM/<VER>/prefs.sh:
++#     The -mode option is similarly used within etc/{bashrc,cshrc} to ensure
++#     that system prefs are respected:
+ #     \code
+-#        foamPrefs=`$WM_PROJECT_DIR/bin/foamEtcFile -m go prefs.sh` \
+-#            && _foamSource $foamPrefs
++#        eval $(foamEtcFile -sh -mode=o  prefs.sh)
++#        eval $(foamEtcFile -sh -mode=ug prefs.sh)
+ #     \endcode
+ #
++# Environment
++#     - WM_PROJECT:         (unset defaults to OpenFOAM)
++#     - WM_PROJECT_SITE:    (unset defaults to PREFIX/site)
++#     - WM_PROJECT_VERSION: (unset defaults to detect from path)
++#
+ # Note
+-#     This script must exist in $FOAM_INST_DIR/OpenFOAM-<VERSION>/bin/
+-#     or $FOAM_INST_DIR/openfoam<VERSION>/bin/ (for the debian version)
++#     This script must exist in one of these locations:
++#     - $WM_PROJECT_INST_DIR/OpenFOAM-<VERSION>/bin
++#     - $WM_PROJECT_INST_DIR/openfoam-<VERSION>/bin
++#     - $WM_PROJECT_INST_DIR/openfoam<VERSION>/bin  (debian version)
+ #
+ #-------------------------------------------------------------------------------
+-usage() {
+-    [ "${optQuiet:-$optSilent}" = true ] && exit 1
+-
+-    exec 1>&2
+-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
++printHelp() {
+     cat<<USAGE
+ 
+-Usage: ${0##*/} [OPTION] fileName
+-       ${0##*/} [OPTION] -list
++Usage: foamEtcFile [OPTION] fileName
++       foamEtcFile [OPTION] [-list|-list-test] [fileName]
++
+ options:
+-  -all              return all files (otherwise stop after the first match)
+-  -list             list the directories to be searched
+-  -mode <mode>      any combination of u(user), g(group), o(other)
+-  -prefix <dir>     specify an alternative installation prefix
+-  -quiet            suppress all normal output
+-  -silent           suppress all stderr output
+-  -version <ver>    specify an alternative OpenFOAM version
+-                    in the form Maj.Min.Rev (eg, 1.7.0)
+-  -help             print the usage
+-
+-  Locate user/group/shipped file with semantics similar to the
+-  ~OpenFOAM/fileName expansion.
+-
+-  The options can also be specified as a single character
+-  (eg, '-q' instead of '-quiet'), but must not be grouped.
+-
+-  Exit status
+-      0  when the file is found. Print resolved path to stdout.
+-      1  for miscellaneous errors.
+-      2  when the file is not found.
++  -all (-a)         Return all files (otherwise stop after the first match)
++  -list (-l)        List directories or files to be checked
++  -list-test        List (existing) directories or files to be checked
++  -mode=MODE        Any combination of u(user), g(group), o(other)
++  -prefix=DIR       Specify an alternative installation prefix
++  -version=VER      Specify alternative OpenFOAM version (eg, 3.0, 1612, ...)
++  -csh              Produce output suitable for a csh or sh 'eval'
++  -csh-verbose      As per -csh with additional verbosity
++  -sh               Produce output suitable for a csh or sh 'eval'
++  -sh-verbose       As per -sh  with additional verbosity
++  -quiet (-q)       Suppress all normal output
++  -silent (-s)      Suppress stderr, except -csh-verbose, -sh-verbose output
++  -help             Print the usage
++
++Locate user/group/other file as per '#includeEtc'
++
++Do not group single character options.
++Equivalent options:
++  |  -mode=MODE     |  -mode MODE     | -m MODE
++  |  -prefix=DIR    |  -prefix DIR    | -p DIR
++  |  -version=VER   |  -version VER   | -v VER
++
++Exit status
++    0  when the file is found. Print resolved path to stdout.
++    1  for miscellaneous errors.
++    2  when the file is not found.
+ 
+ USAGE
+-    exit 1
++    exit 0  # A clean exit
+ }
+ 
+-#-------------------------------------------------------------------------------
+ 
+-# the bin dir:
+-binDir="${0%/*}"
++unset optQuiet optSilent
++# Report error and exit
++die()
++{
++    [ "${optQuiet:-$optSilent}" = true ] && exit 1
++    exec 1>&2
++    echo
++    echo "Error encountered:"
++    while [ "$#" -ge 1 ]; do echo "    $1"; shift; done
++    echo
++    echo "See 'foamEtcFile -help' for usage"
++    echo
++    exit 1
++}
+ 
+-# the project dir:
+-projectDir="${binDir%/bin}"
++#-------------------------------------------------------------------------------
++binDir="${0%/*}"                # The bin dir
++projectDir="${binDir%/bin}"     # The project dir
++prefixDir="${projectDir%/*}"    # The prefix dir (same as $WM_PROJECT_INST_DIR)
+ 
+-# the prefix dir (same as $FOAM_INST_DIR):
+-prefixDir="${projectDir%/*}"
++# Could not resolve projectDir, prefixDir? (eg, called as ./bin/foamEtcFile)
++if [ "$prefixDir" = "$projectDir" ]
++then
++    binDir="$(cd $binDir && pwd -L)"
++    projectDir="${binDir%/bin}"
++    prefixDir="${projectDir%/*}"
++fi
++projectDirName="${projectDir##*/}"      # The project directory name
+ 
+-# the name used for the project directory
+-projectDirName="${projectDir##*/}"
++projectVersion="$WM_PROJECT_VERSION"    # Empty? - will be treated later
++userDir="$HOME/.OpenFOAM"               # Hard-coded as per foamVersion.H
+ 
+-# version number used for debian packaging
+-unset versionNum
++#-------------------------------------------------------------------------------
+ 
++# Guess project version or simply get the stem part of the projectDirName.
++# Handle standard and debian naming conventions.
+ #
+-# handle standard and debian naming convention
++# - projectVersion: update unless already set
+ #
+-case "$projectDirName" in
+-OpenFOAM-*)         # standard naming convention OpenFOAM-<VERSION>
+-    version="${projectDirName##OpenFOAM-}"
+-    ;;
++# Helper variables:
++# - dirBase (for reassembling name) == projectDirName without the version
++# - versionNum (debian packaging)
++unset dirBase versionNum
++guessVersion()
++{
++    local version
++
++    case "$projectDirName" in
++    (OpenFOAM-* | openfoam-*)
++        # Standard naming: OpenFOAM-<VERSION> or openfoam-<VERSION>
++        dirBase="${projectDirName%%-*}-"
++        version="${projectDirName#*-}"
++        version="${version%%*-}" # Extra safety, eg openfoam-version-packager
++        ;;
++
++    (openfoam[0-9]*)
++        # Debian naming: openfoam<VERSION>
++        dirBase="openfoam"
++        version="${projectDirName#openfoam}"
++        versionNum="$version"
++
++        # Convert digits version number to decimal delineated
++        case "${#versionNum}" in (2|3|4)
++            version=$(echo "$versionNum" | sed -e 's@\([0-9]\)@\1.@g')
++            version="${version%.}"
++            ;;
++        esac
+ 
+-openfoam[0-9]* | openfoam-dev)     # debian naming convention 'openfoam<VERSION>'
+-    versionNum="${projectDirName##openfoam}"
+-    case "$versionNum" in
+-    ??)         # convert 2 digit version number to decimal delineated
+-        version=$(echo "$versionNum" | sed -e 's@\(.\)\(.\)@\1.\2@')
+-        ;;
+-    ???)        # convert 3 digit version number to decimal delineated
+-        version=$(echo "$versionNum" | sed -e 's@\(.\)\(.\)\(.\)@\1.\2.\3@')
++        # Ignore special treatment if no decimals were inserted.
++        [ "${#version}" -gt "${#versionNum}" ] || unset versionNum
+         ;;
+-    ????)       # convert 4 digit version number to decimal delineated
+-        version=$(echo "$versionNum" | sed -e 's@\(.\)\(.\)\(.\)\(.\)@\1.\2.\3.\4@')
+-        ;;
+-    *)          # failback - use current environment setting
+-        version="$WM_PROJECT_VERSION"
++
++    (*)
++        die "unknown/unsupported naming convention for '$projectDirName'"
+         ;;
+     esac
+-    ;;
+ 
+-*)
+-    echo "Error : unknown/unsupported naming convention"
+-    exit 1
+-    ;;
+-esac
++    # Set projectVersion if required
++    : ${projectVersion:=$version}
++}
+ 
+ 
+-# default mode is 'ugo'
+-mode=ugo
+-unset optAll optList optQuiet optSilent
++# Set projectVersion and update versionNum, projectDirName accordingly
++setVersion()
++{
++    projectVersion="$1"
+ 
+-# parse options
++    # Need dirBase when reassembling projectDirName
++    [ -n "$dirBase" ] || guessVersion
++
++    # Debian: update x.y.z -> xyz version
++    if [ -n "$versionNum" ]
++    then
++        versionNum=$(echo "$projectVersion" | sed -e 's@\.@@g')
++    fi
++
++    projectDirName="$dirBase${versionNum:-$projectVersion}"
++}
++
++
++optMode=ugo         # Default mode is always 'ugo'
++unset optAll optList optShell optVersion
++
++# Parse options
+ while [ "$#" -gt 0 ]
+ do
+     case "$1" in
+-    -h | -help)
+-        usage
++    -h | -help*)
++        printHelp
+         ;;
+     -a | -all)
+         optAll=true
++        unset optShell
+         ;;
+     -l | -list)
+         optList=true
++        unset optShell
++        ;;
++    -list-test)
++        optList='test'
++        unset optShell
++        ;;
++    -csh | -sh | -csh-verbose | -sh-verbose)
++        optShell="${1#-}"
++        unset optAll
++        ;;
++    -mode=[ugo]*)
++        optMode="${1#*=}"
++        ;;
++    -prefix=/*)
++        prefixDir="${1#*=}"
++        prefixDir="${prefixDir%/}"
++        ;;
++    -version=*)
++        optVersion="${1#*=}"
+         ;;
+     -m | -mode)
+-        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+-        mode="$2"
+-
+-        # sanity check:
+-        case "$mode" in
+-        *u* | *g* | *o* )
+-           ;;
+-        *)
+-           usage "'$1' option with invalid mode '$mode'"
+-           ;;
+-        esac
++        optMode="$2"
+         shift
++        # Sanity check. Handles missing argument too.
++        case "$optMode" in
++        ([ugo]*)
++            ;;
++        (*)
++            die "invalid mode '$optMode'"
++            ;;
++        esac
+         ;;
+     -p | -prefix)
+-        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+-        prefixDir="$2"
++        [ "$#" -ge 2 ] || die "'$1' option requires an argument"
++        prefixDir="${2%/}"
+         shift
+         ;;
+     -q | -quiet)
+@@ -171,13 +242,8 @@
+         optSilent=true
+         ;;
+     -v | -version)
+-        [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
+-        version="$2"
+-        # convert x.y.z -> xyz version (if installation looked like debian)
+-        if [ -n "$versionNum" ]
+-        then
+-            versionNum=$(echo "$version" | sed -e 's@\.@@g')
+-        fi
++        [ "$#" -ge 2 ] || die "'$1' option requires an argument"
++        optVersion="$2"
+         shift
+         ;;
+     --)
+@@ -185,7 +251,7 @@
+         break
+         ;;
+     -*)
+-        usage "unknown option: '$*'"
++        die "unknown option: '$1'"
+         ;;
+     *)
+         break
+@@ -195,11 +261,28 @@
+ done
+ 
+ 
+-# debugging:
+-# echo "Installed locations:"
+-# for i in projectDir prefixDir projectDirName version versionNum
++#-------------------------------------------------------------------------------
++
++if [ -n "$optVersion" ]
++then
++    setVersion $optVersion
++elif [ -z "$projectVersion" ]
++then
++    guessVersion
++fi
++
++# Updates:
++# - projectDir  for changes via -prefix or -version
++# - groupDir    for changes via -prefix
++projectDir="$prefixDir/$projectDirName"
++groupDir="${WM_PROJECT_SITE:-$prefixDir/site}"
++
++
++# Debugging:
++# echo "Installed locations:" 1>&2
++# for i in projectDir prefixDir projectDirName projectVersion
+ # do
+-#     eval echo "$i=\$$i"
++#     eval echo "$i=\$$i" 1>&2
+ # done
+ 
+ 
+@@ -210,30 +293,18 @@
+ 
+ # Define the various places to be searched:
+ unset dirList
+-case "$mode" in
+-*u*)  # user
+-    userDir="$HOME/.${WM_PROJECT:-OpenFOAM}"
+-    dirList="$dirList $userDir/$version $userDir"
++case "$optMode" in (*u*) # (U)ser
++    dirList="$dirList $userDir/$projectVersion $userDir"
+     ;;
+ esac
+ 
+-case "$mode" in
+-*g*)  # group (site)
+-    siteDir="${WM_PROJECT_SITE:-$prefixDir/site}"
+-    dirList="$dirList $siteDir/$version $siteDir"
++case "$optMode" in (*g*) # (G)roup == site
++    dirList="$dirList $groupDir/$projectVersion $groupDir"
+     ;;
+ esac
+ 
+-case "$mode" in
+-*o*)  # other (shipped)
+-    if [ -n "$versionNum" ]
+-    then
+-        # debian packaging
+-        dirList="$dirList $prefixDir/openfoam$versionNum/etc"
+-    else
+-        # standard packaging
+-        dirList="$dirList $prefixDir/${WM_PROJECT:-OpenFOAM}-$version/etc"
+-    fi
++case "$optMode" in (*o*) # (O)ther == shipped
++    dirList="$dirList $projectDir/etc"
+     ;;
+ esac
+ set -- $dirList
+@@ -244,50 +315,87 @@
+ #
+ 
+ exitCode=0
+-if [ "$optList" = true ]
++if [ -n "$optList" ]
+ then
+ 
+-    # list directories, or potential file locations
+-    [ "$nArgs" -le 1 ] || usage
++    # List directories, or potential file locations
++    [ "$nArgs" -le 1 ] || \
++    die "-list expects 0 or 1 filename, but $nArgs provided"
+ 
+-    # a silly combination, but -quiet does have precedence
+-    [ "$optQuiet" = true ] && exit 0
++    # A silly combination, but -quiet does have precedence
++    [ -n "$optQuiet" ] && exit 0
++
++    # Test for directory or file too?
++    if [ "$optList" = "test" ]
++    then
++        exitCode=2  # Fallback to a general error (file not found)
+ 
+-    for dir
+-    do
+         if [ "$nArgs" -eq 1 ]
+         then
+-            echo "$dir/$fileName"
++            for dir
++            do
++                resolved="$dir/$fileName"
++                if [ -f "$resolved" ]
++                then
++                    echo "$resolved"
++                    exitCode=0  # OK
++                fi
++            done
+         else
+-            echo "$dir"
++            for dir
++            do
++                if [ -d "$dir" ]
++                then
++                    echo "$dir"
++                    exitCode=0  # OK
++                fi
++            done
+         fi
+-    done
++    else
++        for dir
++        do
++            echo "$dir${fileName:+/}$fileName"
++        done
++    fi
+ 
+ else
+ 
+-    [ "$nArgs" -eq 1 ] || usage
++    [ "$nArgs" -eq 1 ] || die "One filename expected - $nArgs provided"
+ 
+-    # general error, eg file not found
+-    exitCode=2
++    exitCode=2  # Fallback to a general error (file not found)
+ 
+     for dir
+     do
+         if [ -f "$dir/$fileName" ]
+         then
+             exitCode=0
+-            if [ "$optQuiet" = true ]
+-            then
++            [ -n "$optQuiet" ] && break
++
++            case "$optShell" in
++            (*verbose)
++                echo "Using: $dir/$fileName" 1>&2
++                ;;
++            esac
++
++            case "$optShell" in
++            csh*)
++                echo "source $dir/$fileName"
+                 break
+-            else
++                ;;
++            sh*)
++                echo ". $dir/$fileName"
++                break
++                ;;
++            *)
+                 echo "$dir/$fileName"
+-                [ "$optAll" = true ] || break
+-            fi
++                [ -n "$optAll" ] || break
++                ;;
++            esac
+         fi
+     done
+ 
+ fi
+ 
+-
+ exit $exitCode
+ 
+ #------------------------------------------------------------------------------
+--- OpenFOAM-v1612+.orig/etc/bashrc	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/bashrc	2017-03-22 16:05:05.751237072 +0100
+@@ -42,7 +42,8 @@
+ #
+ # Please set to the appropriate path if the default is not correct.
+ #
+-[ $BASH_SOURCE ] && FOAM_INST_DIR=$(\cd ${BASH_SOURCE%/*/*/*} && \pwd -P) || \
++rc="${BASH_SOURCE:-${ZSH_NAME:+$0}}"
++[ -n "$rc" ] && FOAM_INST_DIR=$(\cd $(dirname $rc)/../.. && \pwd -L) || \
+ FOAM_INST_DIR=$HOME/$WM_PROJECT
+ # FOAM_INST_DIR=~$WM_PROJECT
+ # FOAM_INST_DIR=/opt/$WM_PROJECT
+@@ -135,8 +136,10 @@
+ # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ . $WM_PROJECT_DIR/etc/config.sh/functions
+ 
+-# Add in preset user or site preferences:
+-_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile prefs.sh`
++# Override definitions via prefs, with 'other' first so the sys-admin
++# can provide base values independent of WM_PROJECT_SITE
++_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile -mode o  prefs.sh`
++_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile -mode ug prefs.sh`
+ 
+ # Evaluate command-line parameters and record settings for later
+ # these can be used to set/unset values, or specify alternative pref files
+diff -uw OpenFOAM-v1612+.orig/etc/cshrc OpenFOAM-v1612+/etc/cshrc
+--- OpenFOAM-v1612+.orig/etc/cshrc	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/cshrc	2017-03-22 16:04:51.839291067 +0100
+@@ -148,8 +148,10 @@
+ # Source files, possibly with some verbosity
+ alias _foamSource 'if ($?FOAM_VERBOSE && $?prompt) echo "Sourcing: \!*"; if (\!* != "") source \!*'
+ 
+-# Add in preset user or site preferences:
+-_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile prefs.csh`
++# Override definitions via prefs, with 'other' first so the sys-admin
++# can provide base values independent of WM_PROJECT_SITE
++_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile -mode o  prefs.csh`
++_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile -mode ug prefs.csh`
+ 
+ # Evaluate command-line parameters and record settings for later
+ # these can be used to set/unset values, or specify alternative pref files
+--- OpenFOAM-v1612+.orig/etc/config.sh/settings	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/config.sh/settings	2017-12-21 20:40:50.109036445 +0100
+@@ -141,7 +141,7 @@
+ #------------------------------------------------------------------------------
+ 
+ # Location of the jobControl directory
+-export FOAM_JOB_DIR=$WM_PROJECT_INST_DIR/jobControl
++export FOAM_JOB_DIR="$HOME/.OpenFOAM/jobControl"
+ 
+ # wmake configuration
+ export WM_DIR=$WM_PROJECT_DIR/wmake
+@@ -198,8 +198,12 @@
+ unset siteDir
+ 
+ _foamAddPath $FOAM_USER_APPBIN:$FOAM_SITE_APPBIN:$FOAM_APPBIN
+-# Make sure to pick up dummy versions of external libraries last
+-_foamAddLib  $FOAM_USER_LIBBIN:$FOAM_SITE_LIBBIN:$FOAM_LIBBIN:$FOAM_EXT_LIBBIN:$FOAM_LIBBIN/dummy
++_foamAddLib  $FOAM_LIBBIN/dummy     # Dummy versions of external libraries last
++if [ -n "$FOAM_EXT_LIBBIN" ]        # External libraries (allowed to be unset)
++then
++    _foamAddLib $FOAM_EXT_LIBBIN
++fi
++_foamAddLib  $FOAM_USER_LIBBIN:$FOAM_SITE_LIBBIN:$FOAM_LIBBIN
+ 
+ # Compiler settings
+ # ~~~~~~~~~~~~~~~~~
+--- OpenFOAM-v1612+.orig/etc/config.csh/settings	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/config.csh/settings	2017-12-21 20:37:24.301773802 +0100
+@@ -137,7 +137,7 @@
+ #------------------------------------------------------------------------------
+ 
+ # Location of the jobControl directory
+-setenv FOAM_JOB_DIR $WM_PROJECT_INST_DIR/jobControl
++setenv FOAM_JOB_DIR "$HOME/.OpenFOAM/jobControl"
+ 
+ # wmake configuration
+ setenv WM_DIR $WM_PROJECT_DIR/wmake
+@@ -196,8 +196,11 @@
+ unset siteDir
+ 
+ _foamAddPath ${FOAM_USER_APPBIN}:${FOAM_SITE_APPBIN}:${FOAM_APPBIN}
+-# Make sure to pick up dummy versions of external libraries last
+-_foamAddLib  ${FOAM_USER_LIBBIN}:${FOAM_SITE_LIBBIN}:${FOAM_LIBBIN}:${FOAM_EXT_LIBBIN}:${FOAM_LIBBIN}/dummy
++_foamAddLib  $FOAM_LIBBIN/dummy     # Dummy versions of external libraries last
++if ( $?FOAM_EXT_LIBBIN ) then       # External libraries (allowed to be unset)
++    _foamAddLib $FOAM_EXT_LIBBIN
++endif
++_foamAddLib  ${FOAM_USER_LIBBIN}:${FOAM_SITE_LIBBIN}:${FOAM_LIBBIN}
+ 
+ # Compiler settings
+ # ~~~~~~~~~~~~~~~~~
+--- OpenFOAM-v1612+.orig/etc/config.sh/mpi	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/config.sh/mpi	2017-03-29 13:55:57.507980699 +0200
+@@ -75,8 +75,15 @@
+     _foamAddMan     $MPI_ARCH_PATH/share/man
+     ;;
+ 
++USERMPI)
++    # Use an arbitrary, user-specified mpi implementation
++    export FOAM_MPI=mpi-user
++    _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.sh/mpi-user`
++    ;;
++
+ SYSTEMMPI)
+     export FOAM_MPI=mpi-system
++    _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.sh/mpi-system`
+ 
+     if [ -z "$MPI_ROOT" ]
+     then
+--- OpenFOAM-v1612+.orig/etc/config.csh/mpi	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/etc/config.csh/mpi	2017-03-29 13:56:36.347835938 +0200
+@@ -71,8 +71,15 @@
+     _foamAddMan     $MPI_ARCH_PATH/share/man
+     breaksw
+ 
++case USERMPI:
++    # Use an arbitrary, user-specified mpi implementation
++    setenv FOAM_MPI mpi-user
++    _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/mpi-user`
++    breaksw
++
+ case SYSTEMMPI:
+     setenv FOAM_MPI mpi-system
++    _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/mpi-system`
+ 
+     if ( ! ($?MPI_ROOT) ) then
+         echo
+--- OpenFOAM-v1612+.orig/src/fvAgglomerationMethods/Allwmake	2017-01-02 09:56:17.578558265 +0100
++++ OpenFOAM-v1612+/src/fvAgglomerationMethods/Allwmake	2017-04-18 18:58:38.236795902 +0200
+@@ -4,9 +4,13 @@
+ # Parse arguments for library compilation
+ . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
+ 
+-export ParMGridGen=$WM_THIRD_PARTY_DIR/ParMGridGen-1.0
++unset MGRIDGEN_ARCH_PATH
++if settings=$($WM_PROJECT_DIR/bin/foamEtcFile config.sh/mgridgen)
++then
++    . $settings
++fi
+ 
+-if [ -e "$FOAM_LIBBIN/libMGridGen.so" ]
++if [ -e "$MGRIDGEN_ARCH_PATH/include/mgridgen.h" ]
+ then
+     wmake $targetType MGridGenGamgAgglomeration
+ fi
+--- OpenFOAM-v1612+.orig/src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options	2017-01-02 09:56:17.578558265 +0100
++++ OpenFOAM-v1612+/src/fvAgglomerationMethods/MGridGenGamgAgglomeration/Make/options	2017-04-18 18:59:16.860662811 +0200
+@@ -1,15 +1,9 @@
+-/* Needs ParMGridGen environment variable set. (see Allwmake script) */
+-
+-TYPE_REAL=
+-#if defined(WM_SP)
+-TYPE_REAL=-DTYPE_REAL
+-#endif
+-
+ EXE_INC = \
+     -I$(LIB_SRC)/finiteVolume/lnInclude \
+-    -I$(ParMGridGen)/MGridGen/Lib/lnInclude \
+-    -I$(ParMGridGen)/MGridGen/IMlib/lnInclude \
+-    $(TYPE_REAL)
++    -I$(MGRIDGEN_ARCH_PATH)/include
+ 
+ LIB_LIBS = \
+-    -L$(FOAM_EXT_LIBBIN) -lMGridGen
++    -L$(FOAM_EXT_LIBBIN) \
++    -L$(MGRIDGEN_ARCH_PATH)/lib \
++    -L$(MGRIDGEN_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) \
++    -lmgrid
+--- OpenFOAM-v1612+.orig/src/parallel/decompose/Allwmake	2017-03-21 16:34:44.599021283 +0100
++++ OpenFOAM-v1612+/src/parallel/decompose/Allwmake	2017-03-21 16:28:57.243969660 +0100
+@@ -36,6 +36,7 @@
+ 
+     # Library
+     [ -r $FOAM_EXT_LIBBIN/libmetis.so ] || \
++    [ -r $METIS_ARCH_PATH/lib/libmetis.so ] || \
+     [ -r $METIS_ARCH_PATH/lib$WM_COMPILER_LIB_ARCH/libmetis.so ] || \
+     [ "${METIS_ARCH_PATH##*-}" = system ] || {
+         echo "$warning (missing library)"
+@@ -90,6 +91,7 @@
+ 
+     # Library
+     [ -r $FOAM_EXT_LIBBIN/libscotch.so ] || \
++    [ -r $SCOTCH_ARCH_PATH/lib/libscotch.so ] || \
+     [ -r $SCOTCH_ARCH_PATH/lib$WM_COMPILER_LIB_ARCH/libscotch.so ] || \
+     [ "${SCOTCH_ARCH_PATH##*-}" = system ] || {
+         echo "$warning (missing library)"
+--- OpenFOAM-v1612+.orig/src/parallel/decompose/metisDecomp/Make/options	2017-03-21 16:34:25.383075328 +0100
++++ OpenFOAM-v1612+/src/parallel/decompose/metisDecomp/Make/options	2017-03-21 16:30:15.727758338 +0100
+@@ -8,6 +8,7 @@
+  * to support central, non-thirdparty installations
+  */
+ LIB_LIBS = \
++    -L$(METIS_ARCH_PATH)/lib \
+     -L$(METIS_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) \
+     -L$(FOAM_EXT_LIBBIN) \
+     -lmetis
+--- OpenFOAM-v1612+.orig/src/parallel/decompose/ptscotchDecomp/Make/options	2017-03-21 16:34:34.607049385 +0100
++++ OpenFOAM-v1612+/src/parallel/decompose/ptscotchDecomp/Make/options	2017-03-21 16:30:00.479799399 +0100
+@@ -16,6 +16,7 @@
+  * to support central, non-thirdparty installations
+  */
+ LIB_LIBS = \
++    -L$(SCOTCH_ARCH_PATH)/lib \
+     -L$(SCOTCH_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) \
+     -L$(FOAM_EXT_LIBBIN) \
+     -L$(FOAM_EXT_LIBBIN)/$(FOAM_MPI) \
+--- OpenFOAM-v1612+.orig/src/parallel/decompose/scotchDecomp/Make/options	2017-03-21 16:34:39.159036582 +0100
++++ OpenFOAM-v1612+/src/parallel/decompose/scotchDecomp/Make/options	2017-03-21 16:29:46.719836452 +0100
+@@ -16,6 +16,7 @@
+  * to support central, non-thirdparty installations
+  */
+ LIB_LIBS = \
++    -L$(SCOTCH_ARCH_PATH)/lib \
+     -L$(SCOTCH_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) \
+     -L$(FOAM_EXT_LIBBIN) \
+     -lscotch \
+--- OpenFOAM-v1612+.orig/applications/utilities/mesh/manipulation/renumberMesh/Allwmake	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/applications/utilities/mesh/manipulation/renumberMesh/Allwmake	2017-03-28 11:13:35.222727218 +0200
+@@ -4,20 +4,35 @@
+ # Parse arguments for compilation (at least for error catching)
+ . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
+ 
+-export COMPILE_FLAGS=''
+-export LINK_FLAGS=''
++unset COMP_FLAGS LINK_FLAGS
+ 
+ if [ -f "${FOAM_LIBBIN}/libSloanRenumber.so" ]
+ then
+-    echo "Found libSloanRenumber.so  --  enabling Sloan renumbering support."
++    echo "    found libSloanRenumber  --  enabling sloan renumbering support."
+     export LINK_FLAGS="${LINK_FLAGS} -lSloanRenumber"
+ fi
+ 
+-if [ -f "${ZOLTAN_ARCH_PATH}/lib/libzoltan.a" -a -f "${FOAM_LIBBIN}/libzoltanRenumber.so" ]
++if [ -f "${FOAM_LIBBIN}/libzoltanRenumber.so" ]
+ then
+-    echo "Found libzoltanRenumber.so  --  enabling zoltan renumbering support."
+-    export COMPILE_FLAGS="-DFOAM_USE_ZOLTAN"
+-    export LINK_FLAGS="${LINK_FLAGS} -lzoltanRenumber -L${ZOLTAN_ARCH_PATH}/lib -lzoltan"
++    if [ -z "$ZOLTAN_ARCH_PATH" ]
++    then
++        # Optional: get ZOLTAN_ARCH_PATH
++        if settings=$($WM_PROJECT_DIR/bin/foamEtcFile config.sh/zoltan)
++        then
++            . $settings
++        fi
++    fi
++
++    for libdir in lib "lib${WM_COMPILER_LIB_ARCH}"
++    do
++        if [ -f "$ZOLTAN_ARCH_PATH/$libdir/libzoltan.a" ]
++        then
++            echo "    found libzoltanRenumber  --  enabling zoltan renumbering support."
++            export COMP_FLAGS="-DFOAM_USE_ZOLTAN"
++            export LINK_FLAGS="${LINK_FLAGS} -lzoltanRenumber -L$ZOLTAN_ARCH_PATH/$libdir -lzoltan"
++            break
++        fi
++    done
+ fi
+ 
+ wmake $targetType
+--- OpenFOAM-v1612+.orig/src/renumber/Allwmake	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/src/renumber/Allwmake	2017-03-28 11:10:22.195543610 +0200
+@@ -5,14 +5,11 @@
+ targetType=libso
+ . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
+ 
+-## Get ZOLTAN_ARCH_PATH
+-#if settings=$($WM_PROJECT_DIR/bin/foamEtcFile config.sh/zoltan)
+-#then
+-#    . $settings
+-#    echo "using ZOLTAN_ARCH_PATH=$ZOLTAN_ARCH_PATH"
+-#else
+-#    echo "Error: no config.sh/zoltan settings"
+-#fi
++# Optional: get ZOLTAN_ARCH_PATH
++if settings=$($WM_PROJECT_DIR/bin/foamEtcFile config.sh/zoltan)
++then
++    . $settings
++fi
+ 
+ wmake $targetType renumberMethods
+ 
+--- OpenFOAM-v1612+.orig/src/renumber/zoltanRenumber/Make/options	2016-12-23 15:22:59.000000000 +0100
++++ OpenFOAM-v1612+/src/renumber/zoltanRenumber/Make/options	2017-03-28 11:50:46.484343848 +0200
+@@ -4,10 +4,13 @@
+ EXE_INC = \
+     /* -DFULLDEBUG -g -O0 */ \
+     $(PFLAGS) $(PINC) \
++    ${c++LESSWARN} \
+     -I$(FOAM_SRC)/renumber/renumberMethods/lnInclude \
+     -I$(ZOLTAN_ARCH_PATH)/include/ \
+     -I$(LIB_SRC)/meshTools/lnInclude
+ 
+ LIB_LIBS = \
+-    /* -L$(ZOLTAN_ARCH_PATH)/lib -lzoltan */ \
++    -L$(ZOLTAN_ARCH_PATH)/lib \
++    -L$(ZOLTAN_ARCH_PATH)/lib$(WM_COMPILER_LIB_ARCH) \
++    -lzoltan \
+     -lmeshTools

@@ -1,0 +1,31 @@
+From f6f806c2ea46866c9490d2d2ddc3f119666d26d4 Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <hppritcha@gmail.com>
+Date: Mon, 17 Sep 2018 05:05:01 -0600
+Subject: [PATCH] spack: fix for spack to work on non-cray systems
+
+or when one wants to use Open MPI on a cray system with spack.
+The problem is that when using an MPI with spack, its going to
+use a long value for the CC and CXX variables.  This confused
+the libhio configury, resulting in it being built without mpi
+support, leading to failure of xexec to properly compile, etc.
+
+This commit fixes that problem.
+
+Signed-off-by: Howard Pritchard <hppritcha@gmail.com>
+
+diff --git a/configure.ac b/configure.ac
+index afab5553..62d35c85 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -37,7 +37,7 @@ if ( test -n "$XTOS_VERSION" || test -n "$CRAYPE_DIR" ) && (test -z $CC || test
+     if test ! -n "$LD" ; then
+         LD=ld
+     fi
+-elif test ${MPICC} = "mpicc" ; then
++elif test -n "$MPICC" ; then
+     CC=${MPICC}
+     CXX=${MPICXX}
+     hio_use_mpi=1
+-- 
+1.8.3.1
+

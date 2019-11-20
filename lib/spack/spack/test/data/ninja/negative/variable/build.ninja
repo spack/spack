@@ -1,0 +1,8 @@
+# Tests that Spack ignores variable definitions
+
+check = -Wall
+
+rule cc
+  command = gcc $check -c $in -o $out
+
+build foo: cc foo.c

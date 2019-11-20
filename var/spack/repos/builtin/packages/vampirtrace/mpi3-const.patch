@@ -1,0 +1,26 @@
+--- VampirTrace-5.14.4/config/mpigen/mpi_standard.h.orig	2019-02-21 06:35:02.610147025 +0100
++++ VampirTrace-5.14.4/config/mpigen/mpi_standard.h	2019-02-21 06:36:06.560969057 +0100
+@@ -36,7 +36,7 @@
+  **/
+ 
+ VT_MPI_INT MPI_Abort(MPI_Comm comm, VT_MPI_INT errorcode);
+-VT_MPI_INT MPI_Address(CONST void* location, MPI_Aint* address_CLASS_SINGLE_OUT);
++VT_MPI_INT MPI_Address(void* location, MPI_Aint* address_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Allgather(CONST void* sendbuf_CLASS_BUFFER_IN_PLACE, VT_MPI_INT sendcount, MPI_Datatype sendtype, void* recvbuf_CLASS_BUFFER, VT_MPI_INT recvcount, MPI_Datatype recvtype, MPI_Comm comm); /*COLL_ALL2ALL*/
+ VT_MPI_INT MPI_Allgatherv(CONST void* sendbuf_CLASS_BUFFER_IN_PLACE, VT_MPI_INT sendcount, MPI_Datatype sendtype, void* recvbuf_CLASS_BUFFER, CONST VT_MPI_INT* recvcounts, CONST VT_MPI_INT* displs, MPI_Datatype recvtype, MPI_Comm comm); /*COLL_ALL2ALL*/
+ VT_MPI_INT MPI_Allreduce(CONST void* sendbuf_CLASS_BUFFER_IN_PLACE, void* recvbuf_CLASS_BUFFER, VT_MPI_INT count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm); /*COLL_ALL2ALL*/
+@@ -149,12 +149,12 @@
+ VT_MPI_INT MPI_Type_contiguous(VT_MPI_INT count, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_extent(MPI_Datatype datatype, MPI_Aint* extent_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_free(MPI_Datatype* datatype_CLASS_SINGLE_IO);
+-VT_MPI_INT MPI_Type_hindexed(VT_MPI_INT count, CONST VT_MPI_INT* array_of_blocklengths, CONST MPI_Aint* array_of_displacements_CLASS_ARRAY_IN_count, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
++VT_MPI_INT MPI_Type_hindexed(VT_MPI_INT count, VT_MPI_INT* array_of_blocklengths, MPI_Aint* array_of_displacements_CLASS_ARRAY_IN_count, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_hvector(VT_MPI_INT count, VT_MPI_INT blocklength, MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_indexed(VT_MPI_INT count, CONST VT_MPI_INT* array_of_blocklengths, CONST VT_MPI_INT* array_of_displacements, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_lb(MPI_Datatype datatype, MPI_Aint* displacement_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_size(MPI_Datatype datatype, VT_MPI_INT* size);
+-VT_MPI_INT MPI_Type_struct(VT_MPI_INT count, CONST VT_MPI_INT* array_of_blocklengths, CONST MPI_Aint* array_of_displacements_CLASS_ARRAY_IN_count, CONST MPI_Datatype* array_of_types_CLASS_ARRAY_IN_count, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
++VT_MPI_INT MPI_Type_struct(VT_MPI_INT count, VT_MPI_INT* array_of_blocklengths, MPI_Aint* array_of_displacements_CLASS_ARRAY_IN_count, MPI_Datatype* array_of_types_CLASS_ARRAY_IN_count, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_ub(MPI_Datatype datatype, MPI_Aint* displacement_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Type_vector(VT_MPI_INT count, VT_MPI_INT blocklength, VT_MPI_INT stride, MPI_Datatype oldtype, MPI_Datatype* newtype_CLASS_SINGLE_OUT);
+ VT_MPI_INT MPI_Unpack(CONST void* inbuf, VT_MPI_INT insize, VT_MPI_INT* position, void* outbuf_CLASS_BUFFER, VT_MPI_INT outcount, MPI_Datatype datatype, MPI_Comm comm);

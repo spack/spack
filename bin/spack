@@ -1,135 +1,64 @@
-#!/usr/bin/env python
-##############################################################################
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+#!/bin/sh
+# -*- python -*-
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# For details, see https://scalability-llnl.github.io/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import sys
-if not sys.version_info[:2] >= (2,6):
-    v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or higher.  This is Python %d.%d.%d." % v_info)
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# This file is bilingual. The following shell code finds our preferred python.
+# Following line is a shell no-op, and starts a multi-line Python comment.
+# See https://stackoverflow.com/a/47886254
+""":"
+# prefer python3, then python, then python2
+for cmd in python3 python python2; do
+   command -v > /dev/null $cmd && exec $cmd $0 "$@"
+done
+
+echo "==> Error: spack could not find a python interpreter!" >&2
+exit 1
+":"""
+# Line above is a shell no-op, and ends a python multi-line comment.
+# The code above runs this file with our preferred python interpreter.
+
+from __future__ import print_function
 
 import os
+import sys
+
+if sys.version_info[:2] < (2, 6):
+    v_info = sys.version_info[:3]
+    sys.exit("Spack requires Python 2.6 or higher."
+             "This is Python %d.%d.%d." % v_info)
 
 # Find spack's location and its prefix.
-SPACK_FILE = os.path.realpath(os.path.expanduser(__file__))
-os.environ["SPACK_FILE"] = SPACK_FILE
-SPACK_PREFIX = os.path.dirname(os.path.dirname(SPACK_FILE))
+spack_file = os.path.realpath(os.path.expanduser(__file__))
+spack_prefix = os.path.dirname(os.path.dirname(spack_file))
 
 # Allow spack libs to be imported in our scripts
-SPACK_LIB_PATH = os.path.join(SPACK_PREFIX, "lib", "spack")
-sys.path.insert(0, SPACK_LIB_PATH)
+spack_lib_path = os.path.join(spack_prefix, "lib", "spack")
+sys.path.insert(0, spack_lib_path)
 
-# If there is no working directory, use the spack prefix.
-try:
-    working_dir = os.getcwd()
-except OSError:
-    os.chdir(SPACK_PREFIX)
-    working_dir = SPACK_PREFIX
+# Add external libs
+spack_external_libs = os.path.join(spack_lib_path, "external")
 
-# clean up the scope and start using spack package instead.
-del SPACK_FILE, SPACK_PREFIX, SPACK_LIB_PATH
-import llnl.util.tty as tty
-import spack
-from spack.error import SpackError
-from external import argparse
+if sys.version_info[:2] == (2, 6):
+    sys.path.insert(0, os.path.join(spack_external_libs, 'py26'))
 
-# Command parsing
-parser = argparse.ArgumentParser(
-    description='Spack: the Supercomputing PACKage Manager.')
-parser.add_argument('-d', '--debug', action='store_true',
-                    help="Write out debug logs during compile")
-parser.add_argument('-k', '--insecure', action='store_true',
-                    help="Do not check ssl certificates when downloading.")
-parser.add_argument('-m', '--mock', action='store_true',
-                    help="Use mock packages instead of real ones.")
-parser.add_argument('-p', '--profile', action='store_true',
-                    help="Profile execution using cProfile.")
-parser.add_argument('-v', '--verbose', action='store_true',
-                    help="Print additional output during builds")
-parser.add_argument('-V', '--version', action='version',
-                    version="%s" % spack.spack_version)
+sys.path.insert(0, spack_external_libs)
 
-# each command module implements a parser() function, to which we pass its
-# subparser for setup.
-subparsers = parser.add_subparsers(metavar='SUBCOMMAND', dest="command")
+# Here we delete ruamel.yaml in case it has been already imported from site
+# (see #9206 for a broader description of the issue).
+#
+# Briefly: ruamel.yaml produces a .pth file when installed with pip that
+# makes the site installed package the preferred one, even though sys.path
+# is modified to point to another version of ruamel.yaml.
+if 'ruamel.yaml' in sys.modules:
+    del sys.modules['ruamel.yaml']
 
-import spack.cmd
-for cmd in spack.cmd.commands:
-    module = spack.cmd.get_module(cmd)
-    subparser = subparsers.add_parser(cmd, help=module.description)
-    module.setup_parser(subparser)
+if 'ruamel' in sys.modules:
+    del sys.modules['ruamel']
 
-# Just print help and exit if run with no arguments at all
-if len(sys.argv) == 1:
-    parser.print_help()
-    sys.exit(1)
-
-# actually parse the args.
-args = parser.parse_args()
-
-def main():
-    # Set up environment based on args.
-    tty.set_verbose(args.verbose)
-    tty.set_debug(args.debug)
-    spack.debug = args.debug
-
-    spack.spack_working_dir = working_dir
-    if args.mock:
-        from spack.packages import PackageDB
-        spack.db = PackageDB(spack.mock_packages_path)
-
-    # If the user asked for it, don't check ssl certs.
-    if args.insecure:
-        tty.warn("You asked for --insecure, which does not check SSL certificates or checksums.")
-        spack.curl.add_default_arg('-k')
-
-    # Try to load the particular command asked for and run it
-    command = spack.cmd.get_command(args.command)
-    try:
-        return_val = command(parser, args)
-    except SpackError, e:
-        if spack.debug:
-            # In debug mode, raise with a full stack trace.
-            raise
-        elif e.long_message:
-            tty.die(e.message, e.long_message)
-        else:
-            tty.die(e.message)
-
-    except KeyboardInterrupt:
-        sys.stderr.write('\n')
-        tty.die("Keyboard interrupt.")
-
-    # Allow commands to return values if they want to exit with some ohter code.
-    if return_val is None:
-        sys.exit(0)
-    elif isinstance(return_val, int):
-        sys.exit(return_val)
-    else:
-        tty.die("Bad return value from command %s: %s" % (args.command, return_val))
-
-if args.profile:
-    import cProfile
-    cProfile.run('main()', sort='tottime')
-else:
-    main()
+# Once we've set up the system path, run the spack main method
+import spack.main  # noqa
+sys.exit(spack.main.main())

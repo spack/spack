@@ -1,0 +1,67 @@
+From e0cb0bfba240669e27d77ea4ac17a90fde1a03fd Mon Sep 17 00:00:00 2001
+From: Anders Bakken <agbakken@gmail.com>
+Date: Thu, 27 Jul 2017 20:55:19 -0700
+Subject: [PATCH] Add a compile test for proper c++11 support for std::string
+ and work around deficient stls.
+
+---
+ rct.cmake           | 10 ++++++++++
+ rct/String.h        | 10 ++++++++++
+ rct/rct-config.h.in |  1 +
+ 3 files changed, 21 insertions(+)
+
+diff --git a/src/rct/rct.cmake b/src/rct/rct.cmake
+index da102d2..30da945 100644
+--- a/src/rct/rct.cmake
++++ b/src/rct/rct.cmake
+@@ -287,6 +287,16 @@ check_cxx_source_runs("
+       return 0;
+   }" HAVE_UNORDERDED_MAP_WORKING_MOVE_CONSTRUCTOR)
+ 
++check_cxx_source_runs("
++  #include <string>
++
++  int main(int, char **)
++  {
++      std::string str = \"foobar testing\";
++      std::string::iterator it = str.erase(str.begin(), str.end());
++      return 0;
++  }" HAVE_STRING_ITERATOR_ERASE)
++
+ unset(CMAKE_REQUIRED_FLAGS)
+ unset(CMAKE_REQUIRED_LIBRARIES)
+ 
+diff --git a/src/rct/rct/String.h b/src/rct/rct/String.h
+index f8b9dbc..31b2012 100644
+--- a/src/rct/rct/String.h
++++ b/src/rct/rct/String.h
+@@ -454,7 +454,17 @@ class String
+ 
+     iterator erase(const_iterator begin, const_iterator end)
+     {
++#ifdef HAVE_STRING_ITERATOR_ERASE
+         return mString.erase(begin, end);
++#else
++        if (begin >= end) {
++            return mString.end();
++        }
++
++        const size_t offset = begin - mString.begin();
++        mString.erase(offset, end - begin);
++        return mString.begin() + offset;
++#endif
+     }
+ 
+     String& erase(size_t index = 0, size_t count = npos)
+diff --git a/src/rct/rct/rct-config.h.in b/src/rct/rct/rct-config.h.in
+index 9c67e2f..87c5b7c 100644
+--- a/src/rct/rct/rct-config.h.in
++++ b/src/rct/rct/rct-config.h.in
+@@ -20,6 +20,7 @@
+ #cmakedefine HAVE_SHMDEST
+ #cmakedefine HAVE_SCRIPTENGINE
+ #cmakedefine HAVE_UNORDERDED_MAP_WORKING_MOVE_CONSTRUCTOR
++#cmakedefine HAVE_HAVE_STRING_ITERATOR_ERASE
+ #if !defined(HAVE_EPOLL) && !defined(HAVE_KQUEUE)
+ #cmakedefine HAVE_SELECT
+ #endif
