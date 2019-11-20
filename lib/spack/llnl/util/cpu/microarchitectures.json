@@ -1180,15 +1180,15 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "4.8",
+            "versions": "4.8:4.8.9",
             "flags": "-march=armv8-a"
           },
           {
-            "versions": "4.9:5",
+            "versions": "4.9:5.9",
             "flags": "-march=armv8-a+crc+crypto"
           },
           {
-            "versions": "6",
+            "versions": "6:6.9",
             "flags": "-march=armv8.1-a+crc+crypto"
           },
           {
@@ -1198,8 +1198,7 @@
         ],
         "clang": {
           "versions": ":",
-          "family": "aarch64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-march=armv8-a -mcpu=generic"
         }
       }
     },
@@ -1227,19 +1226,19 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "4.8",
+            "versions": "4.8:4.8.9",
             "flags": "-march=armv8-a"
           },
           {
-            "versions": "4.9:5",
+            "versions": "4.9:5.9",
             "flags": "-march=armv8-a+crc+crypto"
           },
           {
-            "versions": "6",
+            "versions": "6:6.9",
             "flags": "-march=armv8.1-a+crc+crypto"
           },
           {
-            "versions": "7",
+            "versions": "7:7.9",
             "flags": "-arch=armv8.2a+crc+crypt+fp16"
           },
           {
@@ -1249,8 +1248,7 @@
         ],
         "clang": {
           "versions": ":",
-          "family": "aarch64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-march=armv8-a -mcpu=generic"
         }
       }
     },
