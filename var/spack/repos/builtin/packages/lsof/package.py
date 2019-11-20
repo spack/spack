@@ -10,9 +10,9 @@ class Lsof(Package):
     """Lsof displays information about files open to Unix processes."""
 
     homepage = "https://people.freebsd.org/~abe/"
-    url      = "https://www.mirrorservice.org/sites/lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_4.89.tar.gz"
+    url      = "https://www.mirrorservice.org/sites/lsof.itap.purdue.edu/pub/tools/unix/lsof/OLD/lsof_4.89.tar.gz"
 
-    version('4.89', sha256='ff4ac555966b587f06338475c8fcc0f41402b4c8e970e730f6f83b62be8b5c0d')
+    version('4.89', sha256='5d08da7ebe049c9d9a6472d6afb81aa5af54c4733a3f8822cbc22b57867633c9')
 
     def install(self, spec, prefix):
         tar = which('tar')
