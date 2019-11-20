@@ -68,11 +68,12 @@ class MirrorCache(object):
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
         relative_dst = os.path.relpath(
-            mirror_path.storage_path,
+            mirror_ref.storage_path,
             start=os.path.dirname(cosmetic_path))
         if not os.path.exists(cosmetic_path):
             mkdirp(os.path.dirname(cosmetic_path))
             os.symlink(relative_dst, cosmetic_path)
+
 
 #: Spack's local cache for downloaded source archives
 fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
