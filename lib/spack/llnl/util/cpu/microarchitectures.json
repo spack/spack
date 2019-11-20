@@ -1161,6 +1161,97 @@
         }
       }
     },
+    "thunderx2": {
+      "from": "aarch64",
+      "vendor": "0x43",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a+crc+crypto"
+          },
+          {
+            "versions": "7:",
+            "flags": "-mcpu=thunderx2t99"
+          }
+        ],
+        "clang": {
+          "versions": ":",
+          "flags": "-march=armv8-a -mcpu=generic"
+        }
+      }
+    },
+    "a64fx": {
+      "from": "aarch64",
+      "vendor": "0x46",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm",
+        "fphp",
+        "asimdhp",
+        "fcma",
+        "dcpop",
+        "sve"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a+crc+crypto"
+          },
+          {
+            "versions": "7:7.9",
+            "flags": "-arch=armv8.2a+crc+crypt+fp16"
+          },
+          {
+            "versions": "8:",
+            "flags": "-arch=armv8.2a+crc+aes+sh2+fp16+sve -msve-vector-bits=512"
+          }
+        ],
+        "clang": {
+          "versions": ":",
+          "flags": "-march=armv8-a -mcpu=generic"
+        }
+      }
+    },
     "arm": {
       "from": null,
       "vendor": "generic",

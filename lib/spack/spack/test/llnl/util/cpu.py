@@ -32,6 +32,7 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-scientific7-piledriver',
     'linux-rhel6-piledriver',
     'linux-centos7-power8le',
+    'linux-centos7-thunderx2',
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
@@ -121,6 +122,8 @@ def test_equality(supported_target):
     ('piledriver <= steamroller', True),
     ('zen2 >= zen', True),
     ('zen >= zen', True),
+    ('aarch64 <= thunderx2', True),
+    ('aarch64 <= a64fx', True),
     # Test unrelated microarchitectures
     ('power8 < skylake', False),
     ('power8 <= skylake', False),
@@ -205,12 +208,15 @@ def test_target_json_schema():
     ('nehalem', 'gcc', '4.9.3', '-march=nehalem -mtune=nehalem'),
     ('nehalem', 'gcc', '4.8.5', '-march=corei7 -mtune=corei7'),
     ('sandybridge', 'gcc', '4.8.5', '-march=corei7-avx -mtune=corei7-avx'),
+    ('thunderx2', 'gcc', '4.8.5', '-march=armv8-a'),
+    ('thunderx2', 'gcc', '4.9.3', '-march=armv8-a+crc+crypto'),
     # Test Clang / LLVM
     ('sandybridge', 'clang', '3.9.0', '-march=x86-64 -mcpu=sandybridge'),
     ('icelake', 'clang', '6.0.0', '-march=x86-64 -mcpu=icelake'),
     ('icelake', 'clang', '8.0.0', '-march=x86-64 -mcpu=icelake-client'),
     ('zen2', 'clang', '9.0.0', '-march=x86-64 -mcpu=znver2'),
     ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
+    ('thunderx2', 'clang', '6.0.0', '-march=armv8-a -mcpu=generic'),
     # Test Intel on Intel CPUs
     ('sandybridge', 'intel', '17.0.2', '-march=corei7-avx -mtune=corei7-avx'),
     ('sandybridge', 'intel', '18.0.5',
