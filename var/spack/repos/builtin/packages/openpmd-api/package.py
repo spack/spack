@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='dev')
+    version('0.10.0',  tag='0.10.0-alpha')
 
     variant('shared', default=True,
             description='Build a shared version of the library')

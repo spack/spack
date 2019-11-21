@@ -20,3 +20,7 @@ class BppSuite(CMakePackage):
     depends_on('bpp-core')
     depends_on('bpp-seq')
     depends_on('bpp-phyl')
+
+    # Clarify isinf's namespace, because Fujitsu compiler can't
+    # resolve ambiguous of 'isinf' function.
+    patch('clarify_isinf.patch', when='%fj')

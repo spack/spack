@@ -12,6 +12,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
+    maintainers = ['msimberg', 'albestro']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
@@ -29,6 +30,10 @@ class Hpx(CMakePackage, CudaPackage):
         description='Define which allocator will be linked in',
         values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
     )
+
+    variant('max_cpu_count', default='64',
+            description='Max number of OS-threads for HPX applications',
+            values=lambda x: isinstance(x, str) and x.isdigit())
 
     variant('instrumentation', values=any_combination_of(
         'apex', 'google_perftools', 'papi', 'valgrind'
@@ -127,6 +132,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Tools
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
+        ))
+
+        # MAX_CPU_COUNT
+        args.append('-DHPX_WITH_MAX_CPU_COUNT={0}'.format(
+            spec.variants['max_cpu_count'].value
         ))
 
         # Examples
