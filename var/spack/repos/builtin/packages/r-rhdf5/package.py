@@ -32,3 +32,5 @@ class RRhdf5(RPackage):
 
     depends_on('r@3.5.0:', when='@2.26.2:', type=('build', 'run'))
     depends_on('r-rhdf5lib@1.3.2:', when='@2.26.2:', type=('build', 'run'))
+
+    depends_on('gmake')
