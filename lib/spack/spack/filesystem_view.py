@@ -398,36 +398,32 @@ class YamlFilesystemView(FilesystemView):
                      "The following packages will be unusable: %s"
                      % ", ".join((s.name for s in dependents)))
 
-        extensions = set(filter(lambda s: s.package.is_extension,
-                         to_deactivate))
-        standalones = to_deactivate - extensions
+        # depmap maps each package to its list of dependencies. This is used to
+        # sort the packages into dependency post-order.
+        depmap = dict()
+        for spec in to_deactivate:
+            depmap[spec] = set(d for d in spec.traverse(root=False)
+                               if d in to_deactivate)
 
-        # extensions_depmap maps each extenson package to its list of
-        # dependencies. This is used to sort the extension packages into
-        # dependency post-order.
-        extensions_depmap = dict()
-        for e in extensions:
-            extensions_depmap[e] = set(d for d in e.traverse(root=False)
-                                    if d in extensions)
+        # to_deactivate_sorted is the packages to deactivate in post-order.
+        to_deactivate_sorted = []
+        while depmap:
+            for spec in [s for s, d in depmap.items() if not d]:
+                to_deactivate_sorted.append(spec)
+                for s in depmap.keys():
+                    depmap[s].discard(spec)
+                depmap.pop(spec)
+        to_deactivate_sorted.reverse()
 
-        # extensions_sorted is the extension packages in post-order.
-        extensions_sorted = []
-        while extensions_depmap:
-            for e in [e for e, d in extensions_depmap.items() if not d]:
-                extensions_sorted.append(e)
-                for ee in extensions_depmap.keys():
-                    extensions_depmap[ee].discard(e)
-                extensions_depmap.pop(e)
-        extensions_sorted.reverse()
-
-        # Ensure that the sorted extensions contain all the packages
-        assert set(extensions_sorted) == extensions
+        # Ensure that the sorted list contains all the packages
+        assert set(to_deactivate_sorted) == to_deactivate
 
         # Remove the packages from the view
-        for extension in extensions_sorted:
-            self.remove_extension(extension, with_dependents=with_dependents)
-        for package in standalones:
-            self.remove_standalone(package)
+        for spec in to_deactivate_sorted:
+            if spec.package.is_extension:
+                self.remove_extension(spec, with_dependents=with_dependents)
+            else:
+                self.remove_standalone(spec)
 
         self._purge_empty_directories()
 
