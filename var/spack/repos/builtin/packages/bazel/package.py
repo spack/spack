@@ -92,7 +92,7 @@ class Bazel(Package):
     version('0.1.1',  sha256='c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20')
     version('0.1.0',  sha256='ea3ad72019f380b145054ef0342e5230508f686c0ac0862912fb9616a66d6d38')
 
-    depends_on('java@8', type=('build', 'link', 'run'))
+    depends_on('java@8:', type=('build', 'link', 'run'))
     depends_on('zip')
 
     patch('fix_env_handling.patch', when='@:0.4.5')
