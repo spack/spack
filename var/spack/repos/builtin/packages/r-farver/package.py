@@ -16,4 +16,3 @@ class RFarver(RPackage):
     version('1.1.0', sha256='2086f309135f37705280fe2df851ad91dc886ad8f2a6eb1f3983aa20427f94b6')
 
     depends_on('r-rcpp@0.12.15:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
