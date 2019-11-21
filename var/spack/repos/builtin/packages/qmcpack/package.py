@@ -117,12 +117,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('mpi', when='+mpi')
 
     # HDF5
-    depends_on('hdf5+hl+fortran', when='+qe')
-    depends_on('hdf5+hl+fortran+mpi', when='+qe+mpi')
-    depends_on('hdf5+hl+fortran~mpi', when='+qe~mpi')
-    depends_on('hdf5~hl~fortran', when='~qe')
-    depends_on('hdf5~hl~fortran+mpi', when='~qe+mpi')
-    depends_on('hdf5~hl~fortran~mpi', when='~qe~mpi')
+    depends_on('hdf5~mpi', when='~phdf5')
+    depends_on('hdf5+mpi', when='+phdf5')
+    depends_on('hdf5+hl+fortran~mpi', when='+qe~phdf5')
+    depends_on('hdf5+hl+fortran+mpi', when='+qe+phdf5')
+
     # Math libraries
     depends_on('blas')
     depends_on('lapack')
