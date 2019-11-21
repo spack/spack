@@ -20,7 +20,8 @@ class Mathematica(Package):
     homepage = "https://www.wolfram.com/mathematica/"
     url = 'file://{0}/Mathematica_12.0.0_LINUX.sh'.format(os.getcwd())
 
-    version('12.0.0', sha256='b9fb71e1afcc1d72c200196ffa434512d208fa2920e207878433f504e58ae9d7',
+    version('12.0.0',
+            sha256='b9fb71e1afcc1d72c200196ffa434512d208fa2920e207878433f504e58ae9d7',
             expand=False)
 
     # Licensing
@@ -35,10 +36,10 @@ class Mathematica(Package):
            '-targetdir={0}'.format(prefix),
            '-execdir={0}'.format(prefix.bin),
            '-selinux=y')
-        # This is what most people would use on a cluster but the installer does not symlink it
+        # This is what most people would use on a cluster but the installer
+        # does not symlink it
         ws_link_path = os.path.join(prefix.bin, 'wolframscript')
         if not os.path.exists(ws_link_path):
             ln = which('ln')
             ws_path = os.path.join(prefix, 'Executables', 'wolframscript')
             ln('-s', ws_path, ws_link_path)
-
