@@ -12,9 +12,15 @@ class PyMaestrowf(PythonPackage):
 
     homepage = "https://github.com/LLNL/maestrowf/"
     url      = "https://github.com/LLNL/maestrowf/archive/v1.1.2.tar.gz"
+    git      = "https://github.com/LLNL/maestrowf/"
 
     maintainers = ['FrankD412']
 
+    # git branches
+    version('develop', branch='develop')
+    version('master',  branch='master')
+
+    # pypi releases
     version('1.1.4', sha256='2cb0fa6f6281d8618ac79217ea5f4fd8cb24955c4315e873657f96b815f171d5')
     version('1.1.2', sha256='ebb45bff54625435bc9f2462e1bdc3b5bdc4d943378c53e7810c11836794c5e0')
     version('1.1.1', sha256='a476ad4b40846d7b7f9540d6413df1b42eb655735e8d3c6c07e0baa68e20a8bb')
