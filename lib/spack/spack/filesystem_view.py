@@ -402,36 +402,32 @@ class YamlFilesystemView(FilesystemView):
                          to_deactivate))
         standalones = to_deactivate - extensions
 
-        # Please note that a traversal of the DAG in post-order and then
-        # forcibly removing each package should remove the need to specify
-        # with_dependents for deactivating extensions/allow removal without
-        # additional checks (force=True). If removal performance becomes
-        # unbearable for whatever reason, this should be the first point of
-        # attack.
-        #
-        # see: https://github.com/spack/spack/pull/3227#discussion_r117147475
-        remove_extension = ft.partial(self.remove_extension,
-                                      with_dependents=with_dependents)
+        # extensions_depmap maps each extenson package to its list of
+        # dependencies. This is used to sort the extension packages into
+        # dependency post-order.
+        extensions_depmap = dict()
+        for e in extensions:
+            extensions_depmap[e] = set(d for d in e.traverse(root=False)
+                                    if d in extensions)
 
-        extensions_depmap = dict((e,
-                                  [d for d in e.traverse(
-                                      root=False) if d in extensions]
-                                  ) for e in extensions)
-
+        # extensions_sorted is the extension packages in post-order.
         extensions_sorted = []
         while extensions_depmap:
             for e in [e for e, d in extensions_depmap.items() if not d]:
                 extensions_sorted.append(e)
                 for ee in extensions_depmap.keys():
-                    extensions_depmap[ee] = \
-                        [d for d in extensions_depmap[ee] if d != e]
+                    extensions_depmap[ee].discard(e)
                 extensions_depmap.pop(e)
         extensions_sorted.reverse()
 
+        # Ensure that the sorted extensions contain all the packages
         assert set(extensions_sorted) == extensions
 
-        set(map(remove_extension, extensions_sorted))
-        set(map(self.remove_standalone, standalones))
+        # Remove the packages from the view
+        for extension in extensions_sorted:
+            self.remove_extension(extension, with_dependents=with_dependents)
+        for package in standalones:
+            self.remove_standalone(package)
 
         self._purge_empty_directories()
 
