@@ -22,6 +22,7 @@
 
 from spack import *
 
+
 class Sprng(AutotoolsPackage):
 
     # A list of GitHub accounts to
