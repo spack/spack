@@ -43,3 +43,5 @@ class RRsamtools(RPackage):
     depends_on('r-xvector@0.19.7:', when='@1.32.3:', type=('build', 'run'))
 
     depends_on('r-rhtslib@1.16.3:', when='@2.0.3:', type=('build', 'run'))
+
+    depends_on('gmake')
