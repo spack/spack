@@ -37,6 +37,6 @@ class RVsn(RPackage):
     depends_on('r-limma', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-hexbin', type=('build', 'run'))
+    depends_on('r-hexbin', when='@3.44.0', type=('build', 'run'))
 
     depends_on('r@3.4.0:', when='@3.46.0:', type=('build', 'run'))
