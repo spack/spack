@@ -30,8 +30,10 @@ class Zee(CMakePackage):
     variant('codechecks', default=False,
             description='Perform additional code checks like ' +
                         'formatting or static analysis')
+    depends_on('boost')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
+    depends_on('git', type='build', when='+codechecks')
     depends_on('py-cmake-format', type='build', when='+codechecks')
     depends_on('py-pre-commit', type='build', when='+codechecks')
     depends_on('py-pyyaml', type='build', when='+codechecks')
