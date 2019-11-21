@@ -25,3 +25,8 @@ class RRhtslib(RPackage):
     version('1.8.0', commit='3b5493473bed42958614091c58c739932ffcfa79')
 
     depends_on('r-zlibbioc', type=('build', 'run'))
+
+    depends_on('bzip2', type=('build', 'run'))
+    depends_on('lzma', type=('build', 'run'))
+    depends_on('curl', type=('build', 'run'))
+    depends_on('gmake', type=('build', 'run'))
