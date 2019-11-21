@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Udocker(Package):
+class Udocker(PythonPackage):
     """A basic user tool to execute simple docker containers in batch or
     interactive systems without root privileges.
 
