@@ -24,7 +24,7 @@ class PyWub(PythonPackage):
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-seaborn', type=('build', 'run'))
     depends_on('py-editdistance', type=('build', 'run', 'test'))
-    depends_on('py-pandas@0.20.2:', type=('build', 'run')
+    depends_on('py-pandas@0.20.2:', type=('build', 'run'))
     depends_on('py-pysam', type=('build', 'run'))
     depends_on('py-tqdm', type=('build', 'run'))
     depends_on('py-statsmodels', type=('build', 'run'))
