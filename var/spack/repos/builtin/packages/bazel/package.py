@@ -98,14 +98,15 @@ class Bazel(Package):
     patch('fix_env_handling.patch', when='@:0.4.5')
     patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
     patch('fix_env_handling-0.13.0.patch', when='@0.13.0:0.13.999')
-    patch('fix_env_handling-0.17.2.patch', when='@0.14.0:')
+    patch('fix_env_handling-0.17.2.patch', when='@0.14.0:0.24.1')
+    patch('fix_env_handling-0.26.1.patch', when='@0.26.1:')
     patch('link.patch', when='@:0.17.2')
     patch('cc_configure.patch', when='@:0.4.5')
     patch('unix_cc_configure.patch', when='@0.9.0')
     patch('unix_cc_configure-0.10.0.patch', when='@0.10.0:0.14.999')
     patch('unix_cc_configure-0.17.2.patch', when='@0.15.0:')
     patch('cc_env.patch', when='@0.19.0')
-    patch('cc_env_024.patch', when='@0.24.1')
+    patch('cc_env_024.patch', when='@0.24.1:')
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
