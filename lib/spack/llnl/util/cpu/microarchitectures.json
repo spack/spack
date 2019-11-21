@@ -1163,7 +1163,7 @@
     },
     "thunderx2": {
       "from": "aarch64",
-      "vendor": "0x43",
+      "vendor": "Cavium",
       "features": [
         "fp",
         "asimd",
@@ -1204,7 +1204,7 @@
     },
     "a64fx": {
       "from": "aarch64",
-      "vendor": "0x46",
+      "vendor": "Fujitsu",
       "features": [
         "fp",
         "asimd",
@@ -1239,11 +1239,11 @@
           },
           {
             "versions": "7:7.9",
-            "flags": "-arch=armv8.2a+crc+crypt+fp16"
+            "flags": "-arch=armv8.2a+crc+crypto+fp16"
           },
           {
             "versions": "8:",
-            "flags": "-arch=armv8.2a+crc+aes+sh2+fp16+sve -msve-vector-bits=512"
+            "flags": "-arch=armv8.2a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
           }
         ],
         "clang": {

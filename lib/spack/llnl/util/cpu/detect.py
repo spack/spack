@@ -109,20 +109,54 @@ def sysctl_info_dict():
         'model name': sysctl('-n', 'machdep.cpu.brand_string')
     }
 
-    # Super hacky way to deal with slight representation differences
-    # Would be better to somehow consider these "identical"
-    if 'sse4.1' in info['flags']:
-        info['flags'] += ' sse4_1'
-    if 'sse4.2' in info['flags']:
-        info['flags'] += ' sse4_2'
-    if 'avx1.0' in info['flags']:
-        info['flags'] += ' avx'
-    if 'clfsopt' in info['flags']:
-        info['flags'] += ' clflushopt'
-    if 'xsave' in info['flags']:
-        info['flags'] += ' xsavec xsaveopt'
+    adjust_raw_flags(info)
 
     return info
+
+
+def adjust_raw_flags(info):
+    """Adjust the flags detected on the system to homogenize
+    slightly different representations.
+    """
+    # Flags detected on Darwin turned to their linux counterpart
+    flags = info.get('flags', [])
+    if 'sse4.1' in flags:
+        info['flags'] += ' sse4_1'
+    if 'sse4.2' in flags:
+        info['flags'] += ' sse4_2'
+    if 'avx1.0' in flags:
+        info['flags'] += ' avx'
+    if 'clfsopt' in flags:
+        info['flags'] += ' clflushopt'
+    if 'xsave' in flags:
+        info['flags'] += ' xsavec xsaveopt'
+
+
+def adjust_raw_vendor(info):
+    """Adjust the vendor field to make it human readable"""
+    # Mapping numeric codes to vendor (ARM)
+    arm_vendor = {
+        '0x41': 'ARM',
+        '0x42': 'Broadcom',
+        '0x43': 'Cavium',
+        '0x44': 'DEC',
+        '0x46': 'Fujitsu',
+        '0x48': 'HiSilicon',
+        '0x4e': 'Nvidia',
+        '0x50': 'APM',
+        '0x51': 'Qualcomm',
+        '0x53': 'Samsung',
+        '0x56': 'Marvell',
+        '0x66': 'Faraday',
+        '0x69': 'Intel'
+    }
+    if 'CPU implementer' not in info:
+        return
+
+    for code, vendor_name in arm_vendor.items():
+        if info['CPU implementer'] == code:
+            info['CPU implementer'] = vendor_name
+            break
 
 
 def raw_info_dictionary():
@@ -139,6 +173,8 @@ def raw_info_dictionary():
             warnings.warn(str(e))
 
         if info:
+            adjust_raw_flags(info)
+            adjust_raw_vendor(info)
             break
 
     return info
