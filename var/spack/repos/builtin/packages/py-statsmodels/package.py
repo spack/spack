@@ -33,5 +33,8 @@ class PyStatsmodels(PythonPackage):
     depends_on('py-scipy@0.11:',       type=('build', 'run'), when='@0.8.0')
     depends_on('py-scipy@0.18:',       type=('build', 'run'), when='@0.10.1')
 
-    # TODO: Add a 'test' deptype
+    # Tests were not run with the 0.8.0 version of the package.  I've tried
+    # enabling them, but they currently fail for v0.10.1 on a mac.
+    # see https://github.com/statsmodels/statsmodels/issues/6263
     # depends_on('py-nose', type='test')
+
