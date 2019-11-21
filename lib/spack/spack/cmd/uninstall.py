@@ -115,7 +115,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
                 spec_copy.concretize()
                 if spec_copy.package.installed_upstream:
                     tty.warn("{0} is installed upstream".format(spec_name))
-                    tty.die("Use 'spack uninstall [-u upstream_name]'")
+                    tty.die("Use 'spack uninstall [--upstream upstream_name]'")
 
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
