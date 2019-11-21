@@ -19,5 +19,4 @@ class RTweenr(RPackage):
     depends_on('r-farver', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rcpp@0.12.3:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
