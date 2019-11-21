@@ -19,8 +19,8 @@ class Czmq(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('pkgconfig', type='build')
-    depends_on("libuuid")
-    depends_on('zeromq')
+    depends_on('libuuid')
+    depends_on('libzmq')
 
     def autoreconf(self, spec, prefix):
         autogen = Executable('./autogen.sh')

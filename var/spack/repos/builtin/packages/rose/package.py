@@ -16,8 +16,7 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    # url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
-    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.9.104.zip"
+    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.10.0.zip"
     git = "https://github.com/rose-compiler/rose-develop.git"
 
     # --------------------------------------------------------------------------
@@ -212,9 +211,9 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if "+codethorn" in self.spec:
-            spack_env.set("CXXFLAGS", "-std=c++11")
+            env.set("CXXFLAGS", "-std=c++11")
 
     def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.

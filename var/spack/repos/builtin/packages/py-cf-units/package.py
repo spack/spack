@@ -26,4 +26,4 @@ class PyCfUnits(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-antlr4-python3-runtime', type=('build', 'run'))
     depends_on('py-pytest-runner', type=('build'))
-    depends_on('udunits2')
+    depends_on('udunits')

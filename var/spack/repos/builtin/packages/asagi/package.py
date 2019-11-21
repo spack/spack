@@ -46,8 +46,8 @@ class Asagi(CMakePackage):
 
     depends_on('mpi', when="+mpi")
     depends_on('mpi@3:', when="+mpi3")
-    depends_on('netcdf +mpi', when="+mpi")
-    depends_on('netcdf ~mpi', when="~mpi")
+    depends_on('netcdf-c +mpi', when="+mpi")
+    depends_on('netcdf-c ~mpi', when="~mpi")
     depends_on('numactl', when="+numa")
 
     conflicts('%gcc@5:', when='@:1.0.0')

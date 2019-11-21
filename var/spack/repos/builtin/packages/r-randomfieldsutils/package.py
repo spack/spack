@@ -13,7 +13,7 @@ class RRandomfieldsutils(RPackage):
        Furthermore, it includes the Struve functions."""
 
     homepage = "https://cloud.r-project.org/package=RandomFieldsUtils"
-    url      = "https://cloud.r-project.org/src/contrib/RandomFieldsUtils_0.3.25.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/RandomFieldsUtils_0.5.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RandomFieldsUtils"
 
     version('0.5.3', sha256='ea823cba2e254a9f534efb4b772c0aeef2039ee9ef99744e077b969a87f8031d')

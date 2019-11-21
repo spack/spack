@@ -31,5 +31,5 @@ class PerlIoPrompt(PerlPackage):
 
     depends_on('perl-module-build', type='build')
 
-    depends_on('perl-term-readkey', type=('build', 'run'))
+    depends_on('perl-termreadkey', type=('build', 'run'))
     depends_on('perl-want', type=('build', 'run'))

@@ -25,4 +25,4 @@ class Libgpuarray(CMakePackage):
 
     depends_on('cuda')
     depends_on('cmake@3:', type='build')
-    depends_on('libcheck')
+    depends_on('check')

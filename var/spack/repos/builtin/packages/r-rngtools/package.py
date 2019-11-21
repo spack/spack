@@ -14,7 +14,7 @@ class RRngtools(RPackage):
     the way current RNG settings can be changed."""
 
     homepage = "https://renozao.github.io/rngtools"
-    url      = "https://cloud.r-project.org/src/contrib/rngtools_1.2.4.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/rngtools_1.4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rngtools"
 
     version('1.4', sha256='3aa92366e5d0500537964302f5754a750aff6b169a27611725e7d84552913bce')

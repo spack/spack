@@ -166,8 +166,20 @@ class FetchStrategy(with_metaclass(FSMeta, object)):
     def source_id(self):
         """A unique ID for the source.
 
+        It is intended that a human could easily generate this themselves using
+        the information available to them in the Spack package.
+
         The returned value is added to the content which determines the full
         hash for a package using `str()`.
+        """
+        raise NotImplementedError
+
+    def mirror_id(self):
+        """This is a unique ID for a source that is intended to help identify
+        reuse of resources across packages.
+
+        It is unique like source-id, but it does not include the package name
+        and is not necessarily easy for a human to create themselves.
         """
         raise NotImplementedError
 
@@ -212,6 +224,9 @@ class BundleFetchStrategy(FetchStrategy):
     def source_id(self):
         """BundlePackages don't have a source id."""
         return ''
+
+    def mirror_id(self):
+        """BundlePackages don't have a mirror id."""
 
 
 @pattern.composite(interface=FetchStrategy)
@@ -272,6 +287,15 @@ class URLFetchStrategy(FetchStrategy):
 
     def source_id(self):
         return self.digest
+
+    def mirror_id(self):
+        if not self.digest:
+            return None
+        # The filename is the digest. A directory is also created based on
+        # truncating the digest to avoid creating a directory with too many
+        # entries
+        return os.path.sep.join(
+            ['archive', self.digest[:2], self.digest])
 
     @_needs_stage
     def fetch(self):
@@ -727,6 +751,13 @@ class GitFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.commit or self.tag
 
+    def mirror_id(self):
+        repo_ref = self.commit or self.tag or self.branch
+        if repo_ref:
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['git', repo_path, repo_ref])
+            return result
+
     def get_source_id(self):
         if not self.branch:
             return
@@ -908,6 +939,12 @@ class SvnFetchStrategy(VCSFetchStrategy):
         info = xml.etree.ElementTree.fromstring(output)
         return info.find('entry/commit').get('revision')
 
+    def mirror_id(self):
+        if self.revision:
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['svn', repo_path, self.revision])
+            return result
+
     @_needs_stage
     def fetch(self):
         if self.stage.expanded:
@@ -1011,6 +1048,12 @@ class HgFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.revision
 
+    def mirror_id(self):
+        if self.revision:
+            repo_path = url_util.parse(self.url).path
+            result = os.path.sep.join(['hg', repo_path, self.revision])
+            return result
+
     def get_source_id(self):
         output = self.hg('id', self.url, output=str)
         if output:
@@ -1086,7 +1129,7 @@ class S3FetchStrategy(URLFetchStrategy):
 
         parsed_url = url_util.parse(self.url)
         if parsed_url.scheme != 's3':
-            raise ValueError(
+            raise FetchError(
                 'S3FetchStrategy can only fetch from s3:// urls.')
 
         tty.msg("Fetching %s" % self.url)
@@ -1352,7 +1395,7 @@ class NoCacheError(FetchError):
 
 
 class FailedDownloadError(FetchError):
-    """Raised wen a download fails."""
+    """Raised when a download fails."""
     def __init__(self, url, msg=""):
         super(FailedDownloadError, self).__init__(
             "Failed to fetch file from URL: %s" % url, msg)

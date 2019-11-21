@@ -16,6 +16,7 @@ import spack.fetch_strategy as fs
 import spack.repo
 import spack.stage
 import spack.util.spack_json as sjson
+import spack
 
 from spack.util.compression import allowed_archive
 from spack.util.crypto import checksum, Checker
@@ -86,6 +87,9 @@ class Patch(object):
             raise NoSuchPatchError("No such patch: %s" % self.path)
 
         apply_patch(stage, self.path, self.level, self.working_dir)
+
+    def cache(self):
+        return None
 
     def to_dict(self):
         """Partial dictionary -- subclases should add to this."""
@@ -180,6 +184,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
+    # TODO: this function doesn't use the stage arg
     def fetch(self, stage):
         """Retrieve the patch in a temporary stage and compute self.path
 
@@ -191,15 +196,23 @@ class UrlPatch(Patch):
         if self.archive_sha256:
             fetch_digest = self.archive_sha256
 
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest)
-        mirror = os.path.join(os.path.dirname(stage.mirror_path),
-                              os.path.basename(self.url))
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
+                                      expand=bool(self.archive_sha256))
 
-        self.stage = spack.stage.Stage(fetcher, mirror_path=mirror)
+        # The same package can have multiple patches with the same name but
+        # with different contents, therefore apply a subset of the hash.
+        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
+
+        per_package_ref = os.path.join(self.owner.split('.')[-1], name)
+        # Reference starting with "spack." is required to avoid cyclic imports
+        mirror_ref = spack.mirror.mirror_archive_paths(
+            fetcher,
+            per_package_ref)
+
+        self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
-        self.stage.cache_local()
 
         root = self.stage.path
         if self.archive_sha256:
@@ -229,6 +242,9 @@ class UrlPatch(Patch):
                 raise fs.ChecksumError(
                     "sha256 checksum failed for %s" % self.path,
                     "Expected %s but got %s" % (self.sha256, checker.sum))
+
+    def cache(self):
+        return self.stage
 
     def clean(self):
         self.stage.destroy()

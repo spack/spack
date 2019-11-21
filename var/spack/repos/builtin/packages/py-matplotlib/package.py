@@ -85,7 +85,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
-               when='@2.1.0:2.999.999')
+               when='@2.1.0:2.999.999 ^python@:2')
     depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
 
     # Optional backend dependencies
@@ -113,7 +113,7 @@ class PyMatplotlib(PythonPackage):
     # Optional dependencies
     depends_on('ffmpeg', when='+movies')
     # depends_on('libav', when='+movies')
-    depends_on('image-magick', when='+animation')
+    depends_on('imagemagick', when='+animation')
     depends_on('py-pillow@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
     depends_on('ghostscript@0.9:', when='+latex', type='run')

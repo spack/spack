@@ -57,6 +57,7 @@ class Vim(AutotoolsPackage):
     depends_on('libxtst', when="+x")
 
     depends_on('ncurses', when="@7.4:")
+    depends_on('findutils', type='build')
 
     def configure_args(self):
         spec = self.spec

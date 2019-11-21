@@ -16,7 +16,7 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.4 - 3.7) to run Spack
+#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
 #. The ``git`` and ``curl`` commands for fetching
@@ -97,7 +97,7 @@ Check Installation
 With Spack installed, you should be able to run some basic Spack
 commands.  For example:
 
-.. command-output:: spack spec netcdf
+.. command-output:: spack spec netcdf-c
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

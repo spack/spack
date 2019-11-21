@@ -18,7 +18,7 @@ class PyOpentuner(PythonPackage):
     depends_on('python@2.7:2.8', type=('build', 'run'))
 
     depends_on('py-argparse@1.2.1:', type=('build', 'run'))
-    depends_on('py-fn@0.2.12:', type=('build', 'run'))
+    depends_on('py-fn-py@0.2.12:', type=('build', 'run'))
     depends_on('py-numpy@1.8.0:', type=('build', 'run'))
     depends_on('py-pysqlite@2.6.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
