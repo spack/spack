@@ -23,3 +23,5 @@ class RRgraphviz(RPackage):
 
     depends_on('r@2.6.0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))
+
+    depends_on('graphviz@2.16:', type='run')
