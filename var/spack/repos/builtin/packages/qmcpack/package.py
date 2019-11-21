@@ -60,16 +60,23 @@ class Qmcpack(CMakePackage, CudaPackage):
     # no way to express this in variant syntax, need something like
     # variant('+mixed', default=True, when='+cuda', description="...")
 
-    # conflicts
+    # high-level variant conflicts
     conflicts(
         '+phdf5',
         when='~mpi',
         msg='Parallel collective I/O requires MPI-enabled QMCPACK. '
         'Please add "~phdf5" to the Spack install line for serial QMCPACK.')
 
-    conflicts('+soa',
-              when='+cuda',
-              msg='QMCPACK SOA variant does not exist for CUDA')
+    conflicts(
+        '+soa',
+        when='+cuda@:3.4.0',
+        msg='QMCPACK CUDA+SOA variant does not exist prior to v. 3.5.0.')
+
+    conflicts(
+        '+qe',
+        when='~mpi',
+        msg='Serial QMCPACK with serial QE converter not supported. '
+        'Configure in serial QE + serial HDF5 will not run correctly.')
 
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
