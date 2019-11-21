@@ -16,7 +16,7 @@ class PyWub(PythonPackage):
 
     version('0.4.0', sha256='1526aa392bccac71b872211c45f5b403ad3d55f5762e0ed34ff9086bc1dab6fd')
 
-    depends_on('py-six')
+    depends_on('py-six', type=('build', 'test'))
     depends_on('py-pytest', type=('build', 'test'))
     depends_on('py-pycmd', type=('build', 'run', 'test'))
     depends_on('py-biopython')
