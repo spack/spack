@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Mg(AutotoolsPackage):
+class Mg(Package):
     """Mg is intended to be a small, fast, and portable editor for people
     who can't (or don't want to) run emacs for one reason or another,
     or are not familiar with the vi editor. It is compatible with
@@ -20,8 +20,17 @@ class Mg(AutotoolsPackage):
 
     depends_on('ncurses')
 
-    def configure_args(self):
+    phases = ['configure', 'build', 'install']
+
+    def configure(self, spec, prefix):
+        configure = Executable('./configure')
         args = [
             '--mandir={0}'.format(self.prefix.man),
         ]
-        return args
+        configure(*args)
+
+    def build(self, spec, prefix):
+        make()
+
+    def install(self, spec, prefix):
+        make('install')
