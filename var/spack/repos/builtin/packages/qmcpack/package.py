@@ -371,22 +371,19 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def check(self):
+    def check_install(self):
         """Run ctest after building binary.
         It can take over 24 hours to run all the regression tests, here we
-        only run the unit tests and short tests. If the unit tests fail,
-        the QMCPACK installation aborts. On the other hand, the short tests
-        are too strict and often fail, but are still useful to run. In the
-        future, the short tests will be more reasonable in terms of quality
-        assurance (i.e. they will not be so strict), but will be sufficient to
-        validate QMCPACK in production."""
+        only run the unit tests and deterministic tests. If the unit tests
+        fail, the QMCPACK installation aborts. If the deterministic tests
+        fails, QMCPACK will still install and emit a warning message."""
 
         with working_dir(self.build_directory):
-            ctest('-L', 'unit')
+            ctest('-R', 'unit')
             try:
-                ctest('-R', 'short')
+                ctest('-R', 'deterministic', '-LE', 'unstable')
             except ProcessError:
-                warn  = 'Unit tests passed, but short tests have failed.\n'
-                warn += 'Please review failed tests before proceeding\n'
-                warn += 'with production calculations.\n'
+                warn  = 'Unit tests passed, but deterministic tests failed.\n'
+                warn += 'Please report this failure to:\n'
+                warn += 'https://github.com/QMCPACK/qmcpack/issues'
                 tty.msg(warn)
