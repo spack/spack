@@ -498,13 +498,13 @@ class Stage(object):
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
-            return
+        else:
+            self.fetch()
+            spack.caches.mirror_cache.store(
+                self.fetcher, self.mirror_paths.storage_path)
+            stats.added(absolute_storage_path)
 
-        self.fetch()
-        spack.caches.mirror_cache.store(
-            self.fetcher, self.mirror_paths.storage_path,
-            self.mirror_paths.cosmetic_path)
-        stats.added(absolute_storage_path)
+        spack.caches.mirror_cache.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
