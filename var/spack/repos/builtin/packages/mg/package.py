@@ -26,6 +26,7 @@ class Mg(Package):
         configure = Executable('./configure')
         args = [
             '--mandir={0}'.format(self.prefix.man),
+            '--prefix={0}'.format(self.prefix),
         ]
         configure(*args)
 
