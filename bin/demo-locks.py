@@ -15,13 +15,16 @@ import heapq
 import time
 import os
 
+from datetime import datetime
 from itertools import count
 
 import llnl.util.tty as tty
 import llnl.util.lock as lk
+import spack.error
 import spack.store
 
 from llnl.util.filesystem import mkdirp
+from llnl.util.tty.color import colorize
 # from spack.package import Package
 from spack.spec import Spec
 # from spack.util.crypto import bit_length
@@ -47,10 +50,31 @@ STATUS_INSTALLED = 'installed'
 #: queue invariants).
 STATUS_REMOVED = 'dequeued'
 
+#: Time to wait before attempting to retry a concretization process
+WAIT_TIME = 10
+
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
 #: were added (see https://docs.python.org/2/library/heapq.html).
 counter = count(0)
+
+
+def get_install_msg(name):
+    return colorize('@*{Installing} @*g{%s}' % name)
+
+
+def get_hms():
+    return datetime.now().strftime('%H:%M:%S.%f')
+
+
+# TODO: Remove this function
+def get_prefix():
+    return '[{0}: {1}]'.format(os.getpid(), get_hms())
+
+
+def log(msg):
+    # TODO: Remove the prefix
+    tty.msg('{0} {1}'.format(get_prefix(), msg))
 
 
 class BuildManager(object):
@@ -59,11 +83,21 @@ class BuildManager(object):
     processing.
     '''
 
-    def __init__(self, spec_name):
+    def __init__(self, spec_name, fake_install):
         """Initialize and set up the build specs."""
         # Spec of the package to be built
         tty.debug('Concretizing {0}'.format(spec_name))
-        self.spec = Spec(spec_name).concretized()
+        while True:
+            try:
+                self.spec = Spec(spec_name).concretized()
+                break
+            except lk.LockTimeoutError:
+                tty.info('PID {0} is blocked: waiting {1} sec before retry'
+                         .format(os.getpid(), WAIT_TIME))
+                time.sleep(WAIT_TIME)
+
+        # Fake installations do not affect the database
+        self.fake_install = fake_install
 
         # Priority queue of unbuilt specs
         self.build_pq = []
@@ -82,6 +116,69 @@ class BuildManager(object):
 
         # Locks on specs being built, keyed on the spec name
         self.locks = {}
+
+    def _check_install_artifacts(self, spec, keep_prefix, restage=False):
+        """
+        Check the database and leftover installation directores/files and
+        prepare for a new install attempt.
+        """
+        # A lock on the spec is required at this stage.
+        if spec.name not in self.locks:
+            # TODO: If keep, use a custom exception
+            msg = '{0} must be locked to check for installation artifacts'
+            raise spack.error.SpackError(msg.format(spec.name))
+
+        # Skip file system operations if we've already gone through them for
+        # this spec.
+        if spec.name in self.installed:
+            # Already determined the spec has been installed
+            return
+
+        # Fake installations do not involve the database
+        # TODO: Is this (still) desirable?  Appropriate?
+        if self.fake_install:
+            if self.layout.check_installed(spec):
+                self.installed.add(spec.name)
+                return
+
+        # Determine if the spec is flagged as installed in the database
+        try:
+            record = spack.store.db.get_record(spec)
+            installed_in_db = record.installed if record else False
+        except KeyError:
+            record = None
+            installed_in_db = False
+
+        # Make sure the installation directory is in the desired state
+        # for uninstalled specs.
+        partial = False
+        if not installed_in_db and os.path.isdir(spec.prefix):
+            if not keep_prefix:
+                spack.store.layout.remove_install_directory(spec)
+            else:
+                log('{0} is partially installed'.format(spec.name))
+                partial = True
+
+        # TODO: Need to destroy the stage if requested
+        # if restage and self.stage.managed_by_spack:  # (i.e., not DIYStage)
+        #     self.stage.destroy()
+
+        if not partial and self.layout.check_installed(spec):
+            msg = '{0.name} is already installed in {0.prefix}'
+            log(msg.format(spec))
+
+            # TODO/TLD: RESUME HERE..we already have record above so why is
+            # TODO/TLD: this done again?  What happens in db update below if
+            # TODO/TLD: rec is None?
+            rec = spack.store.db.get_record(spec)
+
+            # In case the stage directory has already been created,
+            # this ensures it's removed after we checked that the spec
+            # is installed
+            # TODO: Need to destroy the stage if requested
+            # if not keep_stage:
+            #    self.stage.destroy()
+            self._update_explicit_entry_in_db(rec, spec == self.spec)
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -217,9 +314,17 @@ class BuildManager(object):
 
     def _install_spec(self, task, install_compilers):
         """Setup the installation directory and perform the install."""
-        spec = task.spec
+        name, spec = task.name, task.spec
+
+        log(get_install_msg(name))
+        task.start = task.start if task.start else time.time()
+        task.status = STATUS_INSTALLING
+
+        # TODO: Try to use cache if use_cache is True
+        # TODO: determine if tests and run self.unit_test_check()
+
         if install_compilers:
-            tty.msg('%s: installing bootstrap compiler' % spec.name)
+            log('{0} installing bootstrap compiler'.format(name))
             # Package._install_bootstrap_compiler(spec.package, **kwargs)
 
         try:
@@ -236,24 +341,25 @@ class BuildManager(object):
                 # TODO: Set the group and permissions, and set perms below
                 mkdirp(indir)
 
-            tty.verbose('Building {0}'.format(spec.name))
+            tty.verbose('Building {0}'.format(name))
 
             # TODO: Fork the current build_process
             time.sleep(BUILD_TIME)
-            success = False if spec.name == FAIL_SPEC else True
+            success = False if name == FAIL_SPEC else True
 
             if success:
                 # TODO: Add the entry to the database
 
                 # TODO: Remove the following message
-                tty.debug('  Build of {0} completed'.format(spec.name))
+                log('  Build of {0} completed'.format(name))
                 self._update_installed(task)
 
-                # Perform basic task cleanup for the installed spec
+                # Perform basic task cleanup for the installed spec to
+                # include downgrading the write to a read lock
                 self._cleanup_task(spec, True)
             else:
                 # TODO: Remove the following message
-                tty.msg('  Build of {0} failed'.format(spec.name))
+                log('  Build of {0} failed'.format(name))
                 self._update_failed(task, mark=True)
                 spack.store.layout.remove_install_directory(spec)
 
@@ -263,13 +369,13 @@ class BuildManager(object):
             # TODO: Does "best effort" installation mean raise exception here?
             raise
         except StopIteration as e:
-            tty.msg(e.message)
-            # TODO: tty.msg('Package stage directory : {0}'
+            log(e.message)
+            # TODO: log('Package stage directory : {0}'
             # TODO:         .format(self.stage.source_path))
             self._cleanup_task(spec, True)
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             err = 'Failed to install {0} due to {1}: {2}'
-            tty.error(err.format(spec.name, exc.__class__.__name__,
+            tty.error(err.format(name, exc.__class__.__name__,
                       str(exc)))
             self._cleanup_all_tasks()
             raise
@@ -358,6 +464,28 @@ class BuildManager(object):
         else:
             return None
 
+    def _requeue_task(self, task):
+        """
+        Requeues a task that appears to be in progress by another process.
+        """
+        log('{0} {1}'.format(get_install_msg(task.name),
+                             'in progress by another process'))
+
+        start = task.start if task.start else time.time()
+        self._push_task(task.spec, start, task.attempts,
+                        STATUS_INSTALLING)
+
+    def _update_explicit_entry_in_db(self, spec, rec, explicit):
+        if explicit and not rec.explicit:
+            with spack.store.db.write_transaction():
+                rec = spack.store.db.get_record(spec)
+                rec.explicit = True
+                # TODO: Fix message, which assumes in Package class
+                # msg = '{s.name}@{s.version} : marking the package explicit'
+                # log(msg.format(s=self))
+                msg = '{0} is now marked explicit in the database'
+                log(msg.format(spec.name))
+
     def _update_failed(self, task, mark=False):
         """
         Update the task and transitive dependents as failed; optionally mark
@@ -414,7 +542,9 @@ class BuildManager(object):
         # TODO: extract relevant arguments from kwargs
         install_self = kwargs.get('install_package', True)
 
-        # TODO: process external package if external spec
+        keep_prefix = kwargs.get('keep_prefix', False)
+
+        # TODO: process external package if external spec and return
         # TODO: warn and return if installed upstream
         # TODO: check and proceed if unfinished installation
 
@@ -473,24 +603,16 @@ class BuildManager(object):
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
             # -- failed, installed, or uninstalled -- on the next pass.
-
-            # TODO: Restore original other_msg
-            # other_msg = 'Installing {0} is in progress by another process'
-            from datetime import datetime
-            other_msg = 'Installing {0} in progress by another process at {1}'
             if lock is None:
-                start = task.start if task.start else time.time()
-
-                # TODO: Restore original other_msg
-                # tty.msg(other_msg.format(name))
-                now = datetime.now()
-                tty.msg(other_msg.format(name, now.strftime("%H:%M:%S.%f")))
-                self._push_task(task.spec, start, task.attempts,
-                                STATUS_INSTALLING)
+                self._requeue_task(task)
                 continue
 
+            # Determine state of installation artifacts and adjust accordingly.
+            restage = False
+            self._check_install_artifacts(spec, keep_prefix, restage)
+
             # Flag an already installed spec
-            if name in self.installed or self.layout.check_installed(spec):
+            if name in self.installed:
                 # Downgrade to a read lock to preclude another processes
                 # from uninstalling the spec until we're done.
                 #
@@ -499,22 +621,14 @@ class BuildManager(object):
                 # the write and acquiring the read.
                 ltype, lock = self._ensure_read_locked(spec)
                 if lock is not None:
-                    tty.msg('{0} is installed'.format(name))
+                    log('{0.name} is installed in {0.prefix}'.format(spec))
                     self._update_installed(task)
                 else:
                     # Since we cannot assess their intentions at this point,
                     # requeue the task so we can re-check the status presumably
                     # established by the other process -- failed, installed,
                     # or uninstalled -- on the next pass.
-                    start = task.start if task.start else time.time()
-
-                    # TODO: Restore original other_msg
-                    # tty.msg(other_msg.format(name))
-                    now = datetime.now()
-                    tty.msg(other_msg.format(name,
-                                             now.strftime("%H:%M:%S.%f")))
-                    self._push_task(task.spec, task.start, task.attempts,
-                                    STATUS_INSTALLING)
+                    self._requeue_task(task)
                 continue
 
             # Having a read lock on an uninstalled spec may mean another
@@ -526,34 +640,20 @@ class BuildManager(object):
             # established by the other process -- failed, installed, or
             # uninstalled -- on the next pass.
             if ltype == 'read':
-                start = task.start if task.start else time.time()
-
-                # TODO: Restore original other_msg
-                # tty.msg(other_msg.format(name))
-                now = datetime.now()
-                tty.msg(other_msg.format(name, now.strftime("%H:%M:%S.%f")))
-                self._push_task(task.spec, task.start, task.attempts,
-                                STATUS_INSTALLING)
+                self._requeue_task(task)
                 continue
 
             # Proceed with the installation since this is the only process
             # that can work on the current spec.
-
-            # TODO: Restore original install message
-            # tty.msg('Installing {0}'.format(name))
-            now = datetime.now()
-            tty.msg('Installing {0} at {1}'
-                    .format(name, now.strftime("%H:%M:%S.%f")))
-            task.start = task.start if task.start else time.time()
-            task.status = STATUS_INSTALLING
-
-            # TODO: Try to use case if use_cache is True
-            # TODO: determine if tests and run self.unit_test_check()
-
             self._install_spec(task, install_compilers)
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
+
+        # Ensure we report that the status of the original spec is reported
+        if self.spec.name in self.failed:
+            log('Installation of {0} failed.  Review log for details'
+                .format(self.spec.name))
 
     @property
     def name(self):
@@ -651,12 +751,14 @@ def process_args():
         description='Demonstrate distributed, lock-based builds')
 
     # Options
-    parser.add_argument('--build-time', type=int, default=5,
+    parser.add_argument('--build-time', type=int, default=10,
                         help='mock build time (sec)')
-    parser.add_argument('--fail', type=str, default='',
-                        help='name of spec to fail during testing')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='enable debug log messages')
+    parser.add_argument('--fail', type=str, default='',
+                        help='name of spec to fail during testing')
+    parser.add_argument('--real', action='store_true', default=False,
+                        help='attempt an actual installation')
     parser.add_argument('--timeout', type=int, default=1,  # TODO: enough time?
                         help='package lock timeout (sec)')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -682,11 +784,11 @@ def main(args):
     spack.store.db.package_lock_timeout = args.timeout
 
     for spec_name in args.spec:
-        mgr = BuildManager(spec_name)
+        mgr = BuildManager(spec_name, not args.real)
         mgr.install()
 
 
 if __name__ == "__main__":
     start = time.time()
     main(process_args())
-    print('\nProcessing time: %.2gs' % (time.time() - start))
+    print('\n%s: Processing time: %.2gs' % (os.getpid(), time.time() - start))
