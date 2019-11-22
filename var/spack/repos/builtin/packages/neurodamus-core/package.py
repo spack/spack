@@ -48,6 +48,7 @@ class NeurodamusCore(Package):
     depends_on('py-numpy',         type=('run',), when='+python')
     depends_on('py-enum34',        type=('run',), when='^python@2.4:2.7.999,3.1:3.3.999')
     depends_on('py-lazy-property', type=('run'), when='+python')
+    depends_on('py-docopt',        type=('run'), when='+python')
 
     def install(self, spec, prefix):
         shutil.copytree('hoc', prefix.hoc)
