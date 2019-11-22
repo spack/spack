@@ -14,7 +14,7 @@ class GoMd2man(Package):
 
     version('1.0.10', sha256='76aa56849123b99b95fcea2b15502fd886dead9a5c35be7f78bdc2bad6be8d99')
 
-    depends_on('go@1.12:')  # modules support
+    depends_on('go@1.11:')  # modules support
 
     def install(self, spec, prefix):
         env['GO111MODULE'] = 'on'  # not the default for go@1.11.x
