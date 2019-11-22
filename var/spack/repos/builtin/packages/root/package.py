@@ -243,8 +243,8 @@ class Root(CMakePackage):
     # depends_on('pythia@8:8.999',  when='+pythia8') - not supported on Spack
     depends_on('python@2.7:',     when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
-    depends_on('r-cpp',     when='+r', type=('build', 'run'))
-    depends_on('r-inside',  when='+r', type=('build', 'run'))
+    depends_on('r-rcpp',     when='+r', type=('build', 'run'))
+    depends_on('r-rinside',  when='+r', type=('build', 'run'))
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
