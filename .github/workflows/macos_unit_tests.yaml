@@ -27,7 +27,7 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew update
-        brew install gcc gnupg2 ccache dash kcov
+        brew install gcc gnupg2 ccache dash kcov git
     - name: Install Python packages
       run: |
         pip install --upgrade pip
@@ -40,6 +40,6 @@ jobs:
     - name: Run unit tests
       run: |
         . share/spack/setup-env.sh
-        coverage run $(which spack) test
+        coverage run $(which spack) test -x
         coverage combine
         coverage xml
