@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 
 
 class PyStatsmodels(PythonPackage):
@@ -29,17 +30,19 @@ class PyStatsmodels(PythonPackage):
     depends_on('py-scipy@0.11:',       type=('build', 'run'), when='@0.8.0')
     depends_on('py-matplotlib@1.3:',   type=('build', 'run'), when='@0.8.0 +plotting')
 
-    depends_on('py-numpy@1.14.6',     type=('build', 'run'), when='@0.10.1')
-    depends_on('py-pandas@0.23.4',    type=('build', 'run'), when='@0.10.1')
-    depends_on('py-patsy@0.4.1',      type=('build', 'run'), when='@0.10.1')
-    depends_on('py-scipy@1.1.0',      type=('build', 'run'), when='@0.10.1')
-    depends_on('py-matplotlib@2.2',   type=('build', 'run'), when='@0.10.1 +plotting')
+    # patsy@0.5.1 works around a Python change
+    #    https://github.com/statsmodels/statsmodels/issues/5343 and
+    #    https://github.com/pydata/patsy/pull/131
+    depends_on('py-numpy',     type=('build', 'run'), when='@0.10.1')
+    depends_on('py-pandas',    type=('build', 'run'), when='@0.10.1')
+    depends_on('py-patsy',      type=('build', 'run'), when='@0.10.1')
+    depends_on('py-scipy@0.5.1:', type=('build', 'run'), when='@0.10.1')
+    depends_on('py-matplotlib',   type=('build', 'run'), when='@0.10.1 +plotting')
 
-    # Tests were not run with the 0.8.0 version of the package.  I've tried
-    # enabling them, but they currently fail for v0.10.1 on a mac.
-    # see https://github.com/statsmodels/statsmodels/issues/6263
     depends_on('py-pytest', type='test')
 
     def test(self):
-        pytest = which('pytest')
-        pytest('statsmodels')
+        dirs = glob.glob("build/lib*")  # There can be only one...
+        with working_dir(dirs[0]):
+            pytest = which('pytest')
+            pytest('statsmodels')
