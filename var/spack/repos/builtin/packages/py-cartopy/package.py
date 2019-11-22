@@ -12,6 +12,7 @@ class PyCartopy(PythonPackage):
     homepage = "http://scitools.org.uk/cartopy/"
     url      = "https://github.com/SciTools/cartopy/archive/v0.16.0.tar.gz"
 
+    version('0.17.0', sha256='137642e63952404ec0841fa0333ad14c58fbbf19cca2a5ac6a38498c4b4998fb')
     version('0.16.0', sha256='cadf62434492c965220b37f0548bc58180466ad6894a1db57dbc51cd43467e5c')
 
     depends_on('py-setuptools@0.7.2:', type='build')
@@ -21,7 +22,8 @@ class PyCartopy(PythonPackage):
     depends_on('py-pyshp@1.1.4:',   type=('build', 'run'))
     depends_on('py-six@1.3.0:',     type=('build', 'run'))
     depends_on('geos@3.3.3:')
-    depends_on('proj@4.9.0:5')
+    depends_on('proj@4.9.0:5', when='@0.16.0')
+    depends_on('proj@6:',      when='@0.17.0')
 
     # optional dependecies
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
