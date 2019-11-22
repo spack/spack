@@ -53,20 +53,23 @@ class MirrorCache(object):
     def __init__(self, root):
         self.root = os.path.abspath(root)
 
-    def store(self, fetcher, relative_dest, cosmetic_path=None):
+    def store(self, fetcher, relative_dest):
+        """Fetch and relocate the fetcher's target into our mirror cache."""
+
         # Note this will archive package sources even if they would not
         # normally be cached (e.g. the current tip of an hg/git branch)
         dst = os.path.join(self.root, relative_dest)
         mkdirp(os.path.dirname(dst))
         fetcher.archive(dst)
 
-        # Add a symlink path that a human can read to understand what resource
-        # the archive path refers to
-        if not cosmetic_path:
-            return
-        cosmetic_path = os.path.join(self.root, cosmetic_path)
+    def symlink(self, mirror_ref):
+        """Symlink a human readible path in our mirror to the actual
+        storage location."""
+
+        cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
         relative_dst = os.path.relpath(
-            dst, start=os.path.dirname(cosmetic_path))
+            mirror_ref.storage_path,
+            start=os.path.dirname(cosmetic_path))
         if not os.path.exists(cosmetic_path):
             mkdirp(os.path.dirname(cosmetic_path))
             os.symlink(relative_dst, cosmetic_path)
