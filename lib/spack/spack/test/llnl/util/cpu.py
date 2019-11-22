@@ -33,6 +33,7 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-rhel6-piledriver',
     'linux-centos7-power8le',
     'linux-centos7-thunderx2',
+    'linux-centos7-cascadelake',
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
@@ -87,6 +88,7 @@ def supported_target(request):
     return request.param
 
 
+@pytest.mark.regression('13803')
 def test_target_detection(expected_target):
     detected_target = llnl.util.cpu.host()
     assert detected_target == expected_target
