@@ -41,6 +41,7 @@ jobs:
       run: |
         git --version
         env
-        coverage run bin/spack test -x --capture=fd --verbose
+        . share/spack/setup-env.sh
+        coverage run $(which spack) test -x --verbose
         coverage combine
         coverage xml
