@@ -149,12 +149,14 @@ class ConfigScope(object):
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
-        validate(data, section_schemas[section])
+
+        # We copy data here to avoid adding defaults at write time
+        validate_data = copy.deepcopy(data)
+        validate(validate_data, section_schemas[section])
 
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                validate(data, section_schemas[section])
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
