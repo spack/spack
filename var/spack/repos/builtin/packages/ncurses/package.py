@@ -45,6 +45,7 @@ class Ncurses(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         opts = [
+            '--disable-stripping',
             '--with-shared',
             '--with-cxx-shared',
             '--enable-overwrite',
