@@ -609,7 +609,7 @@
         "avx512bw",
         "avx512dq",
         "avx512cd",
-        "avx512vnni"
+        "avx512_vnni"
       ],
       "compilers": {
         "gcc": {
