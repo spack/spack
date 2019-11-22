@@ -31,7 +31,6 @@ class RInside(RPackage):
 
     version('0.2.15', sha256='1e1d87a3584961f3aa4ca6acd4d2f3cda26abdab027ff5be2fd5cd76a98af02b')
 
-
     def configure_args(self, spec, prefix):
         args = []
         return args

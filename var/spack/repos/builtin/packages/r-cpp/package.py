@@ -31,7 +31,6 @@ class RCpp(RPackage):
 
     version('1.0.3', sha256='2b3500dd3aca16f7b3cb5442625e76dcf4f7c974b4249d33041e9184a5ff030e')
 
-
     def configure_args(self, spec, prefix):
         args = []
         return args
