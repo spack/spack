@@ -123,6 +123,63 @@ class Coreneuron(CMakePackage):
         spec   = self.spec
         flags = self.get_flags()
 
+        if spec.satisfies('+profile'):
+            env['CC']  = 'tau_cc'
+            env['CXX'] = 'tau_cxx'
+
+        options = ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
+                   '-DCMAKE_C_FLAGS=%s' % flags,
+                   '-DCMAKE_CXX_FLAGS=%s' % flags,
+                   '-DCMAKE_BUILD_TYPE=CUSTOM',
+                   '-DCORENRN_ENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_UNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_TIMEOUT=OFF'
+                   ]
+
+        if spec.satisfies('+nmodl'):
+            options.append('-DCORENRN_ENABLE_NMODL=ON')
+            options.append('-DCORENRN_NMODL_ROOT=%s' % spec['nmodl'].prefix)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+
+        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+ispc'):
+            options.append('-DCORENRN_ENABLE_ISPC=ON')
+            if '+knl' in spec:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+            else:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+
+        if spec.satisfies('+sympy'):
+            nmodl_options += ' sympy --analytic'
+
+        if spec.satisfies('+sympyopt'):
+            nmodl_options += ' --conductance --pade --cse'
+
+        options.append('-DCORENRN_NMODL_FLAGS=%s' % nmodl_options)
+
+        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
+            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+
+        if spec.satisfies('+gpu'):
+            gcc = which("gcc")
+            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
+                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
+                            '-DCORENRN_ENABLE_GPU=ON'])
+            # PGI compiler not able to compile nrnreport.cpp when enabled
+            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
+            options.append('-DCORENRN_ENABLE_REPORTINGLIB=OFF')
+
+        return options
+
+
+    @when('@0:0.16')
+    def get_cmake_args(self):
+        spec   = self.spec
+        flags = self.get_flags()
+
         options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
                    '-DCMAKE_BUILD_TYPE=CUSTOM',
                    '-DENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
@@ -139,8 +196,8 @@ class Coreneuron(CMakePackage):
             env['CXX'] = 'tau_cxx'
 
         if spec.satisfies('+nmodl'):
-            options.append('-DENABLE_NMODL=ON')
-            options.append('-DNMODL_ROOT=%s' % spec['nmodl'].prefix)
+            options.append('-DCORENRN_ENABLE_NMODL=ON')
+            options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
             flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
 
         nmodl_options = 'codegen --force passes --verbatim-rename --inline'
@@ -163,7 +220,7 @@ class Coreneuron(CMakePackage):
         options.extend(['-DCMAKE_C_FLAGS=%s' % flags,
                         '-DCMAKE_CXX_FLAGS=%s' % flags])
 
-        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
+        if spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture:
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         if spec.satisfies('+gpu'):
@@ -183,63 +240,6 @@ class Coreneuron(CMakePackage):
             modfile_list = '%s/coreneuron_modlist.txt' % modlib_dir
             options.append('-DADDITIONAL_MECHS=%s' % modfile_list)
             options.append('-DADDITIONAL_MECHPATH=%s' % modlib_dir)
-
-        return options
-
-
-    @when('@develop')
-    def get_cmake_args(self):
-        spec   = self.spec
-        flags = self.get_flags()
-
-        if spec.satisfies('+profile'):
-            env['CC']  = 'tau_cc'
-            env['CXX'] = 'tau_cxx'
-
-        options = ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
-                   '-DCMAKE_C_FLAGS=%s' % flags,
-                   '-DCMAKE_CXX_FLAGS=%s' % flags,
-                   '-DCMAKE_BUILD_TYPE=CUSTOM',
-                   '-DCORENRN_ENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_UNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_TIMEOUT=OFF'
-                   ]
-
-        if spec.satisfies('+nmodl'):
-            options.append('-DCORENRN_ENABLE_NMODL=ON')
-            options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
-            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
-
-        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
-
-        if spec.satisfies('+ispc'):
-            options.append('-DCORENRN_ENABLE_ISPC=ON')
-            if '+knl' in spec:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
-            else:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
-
-        if spec.satisfies('+sympy'):
-            nmodl_options += ' sympy --analytic'
-
-        if spec.satisfies('+sympyopt'):
-            nmodl_options += ' --conductance --pade --cse'
-
-        options.append('-DCORENRN_NMODL_FLAGS=%s' % nmodl_options)
-
-        if spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture:
-            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
-
-        if spec.satisfies('+gpu'):
-            gcc = which("gcc")
-            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
-                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
-                            '-DCORENRN_ENABLE_GPU=ON'])
-            # PGI compiler not able to compile nrnreport.cpp when enabled
-            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
-            options.append('-DCORENRN_ENABLE_REPORTINGLIB=OFF')
 
         return options
 
