@@ -327,6 +327,10 @@ def test_uninstall_by_spec_errors(mutable_database):
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.skipif(
+    'GITHUB_ACTION' in os.environ,
+    reason="Github Action environment seems to interfere with capturing output"
+)
 def test_nosource_pkg_install(
         install_mockery, mock_fetch, mock_packages, capfd):
     """Test install phases with the nosource package."""
