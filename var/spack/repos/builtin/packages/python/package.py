@@ -67,6 +67,10 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
+    # Variants to control dependency variants to avoid cyclical dependencies
+    variant('libxml2', default=False,
+            description='Use a gettext library build with libxml2')
+
     # --enable-shared is known to cause problems for some users on macOS
     # See http://bugs.python.org/issue29846
     variant('shared', default=sys.platform != 'darwin',
@@ -108,7 +112,8 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext')
+    depends_on('gettext +libxml2', when='+libxml2')
+    depends_on('gettext ~libxml2', when='~libxml2')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
