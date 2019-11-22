@@ -144,11 +144,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
     depends_on('quantum-espresso@6.4.1+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum),
-               when='+qe+mpi', type='run')
+               when='+qe+phdf5', type='run')
 
-    depends_on('quantum-espresso@6.4.1~scalapack~mpi hdf5=serial',
+    depends_on('quantum-espresso@6.4.1+mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum),
-               when='+qe~mpi', type='run')
+               when='+qe~phdf5', type='run')
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
