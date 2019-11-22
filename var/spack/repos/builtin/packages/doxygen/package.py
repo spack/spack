@@ -28,6 +28,8 @@ class Doxygen(CMakePackage):
             description='Build with dot command support from Graphviz.')
 
     depends_on("cmake@2.8.12:", type='build')
+    depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
+    depends_on("libiconv")
     depends_on("flex", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed

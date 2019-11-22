@@ -25,3 +25,14 @@ class Texinfo(AutotoolsPackage):
     version('5.0', sha256='2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803')
 
     depends_on('perl')
+
+    # Fix unescaped braces in regexps.
+    # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898994
+    patch('fix_unescaped_braces.patch', when='@6.3:')
+    patch('fix_unescaped_braces_2.patch', when='@5.1:6.0')
+    patch('fix_unescaped_braces_3.patch', when='@5.0')
+
+    # Apply this fix to perform thread-safe processing in code
+    # that uses the global locale.
+    # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
+    patch('update_locale_handling.patch', when='@6.3:')

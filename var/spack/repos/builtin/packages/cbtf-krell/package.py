@@ -50,6 +50,12 @@ class CbtfKrell(CMakePackage):
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
 
+    # For rpcgen
+    depends_on("rpcsvc-proto", type='build')
+
+    # For rpc
+    depends_on("libtirpc", type='link')
+
     # For binutils
     depends_on("binutils")
 
