@@ -17,3 +17,4 @@ class PyAmqp(PythonPackage):
     version('2.4.1', sha256='6816eed27521293ee03aa9ace300a07215b11fee4e845588a9b863a7ba30addb')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-vine', type='run')
