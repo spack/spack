@@ -20,6 +20,8 @@ class PyPythonMapnik(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('mapnik', type=('build', 'link', 'run'))
     depends_on('boost +python+thread')
+    # py-pycairo is need by mapnik.printing
+    depends_on('py-pycairo', type=('build', 'run'))
 
     # Package can't find boost_python without the following
     def setup_environment(self, spack_env, run_env):

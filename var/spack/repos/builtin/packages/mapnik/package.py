@@ -29,7 +29,7 @@ class Mapnik(AutotoolsPackage):
     depends_on('libjpeg')
     depends_on('libtiff')
     depends_on('proj')
-    depends_on('cairo')
+    depends_on('cairo+pdf')  # +pdf needed for mapnik.printing
     depends_on('postgresql', type=('build', 'link', 'run'))
     depends_on('gdal', type=('build', 'link', 'run'))
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
