@@ -1,0 +1,6 @@
+---
+upstreams:
+  spack-bootstrap:
+    install_tree: /spack-bootstrap/sw
+    modules:
+      tcl: /spack-bootstrap/modules
