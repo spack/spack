@@ -10,9 +10,6 @@ class Ethtool(AutotoolsPackage):
     """Ethtool is a small utility for examining and tuning your ethernet-based
     network interface."""
 
-    homepage = "https://www.example.com"
-    url      = "ethtool"
-
     homepage = "https://github.com/Distrotech/ethtool"
     url      = "https://github.com/Distrotech/ethtool/archive/v4.8.tar.gz"
 
