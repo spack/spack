@@ -13,6 +13,6 @@ class PySvgwrite(PythonPackage):
     homepage = "https://pypi.org/project/svgwrite/"
     url      = "https://pypi.io/packages/source/s/svgwrite/svgwrite-1.1.12.zip"
 
-    version('1.1.12', '05780a4a8ba33c16842faf37818d670e')
+    version('1.1.12', sha256='968c99f193f34f0fa7f0b3e82f49b93789c7c45cd89ce190480f16020d41ab79')
 
     depends_on('py-setuptools', type='build')

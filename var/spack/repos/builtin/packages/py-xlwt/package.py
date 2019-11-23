@@ -15,6 +15,6 @@ class PyXlwt(PythonPackage):
     homepage = "https://pypi.org/project/xlwt/"
     url      = "https://pypi.io/packages/source/x/xlwt/xlwt-1.3.0.tar.gz"
 
-    version('1.3.0', '4b1ca8a3cef3261f4b4dc3f138e383a8')
+    version('1.3.0', sha256='c59912717a9b28f1a3c2a98fd60741014b06b043936dcecbc113eaaada156c88')
 
     depends_on('py-setuptools', type='build')

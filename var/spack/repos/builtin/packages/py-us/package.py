@@ -13,7 +13,7 @@ class PyUs(PythonPackage):
     homepage = "https://pypi.org/project/us/"
     url      = "https://pypi.io/packages/source/u/us/us-1.0.0.tar.gz"
 
-    version('1.0.0', 'ce13f8d9c4202402acc1eb451e7bf22f')
+    version('1.0.0', sha256='09dc9ba763e2e4399e6a042104f3e415a7de6bfa4df6f557b4f19e3ba9a22fda')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-jellyfish', type=('build', 'run'))

@@ -13,6 +13,6 @@ class PyJellyfish(PythonPackage):
     homepage = "https://pypi.org/project/jellyfish/"
     url      = "https://pypi.io/packages/source/j/jellyfish/jellyfish-0.6.1.tar.gz"
 
-    version('0.6.1', '4944750af050995d38dd3c42709ae2ab')
+    version('0.6.1', sha256='5104e45a2b804b48a46a92a5e6d6e86830fe60ae83b1da32c867402c8f4c2094')
 
     depends_on('py-setuptools', type='build')
