@@ -48,7 +48,9 @@ class Jdk(Package):
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz')
     version('10.0.1_10', sha256='ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz')
-    version('1.8.0_202', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0', curl_options=curl_options,
+    version('1.8.0_212-b10', sha256='3160c50aa8d8e081c8c7fe0f859ea452922eca5d2ae8f8ef22011ae87e6fedfb', curl_options=curl_options,
+            url='https://download.oracle.com/otn/java/jdk/8u212-b10/59066701cf1a433da9770636fbc4c9aa/jdk-8u212-linux-x64.tar.gz')
+    version('1.8.0_202-b08', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0', curl_options=curl_options,
             url='https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz')
     version('1.8.0_141-b15', sha256='041d5218fbea6cd7e81c8c15e51d0d32911573af2ed69e066787a8dc8a39ba4f', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
@@ -148,18 +150,18 @@ and adding entries for each installation:
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set JAVA_HOME."""
 
-        run_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
         other Java extensions it depends on."""
 
-        spack_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
         class_paths = []
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
@@ -167,14 +169,19 @@ and adding entries for each installation:
                 class_paths.extend(find(d.prefix, '*.jar'))
 
         classpath = os.pathsep.join(class_paths)
-        spack_env.set('CLASSPATH', classpath)
+        env.set('CLASSPATH', classpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set CLASSPATH.
+
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
         # For runtime environment set only the path for
         # dependent_spec and prepend it to CLASSPATH
         if dependent_spec.package.extends(self.spec):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
-            run_env.prepend_path('CLASSPATH', classpath)
+            env.prepend_path('CLASSPATH', classpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""
