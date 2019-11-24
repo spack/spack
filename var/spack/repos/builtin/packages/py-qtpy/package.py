@@ -17,12 +17,13 @@ class PyQtpy(PythonPackage):
 
     apis = ['pyqt5', 'pyqt4', 'pyside2', 'pyside']
 
-    variant('api', default='pyqt5', description='Default QT API', 
+    variant('api', default='pyqt5', description='Default QT API',
             values=apis, multi=False)
 
     depends_on('py-setuptools', type='build')
     for api in apis:
         depends_on('py-' + api, when='+' + api, type='run')
+
 
 def setup_run_environment(self, env):
     env.set('QT_API', self.spec.variants['api'].value)
