@@ -86,8 +86,8 @@ class Bazel(Package):
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
 
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
-    depends_on('java@8', type=('build', 'link', 'run'))
-    depends_on('python', type=('build', 'link', 'run'))
+    depends_on('java@8', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
 
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
@@ -111,7 +111,7 @@ class Bazel(Package):
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
 
-    phases = ['build', 'install']
+    phases = ['bootstrap', 'install']
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
@@ -122,16 +122,45 @@ class Bazel(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
-        # Latest docs say to set this, older don't...
         env.set('EXTRA_BAZEL_ARGS', '--host_javabase=@local_jdk//:jdk')
 
-    def build(self, spec, prefix):
+    def bootstrap(self, spec, prefix):
         bash = which('bash')
         bash('./compile.sh')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('output/bazel', prefix.bin)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb
+
+        with working_dir('spack-test', create=True):
+            touch('WORKSPACE')
+
+            with open('ProjectRunner.java', 'w') as f:
+                f.write("""\
+public class ProjectRunner {
+    public static void main(String args[]) {
+        System.out.println("Hi!");
+    }
+}""")
+
+            with open('BUILD', 'w') as f:
+                f.write("""\
+java_binary(
+    name = "bazel-test",
+    srcs = glob(["*.java"]),
+    main_class = "ProjectRunner",
+)""")
+
+            bazel = Executable(self.prefix.bin.bazel)
+            bazel('build', '//:bazel-test')
+
+            exe = Executable('bazel-bin/bazel-test')
+            assert exe(output=str) == 'Hi!\n'
 
     def setup_dependent_package(self, module, dependent_spec):
         module.bazel = Executable('bazel')
