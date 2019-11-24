@@ -51,7 +51,7 @@ class PyCelery(PythonPackage):
 
     depends_on('py-redis@3.2.0:', when='+redis', type=('build', 'run'))
 
-    depends_on('py-pytz@dev', type=('build', 'run'))
+    depends_on('py-pytz@2019.3:', type=('build', 'run'))
     depends_on('py-billiard@3.6.0:3.999', type=('build', 'run'))
     depends_on('py-kombu@4.4.0:4.999', type=('build', 'run'))
     depends_on('py-vine@1.3.0:', type=('build', 'run'))
