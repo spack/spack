@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.util.environment import env_flag
-from spack.build_environment import SPACK_NO_PARALLEL_MAKE
 
 
 class Bazel(Package):
-    """Bazel is Google's own build tool"""
+    """Bazel is an open-source build and test tool similar to Make, Maven, and
+    Gradle. It uses a human-readable, high-level build language. Bazel supports
+    projects in multiple languages and builds outputs for multiple platforms.
+    Bazel supports large codebases across multiple repositories, and large
+    numbers of users."""
 
     homepage = "https://bazel.build/"
     url      = "https://github.com/bazelbuild/bazel/releases/download/1.2.0/bazel-1.2.0-dist.zip"
@@ -92,8 +94,8 @@ class Bazel(Package):
     version('0.1.1',  sha256='c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20')
     version('0.1.0',  sha256='ea3ad72019f380b145054ef0342e5230508f686c0ac0862912fb9616a66d6d38')
 
-    depends_on('java@8:', type=('build', 'link', 'run'))
-    depends_on('zip')
+    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
+    depends_on('java@8', type=('build', 'link', 'run'))
 
     patch('fix_env_handling.patch', when='@:0.4.5')
     patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
@@ -108,37 +110,24 @@ class Bazel(Package):
     patch('cc_env.patch', when='@0.19.0')
     patch('cc_env_024.patch', when='@0.24.1:')
 
+    phases = ['build', 'install']
+
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
             return 'https://github.com/bazelbuild/bazel/releases/download/{0}/bazel-{0}-dist.zip'.format(version)
         else:
             return 'https://github.com/bazelbuild/bazel/archive/{0}.tar.gz'.format(version)
 
-    def install(self, spec, prefix):
+    def setup_build_environment(self, env):
+        env.set('EXTRA_BAZEL_ARGS', '--host_javabase=@local_jdk//:jdk')
+
+    def build(self, spec, prefix):
         bash = which('bash')
-        bash('-c', './compile.sh')
+        bash('./compile.sh')
+
+    def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('output/bazel', prefix.bin)
 
     def setup_dependent_package(self, module, dependent_spec):
-        class BazelExecutable(Executable):
-            """Special callable executable object for bazel so the user can
-               specify parallel or not on a per-invocation basis.  Using
-               'parallel' as a kwarg will override whatever the package's
-               global setting is, so you can either default to true or false
-               and override particular calls.
-
-               Note that if the SPACK_NO_PARALLEL_MAKE env var is set it
-               overrides everything.
-            """
-
-            def __init__(self, name, command):
-                super(BazelExecutable, self).__init__(name)
-                self.bazel_command = command
-
-            def __call__(self, *args, **kwargs):
-                args = (self.bazel_command,) + args
-
-                return super(BazelExecutable, self).__call__(*args, **kwargs)
-
-        module.bazel = BazelExecutable('bazel', 'build')
+        module.bazel = Executable('bazel')
