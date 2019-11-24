@@ -1,9 +1,5 @@
-diff --git a/spack-expanded-archive/tools/cpp/unix_cc_configure.bzl.orig b/spack-expanded-archive/tools/cpp/unix_cc_configure.bzl
-old mode 100644
-new mode 100755
-index aa46f55..ae3c689
---- spack-expanded-archive/tools/cpp/unix_cc_configure.bzl
-+++ spack-expanded-archive/tools/cpp/unix_cc_configure.bzl
+--- a/tools/cpp/unix_cc_configure.bzl
++++ b/tools/cpp/unix_cc_configure.bzl
 @@ -117,9 +117,23 @@ def get_escaped_cxx_inc_directories(repository_ctx, cc):
    else:
      inc_dirs = result.stderr[index1 + 1:index2].strip()

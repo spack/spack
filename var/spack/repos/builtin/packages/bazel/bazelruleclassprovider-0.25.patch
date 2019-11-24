@@ -1,6 +1,4 @@
-diff --git a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java.orig b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
-index 60dad99..b4437c4 100755
---- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java.orig
+--- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
 +++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
 @@ -181,6 +181,126 @@ public class BazelRuleClassProvider {
            env.put("PATH", null);

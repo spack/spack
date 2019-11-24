@@ -1,7 +1,5 @@
-diff --git a/compile.sh b/compile.sh.orig
-index c2460fa..248d4f1 100755
 --- a/compile.sh
-+++ b/compile.sh.orig
++++ b/compile.sh
 @@ -92,7 +92,7 @@ display "."
  log "Building output/bazel"
  # We set host and target platform directly since the defaults in @bazel_tools

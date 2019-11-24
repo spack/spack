@@ -1,5 +1,3 @@
-diff --git a/tools/cpp/unix_cc_configure.bzl b/tools/cpp/unix_cc_configure.bzl
-index 361931b..a79129b 100755
 --- a/tools/cpp/unix_cc_configure.bzl
 +++ b/tools/cpp/unix_cc_configure.bzl
 @@ -145,11 +145,19 @@ def get_escaped_cxx_inc_directories(repository_ctx, cc, lang_flag, additional_fl

@@ -1,13 +1,13 @@
---- bazel-0.3.1/tools/cpp/cc_configure.bzl	2016-10-13 14:00:32.118358387 +0200
-+++ bazel-0.3.1/tools/cpp/cc_configure.bzl	2016-10-13 13:52:45.342610147 +0200
-@@ -173,8 +173,23 @@
+--- a/tools/cpp/cc_configure.bzl
++++ b/tools/cpp/cc_configure.bzl
+@@ -200,8 +200,23 @@
    else:
      inc_dirs = result.stderr[index1 + 1:index2].strip()
  
--  return [repository_ctx.path(_cxx_inc_convert(p))
+-  return [_escape_string(repository_ctx.path(_cxx_inc_convert(p)))
 -          for p in inc_dirs.split("\n")]
 +  default_inc_directories = [
-+    repository_ctx.path(_cxx_inc_convert(p))
++    _escape_string(repository_ctx.path(_cxx_inc_convert(p)))
 +    for p in inc_dirs.split("\n")
 +  ]
 +
@@ -24,5 +24,5 @@
 +
 +  return default_inc_directories
  
+ 
  def _add_option_if_supported(repository_ctx, cc, option):
-   """Checks that `option` is supported by the C compiler."""

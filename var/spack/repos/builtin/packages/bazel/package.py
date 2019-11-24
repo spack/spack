@@ -16,6 +16,8 @@ class Bazel(Package):
     homepage = "https://bazel.build/"
     url      = "https://github.com/bazelbuild/bazel/releases/download/1.2.0/bazel-1.2.0-dist.zip"
 
+    maintainers = ['adamjstewart']
+
     version('1.2.0',  sha256='9cb46b0a18b9166730307a0e82bf4c02281a1cc6da0fb11239e6fe4147bdee6e')
     version('1.1.0',  sha256='4b66a8c93af7832ed32e7236cf454a05f3aa06d25a8576fc3f83114f142f95ab')
     version('1.0.1',  sha256='f4d2dfad011ff03a5fae41b9b02cd96cd7297c1205d496603d66516934fbcfee')
@@ -82,43 +84,45 @@ class Bazel(Package):
     version('0.3.2',  sha256='ca5caf7b2b48c7639f45d815b32e76d69650f3199eb8caa541d402722e3f6c10')
     version('0.3.1',  sha256='218d0e28b4d1ee34585f2ac6b18d169c81404d93958815e73e60cc0368efcbb7')
     version('0.3.0',  sha256='357fd8bdf86034b93902616f0844bd52e9304cccca22971ab7007588bf9d5fb3')
-    version('0.2.3',  sha256='1dc9841cc504b9f022a5f8ef0918e7bbd9ee682f7e4b3074cca1015742dee9fc')
-    version('0.2.2b', sha256='2ce461127eed9ef5c04fd001d3e9250b26f1806c5710192ae38f3ac11f5a1c17')
-    version('0.2.2',  sha256='54669662f7751d9fc9959207e13d9a171bda15be9087703d3dbd3968fed12b27')
-    version('0.2.1',  sha256='e71631ed94d7bf6c62fc967604c5b65d2cee834cd38b2e33239b2e7bc41ddf4f')
-    version('0.2.0',  sha256='e9ba2740d9727ae6d0f9b1ac0c5df331814fd03518fe4b511396ed10780d5272')
-    version('0.1.5',  sha256='b2526c646199dea675704578737210e42d37b6c73911c72bda0b46883ede0ad3')
-    version('0.1.4',  sha256='f3c395f5cd78cfef96f4008fe842f327bc8b03b77f46999387bc0ad223b5d970')
-    version('0.1.3',  sha256='6bb2e1c697bf9be88085adb15e1fa2acb0191f7818879728a67cc3e7b36a2a43')
-    version('0.1.2',  sha256='4fdd95ac89750c11b93033c37d171f5852dfc8cbbecc9c0d9ad937be5b01939e')
-    version('0.1.1',  sha256='c6ae19610b936a0aa940b44a3626d6e660fc457a8187d295cdf0b21169453d20')
-    version('0.1.0',  sha256='ea3ad72019f380b145054ef0342e5230508f686c0ac0862912fb9616a66d6d38')
 
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
     depends_on('java@8', type=('build', 'link', 'run'))
+    depends_on('python', type=('build', 'link', 'run'))
 
-    patch('fix_env_handling.patch', when='@:0.4.5')
-    patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
-    patch('fix_env_handling-0.13.0.patch', when='@0.13.0:0.13.999')
-    patch('fix_env_handling-0.17.2.patch', when='@0.14.0:0.24.1')
-    patch('fix_env_handling-0.26.1.patch', when='@0.26.1:')
-    patch('link.patch', when='@:0.17.2')
-    patch('cc_configure.patch', when='@:0.4.5')
-    patch('unix_cc_configure.patch', when='@0.9.0')
-    patch('unix_cc_configure-0.10.0.patch', when='@0.10.0:0.14.999')
-    patch('unix_cc_configure-0.17.2.patch', when='@0.15.0:')
-    patch('cc_env.patch', when='@0.19.0')
-    patch('cc_env_024.patch', when='@0.24.1:')
+    # Pass Spack environment variables to the build
+    patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
+    patch('bazelruleclassprovider-0.14.patch', when='@0.14:0.24')
+    patch('bazelconfiguration-0.3.patch', when='@:0.13')
+
+    # Inject include paths
+    patch('unix_cc_configure-0.15.patch',  when='@0.15:')
+    patch('unix_cc_configure-0.10.patch',  when='@0.10:0.14')
+    patch('unix_cc_configure-0.5.3.patch', when='@0.5.3:0.9')
+    patch('cc_configure-0.5.0.patch', when='@0.5.0:0.5.2')
+    patch('cc_configure-0.3.0.patch', when='@:0.4')
+
+    # Set CC and CXX
+    patch('compile-0.29.patch', when='@0.29:')
+    patch('compile-0.21.patch', when='@0.21:0.28')
+    patch('compile-0.16.patch', when='@0.16:0.20')
+    patch('compile-0.13.patch', when='@0.13:0.15')
+    patch('compile-0.9.patch',  when='@0.9:0.12')
+    patch('compile-0.6.patch',  when='@0.6:0.8')
+    patch('compile-0.4.patch',  when='@0.4:0.5')
+    patch('compile-0.3.patch',  when='@:0.3')
 
     phases = ['build', 'install']
 
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
-            return 'https://github.com/bazelbuild/bazel/releases/download/{0}/bazel-{0}-dist.zip'.format(version)
+            url = 'https://github.com/bazelbuild/bazel/releases/download/{0}/bazel-{0}-dist.zip'
         else:
-            return 'https://github.com/bazelbuild/bazel/archive/{0}.tar.gz'.format(version)
+            url = 'https://github.com/bazelbuild/bazel/archive/{0}.tar.gz'
+
+        return url.format(version)
 
     def setup_build_environment(self, env):
+        # Latest docs say to set this, older don't...
         env.set('EXTRA_BAZEL_ARGS', '--host_javabase=@local_jdk//:jdk')
 
     def build(self, spec, prefix):

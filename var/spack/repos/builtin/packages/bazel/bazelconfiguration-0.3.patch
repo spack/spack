@@ -1,5 +1,5 @@
---- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java.orig	2018-05-23 12:11:29.319402761 +0200
-+++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java	2018-05-23 12:35:21.817904301 +0200
+--- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java
++++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelConfiguration.java
 @@ -150,6 +150,126 @@
        builder.put("PATH", null);
        builder.put("LD_LIBRARY_PATH", null);
