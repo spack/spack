@@ -16,5 +16,8 @@ class PyKombu(PythonPackage):
     version('4.5.0', sha256='389ba09e03b15b55b1a7371a441c894fd8121d174f5583bbbca032b9ea8c9edd')
     version('4.3.0', sha256='529df9e0ecc0bad9fc2b376c3ce4796c41b482cf697b78b71aea6ebe7ca353c8')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+
     depends_on('py-setuptools', type='build')
-    depends_on('py-amqp', type='run')
+    depends_on('py-amqp', type=('build', 'run'))
+    depends_on('py-importlib-metadata@0.18:', type=('build','run'))
