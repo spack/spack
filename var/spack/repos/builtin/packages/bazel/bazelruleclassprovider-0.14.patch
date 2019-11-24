@@ -4,10 +4,10 @@
        env.put("PATH", null);
      }
  
-+    Map<String, String> env = System.getenv();
-+    for (String envName : env.keySet()) {
++    Map<String, String> spackEnv = System.getenv();
++    for (String envName : spackEnv.keySet()) {
 +      if (envName.startsWith("SPACK_")) {
-+        builder.put(envName, env.get(envName));
++        env.put(envName, spackEnv.get(envName));
 +      }
 +    }
 +
