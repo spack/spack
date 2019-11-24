@@ -25,20 +25,20 @@ class PyMerlinwf(PythonPackage):
     depends_on('py-pytest', type='test')
     depends_on('py-pytest-runner', type='test')
 
-    depends_on('py-cached-property', type='run')
-    depends_on('py-celery+redis', type='run')
-    depends_on('py-coloredlogs', type='run')
-    depends_on('py-cryptography', type='run')
-    depends_on('py-maestrowf@1.1.15:', type='run')
-    depends_on('py-numpy', type='run')
-    depends_on('py-parse', type='run')
-    depends_on('py-psutil@5.1.0:', type='run')
-    depends_on('py-pyyaml@5.1b7:', type='run')
-    depends_on('py-importlib-re', when="^python@3.0:3.6.99", type='run')
+    depends_on('py-cached-property', type=('build', 'run'))
+    depends_on('py-celery@4.3.0:+redis', type=('build', 'run'))
+    depends_on('py-coloredlogs@10.0:', type=('build', 'run'))
+    depends_on('py-cryptography', type=('build', 'run'))
+    depends_on('py-maestrowf@1.1.15:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-parse', type=('build', 'run'))
+    depends_on('py-psutil@5.1.0:', type=('build', 'run'))
+    depends_on('py-pyyaml@5.1.2:', type=('build', 'run'))
+    depends_on('py-importlib-rerources', when="^python@3.0:3.6.99", type=('build', 'run'))
 
     # Optional packages
-    depends_on('py-mysql-connector-python-rf', when='+mysql', type='run')
-    depends_on('pymysql', when='+mysql', type='run')
+    depends_on('py-mysql-connector-python-rf', when='+mysql', type=('build', 'run'))
+    depends_on('pymysql', when='+mysql', type=('build', 'run'))
 
     def test(self):
         pytest = which('pytest')
