@@ -47,10 +47,10 @@ class Papi(Package):
         if '+lmsensors' in spec:
             with working_dir("src/components/lmsensors"):
                 configure_args = [
-                    "--with-sensors_incdir=%s/include/sensors" %
-                    spec['lm-sensors'].prefix,
-                    "--with-sensors_libdir=%s/lib" %
-                    spec['lm-sensors'].prefix]
+                    "--with-sensors_incdir=%s/sensors" %
+                    spec['lm-sensors'].headers.directories[0],
+                    "--with-sensors_libdir=%s" %
+                    spec['lm-sensors'].libs.directories[0]]
                 configure(*configure_args)
         with working_dir("src"):
 
