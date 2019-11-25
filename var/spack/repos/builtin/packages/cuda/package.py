@@ -20,6 +20,10 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    version('10.2.89',
+            sha256='560d07fdcf4a46717f2242948cd4f92c5f9b6fc7eae10dd996614da913d5ca11',
+            expand=False,
+            url="http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/cuda_10.2.89_440.33.01_linux.run")
     version('10.1.243',
             sha256='e7c22dc21278eb1b82f34a60ad7640b41ad3943d929bebda3008b72536855d31',
             expand=False,
@@ -52,8 +56,8 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('CUDA_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('CUDA_HOME', self.prefix)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
