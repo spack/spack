@@ -55,7 +55,7 @@ class Plasma(CMakePackage):
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
     conflicts("%gcc@:4.8.99", when='@:17.1')
     # only GCC 6.0+ and higher have for OpenMP 4+ Clause "priority"
-    conflicts("%gcc@:5.99", when='@17.2:')
+    conflicts("%gcc@:5.99", when='@:17.2')
 
     conflicts("%cce")
     conflicts("%clang")
