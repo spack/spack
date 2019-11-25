@@ -27,6 +27,10 @@ class Mstk(CMakePackage):
 
     maintainers = ['raovgarimella', 'julienloiseau']
 
+    def url_for_version(self, version):
+        url = 'https://github.com/MeshToolkit/MSTK/archive/{0}.tar.gz'
+        return url.format(version)
+    
     version('master', branch='master')
     version('3.3.2', sha256='fb4ffa97af4d0a0d4771c8585d0b27538b013d8b1cfaff992e5e054fef62af0b')
     version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
