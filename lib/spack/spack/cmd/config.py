@@ -6,6 +6,7 @@
 from __future__ import print_function
 import os
 import six
+import re
 
 import llnl.util.tty as tty
 
@@ -74,12 +75,7 @@ def setup_parser(subparser):
 def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
     scope = args.scope
-    if hasattr(args, 'value'):
-        # take first element of value for commands that accept nested values
-        value = args.value
-        section = value[:value.find(':')] if ':' in value else value
-    else:
-        section = args.section
+    section = getattr(args, 'section', '')
 
     # w/no args and an active environment, point to env manifest
     if not section:
@@ -89,6 +85,11 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not scope:
+        # set section from value if the command takes a value
+        if hasattr(args, 'value'):
+            value = args.value
+            section = value[:value.find(':')] if ':' in value else value
+
         if section == 'compilers':
             scope = spack.config.default_modify_scope()
         else:
@@ -190,14 +191,14 @@ def config_add(args):
         test_existing = spack.config.get(test_path, scope=scope)
         if test_existing is None:
             path = test_path
-
             # We've nested further than existing config, so we need empty
             # get type to ensure we treat lists properly when empty
-            existing = type(spack.config.get(path, scope=None))()
+            existing = [] if isinstance(spack.config.get(path, scope=None), list) else None
             # construct value from this point down
             value = syaml.load(components[-1])
             for component in reversed(components[idx + 1:-1]):
                 value = {component: value}
+            break
 
     if path is None:
         path, _, value = args.value.rpartition(':')
@@ -205,7 +206,12 @@ def config_add(args):
         existing = spack.config.get(path, scope=scope)
 
     new = merge_value(existing, value)
-    spack.config.set(path, new, scope=scope)
+
+    if re.match(r'env.*', scope):
+        e = ev.get_env(args, 'config add')
+        e.set_config(path, new)
+    else:
+        spack.config.set(path, new, scope=scope)
 
 
 def config_remove(args):
@@ -230,7 +236,11 @@ def config_remove(args):
         # This should be impossible to reach
         raise spack.config.ConfigError('Config has nested non-dict values')
 
-    spack.config.set(path, new, scope=scope)
+    if re.match(r'env.*', scope):
+        e = ev.get_env(args, 'config remove')
+        e.set_config(path, new)
+    else:
+        spack.config.set(path, new, scope=scope)
 
 def config(parser, args):
     action = {'get': config_get,
