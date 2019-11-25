@@ -36,5 +36,4 @@ class LmSensors(MakefilePackage):
     @property
     def libs(self):
         return find_libraries(
-            'libsensors', root=self.prefix, shared=True, recursive=True) \
-            or None  # return None to indicate failure
+            'libsensors', root=self.prefix, shared=True, recursive=True)
