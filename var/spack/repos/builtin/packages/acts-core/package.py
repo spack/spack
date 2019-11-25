@@ -86,7 +86,7 @@ class ActsCore(CMakePackage):
             cmake_variant("INTEGRATION_TESTS", "integration_tests"),
             cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
-            cmake_variant("IDENTIFICATION", "identification"),
+            cmake_variant("IDENTIFICATION_PLUGIN", "identification"),
             cmake_variant("JSON_PLUGIN", "json"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
