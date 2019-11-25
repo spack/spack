@@ -42,7 +42,7 @@ class Arbor(CMakePackage):
     # depends_on('llvm@4:', type='build')
     # depends_on('clang-apple@9:', type='build')
 
-    # when building documentation
+    # when building documentation, this could be an optional dependency
     depends_on('py-sphinx', type='build')
 
     def patch(self):
@@ -52,19 +52,19 @@ class Arbor(CMakePackage):
             'cmake/FindUnwind.cmake'
         )
         filter_file(
-            r'target_compile_definitions\(arbor-private-deps ARB_WITH_UNWIND\)',      # noqa
-            r'target_compile_definitions(arbor-private-deps INTERFACE WITH_UNWIND)',  # noqa
+            r'target_compile_definitions\(arbor-private-deps ARB_WITH_UNWIND\)',      # noqa: E501
+            r'target_compile_definitions(arbor-private-deps INTERFACE WITH_UNWIND)',  # noqa: E501
             'CMakeLists.txt'
         )
 
     def cmake_args(self):
         args = [
-            '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),      # noqa
+            '-DARB_VECTORIZE=' + ('ON' if '+vectorize' in self.spec else 'OFF'),      # noqa: E501
             '-DARB_WITH_GPU=' + ('ON' if '+gpu' in self.spec else 'OFF'),
             '-DARB_WITH_PYTHON=' + ('ON' if '+python' in self.spec else 'OFF'),
         ]
 
         if '+unwind' in self.spec:
-            args.append('-DUnwind_ROOT_DIR={0}'.format(self.spec['libunwind'].prefix))  # noqa
+            args.append('-DUnwind_ROOT_DIR={0}'.format(self.spec['libunwind'].prefix))  # noqa: E501
 
         return args
