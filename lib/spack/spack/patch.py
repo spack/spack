@@ -199,11 +199,15 @@ class UrlPatch(Patch):
         fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
                                       expand=bool(self.archive_sha256))
 
-        per_package_ref = os.path.join(
-            self.owner.split('.')[-1], os.path.basename(self.url))
+        # The same package can have multiple patches with the same name but
+        # with different contents, therefore apply a subset of the hash.
+        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
+
+        per_package_ref = os.path.join(self.owner.split('.')[-1], name)
         # Reference starting with "spack." is required to avoid cyclic imports
         mirror_ref = spack.mirror.mirror_archive_paths(
-            fetcher, per_package_ref)
+            fetcher,
+            per_package_ref)
 
         self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
