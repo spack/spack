@@ -37,9 +37,9 @@ class Mapnik(AutotoolsPackage):
 
     conflicts('%gcc@9.0.0:')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
+        env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
 
     def configure_args(self):
         return [
