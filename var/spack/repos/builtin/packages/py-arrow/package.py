@@ -21,11 +21,11 @@ class PyArrow(PythonPackage):
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-backports-functools_lru_cache@1.5.0:', type=('build', 'run'), when='^python@2.7:2.8')
-    depends_on('py-python-dateutil@2.8:', type=('build', 'run'))
-    depends_on('py-chai@1.1.2:', type='test')
-    depends_on('py-mock@3.0:', type='test')
+    depends_on('py-backports-functools_lru_cache@1.2.1:', type=('build', 'run'), when='^python@2.7:2.8')
+    depends_on('py-python-dateutil', type=('build', 'run'))
+    depends_on('py-chai', type='test')
+    depends_on('py-mock', type='test')
     depends_on('py-pytz@2019.0:', type='test')
-    depends_on('py-simplejson@3.16.0:', type='test')
-    depends_on('py-sphinx@1.8.0:1.99.99', type='doc', when='^python@2.7:2.8')
-    depends_on('py-sphinx@2.2.0:', type='doc', when='^python@3.5')
+    # documentation dependencies
+    depends_on('py-sphinx@1.8.0:1.99.99', type='build', when='^python@2.7:2.8')
+    depends_on('py-sphinx@2.2.0:', type='build', when='^python@3.5:')
