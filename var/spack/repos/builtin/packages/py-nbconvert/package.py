@@ -25,7 +25,7 @@ class PyNbconvert(PythonPackage):
     depends_on('py-setuptools', type='build',                     when='@5:')
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'),      when='@5:')
-    depends_on('py-mistune', type=('build', 'run'))
+    depends_on('py-mistune@0.8.1:1.999', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2@2.4:', type=('build', 'run'),           when='@5:')
     depends_on('py-pygments', type=('build', 'run'))
