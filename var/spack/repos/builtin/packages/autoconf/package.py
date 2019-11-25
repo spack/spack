@@ -10,7 +10,11 @@ class Autoconf(AutotoolsPackage):
     """Autoconf -- system configuration part of autotools"""
 
     homepage = 'https://www.gnu.org/software/autoconf/'
-    url      = 'https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
+    url = 'https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
+
+    mirrors = [
+        'https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'
+    ]
 
     version('2.69', sha256='954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969')
     version('2.62', sha256='83aa747e6443def0ebd1882509c53f5a2133f502ddefa21b3de141c433914bdd')

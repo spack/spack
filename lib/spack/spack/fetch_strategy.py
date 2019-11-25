@@ -243,6 +243,7 @@ class URLFetchStrategy(FetchStrategy):
 
         # Prefer values in kwargs to the positionals.
         self.url = kwargs.get('url', url)
+        self.mirrors = kwargs.get('mirrors', [])
 
         # digest can be set as the first argument, or from an explicit
         # kwarg by the hash name.
@@ -284,14 +285,27 @@ class URLFetchStrategy(FetchStrategy):
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
+        url_list = [self.url] + (self.mirrors or [])
+        for url in url_list:
+            try:
+                partial_file, save_file = self._fetch_from_url(url)
+                if save_file:
+                    os.rename(partial_file, save_file)
+                break
+            except FetchError as e:
+                tty.msg(str(e))
+                pass
+
+        if not self.archive_file:
+            raise FailedDownloadError(self.url)
+
+    def _fetch_from_url(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
-
-        tty.msg("Fetching %s" % self.url)
-
+        tty.msg("Fetching %s" % url)
         if partial_file:
             save_args = ['-C',
                          '-',  # continue partial downloads
@@ -299,30 +313,26 @@ class URLFetchStrategy(FetchStrategy):
                          partial_file]  # use a .part file
         else:
             save_args = ['-O']
-
         curl_args = save_args + [
             '-f',  # fail on >400 errors
             '-D',
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
-            self.url,
+            # Timeout if can't establish a connection after 10 sec.
+            '--connect-timeout', '10',
+            url,
         ]
-
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
-
         if sys.stdout.isatty() and tty.msg_enabled():
             curl_args.append('-#')  # status bar when using a tty
         else:
             curl_args.append('-sS')  # just errors when not.
-
         curl_args += self.extra_curl_options
-
         # Run curl but grab the mime type from the http headers
         curl = self.curl
         with working_dir(self.stage.path):
             headers = curl(*curl_args, output=str, fail_on_error=False)
-
         if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
@@ -353,7 +363,6 @@ class URLFetchStrategy(FetchStrategy):
                 raise FailedDownloadError(
                     self.url,
                     "Curl failed with error %d" % curl.returncode)
-
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
         # redirects properly.
@@ -361,12 +370,7 @@ class URLFetchStrategy(FetchStrategy):
                                    flags=re.IGNORECASE)
         if content_types and 'text/html' in content_types[-1]:
             warn_content_type_mismatch(self.archive_file or "the archive")
-
-        if save_file:
-            os.rename(partial_file, save_file)
-
-        if not self.archive_file:
-            raise FailedDownloadError(self.url)
+        return partial_file, save_file
 
     @property
     @_needs_stage
@@ -1229,7 +1233,10 @@ def _from_merged_attrs(fetcher, pkg, version):
     else:
         url = getattr(pkg, fetcher.url_attr)
 
-    attrs = {fetcher.url_attr: url}
+    attrs = {
+        fetcher.url_attr: url,
+        'mirrors': getattr(pkg, 'mirrors', None)
+    }
     attrs.update(pkg.versions[version])
     return fetcher(**attrs)
 
