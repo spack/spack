@@ -32,3 +32,9 @@ class LmSensors(MakefilePackage):
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
              'ETCDIR={0}/etc'.format(prefix))
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libsensors', root=self.prefix, shared=True, recursive=True) \
+            or None # return None to indicate failure
