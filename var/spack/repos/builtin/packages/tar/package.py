@@ -11,7 +11,7 @@ class Tar(AutotoolsPackage):
     other kinds of manipulation."""
 
     homepage = "https://www.gnu.org/software/tar/"
-    url      = "https://ftpmirror.gnu.org/tar/tar-1.32.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/tar/tar-1.32.tar.gz"
 
     version('1.32', sha256='b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c')
     version('1.31', sha256='b471be6cb68fd13c4878297d856aebd50551646f4e3074906b1a74549c40d5a2')

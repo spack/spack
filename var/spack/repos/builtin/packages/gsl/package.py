@@ -15,7 +15,7 @@ class Gsl(AutotoolsPackage):
     over 1000 functions in total with an extensive test suite."""
 
     homepage = "http://www.gnu.org/software/gsl"
-    url      = "https://ftpmirror.gnu.org/gsl/gsl-2.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/gsl/gsl-2.3.tar.gz"
 
     version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
     version('2.4',   sha256='4d46d07b946e7b31c19bbf33dda6204d7bedc2f5462a1bae1d4013426cd1ce9b')

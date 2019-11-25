@@ -10,7 +10,7 @@ class Libtool(AutotoolsPackage):
     """libtool -- library building part of autotools."""
 
     homepage = 'https://www.gnu.org/software/libtool/'
-    url      = 'https://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
+    url      = 'https://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz'
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)

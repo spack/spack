@@ -13,7 +13,7 @@ class Groff(AutotoolsPackage):
     ASCII/UTF8 for display at the terminal."""
 
     homepage = "https://www.gnu.org/software/groff/"
-    url      = "https://ftpmirror.gnu.org/groff/groff-1.22.3.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/groff/groff-1.22.3.tar.gz"
 
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.

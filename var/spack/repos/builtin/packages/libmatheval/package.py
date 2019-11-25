@@ -15,7 +15,7 @@ class Libmatheval(AutotoolsPackage):
     compute symbolic derivatives and output expressions to strings."""
 
     homepage = "https://www.gnu.org/software/libmatheval/"
-    url      = "https://ftpmirror.gnu.org/libmatheval/libmatheval-1.1.11.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/libmatheval/libmatheval-1.1.11.tar.gz"
 
     version('1.1.11', sha256='474852d6715ddc3b6969e28de5e1a5fbaff9e8ece6aebb9dc1cc63e9e88e89ab')
 

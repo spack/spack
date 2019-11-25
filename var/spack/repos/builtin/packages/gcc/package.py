@@ -18,7 +18,7 @@ class Gcc(AutotoolsPackage):
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    url      = 'https://ftp.gnu.org/gnu/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
     svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
@@ -228,7 +228,7 @@ class Gcc(AutotoolsPackage):
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
-        url = 'https://ftpmirror.gnu.org/gcc/gcc-{0}/gcc-{0}.tar.{1}'
+        url = 'https://ftp.gnu.org/gnu/gcc/gcc-{0}/gcc-{0}.tar.{1}'
         suffix = 'xz'
 
         if version < Version('6.4.0') or version == Version('7.1.0'):

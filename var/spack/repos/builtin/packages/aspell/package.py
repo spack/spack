@@ -12,7 +12,7 @@ class Aspell(AutotoolsPackage):
     eventually replace Ispell."""
 
     homepage = "http://aspell.net/"
-    url      = "https://ftpmirror.gnu.org/aspell/aspell-0.60.6.1.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/aspell/aspell-0.60.6.1.tar.gz"
 
     extendable = True           # support activating dictionaries
 

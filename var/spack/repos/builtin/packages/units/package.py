@@ -10,7 +10,7 @@ class Units(AutotoolsPackage):
     """GNU units converts between different systems of units"""
 
     homepage = "https://www.gnu.org/software/units/"
-    url      = "https://ftpmirror.gnu.org/units/units-2.13.tar.gz"
+    url      = "https://ftp.gnu.org/gnu/units/units-2.13.tar.gz"
 
     version('2.13', sha256='0ba5403111f8e5ea22be7d51ab74c8ccb576dc30ddfbf18a46cb51f9139790ab')
 
