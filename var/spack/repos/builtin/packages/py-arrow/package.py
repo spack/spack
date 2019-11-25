@@ -26,6 +26,3 @@ class PyArrow(PythonPackage):
     depends_on('py-chai', type='test')
     depends_on('py-mock', type='test')
     depends_on('py-pytz@2019.0:', type='test')
-    # documentation dependencies
-    depends_on('py-sphinx@1.8.0:1.99.99', type='build', when='^python@2.7:2.8')
-    depends_on('py-sphinx@2.2.0:', type='build', when='^python@3.5:')
