@@ -6,13 +6,12 @@
 from __future__ import print_function
 import os
 import six
-import json
 
 import llnl.util.tty as tty
 
 import spack.config
 import spack.environment as ev
-
+import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
 
 description = "get and set configuration options"
@@ -63,10 +62,7 @@ def setup_parser(subparser):
     add_parser = sp.add_parser('add', help='add configuration parameters')
     add_parser.add_argument('value',
                             help='configuration value to set. Nested values '
-                            'separated by colons (:) or pipes (|). The '
-                            'rightmost value delimited by pipes or colons '
-                            'can be any valid JSON. Use pipes as delimiters '
-                            'when inputting JSON dicts.')
+                            'separated by colons (:)')
 
     remove_parser = sp.add_parser('remove', help='remove configuration parameters')
     remove_parser.add_argument('value',
@@ -155,29 +151,7 @@ def config_list(args):
     print(' '.join(list(spack.config.section_schemas)))
 
 
-def config_add(args):
-    """Add the given configuration to the specified config scope
-
-    This is a stateful operation that edits the config files under the hood"""
-    scope, _ = _get_scope_and_section(args)
-
-    # allow '|' delimiter so that json dicts can be included
-    if '|' in args.value:
-        path, _, value = args.value.rpartition('|')
-        path = path.replace('|', ':')
-    else:
-        path, _, value = args.value.rpartition(':')
-
-    existing = spack.config.get(path, scope=scope)
-
-    # turn value into yaml
-    # TODO: Fix this to iterate over path
-    try:
-        value = json.loads(value)
-    except ValueError:
-        # strings without quotes become strings
-        pass
-
+def merge_value(existing, value):
     # dictionaries have special handling
     if isinstance(value, dict) or isinstance(existing, dict):
         if isinstance(value, dict) and isinstance(existing, dict):
@@ -199,6 +173,37 @@ def config_add(args):
     else:
         new = value
 
+    return new
+
+
+def config_add(args):
+    """Add the given configuration to the specified config scope
+
+    This is a stateful operation that edits the config files under the hood"""
+    scope, _ = _get_scope_and_section(args)
+
+    components = args.value.split(':')
+    path = None
+    for idx, name in enumerate(components[:-1]):
+        test_path = ':'.join(components[:idx + 1])
+        test_existing = spack.config.get(test_path, scope=scope)
+        if test_existing is None:
+            path = test_path
+
+            # We've nested further than existing config, so we need empty
+            # get type to ensure we treat lists properly when empty
+            existing = type(spack.config.get(path, scope=None))()
+            # construct value from this point down
+            value = syaml.load(components[-1])
+            for component in reversed(components[idx + 1:-1]):
+                value = {component: value}
+
+    if path is None:
+        path, _, value = args.value.rpartition(':')
+        value = syaml.load(value)
+        existing = spack.config.get(path, scope=scope)
+
+    new = merge_value(existing, value)
     spack.config.set(path, new, scope=scope)
 
 
