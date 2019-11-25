@@ -19,8 +19,7 @@ WORKDIR /build
 # single, large index file
 RUN $SPACK_ROOT/bin/spack list --format version_json > packages.json
 # individual packages split into a tree of :firstLetter/:packageName.json
-COPY share/spack/docker/package-index/split.sh ./
-RUN ./split.sh
+RUN $SPACK_ROOT/share/spack/docker/package-index/split.sh
 
 # nginx web service
 FROM nginx:mainline-alpine
