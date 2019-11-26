@@ -128,7 +128,6 @@ class Tensorflow(Package):
 
         # config options for version 1.0
         if self.spec.satisfies('@1.0.0-rc2:'):
-            env['CC_OPT_FLAGS'] = '-march=x86-64 -mtune=generic'
             env['TF_NEED_JEMALLOC'] = '0'
             env['TF_NEED_HDFS'] = '0'
             env['TF_ENABLE_XLA'] = '0'
