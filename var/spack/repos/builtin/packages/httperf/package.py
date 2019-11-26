@@ -12,9 +12,9 @@ class Httperf(AutotoolsPackage):
     measuring server performance."""
 
     homepage = "https://github.com/httperf"
-    url      = "https://github.com/httperf/httperf/archive/master.zip"
+    git      = "https://github.com/httperf/httperf.git"
 
-    version('master', '8a14602560914710a4caac56607d74ed82081ba0f666e3da903514eaac28c455')
+    version('master', branch='master')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
