@@ -37,6 +37,9 @@ class Tensorflow(Package):
     variant('cuda', default=False,
             description='Enable CUDA Support')
 
+    variant('nccl', default=False,
+            description='Enable NCCL Support')
+
     extends('python')
 
     depends_on('swig',                          type='build')
@@ -73,9 +76,13 @@ class Tensorflow(Package):
 
     depends_on('cuda', when='+cuda')
     depends_on('cudnn', when='+cuda')
+    depends_on('nccl', when='+nccl')
 
     patch('url-zlib.patch',  when='@0.10.0')
     patch('crosstool.patch', when='@1.0.0-rc2')  # also on 0.10.0 if +cuda!
+    patch('io_bazel_rules_docker2.patch', when='@1.15.0,2.0.0')
+    patch('http_archive.patch', when='@1.12.3')
+
 
     def install(self, spec, prefix):
         if '+gcp' in spec:
@@ -89,12 +96,23 @@ class Tensorflow(Package):
 
         # CUDA related config options - note: tf has only been tested for cpu
         if '+cuda' in spec:
+            env['GCC_HOST_COMPILER_PATH'] = self.compiler.cc
             env['TF_NEED_CUDA'] = '1'
-            env['TF_CUDA_VERSION'] = str(spec['cuda'].version)
-            env['CUDA_TOOLKIT_PATH'] = str(spec['cuda'].prefix)
+            env['TF_CUDA_VERSION'] = str(spec['cuda'].version.up_to(2))
             env['TF_CUDNN_VERSION'] = str(spec['cudnn'].version)[0]
-            env['CUDNN_INSTALL_PATH'] = str(spec['cudnn'].prefix)
-            env['TF_CUDA_COMPUTE_CAPABILITIES'] = '3.5,5.2'
+            env['TF_NCCL_VERSION'] = str(spec['nccl'].version.up_to(1))
+            if self.spec.satisfies('@1.14.0:'):
+                env['TF_CUDA_PATHS'] = '"' + str(spec['cuda'].prefix)+',' +\
+                                        str(spec['nccl'].prefix)+',' +\
+                                        str(spec['cudnn'].prefix)+'"'
+            env['CUDA_TOOLKIT_PATH'] = str(spec['cuda'].prefix)
+            env['CUDNN_INSTALL_PATH'] = str(spec['cudnn'].prefix) # ignored? as of tf@1.14.0:
+            env['TF_CUDA_COMPUTE_CAPABILITIES'] = "6.1,7.5"
+            env['NCCL_INSTALL_PATH'] = str(spec['nccl'].prefix.lib)
+            env['NCCL_HDR_PATH'] = str(spec['nccl'].prefix.include)
+            env['TF_CUDA_CLANG'] = '0'
+            env['TF_NEED_ROCM'] = '0'
+            env['TF_NEED_TENSORRT'] = '0'
         else:
             env['TF_NEED_CUDA'] = '0'
             env['TF_CUDA_VERSION'] = ''
@@ -219,8 +237,32 @@ class Tensorflow(Package):
                         r"#'tb-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
 
+        if self.spec.satisfies('+nccl'):
+            filter_file(r'^build --action_env NCCL_INSTALL_PATH=.*',
+                     r'build --action_env NCCL_INSTALL_PATH="'+str(spec['nccl'].prefix.lib)+'"',
+                     '.tf_configure.bazelrc')
+            filter_file(r'^build --action_env NCCL_HDR_PATH=.*',
+                     r'build --action_env NCCL_HDR_PATH="'+str(spec['nccl'].prefix.include)+'"',
+                    '.tf_configure.bazelrc')
+
+        if self.spec.satisfies('+cuda'):
+            libs = [
+                    str(spec['cuda'].prefix)+'/lib',
+                    str(spec['cuda'].prefix)+'/lib64',
+                    str(spec['cudnn'].prefix)+'/lib',
+                    str(spec['cudnn'].prefix)+'/lib64',
+                    str(spec['nccl'].prefix)+'/lib',
+                    str(spec['nccl'].prefix)+'/lib64']
+            slibs = ':'.join(libs)
+
+            filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
+                        'build --action_env TF_NEED_OPENCL_SYCL="0"\n'
+                        'build --action_env LD_LIBRARY_PATH="'+slibs+'"',
+                        '.tf_configure.bazelrc')
+
+
         if '+cuda' in spec:
-            bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '--config=cuda', '//tensorflow/tools/pip_package:build_pip_package')  # noqa: E501
+            bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '--config=cuda', '--config=noaws', '--config=nogcp','--config=nohdfs','--config=noignite','--config=nokafka', '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0', '//tensorflow/tools/pip_package:build_pip_package')  # noqa: E501
         else:
             bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')                   # noqa: E501
 
