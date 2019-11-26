@@ -29,4 +29,3 @@ class PyPymol(PythonPackage):
 
     depends_on('libmmtf-cpp', type=('build'))
     depends_on('msgpack-c', type=('build'))
-
