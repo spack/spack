@@ -93,11 +93,11 @@ class Mstk(CMakePackage):
             options.append('-DENABLE_METIS=OFF')
             options.append('-DENABLE_ZOLTAN=OFF')
         else:
-            if 'zoltan' or 'all' in self.spec:
+            if 'zoltan' in self.spec:
                 options.append('-DENABLE_ZOLTAN=ON')
             else:
                 options.append('-DENABLE_ZOLTAN=OFF')
-            if 'metis' or 'all' in self.spec:
+            if 'metis' in self.spec:
                 options.append('-DENABLE_METIS=ON')
             else:
                 options.append('-DENABLE_METIS=OFF')
