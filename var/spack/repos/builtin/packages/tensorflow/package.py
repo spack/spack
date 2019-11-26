@@ -81,7 +81,9 @@ class Tensorflow(Package):
 
     patch('url-zlib.patch',  when='@0.10.0')
     patch('crosstool.patch', when='@1.0.0-rc2')  # also on 0.10.0 if +cuda!
+    # Avoid build error: "no such package '@io_bazel_rules_docker..."
     patch('io_bazel_rules_docker2.patch', when='@1.15.0,2.0.0')
+    # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
 
 
