@@ -42,13 +42,15 @@ class Tensorflow(Package):
     depends_on('swig',                          type='build')
 
     # old tensorflow needs old bazel
-    depends_on('bazel@0.19.0',        type='build', when='@1.13.0:')
-    depends_on('bazel@0.15.0',        type='build', when='@1.12.0')
-    depends_on('bazel@0.10.0',        type='build', when='@1.8.0:1.9.0')
-    depends_on('bazel@0.9.0',         type='build', when='@1.5.0:1.6.0')
-    depends_on('bazel@0.4.5',         type='build', when='@1.2.0:1.3.0')
-    depends_on('bazel@0.4.4:0.4.999', type='build', when='@1.0.0:1.1.0')
-    depends_on('bazel@0.3.1:0.4.999', type='build', when='@:1.0.0')
+    depends_on('bazel@0.24.1:0.26.1',   type='build', when='@1.15.0,2.0.0')
+    depends_on('bazel@0.24.1:0.25.2',   type='build', when='@1.14.0')
+    depends_on('bazel@0.19.0:0.21.0',   type='build', when='@1.13.0:1.13.2')
+    depends_on('bazel@0.15.0',          type='build', when='@1.12.0:1.12.3')
+    depends_on('bazel@0.10.0',          type='build', when='@1.8.0:1.9.0')
+    depends_on('bazel@0.9.0',           type='build', when='@1.5.0:1.6.0')
+    depends_on('bazel@0.4.5',           type='build', when='@1.2.0:1.3.0')
+    depends_on('bazel@0.4.4:0.4.999',   type='build', when='@1.0.0:1.1.0')
+    depends_on('bazel@0.3.1:0.4.999',   type='build', when='@:1.0.0')
 
     depends_on('py-absl-py@0.1.6',       type=('build', 'run'), when='@1.5.0:')
     depends_on('py-astor@0.1.6:',        type=('build', 'run'), when='@1.6.0:')
