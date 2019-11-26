@@ -14,18 +14,21 @@ class Tensorflow(Package):
     homepage = "https://www.tensorflow.org"
     url      = "https://github.com/tensorflow/tensorflow/archive/v0.10.0.tar.gz"
 
-    version('2.0.0-alpha0', 'a26886611105d3399c2a5985fe14d904')
-    version('1.13.1',       '0fd6bd88f880c1d907e0bd898b37ee1b', preferred=True)
-    version('1.12.0',       '48164180a2573e75f1c8dff492a550a0')
-    version('1.9.0',        '3426192cce0f8e070b2010e5bd5695cd')
-    version('1.8.0',        'cd45874be9296644471dd43e7da3fbd0')
-    version('1.6.0',        '6dc60ac37e49427cd7069968da42c1ac')
-    version('1.5.0',        'e087dc1f47dbbda87cf4278acddf785b')
-    version('1.3.0',        '01c008c58d206324ef68cd5116a83965')
-    version('1.2.0',        '3f15746caabfd2583724258643fd1678')
-    version('1.1.0',        'fb745649d33954c97d29b7acaffe7d65')
-    version('1.0.0-rc2',    'a058a7e0ba2b9761cf2420c82d520049')
-    version('0.10.0',       'b75cbd494d61a809af5ef25d7fba561b')
+    version('2.0.0',        sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.0',       sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
+    version('1.14.0',       sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed')
+    version('1.13.1',       sha256='7cd19978e6bc7edc2c847bce19f95515a742b34ea5e28e4389dade35348f58ed', preferred=True)
+    version('1.12.3',       sha256='b9e5488e84f4a133ed20b18605f0cd6301f11d356bd959712db4e7b9301d0462')
+    version('1.12.0',       sha256='3c87b81e37d4ed7f3da6200474fa5e656ffd20d8811068572f43610cae97ca92')
+    version('1.9.0',        sha256='ffc3151b06823d57b4a408261ba8efe53601563dfe93af0866751d4f6ca5068c')
+    version('1.8.0',        sha256='47646952590fd213b747247e6870d89bb4a368a95ae3561513d6c76e44f92a75')
+    version('1.6.0',        sha256='03cf1423446abbead6bd8c3cf6e6affa7d99746cd119691b012aac9a1795f4fb')
+    version('1.5.0',        sha256='0642781c3a3a8c2c4834b91b86aec385f0b2ada7d721571458079478cc5b29c8')
+    version('1.3.0',        sha256='e1af1bb767b57c3416de0d43a5f74d174c42b85231dffd36f3630173534d4307')
+    version('1.2.0',        sha256='03dbf7548d1fc1c11ed58da5fa68616f795c819f868f43478cbcaa26abed374f')
+    version('1.1.0',        sha256='aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027')
+    version('1.0.0-rc2',    sha256='bf5c58c59c182d0bdf07018f9fd394f7b760341bb432e3602874928929cf8495')
+    version('0.10.0',       sha256='f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680')
 
     variant('gcp', default=False,
             description='Enable Google Cloud Platform Support')
