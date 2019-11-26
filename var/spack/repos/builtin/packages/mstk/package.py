@@ -23,6 +23,7 @@ class Mstk(CMakePackage):
 
     homepage = "https://github.com/MeshToolkit/MSTK"
     git      = "https://github.com/MeshToolkit/MSTK"
+    url      = "https://github.com/MeshToolkit/MSTK/archive/3.2.1.tar.gz"
 
     maintainers = ['raovgarimella', 'julienloiseau']
 
