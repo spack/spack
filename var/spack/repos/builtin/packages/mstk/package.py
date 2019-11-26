@@ -43,7 +43,7 @@ class Mstk(CMakePackage):
     variant('use_markers', default=True, description='Enable use of markers')
     variant('parallel', default=False, description='Enable Parallel Support')
     variant('partitioner', default='none',
-            values=('none', 'metis', 'zoltan','all'),
+            values=('none', 'metis', 'zoltan', 'all'),
             multi=False, description='Choose partitioner')
     conflicts('partitioner=none', when='+parallel')
     conflicts('partitioner=all', when='-parallel')
@@ -62,7 +62,6 @@ class Mstk(CMakePackage):
     depends_on('zoltan -fortran', when='partitioner=all')
     depends_on('metis', when='partitioner=metis')
     depends_on('metis', when='partitioner=all')
-
 
     # Exodusii variant
     # The default exodusii build with mpi support
@@ -96,7 +95,6 @@ class Mstk(CMakePackage):
                 options.append('-DENABLE_METIS=ON')
             else:
                 options.append('-DENABLE_METIS=OFF')
-
 
         # ExodusII variant
         if '+exodusii' in self.spec:
