@@ -1196,10 +1196,19 @@
             "flags": "-mcpu=thunderx2t99"
           }
         ],
-        "clang": {
-          "versions": ":",
-          "flags": "-march=armv8-a -mcpu=generic"
-        }
+        "clang": [{
+          "versions": ":6.9",
+          "family": "aarch64",
+          "flags": "-march={family} -mattr=+v8.1a,+fp-armv8,+neon,+crc,+crypto"
+        }, {
+          "versions": "7:8.9",
+          "family": "aarch64",
+          "flags": "-march={family} -mattr=+v8.1a,+fp-armv8,+aes,+neon,+sha2,+crc,+crypto"
+        }, {
+          "versions": "9:",
+          "family": "aarch64",
+          "flags": "-march={family} -mcpu=thunderx2t99"
+        }]
       }
     },
     "a64fx": {
@@ -1248,7 +1257,8 @@
         ],
         "clang": {
           "versions": ":",
-          "flags": "-march=armv8-a -mcpu=generic"
+          "family": "aarch64",
+          "flags": "-march={aarch64} -mcpu=generic"
         }
       }
     },
