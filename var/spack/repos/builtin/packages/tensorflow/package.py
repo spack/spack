@@ -92,7 +92,7 @@ class Tensorflow(Package):
             env['TF_NEED_GCP'] = '0'
 
         env['PYTHON_BIN_PATH'] = spec['python'].command.path
-        env['SWIG_PATH'] = str(spec['swig'].prefix.bin)
+        env['SWIG_PATH'] = spec['swig'].prefix.bin
         env['GCC_HOST_COMPILER_PATH'] = spack_cc
 
         # CUDA related config options - note: tf has only been tested for cpu
