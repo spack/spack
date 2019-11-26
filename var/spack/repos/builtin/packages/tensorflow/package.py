@@ -218,9 +218,9 @@ class Tensorflow(Package):
                         'tensorflow/tools/pip_package/setup.py')
 
         if '+cuda' in spec:
-            bazel('--jobs={}'.format(make_jobs), '-c', 'opt', '--config=cuda', '//tensorflow/tools/pip_package:build_pip_package')  # noqa: E501
+            bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '--config=cuda', '//tensorflow/tools/pip_package:build_pip_package')  # noqa: E501
         else:
-            bazel('--jobs={}'.format(make_jobs), '-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')                   # noqa: E501
+            bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')                   # noqa: E501
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')  # noqa: E501
         build_pip_package(tmp_path)
