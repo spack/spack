@@ -58,6 +58,7 @@ class Tensorflow(Package):
     depends_on('py-absl-py@0.1.6',       type=('build', 'run'), when='@1.5.0:')
     depends_on('py-astor@0.1.6:',        type=('build', 'run'), when='@1.6.0:')
     depends_on('py-enum34@1.1.6:',       type=('build', 'run'), when='@1.5.0: ^python@:3.3')
+    depends_on('py-future@0.17.1:',      type=('build', 'run'), when='@1.14.0:')
     depends_on('py-gast@0.2.0:',         type=('build', 'run'), when='@1.6.0:')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-grpcio@1.8.6:',       type=('build', 'run'), when='@1.6.0:')
