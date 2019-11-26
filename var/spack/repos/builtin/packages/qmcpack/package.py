@@ -358,7 +358,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.
         Set PYTHONPATH for basic analysis scripts and for Nexus."""
-        run_env.prepend_path('PYTHONPATH', self.prefix.nexus)
+        env.prepend_path('PYTHONPATH', self.prefix.nexus)
 
     @when('@3.6.0:')
     def setup_run_environment(self, env):
@@ -366,8 +366,8 @@ class Qmcpack(CMakePackage, CudaPackage):
         Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
         are in the  'prefix' directory instead of 'prefix.bin' which is
         not set by the default module environment"""
-        run_env.prepend_path('PATH', self.prefix)
-        run_env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('PYTHONPATH', self.prefix)
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
