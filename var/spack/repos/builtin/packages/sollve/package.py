@@ -13,7 +13,7 @@ class Sollve(CMakePackage):
     """
 
     homepage = 'https://www.bnl.gov/compsci/projects/SOLLVE/'
-    url      = "https://github.com/SOLLVE"
+    git      = "https://github.com/SOLLVE/llvm.git"
 
     family = 'compiler'  # Used by lmod
 
@@ -70,7 +70,7 @@ class Sollve(CMakePackage):
     # gold support
     depends_on('binutils+gold', when='+gold')
 
-    version("develop", git='https://github.com/SOLLVE/llvm.git')
+    version("develop")
     resource(name='compiler-rt',
              svn='http://llvm.org/svn/llvm-project/compiler-rt/trunk',
              destination='projects', when='@develop+compiler-rt',
@@ -151,6 +151,7 @@ class Sollve(CMakePackage):
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
                               spec['binutils'].prefix.include)
+
         if '+polly' in spec:
             cmake_args.append('-DLINK_POLLY_INTO_TOOLS:Bool=ON')
         else:
@@ -161,28 +162,53 @@ class Sollve(CMakePackage):
 
         if '+python' in spec and '+lldb' in spec:
             cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
-        if '+clang' not in spec:
+        else:
+            cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=FALSE')
+
+        if '+clang' in spec:
+            cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=ON')
+        else:
             cmake_args.append('-DLLVM_EXTERNAL_CLANG_BUILD:Bool=OFF')
-        if '+lldb' not in spec:
+
+        if '+lldb' in spec:
+            cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=ON',
+                               '-DLLVM_TOOL_LLDB_BUILD:Bool=ON'])
+        else:
             cmake_args.extend(['-DLLVM_EXTERNAL_LLDB_BUILD:Bool=OFF',
                                '-DLLVM_TOOL_LLDB_BUILD:Bool=OFF'])
-        if '+lld' not in spec:
+
+        if '+lld' in spec:
+            cmake_args.append('-DLLVM_TOOL_LLD_BUILD:Bool=ON')
+        else:
             cmake_args.append('-DLLVM_TOOL_LLD_BUILD:Bool=OFF')
-        if '+internal_unwind' not in spec:
+
+        if '+internal_unwind' in spec:
+            cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=ON')
+        else:
             cmake_args.append('-DLLVM_EXTERNAL_LIBUNWIND_BUILD:Bool=OFF')
+
         if '+libcxx' in spec:
             cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
+            cmake_args.append('-DLLVM_EXTERNAL_LIBCXX_BUILD:Bool=ON')
+            cmake_args.append('-DLLVM_EXTERNAL_LIBCXXABI_BUILD:Bool=ON')
         else:
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXX_BUILD:Bool=OFF')
             cmake_args.append('-DLLVM_EXTERNAL_LIBCXXABI_BUILD:Bool=OFF')
-        if '+compiler-rt' not in spec:
+
+        if '+compiler-rt' in spec:
+            cmake_args.append('-DLLVM_EXTERNAL_COMPILER_RT_BUILD:Bool=ON')
+        else:
             cmake_args.append('-DLLVM_EXTERNAL_COMPILER_RT_BUILD:Bool=OFF')
 
         if '+shared_libs' in spec:
             cmake_args.append('-DBUILD_SHARED_LIBS:Bool=ON')
+        else:
+            cmake_args.append('-DBUILD_SHARED_LIBS:Bool=OFF')
 
         if '+link_dylib' in spec:
             cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
+        else:
+            cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=OFF')
 
         if '+all_targets' not in spec:  # all is default on cmake
             targets = []
@@ -206,12 +232,17 @@ class Sollve(CMakePackage):
 
         if '+omp_tsan' in spec:
             cmake_args.append('-DLIBOMP_TSAN_SUPPORT=ON')
+        else:
+            cmake_args.append('-DLIBOMP_TSAN_SUPPORT=OFF')
 
         if '+argobots' in spec:
             cmake_args.extend([
-                '-DLIBOMP_USE_ITT_NOTIFY=off',
-                '-DLIBOMP_USE_ARGOBOTS=on',
+                '-DLIBOMP_USE_ITT_NOTIFY=OFF',
+                '-DLIBOMP_USE_ARGOBOTS=ON',
                 '-DLIBOMP_ARGOBOTS_INSTALL_DIR=' + spec['argobots'].prefix])
+        else:
+            # LIBOMP_USE_ITT_NOTIFY should be set to a default value.
+            cmake_args.append('-DLIBOMP_USE_ARGOBOTS=OFF')
 
         if self.compiler.name == 'gcc':
             gcc_prefix = ancestor(self.compiler.cc, 2)
@@ -219,6 +250,7 @@ class Sollve(CMakePackage):
 
         if spec.satisfies('platform=linux'):
             cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+
         return cmake_args
 
     @run_before('build')
