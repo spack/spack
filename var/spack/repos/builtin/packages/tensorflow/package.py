@@ -150,7 +150,7 @@ class Tensorflow(Package):
             env['TF_NEED_GDR'] = '0'
             env['TF_NEED_OPENCL_SYCL'] = '0'
             env['TF_SET_ANDROID_WORKSPACE'] = '0'
-            # env variable is somehow ignored -> brute force
+            # env variable is somehow ignored -> brute force (TODO find a better solution)
             filter_file(r'if workspace_has_any_android_rule\(\)',
                         r'if True',
                         'configure.py')
