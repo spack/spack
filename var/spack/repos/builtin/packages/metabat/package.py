@@ -24,7 +24,7 @@ class Metabat(SConsPackage):
     depends_on('ncurses', type='link')
 
     def setup_build_environment(self, env):
-        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
+        env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
     def install_args(self, spec, prefix):
         return ["PREFIX={0}".format(prefix)]
