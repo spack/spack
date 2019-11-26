@@ -23,7 +23,7 @@ class Metabat(SConsPackage):
     depends_on('zlib', type='link')
     depends_on('ncurses', type='link')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env, run_env):
         spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
     def install_args(self, spec, prefix):
