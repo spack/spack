@@ -96,10 +96,11 @@ class Tensorflow(Package):
 
         # CUDA related config options - note: tf has only been tested for cpu
         if '+cuda' in spec:
-            env['GCC_HOST_COMPILER_PATH'] = self.compiler.cc
+            env['GCC_HOST_COMPILER_PATH'] = self.compiler.cc #TODO double check if this is still necessary
             env['TF_NEED_CUDA'] = '1'
             env['TF_CUDA_VERSION'] = str(spec['cuda'].version.up_to(2))
             env['TF_CUDNN_VERSION'] = str(spec['cudnn'].version)[0]
+            # TODO also consider the case of cuda enabled but nccl disabled
             env['TF_NCCL_VERSION'] = str(spec['nccl'].version.up_to(1))
             if self.spec.satisfies('@1.14.0:'):
                 env['TF_CUDA_PATHS'] = '"' + str(spec['cuda'].prefix)+',' +\
@@ -107,6 +108,8 @@ class Tensorflow(Package):
                                         str(spec['cudnn'].prefix)+'"'
             env['CUDA_TOOLKIT_PATH'] = str(spec['cuda'].prefix)
             env['CUDNN_INSTALL_PATH'] = str(spec['cudnn'].prefix) # ignored? as of tf@1.14.0:
+            # TODO: create a string valued variant for compute capabilities?
+            # one should be able to specify single or multiple capabilities
             env['TF_CUDA_COMPUTE_CAPABILITIES'] = "6.1,7.5"
             env['NCCL_INSTALL_PATH'] = str(spec['nccl'].prefix.lib)
             env['NCCL_HDR_PATH'] = str(spec['nccl'].prefix.include)
