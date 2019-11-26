@@ -102,7 +102,7 @@ class Gromacs(CMakePackage):
             'sse2': 'SSE2',
             'sse4_1': 'SSE4.1',
             'avx128fma': 'AVX_128_FMA',
-            'avx256': 'AVX_256',
+            'avx': 'AVX_256',
             'axv128': 'AVX2_128',
             'avx2_256': 'AVX2_256',
             'avx512': 'AVX_512',
