@@ -42,7 +42,7 @@ class Tensorflow(Package):
 
     extends('python')
 
-    depends_on('swig',                          type='build')
+    depends_on('swig', type='build')
 
     # old tensorflow needs old bazel
     depends_on('bazel@0.24.1:0.26.1',   type='build', when='@1.15.0,2.0.0')
