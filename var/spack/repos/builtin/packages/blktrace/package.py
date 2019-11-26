@@ -28,4 +28,4 @@ class Blktrace(MakefilePackage):
     depends_on('libaio')
 
     def install(self, spec, prefix):
-        install_tree('', prefix)
+        install_tree('.', prefix)
