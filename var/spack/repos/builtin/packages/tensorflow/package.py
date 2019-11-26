@@ -34,10 +34,10 @@ class Tensorflow(Package):
     variant('gcp', default=False,
             description='Enable Google Cloud Platform Support')
 
-    variant('cuda', default=False,
+    variant('cuda', default=True,
             description='Enable CUDA Support')
 
-    variant('nccl', default=False,
+    variant('nccl', default=True,
             description='Enable NCCL Support')
 
     extends('python')
