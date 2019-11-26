@@ -18,6 +18,7 @@ from six.moves.urllib.request import build_opener, HTTPHandler, Request
 
 import llnl.util.tty as tty
 
+import spack
 import spack.binary_distribution as bindist
 import spack.compilers as compilers
 import spack.config as cfg
@@ -508,7 +509,9 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
     staged_phases = {}
     for phase in phases:
         phase_name = phase['name']
-        staged_phases[phase_name] = stage_spec_jobs(env.spec_lists[phase_name])
+        with spack.concretize.disable_compiler_existence_check():
+            staged_phases[phase_name] = stage_spec_jobs(
+                env.spec_lists[phase_name])
 
     if print_summary:
         for phase in phases:
