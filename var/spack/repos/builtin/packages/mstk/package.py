@@ -25,12 +25,8 @@ class Mstk(CMakePackage):
     git      = "https://github.com/MeshToolkit/MSTK"
     url      = "https://github.com/MeshToolkit/MSTK/archive/3.3.1.tar.gz"
 
-    maintainers = ['raovgarimella','julienloiseau']
+    maintainers = ['raovgarimella', 'julienloiseau']
 
-    def url_for_version(self, version):
-        url = 'https://github.com/MeshToolkit/MSTK/archive/{0}.tar.gz'
-        return url.format(version)
-    
     version('master', branch='master')
     version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
     version('3.3.0', sha256='205c48fb5619937b5dd83788da739b7c2060155b7c41793e29ce05422b8f7dfb')
@@ -48,7 +44,6 @@ class Mstk(CMakePackage):
 
     variant('exodusii', default=False, description='Enable ExodusII')
     variant('use_markers', default=True, description='Enable use of markers')
-    variant('enable_tests', default=False, description='Enable unit testing')
     variant('parallel', default=False, description='Enable Parallel Support')
     variant('partitioner', default='none',
             values=('none', 'metis', 'zoltan','all'),
@@ -116,7 +111,7 @@ class Mstk(CMakePackage):
             options.append('-DENABLE_ExodusII=OFF')
 
         # Unit test variant
-        if '+enable_tests' in self.spec:
+        if self.run_tests:
             options.append('-DENABLE_Tests=ON')
         else:
             options.append('-DENABLE_Tests=OFF')
