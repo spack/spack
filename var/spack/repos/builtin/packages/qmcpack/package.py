@@ -355,13 +355,13 @@ class Qmcpack(CMakePackage, CudaPackage):
     # QMCPACK 3.6.0 install directory structure changed, thus there
     # thus are two version of the setup_environment method
     @when('@:3.5.0')
-    def setup_run_unvironment(self, spack_env, run_env):
+    def setup_run_unvironment(self, env):
         """Set-up runtime environment for QMCPACK.
         Set PYTHONPATH for basic analysis scripts and for Nexus."""
         run_env.prepend_path('PYTHONPATH', self.prefix.nexus)
 
     @when('@3.6.0:')
-    def setup_run_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.
         Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
         are in the  'prefix' directory instead of 'prefix.bin' which is
