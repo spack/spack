@@ -23,7 +23,6 @@ class PyMerlinwf(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-pytest', type='test')
-    depends_on('py-pytest-runner', type='test')
 
     depends_on('py-cached-property', type=('build', 'run'))
     depends_on('py-celery@4.3.0:+redis', type=('build', 'run'))
