@@ -106,9 +106,9 @@ class Tensorflow(Package):
             # TODO also consider the case of cuda enabled but nccl disabled
             env['TF_NCCL_VERSION'] = str(spec['nccl'].version.up_to(1))
             if self.spec.satisfies('@1.14.0:'):
-                env['TF_CUDA_PATHS'] = '"' + str(spec['cuda'].prefix)+',' +\
-                                        str(spec['nccl'].prefix)+',' +\
-                                        str(spec['cudnn'].prefix)+'"'
+                env['TF_CUDA_PATHS'] = '"' + ','.join(str(spec['cuda'].prefix),
+                                        str(spec['nccl'].prefix),
+                                        str(spec['cudnn'].prefix))+'"'
             env['CUDA_TOOLKIT_PATH'] = str(spec['cuda'].prefix)
             env['CUDNN_INSTALL_PATH'] = str(spec['cudnn'].prefix) # ignored? as of tf@1.14.0:
             # TODO: create a string valued variant for compute capabilities?
