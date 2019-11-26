@@ -48,15 +48,16 @@ class IntelTbb(Package):
     version('4.4',    sha256='88e37f08ffcfaa24a2caf6c1a9084000cce689cc4b11edea7e89b20ab74ceceb')
 
     provides('tbb')
-    
-    # Clang builds incorrectly determine GCC version which in turn incorrectly causes a
-    # mismatch in C++ features resulting in a link error. This also means that clang
-    # builds require a gcc compiler to work correctly (this has always been the case).
+
+    # Clang builds incorrectly determine GCC version which in turn incorrectly
+    # causes a mismatch in C++ features resulting in a link error. This also
+    # means that clang builds require a gcc compiler to work correctly (this
+    # has always been the case).
     #
     #    See https://github.com/intel/tbb/pull/147 for details.
     #
     conflicts('%clang', when='@:2019.7',
-		          msg='2019.7 or later required for clang')
+              msg='2019.7 or later required for clang')
 
     conflicts('%gcc@6.1:', when='@:4.4.3',
               msg='4.4.4 or later required for GCC >= 6.1.')
