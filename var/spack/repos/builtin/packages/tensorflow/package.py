@@ -91,7 +91,7 @@ class Tensorflow(Package):
         else:
             env['TF_NEED_GCP'] = '0'
 
-        env['PYTHON_BIN_PATH'] = str(spec['python'].prefix.bin) + '/python'
+        env['PYTHON_BIN_PATH'] = spec['python'].command.path
         env['SWIG_PATH'] = str(spec['swig'].prefix.bin)
         env['GCC_HOST_COMPILER_PATH'] = spack_cc
 
