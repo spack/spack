@@ -164,10 +164,6 @@ def test_api_for_build_and_run_environment():
 @pytest.mark.skipif(
     not executable.which('git'), reason='requires git to be installed'
 )
-@pytest.mark.skipif(
-    'GITHUB_ACTION' in os.environ,
-    reason="Develop is not in the git tree?"
-)
 def test_prs_update_old_api():
     """Ensures that every package modified in a PR doesn't contain
     deprecated calls to any method.
