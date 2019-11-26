@@ -134,7 +134,13 @@ def adjust_raw_flags(info):
 
 def adjust_raw_vendor(info):
     """Adjust the vendor field to make it human readable"""
-    # Mapping numeric codes to vendor (ARM)
+    # Mapping numeric codes to vendor (ARM). This list is a merge from
+    # different sources:
+    #
+    # https://github.com/karelzak/util-linux/blob/master/sys-utils/lscpu-arm.c
+    # https://developer.arm.com/docs/ddi0487/latest/arm-architecture-reference-manual-armv8-for-armv8-a-architecture-profile
+    # https://github.com/gcc-mirror/gcc/blob/master/gcc/config/aarch64/aarch64-cores.def
+    # https://patchwork.kernel.org/patch/10524949/
     arm_vendor = {
         '0x41': 'ARM',
         '0x42': 'Broadcom',
@@ -142,12 +148,16 @@ def adjust_raw_vendor(info):
         '0x44': 'DEC',
         '0x46': 'Fujitsu',
         '0x48': 'HiSilicon',
+        '0x49': 'Infineon Technologies AG',
+        '0x4d': 'Motorola',
         '0x4e': 'Nvidia',
         '0x50': 'APM',
         '0x51': 'Qualcomm',
         '0x53': 'Samsung',
         '0x56': 'Marvell',
+        '0x61': 'Apple',
         '0x66': 'Faraday',
+        '0x68': 'HXT',
         '0x69': 'Intel'
     }
     if 'CPU implementer' not in info:
