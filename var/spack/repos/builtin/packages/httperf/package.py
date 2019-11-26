@@ -16,10 +16,10 @@ class Httperf(AutotoolsPackage):
 
     version('master', '8a14602560914710a4caac56607d74ed82081ba0f666e3da903514eaac28c455')
 
-    depends_on('autoconf')
-    depends_on('automake')
-    depends_on('libtool')
-    depends_on('m4')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
 
     @run_before('autoreconf')
     def e_autogen(self):
