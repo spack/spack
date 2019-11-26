@@ -279,14 +279,17 @@ class URLFetchStrategy(FetchStrategy):
         return os.path.sep.join(
             ['archive', self.digest[:2], self.digest])
 
+    @property
+    def candidate_urls(self):
+        return [self.url] + (self.mirrors or [])
+
     @_needs_stage
     def fetch(self):
         if self.archive_file:
             tty.msg("Already downloaded %s" % self.archive_file)
             return
 
-        url_list = [self.url] + (self.mirrors or [])
-        for url in url_list:
+        for url in self.candidate_urls:
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file:
@@ -1233,10 +1236,11 @@ def _from_merged_attrs(fetcher, pkg, version):
     else:
         url = getattr(pkg, fetcher.url_attr)
 
-    attrs = {
-        fetcher.url_attr: url,
-        'mirrors': getattr(pkg, 'mirrors', None)
-    }
+    mirrors = getattr(pkg, 'mirrors', None)
+    if mirrors:
+        mirrors = [spack.url.substitute_version(u, version) for u in mirrors]
+
+    attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     attrs.update(pkg.versions[version])
     return fetcher(**attrs)
 
