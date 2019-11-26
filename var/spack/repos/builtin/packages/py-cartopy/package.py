@@ -43,4 +43,8 @@ class PyCartopy(PythonPackage):
         args = ['-I{0}'.format(spec['proj'].prefix.include),
                 '-L{0}'.format(spec['proj'].prefix.lib)
                 ]
+
+        if spec.satisfies('@0.17.0 ^proj@6'):
+            args.append('-DACCEPT_USE_OF_DEPRECATED_PROJ_API_H')
+
         return args
