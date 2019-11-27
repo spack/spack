@@ -28,7 +28,7 @@ class RAneufinder(RPackage):
     depends_on('r-aneufinderdata', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-doparallel', type=('build', 'run'))
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-biocgenerics', when='@1.4.0:1.6.0', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
