@@ -10,9 +10,7 @@ class RBiocmanager(RPackage):
     """BiocManager: Access the Bioconductor Project Package Repository"""
 
     homepage = "https://cloud.r-project.org/package=BiocManager"
-    url      = "https://cloud.r-project.org/src/contrib/BiocManager_1.30.4.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/BiocManager_1.30.10.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/BiocManager"
 
-    version('1.30.4', sha256='50093f5c8ed8fba6e68bc715784b713887bdad3538fbb92f152dcc1eaf39ba4f')
-
-    depends_on('r@3.5.0:', type=('build', 'run'))
+    version('1.30.10', sha256='f3b7a412b42be0ab8df5fcd9bf981876ba9e5c55bc5faaca7af7ede3b6d0c90e')
