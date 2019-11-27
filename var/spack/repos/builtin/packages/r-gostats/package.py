@@ -25,7 +25,7 @@ class RGostats(RPackage):
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase@1.15.29:', type=('build', 'run'))
     depends_on('r-category@2.3.26:', type=('build', 'run'))
-    depends_on('r-graph@1.15.15:', type=('build', 'run'))
+    depends_on('r-graph@1.15.15:', when='@2.42.0', type=('build', 'run'))
     depends_on('r-annotationdbi@0.0.89:', type=('build', 'run'))
     depends_on('r-go-db@1.13.0:', type=('build', 'run'))
     depends_on('r-rbgl', type=('build', 'run'))
@@ -34,3 +34,4 @@ class RGostats(RPackage):
 
     depends_on('r-category@2.43.2:', when='@2.44.0:', type=('build', 'run'))
     depends_on('r-rgraphviz', when='@2.44.0:', type=('build', 'run'))
+    depends_on('r-graph', when='@2.44.0:', type=('build', 'run'))
