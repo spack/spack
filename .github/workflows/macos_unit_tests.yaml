@@ -46,3 +46,9 @@ jobs:
         coverage run $(which spack) test -x --verbose
         coverage combine
         coverage xml
+    - name: Upload to codecov.io
+      uses: codecov/codecov-action@v1.0.4
+      with:
+        token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
+        file: ./coverage.xml
+        flags: unittests,macos
