@@ -24,8 +24,8 @@ class RGeoquery(RPackage):
     version('2.42.0', commit='c26adef8d3ddbd6932a3170f2f84f6e4327641fb')
 
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-rcurl', type=('build', 'run'))
+    depends_on('r-xml', when='@2.42.0', type=('build', 'run'))
+    depends_on('r-rcurl', when='@2.42.0', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
 
     depends_on('r-readr', when='@2.46.15:', type=('build', 'run'))
