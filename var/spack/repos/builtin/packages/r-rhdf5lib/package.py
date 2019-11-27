@@ -18,3 +18,5 @@ class RRhdf5lib(RPackage):
     version('1.4.3', commit='f6be8c2659b2daa17541506058917b7981490d65')
     version('1.2.1', commit='dbf85dbedb736d5a696794d52875729c8514494e')
     version('1.0.0', commit='79608038c2016a518ba747fe6a2bf02ce53a75f9')
+
+    depends_on('gmake', type='build')
