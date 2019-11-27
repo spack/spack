@@ -16,10 +16,9 @@ class PySetuptoolsScmGitArchive(PythonPackage):
     maintainers = ['marcmengel']
 
     version(
-        '1.0', sha256='52425f905518247c685fc64c5fdba6e1e74443c8562e141c8de56059be0e31da')
-    version(
         '1.1', sha256='6026f61089b73fa1b5ee737e95314f41cb512609b393530385ed281d0b46c062')
+    version(
+        '1.0', sha256='52425f905518247c685fc64c5fdba6e1e74443c8562e141c8de56059be0e31da')
 
-    depends_on('python@2.7:,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
