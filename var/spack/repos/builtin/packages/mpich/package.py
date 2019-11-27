@@ -94,6 +94,8 @@ spack package at this time.''',
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
+    depends_on('ucx', when='netmod=ucx')
+
     depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
 
@@ -217,10 +219,13 @@ spack package at this time.''',
 
         config_args.append(device_config)
 
-        # Specify libfabric's path explicitly, otherwise configure might fall
-        # back to an embedded version of libfabric.
+        # Specify libfabric or ucx path explicitly, otherwise
+        # configure might fall back to an embedded version.
         if 'netmod=ofi' in spec:
             config_args.append('--with-libfabric={0}'.format(
                 spec['libfabric'].prefix))
+        if 'netmod=ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(
+                spec['ucx'].prefix))
 
         return config_args
