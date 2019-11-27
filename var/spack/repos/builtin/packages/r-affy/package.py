@@ -26,7 +26,7 @@ class RAffy(RPackage):
     depends_on('r-biocgenerics@0.1.12:', type=('build', 'run'))
     depends_on('r-biobase@2.5.5:', type=('build', 'run'))
     depends_on('r-affyio@1.13.3:', type=('build', 'run'))
-    depends_on('r-biocinstaller', type=('build', 'run'))
+    depends_on('r-biocinstaller', when='@1.54.0:1.58.0', type=('build', 'run'))
     depends_on('r-preprocesscore', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
 
