@@ -32,7 +32,7 @@ class RDose(RPackage):
     depends_on('r-fgsea', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-gosemsim@2.0.0:', type=('build', 'run'))
-    depends_on('r-igraph', type=('build', 'run'))
+    depends_on('r-igraph', when='@3.2.0:3.4.0', type=('build', 'run'))
     depends_on('r-qvalue', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
