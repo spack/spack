@@ -25,10 +25,10 @@ class RGlimma(RPackage):
     version('1.4.0', commit='c613c5334ed7868f36d5716b97fdb6234fb291f8')
 
     depends_on('r@3.3.0:', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-biobase', when='@1.4.0:1.6.0', type=('build', 'run'))
     depends_on('r-edger', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-scater', type=('build', 'run'))
+    depends_on('r-scater', when='@1.4.0', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
 
     depends_on('r@3.4.0:', when='@1.6.0:', type=('build', 'run'))
