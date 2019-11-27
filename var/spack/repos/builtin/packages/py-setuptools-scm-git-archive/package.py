@@ -7,7 +7,7 @@ from spack import *
 
 
 class PySetuptoolsScmGitArchive(PythonPackage):
-    """This is a setuptools_scm plugin that adds support for git archives 
+    """This is a setuptools_scm plugin that adds support for git archives
        (for example the ones GitHub automatically generates)."""
 
     homepage = "https://github.com/Changaco/setuptools_scm_git_archive/"
