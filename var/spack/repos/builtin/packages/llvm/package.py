@@ -94,10 +94,12 @@ class Llvm(CMakePackage):
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
     depends_on('python@2.7:2.8', when='@:4.999 ~python', type='build')
+    depends_on('python@2.7:2.8', when='@5: ~python +flang', type='build')
     depends_on('python', when='@5: ~python', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8', when='@:4.999+python')
+    depends_on('python@2.7:2.8', when='@5:+python+flang')
     depends_on('python', when='@5:+python')
 
     # openmp dependencies
@@ -267,7 +269,7 @@ class Llvm(CMakePackage):
         if '+libcxx' in spec:
             projects.append('libcxx')
             projects.append('libcxxabi')
-            if spec.satisfies('@3.9.0:'):
+            if spec.satisfies('@3.9.0:') and '+flang' not in spec:
                 cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
         if '+internal_unwind' in spec:
             projects.append('libunwind')
