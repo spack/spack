@@ -56,4 +56,4 @@ class RVariantannotation(RPackage):
     depends_on('r-rsamtools@1.99.0:', when='@1.30.1:', type=('build', 'run'))
     depends_on('r-rhtslib', when='@1.30.1:', type=('build', 'run'))
 
-    depends_on('gmake')
+    depends_on('gmake', type='build')
