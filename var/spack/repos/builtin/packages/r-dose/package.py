@@ -36,8 +36,8 @@ class RDose(RPackage):
     depends_on('r-qvalue', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-scales', type=('build', 'run'))
+    depends_on('r-scales', when='@3.2.0:3.4.0', type=('build', 'run'))
 
-    depends_on('r-rvcheck', when='@3.4.0:', type=('build', 'run'))
+    depends_on('r-rvcheck', when='@3.4.0', type=('build', 'run'))
 
     depends_on('r@3.4.0:', when='@3.6.1:', type=('build', 'run'))
