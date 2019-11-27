@@ -29,4 +29,4 @@ class RRhtslib(RPackage):
     depends_on('bzip2', type=('build', 'run'))
     depends_on('lzma', type=('build', 'run'))
     depends_on('curl', type=('build', 'run'))
-    depends_on('gmake', type=('build', 'run'))
+    depends_on('gmake', type='build')
