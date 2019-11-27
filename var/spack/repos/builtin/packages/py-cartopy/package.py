@@ -17,6 +17,7 @@ class PyCartopy(PythonPackage):
 
     depends_on('py-setuptools@0.7.2:', type='build')
     depends_on('py-cython@0.15.1:',    type='build')
+    depends_on('py-futures',        type=('build', 'run'), when='^python@:2')
     depends_on('py-numpy@1.10.0:',  type=('build', 'run'))
     depends_on('py-shapely@1.5.6:', type=('build', 'run'))
     depends_on('py-pyshp@1.1.4:',   type=('build', 'run'))
@@ -25,15 +26,20 @@ class PyCartopy(PythonPackage):
     depends_on('proj@4.9.0:5', when='@0.16.0')
     depends_on('proj@6:',      when='@0.17.0')
 
+    variant('epsg', default=True, description='Add support for epsg.io')
+    variant('ows', default=True, description='Add support for Open Geospatial Consortium (OGC) web service')
+    variant('plotting', default=True, description='Add plotting functionality')
+    
     # optional dependecies
-    depends_on('py-matplotlib@1.5.1:', type=('build', 'run'))
-    depends_on('gdal@1.10.0:+python',  type=('build', 'run'))
-    depends_on('py-pillow@1.7.8:',     type=('build', 'run'))
-    depends_on('py-pyepsg@0.2.0:',     type=('build', 'run'))
-    depends_on('py-scipy@0.10:',       type=('build', 'run'))
-    depends_on('py-owslib@0.8.11:',    type=('build', 'run'))
+    depends_on('py-matplotlib@1.5.1:', type=('build', 'run'), when='+plotting')
+    depends_on('gdal@1.10.0:+python',  type=('build', 'run'), when='+plotting')
+    depends_on('py-pillow@1.7.8:',     type=('build', 'run'), when='+ows+plotting')
+    depends_on('py-pyepsg@0.2.0:',     type=('build', 'run'), when='+epsg')
+    depends_on('py-scipy@0.10:',       type=('build', 'run'), when='+plotting')
+    depends_on('py-owslib@0.8.11:',    type=('build', 'run'), when='+ows')
 
     # testing dependencies
+    depends_on('py-filelock',      type='test')
     depends_on('py-mock@1.0.1',    type='test')
     depends_on('py-pytest@3.0.0:', type='test')
 
