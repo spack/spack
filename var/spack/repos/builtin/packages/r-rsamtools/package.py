@@ -44,4 +44,4 @@ class RRsamtools(RPackage):
 
     depends_on('r-rhtslib@1.16.3:', when='@2.0.3:', type=('build', 'run'))
 
-    depends_on('gmake')
+    depends_on('gmake', type='build')
