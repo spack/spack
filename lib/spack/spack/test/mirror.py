@@ -14,6 +14,8 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.executable import which
 
+from llnl.util.filesystem import resolve_link_target_relative_to_the_link
+
 pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
 
 # paths in repos that shouldn't be in the mirror tarballs.
@@ -192,3 +194,33 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
             'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'  # NOQA: ignore=E501
         ]) - files_cached_in_mirror)
+
+
+class MockFetcher(object):
+    """Mock fetcher object which implements the necessary functionality for
+       testing MirrorCache
+    """
+    @staticmethod
+    def archive(dst):
+        with open(dst, 'w'):
+            pass
+
+
+@pytest.mark.regression('14067')
+def test_mirror_cache_symlinks(tmpdir):
+    """Confirm that the cosmetic symlink created in the mirror cache (which may
+       be relative) targets the storage path correctly.
+    """
+    cosmetic_path = 'zlib/zlib-1.2.11.tar.gz'
+    global_path = '_source-cache/archive/c3/c3e5.tar.gz'
+    cache = spack.caches.MirrorCache(str(tmpdir))
+    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+
+    cache.store(MockFetcher(), reference.storage_path)
+    cache.symlink(reference)
+
+    link_target = resolve_link_target_relative_to_the_link(
+        os.path.join(cache.root, reference.cosmetic_path))
+    assert os.path.exists(link_target)
+    assert (os.path.normpath(link_target) ==
+            os.path.join(cache.root, reference.storage_path))
