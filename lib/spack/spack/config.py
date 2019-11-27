@@ -378,6 +378,14 @@ class Configuration(object):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
 
+    def highest_precedence_non_subscope(self):
+        """Non-internal scope with highest precedence that is not a subscope"""
+        generator = reversed(self.file_scopes)
+        highest = next(generator, None)
+        while highest and '/' in highest.name:
+            highest = next(generator, None)
+        return highest
+
     def matching_scopes(self, reg_expr):
         """
         List of all scopes whose names match the provided regular expression.
@@ -438,7 +446,12 @@ class Configuration(object):
         scope = self._validate_scope(scope)  # get ConfigScope object
 
         # read only the requested section's data.
-        scope.sections[section] = {section: update_data}
+        if section in scope.sections and scope.sections[section] is not None:
+            # don't overwrite yaml comment markings
+            scope.sections[section][section] = update_data
+        else:
+            scope.sections[section] = {section: update_data}
+
         scope.write_section(section)
 
     def get_config(self, section, scope=None):
@@ -795,6 +808,7 @@ def _merge_yaml(dest, source):
 
     # Source list is prepended (for precedence)
     if they_are(list):
+        # Make sure to copy ruamel comments
         dest[:] = source + [x for x in dest if x not in source]
         return dest
 
@@ -807,6 +821,7 @@ def _merge_yaml(dest, source):
             if _override(sk) or sk not in dest:
                 # if sk ended with ::, or if it's new, completely override
                 dest[sk] = copy.copy(sv)
+                # copy ruamel comments manually
             else:
                 # otherwise, merge the YAML
                 dest[sk] = _merge_yaml(dest[sk], source[sk])
@@ -863,14 +878,19 @@ def _process_config_path(path):
 #
 # Settings for commands that modify configuration
 #
-def default_modify_scope():
+def default_modify_scope(subscopes=True):
     """Return the config scope that commands should modify by default.
 
     Commands that modify configuration by default modify the *highest*
     priority scope.
-    """
-    return spack.config.config.highest_precedence_scope().name
 
+    Arguments:
+        subscopes (boolean): allow scopes that are subscopes. (Defaultv True)
+    """
+    if subscopes:
+        return spack.config.config.highest_precedence_scope().name
+    else:
+        return spack.config.config.highest_precedence_non_subscope().name
 
 def default_list_scope():
     """Return the config scope that is listed by default.

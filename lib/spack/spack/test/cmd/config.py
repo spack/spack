@@ -12,7 +12,7 @@ import spack.environment as ev
 from spack.main import SpackCommand
 
 config = SpackCommand('config')
-
+env = SpackCommand('env')
 
 def test_get_config_scope(mock_low_high_config):
     assert config('get', 'compilers').strip() == 'compilers: {}'
@@ -97,3 +97,126 @@ def test_config_list():
     output = config('list')
     assert 'compilers' in output
     assert 'packages' in output
+
+
+def test_config_add(mock_config):
+    config('add', 'config:dirty:true')
+    output = config('get', 'config')
+
+    assert output == """config:
+  dirty: true
+"""
+
+
+def test_config_add_list(mock_config):
+    config('add', 'config:template_dirs:test1')
+    config('add', 'config:template_dirs:[test2]')
+    config('add', 'config:template_dirs:test3')
+    output = config('get', 'config')
+
+    assert output == """config:
+  template_dirs:
+  - test1
+  - test2
+  - test3
+"""
+
+
+def test_config_add_update_dict(mock_config):
+    config('add', 'packages:all:compiler:[gcc]')  # TODO
+    config('add', 'packages:all:version:1.0.0')
+    output = config('get', 'packages')
+
+    assert output == """packages:
+  all:
+    version:
+    - 1.0.0
+    compiler:
+    - gcc
+"""
+
+
+def test_config_remove_value(mock_config):
+    config('add', 'config:dirty:true')
+    config('remove', 'config:dirty:true')
+    output = config('get', 'config')
+
+    assert output == """config: {}
+"""
+
+
+def test_config_remove_alias_rm(mock_config):
+    config('add', 'config:dirty:true')
+    config('rm', 'config:dirty:true')
+    output = config('get', 'config')
+
+    assert output == """config: {}
+"""
+
+
+def test_config_remove_dict(mock_config):
+    config('add', 'config:dirty:true')
+    config('rm', 'config:dirty')
+    output = config('get', 'config')
+
+    assert output == """config: {}
+"""
+
+
+def test_remove_from_list(mock_config):
+    config('add', 'config:template_dirs:test1')
+    config('add', 'config:template_dirs:[test2]')
+    config('add', 'config:template_dirs:test3')
+    config('remove', 'config:template_dirs:test2')
+    output = config('get', 'config')
+
+    assert output == """config:
+  template_dirs:
+  - test1
+  - test3
+"""
+
+
+def test_remove_list(mock_config):
+    config('add', 'config:template_dirs:test1')
+    config('add', 'config:template_dirs:[test2]')
+    config('add', 'config:template_dirs:test3')
+    config('remove', 'config:template_dirs:[test2]')
+    output = config('get', 'config')
+
+    assert output == """config:
+  template_dirs:
+  - test1
+  - test3
+"""
+
+
+def test_config_add_to_env(mock_config, mutable_mock_env_path):
+    env = ev.create('test')
+    with env:
+        config('add', 'config:dirty:true')
+        output = config('get')
+
+    expected = ev.default_manifest_yaml
+    expected += """  config:
+    dirty: true
+
+"""
+    assert output == expected
+
+
+def test_config_remove_from_env(mock_config, mutable_mock_env_path):
+    env('create', 'test')
+
+    with ev.read('test'):
+        config('add', 'config:dirty:true')
+
+    with ev.read('test'):
+        config('rm', 'config:dirty')
+        output = config('get')
+
+    expected = ev.default_manifest_yaml
+    expected += """  config: {}
+
+"""
+    assert output == expected

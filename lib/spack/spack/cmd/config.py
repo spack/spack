@@ -85,15 +85,20 @@ def _get_scope_and_section(args):
 
     # set scope defaults
     elif not scope:
-        # set section from value if the command takes a value
-        if hasattr(args, 'value'):
-            value = args.value
-            section = value[:value.find(':')] if ':' in value else value
-
         if section == 'compilers':
             scope = spack.config.default_modify_scope()
         else:
-            scope = 'user'
+            scope = spack.config.default_modify_scope(subscopes=False)
+
+    # special handling for commands that take value instead of section
+    if hasattr(args, 'value'):
+        value = args.value
+        section = value[:value.find(':')] if ':' in value else value
+        if not scope:
+            if section == 'compilers':
+                scope = spack.config.default_modify_scope
+            else:
+                scope = spack.config.default_modify_scope(False)
 
     return scope, section
 
@@ -182,7 +187,7 @@ def config_add(args):
     """Add the given configuration to the specified config scope
 
     This is a stateful operation that edits the config files under the hood"""
-    scope, _ = _get_scope_and_section(args)
+    scope, section = _get_scope_and_section(args)
 
     components = args.value.split(':')
     path = None
@@ -191,9 +196,22 @@ def config_add(args):
         test_existing = spack.config.get(test_path, scope=scope)
         if test_existing is None:
             path = test_path
-            # We've nested further than existing config, so we need empty
+            # We've nested further than existing config, so we need empty value
             # get type to ensure we treat lists properly when empty
-            existing = [] if isinstance(spack.config.get(path, scope=None), list) else None
+            for type in (list, dict, str, bool, int, float):
+                try:
+                    # Try validating with different types
+                    existing = type()
+                    test_data = existing
+                    for component in reversed(components[:idx + 1]):
+                        test_data = {component: test_data}
+                    spack.config.validate(
+                        test_data, spack.config.section_schemas[section])
+                    break
+                except spack.config.ConfigFormatError:
+                    # Wrong type, try the next one
+                    pass
+
             # construct value from this point down
             value = syaml.load(components[-1])
             for component in reversed(components[idx + 1:-1]):
@@ -207,7 +225,7 @@ def config_add(args):
 
     new = merge_value(existing, value)
 
-    if re.match(r'env.*', scope):
+    if re.match(r'env.*', scope or ''):
         e = ev.get_env(args, 'config add')
         e.set_config(path, new)
     else:
@@ -220,6 +238,11 @@ def config_remove(args):
     This is a stateful operation that edits the config files under the hood"""
     scope, _ = _get_scope_and_section(args)
 
+    e = ev.get_env(args, 'config remove')
+    if e:
+        import ruamel.yaml as yaml
+        tty.msg(str(getattr(e.yaml, yaml.comments.Comment.attrib, None)))
+
     path, _, value = args.value.rpartition(':')
     existing = spack.config.get(path, scope=scope)
 
@@ -227,20 +250,23 @@ def config_remove(args):
         path, _, value = path.rpartition(':')
         existing = spack.config.get(path, scope=scope)
 
+    value = syaml.load(value)
+
     if isinstance(existing, list):
-        new = [x for x in existing if x != value] if value else []
+        values = value if isinstance(value, list) else [value]
+        for v in values:
+            existing.remove(v)
     elif isinstance(existing, dict):
-        new = dict((k, v) for k, v in existing.items()
-                   if k != value) if value else {}
+        existing.pop(value, None)
     else:
         # This should be impossible to reach
         raise spack.config.ConfigError('Config has nested non-dict values')
 
-    if re.match(r'env.*', scope):
+    if re.match(r'env.*', scope or ''):
         e = ev.get_env(args, 'config remove')
-        e.set_config(path, new)
+        e.set_config(path, existing)
     else:
-        spack.config.set(path, new, scope=scope)
+        spack.config.set(path, existing, scope=scope)
 
 def config(parser, args):
     action = {'get': config_get,
