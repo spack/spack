@@ -32,7 +32,7 @@ class ROligoclasses(RPackage):
     depends_on('r-affyio@1.23.2:', type=('build', 'run'))
     depends_on('r-ff', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-biocinstaller', type=('build', 'run'))
+    depends_on('r-biocinstaller', when='1.38.0:1.42.0', type=('build', 'run'))
     depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
 
