@@ -45,7 +45,7 @@ class RGenomicfeatures(RPackage):
     depends_on('r-iranges@2.11.16:', when='@1.30.3:', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.13.1:', when='@1.30.3:', type=('build', 'run'))
     depends_on('r-genomicranges@1.29.14:', when='@1.30.3:', type=('build', 'run'))
-    depends_on('r-rmysql', when='@1.30.3:', type=('build', 'run'))
+    depends_on('r-rmysql', when='@1.30.3', type=('build', 'run'))
 
     depends_on('r-s4vectors@0.17.29:', when='@1.32.3:', type=('build', 'run'))
     depends_on('r-iranges@2.13.23:', when='@1.32.3:', type=('build', 'run'))
