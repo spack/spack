@@ -500,6 +500,7 @@ class Stage(object):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
+            self.check()
             spack.caches.mirror_cache.store(
                 self.fetcher, self.mirror_paths.storage_path)
             stats.added(absolute_storage_path)
