@@ -17,7 +17,6 @@ class PyCartopy(PythonPackage):
 
     depends_on('py-setuptools@0.7.2:', type='build')
     depends_on('py-cython@0.15.1:',    type='build')
-    depends_on('py-futures',        type=('build', 'run'), when='^python@:2')
     depends_on('py-numpy@1.10.0:',  type=('build', 'run'))
     depends_on('py-shapely@1.5.6:', type=('build', 'run'))
     depends_on('py-pyshp@1.1.4:',   type=('build', 'run'))
@@ -29,7 +28,7 @@ class PyCartopy(PythonPackage):
     variant('epsg', default=True, description='Add support for epsg.io')
     variant('ows', default=True, description='Add support for Open Geospatial Consortium (OGC) web service')
     variant('plotting', default=True, description='Add plotting functionality')
-    
+
     # optional dependecies
     depends_on('py-matplotlib@1.5.1:', type=('build', 'run'), when='+plotting')
     depends_on('gdal@1.10.0:+python',  type=('build', 'run'), when='+plotting')
