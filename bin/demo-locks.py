@@ -1,5 +1,6 @@
 #!/usr/bin/env spack-python
 #
+# TODO: Add the remaining install logic
 # TODO: Change from spec name to dag hash since name will no longer be unique
 # TODO: Add invariant check to ensure never build spec before dependencies
 # TODO: Refine timing, use, and reporting of task status
@@ -12,15 +13,17 @@
 
 import argparse
 import heapq
-import time
 import os
+import time
 
 from datetime import datetime
 from itertools import count
+from re import search
 
 import llnl.util.tty as tty
 import llnl.util.lock as lk
 import spack.error
+import spack.repo
 import spack.store
 
 from llnl.util.filesystem import mkdirp
@@ -51,7 +54,7 @@ STATUS_INSTALLED = 'installed'
 STATUS_REMOVED = 'dequeued'
 
 #: Time to wait before attempting to retry a concretization process
-WAIT_TIME = 10
+WAIT_TIME = 5
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -67,15 +70,46 @@ def get_hms():
     return datetime.now().strftime('%H:%M:%S.%f')
 
 
-# TODO: Remove this function
+# TODO: Remove this function once done with timing/plotting
 def get_prefix():
     return '[{0}: {1}]'.format(os.getpid(), get_hms())
 
 
 def log(msg):
-    # TODO: Remove the prefix
+    # TODO: Remove the prefix once done with timing/plotting
     tty.msg('{0} {1}'.format(get_prefix(), msg))
 
+
+def concretize_spec(spec_name):
+    tty.debug('Concretizing {0}'.format(spec_name))
+    error_msg = '{0}: Blocked on provider{1}: {2}'
+    retry_msg = '{0}: Blocked on lock timeout: will retry in {1} sec'
+
+    prefix = 'PID {0}: {1}'.format(os.getpid(), spec_name)
+    spec = None
+    pid = os.getpid()
+    while True:
+        try:
+            spec = Spec(spec_name).concretized()
+            break
+        except lk.LockTimeoutError:
+            tty.info(retry_msg.format(prefix, WAIT_TIME))
+            time.sleep(WAIT_TIME)
+        except spack.repo.UnknownPackageError as err:
+            match = search(r'\'.*\' not found', str(err))
+            # TODO: Cache is not built consistently in parallel (e.g., on 3 or
+            # TODO: more NFS nodes) so needs to be rebuilt by running "spack
+            # TODO: spec <pkg>".
+            fix = 'Rebuild the cache and try again'
+            if match:
+                pkg = match.group(0).replace(' not found', '')
+                msg = ' for {0}'.format(pkg)
+            else:
+                msg = ''
+            tty.error(error_msg.format(pid, spec_name, msg, fix))
+            raise
+
+    return spec
 
 class BuildManager(object):
     '''
@@ -86,15 +120,8 @@ class BuildManager(object):
     def __init__(self, spec_name, fake_install):
         """Initialize and set up the build specs."""
         # Spec of the package to be built
-        tty.debug('Concretizing {0}'.format(spec_name))
-        while True:
-            try:
-                self.spec = Spec(spec_name).concretized()
-                break
-            except lk.LockTimeoutError:
-                tty.info('PID {0} is blocked: waiting {1} sec before retry'
-                         .format(os.getpid(), WAIT_TIME))
-                time.sleep(WAIT_TIME)
+        self.spec = concretize_spec(spec_name)
+        assert isinstance(self.spec, Spec)
 
         # Fake installations do not affect the database
         self.fake_install = fake_install
@@ -139,7 +166,7 @@ class BuildManager(object):
         if self.fake_install:
             if self.layout.check_installed(spec):
                 self.installed.add(spec.name)
-                return
+            return
 
         # Determine if the spec is flagged as installed in the database
         try:
@@ -167,10 +194,9 @@ class BuildManager(object):
             msg = '{0.name} is already installed in {0.prefix}'
             log(msg.format(spec))
 
-            # TODO/TLD: RESUME HERE..we already have record above so why is
-            # TODO/TLD: this done again?  What happens in db update below if
-            # TODO/TLD: rec is None?
-            rec = spack.store.db.get_record(spec)
+            # TODO: Remove spec if in Package
+            if spec == self.spec:
+                self._update_explicit_entry_in_db(spec, record, True)
 
             # In case the stage directory has already been created,
             # this ensures it's removed after we checked that the spec
@@ -178,7 +204,6 @@ class BuildManager(object):
             # TODO: Need to destroy the stage if requested
             # if not keep_stage:
             #    self.stage.destroy()
-            self._update_explicit_entry_in_db(rec, spec == self.spec)
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
@@ -371,7 +396,7 @@ class BuildManager(object):
         except StopIteration as e:
             log(e.message)
             # TODO: log('Package stage directory : {0}'
-            # TODO:         .format(self.stage.source_path))
+            # TODO:     .format(self.stage.source_path))
             self._cleanup_task(spec, True)
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             err = 'Failed to install {0} due to {1}: {2}'
@@ -468,8 +493,9 @@ class BuildManager(object):
         """
         Requeues a task that appears to be in progress by another process.
         """
-        log('{0} {1}'.format(get_install_msg(task.name),
-                             'in progress by another process'))
+        if task.status != STATUS_INSTALLING:
+            log('{0} {1}'.format(get_install_msg(task.name),
+                                 'in progress by another process'))
 
         start = task.start if task.start else time.time()
         self._push_task(task.spec, start, task.attempts,
@@ -480,7 +506,8 @@ class BuildManager(object):
             with spack.store.db.write_transaction():
                 rec = spack.store.db.get_record(spec)
                 rec.explicit = True
-                # TODO: Fix message, which assumes in Package class
+                # TODO: Restore message -- assumes in Package -- and remove
+                # TODO: spec from args.
                 # msg = '{s.name}@{s.version} : marking the package explicit'
                 # log(msg.format(s=self))
                 msg = '{0} is now marked explicit in the database'
@@ -551,6 +578,7 @@ class BuildManager(object):
         # Initialize the build task queue
         self._init_queue(install_self)
 
+        # Proceed with the installation
         install_compilers = spack.config.get(
             'config:install_missing_compilers', False)
 
@@ -611,6 +639,10 @@ class BuildManager(object):
             restage = False
             self._check_install_artifacts(spec, keep_prefix, restage)
 
+            # TODO: Is it still appropriate to check the 'stop_at' option
+            # TODO: for the last phase (and die) here?
+            # self._do_install_pop_kwargs(kwargs)
+
             # Flag an already installed spec
             if name in self.installed:
                 # Downgrade to a read lock to preclude another processes
@@ -643,6 +675,13 @@ class BuildManager(object):
                 self._requeue_task(task)
                 continue
 
+            # TODO: What should be checked?  Originally checked prior to
+            # TODO: calling "do_install" for each dependency BUT only called
+            # TODO: for requested spec if installing dependents.
+            if install_compilers:  
+                log('{0} installing bootstrap compiler'.format(name))
+                # Package._install_bootstrap_compiler(spec.package, **kwargs)
+
             # Proceed with the installation since this is the only process
             # that can work on the current spec.
             self._install_spec(task, install_compilers)
@@ -669,8 +708,8 @@ class BuildTask(object):
             self.spec = spec
         else:
             if isinstance(spec, str):
-                tty.debug('Concretizing {0}'.format(spec))
-                self.spec = Spec(spec).concretized()
+                self.spec = concretize_spec(spec)
+                assert isinstance(self.spec, Spec)
             else:
                 raise ValueError("Can only build concrete specs!")
 
@@ -751,7 +790,7 @@ def process_args():
         description='Demonstrate distributed, lock-based builds')
 
     # Options
-    parser.add_argument('--build-time', type=int, default=10,
+    parser.add_argument('--build-time', type=int, default=30,
                         help='mock build time (sec)')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='enable debug log messages')
@@ -759,7 +798,7 @@ def process_args():
                         help='name of spec to fail during testing')
     parser.add_argument('--real', action='store_true', default=False,
                         help='attempt an actual installation')
-    parser.add_argument('--timeout', type=int, default=1,  # TODO: enough time?
+    parser.add_argument('--timeout', type=float, default=.1,  # TODO: enough time?
                         help='package lock timeout (sec)')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='enable verbose output')
@@ -783,7 +822,9 @@ def main(args):
 
     spack.store.db.package_lock_timeout = args.timeout
 
+    pid = os.getpid()
     for spec_name in args.spec:
+        tty.msg('PID {0}: Began processing {1}'.format(pid, spec_name))
         mgr = BuildManager(spec_name, not args.real)
         mgr.install()
 
