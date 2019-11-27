@@ -64,11 +64,8 @@ class Patch(object):
         self.level = level
         self.working_dir = working_dir
 
-    def fetch(self, stage):
+    def fetch(self):
         """Fetch the patch in case of a UrlPatch
-
-        Args:
-            stage: stage for the package that needs to be patched
         """
 
     def clean(self):
@@ -185,8 +182,7 @@ class UrlPatch(Patch):
         if not self.sha256:
             raise PatchDirectiveError("URL patches require a sha256 checksum")
 
-    # TODO: this function doesn't use the stage arg
-    def fetch(self, stage):
+    def fetch(self):
         """Retrieve the patch in a temporary stage and compute self.path
 
         Args:
