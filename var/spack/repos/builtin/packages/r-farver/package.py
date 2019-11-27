@@ -7,12 +7,10 @@ from spack import *
 
 
 class RFarver(RPackage):
-    """farver: Vectorised Colour Conversion and Comparison"""
+    """farver: High Performance Colour Space Manipulation"""
 
     homepage = "https://github.com/thomasp85/farver"
-    url      = "https://cloud.r-project.org/src/contrib/farver_1.1.0.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/farver_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/farver"
 
-    version('1.1.0', sha256='2086f309135f37705280fe2df851ad91dc886ad8f2a6eb1f3983aa20427f94b6')
-
-    depends_on('r-rcpp@0.12.15:', type=('build', 'run'))
+    version('2.0.1', sha256='1642ca1519ef80616ab044ae7f6eaf464118356f2a7875e9d0e3df60ca84012b')
