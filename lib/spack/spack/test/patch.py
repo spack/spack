@@ -79,7 +79,7 @@ first line
 third line
 """)
         # apply the patch and compare files
-        patch.fetch(stage)
+        patch.fetch()
         patch.apply(stage)
         patch.clean()
 
