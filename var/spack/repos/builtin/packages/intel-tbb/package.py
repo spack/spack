@@ -18,6 +18,10 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
+    version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
+    version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
+    version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
+    version('2019.5', sha256='2ea82d74dec50e18075b4982b8d360f8bd2bf2950f38e2db483aef82e0047444')
     version('2019.4', sha256='342a0a2cd583879850658284b86e9351ea019b4f3fcd731f4c18456f0ce9f900')
     version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
     version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')

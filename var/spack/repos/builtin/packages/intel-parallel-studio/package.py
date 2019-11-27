@@ -199,7 +199,7 @@ class IntelParallelStudio(IntelPackage):
     conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
 
-    def setup_dependent_environment(self, *args):
+    def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py

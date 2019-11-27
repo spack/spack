@@ -416,11 +416,9 @@ def listspecs(args):
     """list binary packages available from mirrors"""
     specs = bindist.get_specs(args.force)
     if args.packages:
-        pkgs = set(args.packages)
-        specs = [s for s in specs for p in pkgs if s.satisfies(p)]
-        display_specs(specs, args, all_headers=True)
-    else:
-        display_specs(specs, args, all_headers=True)
+        constraints = set(args.packages)
+        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+    display_specs(specs, args, all_headers=True)
 
 
 def getkeys(args):

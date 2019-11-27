@@ -72,6 +72,10 @@ class Cmake(Package):
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
     patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
 
+    # Fix builds with XLF + Ninja generator
+    # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
+    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="3387faf4a71efe81c0fa17410b270ca7d352081ac88d2322df3da9bb6a6a3f2d", when="@3.15.5")
+
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
     # a build dependency, and its libs will not interfere with others in
