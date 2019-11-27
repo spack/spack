@@ -31,4 +31,4 @@ class RGtrellis(RPackage):
     depends_on('r-circlize@0.3.3:', type=('build', 'run'))
     depends_on('r-getoptlong', type=('build', 'run'))
 
-    depends_on('r-circlize@0.4.8:', when='@1.16.1:', type=('build', 'run'))
+    depends_on('r-circlize@0.4.8:', when='@1.16.1', type=('build', 'run'))
