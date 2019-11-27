@@ -24,7 +24,7 @@ class PyCartopy(PythonPackage):
     depends_on('py-six@1.3.0:',     type=('build', 'run'))
     depends_on('geos@3.3.3:')
     depends_on('proj@4.9.0:5', when='@0.16.0')
-    depends_on('proj@6:',      when='@0.17.0')
+    depends_on('proj@4.9:',    when='@0.17.0')
 
     variant('epsg', default=True, description='Add support for epsg.io')
     variant('ows', default=True, description='Add support for Open Geospatial Consortium (OGC) web service')
