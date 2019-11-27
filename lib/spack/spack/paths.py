@@ -47,7 +47,7 @@ class Paths:
     mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
     #: User configuration location
-    user_config_path = os.path.expanduser('~/.spack')
+    _user_config_path = os.path.expanduser('~/.spack')
 
     opt_path        = os.path.join(prefix, "opt")
     etc_path        = os.path.join(prefix, "etc")
@@ -58,6 +58,16 @@ class Paths:
     mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
     mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
     gpg_path           = os.path.join(opt_path, "spack", "gpg")
+
+    @property
+    def user_config_path(self):
+        """Return the path to the user configuration directory"""
+        return self._user_config_path
+
+    @user_config_path.setter
+    def user_config_path(self, arg):
+        """Set the user_config_path"""
+        self._user_config_path = arg
 
 
 # The following allows the Paths() class to replace this module in sys.modules:
@@ -84,8 +94,8 @@ class Paths:
 # it. (This is no accident. The hack was proposed long ago and we decided we
 # liked enough to support it in the import machinery.)
 
-# But why? We want user_config_path to be a property so that it can be set from
-# a command line option.
+# But why? We want user_config_path to provide an API for modifying the
+# user_config_path
 import sys  # noqa: E402
 
 sys.modules[__name__] = Paths()
