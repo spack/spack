@@ -28,7 +28,7 @@ class RComplexheatmap(RPackage):
     depends_on('r-getoptlong', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))
-    depends_on('r-dendextend@1.0.1:', type=('build', 'run'))
+    depends_on('r-dendextend@1.0.1:', when='@1.14.0:1.17.1', type=('build', 'run'))
     depends_on('r-globaloptions@0.0.10:', type=('build', 'run'))
 
     depends_on('r-circlize@0.4.1:', when='@1.17.1:', type=('build', 'run'))
