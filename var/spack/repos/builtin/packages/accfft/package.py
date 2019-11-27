@@ -24,6 +24,9 @@ class Accfft(CMakePackage, CudaPackage):
 
     depends_on('parallel-netcdf', when='+pnetcdf')
 
+    # fix error [-Wc++11-narrowing]
+    patch('fix_narrowing_error.patch')
+
     parallel = False
 
     def cmake_args(self):
