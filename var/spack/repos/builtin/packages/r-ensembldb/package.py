@@ -42,7 +42,7 @@ class REnsembldb(RPackage):
     depends_on('r-annotationdbi@1.31.19:', type=('build', 'run'))
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-s4vectors', type=('build', 'run'))
-    depends_on('r-annotationhub', type=('build', 'run'))
+    depends_on('r-annotationhub', when='@2.0.4:2.2.2', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-protgenerics', type=('build', 'run'))
