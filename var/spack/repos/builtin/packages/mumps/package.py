@@ -119,6 +119,7 @@ class Mumps(Package):
         using_pgi = self.compiler.name == "pgi"
         using_intel = self.compiler.name == "intel"
         using_xl = self.compiler.name in ['xl', 'xl_r']
+        using_fj = self.compiler.name == "fj"
 
         # The llvm compiler suite does not contain a Fortran compiler by
         # default.  Its possible that a Spack user may have configured
@@ -176,17 +177,18 @@ class Mumps(Package):
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
-                ["CC = cc",
-                 "FC = fc",
-                 "FL = fc",
+                ["CC = {0}".format(spack_cc),
+                 "FC = {0}".format(spack_fc),
+                 "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if using_intel or using_pgi:
-            # Intel & PGI Fortran compiler provides the main() function so
-            # C examples linked with the Fortran compiler require a
-            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+        if using_intel or using_pgi or using_fj:
+            # Intel, PGI, and Fujitsu Fortran compiler provides
+            # the main() function so C examples linked with the Fortran
+            # compiler require a hack defined by _DMAIN_COMP
+            # (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
             if not using_xlf:

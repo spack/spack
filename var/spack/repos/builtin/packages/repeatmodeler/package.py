@@ -18,7 +18,7 @@ class Repeatmodeler(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-json', type=('build', 'run'))
     depends_on('perl-uri', type=('build', 'run'))
-    depends_on('perl-lwp', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))
 
     depends_on('repeatmasker', type='run')
     depends_on('recon+repeatmasker', type='run')

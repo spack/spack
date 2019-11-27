@@ -93,6 +93,6 @@ class Macsio(CMakePackage):
                               .format(spec['exodusii'].prefix))
             # exodus requires netcdf
             cmake_args.append("-DWITH_NETCDF_PREFIX={0}"
-                              .format(spec['netcdf'].prefix))
+                              .format(spec['netcdf-c'].prefix))
 
         return cmake_args

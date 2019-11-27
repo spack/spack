@@ -40,6 +40,9 @@ class SuperluDist(CMakePackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
+    patch('xl-611.patch', when='@:6.1.1 %xl')
+    patch('xl-611.patch', when='@:6.1.1 %xl_r')
+
     def cmake_args(self):
         spec = self.spec
         args = [
@@ -53,6 +56,10 @@ class SuperluDist(CMakePackage):
             ';' + spec['metis'].libs.ld_flags,
             '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
         ]
+
+        if (spec.satisfies('%xl') or spec.satisfies('%xl_r')) and \
+           spec.satisfies('@:6.1.1'):
+            args.append('-DCMAKE_C_FLAGS=-DNoChange')
 
         if '+int64' in spec:
             args.append('-DXSDK_INDEX_SIZE=64')

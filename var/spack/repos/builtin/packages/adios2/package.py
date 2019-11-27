@@ -85,8 +85,8 @@ class Adios2(CMakePackage):
     # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
 
     depends_on('mpi', when='+mpi')
-    depends_on('zeromq', when='+dataman')
-    depends_on('zeromq', when='@2.4: +ssc')
+    depends_on('libzmq', when='+dataman')
+    depends_on('libzmq', when='@2.4: +ssc')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
     depends_on('hdf5', when='+hdf5')

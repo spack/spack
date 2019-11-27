@@ -10,7 +10,7 @@ class RWgcna(RPackage):
     """WGCNA: Weighted Correlation Network Analysis"""
 
     homepage = "https://cloud.r-project.org/package=WGCNA"
-    url      = "https://cloud.r-project.org/src/contrib/WGCNA_1.66.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/WGCNA_1.68.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/WGCNA/"
 
     version('1.68', sha256='0a04f15a20817f9260ae1896eda3be83a7f4855a27a348df85c7f4d376f1efe8')

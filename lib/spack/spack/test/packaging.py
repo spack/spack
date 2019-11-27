@@ -92,9 +92,7 @@ echo $PATH"""
     # Create the build cache  and
     # put it directly into the mirror
     mirror_path = os.path.join(str(tmpdir), 'test-mirror')
-    spack.mirror.create(
-        mirror_path, specs=[], no_checksum=True
-    )
+    spack.mirror.create(mirror_path, specs=[])
 
     # register mirror with spack config
     mirrors = {'spack-mirror-test': 'file://' + mirror_path}

@@ -38,18 +38,25 @@ def setup_parser(subparser):
     create_parser = sp.add_parser('create', help=mirror_create.__doc__)
     create_parser.add_argument('-d', '--directory', default=None,
                                help="directory in which to create mirror")
+
     create_parser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help="specs of packages to put in mirror")
     create_parser.add_argument(
+        '-a', '--all', action='store_true',
+        help="mirror all versions of all packages in Spack, or all packages"
+             " in the current environment if there is an active environment"
+             " (this requires significant time and space)")
+    create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
+
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
     create_parser.add_argument(
-        '-n', '--versions-per-spec', type=int,
-        default=1,
-        help="the number of versions to fetch for each spec")
+        '-n', '--versions-per-spec',
+        help="the number of versions to fetch for each spec, choose 'all' to"
+             " retrieve all versions of each package")
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -225,6 +232,25 @@ def _read_specs_from_file(filename):
 def mirror_create(args):
     """Create a directory to be used as a spack mirror, and fill it with
        package archives."""
+    if args.specs and args.all:
+        raise SpackError("Cannot specify specs on command line if you"
+                         " chose to mirror all specs with '--all'")
+    elif args.file and args.all:
+        raise SpackError("Cannot specify specs with a file ('-f') if you"
+                         " chose to mirror all specs with '--all'")
+
+    if not args.versions_per_spec:
+        num_versions = 1
+    elif args.versions_per_spec == 'all':
+        num_versions = 'all'
+    else:
+        try:
+            num_versions = int(args.versions_per_spec)
+        except ValueError:
+            raise SpackError(
+                "'--versions-per-spec' must be a number or 'all',"
+                " got '{0}'".format(args.versions_per_spec))
+
     # try to parse specs from the command line first.
     with spack.concretize.disable_compiler_existence_check():
         specs = spack.cmd.parse_specs(args.specs, concretize=True)
@@ -235,56 +261,67 @@ def mirror_create(args):
                 tty.die("Cannot pass specs on the command line with --file.")
             specs = _read_specs_from_file(args.file)
 
-        # If nothing is passed, use environment or all if no active env
         if not specs:
+            # If nothing is passed, use environment or all if no active env
+            if not args.all:
+                tty.die("No packages were specified.",
+                        "To mirror all packages, use the '--all' option"
+                        " (this will require significant time and space).")
+
             env = ev.get_env(args, 'mirror')
             if env:
-                specs = env.specs_by_hash.values()
+                mirror_specs = env.specs_by_hash.values()
             else:
                 specs = [Spec(n) for n in spack.repo.all_package_names()]
-                specs.sort(key=lambda s: s.format("{name}{@version}").lower())
+                mirror_specs = spack.mirror.get_all_versions(specs)
+                mirror_specs.sort(
+                    key=lambda s: (s.name, s.version))
+        else:
+            # If the user asked for dependencies, traverse spec DAG get them.
+            if args.dependencies:
+                new_specs = set()
+                for spec in specs:
+                    spec.concretize()
+                    for s in spec.traverse():
+                        new_specs.add(s)
+                specs = list(new_specs)
 
-        # If the user asked for dependencies, traverse spec DAG get them.
-        if args.dependencies:
-            new_specs = set()
-            for spec in specs:
-                spec.concretize()
-                for s in spec.traverse():
-                    new_specs.add(s)
-            specs = list(new_specs)
+            # Skip external specs, as they are already installed
+            external_specs = [s for s in specs if s.external]
+            specs = [s for s in specs if not s.external]
 
-        # Skip external specs, as they are already installed
-        external_specs = [s for s in specs if s.external]
-        specs = [s for s in specs if not s.external]
+            for spec in external_specs:
+                msg = 'Skipping {0} as it is an external spec.'
+                tty.msg(msg.format(spec.cshort_spec))
 
-        for spec in external_specs:
-            msg = 'Skipping {0} as it is an external spec.'
-            tty.msg(msg.format(spec.cshort_spec))
+            if num_versions == 'all':
+                mirror_specs = spack.mirror.get_all_versions(specs)
+            else:
+                mirror_specs = spack.mirror.get_matching_versions(
+                    specs, num_versions=num_versions)
 
-        mirror = spack.mirror.Mirror(
-            args.directory or spack.config.get('config:source_cache'))
+    mirror = spack.mirror.Mirror(
+        args.directory or spack.config.get('config:source_cache'))
 
-        directory = url_util.format(mirror.push_url)
+    directory = url_util.format(mirror.push_url)
 
-        # Make sure nothing is in the way.
-        existed = web_util.url_exists(directory)
+    existed = web_util.url_exists(directory)
 
-        # Actually do the work to create the mirror
-        present, mirrored, error = spack.mirror.create(
-            directory, specs, num_versions=args.versions_per_spec)
-        p, m, e = len(present), len(mirrored), len(error)
+    # Actually do the work to create the mirror
+    present, mirrored, error = spack.mirror.create(directory, mirror_specs)
+    p, m, e = len(present), len(mirrored), len(error)
 
-        verb = "updated" if existed else "created"
-        tty.msg(
-            "Successfully %s mirror in %s" % (verb, directory),
-            "Archive stats:",
-            "  %-4d already present"  % p,
-            "  %-4d added"            % m,
-            "  %-4d failed to fetch." % e)
-        if error:
-            tty.error("Failed downloads:")
-            colify(s.cformat("{name}{@version}") for s in error)
-            sys.exit(1)
+    verb = "updated" if existed else "created"
+    tty.msg(
+        "Successfully %s mirror in %s" % (verb, directory),
+        "Archive stats:",
+        "  %-4d already present"  % p,
+        "  %-4d added"            % m,
+        "  %-4d failed to fetch." % e)
+    if error:
+        tty.error("Failed downloads:")
+        colify(s.cformat("{name}{@version}") for s in error)
+        sys.exit(1)
 
 
 def mirror(parser, args):

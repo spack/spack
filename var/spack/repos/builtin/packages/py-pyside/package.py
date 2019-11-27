@@ -42,6 +42,17 @@ class PyPyside(PythonPackage):
         rpath.append(os.path.join(
             self.prefix, pypkg.site_packages_dir, 'PySide'))
 
+        # Fix subprocess.mswindows check for Python 3.5
+        # https://github.com/pyside/pyside-setup/pull/55
+        filter_file(
+            '^if subprocess.mswindows:',
+            'mswindows = (sys.platform == "win32")\r\nif mswindows:',
+            "popenasync.py")
+        filter_file(
+            '^    if subprocess.mswindows:',
+            '    if mswindows:',
+            "popenasync.py")
+
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
         filter_file(

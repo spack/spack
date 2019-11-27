@@ -223,3 +223,15 @@ def compatibility_check_for_x86_64(info, target):
     return (target == arch_root or arch_root in target.ancestors) \
         and (target.vendor == vendor or target.vendor == 'generic') \
         and target.features.issubset(features)
+
+
+@compatibility_check(architecture_family='aarch64')
+def compatibility_check_for_aarch64(info, target):
+    basename = 'aarch64'
+    features = set(info.get('Features', '').split())
+    vendor = info.get('CPU implementer', 'generic')
+
+    arch_root = targets[basename]
+    return (target == arch_root or arch_root in target.ancestors) \
+        and (target.vendor == vendor or target.vendor == 'generic') \
+        and target.features.issubset(features)

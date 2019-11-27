@@ -17,7 +17,7 @@ class Hpgmg(Package):
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.4.tar.gz"
     git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
     tags = ['proxy-app']

@@ -45,7 +45,9 @@ class Mariadb(CMakePackage):
     depends_on('curl')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('zeromq')
+    depends_on('libzmq')
     depends_on('msgpack-c')
+    depends_on('openssl')
+    depends_on('openssl@:1.0', when='@:10.1')
 
     conflicts('%gcc@9.1.0:', when='@:5.5')

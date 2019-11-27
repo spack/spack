@@ -33,7 +33,7 @@ class RMzr(RPackage):
     depends_on('r-zlibbioc', type=('build', 'run'))
 
     depends_on('r-protgenerics@1.9.1:', when='@2.12.0:', type=('build', 'run'))
-
     depends_on('r-rhdf5lib@1.1.4:', when='@2.14.0:', type=('build', 'run'))
 
     depends_on('r-ncdf4', when='@2.16.2:', type=('build', 'run'))
+    depends_on('netcdf-c')
