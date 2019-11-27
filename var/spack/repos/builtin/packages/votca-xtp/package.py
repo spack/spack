@@ -26,8 +26,7 @@ class VotcaXtp(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4.1", "1.5", "1.5.1", "develop"]:
-        depends_on('votca-tools@%s' % v, when="@%s" % v)
-        depends_on('votca-csg@%s' % v, when="@%s" % v)
-    depends_on("votca-ctp@develop", when='@develop')
+        depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v,v))
+        depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v,v))
     depends_on("libxc", when='@1.5:')
     depends_on("ceres-solver", when='@1.5:')

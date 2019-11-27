@@ -27,6 +27,6 @@ class VotcaCsg(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "develop"]:
-        depends_on('votca-tools@%s' % v, when="@%s" % v)
+        depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v,v))
     depends_on("gromacs~mpi@5.1:")
     depends_on("hdf5~mpi")
