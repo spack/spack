@@ -171,6 +171,7 @@ class UrlPatch(Patch):
         super(UrlPatch, self).__init__(pkg, url, level, working_dir)
 
         self.url = url
+        self._stage = None
 
         self.ordering_key = ordering_key
 
@@ -191,25 +192,6 @@ class UrlPatch(Patch):
         Args:
             stage: stage for the package that needs to be patched
         """
-        # use archive digest for compressed archives
-        fetch_digest = self.sha256
-        if self.archive_sha256:
-            fetch_digest = self.archive_sha256
-
-        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
-                                      expand=bool(self.archive_sha256))
-
-        # The same package can have multiple patches with the same name but
-        # with different contents, therefore apply a subset of the hash.
-        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
-
-        per_package_ref = os.path.join(self.owner.split('.')[-1], name)
-        # Reference starting with "spack." is required to avoid cyclic imports
-        mirror_ref = spack.mirror.mirror_archive_paths(
-            fetcher,
-            per_package_ref)
-
-        self.stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self.stage.create()
         self.stage.fetch()
         self.stage.check()
@@ -242,6 +224,33 @@ class UrlPatch(Patch):
                 raise fs.ChecksumError(
                     "sha256 checksum failed for %s" % self.path,
                     "Expected %s but got %s" % (self.sha256, checker.sum))
+
+    @property
+    def stage(self):
+        if self._stage:
+            return self._stage
+
+        # use archive digest for compressed archives
+        fetch_digest = self.sha256
+        if self.archive_sha256:
+            fetch_digest = self.archive_sha256
+
+        fetcher = fs.URLFetchStrategy(self.url, fetch_digest,
+                                      expand=bool(self.archive_sha256))
+
+        # The same package can have multiple patches with the same name but
+        # with different contents, therefore apply a subset of the hash.
+        name = '{0}-{1}'.format(os.path.basename(self.url), fetch_digest[:7])
+
+        per_package_ref = os.path.join(self.owner.split('.')[-1], name)
+        # Reference starting with "spack." is required to avoid cyclic imports
+        mirror_ref = spack.mirror.mirror_archive_paths(
+            fetcher,
+            per_package_ref)
+
+        self._stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
+        self._stage.create()
+        return self._stage
 
     def cache(self):
         return self.stage

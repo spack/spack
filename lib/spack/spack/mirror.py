@@ -502,7 +502,6 @@ def add_single_spec(spec, mirror_root, mirror_stats):
             with spec.package.stage as pkg_stage:
                 pkg_stage.cache_mirror(mirror_stats)
                 for patch in spec.package.all_patches():
-                    patch.fetch(pkg_stage)
                     if patch.cache():
                         patch.cache().cache_mirror(mirror_stats)
                     patch.clean()
