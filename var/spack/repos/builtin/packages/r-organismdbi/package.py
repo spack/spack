@@ -28,7 +28,7 @@ class ROrganismdbi(RPackage):
     depends_on('r-annotationdbi@1.33.15:', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.23.31:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-biocinstaller', type=('build', 'run'))
+    depends_on('r-biocinstaller',i when='@1.18.1:1.22.0', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
