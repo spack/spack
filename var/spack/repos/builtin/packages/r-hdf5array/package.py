@@ -45,3 +45,5 @@ class RHdf5array(RPackage):
     depends_on('r-delayedarray@0.9.3:', when='@1.12.3:', type=('build', 'run'))
     depends_on('r-s4vectors@0.21.6:', when='@1.12.3:', type=('build', 'run'))
     depends_on('r-rhdf5lib', when='@1.12.3:', type=('build', 'run'))
+
+    depends_on('gmake', type='build')
