@@ -367,7 +367,7 @@ class Boost(Package):
                 cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
                                 'linkflags="-stdlib=libc++"'])
-        elif spec.satisfies('%xl_r'):
+        elif spec.satisfies('%xl') or spec.satisfies('%xl_r'):
             # see also: https://lists.boost.org/boost-users/2019/09/89953.php
             # the cxxstd setting via spack is not sufficient to drive the
             # change into boost compilation
