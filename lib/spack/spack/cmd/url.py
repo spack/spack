@@ -135,7 +135,7 @@ def url_list(args):
 
     # Gather set of URLs from all packages
     for pkg in spack.repo.path.all_packages():
-        url = getattr(pkg.__class__, 'url', None)
+        url = getattr(pkg, 'url', None)
         urls = url_list_parsing(args, urls, url, pkg)
 
         for params in pkg.versions.values():
@@ -174,7 +174,7 @@ def url_summary(args):
     for pkg in spack.repo.path.all_packages():
         urls = set()
 
-        url = getattr(pkg.__class__, 'url', None)
+        url = getattr(pkg, 'url', None)
         if url:
             urls.add(url)
 
