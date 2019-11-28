@@ -89,26 +89,26 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
 
     # Optional backend dependencies
-    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg')
-    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkcairo')
-    depends_on('python+tkinter', when='backend=tkagg')
-    depends_on('python+tkinter', when='backend=tkcairo')
-    depends_on('py-pyqt4@4.6:', when='backend=qt4agg')    # or py-pyside@1.0.3:
-    depends_on('py-pyqt4@4.6:', when='backend=qt4cairo')  # or py-pyside@1.0.3:
-    depends_on('py-pyqt5', when='backend=qt5agg')
-    depends_on('py-pyqt5', when='backend=qt5cairo')
-    depends_on('py-pygobject', when='backend=gtk3agg')
-    depends_on('py-pygobject', when='backend=gtk3cairo')
-    depends_on('py-wxpython@4:', when='backend=wx')
-    depends_on('py-wxpython@4:', when='backend=wxagg')
-    depends_on('py-wxpython@4:', when='backend=wxcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=gtk3cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=qt4cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=qt5cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=tkcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=wxcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=cairo')
-    depends_on('py-tornado', when='backend=webagg')
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg', type='run')
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkcairo', type='run')
+    depends_on('python+tkinter', when='backend=tkagg', type='run')
+    depends_on('python+tkinter', when='backend=tkcairo', type='run')
+    depends_on('py-pyqt4@4.6:', when='backend=qt4agg', type='run')    # or py-pyside@1.0.3:
+    depends_on('py-pyqt4@4.6:', when='backend=qt4cairo', type='run')  # or py-pyside@1.0.3:
+    depends_on('py-pyqt5', when='backend=qt5agg', type='run')
+    depends_on('py-pyqt5', when='backend=qt5cairo', type='run')
+    depends_on('py-pygobject', when='backend=gtk3agg', type='run')
+    depends_on('py-pygobject', when='backend=gtk3cairo', type='run')
+    depends_on('py-wxpython@4:', when='backend=wx', type='run')
+    depends_on('py-wxpython@4:', when='backend=wxagg', type='run')
+    depends_on('py-wxpython@4:', when='backend=wxcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=gtk3cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=qt4cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=qt5cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=tkcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=wxcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=cairo', type='run')
+    depends_on('py-tornado', when='backend=webagg', type='run')
 
     # Optional dependencies
     depends_on('ffmpeg', when='+movies')

@@ -24,8 +24,11 @@ class PyLineProfiler(PythonPackage):
 
     # See https://github.com/rkern/line_profiler/issues/166
     @run_before('build')
-    @when('^python@3.7:')
     def fix_cython(self):
+        # TODO: Replace the check with a `@when('^python@3.7:')` decorator once
+        # https://github.com/spack/spack/issues/12736 is resolved
+        if not self.spec.satisfies("^python@3.7:"):
+            return
         cython = self.spec['py-cython'].command
         for root, _, files in os.walk('.'):
             for fn in files:
