@@ -48,11 +48,11 @@ class IbmJava(Package):
     def libs(self):
         return find_libraries(['libjvm'], root=self.home, recursive=True)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('JAVA_HOME', self.home)
+    def setup_run_environment(self, env):
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('JAVA_HOME', self.home)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('JAVA_HOME', self.home)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.home = self.home

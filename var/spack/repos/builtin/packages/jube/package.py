@@ -33,10 +33,7 @@ class Jube(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         if not self.spec.variants['resource_manager'].value == 'none':
-            run_env.prepend_path(
-                'JUBE_INCLUDE_PATH',
-                prefix + "/platform/" +
-                self.spec.variants['resource_manager'].value
-            )
+            env.prepend_path('JUBE_INCLUDE_PATH', join_path(
+                prefix.platform, self.spec.variants['resource_manager'].value))

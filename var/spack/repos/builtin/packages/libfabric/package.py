@@ -90,9 +90,9 @@ class Libfabric(AutotoolsPackage):
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
              placement='fabtests', when='@1.5.0')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.run_tests:
-            spack_env.prepend_path('PATH', self.prefix.bin)
+            env.prepend_path('PATH', self.prefix.bin)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):

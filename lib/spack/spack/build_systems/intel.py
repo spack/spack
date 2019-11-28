@@ -942,7 +942,7 @@ class IntelPackage(PackageBase):
         for key, value in wrapper_vars.items():
             env.set(key, value)
 
-        debug_print("adding to spack_env:", wrapper_vars)
+        debug_print("adding to build env:", wrapper_vars)
 
     # ---------------------------------------------------------------------
     # General support for child packages
@@ -1054,7 +1054,7 @@ class IntelPackage(PackageBase):
             env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                             env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
 
-            debug_print("adding/modifying spack_env:", env_mods)
+            debug_print("adding/modifying build env:", env_mods)
 
         if '+mpi' in self.spec or self.provides('mpi'):
             if compilers_of_client:

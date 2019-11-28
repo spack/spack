@@ -145,7 +145,7 @@ class Geant4(CMakePackage):
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))
 
-    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         version = self.version
         major = version[0]
         minor = version[1]
@@ -154,6 +154,5 @@ class Geant4(CMakePackage):
         else:
             patch = 0
         datadir = 'Geant4-%s.%s.%s' % (major, minor, patch)
-        spack_env.append_path('CMAKE_MODULE_PATH',
-                              '{0}/{1}/Modules'.format(
-                                  self.prefix.lib64, datadir))
+        env.append_path('CMAKE_MODULE_PATH', join_path(
+            self.prefix.lib64, datadir, 'Modules'))
