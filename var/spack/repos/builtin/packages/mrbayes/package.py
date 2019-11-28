@@ -15,11 +15,14 @@ class Mrbayes(AutotoolsPackage):
     homepage = "http://mrbayes.sourceforge.net"
     git      = "https://github.com/NBISweden/MrBayes.git"
 
-    version('2017-11-22', commit='8a9adb11bcc538cb95d91d57568dff383f924503')
+    version('3.2.7a', commit='0176ac2d0bfed53a5bc0aaf3f5a3def71f23575f')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')
+    variant('readline', default=True, description='Enable readline library')
     variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
+    variant('avx', default=True, description='Enable AVX in order to substantially speed up execution')
+    variant('fma', default=True, description='Enable FMA in order to substantially speed up execution')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -35,14 +38,26 @@ class Mrbayes(AutotoolsPackage):
             args.append('--with-beagle=no')
         else:
             args.append('--with-beagle=%s' % self.spec['libbeagle'].prefix)
+        if '~readline' in self.spec:
+            args.append('--with-readline=no')
+        else:
+            args.append('--with-readline=yes')
         if '~sse' in self.spec:
             args.append('--enable-sse=no')
         else:
             args.append('--enable-sse=yes')
-        if '~mpi' in self.spec:
-            args.append('--enable-mpi=no')
+        if '~avx' in self.spec:
+            args.append('--enable-avx=no')
         else:
-            args.append('--enable-mpi=yes')
+            args.append('--enable-avx=yes')
+        if '~fma' in self.spec:
+            args.append('--enable-fma=no')
+        else:
+            args.append('--enable-fma=yes')
+        if '~mpi' in self.spec:
+            args.append('--with-mpi=no')
+        else:
+            args.append('--with-mpi=yes')
         return args
 
     def install(self, spec, prefix):
