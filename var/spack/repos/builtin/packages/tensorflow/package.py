@@ -272,9 +272,17 @@ class Tensorflow(Package):
             # For an explanation for ABI build option, see https://www.tensorflow.org/install/source#bazel_build_options
             # Recently noticed that TF_NEED_AWS etc environment variables aren't recognized by configure.py anymore.
             # So, explicitly disable them via bazel options.
-            bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt', '--config=cuda', '--config=noaws', '--config=nogcp','--config=nohdfs','--config=noignite','--config=nokafka', '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0', '//tensorflow/tools/pip_package:build_pip_package')  # noqa: E501
+            bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                '--config=cuda', '--config=noaws', '--config=nogcp',\
+                '--config=nohdfs','--config=noignite','--config=nokafka',\
+                '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                '//tensorflow/tools/pip_package:build_pip_package')
         else:
-            bazel('build', '--jobs={}'.format(make_jobs), '-c', 'opt', '//tensorflow/tools/pip_package:build_pip_package')                   # noqa: E501
+            bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                '--config=noaws', '--config=nogcp',\
+                '--config=nohdfs','--config=noignite','--config=nokafka',\
+                '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                '//tensorflow/tools/pip_package:build_pip_package')
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')  # noqa: E501
         build_pip_package(tmp_path)
