@@ -553,6 +553,33 @@ version. This is useful for packages that have an easy to extrapolate URL, but
 keep changing their URL format every few releases. With this method, you only
 need to specify the ``url`` when the URL changes.
 
+"""""""""""""""""""""""
+Mirrors of the main URL
+"""""""""""""""""""""""
+
+Spack supports listing mirrors of the main URL in a package by defining
+the ``mirrors`` attribute. This attribute must return a list of URLs:
+
+.. code-block:: python
+
+  class Foo(Package):
+
+    url = "http://example.com/foo-1.0.tar.gz"
+    mirrors = [
+        'http://mirror.com/foo-1.0.tar.gz'
+    ]
+
+When fetching a package Spack will always try first the main URL and
+proceed with mirrors in the order in which they are listed if that fails.
+
+A well-known case of packages that can be fetched from multiple mirrors is that
+of GNU. For that, Spack goes a step further and defines a mixin class that
+takes care of all of the plumbing and requires packagers to just define a proper
+``gnu_path`` attribute:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/autoconf/package.py
+   :lines: 9-18
+
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
 ^^^^^^^^^^^^^^^^^^^^^^^^
