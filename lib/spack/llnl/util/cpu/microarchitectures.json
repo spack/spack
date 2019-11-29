@@ -1368,6 +1368,13 @@
       "0x66": "Faraday",
       "0x68": "HXT",
       "0x69": "Intel"
+    },
+    "darwin_flags_to_linux": {
+      "sse4.1": "sse4_1",
+      "sse4.2": "sse4_2",
+      "avx1.0": "avx",
+      "clfsopt": "clflushopt",
+      "xsave": "xsavec xsaveopt"
     }
   }
 }

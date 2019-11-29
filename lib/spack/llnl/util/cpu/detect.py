@@ -121,16 +121,10 @@ def adjust_raw_flags(info):
     """
     # Flags detected on Darwin turned to their linux counterpart
     flags = info.get('flags', [])
-    if 'sse4.1' in flags:
-        info['flags'] += ' sse4_1'
-    if 'sse4.2' in flags:
-        info['flags'] += ' sse4_2'
-    if 'avx1.0' in flags:
-        info['flags'] += ' avx'
-    if 'clfsopt' in flags:
-        info['flags'] += ' clflushopt'
-    if 'xsave' in flags:
-        info['flags'] += ' xsavec xsaveopt'
+    d2l = targets_json['miscellaneous']['darwin_flags_to_linux']
+    for darwin_flag, linux_flag in d2l.items():
+        if darwin_flag in flags:
+            info['flags'] += ' ' + linux_flag
 
 
 def adjust_raw_vendor(info):

@@ -72,7 +72,18 @@ properties = {
                 'additionalProperties': False
             }
         },
-
+    },
+    'miscellaneous': {
+        'type': 'object',
+        'properties': {
+            'arm_vendors': {
+                'type': 'object',
+            },
+            'darwin_flags_to_linux': {
+                'type': 'object'
+            }
+        },
+        'additionalProperties': False
     }
 }
 
