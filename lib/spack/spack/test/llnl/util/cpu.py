@@ -218,8 +218,7 @@ def test_target_json_schema():
     ('icelake', 'clang', '8.0.0', '-march=x86-64 -mcpu=icelake-client'),
     ('zen2', 'clang', '9.0.0', '-march=x86-64 -mcpu=znver2'),
     ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
-    ('thunderx2', 'clang', '6.0.0',
-     '-march=aarch64 -mattr=+v8.1a,+fp-armv8,+neon,+crc,+crypto'),
+    ('thunderx2', 'clang', '6.0.0', '-mcpu=thunderx2t99'),
     # Test Intel on Intel CPUs
     ('sandybridge', 'intel', '17.0.2', '-march=corei7-avx -mtune=corei7-avx'),
     ('sandybridge', 'intel', '18.0.5',
