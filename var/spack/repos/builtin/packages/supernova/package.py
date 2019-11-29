@@ -36,8 +36,8 @@ class Supernova(Package):
     def url_for_version(self, version):
         return "file://{0}/supernova-{1}.tar.gz".format(os.getcwd(), version)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
 
     def install(self, spec, prefix):
         rm = which('rm')

@@ -63,10 +63,9 @@ class Picard(Package):
         filter_file('picard.jar', join_path(prefix.bin, 'picard.jar'),
                     script, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """The Picard docs suggest setting this as a convenience."""
-        run_env.prepend_path('PICARD',
-                             join_path(self.prefix, 'bin', 'picard.jar'))
+        env.prepend_path('PICARD', join_path(self.prefix.bin, 'picard.jar'))
 
     def url_for_version(self, version):
         if version < Version('2.6.0'):

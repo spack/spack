@@ -40,11 +40,11 @@ class Amber(Package, CudaPackage):
     depends_on('py-matplotlib@:2.9', type=('build', 'run'))
     depends_on('zlib')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         sp_dir = join_path(self.prefix, 'python2.7/site-packages')
 
-        run_env.set('AMBERHOME', self.prefix)
-        run_env.prepend_path('PYTHONPATH', sp_dir)
+        env.set('AMBERHOME', self.prefix)
+        env.prepend_path('PYTHONPATH', sp_dir)
 
     def install(self, spec, prefix):
         # install AmberTools where it should be

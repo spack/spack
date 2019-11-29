@@ -23,5 +23,5 @@ class PyGitReview(PythonPackage):
     depends_on('git',              type=('run'))
     depends_on('tk',               type=('run'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('PBR_VERSION', str(self.spec.version))
+    def setup_run_environment(self, env):
+        env.set('PBR_VERSION', str(self.spec.version))

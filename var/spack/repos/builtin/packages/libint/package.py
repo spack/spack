@@ -81,15 +81,15 @@ class Libint(AutotoolsPackage):
 
         return flags
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         # Set optimization flags
-        build_env.set('CFLAGS', self.optflags)
-        build_env.set('CXXFLAGS', self.optflags)
+        env.set('CFLAGS', self.optflags)
+        env.set('CXXFLAGS', self.optflags)
 
         # Change AR to xiar if we compile with Intel and we
         # find the executable
         if '%intel' in self.spec and which('xiar'):
-            build_env.set('AR', 'xiar')
+            env.set('AR', 'xiar')
 
     def configure_args(self):
 

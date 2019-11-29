@@ -28,9 +28,9 @@ class Launchmon(AutotoolsPackage):
 
     patch('launchmon-char-conv.patch', when='@1.0.2')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.spec.satisfies('@master'):
             # automake for launchmon requires the AM_PATH_LIBGCRYPT macro
             # which is defined in libgcrypt.m4
-            spack_env.prepend_path('ACLOCAL_PATH',
-                                   self.spec['libgcrypt'].prefix.share.aclocal)
+            env.prepend_path('ACLOCAL_PATH',
+                             self.spec['libgcrypt'].prefix.share.aclocal)

@@ -17,6 +17,9 @@ class IntelTbb(Package):
     """
     homepage = "http://www.threadingbuildingblocks.org/"
 
+    # Note: when adding new versions, please check and update the
+    # patches and filters below as needed.
+
     # See url_for_version() below.
     version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
     version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
@@ -86,36 +89,18 @@ class IntelTbb(Package):
     # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
     # can be simplified.
 
-    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    # one patch format for 2019.1 and after...
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
-    # ...another patch file for 2019 and before
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
-
-    # patch for pedantic warnings (#10836)
-    # one patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
+    # Patch for pedantic warnings (#10836).  This was fixed in the TBB
+    # source tree in 2019.6.  One patch file for 2019.1 and after...
+    patch("gcc_generic-pedantic-2019.patch", level=1,
+          when='@2019.1,2019.2,2019.3,2019.4,2019.5')
     # ...another patch file for 2019 and before
     patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+    # Can't use '@2019.5:' because 2019.5 <= 2019 <= 2019.99.  wtf!?
+    patch("tbb_cmakeConfig-2019.5.patch", level=0,
+          when='@2019.5,2019.6,2019.7,2019.8')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:2019.4')
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -145,6 +130,14 @@ class IntelTbb(Package):
                         of.write(l)
 
     def install(self, spec, prefix):
+        # Deactivate use of RTM with GCC when on an OS with a very old
+        # assembler.
+        if (spec.satisfies('%gcc@4.8.0: os=rhel6')
+            or spec.satisfies('%gcc@4.8.0: os=centos6')
+            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+            filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
+                        join_path('build', 'linux.gcc.inc'))
+
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:

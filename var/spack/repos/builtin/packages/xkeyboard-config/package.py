@@ -31,6 +31,8 @@ class XkeyboardConfig(AutotoolsPackage):
     # perl@5.8.1:
     # perl XML::Parser
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
-        run_env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XKB_CONFIG_ROOT', self.prefix.share.X11.xkb)

@@ -353,7 +353,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             install_tree('bin', prefix.bin)
 
     # QMCPACK 3.6.0 install directory structure changed, thus there
-    # thus are two version of the setup_environment method
+    # thus are two version of the setup_run_environment method
     @when('@:3.5.0')
     def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.

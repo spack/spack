@@ -44,6 +44,6 @@ class Targetp(Package):
         install_tree('tmp', prefix.tmp)
         install('targetp', prefix.targetp)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('TARGETP', self.prefix)
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('TARGETP', self.prefix)
+        env.prepend_path('PATH', self.prefix)

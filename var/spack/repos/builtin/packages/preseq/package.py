@@ -21,5 +21,5 @@ class Preseq(MakefilePackage):
     depends_on('samtools')
     depends_on('gsl')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PREFIX', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('PREFIX', self.prefix)
