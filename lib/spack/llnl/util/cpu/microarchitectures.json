@@ -1156,8 +1156,7 @@
         },
         "clang": {
           "versions": ":",
-          "family": "aarch64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-march=armv8-a -mtune=generic"
         }
       }
     },
@@ -1198,19 +1197,14 @@
         ],
         "clang": [
           {
-            "versions": ":6.9",
+            "versions": "3.9:4.9",
             "family": "aarch64",
-            "flags": "-march={family} -mattr=+v8.1a,+fp-armv8,+neon,+crc,+crypto"
+            "flags": "-march=armv8.1-a+crc+crypto"
           },
           {
-            "versions": "7:8.9",
+            "versions": "5:",
             "family": "aarch64",
-            "flags": "-march={family} -mattr=+v8.1a,+fp-armv8,+aes,+neon,+sha2,+crc,+crypto"
-          },
-          {
-            "versions": "9:",
-            "family": "aarch64",
-            "flags": "-march={family} -mcpu=thunderx2t99"
+            "flags": "-mcpu=thunderx2t99"
           }
         ]
       }
@@ -1261,19 +1255,12 @@
         ],
         "clang": [
           {
-            "versions": ":4.9",
-            "family": "aarch64",
-            "flags": "-march={aarch64} -mattr=+v8.2a,+crc,+crypto,+fullfp16"
+            "versions": "3.9:4.9",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
-            "versions": "5:6.9",
-            "family": "aarch64",
-            "flags": "-march={aarch64} -mattr=+v8.2a,+crc,+crypto,+fullfp16,+sve"
-          },
-          {
-            "versions": "7:",
-            "family": "aarch64",
-            "flags": "-march={aarch64} -mattr=+v8.2a,+crc,+crypto,+fullfp16,+sve,+sha2"
+            "versions": "5:",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
           }
         ]
       }
