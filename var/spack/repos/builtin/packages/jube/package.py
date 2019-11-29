@@ -36,4 +36,5 @@ class Jube(PythonPackage):
     def setup_run_environment(self, env):
         if not self.spec.variants['resource_manager'].value == 'none':
             env.prepend_path('JUBE_INCLUDE_PATH', join_path(
-                prefix.platform, self.spec.variants['resource_manager'].value))
+                self.prefix.platform,
+                self.spec.variants['resource_manager'].value))

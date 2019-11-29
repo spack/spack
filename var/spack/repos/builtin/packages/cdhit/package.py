@@ -32,4 +32,4 @@ class Cdhit(MakefilePackage):
         make(*make_args)
 
     def setup_build_environment(self, env):
-        env.set('PREFIX', prefix.bin)
+        env.set('PREFIX', self.prefix.bin)

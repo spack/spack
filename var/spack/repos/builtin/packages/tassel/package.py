@@ -22,4 +22,4 @@ class Tassel(Package):
         install_tree('.', prefix.bin)
 
     def setup_run_environment(self, env):
-        env.prepend_path('CLASSPATH', prefix.bin.lib)
+        env.prepend_path('CLASSPATH', self.prefix.bin.lib)

@@ -23,15 +23,15 @@ class Nghttp2(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         site_packages_dir = os.path.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
         env.prepend_path('PYTHONPATH', site_packages_dir)
 
     @run_before('install')
     def ensure_install_dir_exists(self):
         site_packages_dir = os.path.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
         mkdirp(site_packages_dir)

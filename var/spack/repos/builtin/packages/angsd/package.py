@@ -23,7 +23,7 @@ class Angsd(MakefilePackage):
     conflicts('^htslib@1.6:', when='@0.919')
 
     def setup_run_environment(self, env):
-        env.set('R_LIBS', prefix.R)
+        env.set('R_LIBS', self.prefix.R)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

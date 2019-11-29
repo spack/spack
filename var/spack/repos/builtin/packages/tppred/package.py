@@ -32,4 +32,4 @@ class Tppred(Package):
         install_tree('tppred2modules', prefix.modules)
 
     def setup_run_environment(self, env):
-        env.set('TPPRED_ROOT', prefix)
+        env.set('TPPRED_ROOT', self.prefix)

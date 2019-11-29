@@ -47,5 +47,5 @@ class Gaussian(Package):
         env.set('GAUSS_ARCHDIR', self.prefix.bin.arch)
         env.set('GAUSS_BSDDIR', self.prefix.bin.bsd)
         env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.bin,
-                         'linda8.2/opteron-linux/lib'))
+                         'linda8.2', 'opteron-linux', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.bin)

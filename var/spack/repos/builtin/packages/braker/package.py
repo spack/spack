@@ -63,4 +63,4 @@ class Braker(Package):
                 filter_file(pattern, repl, *files, backup=False)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PERL5LIB', prefix.lib)
+        env.prepend_path('PERL5LIB', self.prefix.lib)

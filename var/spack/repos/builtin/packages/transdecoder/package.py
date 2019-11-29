@@ -30,5 +30,5 @@ class Transdecoder(MakefilePackage):
         install_tree('util', prefix.util)
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', prefix)
-        env.prepend_path('PATH', prefix.util)
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('PATH', self.prefix.util)

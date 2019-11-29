@@ -38,7 +38,7 @@ class Stata(Package):
 
     # STATA is simple and needs really just the PATH set.
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', prefix)
+        env.prepend_path('PATH', self.prefix)
         env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
 
     # Extracting the file provides the following:
