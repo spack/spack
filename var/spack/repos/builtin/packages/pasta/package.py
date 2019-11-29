@@ -25,9 +25,9 @@ class Pasta(Package):
         destination='.'
     )
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         tools = join_path(self.prefix, 'sate-tools-linux')
-        spack_env.set('PASTA_TOOLS_DEVDIR', tools)
+        env.set('PASTA_TOOLS_DEVDIR', tools)
 
     def install(self, spec, prefix):
         # build process for pasta is very hacky -- uses hard links to source

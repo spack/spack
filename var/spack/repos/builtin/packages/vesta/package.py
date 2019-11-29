@@ -21,9 +21,9 @@ class Vesta(Package):
 
     conflicts('%gcc@:5.3')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

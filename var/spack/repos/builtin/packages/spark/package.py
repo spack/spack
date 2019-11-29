@@ -47,7 +47,7 @@ class Spark(Package):
         install('RELEASE', prefix)
 
     @when('+hadoop')
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         hadoop = self.spec['hadoop'].command
         hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
@@ -56,4 +56,4 @@ class Spark(Package):
         # module files
         hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
-        run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
+        env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

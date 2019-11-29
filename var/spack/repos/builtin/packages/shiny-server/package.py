@@ -47,10 +47,8 @@ class ShinyServer(CMakePackage):
         bash('-c', 'bin/npm --python="$PYTHON" install')
         bash('-c', 'bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="$PYTHON" rebuild')  # noqa: E501
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'shiny-server', 'bin'))
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', join_path(self.prefix, 'shiny-server', 'bin'))
         # shiny comes with its own pandoc; hook it up...
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'shiny-server',
-                                       'ext', 'pandoc', 'static'))
+        env.prepend_path('PATH', join_path(
+            self.prefix, 'shiny-server', 'ext', 'pandoc', 'static'))

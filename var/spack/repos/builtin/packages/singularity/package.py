@@ -87,10 +87,9 @@ class Singularity(MakefilePackage):
     build_targets = ['-C', 'builddir', 'parallel=False']
     install_targets = ['install', '-C', 'builddir', 'parallel=False']
 
-    def setup_environment(self, spack_env, run_env):
-        # Point GOPATH at the top of the staging dir for the build
-        # step.
-        spack_env.prepend_path('GOPATH', self.gopath)
+    def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        env.prepend_path('GOPATH', self.gopath)
 
     # `singularity` has a fixed path where it will look for
     # mksquashfs.  If it lives somewhere else you need to specify the
