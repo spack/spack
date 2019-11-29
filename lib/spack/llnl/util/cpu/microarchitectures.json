@@ -1198,12 +1198,10 @@
         "clang": [
           {
             "versions": "3.9:4.9",
-            "family": "aarch64",
             "flags": "-march=armv8.1-a+crc+crypto"
           },
           {
             "versions": "5:",
-            "family": "aarch64",
             "flags": "-mcpu=thunderx2t99"
           }
         ]
