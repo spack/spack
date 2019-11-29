@@ -8,7 +8,7 @@ import os.path
 import spack.package
 
 
-class GNUPackage(spack.package.PackageBase):
+class GNUMirrorPackage(spack.package.PackageBase):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
     gnu_path = None
 
@@ -17,7 +17,10 @@ class GNUPackage(spack.package.PackageBase):
 
     #: List of GNU mirrors we'll use as a fall-back
     base_mirrors = [
-        'https://ftpmirror.gnu.org/'
+        'https://ftpmirror.gnu.org/',
+        # Fall back to http if https didn't work (for instance because
+        # Spack is bootstrapping curl)
+        'http://ftpmirror.gnu.org/'
     ]
 
     @property

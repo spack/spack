@@ -9,7 +9,7 @@ from os.path import exists, join
 from os import makedirs
 
 
-class Ncurses(AutotoolsPackage):
+class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     """The ncurses (new curses) library is a free software emulation of
     curses in System V Release 4.0, and more. It uses terminfo format,
     supports pads and color and multiple highlights and forms
@@ -18,7 +18,7 @@ class Ncurses(AutotoolsPackage):
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
+    gnu_path = "ncurses/ncurses-6.1.tar.gz"
 
     version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
     version('6.0', sha256='f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260')

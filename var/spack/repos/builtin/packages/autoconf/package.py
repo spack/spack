@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Autoconf(AutotoolsPackage, GNUPackage):
+class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     """Autoconf -- system configuration part of autotools"""
 
     homepage = 'https://www.gnu.org/software/autoconf/'
