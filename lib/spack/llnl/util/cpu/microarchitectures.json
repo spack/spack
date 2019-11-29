@@ -1348,5 +1348,26 @@
         "aarch64"
       ]
     }
+  },
+  "miscellaneous": {
+    "arm_vendors": {
+      "0x41": "ARM",
+      "0x42": "Broadcom",
+      "0x43": "Cavium",
+      "0x44": "DEC",
+      "0x46": "Fujitsu",
+      "0x48": "HiSilicon",
+      "0x49": "Infineon Technologies AG",
+      "0x4d": "Motorola",
+      "0x4e": "Nvidia",
+      "0x50": "APM",
+      "0x51": "Qualcomm",
+      "0x53": "Samsung",
+      "0x56": "Marvell",
+      "0x61": "Apple",
+      "0x66": "Faraday",
+      "0x68": "HXT",
+      "0x69": "Intel"
+    }
   }
 }
