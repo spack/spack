@@ -1312,7 +1312,7 @@ def from_url_scheme(url, *args, **kwargs):
             'file': 'url',
             'http': 'url',
             'https': 'url',
-            'ftp': 'url', 
+            'ftp': 'url',
             'ftps': 'url',
         })
 
