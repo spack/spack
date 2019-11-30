@@ -248,8 +248,8 @@ class Tensorflow(Package):
             filter_file(r"'tf-estimator-nightly >=",
                         r"#'tf-estimator-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\,'tb-nightly >=",
-                        r"pass #REQUIRED_PACKAGES\[i\,'tb-nightly >=",
+            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
+                        r"pass #REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
             filter_file(r"'tb-nightly >=",
                         r"#'tb-nightly >=",
