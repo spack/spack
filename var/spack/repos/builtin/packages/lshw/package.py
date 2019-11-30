@@ -23,9 +23,6 @@ class Lshw(MakefilePackage):
     version('02.16', sha256='58a7731d204791dd33db5eb3fde9808d1235283e069e6c33a193637ccec27b3e')
     version('02.15', sha256='33c51ba0554d4bcd8ff9a67e5971a63b9ddd58213e2901a09000815376bc61b9')
 
-    def build(self, spec, prefix):
-        make()
-
     def install(self, spec, prefix):
         make('install')
         install_tree('.', prefix)
