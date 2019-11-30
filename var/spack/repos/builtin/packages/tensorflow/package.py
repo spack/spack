@@ -118,8 +118,14 @@ class Tensorflow(Package):
             # TODO: create a string valued variant for compute capabilities?
             # one should be able to specify single or multiple capabilities
             env.set('TF_CUDA_COMPUTE_CAPABILITIES',"6.1,7.5")
-            env.set('NCCL_INSTALL_PATH',str(spec['nccl'].prefix.lib))
+
+            # @v1.13, config hangs without the following nccl env variables
+            # however, in the end it ignores them, and sets these incorrectly
+            # Because of this, these paths are reset via file filtering
+            # As shown in the "post_config_fix" section
+            env.set('NCCL_INSTALL_PATH',str(spec['nccl'].prefix))
             env.set('NCCL_HDR_PATH',str(spec['nccl'].prefix.include))
+
             env.set('TF_CUDA_CLANG','0')
             env.set('TF_NEED_ROCM','0')
             env.set('TF_NEED_TENSORRT','0')
