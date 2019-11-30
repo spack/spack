@@ -86,88 +86,88 @@ class Tensorflow(Package):
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
 
+    phases = ['config', 'install']
 
-    def install(self, spec, prefix):
+    def setup_build_environment(self, env):
+        spec = self.spec
+        prefix = self.spec.prefix
+
         if '+gcp' in spec:
-            env['TF_NEED_GCP'] = '1'
+            env.set('TF_NEED_GCP','1')
         else:
-            env['TF_NEED_GCP'] = '0'
+            env.set('TF_NEED_GCP','0')
 
-        env['PYTHON_BIN_PATH'] = spec['python'].command.path
-        env['SWIG_PATH'] = spec['swig'].prefix.bin
-        env['GCC_HOST_COMPILER_PATH'] = spack_cc
+        env.set('PYTHON_BIN_PATH',spec['python'].command.path)
+        env.set('SWIG_PATH',spec['swig'].prefix.bin)
+        env.set('GCC_HOST_COMPILER_PATH',spack_cc)
 
         # CUDA related config options - note: tf has only been tested for cpu
         if '+cuda' in spec:
-            env['GCC_HOST_COMPILER_PATH'] = self.compiler.cc #TODO double check if this is still necessary
-            env['TF_NEED_CUDA'] = '1'
-            env['TF_CUDA_VERSION'] = str(spec['cuda'].version.up_to(2))
-            env['TF_CUDNN_VERSION'] = str(spec['cudnn'].version)[0]
+            env.set('GCC_HOST_COMPILER_PATH',self.compiler.cc) #TODO double check if this is still necessary
+            env.set('TF_NEED_CUDA','1')
+            env.set('TF_CUDA_VERSION',str(spec['cuda'].version.up_to(2)))
+            env.set('TF_CUDNN_VERSION',str(spec['cudnn'].version)[0])
             # TODO also consider the case of cuda enabled but nccl disabled
-            env['TF_NCCL_VERSION'] = str(spec['nccl'].version.up_to(1))
+            env.set('TF_NCCL_VERSION',str(spec['nccl'].version.up_to(1)))
             if self.spec.satisfies('@1.14.0:'):
-                env['TF_CUDA_PATHS'] = '"' + ','.join([str(spec['cuda'].prefix),
+                env.set('TF_CUDA_PATHS','"' + ','.join([str(spec['cuda'].prefix),
                                         str(spec['nccl'].prefix),
-                                        str(spec['cudnn'].prefix)])+'"'
-            env['CUDA_TOOLKIT_PATH'] = str(spec['cuda'].prefix)
-            env['CUDNN_INSTALL_PATH'] = str(spec['cudnn'].prefix) # ignored? as of tf@1.14.0:
+                                        str(spec['cudnn'].prefix)])+'"')
+            env.set('CUDA_TOOLKIT_PATH',str(spec['cuda'].prefix))
+            env.set('CUDNN_INSTALL_PATH',str(spec['cudnn'].prefix)) # ignored? as of tf@1.14.0:
             # TODO: create a string valued variant for compute capabilities?
             # one should be able to specify single or multiple capabilities
-            env['TF_CUDA_COMPUTE_CAPABILITIES'] = "6.1,7.5"
-            env['NCCL_INSTALL_PATH'] = str(spec['nccl'].prefix.lib)
-            env['NCCL_HDR_PATH'] = str(spec['nccl'].prefix.include)
-            env['TF_CUDA_CLANG'] = '0'
-            env['TF_NEED_ROCM'] = '0'
-            env['TF_NEED_TENSORRT'] = '0'
+            env.set('TF_CUDA_COMPUTE_CAPABILITIES',"6.1,7.5")
+            env.set('NCCL_INSTALL_PATH',str(spec['nccl'].prefix.lib))
+            env.set('NCCL_HDR_PATH',str(spec['nccl'].prefix.include))
+            env.set('TF_CUDA_CLANG','0')
+            env.set('TF_NEED_ROCM','0')
+            env.set('TF_NEED_TENSORRT','0')
         else:
-            env['TF_NEED_CUDA'] = '0'
-            env['TF_CUDA_VERSION'] = ''
-            env['CUDA_TOOLKIT_PATH'] = ''
-            env['TF_CUDNN_VERSION'] = ''
-            env['CUDNN_INSTALL_PATH'] = ''
+            env.set('TF_NEED_CUDA','0')
+            env.set('TF_CUDA_VERSION','')
+            env.set('CUDA_TOOLKIT_PATH','')
+            env.set('TF_CUDNN_VERSION','')
+            env.set('CUDNN_INSTALL_PATH','')
 
         # config options for version 1.0
         if self.spec.satisfies('@1.0.0-rc2:'):
-            env['CC_OPT_FLAGS'] = '-march='+str(self.spec.target)+' -mtune='+str(self.spec.target)
-            env['TF_NEED_JEMALLOC'] = '0'
-            env['TF_NEED_HDFS'] = '0'
-            env['TF_ENABLE_XLA'] = '0'
-            env['PYTHON_LIB_PATH'] = self.module.site_packages_dir
-            env['TF_NEED_OPENCL'] = '0'
+            env.set('CC_OPT_FLAGS','-march='+str(self.spec.target)+' -mtune='+str(self.spec.target) )
+            env.set('TF_NEED_JEMALLOC','0')
+            env.set('TF_NEED_HDFS','0')
+            env.set('TF_ENABLE_XLA','0')
+            env.set('PYTHON_LIB_PATH',self.module.site_packages_dir)
+            env.set('TF_NEED_OPENCL','0')
 
         # additional config options starting with version 1.2
         if self.spec.satisfies('@1.2.0:'):
-            env['TF_NEED_MKL'] = '0'
-            env['TF_NEED_VERBS'] = '0'
+            env.set('TF_NEED_MKL','0')
+            env.set('TF_NEED_VERBS','0')
 
         # additional config options starting with version 1.3
         if self.spec.satisfies('@1.3.0:'):
-            env['TF_NEED_MPI'] = '0'
+            env.set('TF_NEED_MPI','0')
 
         # additional config options starting with version 1.5
         if self.spec.satisfies('@1.5.0:'):
-            env['TF_NEED_S3'] = '0'
-            env['TF_NEED_GDR'] = '0'
-            env['TF_NEED_OPENCL_SYCL'] = '0'
-            env['TF_SET_ANDROID_WORKSPACE'] = '0'
-            # env variable is somehow ignored -> brute force (TODO find a better solution)
-            filter_file(r'if workspace_has_any_android_rule\(\)',
-                        r'if True',
-                        'configure.py')
+            env.set('TF_NEED_S3','0')
+            env.set('TF_NEED_GDR','0')
+            env.set('TF_NEED_OPENCL_SYCL','0')
+            env.set('TF_SET_ANDROID_WORKSPACE','0')
 
         # additional config options starting with version 1.6
         if self.spec.satisfies('@1.6.0:'):
-            env['TF_NEED_KAFKA'] = '0'
+            env.set('TF_NEED_KAFKA','0')
 
         # additional config options starting with version 1.8
         if self.spec.satisfies('@1.8.0:'):
-            env['TF_DOWNLOAD_CLANG'] = '0'
-            env['TF_NEED_AWS'] = '0'
+            env.set('TF_DOWNLOAD_CLANG','0')
+            env.set('TF_NEED_AWS','0')
 
         # additional config options starting with version 1.12
         if self.spec.satisfies('@1.12.0:'):
-            env['TF_NEED_IGNITE'] = '0'
-            env['TF_NEED_ROCM'] = '0'
+            env.set('TF_NEED_IGNITE','0')
+            env.set('TF_NEED_ROCM','0')
 
         # set tmpdir to a non-NFS filesystem (because bazel uses ~/.cache/bazel)        # noqa: E501
         # TODO: This should be checked for non-nfsy filesystem, but the current
@@ -175,16 +175,28 @@ class Tensorflow(Package):
         #           subprocess.call(['stat', '--file-system', '--format=%T', tmp_path]) # noqa: E501
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = env.get('SPACK_TMPDIR', '/tmp/spack') + '/tf'
+        tmp_path = '/tmp/spack' + '/tf'
+#        tmp_path = env['SPACK_TMPDIR'] '/tmp/spack') + '/tf' #TODO
         mkdirp(tmp_path)
-        env['TEST_TMPDIR'] = tmp_path
-        env['HOME'] = tmp_path
-        env['CC'] = env['SPACK_CC']
-        env['CXX'] = env['SPACK_CXX']
+        env.set('TEST_TMPDIR', tmp_path)
+        env.set('HOME', tmp_path)
+#        env.set('CC', env['SPACK_CC']) #TODO
+#        env.set('CXX', env['SPACK_CXX']) #TODO
 
+    def config(self, spec, prefix):
         configure()
 
-        # version dependent fixes
+    @run_after('config')
+    def post_config_fixes(self):
+        spec = self.spec
+        prefix = self.prefix
+        if self.spec.satisfies('@1.5.0:'):
+            # env variable is somehow ignored -> brute force (TODO find a better solution)
+            filter_file(r'if workspace_has_any_android_rule\(\)',
+                        r'if True',
+                        'configure.py')
+
+       # version dependent fixes
         if self.spec.satisfies('@1.3.0:1.5.0'):
             # checksum for protobuf that bazel downloads (@github) changed,
             # comment out to avoid error better solution: replace wrong
@@ -236,8 +248,8 @@ class Tensorflow(Package):
             filter_file(r"'tf-estimator-nightly >=",
                         r"#'tf-estimator-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
-            filter_file(r"REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
-                        r"pass #REQUIRED_PACKAGES\[i\] = 'tb-nightly >=",
+            filter_file(r"REQUIRED_PACKAGES\[i\,'tb-nightly >=",
+                        r"pass #REQUIRED_PACKAGES\[i\,'tb-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
             filter_file(r"'tb-nightly >=",
                         r"#'tb-nightly >=",
@@ -267,6 +279,7 @@ class Tensorflow(Package):
                         '.tf_configure.bazelrc')
 
 
+    def install(self, spec, prefix):
         if '+cuda' in spec:
             #TODO also consider the case '+gcp'
             #TODO make '--cxxopt...CXX11_ABI=0' a variant
