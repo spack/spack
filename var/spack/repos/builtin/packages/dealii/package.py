@@ -249,7 +249,7 @@ class Dealii(CMakePackage, CudaPackage):
         ])
 
         if '+threads' in spec:
-            options.extend(['-DDEAL_II_WITH_THREADS:BOOL=ON'])
+            options.append('-DDEAL_II_WITH_THREADS:BOOL=ON')
         else:
             options.extend(['-DDEAL_II_WITH_THREADS:BOOL=OFF'])
 
