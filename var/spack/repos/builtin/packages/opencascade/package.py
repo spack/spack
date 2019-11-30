@@ -40,20 +40,28 @@ class Opencascade(CMakePackage):
             args.append('-DUSE_TBB=ON')
             args.append('-D3RDPARTY_VTK_DIR=%s' %
                         self.spec['intel-tbb'].prefix)
+        else:
+            args.append('-DUSE_TBB=OFF')
 
         if '+vtk' in self.spec:
             args.append('-DUSE_VTK=ON')
             args.append('-D3RDPARTY_VTK_DIR=%s' %
                         self.spec['vtk'].prefix)
+        else:
+            args.append('-DUSE_VTK=OFF')
 
         if '+freeimage' in self.spec:
             args.append('-DUSE_FREEIMAGE=ON')
             args.append('-D3RDPARTY_FREEIMAGE_DIR=%s' %
                         self.spec['freeimage'].prefix)
+        else:
+            args.append('-DUSE_FREEIMAGE=OFF')
 
         if '+rapidjson' in self.spec:
             args.append('-DUSE_RAPIDJSON=ON')
             args.append('-D3RDPARTY_RAPIDJSON_DIR=%s' %
                         self.spec['rapidjson'].prefix)
+        else:
+            args.append('-DUSE_RAPIDJSON=OFF')
 
         return args
