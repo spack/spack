@@ -299,6 +299,7 @@ class Tensorflow(Package):
                 '//tensorflow/tools/pip_package:build_pip_package')
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')  # noqa: E501
+        tmp_path = env['TEST_TMPDIR']
         build_pip_package(tmp_path)
 
         # using setup.py for installation
