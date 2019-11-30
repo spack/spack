@@ -295,17 +295,31 @@ class Tensorflow(Package):
             # For an explanation for ABI build option, see https://www.tensorflow.org/install/source#bazel_build_options
             # Recently noticed that TF_NEED_AWS etc environment variables aren't recognized by configure.py anymore.
             # So, explicitly disable them via bazel options.
-            bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
-                '--config=cuda', '--config=noaws', '--config=nogcp',\
-                '--config=nohdfs','--config=noignite','--config=nokafka',\
-                '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
-                '//tensorflow/tools/pip_package:build_pip_package')
+            if self.spec.satisfies('@2.1.0-rc0'):
+                bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                    '--config=cuda', '--config=noaws', '--config=nogcp',\
+                    '--config=nohdfs',\
+                    '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '//tensorflow/tools/pip_package:build_pip_package')
+            else:
+                bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                    '--config=cuda', '--config=noaws', '--config=nogcp',\
+                    '--config=nohdfs', '--config=noignite', '--config=nokafka',\
+                    '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '//tensorflow/tools/pip_package:build_pip_package')
         else:
-            bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
-                '--config=noaws', '--config=nogcp',\
-                '--config=nohdfs','--config=noignite','--config=nokafka',\
-                '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
-                '//tensorflow/tools/pip_package:build_pip_package')
+            if self.spec.satisfies('@2.1.0-rc0'):
+                bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                    '--config=noaws', '--config=nogcp', '--config=nohdfs',\
+                    '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '//tensorflow/tools/pip_package:build_pip_package')
+            else:
+                bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
+                    '--config=noaws', '--config=nogcp',\
+                    '--config=nohdfs', '--config=noignite', '--config=nokafka',\
+                    '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '//tensorflow/tools/pip_package:build_pip_package')
+ 
 
         build_pip_package = Executable('bazel-bin/tensorflow/tools/pip_package/build_pip_package')  # noqa: E501
         tmp_path = env['TEST_TMPDIR']
