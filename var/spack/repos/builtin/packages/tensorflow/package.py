@@ -300,6 +300,7 @@ class Tensorflow(Package):
                     '--config=cuda', '--config=noaws', '--config=nogcp',\
                     '--config=nohdfs',\
                     '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '--define=tensorflow_mkldnn_contraction_kernel=0',\
                     '//tensorflow/tools/pip_package:build_pip_package')
             else:
                 bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
@@ -312,6 +313,7 @@ class Tensorflow(Package):
                 bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
                     '--config=noaws', '--config=nogcp', '--config=nohdfs',\
                     '--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0',\
+                    '--define=tensorflow_mkldnn_contraction_kernel=0',\
                     '//tensorflow/tools/pip_package:build_pip_package')
             else:
                 bazel('build', '--jobs={0}'.format(make_jobs), '-c', 'opt',\
