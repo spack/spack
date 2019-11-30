@@ -15,7 +15,7 @@ class Opencascade(CMakePackage):
 
     homepage = "https://www.opencascade.com"
     url      = "http://git.dev.opencascade.org/gitweb/?p=occt.git;a=snapshot;h=refs/tags/V7_4_0;sf=tgz"
-    
+
     version('7.4.0', extension='tar.gz',
             sha256='655da7717dac3460a22a6a7ee68860c1da56da2fec9c380d8ac0ac0349d67676')
 
@@ -32,24 +32,28 @@ class Opencascade(CMakePackage):
     depends_on('vtk', when='+vtk')
     depends_on('freeimage', when='+freeimage')
     depends_on('rapidjson', when='+rapidjson')
-    
+
     def cmake_args(self):
         args = []
 
         if '+tbb' in self.spec:
             args.append('-DUSE_TBB=ON')
-            args.append('-D3RDPARTY_VTK_DIR=%s' % self.spec['intel-tbb'].prefix)
-        
+            args.append('-D3RDPARTY_VTK_DIR=%s' %
+                        self.spec['intel-tbb'].prefix)
+
         if '+vtk' in self.spec:
             args.append('-DUSE_VTK=ON')
-            args.append('-D3RDPARTY_VTK_DIR=%s' % self.spec['vtk'].prefix)
+            args.append('-D3RDPARTY_VTK_DIR=%s' %
+                        self.spec['vtk'].prefix)
 
         if '+freeimage' in self.spec:
             args.append('-DUSE_FREEIMAGE=ON')
-            args.append('-D3RDPARTY_FREEIMAGE_DIR=%s' % self.spec['freeimage'].prefix)
+            args.append('-D3RDPARTY_FREEIMAGE_DIR=%s' %
+                        self.spec['freeimage'].prefix)
 
         if '+rapidjson' in self.spec:
             args.append('-DUSE_RAPIDJSON=ON')
-            args.append('-D3RDPARTY_RAPIDJSON_DIR=%s' % self.spec['rapidjson'].prefix)
-            
+            args.append('-D3RDPARTY_RAPIDJSON_DIR=%s' %
+                        self.spec['rapidjson'].prefix)
+
         return args
