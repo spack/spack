@@ -13,17 +13,17 @@ class TensorflowEstimator(Package):
     homepage = "https://github.com/tensorflow/estimator"
     url      = "https://github.com/tensorflow/estimator/archive/v1.13.0.tar.gz"
 
-    version('2.0.1',  sha256='4e889fca3a841b646fa8b44e10969286c6d911948ade774eb807ac9f3b171460')
+    version('2.0.0', sha256='6f4bdf1ab219e1f1cba25d2af097dc820f56479f12a839853d97422fe4d8b465')
     version('1.13.0', sha256='a787b150ff436636df723e507019c72a5d6486cfe506886279d380166953f12f', preferred=True)
 
     extends('python')
 
-    depends_on('tensorflow@2.0.0-alpha0',  when='@2.0.0-alpha')
-    depends_on('tensorflow@1.13.1',        when='@1.13.0')
+    depends_on('tensorflow@2.0.0',  when='@2.0.0')
+    depends_on('tensorflow@1.13.1', when='@1.13.0')
 
-    depends_on('bazel@0.19.0',             type='build')
-    depends_on('py-pip',                   type='build')
-    depends_on('py-funcsigs@1.0.2:',       type=('build', 'run'))
+    depends_on('bazel@0.19.0', type='build')
+    depends_on('py-pip', type='build')
+    depends_on('py-funcsigs@1.0.2:', type=('build', 'run'))
 
     def install(self, spec, prefix):
         tmp_path = join_path(env.get('SPACK_TMPDIR', '/tmp/spack'),
