@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Lshw(Package):
+class Lshw(MakefilePackage):
     """
     lshw is a small tool to provide detailed information on the
     hardware configuration of the machine. It can report exact memory
