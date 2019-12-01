@@ -115,7 +115,7 @@ class Tensorflow(Package):
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
 
-    phases = ['configure', 'install']
+    phases = ['configure', 'build', 'install']
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
@@ -130,7 +130,7 @@ class Tensorflow(Package):
         env.set('SWIG_PATH', spec['swig'].prefix.bin)
         env.set('GCC_HOST_COMPILER_PATH', spack_cc)
 
-        # CUDA related config options - note: tf has only been tested for cpu
+        # CUDA related configure options
         if '+cuda' in spec:
             env.set('GCC_HOST_COMPILER_PATH', self.compiler.cc)
             env.set('TF_NEED_CUDA', '1')
@@ -151,10 +151,10 @@ class Tensorflow(Package):
             # one should be able to specify single or multiple capabilities
             env.set('TF_CUDA_COMPUTE_CAPABILITIES', "6.1,7.5")
 
-            # @v1.13, config hangs without the following nccl env variables
+            # @v1.13, configure hangs without the following nccl env variables
             # however, in the end it ignores them, and sets these incorrectly
             # Because of this, these paths are reset via file filtering
-            # As shown in the "post_config_fix" section
+            # As shown in the "post_configure_fix" section
             env.set('NCCL_INSTALL_PATH', spec['nccl'].prefix)
             env.set('NCCL_HDR_PATH', spec['nccl'].prefix.include)
 
@@ -168,7 +168,7 @@ class Tensorflow(Package):
             env.set('TF_CUDNN_VERSION', '')
             env.set('CUDNN_INSTALL_PATH', '')
 
-        # config options for version 1.0
+        # configure options for version 1.0
         if self.spec.satisfies('@1.0.0:'):
             env.set('TF_NEED_JEMALLOC', '0')
             env.set('TF_NEED_HDFS', '0')
@@ -176,32 +176,32 @@ class Tensorflow(Package):
             env.set('PYTHON_LIB_PATH', self.module.site_packages_dir)
             env.set('TF_NEED_OPENCL', '0')
 
-        # additional config options starting with version 1.2
+        # additional configure options starting with version 1.2
         if self.spec.satisfies('@1.2.0:'):
             env.set('TF_NEED_MKL', '0')
             env.set('TF_NEED_VERBS', '0')
 
-        # additional config options starting with version 1.3
+        # additional configure options starting with version 1.3
         if self.spec.satisfies('@1.3.0:'):
             env.set('TF_NEED_MPI', '0')
 
-        # additional config options starting with version 1.5
+        # additional configure options starting with version 1.5
         if self.spec.satisfies('@1.5.0:'):
             env.set('TF_NEED_S3', '0')
             env.set('TF_NEED_GDR', '0')
             env.set('TF_NEED_OPENCL_SYCL', '0')
             env.set('TF_SET_ANDROID_WORKSPACE', '0')
 
-        # additional config options starting with version 1.6
+        # additional configure options starting with version 1.6
         if self.spec.satisfies('@1.6.0:'):
             env.set('TF_NEED_KAFKA', '0')
 
-        # additional config options starting with version 1.8
+        # additional configure options starting with version 1.8
         if self.spec.satisfies('@1.8.0:'):
             env.set('TF_DOWNLOAD_CLANG', '0')
             env.set('TF_NEED_AWS', '0')
 
-        # additional config options starting with version 1.12
+        # additional configure options starting with version 1.12
         if self.spec.satisfies('@1.12.0:'):
             env.set('TF_NEED_IGNITE', '0')
             env.set('TF_NEED_ROCM', '0')
@@ -224,7 +224,7 @@ class Tensorflow(Package):
         configure()
 
     @run_after('configure')
-    def post_config_fixes(self):
+    def post_configure_fixes(self):
         spec = self.spec
         if self.spec.satisfies('@1.5.0:'):
             # env variable is somehow ignored -> brute force
@@ -317,7 +317,7 @@ class Tensorflow(Package):
                         'build --action_env LD_LIBRARY_PATH="' + slibs + '"',
                         '.tf_configure.bazelrc')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         if '+cuda' in spec:
             # TODO also consider the case '+gcp'
             # TODO make '--cxxopt...CXX11_ABI=0' a variant
@@ -359,6 +359,7 @@ class Tensorflow(Package):
         tmp_path = env['TEST_TMPDIR']
         build_pip_package(tmp_path)
 
+    def install(self, spec, prefix):
         # using setup.py for installation
         # webpage suggests:
         # sudo pip install /tmp/tensorflow_pkg/tensorflow-0.XYZ.whl
