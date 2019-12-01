@@ -92,6 +92,8 @@ class Amber(Package, CudaPackage):
             default=False)
 
     depends_on('zlib')
+    depends_on('flex')
+    depends_on('bison')
     depends_on('netcdf-fortran')
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
