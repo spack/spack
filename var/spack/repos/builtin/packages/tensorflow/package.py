@@ -171,9 +171,12 @@ class Tensorflow(Package):
 
         # configure options for version 1.0
         if self.spec.satisfies('@1.0.0:'):
-            # TODO: this env var must be set, can we query Spack to find out
-            # what optimization flags it automatically adds?
-            env.set('CC_OPT_FLAGS', '-march=native -Wno-sign-compare')
+            # TODO: will this work for compilers (like Apple Clang) that don't
+            # currently have microarchitecture optimization support in Spack?
+            # Setting CC_OPT_FLAGS to the empty string didn't work, but what
+            # about ' '?
+            env.set('CC_OPT_FLAGS', self.spec.target.optimization_flags(
+                self.spec.compiler.name, self.spec.compiler.version))
             env.set('TF_NEED_JEMALLOC', '0')
             env.set('TF_NEED_HDFS', '0')
             env.set('TF_ENABLE_XLA', '0')
