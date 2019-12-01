@@ -223,7 +223,7 @@ class Tensorflow(Package):
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
         # environment variables, this interactivity is skipped. If you don't,
-        # Spack hangs during the configure phase. Use `spack dev-build` to
+        # Spack hangs during the configure phase. Use `spack build-env` to
         # determine which environment variables must be set for a particular
         # version.
         configure()
