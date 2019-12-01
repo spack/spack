@@ -129,6 +129,7 @@ class Tensorflow(Package):
         env.set('PYTHON_BIN_PATH', spec['python'].command.path)
         env.set('SWIG_PATH', spec['swig'].prefix.bin)
         env.set('GCC_HOST_COMPILER_PATH', spack_cc)
+        env.set('TF_CONFIGURE_IOS', '0')
 
         # CUDA related configure options
         if '+cuda' in spec:
@@ -170,6 +171,9 @@ class Tensorflow(Package):
 
         # configure options for version 1.0
         if self.spec.satisfies('@1.0.0:'):
+            # TODO: this env var must be set, can we query Spack to find out
+            # what optimization flags it automatically adds?
+            env.set('CC_OPT_FLAGS', '-march=native -Wno-sign-compare')
             env.set('TF_NEED_JEMALLOC', '0')
             env.set('TF_NEED_HDFS', '0')
             env.set('TF_ENABLE_XLA', '0')
