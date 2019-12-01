@@ -17,21 +17,42 @@ class Tensorflow(Package):
     maintainers = ['adamjstewart']
 
     version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
-    version('2.0.0',     sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
-    version('1.15.0',    sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
-    version('1.14.0',    sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed', preferred=True)
-    version('1.13.2',    sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
-    version('1.13.1',    sha256='7cd19978e6bc7edc2c847bce19f95515a742b34ea5e28e4389dade35348f58ed')
-    version('1.12.3',    sha256='b9e5488e84f4a133ed20b18605f0cd6301f11d356bd959712db4e7b9301d0462')
-    version('1.12.0',    sha256='3c87b81e37d4ed7f3da6200474fa5e656ffd20d8811068572f43610cae97ca92')
-    version('1.9.0',     sha256='ffc3151b06823d57b4a408261ba8efe53601563dfe93af0866751d4f6ca5068c')
-    version('1.8.0',     sha256='47646952590fd213b747247e6870d89bb4a368a95ae3561513d6c76e44f92a75')
-    version('1.6.0',     sha256='03cf1423446abbead6bd8c3cf6e6affa7d99746cd119691b012aac9a1795f4fb')
-    version('1.5.0',     sha256='0642781c3a3a8c2c4834b91b86aec385f0b2ada7d721571458079478cc5b29c8')
-    version('1.3.0',     sha256='e1af1bb767b57c3416de0d43a5f74d174c42b85231dffd36f3630173534d4307')
-    version('1.2.0',     sha256='03dbf7548d1fc1c11ed58da5fa68616f795c819f868f43478cbcaa26abed374f')
-    version('1.1.0',     sha256='aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027')
-    version('0.10.0',    sha256='f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680')
+    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
+    version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed', preferred=True)
+    version('1.13.2', sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
+    version('1.13.1', sha256='7cd19978e6bc7edc2c847bce19f95515a742b34ea5e28e4389dade35348f58ed')
+    version('1.12.3', sha256='b9e5488e84f4a133ed20b18605f0cd6301f11d356bd959712db4e7b9301d0462')
+    version('1.12.2', sha256='90ffc7cf1df5e4b8385c9108db18d5d5034ec423547c0e167d44f5746a20d06b')
+    version('1.12.1', sha256='7b559a3ae56322b7a7e4307f45f9fce96022c533a98b32c18bfdff8c5838271d')
+    version('1.12.0', sha256='3c87b81e37d4ed7f3da6200474fa5e656ffd20d8811068572f43610cae97ca92')
+    version('1.11.0', sha256='f49ce3f1d04cee854bc9f74fa9696991140b34a2e2447f35f01391b72c8bfa9f')
+    version('1.10.1', sha256='83092d709800e2d93d4d4b1bcacaeb74f2f328962ed764cb35bbee20402879c6')
+    version('1.10.0', sha256='ee9cb98d9e0d8106f2f4ed52a38fe89399324af303e1401567e5b64a9f86744b')
+    version('1.9.0',  sha256='ffc3151b06823d57b4a408261ba8efe53601563dfe93af0866751d4f6ca5068c')
+    version('1.8.0',  sha256='47646952590fd213b747247e6870d89bb4a368a95ae3561513d6c76e44f92a75')
+    version('1.7.1',  sha256='3147f8c60d1f30da23a831bcf732e74b935dcee7c62e4b8b85f0f093030b52c8')
+    version('1.7.0',  sha256='c676a96fc8700722816b2b98c85578b2f99fac7a7b2484c9c7f0641484f8d50d')
+    version('1.6.0',  sha256='03cf1423446abbead6bd8c3cf6e6affa7d99746cd119691b012aac9a1795f4fb')
+    version('1.5.1',  sha256='cab2157783905e12a7a3baae3264edfb739dd92d5658019a131fff4b14190240')
+    version('1.5.0',  sha256='0642781c3a3a8c2c4834b91b86aec385f0b2ada7d721571458079478cc5b29c8')
+    version('1.4.1',  sha256='1f75e463318419a1b3ae076d5a92697c1d3a85e8377c946a5510b651ff5c0d60')
+    version('1.4.0',  sha256='8a0ad8d61f8f6c0282c548661994a5ab83ac531bac496c3041dedc1ab021107b')
+    version('1.3.1',  sha256='ded509c209f8a1d390df8a2f44be5b5c29963172b0e0f095304efb59765d0523')
+    version('1.3.0',  sha256='e1af1bb767b57c3416de0d43a5f74d174c42b85231dffd36f3630173534d4307')
+    version('1.2.1',  sha256='f2baf09b1a9a0500907b4d5cb5473070b3ecede06ed6e8d1096873c91922fb9e')
+    version('1.2.0',  sha256='03dbf7548d1fc1c11ed58da5fa68616f795c819f868f43478cbcaa26abed374f')
+    version('1.1.0',  sha256='aad4470f52fa59f54de7b9a2da727429e6755d91d756f245f952698c42a60027')
+    version('1.0.1',  sha256='deea3c65e0703da96d9c3f1162e464c51d37659dd129396af134e9e8f1ea8c05')
+    version('1.0.0',  sha256='db8b3b8f4134b7c9c1b4165492ad5d5bb78889fcd99ffdffc325e97da3e8c677')
+    version('0.12.0', sha256='13a1d4e98c82eae7e26fe75384de1517d6126f63ba5d302392ec02ac3ae4b1b9')
+    version('0.11.0', sha256='24242ff696234bb1e58d09d45169b148525ccb706f980a4a92ddd3b82c7546dc')
+    version('0.10.0', sha256='f32df04e8f7186aaf6723fc5396733b2f6c2fd6fe4a53a54a68b80f3ec855680')
+    version('0.9.0',  sha256='3128c396af19518c642d3e590212291e1d93c5b047472a10cf3245b53adac9c9')
+    version('0.8.0',  sha256='f201ba7fb7609a6416968d4e1920d87d67be693b5bc7d34b6b4a79860a9a8a4e')
+    version('0.7.1',  sha256='ef34121432f7a522cf9f99a56cdd86e370cc5fa3ee31255ca7cb17f36b8dfc0d')
+    version('0.7.0',  sha256='43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce')
+    version('0.6.0',  sha256='f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657')
 
     variant('gcp', default=False,
             description='Enable Google Cloud Platform Support')
@@ -42,17 +63,26 @@ class Tensorflow(Package):
 
     depends_on('swig', type='build')
 
-    # old tensorflow needs old bazel
-    depends_on('bazel@0.27.1:0.29.1',   type='build', when='2.1.0-rc0')
-    depends_on('bazel@0.24.1:0.26.1',   type='build', when='@1.15.0,2.0.0')
-    depends_on('bazel@0.24.1:0.25.2',   type='build', when='@1.14.0')
-    depends_on('bazel@0.19.0:0.21.0',   type='build', when='@1.13.0:1.13.2')
-    depends_on('bazel@0.15.0',          type='build', when='@1.12.0:1.12.3')
-    depends_on('bazel@0.10.0',          type='build', when='@1.8.0:1.9.0')
-    depends_on('bazel@0.9.0',           type='build', when='@1.5.0:1.6.0')
-    depends_on('bazel@0.4.5',           type='build', when='@1.2.0:1.3.0')
-    depends_on('bazel@0.4.4:0.4.999',   type='build', when='@1.0.0:1.1.0')
-    depends_on('bazel@0.3.1:0.4.999',   type='build', when='@:1.0.0')
+    # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
+    depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1:')
+    depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
+    # See call to check_bazel_version in configure.py
+    depends_on('bazel@0.24.1:0.25.2', type='build', when='@1.14.0')
+    depends_on('bazel@0.19.0:0.21.0', type='build', when='@1.13.0:1.13.2')
+    depends_on('bazel@0.24.1:0.25.0', type='build', when='@1.12.1')
+    depends_on('bazel@0.15.0',        type='build', when='@1.10:1.12.0,1.12.2:1.12.3')
+    depends_on('bazel@0.10.0',        type='build', when='@1.8:1.9')
+    # See call to check_version in tensorflow/workspace.bzl
+    depends_on('bazel@0.5.4',         type='build', when='@1.4:1.6')
+    # See MIN_BAZEL_VERSION in configure
+    depends_on('bazel@0.4.5:',        type='build', when='@1.2:1.3')
+    # See call to check_version in WORKSPACE
+    depends_on('bazel@0.4.2:',        type='build', when='@1.0:1.1')
+    depends_on('bazel@0.3.2:',        type='build', when='@0.12.0:0.12.1')
+    depends_on('bazel@0.3.0:',        type='build', when='@0.11.0')
+    depends_on('bazel@0.2.0:',        type='build', when='@0.9:0.10')
+    depends_on('bazel@0.1.4:',        type='build', when='@0.8.0')
+    depends_on('bazel',               type='build', when='@:0.7')
 
     depends_on('py-absl-py@0.1.6',       type=('build', 'run'), when='@1.5.0:')
     depends_on('py-astor@0.1.6:',        type=('build', 'run'), when='@1.6.0:')
@@ -87,6 +117,7 @@ class Tensorflow(Package):
 
     phases = ['configure', 'install']
 
+    # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
         spec = self.spec
 
@@ -342,3 +373,5 @@ class Tensorflow(Package):
         for fn in glob("../tensorflow/tools/pip_package/*"):
             ln('-s', fn, '.')
         setup_py('install', '--prefix={0}'.format(prefix))
+
+    # TODO: add unit tests
