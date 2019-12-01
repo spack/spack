@@ -16,7 +16,8 @@ class Sensei(CMakePackage):
     homepage = "https://sensei-insitu.org"
     url      = "https://gitlab.kitware.com/sensei/sensei/-/archive/v3.1.0/sensei-v3.1.0.tar.gz"
     git      = "https://gitlab.kitware.com/sensei/sensei.git"
-maintainers = ['sshudler']
+    maintainers = ['sshudler']
+
     version('master', branch='master')
     version('3.1.0', sha256='9a3e6d0d5bb6170ee666586435434da1708b3876fd448b9d41142571ed9da939')
     version('3.0.0', sha256='0aabbea03ade9947c88fc0aa6d3cbaf3c8267e8504e384a041445678a95e58eb')
