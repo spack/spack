@@ -57,6 +57,8 @@ class Hypre(Package):
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
+    variant('blas', default=True, description='Use external BLAS library')
+    variant('lapack', default=True, description='Use external LAPACK library')
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -69,8 +71,8 @@ class Hypre(Package):
     patch('hypre21800-compat.patch', when='@2.18.0')
 
     depends_on("mpi", when='+mpi')
-    depends_on("blas")
-    depends_on("lapack")
+    depends_on('blas', when='+blas')
+    depends_on('lapack', when='+lapack')
     depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     # Patch to build shared libraries on Darwin does not apply to
@@ -96,17 +98,21 @@ class Hypre(Package):
         return url.format(version)
 
     def install(self, spec, prefix):
-        # Note: --with-(lapack|blas)_libs= needs space separated list of names
-        lapack = spec['lapack'].libs
-        blas = spec['blas'].libs
+        configure_args = ['--prefix=%s' % prefix]
 
-        configure_args = [
-            '--prefix=%s' % prefix,
-            '--with-lapack-libs=%s' % ' '.join(lapack.names),
-            '--with-lapack-lib-dirs=%s' % ' '.join(lapack.directories),
-            '--with-blas-libs=%s' % ' '.join(blas.names),
-            '--with-blas-lib-dirs=%s' % ' '.join(blas.directories)
-        ]
+        if '+blas' in self.spec:
+            # Note: --with-blas-libs= needs space separated list of names
+            configure_args.append('--with-blas-libs=%s' %
+                                  ' '.join(spec['blas'].libs.names))
+            configure_args.append('--with-blas-lib-dirs=%s' %
+                                  ' '.join(spec['blas'].libs.directories))
+
+        if '+lapack' in self.spec:
+            # Note: --with-lapack-libs= needs space separated list of names
+            configure_args.append('--with-lapack-libs=%s' %
+                                  ' '.join(spec['lapack'].libs.names))
+            configure_args.append('--with-lapack-lib-dirs=%s' %
+                                  ' '.join(spec['lapack'].libs.directories))
 
         if '+mpi' in self.spec:
             os.environ['CC'] = spec['mpi'].mpicc
