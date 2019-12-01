@@ -267,8 +267,8 @@ class Tensorflow(Package):
         # currently have microarchitecture optimization support in Spack?
         # Setting CC_OPT_FLAGS to the empty string didn't work, but what
         # about ' '?
-        env.set('CC_OPT_FLAGS', self.spec.target.optimization_flags(
-            self.spec.compiler.name, self.spec.compiler.version))
+        env.set('CC_OPT_FLAGS', spec.target.optimization_flags(
+            spec.compiler.name, spec.compiler.version))
 
         # Would you like to interactively configure ./WORKSPACE for
         # Android builds?
@@ -371,7 +371,7 @@ class Tensorflow(Package):
     @run_after('configure')
     def post_configure_fixes(self):
         spec = self.spec
-        if self.spec.satisfies('@1.5.0:'):
+        if spec.satisfies('@1.5.0:'):
             # env variable is somehow ignored -> brute force
             # TODO: find a better solution
             filter_file(r'if workspace_has_any_android_rule\(\)',
@@ -379,7 +379,7 @@ class Tensorflow(Package):
                         'configure.py')
 
         # version dependent fixes
-        if self.spec.satisfies('@1.3.0:1.5.0'):
+        if spec.satisfies('@1.3.0:1.5.0'):
             # checksum for protobuf that bazel downloads (@github) changed
             filter_file(r'sha256 = "6d43b9d223ce09e5d4ce8b0060cb8a7513577a35a64c7e3dad10f0703bf3ad93"',
                         r'sha256 = "e5fdeee6b28cf6c38d61243adff06628baa434a22b5ebb7432d2a7fbabbdb13d"',
@@ -391,7 +391,7 @@ class Tensorflow(Package):
             filter_file(r"'tensorflow-tensorboard",
                         r"#'tensorflow-tensorboard",
                         'tensorflow/tools/pip_package/setup.py')
-        if self.spec.satisfies('@1.5.0:'):
+        if spec.satisfies('@1.5.0:'):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
             # installing gcp support
@@ -399,12 +399,12 @@ class Tensorflow(Package):
             filter_file(r'--define with_gcp_support=true',
                         r'--define with_gcp_support=false',
                         '.tf_configure.bazelrc')
-        if self.spec.satisfies('@1.6.0:'):
+        if spec.satisfies('@1.6.0:'):
             # tensorboard name changed
             filter_file(r"'tensorboard >=",
                         r"#'tensorboard >=",
                         'tensorflow/tools/pip_package/setup.py')
-        if self.spec.satisfies('@1.8.0:'):
+        if spec.satisfies('@1.8.0:'):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
             # generation somehow the wrong PYTHONPATH is used...
             # set --distinct_host_configuration=false as a workaround
@@ -415,14 +415,14 @@ class Tensorflow(Package):
                         'build --action_env PYTHONPATH="{0}"'.format(
                             env['PYTHONPATH']),
                         '.tf_configure.bazelrc')
-        if self.spec.satisfies('@1.13.1'):
+        if spec.satisfies('@1.13.1'):
             # tensorflow_estimator is an API for tensorflow
             # tensorflow-estimator imports tensorflow during build, so
             # tensorflow has to be set up first
             filter_file(r"'tensorflow_estimator >=",
                         r"#'tensorflow_estimator >=",
                         'tensorflow/tools/pip_package/setup.py')
-        if self.spec.satisfies('@2.0.0:'):
+        if spec.satisfies('@2.0.0:'):
             # now it depends on the nightly versions...
             filter_file(r"'tf-estimator-nightly >=",
                         r"#'tf-estimator-nightly >=",
@@ -434,7 +434,7 @@ class Tensorflow(Package):
                         r"#'tb-nightly >=",
                         'tensorflow/tools/pip_package/setup.py')
 
-        if self.spec.satisfies('@1.13.1 +nccl'):
+        if spec.satisfies('@1.13.1 +nccl'):
             filter_file(
                 r'^build --action_env NCCL_INSTALL_PATH=.*',
                 r'build --action_env NCCL_INSTALL_PATH="' +
@@ -446,15 +446,18 @@ class Tensorflow(Package):
                 spec['nccl'].prefix.include + '"',
                 '.tf_configure.bazelrc')
 
-        if self.spec.satisfies('+cuda'):
+        if spec.satisfies('+cuda'):
             libs = [
                 spec['cuda'].prefix.lib,
                 spec['cuda'].prefix.lib64,
                 spec['cudnn'].prefix.lib,
                 spec['cudnn'].prefix.lib64,
-                spec['nccl'].prefix.lib,
-                spec['nccl'].prefix.lib64
             ]
+            if '+nccl' in spec:
+                libs.extend([
+                    spec['nccl'].prefix.lib,
+                    spec['nccl'].prefix.lib64
+                ])
             slibs = ':'.join(libs)
 
             filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
