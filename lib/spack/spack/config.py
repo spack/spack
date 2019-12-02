@@ -892,6 +892,7 @@ def default_modify_scope(subscopes=True):
     else:
         return spack.config.config.highest_precedence_non_subscope().name
 
+
 def default_list_scope():
     """Return the config scope that is listed by default.
 

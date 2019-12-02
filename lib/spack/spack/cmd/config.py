@@ -5,7 +5,6 @@
 
 from __future__ import print_function
 import os
-import six
 import re
 
 import llnl.util.tty as tty
@@ -68,8 +67,9 @@ def setup_parser(subparser):
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
     remove_parser.add_argument('value',
-                            help='configuration value to remove. Nested values '
-                            'separated by colons (:).')
+                               help='configuration value to remove. Nested '
+                               'values separated by colons (:).')
+
 
 
 def _get_scope_and_section(args):
@@ -267,6 +267,7 @@ def config_remove(args):
         e.set_config(path, existing)
     else:
         spack.config.set(path, existing, scope=scope)
+
 
 def config(parser, args):
     action = {'get': config_get,
