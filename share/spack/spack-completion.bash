@@ -490,7 +490,25 @@ _spack_clean() {
     fi
 }
 
+<<<<<<< HEAD
 _spack_clone() {
+=======
+function _spack_config_add {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    fi
+}
+
+function _spack_config_remove {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    fi
+}
+
+function _spack_configure {
+>>>>>>> spack config add/remove: update bash completions
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -r --remote"
@@ -579,7 +597,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list"
+        SPACK_COMPREPLY="get blame edit list add remove rm"
     fi
 }
 
