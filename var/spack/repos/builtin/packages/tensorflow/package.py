@@ -75,8 +75,6 @@ class Tensorflow(Package):
 
     extends('python')
 
-    depends_on('swig', type='build')
-
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1:')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
@@ -98,33 +96,65 @@ class Tensorflow(Package):
     depends_on('bazel@0.1.4:',        type='build', when='@0.8.0')
     depends_on('bazel',               type='build', when='@:0.7')
 
-    # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
-    # TODO: package and version requirements below are for 2.1.0-rc0,
-    # determine when the packages became required and how the version
-    # requirements have changed over time like we did with bazel.
+    depends_on('swig', type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('py-absl-py@0.7.0:', type=('build', 'run'))
-    depends_on('py-astor@0.6.0:', type=('build', 'run'))
-    depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-gast@0.2.2', type=('build', 'run'))
-    depends_on('py-google-pasta@0.1.6:', type=('build', 'run'))
-    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'))
-    depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'))
-    depends_on('py-numpy@1.16.0:1.999', type=('build', 'run'))
-    depends_on('py-protobuf@3.8.0:', type=('build', 'run'))
+
+    # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
+    depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
+    depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:')
+    depends_on('py-astor@0.6.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-backports-weakref@1.0:', type=('build', 'run'), when='@1.3: ^python@:3.3')
+    depends_on('py-backports-weakref@1.0rc1', type=('build', 'run'), when='@1.2.0:1.2.1')
+    depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.5: ^python@:3.3')
+    depends_on('py-enum34@1.1.6:', type=('build', 'run'), when='@1.4.0:1.4.1')
+    depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:')
+    depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:')
+    depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
+    depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:')
+    depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:')
+    depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11:')
+    depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
+    depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
+    depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
+    depends_on('py-numpy@1.16.0:1.999',  type=('build', 'run'), when='@1.13.2,1.15:')
+    depends_on('py-numpy@1.14.5:1.999',  type=('build', 'run'), when='@1.12.1,1.14.0')
+    depends_on('py-numpy@1.13.3:1.14.5', type=('build', 'run'), when='@1.10.0:1.10.1')
+    depends_on('py-numpy@1.13.3:',       type=('build', 'run'), when='@1.6:')
+    depends_on('py-numpy@1.12.1:',       type=('build', 'run'), when='@1.4:')
+    depends_on('py-numpy@1.11.0:',       type=('build', 'run'), when='@0.11:')
+    depends_on('py-numpy@1.10.1:',       type=('build', 'run'), when='@0.7.1: platform=darwin')
+    depends_on('py-numpy@1.8.2:',        type=('build', 'run'), when='@0.6:')
+    depends_on('py-numpy@1.9.2:',        type=('build', 'run'), when='@0.5.0')
+    depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:')
+    depends_on('py-protobuf@3.8.0:', type=('build', 'run'), when='@2.1:')
+    depends_on('py-protobuf@3.6.1:', type=('build', 'run'), when='@1.12:')
+    depends_on('py-protobuf@3.6.0:', type=('build', 'run'), when='@1.10:')
+    depends_on('py-protobuf@3.4.0:', type=('build', 'run'), when='@1.5:')
+    depends_on('py-protobuf@3.3.0:', type=('build', 'run'), when='@1.3:')
+    depends_on('py-protobuf@3.2.0:', type=('build', 'run'), when='@1.1:')
+    depends_on('py-protobuf@3.1.0:', type=('build', 'run'), when='@0.12.1:')
+    depends_on('py-protobuf@3.1.0', type=('build', 'run'), when='@0.12.0')
+    depends_on('py-protobuf@3.0.0', type=('build', 'run'), when='@0.11.0')
+    depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
+    depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
     # tensorboard
     # tensorflow-estimator
-    depends_on('py-termcolor@1.1.0:', type=('build', 'run'))
-    depends_on('py-wrapt@1.11.1:', type=('build', 'run'))
-    depends_on('py-wheel', type=('build', 'run'))
-    depends_on('py-wheel@0.26:', type=('build', 'run'), when='^python@3:')
-    depends_on('py-mock@2.0.0:', type=('build', 'run'), when='^python@:2')
-    depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='^python@:2')
-    depends_on('py-six@1.12.0:', type=('build', 'run'))
+    depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-wrapt@1.11.1:', type=('build', 'run'), when='@1.12.1,1.14:')
+    depends_on('py-wheel', type=('build', 'run'), when='@0.6:')
+    depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
+    depends_on('py-mock@2.0.0:', type=('build', 'run'), when='@0.10: ^python@:2')
+    depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
+    depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
+    depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
     if sys.byteorder == 'little':
-        # Only needed on big-endian machines
-        depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6.0:')
+        # Only builds correctly on little-endian machines
+        depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:')
+
+    # Listed under TEST_PACKAGES in tensorflow/tools/pip_package/setup.py
+    depends_on('py-scipy@0.15.1:', type='test')
 
     # TODO: add packages for some of these dependencies
     depends_on('computecpp', when='+opencl_sycl+computecpp')
