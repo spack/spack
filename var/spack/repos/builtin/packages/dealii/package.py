@@ -66,6 +66,8 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('symengine', default=True,
             description='Compile with SymEngine')
+    variant('threads',  default=True,
+            description='Compile with multi-threading via TBB')
     variant('trilinos', default=True,
             description='Compile with Trilinos (only with MPI)')
     variant('python',   default=False,
@@ -110,7 +112,6 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('bzip2', when='@:8.99')
     depends_on('lapack')
     depends_on('suite-sparse')
-    depends_on('tbb')
     depends_on('zlib')
 
     # optional dependencies
@@ -159,6 +160,7 @@ class Dealii(CMakePackage, CudaPackage):
     # depends_on("symengine@0.4: build_type=Release", when="@9.1:+symengine+trilinos^trilinos~debug")  # NOQA: ignore=E501
     # depends_on("symengine@0.4: build_type=Debug", when="@9.1:+symengine+trilinos^trilinos+debug")  # NOQA: ignore=E501
     depends_on('symengine@0.4:', when='@9.1:+symengine')
+    depends_on('tbb', when='+threads')
     # do not require +rol to make concretization of xsdk possible
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
     depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
@@ -233,7 +235,6 @@ class Dealii(CMakePackage, CudaPackage):
         lapack_blas_headers = spec['lapack'].headers + spec['blas'].headers
         options.extend([
             '-DDEAL_II_COMPONENT_EXAMPLES=ON',
-            '-DDEAL_II_WITH_THREADS:BOOL=ON',
             '-DBOOST_DIR=%s' % spec['boost'].prefix,
             # CMake's FindBlas/Lapack may pickup system's blas/lapack instead
             # of Spack's. Be more specific to avoid this.
@@ -247,7 +248,13 @@ class Dealii(CMakePackage, CudaPackage):
             '-DDEAL_II_ALLOW_BUNDLED=OFF'
         ])
 
-        if (spec.satisfies('^intel-parallel-studio+tbb')):
+        if '+threads' in spec:
+            options.append('-DDEAL_II_WITH_THREADS:BOOL=ON')
+        else:
+            options.extend(['-DDEAL_II_WITH_THREADS:BOOL=OFF'])
+
+        if (spec.satisfies('^intel-parallel-studio+tbb')
+            and '+threads' in spec):
             # deal.II/cmake will have hard time picking up TBB from Intel.
             tbb_ver = '.'.join(('%s' % spec['tbb'].version).split('.')[1:])
             options.extend([
