@@ -1090,7 +1090,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if checksum and self.version in self.versions:
             self.stage.check()
 
-        self.stage.cache_local()
+        with temp_umask(PRIVATE_MASK):
+            cached_path = self.stage.cache_local()
+        if cached_path is not None:
+            fp.set_permissions_by_spec(cached_path, self.spec)
 
         for patch in self.spec.patches:
             patch.fetch(self.stage)

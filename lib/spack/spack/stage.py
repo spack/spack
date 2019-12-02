@@ -489,7 +489,7 @@ class Stage(object):
             self.fetcher.check()
 
     def cache_local(self):
-        spack.caches.fetch_cache.store(
+        return spack.caches.fetch_cache.store(
             self.fetcher, self.mirror_paths.storage_path)
 
     def cache_mirror(self, stats):
