@@ -435,7 +435,7 @@ def ci_rebuild(args):
                 tty.msg('Creating local artifact buildcache in {0}'.format(
                     artifact_mirror_url))
                 buildcache._createtarball(
-                    env, job_spec_yaml_path, None, remote_mirror_url, None,
+                    env, job_spec_yaml_path, None, artifact_mirror_url, None,
                     True, True, False, False, True, False)
 
                 if enable_cdash:
