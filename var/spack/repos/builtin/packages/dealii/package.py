@@ -97,7 +97,7 @@ class Dealii(CMakePackage, CudaPackage):
                         patch('boost_1.68.0.patch',
                               level=1,
                               when='@1.68.0'),
-                       ],
+                        ],
                when='~python')
     depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:+thread+system+serialization+iostreams+python',
                patches=[patch('boost_1.65.1_singleton.patch',
@@ -106,7 +106,7 @@ class Dealii(CMakePackage, CudaPackage):
                         patch('boost_1.68.0.patch',
                               level=1,
                               when='@1.68.0'),
-                       ],
+                        ],
                when='+python')
     # bzip2 is not needed since 9.0
     depends_on('bzip2', when='@:8.99')
