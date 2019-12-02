@@ -477,12 +477,12 @@ class Tensorflow(Package):
                 '.tf_configure.bazelrc')
 
         if spec.satisfies('+cuda'):
-            libs = [
-                *spec['cuda'].libs.directories,
-                *spec['cudnn'].libs.directories,
-            ]
+            libs = spec['cuda'].libs.directories
+            libs.extend(spec['cudnn'].libs.directories)
             if '+nccl' in spec:
                 libs.extend(spec['nccl'].libs.directories)
+            if '+tensorrt' in spec:
+                libs.extend(spec['tensorrt'].libs.directories)
             slibs = ':'.join(libs)
 
             filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
