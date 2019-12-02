@@ -245,11 +245,23 @@ class Tensorflow(Package):
         if '+cuda' in spec:
             env.set('TF_NEED_CUDA', '1')
 
+            cuda_paths = [
+                spec['cuda'].prefix,
+                spec['cudnn'].prefix,
+            ]
+
             # Do you wish to build TensorFlow with TensorRT support?
             if '+tensorrt' in spec:
                 env.set('TF_NEED_TENSORRT', '1')
+
+                cuda_paths.append(spec['tensorrt'].prefix)
+
+                # Please specify the TensorRT version you want to use
+                env.set('TF_TENSORRT_VERSION',
+                        spec['tensorrt'].version.up_to(1))
             else:
                 env.set('TF_NEED_TENSORRT', '0')
+                env.unset('TF_TENSORRT_VERSION')
 
             # Please specify the CUDA SDK version you want to use
             env.set('TF_CUDA_VERSION', spec['cuda'].version.up_to(2))
@@ -257,34 +269,17 @@ class Tensorflow(Package):
             # Please specify the cuDNN version you want to use
             env.set('TF_CUDNN_VERSION', spec['cudnn'].version.up_to(1))
 
-            if '+tensorrt' in spec:
-                # Please specify the TensorRT version you want to use
-                env.set('TF_TENSORRT_VERSION',
-                        spec['tensorrt'].version.up_to(1))
-            else:
-                env.unset('TF_TENSORRT_VERSION')
-
             if '+nccl' in spec:
                 # Please specify the locally installed NCCL version to use
                 env.set('TF_NCCL_VERSION', spec['nccl'].version.up_to(1))
+
+                cuda_paths.append(spec['nccl'].prefix)
             else:
                 env.unset('TF_NCCL_VERSION')
 
             # Please specify the comma-separated list of base paths to
             # look for CUDA libraries and headers
-            cuda_paths = [
-                spec['cuda'].prefix,
-                spec['cudnn'].prefix,
-            ]
-
-            if '+tensorrt' in spec:
-                cuda_paths.append(spec['tensorrt'].prefix)
-
-            if '+nccl' in spec:
-                cuda_paths.append(spec['nccl'].prefix)
-
             env.set('TF_CUDA_PATHS', ','.join(cuda_paths))
-
         else:
             env.set('TF_NEED_CUDA', '0')
 
@@ -385,7 +380,7 @@ class Tensorflow(Package):
         #       ])
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = join_path('tmp', 'spack', 'tf')
+        tmp_path = '/tmp/spack/tf'
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
         env.set('HOME', tmp_path)
