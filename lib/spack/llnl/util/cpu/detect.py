@@ -109,9 +109,6 @@ def sysctl_info_dict():
         'model': sysctl('-n', 'machdep.cpu.model'),
         'model name': sysctl('-n', 'machdep.cpu.brand_string')
     }
-
-    adjust_raw_flags(info)
-
     return info
 
 
