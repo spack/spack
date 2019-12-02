@@ -55,8 +55,8 @@ class SuperluDist(CMakePackage):
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,
             '-DTPL_PARMETIS_INCLUDE_DIRS=%s' %
-                spec['parmetis'].prefix.include +
-                ';' + spec['metis'].prefix.include
+            spec['parmetis'].prefix.include +
+            ';' + spec['metis'].prefix.include
         ]
 
         if (spec.satisfies('%xl') or spec.satisfies('%xl_r')) and \
