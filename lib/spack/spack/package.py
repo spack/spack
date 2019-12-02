@@ -556,16 +556,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
-            visited=None):
+            visited=None, missing=None):
         """Return dict of possible dependencies of this package.
 
         Args:
-            transitive (bool): return all transitive dependencies if True,
-                only direct dependencies if False.
-            expand_virtuals (bool): expand virtual dependencies into all
-                possible implementations.
-            deptype (str or tuple): dependency types to consider
-            visited (set): set of names of dependencies visited so far.
+            transitive (bool, optional): return all transitive dependencies if
+                True, only direct dependencies if False (default True)..
+            expand_virtuals (bool, optional): expand virtual dependencies into
+                all possible implementations (default True)
+            deptype (str or tuple, optional): dependency types to consider
+            visited (dicct, optional): dict of names of dependencies visited so
+                far, mapped to their immediate dependencies' names.
+            missing (dict, optional): dict to populate with packages and their
+                *missing* dependencies.
 
         Returns:
             (dict): dictionary mapping dependency names to *their*
@@ -576,7 +579,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         *immediate* dependencies. If ``expand_virtuals`` is ``False``,
         virtual package names wil be inserted as keys mapped to empty
         sets of dependencies.  Virtuals, if not expanded, are treated as
-        though they have no immediate dependencies
+        though they have no immediate dependencies.
+
+        Missing dependencies by default are ignored, but if a
+        missing dict is provided, it will be populated with package names
+        mapped to any dependencies they have that are in no
+        repositories. This is only populated if transitive is True.
 
         Note: the returned dict *includes* the package itself.
 
@@ -585,6 +593,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if visited is None:
             visited = {cls.name: set()}
+
+        if missing is None:
+            missing = {cls.name: set()}
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
@@ -609,12 +620,24 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # recursively traverse dependencies
             for dep_name in dep_names:
-                if dep_name not in visited:
-                    visited.setdefault(dep_name, set())
-                    if transitive:
-                        dep_cls = spack.repo.path.get_pkg_class(dep_name)
-                        dep_cls.possible_dependencies(
-                            transitive, expand_virtuals, deptype, visited)
+                if dep_name in visited:
+                    continue
+
+                visited.setdefault(dep_name, set())
+
+                # skip the rest if not transitive
+                if not transitive:
+                    continue
+
+                try:
+                    dep_cls = spack.repo.path.get_pkg_class(dep_name)
+                except spack.repo.UnknownPackageError:
+                    # log unknown packages
+                    missing.setdefault(cls.name, set()).add(dep_name)
+                    continue
+
+                dep_cls.possible_dependencies(
+                    transitive, expand_virtuals, deptype, visited, missing)
 
         return visited
 
@@ -2671,6 +2694,7 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
     transitive = kwargs.get('transitive', True)
     expand_virtuals = kwargs.get('expand_virtuals', True)
     deptype = kwargs.get('deptype', 'all')
+    missing = kwargs.get('missing')
 
     packages = []
     for pos in pkg_or_spec:
@@ -2686,7 +2710,7 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
     visited = {}
     for pkg in packages:
         pkg.possible_dependencies(
-            transitive, expand_virtuals, deptype, visited)
+            transitive, expand_virtuals, deptype, visited, missing)
 
     return visited
 

@@ -47,6 +47,15 @@ def test_possible_dependencies(mock_packages, mpileaks_possible_deps):
     }
 
 
+def test_possible_dependencies_missing(mock_packages):
+    md = spack.repo.get("missing-dependency")
+    missing = {}
+    md.possible_dependencies(transitive=True, missing=missing)
+    assert missing["missing-dependency"] == set([
+        "this-is-a-missing-dependency"
+    ])
+
+
 def test_possible_dependencies_with_deptypes(mock_packages):
     dtbuild1 = spack.repo.get('dtbuild1')
 
