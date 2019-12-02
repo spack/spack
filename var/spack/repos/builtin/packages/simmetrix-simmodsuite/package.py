@@ -10,79 +10,78 @@ import os
 def simmodsuite_releases():
     releases = [
     {
-        'version': '12.0-181124',
+        'version': '14.0-191122',
         'components': {
-           'msadv': ['266977643de96937c44c9fb712393949', 'adv'],
-           'psint': ['308a9da4ebee34a35c8a99b0f1a554f0', 'parasolid'],
-           'fdcore': ['317e7fe2d8178b3d95f62b5cfaa8a5b7', 'base'],
-           'mscore': ['474f6af30bd624f541199822f0fc4692', 'base'],
-           'pskrnl': ['69ebea229c7722d69a733a2e49a468ac', 'parasolid'],
-           'msparallelmesh': ['67d121846a982f9727350593f559079d', 'parallelmesh'],
-           'gmcore': ['065fef92ce37661c194555d965bd00c3', 'base'],
-           'msparalleladapt': ['7b8205dda0145df7f209a2c73cfbbd24', 'paralleladapt'],
-           'gmadv': ['36f25932e694c00107f8d032a26554c2', 'advmodel'],
-           'aciskrnl': ['a54ec6e79029f18e4d0126f9b83a8a72', 'acis'],
-           'gmimport': ['d9712c063bc55c4cf0c4d6f02ccd6bb9', 'import'],
-           'discrete': ['ae312b940afc8540b95859594f38135d', 'discrete'],
-           'msadapt': ['91af0c3b766b63dd63556ad70ab39187', 'base'],
-           'gmabstract': ['9f0ab14b1980740cafa2b6e5c8ab5504', 'abstract'],
-           'gmvoxel': ['8f533f93a569c72fd38b87ed0d78149a', 'voxel'],
+           'gmadv': ['01cea5f7aff5e442ea544df054969740ad33e2ff4097cf02de31874d16a0c7c2', 'advmodel'],
+           'msadapt': ['69839698f24969f97963869fd212bdcff0b5d52dd40ec3fdc710d878e43b527a', 'base'],
+           'gmvoxel': ['bfea15e1fc5d258ed9db69132042a848ca81995e92bf265215e4b88d08a308a8', 'voxel'],
+           'gmabstract': ['dccdcd4b71758e4110cd69b0befa7875e5c1f3871f87478410c6676da3f39092', 'abstract'],
+           'fdcore': ['6981b2eb0c0143e6abc3ec29918fc3552f81018755770bf922d2491275984e1a', 'base'],
+           'msparallelmesh': ['1e1a431ec9dd85354ff42c6a2a41df7fbe3dfe5d296f40105c4d3aa372639dc3', 'parallelmesh'],
+           'mscore': ['bca80fcb2c86e7b6dc0259681ccd73197ce85c47f00f1910bd6b518fa0b3a092', 'base'],
+           'discrete': ['430e5f2270864b1ab9c8dff75d2510147a0c5cde8af0828975d9e38661be3a35', 'discrete'],
+           'gmimport': ['e83b3c43b7c695fa96ed42253a4b317a2882bcb8987fd3225c09492e353e49aa', 'import'],
+           'pskrnl': ['31455cfce746b2339b3644f3890d4444014fb839654a9f576ec747d28ff6c1c4', 'parasolid'],
+           'gmcore': ['af5d89b9ce266cac5b45f2bf96e1324e87e54c6e2f568bd5b6a85c41122d39e4', 'base'],
+           'aciskrnl': ['764e5633e6d502951788accfb8c34ed59430a4779a44d1775fd67f9aab8a654a', 'acis'],
+           'msparalleladapt': ['8ae607112958f6b9d319736c71a6597cf99a8a59ceed733f2a939cb9cfa6dd67', 'paralleladapt'],
+           'psint': ['f6c90b2fe87e690b2cba20f357d03c5962fed91541d6b79e01dc25cb8f01d1e0', 'parasolid'],
+           'msadv': ['f18a8285d539cb07b00fde06fe970d958eceabf2a10182bcca6c8ad1c074c395', 'adv'],
         },
         'docs': {
-           'FieldSim': ['810f237944f56ffe494fcbbb4b9eafe7', 'base'],
-           'GeomSimDiscrete': ['c9b3b994d9bd219b7804580635ff112c', 'discrete'],
-           'MeshSim': ['a18456926018b326330df3931af5be3e', 'base'],
-           'GeomSimAbstract': ['62fa4c5ea8abfa903acdf704d52883fc', 'abstract'],
-           'GeomSimParasolid': ['f059c25e203501175178374a4a608ed5', 'parasolid'],
-           'GeomSimImport': ['2b2656cd75757d64ec099497e346c373', 'import'],
-           'GeomSimAcis': ['8baafac8e8d08767bf560afafb4b0bff', 'acis'],
-           'GeomSimVoxel': ['6c94bc980fe70334b9b48e5001efc665', 'voxel'],
-           'GeomSimDiscreteModeling': ['f57e2b3a95973bed15aa99048b6ebbc2', 'discrete'],
-           'ParallelMeshSim': ['df06fe4b3e850c8b9804be7107776351', 'parallelmesh'],
-           'GeomSimAdvanced': ['111d1407bdce792ff3b3e88bb8e5f1c2', 'advmodel'],
-           'MeshSimAdvanced': ['6845fa170b42d02697fbb21ff902dd95', 'adv'],
-           'ParallelMeshSimAdapt': ['ced7a09b9154bf5177dced35052f00ec', 'paralleladapt'],
-           'GeomSim': ['43ffc86a2a0275c8b182a4221e9e8a5b', 'base'],
-           'MeshSimAdapt': ['1ee82ef272292196d719db92454aa704', 'base'],
+           'MeshSim': ['f3c475072f270ff49ac2f6639ca1cddb0642889648cbea7df1a3f1b85f7cac36', 'base'],
+           'GeomSimVoxel': ['9f4ee5a8204fee1d899cb912e0379f8be7a826e81ca0a0d8a670a4b804ca1276', 'voxel'],
+           'MeshSimAdvanced': ['8c8bc3709238e600e8938c7c345588f8947d89eae98a228b0d0e3d46f5f4c0d9', 'adv'],
+           'GeomSimDiscreteModeling': ['4e8e26a88e8a5ad396a637597a52f5973d8f77abc0a5b99fa737caf37226d6cc', 'discrete'],
+           'GeomSimAdvanced': ['5efb38317d6be7862ce34024922ca372b30691a30af820474e2e26e4c3055278', 'advmodel'],
+           'GeomSimParasolid': ['6851bdaf6d96e7b2335fce3394825e9876800f0aba0a42644758dc1bd06f60fe', 'parasolid'],
+           'GeomSimImport': ['d931ecfc332460c825b473c0950c7ae8ff9f845e0d1565f85bfd7698da5e6d26', 'import'],
+           'ParallelMeshSim': ['0f0d235b25a660271e401488e412220f574b341dadb827f7b82f0e93172b5cdb', 'parallelmesh'],
+           'ParallelMeshSimAdapt': ['7964ebbd7e8d971ea85fc5260e44f7e876da5ad474dc67d8d6fc939bfa5ba454', 'paralleladapt'],
+           'GeomSimAcis': ['dea82efbc4e3043ecda163be792ef295057e08be17654a7783ce7ca5e786f950', 'acis'],
+           'MeshSimAdapt': ['ee4d5595572c1fe1a0d78bd9b85c774a55e994c48170450d6c5f34b05fcf2411', 'base'],
+           'FieldSim': ['6b09b4ab278911d3e9229fd4cd8dc92ba188f151d42d9d7b96d542aad2af1fac', 'base'],
+           'GeomSim': ['0673823d649998367c0e427055911eae971bb6e8c76625882e7a7901f4d18c44', 'base'],
+           'GeomSimDiscrete': ['58dfd33fc5cdd2ab24e9084377943f28d5ba68b8c017b11b71cde64c5e4f2113', 'discrete'],
+           'GeomSimAbstract': ['16248cd2a0d133029eb4b79d61397da008e4d5b5c3eaf0161a0a44148b0bc519', 'abstract'],
         }
     },
     {
-      'version': '11.0-180619',
-      'components': {
-         'gmvoxel': ['b3fef983a5a23b9cdc17d69dcd4d7689', 'voxel'],
-         'msadapt': ['b762d2429bdccf83085f9766beba8799', 'base'],
-         'mscore': ['ef694c4b928893bb9021eec8c9273230', 'base'],
-         'fdcore': ['1f9bb2ff299e323ec7cbafc3c633f481', 'base'],
-         'msadv': ['c625d3aaa59db0977cef36c887f902ca', 'adv'],
-         'psint': ['6e52c7be443f8b0fffc0e8489d6e7965', 'parasolid'],
-         'aciskrnl': ['201a136fb8f5aea6799db630548acdc0', 'acis'],
-         'discrete': ['289c21baf8690b5cdda3f5499f97fda0', 'discrete'],
-         'gmimport': ['7b5c9b1a75dc9eb283dce80e5e0747eb', 'import'],
-         'gmadv': ['1d1a01752efc3d2c38ec6f2e9aa8727b', 'advmodel'],
-         'msparallelmesh': ['fc014dab94e5e1dcbc82db68dd99262c', 'parallelmesh'],
-         'gmabstract': ['249ca5620801439bff8cec6d7f9dd0d0', 'abstract'],
-         'gmcore': ['1b6b3874f5ed4027681a27a6a7c9369c', 'base'],
-         'pskrnl': ['6ea83d632484bdd0a05511e66fe5fa67', 'parasolid'],
-         'msparalleladapt': ['d8882e5cb680805f1174df5ceea11414', 'paralleladapt'],
-      },
-      'docs': {
-         'MeshSimAdv': ['f5c2c0f58aeaeebbe04527d681386eeb', 'adv'],
-         'GeomSimAcis': ['9da1c3486fac8ed7deb5d65f163cd4e0', 'acis'],
-         'GeomSimImport': ['828d1db75cad7d8920471a31fb777c4b', 'import'],
-         'GeomSimSolidWorks': ['4fcdc8a9a73e1b2a65d77d6875bc5fc9', 'parasolid'],
-         'ParallelMeshSimAdapt': ['f11d765df98175c806a67a8fbc0aaf5a', 'paralleladapt'],
-         'GeomSimVoxel': ['0a20ab050ae67a9e7d8c10a3ca6d33b9', 'voxel'],
-         'GeomSim': ['3d9c30616475636f4d2c0da85684274c', 'base'],
-         'GeomSimAdvanced': ['d178a1ad442147b54d6eeb00480506dc', 'advmodel'],
-         'MeshSimAdapt': ['ea2272dd9577f8d52fd749efc33e9c15', 'base'],
-         'ParallelMeshSim': ['2729d1a03764a1fe015eac881c4ca73a', 'parallelmesh'],
-         'MeshSim': ['ea2246f55e1fcf732355afb832252b0c', 'base'],
-         'FieldSim': ['aeca95adfa92710bc6b731108124d961', 'base'],
-         'GeomSimParasolid': ['59680124b20a45fe3122f364be485398', 'parasolid'],
-         'GeomSimAbstract': ['dfe2559a7d1fb837a39afd9b24f12a26', 'abstract'],
-         'GeomSimDiscrete': ['233fa79ef98483ad69d45647ec409e48', 'discrete'],
-         'GeomSimProe': ['b2587521678eb121384d22d686b5456d', 'granite'],
-      }
+        'version': '12.0-191027',
+        'components': {
+           'gmadv': ['1a133523062974c4d9acb1d52baa3893dc891482aebaaeb79a7dc907461d5dbc', 'advmodel'],
+           'fdcore': ['c3a89093f811cb489698d203dbe68ca910e6c67ea75c0a7aba73dd369508b9ec', 'base'],
+           'mscore': ['a2f043278d45d8729020b663c66c57960fcec33dafd3d90db55f0a9e32723bce', 'base'],
+           'msparallelmesh': ['2f6fd47d3c5c2f1ece4634985a522ac599d3cee20ad8a4623f252cc75aa32c4c', 'parallelmesh'],
+           'msparalleladapt': ['8d288730b1300215a32f3b21624bd2e0e2d8a684fe928459757fcec7e0aeb7d3', 'paralleladapt'],
+           'gmabstract': ['3b608f21e6c11db5bb48e49f9cd7e9d88aeec4feadebd778529a5c9d506d08c6', 'abstract'],
+           'gmimport': ['fc1626c7b1522b90eaa3926e1253b84d28440c7df8634decdedb79b5229be800', 'import'],
+           'discrete': ['a15ead08138f0c59c7ee46cd0d348d4f26e1b021d2580a134cf2b84a7337bcf9', 'discrete'],
+           'aciskrnl': ['8773f00e08d237052c877e79d1a869214f59891e812d70df938b2a5e5423a96f', 'acis'],
+           'msadv': ['41bdb9555ab9feb0891f0832a49fc29777d40957473f315e1c33e1c0077cba7d', 'adv'],
+           'psint': ['b040ab48833eb2a748f757e2de6929f3002aa98db459ba92bd9a88e443e5cb07', 'parasolid'],
+           'gmvoxel': ['19fba83c9c7eac20d9613236530fbae652dc8edef35233214f0f92b81c91a877', 'voxel'],
+           'msadapt': ['1a752adb6724c3328fffb26f1aebed007d3c2a5df725cd29aa0cf0fdfda1f39a', 'base'],
+           'gmcore': ['ec95bae84b36644e6e04cf0a6b4e813a51990d0a30519176ebb8a05f681af7f2', 'base'],
+           'pskrnl': ['7b7b4952513e06c8c23aa8f7c1748f5c199d9af70ea06c4a359412237ed8ac1d', 'parasolid'],
+        },
+        'docs': {
+           'FieldSim': ['5109d91fe61ccdaf0af5aa869aea9c38ec98760746ec3983d100f870cbb1cb63', 'base'],
+           'ParallelMeshSim': ['a1e6618a77022a9580beac4c698dd4b9aa70f617a27db9ce13ab1f2388475290', 'parallelmesh'],
+           'GeomSimAcis': ['f0319b32eb417fa9b237575d9b2dc1c061848888c36fd4da97d97cdbb3cf19c3', 'acis'],
+           'GeomSimAbstract': ['c44023e6944522057c47925db49089031c7de9b67938ca6a987e04fadfeda9b7', 'abstract'],
+           'GeomSimDiscrete': ['ad648752fa7d2dc1ce234a612e28ce84eb1f064a1decadf17b42e9fe56967350', 'discrete'],
+           'MeshSimAdapt': ['dcb7d6ec74c910b41b5ae707d9fd4664fcb3a0fdb2c876caaa28a6f1cf701024', 'base'],
+           'MeshSim': ['e5a8cb300b1e13b9f2733bf8b738872ffb37d9df15836a6ab264483c10000696', 'base'],
+           'GeomSimParasolid': ['2bf33cc5b3879716437d45fde0a02caaa165e37d248d05b4b00708e76573a15e', 'parasolid'],
+           'GeomSimImport': ['5309433dcdce660e062412f070719eefcc6299764e9b0169533ff343c9c9c406', 'import'],
+           'ParallelMeshSimAdapt': ['2e8e0ceede3107b85dba9536f3bbf5e6959793073a5147548cfb01ca568c8da2', 'paralleladapt'],
+           'GeomSimDiscreteModeling': ['ff88ec234b890315cc36539e3f73f4f977dab94160860950e7b7ee0303c9b55e', 'discrete'],
+           'GeomSim': ['62ae33372f999d5e62a1b7b161ddd7de04c055adc85cfd258e088c95b76d5fef', 'base'],
+           'GeomSimVoxel': ['7a624ddaebd833077511acac3efd4b4c1dab09bd9feff40aba0813182eeb262f', 'voxel'],
+           'GeomSimAdvanced': ['f0ab801ddf3d701a4ac3f8c47900cc858a4488eb0fe2f663504ba260cd270d20', 'advmodel'],
+           'MeshSimAdvanced': ['bb532027e4fcc311a7c376383da010aed5ee133a9122b186a4e5c7d0cf1d976b', 'adv'],
+        }
     }
     ]
     return releases
@@ -111,7 +110,7 @@ def simmetrix_setkernelcmakeprefixpath(spec, path, env):
         env.append_path('LD_LIBRARY_PATH', join_path(path, 'psKrnl'))
 
 
-def simmetrix_resource(name, url, md5, condition):
+def simmetrix_resource(name, url, sha256, condition):
     # The tarballs/zips each have the same directory structure.  Because of
     # this, and the bug in spack described here:
     # https://github.com/spack/spack/pull/3553#issuecomment-391424244
@@ -120,7 +119,7 @@ def simmetrix_resource(name, url, md5, condition):
     resource(
         name=name,
         url=url,
-        md5=md5,
+        sha256=sha256,
         destination=name,
         when=condition
     )
@@ -166,25 +165,25 @@ class SimmetrixSimmodsuite(Package):
         sim_version = release['version']
         main_pkg_name = 'mscore'
         url = simmetrix_makecomponenturl(main_pkg_name)
-        md5 = release['components'][main_pkg_name][0]
-        version(sim_version, md5=md5, url=url)
+        sha256 = release['components'][main_pkg_name][0]
+        version(sim_version, sha256=sha256, url=url)
         # define resources for the other tarballs
         for name, atts in release['components'].items():
             # skip the tarball used for the version(...) call
             if name == 'mscore':
                 continue
-            md5 = atts[0]
+            sha256 = atts[0]
             feature = atts[1]
             url = simmetrix_makecomponenturl(name)
             condition = "@{0}+{1}".format(sim_version, feature)
-            simmetrix_resource(name, url, md5, condition)
+            simmetrix_resource(name, url, sha256, condition)
         # define resources for the document zip files
         for name, atts in release['docs'].items():
-            md5 = atts[0]
+            sha256 = atts[0]
             feature = atts[1]
             url = simmetrix_makedocurl(name)
             condition = "@{0}+{1}".format(sim_version, feature)
-            simmetrix_resource(name, url, md5, condition)
+            simmetrix_resource(name, url, sha256, condition)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         archlib = join_path(prefix.lib, self.oslib)
