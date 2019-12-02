@@ -118,11 +118,11 @@ def simmetrix_resource(name, url, md5, condition):
     # , they cannot be expanded into the source root directory.
     # Once this is fixed the 'destination=name' argument can be removed.
     resource(
-      name=name,
-      url=url,
-      md5=md5,
-      destination=name,
-      when=condition
+        name=name,
+        url=url,
+        md5=md5,
+        destination=name,
+        when=condition
     )
 
 
