@@ -478,16 +478,11 @@ class Tensorflow(Package):
 
         if spec.satisfies('+cuda'):
             libs = [
-                spec['cuda'].prefix.lib,
-                spec['cuda'].prefix.lib64,
-                spec['cudnn'].prefix.lib,
-                spec['cudnn'].prefix.lib64,
+                *spec['cuda'].libs.directories,
+                *spec['cudnn'].libs.directories,
             ]
             if '+nccl' in spec:
-                libs.extend([
-                    spec['nccl'].prefix.lib,
-                    spec['nccl'].prefix.lib64
-                ])
+                libs.extend(spec['nccl'].libs.directories)
             slibs = ':'.join(libs)
 
             filter_file('build --action_env TF_NEED_OPENCL_SYCL="0"',
