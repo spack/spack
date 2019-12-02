@@ -163,27 +163,27 @@ class SimmetrixSimmodsuite(Package):
     releases = simmodsuite_releases()
     for release in releases:
         # define the version using the mscore tarball
-        simVersion = release['version']
-        mainPkgName = 'mscore'
-        url = simmetrix_makecomponenturl(mainPkgName)
-        md5 = release['components'][mainPkgName][0]
-        version(simVersion, md5=md5, url=url)
+        sim_version = release['version']
+        main_pkg_name = 'mscore'
+        url = simmetrix_makecomponenturl(main_pkg_name)
+        md5 = release['components'][main_pkg_name][0]
+        version(sim_version, md5=md5, url=url)
         # define resources for the other tarballs
         for name, atts in release['components'].items():
             # skip the tarball used for the version(...) call
-            if name is 'mscore':
+            if name == 'mscore':
                 continue
             md5 = atts[0]
             feature = atts[1]
             url = simmetrix_makecomponenturl(name)
-            condition = "@{0}+{1}".format(simVersion, feature)
+            condition = "@{0}+{1}".format(sim_version, feature)
             simmetrix_resource(name, url, md5, condition)
         # define resources for the document zip files
         for name, atts in release['docs'].items():
             md5 = atts[0]
             feature = atts[1]
             url = simmetrix_makedocurl(name)
-            condition = "@{0}+{1}".format(simVersion, feature)
+            condition = "@{0}+{1}".format(sim_version, feature)
             simmetrix_resource(name, url, md5, condition)
 
     def setup_dependent_build_environment(self, spack_env, dependent_spec):
@@ -207,7 +207,7 @@ class SimmetrixSimmodsuite(Package):
             for name, atts in release['components'].items():
                 feature = atts[1]
                 if '+' + feature in spec:
-                    if name is 'mscore':
+                    if name == 'mscore':
                         install_tree(join_path(source_path, 'lib'), prefix.lib)
                         install_tree(
                             join_path(source_path, 'include'),
