@@ -401,6 +401,7 @@ def ci_rebuild(args):
             # install_args = ['--keep-stage']
 
             # 3) create/register a new build on CDash (if enabled)
+            cdash_args = []
             if enable_cdash:
                 tty.debug('Registering build with CDash')
                 (cdash_build_id,
@@ -411,20 +412,43 @@ def ci_rebuild(args):
                 cdash_upload_url = '{0}/submit.php?project={1}'.format(
                     cdash_base_url, cdash_project_enc)
 
-                install_args.extend([
+                cdash_args = [
                     '--cdash-upload-url', cdash_upload_url,
                     '--cdash-build', cdash_build_name,
                     '--cdash-site', cdash_site,
                     '--cdash-buildstamp', cdash_build_stamp,
-                ])
+                ]
 
-            install_args.extend(['-f', job_spec_yaml_path])
+            spec_cli_arg = [job_spec_yaml_path]
 
             tty.debug('Installing package')
 
             try:
-                spack_cmd(*install_args)
-                # spack_install(*install_args)
+                # Two-pass install is intended to avoid spack trying to
+                # install from buildcache even though the locally computed
+                # full hash is different than the one stored in the spec.yaml
+                # file on the remote mirror.
+                if job_spec.dependencies():
+                    first_pass_args = install_args + [
+                        '--cache-only',
+                        '--only',
+                        'dependencies',
+                    ]
+                    first_pass_args.extend(spec_cli_arg)
+                    tty.debug('First pass install arguments: {0}'.format(
+                        first_pass_args))
+                    spack_cmd(*first_pass_args)
+
+                second_pass_args = install_args + [
+                    '--no-cache',
+                    '--only',
+                    'package',
+                ]
+                second_pass_args.extend(cdash_args)
+                second_pass_args.extend(spec_cli_arg)
+                tty.debug('Second pass install arguments: {0}'.format(
+                    second_pass_args))
+                spack_cmd(*second_pass_args)
             except Exception as inst:
                 tty.error('Caught exception during install:')
                 tty.error(inst)
