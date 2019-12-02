@@ -55,23 +55,29 @@ class Tensorflow(Package):
     version('0.7.0',  sha256='43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce')
     version('0.6.0',  sha256='f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657')
 
+    variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
+    variant('gcp', default=False, description='Build with Google Cloud Platform support')
+    variant('hdfs', default=False, description='Build with Hadoop File System support')
+    variant('aws', default=False, description='Build with Amazon AWS Platform support')
+    variant('kafka', default=False, description='Build with Apache Kafka Platform support')
+    variant('ignite', default=False, description='Build with Apache Ignite support')
     variant('xla_jit', default=False, description='Build with XLA JIT support')
+    variant('gdr', default=False, description='Build with GDR support')
+    variant('verbs', default=False, description='Build with libverbs support')
+    variant('ngraph', default=False, description='Build with Intel nGraph support')
     variant('opencl_sycl', default=False, description='Build with OpenCL SYCL support')
     variant('computecpp', default=False, description='Build with ComputeCPP support')
     variant('rocm', default=False, description='Build with ROCm support')
     variant('cuda', default=True, description='Enable CUDA support')
     variant('tensorrt', default=False, description='Build with TensorRT support')
+    variant('mpi', default=False, description='Build with MPI support')
     variant('android', default=False, description='Configure for Android builds')
     variant('ios', default=False, description='Build with iOS support (macOS only)')
     variant('mkl', default=False, description='Build with MKL support')
     variant('monolithic', default=False, description='Static monolithic build')
-    variant('ngraph', default=False, description='Build with Intel nGraph support')
     variant('numa', default=False, description='Build with NUMA support')
     variant('dynamic_kernels', default=False, description='Build kernels into separate shared objects')
-    variant('aws', default=False, description='Enable AWS S3 filesystem support')
-    variant('gcp', default=False, description='Enable GCP support')
-    variant('hdfs', default=False, description='Enable HDFS support')
-    variant('nccl', default=False, description='Enable NVIDIA NCCL support')
+    variant('nccl', default=sys.platform == 'Linux', description='Enable NVIDIA NCCL support')
 
     extends('python')
 
@@ -83,7 +89,7 @@ class Tensorflow(Package):
     depends_on('bazel@0.19.0:0.21.0', type='build', when='@1.13.0:1.13.2')
     depends_on('bazel@0.24.1:0.25.0', type='build', when='@1.12.1')
     depends_on('bazel@0.15.0',        type='build', when='@1.10:1.12.0,1.12.2:1.12.3')
-    depends_on('bazel@0.10.0',        type='build', when='@1.8:1.9')
+    depends_on('bazel@0.10.0',        type='build', when='@1.7:1.9')
     # See call to check_version in tensorflow/workspace.bzl
     depends_on('bazel@0.5.4',         type='build', when='@1.4:1.6')
     # See MIN_BAZEL_VERSION in configure
@@ -163,11 +169,15 @@ class Tensorflow(Package):
     depends_on('cudnn', when='+cuda')
     depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
+    depends_on('mpi', when='+mpi')
     depends_on('android-ndk@10:18', when='+android')
     depends_on('android-sdk', when='+android')
     depends_on('mkl', when='+mkl')
 
     # TODO: figure out when these variants start being supported
+    conflicts('+jemalloc', when='platform=darwin', msg='Currently jemalloc is only support on Linux platform')
+    conflicts('+jemalloc', when='platform=cray',   msg='Currently jemalloc is only support on Linux platform')
+    conflicts('+jemalloc', when='platform=bgq',    msg='Currently jemalloc is only support on Linux platform')
     conflicts('+computepp', when='~opencl_sycl')
     conflicts('+cuda', when='platform=darwin', msg='There is no GPU support for macOS')
     conflicts('+tensorrt', when='~cuda')
@@ -203,11 +213,67 @@ class Tensorflow(Package):
         # Please input the desired Python library path to use
         env.set('PYTHON_LIB_PATH', site_packages_dir)
 
+        # Do you wish to build TensorFlow with jemalloc as malloc support?
+        if '+jemalloc' in spec:
+            env.set('TF_NEED_JEMALLOC', '1')
+        else:
+            env.set('TF_NEED_JEMALLOC', '0')
+
+        # Do you wish to build TensorFlow with Google Cloud Platform support?
+        if '+gcp' in spec:
+            env.set('TF_NEED_GCP', '1')
+        else:
+            env.set('TF_NEED_GCP', '0')
+
+        # Do you wish to build TensorFlow with Hadoop File System support?
+        if '+hdfs' in spec:
+            env.set('TF_NEED_HDFS', '1')
+        else:
+            env.set('TF_NEED_HDFS', '0')
+
+        # Do you wish to build TensorFlow with Amazon AWS Platform support?
+        if '+aws' in spec:
+            env.set('TF_NEED_AWS', '1')
+            env.set('TF_NEED_S3', '1')
+        else:
+            env.set('TF_NEED_AWS', '0')
+            env.set('TF_NEED_S3', '0')
+
+        # Do you wish to build TensorFlow with Apache Kafka Platform support?
+        if '+kafka' in spec:
+            env.set('TF_NEED_KAFKA', '1')
+        else:
+            env.set('TF_NEED_KAFKA', '0')
+
+        # Do you wish to build TensorFlow with Apache Ignite support?
+        if '+ignite' in spec:
+            env.set('TF_NEED_IGNITE', '1')
+        else:
+            env.set('TF_NEED_IGNITE', '0')
+
         # Do you wish to build TensorFlow with XLA JIT support?
         if '+xla_jit' in spec:
             env.set('TF_ENABLE_XLA', '1')
         else:
             env.set('TF_ENABLE_XLA', '0')
+
+        # Do you wish to build TensorFlow with GDR support?
+        if '+gdr' in spec:
+            env.set('TF_NEED_GDR', '1')
+        else:
+            env.set('TF_NEED_GDR', '0')
+
+        # Do you wish to build TensorFlow with VERBS support?
+        if '+verbs' in spec:
+            env.set('TF_NEED_VERBS', '1')
+        else:
+            env.set('TF_NEED_VERBS', '0')
+
+        # Do you wish to build TensorFlow with nGraph support?
+        if '+ngraph' in spec:
+            env.set('TF_NEED_NGRAPH', '1')
+        else:
+            env.set('TF_NEED_NGRAPH', '0')
 
         # Do you wish to build TensorFlow with OpenCL SYCL support?
         if '+opencl_sycl' in spec:
@@ -286,6 +352,16 @@ class Tensorflow(Package):
         # Do you wish to download a fresh release of clang? (Experimental)
         env.set('TF_DOWNLOAD_CLANG', '0')
 
+        # Do you wish to build TensorFlow with MPI support?
+        if '+mpi' in spec:
+            env.set('TF_NEED_MPI', '1')
+
+            # Please specify the MPI toolkit folder
+            env.set('MPI_HOME', spec['mpi'].prefix)
+        else:
+            env.set('TF_NEED_MPI', '0')
+            env.unset('MPI_HOME')
+
         # Please specify optimization flags to use during compilation when
         # bazel option "--config=opt" is specified
         # TODO: will this work for compilers (like Apple Clang) that don't
@@ -322,11 +398,6 @@ class Tensorflow(Package):
         else:
             env.set('TF_CONFIGURE_IOS', '0')
 
-        # if '+gcp' in spec:
-        #     env.set('TF_NEED_GCP', '1')
-        # else:
-        #     env.set('TF_NEED_GCP', '0')
-
         # env.set('SWIG_PATH', spec['swig'].prefix.bin)
 
         # # CUDA related configure options
@@ -352,24 +423,7 @@ class Tensorflow(Package):
         #     env.set('TF_CUDNN_VERSION', '')
         #     env.set('CUDNN_INSTALL_PATH', '')
 
-        # env.set('TF_NEED_JEMALLOC', '0')
-        # env.set('TF_NEED_HDFS', '0')
         # env.set('TF_NEED_OPENCL', '0')
-
-        # env.set('TF_NEED_MKL', '0')
-        # env.set('TF_NEED_VERBS', '0')
-
-        # env.set('TF_NEED_MPI', '0')
-
-        # env.set('TF_NEED_S3', '0')
-        # env.set('TF_NEED_GDR', '0')
-        # env.set('TF_SET_ANDROID_WORKSPACE', '0')
-
-        # env.set('TF_NEED_KAFKA', '0')
-
-        # env.set('TF_NEED_AWS', '0')
-
-        # env.set('TF_NEED_IGNITE', '0')
 
         # set tmpdir to a non-NFS filesystem
         # (because bazel uses ~/.cache/bazel)
@@ -507,10 +561,25 @@ class Tensorflow(Package):
         else:
             args.append('--config=nomonolithic')
 
+        if '+grd' in spec:
+            args.append('--config=gdr')
+        else:
+            args.append('--config=nogdr')
+
+        if '+verbs' in spec:
+            args.append('--config=verbs')
+        else:
+            args.append('--config=noverbs')
+
         if '+ngraph' in spec:
             args.append('--config=ngraph')
         else:
             args.append('--config=nongraph')
+
+        if '+numa' in spec:
+            args.append('--config=numa')
+        else:
+            args.append('--config=nonuma')
 
         if '+dynamic_kernels' in spec:
             args.append('--config=dynamic_kernels')
@@ -531,6 +600,16 @@ class Tensorflow(Package):
             args.append('--config=hdfs')
         else:
             args.append('--config=nohdfs')
+
+        if '+ignite' in spec:
+            args.append('--config=ignite')
+        else:
+            args.append('--config=noignite')
+
+        if '+kafka' in spec:
+            args.append('--config=kafka')
+        else:
+            args.append('--config=nokafka')
 
         if '+nccl' in spec:
             args.append('--config=nccl')
