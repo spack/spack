@@ -642,9 +642,7 @@ class BaseContext(tengine.Context):
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(
-            self.spec.package, context='run'
-        )
+        build_environment.set_module_variables_for_package(self.spec.package)
         self.spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
