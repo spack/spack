@@ -785,6 +785,18 @@ def temp_rename(orig_path, temp_path):
             shutil.move(temp_path, orig_path)
 
 
+@contextmanager
+def temp_umask(mask):
+    """Within this context, restrict permissions on newly created files, pipes,
+    and processes.
+    """
+    orig_mask = os.umask(mask)
+    try:
+        yield
+    finally:
+        os.umask(orig_mask)
+
+
 def can_access(file_name):
     """True if we have read/write access to the file."""
     return os.access(file_name, os.R_OK | os.W_OK)

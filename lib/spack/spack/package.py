@@ -50,7 +50,7 @@ import spack.util.web
 import spack.multimethod
 import spack.binary_distribution as binary_distribution
 
-from llnl.util.filesystem import mkdirp, touch, chgrp
+from llnl.util.filesystem import mkdirp, touch, chgrp, temp_umask
 from llnl.util.filesystem import working_dir, install_tree, install
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
@@ -60,6 +60,7 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.util.executable import which
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.environment import dump_environment
+import spack.util.file_permissions as fp
 from spack.util.package_hash import package_hash
 from spack.version import Version
 from spack.package_prefs import get_package_dir_permissions, get_package_group
@@ -1076,9 +1077,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
-        self.stage.create()
-        self.stage.fetch(mirror_only)
+        # Restrict permissions to owner-only when staging
+        PRIVATE_MASK = 0o077
+        with temp_umask(PRIVATE_MASK):
+            self.stage.create()
+            self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
+
+        # Loosen permissions according to packages.yaml
+        fp.set_permissions_by_spec(self.stage.path, self.spec)
 
         if checksum and self.version in self.versions:
             self.stage.check()
