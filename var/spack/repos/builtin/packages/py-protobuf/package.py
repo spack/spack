@@ -15,11 +15,12 @@ class PyProtobuf(PythonPackage):
     and using a variety of languages."""
 
     homepage = 'https://developers.google.com/protocol-buffers/'
-    url      = 'https://pypi.io/packages/source/p/protobuf/protobuf-3.7.1.tar.gz'
+    url      = 'https://pypi.io/packages/source/p/protobuf/protobuf-3.11.0.tar.gz'
 
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.11.0',  sha256='97b08853b9bb71512ed52381f05cf2d4179f4234825b505d8f8d2bb9d9429939')
     version('3.7.1',   sha256='21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9')
     version('3.6.1',   sha256='1489b376b0f364bcc6f89519718c057eb191d7ad6f1b395ffd93d1aa45587811')
     version('3.6.0',   sha256='a37836aa47d1b81c2db1a6b7a5e79926062b5d76bd962115a0e615551be2b48d')
