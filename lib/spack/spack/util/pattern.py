@@ -64,8 +64,12 @@ def composite(interface=None, method_list=None, container=list):
 
             def __get__(self, instance, owner):
                 def getter(*args, **kwargs):
+                    final_result = None
                     for item in instance:
-                        getattr(item, self.name)(*args, **kwargs)
+                        result = getattr(item, self.name)(*args, **kwargs)
+                        if final_result is None:
+                            final_result = result
+                    return final_result
                 # If we are using this descriptor to wrap a method from an
                 # interface, then we must conditionally use the
                 # `functools.wraps` decorator to set the appropriate fields
