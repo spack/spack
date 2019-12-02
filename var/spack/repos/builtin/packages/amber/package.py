@@ -82,8 +82,6 @@ class Amber(Package, CudaPackage):
             default=True)
     variant('openmp', description='Use OpenMP pragmas to parallelize',
             default=False)
-    variant('python', description='Build python applications',
-            default=False)
     variant('x11', description='Build programs that require X11',
             default=False)
     variant('update', description='Update the sources prior compilation',
