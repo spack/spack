@@ -88,12 +88,10 @@ class Amber(Package, CudaPackage):
             default=False)
     variant('update', description='Update the sources prior compilation',
             default=False)
-    variant('cray', description='Compiling in a cray server',
-            default=False)
 
     depends_on('zlib')
-    depends_on('flex')
-    depends_on('bison')
+    depends_on('flex', type='build')
+    depends_on('bison', type='buid')
     depends_on('netcdf-fortran')
     # Potential issues with openmpi 4
     # (http://archive.ambermd.org/201908/0105.html)
@@ -104,7 +102,7 @@ class Amber(Package, CudaPackage):
     depends_on('cuda@7.5.18', when='@:16+cuda')
 
     # conflicts
-    conflicts('+x11', when='+cray',
+    conflicts('+x11', when='platform=cray',
               msg='x11 amber applications not available for cray')
     conflicts('+openmp', when='%clang',
               msg='openmp optimizations not available for the clang compiler')
@@ -127,7 +125,7 @@ class Amber(Package, CudaPackage):
         shutil.rmtree(join_path(self.stage.source_path, 'ambertools_tmpdir'))
 
         # Select compiler style
-        if self.spec.satisfies('+cray'):
+        if self.spec.satisfies('%cce'):
             compiler = 'cray'
         elif self.spec.satisfies('%gcc'):
             compiler = 'gnu'
@@ -187,8 +185,6 @@ class Amber(Package, CudaPackage):
     def setup_run_environment(self, env):
         env.set('AMBER_PREFIX', self.prefix)
         env.set('AMBERHOME', self.prefix)
-        env.prepend_path('PATH', self.prefix.bin)
-        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
         # CUDA
         if self.spec.satisfies('+cuda'):
             env.prepend_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
