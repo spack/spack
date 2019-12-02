@@ -137,10 +137,9 @@ def adjust_raw_vendor(info):
     # https://github.com/gcc-mirror/gcc/blob/master/gcc/config/aarch64/aarch64-cores.def
     # https://patchwork.kernel.org/patch/10524949/
     arm_vendors = targets_json['miscellaneous']['arm_vendors']
-    for code, vendor_name in arm_vendors.items():
-        if info['CPU implementer'] == code:
-            info['CPU implementer'] = vendor_name
-            break
+    arm_code = info['CPU implementer']
+    if arm_code in arm_vendors:
+        info['CPU implementer'] = arm_vendors[arm_code]
 
 
 def raw_info_dictionary():
