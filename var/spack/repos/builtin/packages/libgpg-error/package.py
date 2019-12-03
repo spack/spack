@@ -21,4 +21,5 @@ class LibgpgError(AutotoolsPackage):
     version('1.18', sha256='9ff1d6e61d4cef7c1d0607ceef6d40dc33f3da7a3094170c3718c00153d80810')
 
     depends_on('awk', type=('build'))
+    # Patch for using gawk@5, c.f. https://dev.gnupg.org/T4459
     patch('awk-5.patch', when='@1.36^gawk@5:')
