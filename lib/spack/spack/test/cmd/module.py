@@ -148,8 +148,8 @@ def test_find_recursive():
 def test_find_recursive_blacklisted(database, module_configuration):
     module_configuration('blacklist')
 
-    module('tcl', 'refresh', '-y', '--delete-tree')
-    module('tcl', 'find', '-r', 'mpileaks ^mpich')
+    module('lmod', 'refresh', '-y', '--delete-tree')
+    module('lmod', 'find', '-r', 'mpileaks ^mpich')
 
 
 # Needed to make the 'module_configuration' fixture below work
