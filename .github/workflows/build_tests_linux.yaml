@@ -1,0 +1,41 @@
+name: Build Tests Linux
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        package: [lz4, mpich, tut, py-setuptools, openjpeg, r-rcpp]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install System Packages
+      run: |
+        sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev findutils openssl libssl-dev libpciaccess-dev
+        R --version
+        perl --version
+    - name: Copy Configuration
+      run: |
+        ccache -M 2G && ccache -z
+        # Set up external deps for build tests, b/c they take too long to compile
+        cp share/spack/qa/configuration/*.yaml etc/spack/
+    - name: Run the build test
+      run: |
+        . share/spack/setup-env.sh
+        SPEC=${{ matrix.package }} share/spack/qa/run-build-tests
+        ccache -s
