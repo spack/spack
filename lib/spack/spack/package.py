@@ -1078,8 +1078,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  self.spec.format('{name}{@version}'), ck_msg)
 
         # Restrict permissions to owner-only when staging
-        PRIVATE_MASK = 0o077
-        with temp_umask(PRIVATE_MASK):
+        with temp_umask(0o077):
             self.stage.create()
             self.stage.fetch(mirror_only)
         self._fetch_time = time.time() - start_time
@@ -1090,7 +1089,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if checksum and self.version in self.versions:
             self.stage.check()
 
-        with temp_umask(PRIVATE_MASK):
+        # Restrict permissions to owner-only when caching locally
+        with temp_umask(0o077):
             cached_path = self.stage.cache_local()
         if cached_path is not None:
             fp.set_permissions_by_spec(cached_path, self.spec)
