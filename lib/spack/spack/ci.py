@@ -700,7 +700,7 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                 mirror_urls[0]),
             'tags': final_job_config['tags']
         }
-        if final_job_config['image']:
+        if 'image' in final_job_config:
             final_job['image'] = final_job_config['image']
         if before_script:
             final_job['before_script'] = before_script
