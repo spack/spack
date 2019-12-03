@@ -104,6 +104,12 @@ spack package at this time.''',
 
     depends_on('pmix', when='pmi=pmix')
 
+    # building from git requires regenerating autotools files
+    depends_on('automake@1.15:', when='@develop', type=("build"))
+    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
+    depends_on("m4", when="@develop", type=("build")),
+    depends_on("autoconf@2.67:", when='@develop', type=("build"))
+
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
     conflicts('netmod=ucx', when='device=ch3')
