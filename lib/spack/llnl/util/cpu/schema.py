@@ -73,13 +73,16 @@ properties = {
             }
         },
     },
-    'miscellaneous': {
+    'conversions': {
         'type': 'object',
         'properties': {
+            'description': {
+                'type': 'string'
+            },
             'arm_vendors': {
                 'type': 'object',
             },
-            'darwin_flags_to_linux': {
+            'darwin_flags': {
                 'type': 'object'
             }
         },

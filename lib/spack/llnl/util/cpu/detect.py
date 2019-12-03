@@ -118,7 +118,7 @@ def adjust_raw_flags(info):
     """
     # Flags detected on Darwin turned to their linux counterpart
     flags = info.get('flags', [])
-    d2l = targets_json['miscellaneous']['darwin_flags_to_linux']
+    d2l = targets_json['conversions']['darwin_flags']
     for darwin_flag, linux_flag in d2l.items():
         if darwin_flag in flags:
             info['flags'] += ' ' + linux_flag
@@ -136,7 +136,7 @@ def adjust_raw_vendor(info):
     # https://developer.arm.com/docs/ddi0487/latest/arm-architecture-reference-manual-armv8-for-armv8-a-architecture-profile
     # https://github.com/gcc-mirror/gcc/blob/master/gcc/config/aarch64/aarch64-cores.def
     # https://patchwork.kernel.org/patch/10524949/
-    arm_vendors = targets_json['miscellaneous']['arm_vendors']
+    arm_vendors = targets_json['conversions']['arm_vendors']
     arm_code = info['CPU implementer']
     if arm_code in arm_vendors:
         info['CPU implementer'] = arm_vendors[arm_code]

@@ -1347,7 +1347,8 @@
       ]
     }
   },
-  "miscellaneous": {
+  "conversions": {
+    "description": "Conversions that map some platform specific values to canonical values",
     "arm_vendors": {
       "0x41": "ARM",
       "0x42": "Broadcom",
@@ -1367,7 +1368,7 @@
       "0x68": "HXT",
       "0x69": "Intel"
     },
-    "darwin_flags_to_linux": {
+    "darwin_flags": {
       "sse4.1": "sse4_1",
       "sse4.2": "sse4_2",
       "avx1.0": "avx",
