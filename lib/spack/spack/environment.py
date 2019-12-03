@@ -994,7 +994,10 @@ class Environment(object):
         else:
             # spec might be in the user_specs, but not installed.
             # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
+            try:
+              spec = next(s for s in self.user_specs if s.satisfies(user_spec))
+            except StopIteration as it:
+              pass
             concrete = self.specs_by_hash.get(spec.build_hash())
             if not concrete:
                 concrete = spec.concretized()
