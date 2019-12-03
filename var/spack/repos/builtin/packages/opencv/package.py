@@ -80,7 +80,7 @@ class Opencv(CMakePackage):
     # Optional 3rd party components
     variant('cuda', default=True, description='Activates support for CUDA')
     # Cuda@10.0.130 does not support gcc > 7
-    conflicts('%gcc@7:', when='+cuda')
+    conflicts('%gcc@8:', when='+cuda')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
