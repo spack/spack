@@ -55,31 +55,36 @@ class Tensorflow(Package):
     version('0.7.0',  sha256='43dd3051f947aa66e6fc09dac2f86a2efe2e019736bbd091c138544b86d717ce')
     version('0.6.0',  sha256='f86ace45e99053b09749cd55ab79c57274d8c7460ae763c5e808d81ffbc3b657')
 
+    variant('mkl', default=False, description='Build with MKL support')
     variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
     variant('gcp', default=False, description='Build with Google Cloud Platform support')
     variant('hdfs', default=False, description='Build with Hadoop File System support')
     variant('aws', default=False, description='Build with Amazon AWS Platform support')
     variant('kafka', default=False, description='Build with Apache Kafka Platform support')
     variant('ignite', default=False, description='Build with Apache Ignite support')
-    variant('xla_jit', default=False, description='Build with XLA JIT support')
+    variant('xla', default=False, description='Build with XLA JIT support')
     variant('gdr', default=False, description='Build with GDR support')
     variant('verbs', default=False, description='Build with libverbs support')
     variant('ngraph', default=False, description='Build with Intel nGraph support')
-    variant('opencl_sycl', default=False, description='Build with OpenCL SYCL support')
+    variant('opencl', default=False, description='Build with OpenCL SYCL support')
     variant('computecpp', default=False, description='Build with ComputeCPP support')
     variant('rocm', default=False, description='Build with ROCm support')
     variant('cuda', default=True, description='Enable CUDA support')
     variant('tensorrt', default=False, description='Build with TensorRT support')
+    variant('nccl', default=sys.platform.startswith('linux'), description='Enable NVIDIA NCCL support')
     variant('mpi', default=False, description='Build with MPI support')
     variant('android', default=False, description='Configure for Android builds')
     variant('ios', default=False, description='Build with iOS support (macOS only)')
-    variant('mkl', default=False, description='Build with MKL support')
     variant('monolithic', default=False, description='Static monolithic build')
     variant('numa', default=False, description='Build with NUMA support')
     variant('dynamic_kernels', default=False, description='Build kernels into separate shared objects')
-    variant('nccl', default=sys.platform == 'Linux', description='Enable NVIDIA NCCL support')
 
     extends('python')
+
+    # TODO: Older versions of TensorFlow don't list the viable version range,
+    # just the minimum version of bazel that will work. The latest version of
+    # bazel doesn't seem to work, so for now we force them to use min version.
+    # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1:')
@@ -93,14 +98,14 @@ class Tensorflow(Package):
     # See call to check_version in tensorflow/workspace.bzl
     depends_on('bazel@0.5.4',         type='build', when='@1.4:1.6')
     # See MIN_BAZEL_VERSION in configure
-    depends_on('bazel@0.4.5:',        type='build', when='@1.2:1.3')
+    depends_on('bazel@0.4.5',         type='build', when='@1.2:1.3')
     # See call to check_version in WORKSPACE
-    depends_on('bazel@0.4.2:',        type='build', when='@1.0:1.1')
-    depends_on('bazel@0.3.2:',        type='build', when='@0.12.0:0.12.1')
-    depends_on('bazel@0.3.0:',        type='build', when='@0.11.0')
-    depends_on('bazel@0.2.0:',        type='build', when='@0.9:0.10')
-    depends_on('bazel@0.1.4:',        type='build', when='@0.8.0')
-    depends_on('bazel',               type='build', when='@:0.7')
+    depends_on('bazel@0.4.2',         type='build', when='@1.0:1.1')
+    depends_on('bazel@0.3.2',         type='build', when='@0.12.0:0.12.1')
+    depends_on('bazel@0.3.0',         type='build', when='@0.11.0')
+    depends_on('bazel@0.2.0',         type='build', when='@0.9:0.10')
+    depends_on('bazel@0.1.4',         type='build', when='@0.7:0.8')
+    depends_on('bazel@0.1.1',         type='build', when='@0.5:0.6')
 
     depends_on('swig', type='build')
     depends_on('py-setuptools', type='build')
@@ -163,34 +168,60 @@ class Tensorflow(Package):
     depends_on('py-scipy@0.15.1:', type='test')
 
     # TODO: add packages for some of these dependencies
-    depends_on('computecpp', when='+opencl_sycl+computecpp')
-    depends_on('trisycl',    when='+opencl_sycl~computepp')
+    depends_on('mkl', when='+mkl')
+    depends_on('curl', when='+gcp')
+    depends_on('computecpp', when='+opencl+computecpp')
+    depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cuda', when='+cuda')
+    depends_on('cuda@7.0', when='@0.5:0.6 +cuda')
     depends_on('cudnn', when='+cuda')
+    depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
     depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
     depends_on('mpi', when='+mpi')
     depends_on('android-ndk@10:18', when='+android')
     depends_on('android-sdk', when='+android')
-    depends_on('mkl', when='+mkl')
 
-    # TODO: figure out when these variants start being supported
+    # Check configure and configure.py to see when these variants are supported
+    conflicts('+mkl', when='@:1.0')
+    conflicts('+mkl', when='platform=darwin', msg='Darwin is not yet supported')
+    conflicts('+jemalloc', when='@:0')
     conflicts('+jemalloc', when='platform=darwin', msg='Currently jemalloc is only support on Linux platform')
     conflicts('+jemalloc', when='platform=cray',   msg='Currently jemalloc is only support on Linux platform')
     conflicts('+jemalloc', when='platform=bgq',    msg='Currently jemalloc is only support on Linux platform')
-    conflicts('+computepp', when='~opencl_sycl')
+    conflicts('+gcp', when='@:0.8')
+    conflicts('+hdfs', when='@:0.10')
+    conflicts('+aws', when='@:1.3')
+    conflicts('+kafka', when='@:1.5')
+    conflicts('+ignite', when='@:1.11')
+    conflicts('+xla', when='@:0')
+    conflicts('+gdr', when='@:1.3')
+    conflicts('+verbs', when='@:1.1')
+    conflicts('+ngraph', when='@:1.10')
+    conflicts('+opencl', when='@:0.11')
+    conflicts('+computecpp', when='@:0.11')
+    conflicts('+computecpp', when='~opencl')
+    conflicts('+rocm', when='@:1.11')
     conflicts('+cuda', when='platform=darwin', msg='There is no GPU support for macOS')
+    conflicts('+tensorrt', when='@:1.5')
     conflicts('+tensorrt', when='~cuda')
     conflicts('+tensorrt', when='platform=darwin', msg='Currently TensorRT is only supported on Linux platform')
     conflicts('+tensorrt', when='platform=cray',   msg='Currently TensorRT is only supported on Linux platform')
     conflicts('+tensorrt', when='platform=bgq',    msg='Currently TensorRT is only supported on Linux platform')
+    conflicts('+nccl', when='@:1.7')
     conflicts('+nccl', when='~cuda')
     conflicts('+nccl', when='platform=darwin', msg='Currently NCCL is only supported on Linux platform')
     conflicts('+nccl', when='platform=cray',   msg='Currently NCCL is only supported on Linux platform')
     conflicts('+nccl', when='platform=bgq',    msg='Currently NCCL is only supported on Linux platform')
+    conflicts('+mpi', when='@:1.2')
+    conflicts('+android', when='@:1.4')
+    conflicts('+ios', when='@:1.12.0,1.12.2:1.13')
     conflicts('+ios', when='platform=linux', msg='iOS support only available on macOS')
     conflicts('+ios', when='platform=cray',  msg='iOS support only available on macOS')
     conflicts('+ios', when='platform=bgq',   msg='iOS support only available on macOS')
+    conflicts('+monolithic', when='@:1.3')
+    conflicts('+numa', when='@:1.12.0,1.12.2:1.13')
+    conflicts('+dynamic_kernels', when='@:1.12.0,1.12.2:1.12.3')
 
     # TODO: is this needed?
     patch('url-zlib.patch',  when='@0.10.0')
@@ -212,6 +243,21 @@ class Tensorflow(Package):
 
         # Please input the desired Python library path to use
         env.set('PYTHON_LIB_PATH', site_packages_dir)
+
+        # Ensure swig is in PATH or set SWIG_PATH
+        env.set('SWIG_PATH', spec['swig'].prefix.bin.swig)
+
+        # Do you wish to build TensorFlow with MKL support?
+        if '+mkl' in spec:
+            env.set('TF_NEED_MKL', '1')
+
+            # Do you wish to download MKL LIB from the web?
+            env.set('TF_DOWNLOAD_MKL', '0')
+
+            # Please specify the location where MKL is installed
+            env.set('MKL_INSTALL_PATH', spec['mkl'].prefix)
+        else:
+            env.set('TF_NEED_MKL', '0')
 
         # Do you wish to build TensorFlow with jemalloc as malloc support?
         if '+jemalloc' in spec:
@@ -252,7 +298,7 @@ class Tensorflow(Package):
             env.set('TF_NEED_IGNITE', '0')
 
         # Do you wish to build TensorFlow with XLA JIT support?
-        if '+xla_jit' in spec:
+        if '+xla' in spec:
             env.set('TF_ENABLE_XLA', '1')
         else:
             env.set('TF_ENABLE_XLA', '0')
@@ -276,8 +322,9 @@ class Tensorflow(Package):
             env.set('TF_NEED_NGRAPH', '0')
 
         # Do you wish to build TensorFlow with OpenCL SYCL support?
-        if '+opencl_sycl' in spec:
+        if '+opencl' in spec:
             env.set('TF_NEED_OPENCL_SYCL', '1')
+            env.set('TF_NEED_OPENCL', '1')
 
             # Please specify which C++ compiler should be used as the host
             # C++ compiler
@@ -300,6 +347,7 @@ class Tensorflow(Package):
                 env.set('TRISYCL_INCLUDE_DIR', spec['trisycl'].prefix.include)
         else:
             env.set('TF_NEED_OPENCL_SYCL', '0')
+            env.set('TF_NEED_OPENCL', '0')
 
         # Do you wish to build TensorFlow with ROCm support?
         if '+rocm' in spec:
@@ -310,6 +358,12 @@ class Tensorflow(Package):
         # Do you wish to build TensorFlow with CUDA support?
         if '+cuda' in spec:
             env.set('TF_NEED_CUDA', '1')
+
+            # Do you want to use clang as CUDA compiler?
+            env.set('TF_CUDA_CLANG', '0')
+
+            # Please specify which gcc nvcc should use as the host compiler
+            env.set('GCC_HOST_COMPILER_PATH', spack_cc)
 
             cuda_paths = [
                 spec['cuda'].prefix,
@@ -325,6 +379,9 @@ class Tensorflow(Package):
                 # Please specify the TensorRT version you want to use
                 env.set('TF_TENSORRT_VERSION',
                         spec['tensorrt'].version.up_to(1))
+
+                # Please specify the location where TensorRT is installed
+                env.set('TENSORRT_INSTALL_PATH', spec['tensorrt'].prefix)
             else:
                 env.set('TF_NEED_TENSORRT', '0')
                 env.unset('TF_TENSORRT_VERSION')
@@ -336,16 +393,25 @@ class Tensorflow(Package):
             env.set('TF_CUDNN_VERSION', spec['cudnn'].version.up_to(1))
 
             if '+nccl' in spec:
+                cuda_paths.append(spec['nccl'].prefix)
+
                 # Please specify the locally installed NCCL version to use
                 env.set('TF_NCCL_VERSION', spec['nccl'].version.up_to(1))
 
-                cuda_paths.append(spec['nccl'].prefix)
+                # Please specify the location where NCCL is installed
+                env.set('NCCL_INSTALL_PATH', spec['nccl'].prefix)
             else:
                 env.unset('TF_NCCL_VERSION')
 
             # Please specify the comma-separated list of base paths to
             # look for CUDA libraries and headers
             env.set('TF_CUDA_PATHS', ','.join(cuda_paths))
+
+            # Please specify the location where CUDA toolkit is installed
+            env.set('CUDA_TOOLKIT_PATH', spec['cuda'].prefix)
+
+            # Please specify the location where CUDNN library is installed
+            env.set('CUDNN_INSTALL_PATH', spec['cudnn'].prefix)
         else:
             env.set('TF_NEED_CUDA', '0')
 
@@ -364,10 +430,6 @@ class Tensorflow(Package):
 
         # Please specify optimization flags to use during compilation when
         # bazel option "--config=opt" is specified
-        # TODO: will this work for compilers (like Apple Clang) that don't
-        # currently have microarchitecture optimization support in Spack?
-        # Setting CC_OPT_FLAGS to the empty string didn't work, but what
-        # about ' '?
         env.set('CC_OPT_FLAGS', spec.target.optimization_flags(
             spec.compiler.name, spec.compiler.version))
 
@@ -398,13 +460,6 @@ class Tensorflow(Package):
         else:
             env.set('TF_CONFIGURE_IOS', '0')
 
-        # env.set('SWIG_PATH', spec['swig'].prefix.bin)
-
-        # # CUDA related configure options
-        # if '+cuda' in spec:
-        #     env.set('CUDA_TOOLKIT_PATH', spec['cuda'].prefix)
-        #     # ignored? as of tf@1.14.0:
-        #     env.set('CUDNN_INSTALL_PATH', spec['cudnn'].prefix)
         #     # TODO: create a string valued variant for compute capabilities?
         #     # one should be able to specify single or multiple capabilities
         #     env.set('TF_CUDA_COMPUTE_CAPABILITIES', "6.1,7.5")
@@ -418,12 +473,6 @@ class Tensorflow(Package):
         #     env.set('NCCL_HDR_PATH', spec['nccl'].prefix.include)
 
         #     env.set('TF_CUDA_CLANG', '0')
-        # else:
-        #     env.set('CUDA_TOOLKIT_PATH', '')
-        #     env.set('TF_CUDNN_VERSION', '')
-        #     env.set('CUDNN_INSTALL_PATH', '')
-
-        # env.set('TF_NEED_OPENCL', '0')
 
         # set tmpdir to a non-NFS filesystem
         # (because bazel uses ~/.cache/bazel)
@@ -437,6 +486,8 @@ class Tensorflow(Package):
         tmp_path = '/tmp/spack/tf'
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
+        # TODO: Is setting this necessary? It breaks `spack build-env`
+        # because Bash can't find my .bashrc
         env.set('HOME', tmp_path)
 
     def configure(self, spec, prefix):
