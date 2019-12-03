@@ -790,7 +790,7 @@ def process_args():
         description='Demonstrate distributed, lock-based builds')
 
     # Options
-    parser.add_argument('--build-time', type=int, default=30,
+    parser.add_argument('--build-time', type=int, default=4,  # TODO: 30 is good
                         help='mock build time (sec)')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='enable debug log messages')
@@ -798,7 +798,7 @@ def process_args():
                         help='name of spec to fail during testing')
     parser.add_argument('--real', action='store_true', default=False,
                         help='attempt an actual installation')
-    parser.add_argument('--timeout', type=float, default=.1,  # TODO: enough time?
+    parser.add_argument('--timeout', type=float, default=1e-9,  # TODO: enough time?
                         help='package lock timeout (sec)')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='enable verbose output')
@@ -824,7 +824,7 @@ def main(args):
 
     pid = os.getpid()
     for spec_name in args.spec:
-        tty.msg('PID {0}: Began processing {1}'.format(pid, spec_name))
+        log('PID {0}: Began processing {1}'.format(pid, spec_name))
         mgr = BuildManager(spec_name, not args.real)
         mgr.install()
 
