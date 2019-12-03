@@ -32,3 +32,12 @@ def test_true_directives_exist(mock_packages):
 
     assert cls.patches
     assert Spec() in cls.patches
+
+
+def test_import_resources(mock_packages):
+    pkg = spack.repo.get("test_import_resources")
+    assert len(pkg.resources) == 3
+    assert list(pkg.resources.keys()) == [Spec(), Spec("@1"), Spec("@2.2:")]
+    assert len(pkg.resources[Spec()]) == 1
+    assert len(pkg.resources[Spec("@1")]) == 1
+    assert len(pkg.resources[Spec("@2.2:")]) == 2

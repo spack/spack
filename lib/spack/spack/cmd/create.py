@@ -394,6 +394,25 @@ class SIPPackageTemplate(PackageTemplate):
         super(SIPPackageTemplate, self).__init__(name, *args, **kwargs)
 
 
+class GoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Go-based packages."""
+
+    base_class_name = 'GoPackage'
+
+    dependencies = """\
+    # FIXME: GoPackage's default might not suit, adjust as necessary
+    # depends_on('go@1.X.Y:', type='build')
+
+    # FIXME: Add additional dependencies if required.
+    # depends_on('foo')"""
+
+    body_def = """\
+    # FIXME: Add any add'l build flags (-mod=vendor is added automagically)
+    # build_flags = []
+    # FIXME: [REQUIRED] Add names of executables to install into prefix.bin
+    executables = []"""
+
+
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
@@ -412,6 +431,7 @@ templates = {
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
     'sip':        SIPPackageTemplate,
+    'go':         GoPackageTemplate,
     'generic':    PackageTemplate,
 }
 
@@ -484,6 +504,7 @@ class BuildSystemGuesser:
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
             (r'/.*\.pro$',            'qmake'),
+            (r'/go\.mod$',            'go'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
             (r'/meson\.build$',       'meson'),
