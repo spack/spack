@@ -20,10 +20,7 @@ class Mrbayes(AutotoolsPackage):
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('beagle', default=True, description='Enable BEAGLE library for speed benefits')
-    variant('readline', default=True, description='Enable readline library')
-    variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
-    variant('avx', default=True, description='Enable AVX in order to substantially speed up execution')
-    variant('fma', default=True, description='Enable FMA in order to substantially speed up execution')
+    variant('readline', default=False, description='Enable readline library, not recommended with MPI')
 
     depends_on('libbeagle', when='+beagle')
     depends_on('mpi', when='+mpi')
@@ -35,22 +32,10 @@ class Mrbayes(AutotoolsPackage):
             args.append('--with-beagle=no')
         else:
             args.append('--with-beagle=%s' % self.spec['libbeagle'].prefix)
-        if '~readline' in self.spec:
-            args.append('--with-readline=no')
-        else:
+        if '+readline' in self.spec:
             args.append('--with-readline=yes')
-        if '~sse' in self.spec:
-            args.append('--enable-sse=no')
         else:
-            args.append('--enable-sse=yes')
-        if '~avx' in self.spec:
-            args.append('--enable-avx=no')
-        else:
-            args.append('--enable-avx=yes')
-        if '~fma' in self.spec:
-            args.append('--enable-fma=no')
-        else:
-            args.append('--enable-fma=yes')
+            args.append('--with-readline=no')
         if '~mpi' in self.spec:
             args.append('--with-mpi=no')
         else:
