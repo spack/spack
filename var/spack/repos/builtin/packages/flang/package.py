@@ -71,9 +71,11 @@ class Flang(CMakePackage):
         chmod = which('chmod')
         chmod('+x', flang)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # to find llvm's libc++.so
-        spack_env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'flang'))
+        env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('FC',  self.spec.prefix.bin.flang)
+        env.set('F77', self.spec.prefix.bin.flang)
+        env.set('F90', self.spec.prefix.bin.flang)

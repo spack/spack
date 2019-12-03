@@ -126,24 +126,24 @@ class OpenfoamOrg(Package):
             settings['label-size'] = False
         return settings
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # This should be similar to the openfoam package,
         # but sourcing the etc/bashrc here seems to exit with an error.
         # ... this needs to be examined in more detail.
         #
         # Minimal environment only.
-        run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-        run_env.set('WM_PROJECT_DIR', self.projectdir)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
-            run_env.prepend_path('PATH', join_path(self.projectdir, d))
+            env.prepend_path('PATH', join_path(self.projectdir, d))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
         """
-        spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):

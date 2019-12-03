@@ -28,24 +28,26 @@ def compute_hash(path):
 
 def create_manifest_entry(path):
     data = {}
-    stat = os.stat(path)
 
-    data['mode'] = stat.st_mode
-    data['owner'] = stat.st_uid
-    data['group'] = stat.st_gid
+    if os.path.exists(path):
+        stat = os.stat(path)
 
-    if os.path.islink(path):
-        data['type'] = 'link'
-        data['dest'] = os.readlink(path)
+        data['mode'] = stat.st_mode
+        data['owner'] = stat.st_uid
+        data['group'] = stat.st_gid
 
-    elif os.path.isdir(path):
-        data['type'] = 'dir'
+        if os.path.islink(path):
+            data['type'] = 'link'
+            data['dest'] = os.readlink(path)
 
-    else:
-        data['type'] = 'file'
-        data['hash'] = compute_hash(path)
-        data['time'] = stat.st_mtime
-        data['size'] = stat.st_size
+        elif os.path.isdir(path):
+            data['type'] = 'dir'
+
+        else:
+            data['type'] = 'file'
+            data['hash'] = compute_hash(path)
+            data['time'] = stat.st_mtime
+            data['size'] = stat.st_size
 
     return data
 

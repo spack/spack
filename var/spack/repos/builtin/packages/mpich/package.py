@@ -19,6 +19,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     version('develop', submodules=True)
+    version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
     version('3.3.1', sha256='fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
     version('3.3',   sha256='329ee02fe6c3d101b6b30a7b6fb97ddf6e82b28844306771fa9dd8845108fa0b')
     version('3.2.1', sha256='5db53bf2edfaa2238eb6a0a5bc3d2c2ccbfbb1badd79b664a1a919d2ce2330f1')
@@ -92,6 +93,8 @@ spack package at this time.''',
     # The ch3 ofi netmod results in crashes with libfabric 1.7
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
+
+    depends_on('ucx', when='netmod=ucx')
 
     depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
@@ -216,10 +219,13 @@ spack package at this time.''',
 
         config_args.append(device_config)
 
-        # Specify libfabric's path explicitly, otherwise configure might fall
-        # back to an embedded version of libfabric.
+        # Specify libfabric or ucx path explicitly, otherwise
+        # configure might fall back to an embedded version.
         if 'netmod=ofi' in spec:
             config_args.append('--with-libfabric={0}'.format(
                 spec['libfabric'].prefix))
+        if 'netmod=ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(
+                spec['ucx'].prefix))
 
         return config_args

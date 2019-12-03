@@ -6,6 +6,7 @@
 
 import os
 import re
+import shutil
 import platform
 import spack.repo
 import spack.cmd
@@ -86,7 +87,14 @@ def get_existing_elf_rpaths(path_name):
     Return the RPATHS returned by patchelf --print-rpath path_name
     as a list of strings.
     """
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        patchelf = Executable(path_name)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         output = patchelf('--print-rpath', '%s' %
                           path_name, output=str, error=str)
@@ -326,8 +334,18 @@ def modify_elf_object(path_name, new_rpaths):
     """
     Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
+
     new_joined = ':'.join(new_rpaths)
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        bak_path = path_name + ".bak"
+        shutil.copy(path_name, bak_path)
+        patchelf = Executable(bak_path)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                  '%s' % path_name, output=str, error=str)
@@ -360,17 +378,21 @@ def replace_prefix_text(path_name, old_dir, new_dir):
     Replace old install prefix with new install prefix
     in text files using utf-8 encoded strings.
     """
-
-    def replace(match):
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8'))
     with open(path_name, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        pat = re.compile(old_dir.encode('utf-8'))
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
+        # Replace old_dir with new_dir if it appears at the beginning of a path
+        # Negative lookbehind for a character legal in a path
+        # Then a match group for any characters legal in a compiler flag
+        # Then old_dir
+        # Then characters legal in a path
+        # Ensures we only match the old_dir if it's precedeed by a flag or by
+        # characters not legal in a path, but not if it's preceeded by other
+        # components of a path.
+        old_bytes = old_dir.encode('utf-8')
+        pat = b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes
+        repl = b'\\1%s\\2' % new_dir.encode('utf-8')
+        ndata = re.sub(pat, repl, data)
         f.write(ndata)
         f.truncate()
 
@@ -484,11 +506,11 @@ def make_link_relative(cur_path_names, orig_path_names):
     Change absolute links to be relative.
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        old_src = os.readlink(orig_path)
-        new_src = os.path.relpath(old_src, orig_path)
+        target = os.readlink(orig_path)
+        relative_target = os.path.relpath(target, os.path.dirname(orig_path))
 
         os.unlink(cur_path)
-        os.symlink(new_src, cur_path)
+        os.symlink(relative_target, cur_path)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names, old_dir,
@@ -633,7 +655,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(file):
+def file_is_relocatable(file, paths_to_relocate=None):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -646,6 +668,8 @@ def file_is_relocatable(file):
 
         ValueError: if the file does not exist or the path is not absolute
     """
+    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
+    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
     if not (platform.system().lower() == 'darwin'
             or platform.system().lower() == 'linux'):
@@ -659,7 +683,13 @@ def file_is_relocatable(file):
         raise ValueError('{0} is not an absolute path'.format(file))
 
     strings = Executable('strings')
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if file[-13:] == "/bin/patchelf":
+        patchelf = Executable(file)
+    else:
+        patchelf = Executable(get_patchelf())
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
@@ -680,19 +710,13 @@ def file_is_relocatable(file):
             if idpath is not None:
                 set_of_strings.discard(idpath)
 
-    if any(spack.store.layout.root in x for x in set_of_strings):
-        # One binary has the root folder not in the RPATH,
-        # meaning that this spec is not relocatable
-        msg = 'Found "{0}" in {1} strings'
-        tty.debug(msg.format(spack.store.layout.root, file))
-        return False
-
-    if any(spack.paths.prefix in x for x in set_of_strings):
-        # One binary has the root folder not in the RPATH,
-        # meaning that this spec is not relocatable
-        msg = 'Found "{0}" in {1} strings'
-        tty.debug(msg.format(spack.paths.prefix, file))
-        return False
+    for path_to_relocate in paths_to_relocate:
+        if any(path_to_relocate in x for x in set_of_strings):
+            # One binary has the root folder not in the RPATH,
+            # meaning that this spec is not relocatable
+            msg = 'Found "{0}" in {1} strings'
+            tty.debug(msg.format(path_to_relocate, file))
+            return False
 
     return True
 

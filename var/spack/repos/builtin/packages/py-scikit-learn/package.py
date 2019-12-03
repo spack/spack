@@ -79,7 +79,7 @@ class PyScikitLearn(PythonPackage):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
         elif self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
             env.append_flags(
-                'CPPFLAGS', '-Xpreprocessor -fopenmp')
+                'CPPFLAGS', self.compiler.openmp_flag)
             env.append_flags(
                 'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             env.append_flags(

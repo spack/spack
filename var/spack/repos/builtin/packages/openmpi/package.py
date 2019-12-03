@@ -78,15 +78,18 @@ class Openmpi(AutotoolsPackage):
     version('develop', branch='master')
 
     # Current
-    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
 
     # Still supported
+    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('3.1.5', sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
     version('3.1.4', preferred=True, sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
     version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
     version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.0.5', sha256='f8976b95f305efc435aa70f906b82d50e335e34cffdbf5d78118a507b1c6efe8')  # libmpi.so.40.00.5
     version('3.0.4', sha256='2ff4db1d3e1860785295ab95b03a2c0f23420cda7c1ae845c419401508a3c7b5')  # libmpi.so.40.00.5
     version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.4
     version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
@@ -188,6 +191,7 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
+    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.3')
 
     # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
     # Haven't release fix for 2.1.x
@@ -311,16 +315,16 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
@@ -430,6 +434,13 @@ class Openmpi(AutotoolsPackage):
         # Fabrics
         if 'fabrics=auto' not in spec:
             config_args.extend(self.with_or_without('fabrics'))
+        # The wrappers fail to automatically link libfabric. This will cause
+        # undefined references unless we add the appropriate flags.
+        if 'fabrics=libfabric' in spec:
+            config_args.append('--with-wrapper-ldflags=-L{0} -Wl,-rpath={0}'
+                               .format(spec['libfabric'].prefix.lib))
+            config_args.append('--with-wrapper-libs=-lfabric')
+
         # Schedulers
         if 'schedulers=auto' not in spec:
             config_args.extend(self.with_or_without('schedulers'))
@@ -444,7 +455,6 @@ class Openmpi(AutotoolsPackage):
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
-
         # Java support
         if spec.satisfies('@1.7.4:'):
             if '+java' in spec:

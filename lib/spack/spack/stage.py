@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from __future__ import print_function
+
 import os
 import stat
 import sys
@@ -434,11 +436,9 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             for url in urls:
-                fetchers.append(fs.from_url_scheme(
-                    url, digest, expand=expand, extension=extension))
-                # fetchers.insert(
-                #     0, fs.URLFetchStrategy(
-                #         url, digest, expand=expand, extension=extension))
+                fetchers.insert(
+                    0, fs.from_url_scheme(
+                        url, digest, expand=expand, extension=extension))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):
@@ -501,13 +501,13 @@ class Stage(object):
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
-            return
+        else:
+            self.fetch()
+            spack.caches.mirror_cache.store(
+                self.fetcher, self.mirror_paths.storage_path)
+            stats.added(absolute_storage_path)
 
-        self.fetch()
-        spack.caches.mirror_cache.store(
-            self.fetcher, self.mirror_paths.storage_path,
-            self.mirror_paths.cosmetic_path)
-        stats.added(absolute_storage_path)
+        spack.caches.mirror_cache.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -763,7 +763,7 @@ def get_checksums_for_versions(
             *spack.cmd.elide_list(
                 ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
-    tty.msg('')
+    print()
 
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=1, abort='q')
@@ -810,7 +810,7 @@ def get_checksums_for_versions(
     ])
 
     num_hash = len(version_hashes)
-    tty.msg("Checksummed {0} version{1} of {2}".format(
+    tty.msg("Checksummed {0} version{1} of {2}:".format(
         num_hash, '' if num_hash == 1 else 's', name))
 
     return version_lines

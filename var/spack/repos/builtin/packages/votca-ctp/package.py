@@ -20,10 +20,11 @@ class VotcaCtp(CMakePackage):
     git      = "https://github.com/votca/ctp.git"
 
     version('develop', branch='master')
+    version('1.5.1', sha256='ef957c2f6b09335d0d27ecb7e1b80b55e76a100247bc0d0b3cfef7718d2a1126')
     version('1.5', sha256='31eb6bcc9339e575116f0c91fe7a4ce7d4189f31f0640329c993fea911401d65')
 
     depends_on("cmake@2.8:", type='build')
-    for v in ["1.5", "develop"]:
-        depends_on('votca-tools@%s' % v, when="@%s" % v)
-        depends_on('votca-csg@%s' % v, when="@%s" % v)
+    for v in ["1.5", "1.5.1", "develop"]:
+        depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
+        depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("gsl")

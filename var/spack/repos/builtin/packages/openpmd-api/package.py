@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='dev')
+    version('0.10.0',  tag='0.10.0-alpha')
 
     variant('shared', default=True,
             description='Build a shared version of the library')
@@ -26,8 +27,6 @@ class OpenpmdApi(CMakePackage):
             description='Enable ADIOS1 support')
     variant('adios2', default=False,
             description='Enable ADIOS2 support')
-    variant('json', default=True,
-            description='Enable JSON support')
     variant('python', default=False,
             description='Enable Python bindings')
 
@@ -44,7 +43,7 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.4.0:', when='+adios2')
     depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.7.0:', when='+json')
+    depends_on('nlohmann-json@3.7.0:')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
@@ -67,8 +66,6 @@ class OpenpmdApi(CMakePackage):
                 'ON' if '+adios1' in spec else 'OFF'),
             '-DopenPMD_USE_ADIOS2:BOOL={0}'.format(
                 'ON' if '+adios2' in spec else 'OFF'),
-            '-DopenPMD_USE_JSON:BOOL={0}'.format(
-                'ON' if '+json' in spec else 'OFF'),
             '-DopenPMD_USE_PYTHON:BOOL={0}'.format(
                 'ON' if '+python' in spec else 'OFF'),
             # tests and examples
@@ -84,10 +81,10 @@ class OpenpmdApi(CMakePackage):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
                         self.spec['python'].command.path))
 
-        if spec.satisfies('+json'):
-            args.append('-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF')
-
-        args.append('-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF')
+        args.extend([
+            '-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF',
+            '-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF'
+        ])
         if self.run_tests:
             args.append('-DopenPMD_USE_INTERNAL_CATCH:BOOL=OFF')
 

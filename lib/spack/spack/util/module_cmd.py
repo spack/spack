@@ -17,7 +17,7 @@ import llnl.util.tty as tty
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
-py_cmd = "'import os\nimport json\nprint(json.dumps(dict(os.environ)))'"
+py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
 
 # This is just to enable testing. I hate it but we can't find a better way
 _test_mode = False

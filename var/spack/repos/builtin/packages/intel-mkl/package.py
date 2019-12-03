@@ -13,6 +13,8 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2019.5.281', sha256='9995ea4469b05360d509c9705e9309dc983c0a10edc2ae3a5384bc837326737e',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15816/l_mkl_2019.5.281.tgz")
     version('2019.3.199', sha256='06de2b54f4812e7c39a118536259c942029fe1d6d8918ad9df558a83c4162b8f',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15275/l_mkl_2019.3.199.tgz")
     version('2019.1.144', sha256='5205a460a9c685f7a442868367389b2d0c25e1455346bc6a37c5b8ff90a20fbb',

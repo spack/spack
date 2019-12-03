@@ -20,6 +20,7 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
@@ -61,6 +62,7 @@ class Vtk(CMakePackage):
 
     if sys.platform != 'darwin':
         depends_on('glx', when='~osmesa')
+        depends_on('libxt', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
@@ -69,24 +71,22 @@ class Vtk(CMakePackage):
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
 
-    depends_on('mpi', when='+mpi')
-
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
-
-    depends_on('mpi', when='+mpi')
-
     depends_on('ffmpeg', when='+ffmpeg')
+    depends_on('mpi', when='+mpi')
 
     depends_on('expat')
     depends_on('freetype')
     depends_on('glew')
-    depends_on('hdf5')
+    # set hl variant explicitly, similar to issue #7145
+    depends_on('hdf5+hl')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('netcdf-c')
+    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c+mpi', when='+mpi')
     depends_on('netcdf-cxx')
     depends_on('libpng')
     depends_on('libtiff')

@@ -243,8 +243,8 @@ class Root(CMakePackage):
     # depends_on('pythia@8:8.999',  when='+pythia8') - not supported on Spack
     depends_on('python@2.7:',     when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
-    depends_on('r-cpp',     when='+r', type=('build', 'run'))
-    depends_on('r-inside',  when='+r', type=('build', 'run'))
+    depends_on('r-rcpp',     when='+r', type=('build', 'run'))
+    depends_on('r-rinside',  when='+r', type=('build', 'run'))
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
@@ -252,8 +252,7 @@ class Root(CMakePackage):
     depends_on('vc',        when='+vc')
     depends_on('veccore',   when='+veccore')
     depends_on('vdt',       when='+vdt')
-    depends_on('libxml2+python',   when='+xml+python')
-    depends_on('libxml2~python',   when='+xml~python')
+    depends_on('libxml2',   when='+xml')
     depends_on('xrootd',    when='+xrootd')
     # depends_on('hdfs') - supported (TODO)
 
@@ -507,23 +506,27 @@ class Root(CMakePackage):
                            spec['python'].command.path)
         return options
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ROOTSYS', self.prefix)
-        run_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+    def setup_build_environment(self, env):
         if 'lz4' in self.spec:
-            spack_env.append_path('CMAKE_PREFIX_PATH',
-                                  self.spec['lz4'].prefix)
-        spack_env.set('SPACK_INCLUDE_DIRS', '', force=True)
+            env.append_path('CMAKE_PREFIX_PATH',
+                            self.spec['lz4'].prefix)
+        env.set('SPACK_INCLUDE_DIRS', '', force=True)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('ROOTSYS', self.prefix)
-        spack_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
-        spack_env.prepend_path('PATH', self.prefix.bin)
-        spack_env.append_path('CMAKE_MODULE_PATH', '{0}/cmake'
-                              .format(self.prefix))
-        run_env.set('ROOTSYS', self.prefix)
-        run_env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
-        run_env.prepend_path('PYTHONPATH', self.prefix.lib)
-        run_env.prepend_path('PATH', self.prefix.bin)
+    def setup_run_environment(self, env):
+        env.set('ROOTSYS', self.prefix)
+        env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('ROOTSYS', self.prefix)
+        env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
+        env.prepend_path('PATH', self.prefix.bin)
+        env.append_path('CMAKE_MODULE_PATH', '{0}/cmake'
+                        .format(self.prefix))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set('ROOTSYS', self.prefix)
+        env.set('ROOT_VERSION', 'v{0}'.format(self.version.up_to(1)))
+        env.prepend_path('PYTHONPATH', self.prefix.lib)
+        env.prepend_path('PATH', self.prefix.bin)

@@ -27,10 +27,9 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
-        spack_env.append_path('ACLOCAL_PATH',
-                              join_path(self.prefix.share, 'aclocal'))
+        env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
 
     def configure_args(self):
         config_args = ['--enable-shared']

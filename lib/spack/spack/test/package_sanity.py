@@ -141,7 +141,6 @@ def test_all_packages_use_sha256_checksums():
     assert [] == errors
 
 
-@pytest.mark.xfail
 def test_api_for_build_and_run_environment():
     """Ensure that every package uses the correct API to set build and
     run environment, and not the old one.
@@ -154,7 +153,7 @@ def test_api_for_build_and_run_environment():
             failing.append(pkg)
 
     msg = ('there are {0} packages using the old API to set build '
-           'and run environment [{1}], for further information see'
+           'and run environment [{1}], for further information see '
            'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(x.name for x in failing)
@@ -182,7 +181,9 @@ def test_prs_update_old_api():
             if failed:
                 failing.append(name)
 
-    msg = 'there are {0} packages still using old APIs in this PR [{1}]'
+    msg = ('there are {0} packages using the old API to set build '
+           'and run environment [{1}], for further information see '
+           'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(failing)
     )
