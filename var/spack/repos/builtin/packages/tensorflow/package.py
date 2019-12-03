@@ -603,47 +603,49 @@ class Tensorflow(Package):
             '--config=opt',
         ]
 
-        if '+mkl' in spec:
-            args.append('--config=mkl')
+        if spec.satisfies('@1.12.1:'):
+            if '+mkl' in spec:
+                args.append('--config=mkl')
 
-        if '+monolithic' in spec:
-            args.append('--config=monolithic')
+            if '+monolithic' in spec:
+                args.append('--config=monolithic')
 
-        if '+grd' in spec:
-            args.append('--config=gdr')
+            if '+gdr' in spec:
+                args.append('--config=gdr')
 
-        if '+verbs' in spec:
-            args.append('--config=verbs')
+            if '+verbs' in spec:
+                args.append('--config=verbs')
 
-        if '+ngraph' in spec:
-            args.append('--config=ngraph')
+            if '+ngraph' in spec:
+                args.append('--config=ngraph')
 
-        if '+numa' in spec:
-            args.append('--config=numa')
+            if '+dynamic_kernels' in spec:
+                args.append('--config=dynamic_kernels')
 
-        if '+dynamic_kernels' in spec:
-            args.append('--config=dynamic_kernels')
+            if '+nccl' in spec:
+                args.append('--config=nccl')
 
-        if '+nccl' in spec:
-            args.append('--config=nccl')
+            if '+cuda' in spec:
+                args.append('--config=cuda')
 
-        if '+cuda' in spec:
-            args.append('--config=cuda')
+            if '~aws' in spec:
+                args.append('--config=noaws')
 
-        if '~aws' in spec:
-            args.append('--config=noaws')
+            if '~gcp' in spec:
+                args.append('--config=nogcp')
 
-        if '~gcp' in spec:
-            args.append('--config=nogcp')
+            if '~hdfs' in spec:
+                args.append('--config=nohdfs')
 
-        if '~hdfs' in spec:
-            args.append('--config=nohdfs')
+            if '~ignite' in spec:
+                args.append('--config=noignite')
 
-        if '~ignite' in spec:
-            args.append('--config=noignite')
+            if '~kafka' in spec:
+                args.append('--config=nokafka')
 
-        if '~kafka' in spec:
-            args.append('--config=nokafka')
+        if spec.satisfies('@1.12.1,1.14:'):
+            if '+numa' in spec:
+                args.append('--config=numa')
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
