@@ -18,9 +18,9 @@ class Tensorflow(Package):
     maintainers = ['adamjstewart']
 
     version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
-    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617', preferred=True)
     version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
-    version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed', preferred=True)
+    version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed')
     version('1.13.2', sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
     version('1.13.1', sha256='7cd19978e6bc7edc2c847bce19f95515a742b34ea5e28e4389dade35348f58ed')
     version('1.12.3', sha256='b9e5488e84f4a133ed20b18605f0cd6301f11d356bd959712db4e7b9301d0462')
@@ -594,7 +594,8 @@ class Tensorflow(Package):
         # https://docs.bazel.build/versions/master/command-line-reference.html
         args = [
             # Don't allow user or system .bazelrc to override build settings
-            '--ignore_all_rc_files',
+            '--nohome_rc',
+            '--nosystem_rc',
             'build',
             # Spack logs don't handle colored output well
             '--color=no',
@@ -604,73 +605,45 @@ class Tensorflow(Package):
 
         if '+mkl' in spec:
             args.append('--config=mkl')
-        else:
-            args.append('--config=nomkl')
 
         if '+monolithic' in spec:
             args.append('--config=monolithic')
-        else:
-            args.append('--config=nomonolithic')
 
         if '+grd' in spec:
             args.append('--config=gdr')
-        else:
-            args.append('--config=nogdr')
 
         if '+verbs' in spec:
             args.append('--config=verbs')
-        else:
-            args.append('--config=noverbs')
 
         if '+ngraph' in spec:
             args.append('--config=ngraph')
-        else:
-            args.append('--config=nongraph')
 
         if '+numa' in spec:
             args.append('--config=numa')
-        else:
-            args.append('--config=nonuma')
 
         if '+dynamic_kernels' in spec:
             args.append('--config=dynamic_kernels')
-        else:
-            args.append('--config=nodynamic_kernels')
-
-        if '+aws' in spec:
-            args.append('--config=aws')
-        else:
-            args.append('--config=noaws')
-
-        if '+gcp' in spec:
-            args.append('--config=gcp')
-        else:
-            args.append('--config=nogcp')
-
-        if '+hdfs' in spec:
-            args.append('--config=hdfs')
-        else:
-            args.append('--config=nohdfs')
-
-        if '+ignite' in spec:
-            args.append('--config=ignite')
-        else:
-            args.append('--config=noignite')
-
-        if '+kafka' in spec:
-            args.append('--config=kafka')
-        else:
-            args.append('--config=nokafka')
 
         if '+nccl' in spec:
             args.append('--config=nccl')
-        else:
-            args.append('--config=nonccl')
 
         if '+cuda' in spec:
             args.append('--config=cuda')
-        else:
-            args.append('--config=nocuda')
+
+        if '~aws' in spec:
+            args.append('--config=noaws')
+
+        if '~gcp' in spec:
+            args.append('--config=nogcp')
+
+        if '~hdfs' in spec:
+            args.append('--config=nohdfs')
+
+        if '~ignite' in spec:
+            args.append('--config=noignite')
+
+        if '~kafka' in spec:
+            args.append('--config=nokafka')
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
