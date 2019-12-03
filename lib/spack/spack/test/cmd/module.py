@@ -144,6 +144,14 @@ def test_find_recursive():
     assert len(out.split()) > 1
 
 
+@pytest.mark.db
+def test_find_recursive_blacklisted(database, module_configuration):
+    module_configuration('blacklist')
+
+    module('tcl', 'refresh', '-y', '--delete-tree')
+    module('tcl', 'find', '-r', 'mpileaks ^mpich')
+
+
 # Needed to make the 'module_configuration' fixture below work
 writer_cls = spack.modules.lmod.LmodModulefileWriter
 
