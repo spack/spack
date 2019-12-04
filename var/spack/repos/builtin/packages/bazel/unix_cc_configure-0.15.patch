@@ -1,8 +1,6 @@
-diff --git a/tools/cpp/unix_cc_configure.bzl b/tools/cpp/unix_cc_configure.bzl
-index 361931b..a79129b 100755
 --- a/tools/cpp/unix_cc_configure.bzl
 +++ b/tools/cpp/unix_cc_configure.bzl
-@@ -145,11 +145,19 @@ def get_escaped_cxx_inc_directories(repository_ctx, cc, lang_flag, additional_fl
+@@ -145,11 +145,18 @@ def get_escaped_cxx_inc_directories(repository_ctx, cc, lang_flag, additional_fl
      else:
          inc_dirs = result.stderr[index1 + 1:index2].strip()
  
@@ -13,9 +11,8 @@ index 361931b..a79129b 100755
      ]
  
 +    env = repository_ctx.os.environ
-+    if "SPACK_DEPENDENCIES" in env:
-+        for dep in env["SPACK_DEPENDENCIES"].split(":"):
-+            path = dep + "/include"
++    if "SPACK_INCLUDE_DIRS" in env:
++        for path in env["SPACK_INCLUDE_DIRS"].split(":"):
 +            default_inc_directories.append(path)
 +
 +    return default_inc_directories

@@ -1,6 +1,6 @@
---- bazel-0.3.1/tools/cpp/cc_configure.bzl	2016-10-13 14:00:32.118358387 +0200
-+++ bazel-0.3.1/tools/cpp/cc_configure.bzl	2016-10-13 13:52:45.342610147 +0200
-@@ -173,8 +173,23 @@
+--- a/tools/cpp/cc_configure.bzl
++++ b/tools/cpp/cc_configure.bzl
+@@ -173,8 +173,19 @@
    else:
      inc_dirs = result.stderr[index1 + 1:index2].strip()
  
@@ -12,12 +12,8 @@
 +  ]
 +
 +  env = repository_ctx.os.environ
-+  if "SPACK_DEPENDENCIES" in env:
-+    for dep in env["SPACK_DEPENDENCIES"].split(":"):
-+      path = dep + "/include"
-+      # path = repository_ctx.os.path.join(dep, "include")
-+      # if not repository_ctx.os.path.exists(path):
-+      #   continue
++  if "SPACK_INCLUDE_DIRS" in env:
++    for path in env["SPACK_INCLUDE_DIRS"].split(":"):
 +      default_inc_directories.append(
 +        repository_ctx.path(_cxx_inc_convert(path))
 +      )
