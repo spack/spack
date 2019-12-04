@@ -3,8 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from glob import glob
+import glob
+import os
 import sys
 
 
@@ -13,9 +13,10 @@ class Tensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v0.10.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.0.0.tar.gz"
 
     maintainers = ['adamjstewart']
+    import_modules = ['tensorflow']
 
     version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
     version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617', preferred=True)
@@ -170,15 +171,15 @@ class Tensorflow(Package, CudaPackage):
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
     depends_on('curl', when='+gcp')
-    depends_on('computecpp', when='+opencl+computecpp')
-    depends_on('trisycl',    when='+opencl~computepp')
+    # depends_on('computecpp', when='+opencl+computecpp')
+    # depends_on('trisycl',    when='+opencl~computepp')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
-    depends_on('tensorrt', when='+tensorrt')
+    # depends_on('tensorrt', when='+tensorrt')
     depends_on('nccl', when='+nccl')
     depends_on('mpi', when='+mpi')
-    depends_on('android-ndk@10:18', when='+android')
-    depends_on('android-sdk', when='+android')
+    # depends_on('android-ndk@10:18', when='+android')
+    # depends_on('android-sdk', when='+android')
 
     # Check configure and configure.py to see when these variants are supported
     conflicts('+mkl', when='@:1.0')
@@ -438,7 +439,7 @@ class Tensorflow(Package, CudaPackage):
             env.unset('MPI_HOME')
 
         # Please specify optimization flags to use during compilation when
-        # bazel option "--config=opt" is specified
+        # bazel option '--config=opt' is specified
         env.set('CC_OPT_FLAGS', spec.target.optimization_flags(
             spec.compiler.name, spec.compiler.version))
 
@@ -659,20 +660,27 @@ class Tensorflow(Package, CudaPackage):
         build_pip_package(tmp_path)
 
     def install(self, spec, prefix):
-        # TODO: setup.py doesn't seem to work for me on macOS...
-        # using setup.py for installation
-        # webpage suggests:
-        # sudo pip install /tmp/tensorflow_pkg/tensorflow-0.XYZ.whl
-        mkdirp('_python_build')
-        cd('_python_build')
-        ln = which('ln')
+        with working_dir('spack-build', create=True):
+            for fn in glob.iglob(join_path(
+                    '../bazel-bin/tensorflow/tools/pip_package',
+                    'build_pip_package.runfiles/org_tensorflow/*')):
+                os.symlink('-s', fn, '.')
+            for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
+                os.symlink('-s', fn, '.')
 
-        for fn in glob(join_path(
-                "../bazel-bin/tensorflow/tools/pip_package",
-                "build_pip_package.runfiles/org_tensorflow/*")):
-            ln('-s', fn, '.')
-        for fn in glob("../tensorflow/tools/pip_package/*"):
-            ln('-s', fn, '.')
-        setup_py('install', '--prefix={0}'.format(prefix))
+            # macOS is case-insensitive, and BUILD file in directory
+            # containing setup.py causes the following error message:
+            #     error: could not create 'build': File exists
+            # Delete BUILD file to prevent this.
+            os.remove('BUILD')
 
-    # TODO: add unit tests/import tests
+            setup_py('install', '--prefix={0}'.format(prefix),
+                     '--single-version-externally-managed', '--root=/')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if '+python' in self.spec:
+            with working_dir('spack-test', create=True):
+                for module in self.import_modules:
+                    python('-c', 'import {0}'.format(module))
