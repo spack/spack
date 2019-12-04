@@ -565,7 +565,7 @@ class PyTensorflow(Package, CudaPackage):
             filter_file(
                 r'^build --action_env NCCL_INSTALL_PATH=.*',
                 r'build --action_env NCCL_INSTALL_PATH="' +
-                spec['nccl'].prefix.lib + '"',
+                spec['nccl'].libs.directories[0] + '"',
                 '.tf_configure.bazelrc')
             filter_file(
                 r'^build --action_env NCCL_HDR_PATH=.*',
@@ -645,7 +645,7 @@ class PyTensorflow(Package, CudaPackage):
                 args.append('--config=numa')
 
         if spec.satisfies('@2:'):
-            args.append('--config=v1')
+            args.append('--config=v2')
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
