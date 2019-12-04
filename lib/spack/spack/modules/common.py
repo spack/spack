@@ -315,13 +315,13 @@ class UpstreamModuleIndex(object):
             tty.debug(
                 "No {0} modules associated with the Spack instance where"
                 " {1} is installed".format(module_type, spec))
-            return
+            return None
         if spec.dag_hash() in module_type_index:
             return module_type_index[spec.dag_hash()]
         else:
             tty.debug(
                 "No module is available for upstream package {0}".format(spec))
-            return
+            return None
 
 
 def get_module(module_type, spec, get_full_path, required=True):
@@ -337,7 +337,7 @@ def get_module(module_type, spec, get_full_path, required=True):
         module = (spack.modules.common.upstream_module_index
                   .upstream_module(spec, module_type))
         if not module:
-            return
+            return None
 
         if get_full_path:
             return module.path
@@ -355,7 +355,7 @@ def get_module(module_type, spec, get_full_path, required=True):
                 tty.debug("The module configuration has blacklisted {0}: "
                           "omitting it".format(spec))
             else:
-                return
+                return None
 
         if get_full_path:
             return writer.layout.filename
