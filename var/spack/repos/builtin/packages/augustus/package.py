@@ -90,7 +90,7 @@ class Augustus(MakefilePackage):
             with working_dir(join_path('auxprogs', 'utrrnaseq', 'Debug')):
                 filter_file('g++',
                             '{0}'.format(spack_cxx), 'makefile', string=True)
-                filter_file('g++ -I/usr/include/boost','{0} -I{1}'
+                filter_file('g++ -I/usr/include/boost', '{0} -I{1}'
                             .format(spack_cxx,
                                     self.spec['boost'].prefix.include),
                             'src/subdir.mk', string=True)
