@@ -12,6 +12,7 @@ class Sz(AutotoolsPackage):
 
     homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
     url      = "https://github.com/disheng222/SZ/archive/v2.1.8.0.tar.gz"
+    maintainers = ['disheng222']
 
     git      = "https://github.com/disheng222/SZ.git"
 
