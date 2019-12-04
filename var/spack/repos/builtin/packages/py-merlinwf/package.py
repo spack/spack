@@ -28,12 +28,13 @@ class PyMerlinwf(PythonPackage):
     depends_on('py-celery@4.3.0:+redis', type=('build', 'run'))
     depends_on('py-coloredlogs@10.0:', type=('build', 'run'))
     depends_on('py-cryptography', type=('build', 'run'))
+    depends_on('py-importlib-resources', when="^python@3.0:3.6.99", type=('build', 'run'))
     depends_on('py-maestrowf@1.1.15:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-parse', type=('build', 'run'))
     depends_on('py-psutil@5.1.0:', type=('build', 'run'))
     depends_on('py-pyyaml@5.1.2:', type=('build', 'run'))
-    depends_on('py-importlib-resources', when="^python@3.0:3.6.99", type=('build', 'run'))
+    depends_on('py-tabulate', type=('build', 'run'))
 
     # Optional packages
     depends_on('py-mysql-connector-python-rf', when='+mysql', type=('build', 'run'))
