@@ -111,6 +111,14 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
+_missing_modules_warning = (
+    "Modules have been omitted for one or more specs, either"
+    " because they were blacklisted or because the spec is"
+    " associated with a package that is installed upstream and"
+    " that installation has not generated a module file. Rerun"
+    " this command with debug output enabled for more details.")
+
+
 def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
@@ -135,7 +143,6 @@ def loads(module_type, specs, args, out=sys.stdout):
          spack.modules.common.get_module(
              module_type, spec, get_full_path=False, required=False))
         for spec in specs)
-    modules = list((spec, module) for spec, module in modules if module)
 
     module_commands = {
         'tcl': 'module load ',
@@ -148,14 +155,23 @@ def loads(module_type, specs, args, out=sys.stdout):
     }
 
     exclude_set = set(args.exclude)
-    prompt_template = '{comment}{exclude}{command}{prefix}{name}'
+    load_template = '{comment}{exclude}{command}{prefix}{name}'
     for spec, mod in modules:
-        d['exclude'] = '## ' if spec.name in exclude_set else ''
-        d['comment'] = '' if not args.shell else '# {0}\n'.format(
-            spec.format())
-        d['name'] = mod
-        out.write(prompt_template.format(**d))
+        if not mod:
+            module_output_for_spec = (
+                '## blacklisted or missing from upstream: {0}'.format(
+                    spec.format()))
+        else:
+            d['exclude'] = '## ' if spec.name in exclude_set else ''
+            d['comment'] = '' if not args.shell else '# {0}\n'.format(
+                spec.format())
+            d['name'] = mod
+            module_output_for_spec = load_template.format(**d)
+        out.write(module_output_for_spec)
         out.write('\n')
+
+    if not all(mod for _, mod in modules):
+        tty.warn(_missing_modules_warning)
 
 
 def find(module_type, specs, args):
@@ -179,10 +195,12 @@ def find(module_type, specs, args):
         modules.append(
             spack.modules.common.get_module(
                 module_type, single_spec, args.full_path, required=True))
-
-        modules = list(x for x in modules if x)
     except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
+
+    if not all(modules):
+        tty.warn(_missing_modules_warning)
+    modules = list(x for x in modules if x)
     print(' '.join(modules))
 
 
