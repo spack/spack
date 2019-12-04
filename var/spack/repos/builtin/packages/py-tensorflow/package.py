@@ -565,7 +565,7 @@ class PyTensorflow(Package, CudaPackage):
             filter_file(
                 r'^build --action_env NCCL_INSTALL_PATH=.*',
                 r'build --action_env NCCL_INSTALL_PATH="' +
-                spec['nccl'].prefix + '"',
+                spec['nccl'].prefix.lib + '"',
                 '.tf_configure.bazelrc')
             filter_file(
                 r'^build --action_env NCCL_HDR_PATH=.*',
