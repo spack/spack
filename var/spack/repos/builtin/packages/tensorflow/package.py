@@ -109,6 +109,7 @@ class Tensorflow(Package):
 
     depends_on('swig', type='build')
     depends_on('py-setuptools', type='build')
+    depends_on('py-future', type='build', when='^python@:2')
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
