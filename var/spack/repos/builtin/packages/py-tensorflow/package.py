@@ -421,8 +421,8 @@ class PyTensorflow(Package, CudaPackage):
             # Please note that each additional compute capability significantly
             # increases your build time and binary size, and that TensorFlow
             # only supports compute capabilities >= 3.5
-            env.set('TF_CUDA_COMPUTE_CAPABILITIES',
-                    spec.variants['cuda_arch'].value)
+            capabs = ','.join(str(int(i)/10.) for i in spec.variants['cuda_arch'].value)
+            env.set('TF_CUDA_COMPUTE_CAPABILITIES', capabs)
         else:
             env.set('TF_NEED_CUDA', '0')
 
