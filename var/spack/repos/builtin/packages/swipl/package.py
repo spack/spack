@@ -56,7 +56,9 @@ class Swipl(CMakePackage):
 
         def append_switch(variant, cmake_flag):
             val = 'ON' if variant in self.spec else 'OFF'
-            args.append('-D{}:BOOL={}'.format(cmake_flag, val))
+
+            flagdef = '-D' + cmake_flag + ':BOOL=' + val
+            args.append(flagdef)
 
         append_switch('+gmp', 'USE_GMP')
         append_switch('+xpce', 'SWIPL_PACKAGES_X')
