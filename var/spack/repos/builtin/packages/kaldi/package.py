@@ -42,6 +42,9 @@ class Kaldi(Package):    # Does not use Autotools
 
     patch('openfst-1.4.1.patch', when='@2015-10-07')
 
+    # Change process of version analysis when using Fujitsu compiler.
+    patch('fujitsu_fix_version_analysis.patch', when='@2018-07-11:%fj')
+
     def install(self, spec, prefix):
         configure_args = ['--fst-root=' + spec['openfst'].prefix]
         configure_args.append('--fst-version=' + str(spec['openfst'].version))

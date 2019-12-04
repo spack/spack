@@ -28,6 +28,6 @@ class Nginx(AutotoolsPackage):
         args = ['--with-http_ssl_module']
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Prepend the sbin directory to PATH."""
-        run_env.prepend_path('PATH', join_path(self.prefix, 'sbin'))
+        env.prepend_path('PATH', self.prefix.sbin)

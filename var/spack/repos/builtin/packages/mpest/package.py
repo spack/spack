@@ -24,8 +24,8 @@ class Mpest(MakefilePackage):
             mkdirp(prefix.bin)
             install('mpest', prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.spec.satisfies('platform=darwin'):
-            spack_env.set('ARCHITECTURE', 'mac')
+            env.set('ARCHITECTURE', 'mac')
         else:
-            spack_env.set('ARCHITECTURE', 'unix')
+            env.set('ARCHITECTURE', 'unix')

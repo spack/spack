@@ -45,32 +45,33 @@ class Upcxx(Package):
             url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-{0}-offline.tar.gz"
         return url.format(version)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if 'platform=cray' in self.spec:
-            spack_env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
+            env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
 
         if 'cross=none' not in self.spec:
-            spack_env.set('CROSS', self.spec.variants['cross'].value)
+            env.set('CROSS', self.spec.variants['cross'].value)
 
         if '+cuda' in self.spec:
-            spack_env.set('UPCXX_CUDA', '1')
-            spack_env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
+            env.set('UPCXX_CUDA', '1')
+            env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
 
-        run_env.set('UPCXX_INSTALL', self.prefix)
-        run_env.set('UPCXX', self.prefix.bin.upcxx)
+    def setup_run_environment(self, env):
+        env.set('UPCXX_INSTALL', self.prefix)
+        env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
-            run_env.set('UPCXX_GASNET_CONDUIT', 'aries')
-            run_env.set('UPCXX_NETWORK', 'aries')
+            env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            env.set('UPCXX_NETWORK', 'aries')
 
     def setup_dependent_package(self, module, dep_spec):
         dep_spec.upcxx = self.prefix.bin.upcxx
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('UPCXX_INSTALL', self.prefix)
-        spack_env.set('UPCXX', self.prefix.bin.upcxx)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('UPCXX_INSTALL', self.prefix)
+        env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
-            spack_env.set('UPCXX_GASNET_CONDUIT', 'aries')
-            spack_env.set('UPCXX_NETWORK', 'aries')
+            env.set('UPCXX_GASNET_CONDUIT', 'aries')
+            env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
         env['CC'] = self.compiler.cc

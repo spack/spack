@@ -87,7 +87,7 @@ class Gatk(Package):
                 **kwargs
             )
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
-            "GATK", join_path(self.prefix, "bin", "GenomeAnalysisTK.jar")
+    def setup_run_environment(self, env):
+        env.prepend_path(
+            "GATK", join_path(self.prefix.bin, "GenomeAnalysisTK.jar")
         )

@@ -55,11 +55,6 @@ class Mumps(Package):
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
     patch('gfortran8.patch', when='@5.1.2')
 
-    # this function is not a patch function because in case scalapack
-    # is needed it uses self.spec['scalapack'].fc_link set by the
-    # setup_dependent_environment in scalapck. This happen after patch
-    # end before install
-    # def patch(self):
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
                 '+mpi' not in self.spec):

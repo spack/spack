@@ -20,6 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2019.5',      sha256='c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
     version('cluster.2019.4',      sha256='32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
     version('cluster.2019.3',      sha256='b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
     version('cluster.2019.2',      sha256='8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
@@ -85,6 +86,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', sha256='84fdf48d1de20e1d580ba5d419a5bc1c55d217a4f5dc1807190ecffe0229a62b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
     version('composer.2019.4',     sha256='1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
     version('composer.2019.3',     sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('composer.2019.1',     sha256='db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
@@ -199,7 +201,7 @@ class IntelParallelStudio(IntelPackage):
     conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
 
-    def setup_dependent_environment(self, *args):
+    def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py

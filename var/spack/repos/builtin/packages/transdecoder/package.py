@@ -29,6 +29,6 @@ class Transdecoder(MakefilePackage):
         install_tree('PerlLib', prefix.PerlLib)
         install_tree('util', prefix.util)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix)
-        run_env.prepend_path('PATH', prefix.util)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('PATH', self.prefix.util)

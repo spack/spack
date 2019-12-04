@@ -37,6 +37,6 @@ class Nag(Package):
         # Run install script
         os.system('./INSTALLU.sh')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('F77', join_path(self.prefix.bin, 'nagfor'))
-        run_env.set('FC',  join_path(self.prefix.bin, 'nagfor'))
+    def setup_run_environment(self, env):
+        env.set('F77', self.prefix.bin.nagfor)
+        env.set('FC',  self.prefix.bin.nagfor)

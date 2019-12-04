@@ -36,7 +36,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
-    variant("logging", default=True, description="build logging support")
+    variant("logging", default=False, description="build logging support")
     variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
