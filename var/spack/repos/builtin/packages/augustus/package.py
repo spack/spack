@@ -107,9 +107,8 @@ class Augustus(MakefilePackage):
             'src/Makefile'
         ]
         for makefile in makefiles:
-            filter_file('gcc', '{0}'.format(spack_cc), makefile)
-            filter_file('g++', '{0}'
-                        .format(spack_cxx), makefile, string=True)
+            filter_file('gcc', spack_cc, makefile, string=True)
+            filter_file('g++', spack_cxx, makefile, string=True)
 
     def install(self, spec, prefix):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))
