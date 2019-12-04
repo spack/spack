@@ -51,6 +51,8 @@ class Swipl(CMakePackage):
     depends_on('fontconfig', when='+xpce')
     depends_on('pkg-config', when='+xpce')
 
+    conflicts('%intel', msg='Test builds with ICC failed when creating startup image')
+
     def cmake_args(self):
         args = []
 
