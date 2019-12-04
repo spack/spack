@@ -6,7 +6,7 @@
 from spack import *
 
 
-class TensorflowEstimator(Package):
+class PyTensorflowEstimator(Package):
     """TensorFlow Estimator is a high-level TensorFlow API that greatly
     simplifies machine learning programming."""
 
@@ -18,8 +18,8 @@ class TensorflowEstimator(Package):
 
     extends('python')
 
-    depends_on('tensorflow@2.0.0',  when='@2.0.0')
-    depends_on('tensorflow@1.13.1', when='@1.13.0')
+    depends_on('py-tensorflow@2.0.0',  when='@2.0.0')
+    depends_on('py-tensorflow@1.13.1', when='@1.13.0')
 
     depends_on('bazel@0.19.0', type='build')
     depends_on('py-pip', type='build')

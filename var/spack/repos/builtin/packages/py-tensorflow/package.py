@@ -8,7 +8,7 @@ import os
 import sys
 
 
-class Tensorflow(Package, CudaPackage):
+class PyTensorflow(CudaPackage):
     """TensorFlow is an Open Source Software Library for Machine Intelligence
     """
 
