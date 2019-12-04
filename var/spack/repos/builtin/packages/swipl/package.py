@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install swipl
-#
-# You can edit this file again by typing:
-#
-#     spack edit swipl
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -39,9 +22,7 @@ class Swipl(CMakePackage):
     homepage = "https://www.swi-prolog.org"
     url      = "https://www.swi-prolog.org/download/stable/src/swipl-8.0.3.tar.gz"
 
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
+    maintainers = ['alexrobomind']
 
     version('8.0.3', sha256='cee59c0a477c8166d722703f6e52f962028f3ac43a5f41240ecb45dbdbe2d6ae')
 
@@ -81,6 +62,6 @@ class Swipl(CMakePackage):
         append_switch('+xpce', 'SWIPL_PACKAGES_X')
         append_switch('+odbc', 'SWIPL_PACKAGES_ODBC')
 
-        # The variants ssl and zlib are implicitly set up by the build system
+        # The variants ssl and zlib are implicitly set up by CMake
 
         return args
