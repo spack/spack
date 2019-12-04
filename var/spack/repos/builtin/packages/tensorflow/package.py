@@ -71,6 +71,7 @@ class Tensorflow(Package, CudaPackage):
     variant('computecpp', default=False, description='Build with ComputeCPP support')
     variant('rocm', default=False, description='Build with ROCm support')
     variant('tensorrt', default=False, description='Build with TensorRT support')
+    variant('cuda', default=sys.platform != 'darwin', description='Build with CUDA support')
     variant('nccl', default=sys.platform.startswith('linux'), description='Enable NVIDIA NCCL support')
     variant('mpi', default=False, description='Build with MPI support')
     variant('android', default=False, description='Configure for Android builds')
