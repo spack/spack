@@ -63,7 +63,7 @@ class IntelTbb(Package):
     #
     #    See https://github.com/intel/tbb/pull/147 for details.
     #
-    conflicts('%clang', when='@:2019.7',
+    conflicts('%clang', when='@:2019.6',
               msg='2019.7 or later required for clang')
 
     conflicts('%gcc@6.1:', when='@:4.4.3',
