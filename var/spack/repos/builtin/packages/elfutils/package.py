@@ -88,7 +88,7 @@ class Elfutils(AutotoolsPackage):
                         spec['gettext'].prefix.lib)
         else:
             args.append('--disable-nls')
-        
+
         # The experimental debuginfod server requires libmicrohttpd
         # which doesn't have a spack package
         if spec.satisfies('@0.178:'):
