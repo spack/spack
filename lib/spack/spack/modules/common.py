@@ -325,13 +325,25 @@ class UpstreamModuleIndex(object):
 
 
 def get_module(module_type, spec, get_full_path, required=True):
-    """Retrieve the module file for a given spec and module type. If
-    ``required`` is set, then an exception will be raised if the module is
-    not found and the Spec is not blacklisted in the module configuration.
-    The upstream module index does not record whether a module is blacklisted:
-    if it is missing it is assumed to have been omitted purposefully. If the
-    module is not available (and it is not required or it is blacklisted), then
-    this function returns ``None``.
+    """Retrieve the module file for a given spec and module type.
+
+    Retrieve the module file for the given spec if it is available. If the
+    module is not available, this will raise an exception unless the module
+    is blacklisted or if the spec is installed upstream.
+
+    Args:
+        module_type: the type of module we want to retrieve (e.g. lmod)
+        spec: refers to the installed package that we want to retrieve a module
+            for
+        required: if the module is required but blacklisted, this function will
+            print a debug message. If a module is missing but not blacklisted,
+            then an exception is raised (regardless of whether it is required)
+        get_full_path: if ``True``, this returns the full path to the module.
+            Otherwise, this returns the module name.
+
+    Returns:
+        The module name or path. May return ``None`` if the module is not
+        available.
     """
     if spec.package.installed_upstream:
         module = (spack.modules.common.upstream_module_index
