@@ -8,7 +8,7 @@ from glob import glob
 import sys
 
 
-class Tensorflow(Package):
+class Tensorflow(Package, CudaPackage):
     """TensorFlow is an Open Source Software Library for Machine Intelligence
     """
 
@@ -69,7 +69,6 @@ class Tensorflow(Package):
     variant('opencl', default=False, description='Build with OpenCL SYCL support')
     variant('computecpp', default=False, description='Build with ComputeCPP support')
     variant('rocm', default=False, description='Build with ROCm support')
-    variant('cuda', default=True, description='Enable CUDA support')
     variant('tensorrt', default=False, description='Build with TensorRT support')
     variant('nccl', default=sys.platform.startswith('linux'), description='Enable NVIDIA NCCL support')
     variant('mpi', default=False, description='Build with MPI support')
@@ -173,8 +172,6 @@ class Tensorflow(Package):
     depends_on('curl', when='+gcp')
     depends_on('computecpp', when='+opencl+computecpp')
     depends_on('trisycl',    when='+opencl~computepp')
-    depends_on('cuda', when='+cuda')
-    depends_on('cuda@7.0', when='@0.5:0.6 +cuda')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
     depends_on('tensorrt', when='+tensorrt')
@@ -401,6 +398,7 @@ class Tensorflow(Package):
 
                 # Please specify the location where NCCL is installed
                 env.set('NCCL_INSTALL_PATH', spec['nccl'].prefix)
+                env.set('NCCL_HDR_PATH', spec['nccl'].prefix.include)
             else:
                 env.unset('TF_NCCL_VERSION')
 
@@ -413,6 +411,16 @@ class Tensorflow(Package):
 
             # Please specify the location where CUDNN library is installed
             env.set('CUDNN_INSTALL_PATH', spec['cudnn'].prefix)
+
+            # Please specify a list of comma-separated CUDA compute
+            # capabilities you want to build with. You can find the compute
+            # capability of your device at:
+            # https://developer.nvidia.com/cuda-gpus.
+            # Please note that each additional compute capability significantly
+            # increases your build time and binary size, and that TensorFlow
+            # only supports compute capabilities >= 3.5
+            env.set('TF_CUDA_COMPUTE_CAPABILITIES',
+                    spec.variants['cuda_arch'].value)
         else:
             env.set('TF_NEED_CUDA', '0')
 
@@ -460,20 +468,6 @@ class Tensorflow(Package):
             env.set('TF_CONFIGURE_IOS', '1')
         else:
             env.set('TF_CONFIGURE_IOS', '0')
-
-        #     # TODO: create a string valued variant for compute capabilities?
-        #     # one should be able to specify single or multiple capabilities
-        #     env.set('TF_CUDA_COMPUTE_CAPABILITIES', "6.1,7.5")
-
-        #     # @v1.13, configure hangs without the following nccl env
-        #     # variables however, in the end it ignores them, and sets
-        #     # these incorrectly.
-        #     # Because of this, these paths are reset via file filtering
-        #     # As shown in the "post_configure_fix" section
-        #     env.set('NCCL_INSTALL_PATH', spec['nccl'].prefix)
-        #     env.set('NCCL_HDR_PATH', spec['nccl'].prefix.include)
-
-        #     env.set('TF_CUDA_CLANG', '0')
 
         # set tmpdir to a non-NFS filesystem
         # (because bazel uses ~/.cache/bazel)
@@ -623,8 +617,8 @@ class Tensorflow(Package):
             if '+dynamic_kernels' in spec:
                 args.append('--config=dynamic_kernels')
 
-            if '+nccl' in spec:
-                args.append('--config=nccl')
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
 
             if '+cuda' in spec:
                 args.append('--config=cuda')
