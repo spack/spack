@@ -107,8 +107,7 @@ class Augustus(MakefilePackage):
             'src/Makefile'
         ]
         for makefile in makefiles:
-            filter_file('gcc', '{0}'
-                        .format(spack_cc), makefile, string=True)
+            filter_file('gcc', '{0}'.format(spack_cc), makefile)
             filter_file('g++', '{0}'
                         .format(spack_cxx), makefile, string=True)
 
