@@ -498,7 +498,7 @@ class PyTensorflow(Package, CudaPackage):
     @run_after('configure')
     def post_configure_fixes(self):
         spec = self.spec
-        if spec.satisfies('@1.5.0:'):
+        if spec.satisfies('@1.5.0: ~android'):
             # env variable is somehow ignored -> brute force
             # TODO: find a better solution
             filter_file(r'if workspace_has_any_android_rule\(\)',
@@ -518,7 +518,7 @@ class PyTensorflow(Package, CudaPackage):
             filter_file(r"'tensorflow-tensorboard",
                         r"#'tensorflow-tensorboard",
                         'tensorflow/tools/pip_package/setup.py')
-        if spec.satisfies('@1.5.0:'):
+        if spec.satisfies('@1.5.0: ~gcp'):
             # google cloud support seems to be installed on default, leading
             # to boringssl error manually set the flag to false to avoid
             # installing gcp support
@@ -531,7 +531,7 @@ class PyTensorflow(Package, CudaPackage):
             filter_file(r"'tensorboard >=",
                         r"#'tensorboard >=",
                         'tensorflow/tools/pip_package/setup.py')
-        if spec.satisfies('@1.8.0:'):
+        if spec.satisfies('@1.8.0: ~opencl'):
             # 1.8.0 and 1.9.0 aborts with numpy import error during python_api
             # generation somehow the wrong PYTHONPATH is used...
             # set --distinct_host_configuration=false as a workaround
@@ -565,7 +565,7 @@ class PyTensorflow(Package, CudaPackage):
             filter_file(
                 r'^build --action_env NCCL_INSTALL_PATH=.*',
                 r'build --action_env NCCL_INSTALL_PATH="' +
-                spec['nccl'].prefix.lib + '"',
+                spec['nccl'].prefix + '"',
                 '.tf_configure.bazelrc')
             filter_file(
                 r'^build --action_env NCCL_HDR_PATH=.*',
@@ -619,9 +619,6 @@ class PyTensorflow(Package, CudaPackage):
             if '+dynamic_kernels' in spec:
                 args.append('--config=dynamic_kernels')
 
-            if '~nccl' in spec:
-                args.append('--config=nonccl')
-
             if '+cuda' in spec:
                 args.append('--config=cuda')
 
@@ -640,9 +637,15 @@ class PyTensorflow(Package, CudaPackage):
             if '~kafka' in spec:
                 args.append('--config=nokafka')
 
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
+
         if spec.satisfies('@1.12.1,1.14:'):
             if '+numa' in spec:
                 args.append('--config=numa')
+
+        if spec.satisfies('@2:'):
+            args.append('--config=v1')
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
@@ -665,9 +668,9 @@ class PyTensorflow(Package, CudaPackage):
             for fn in glob.iglob(join_path(
                     '../bazel-bin/tensorflow/tools/pip_package',
                     'build_pip_package.runfiles/org_tensorflow/*')):
-                os.symlink('-s', fn, '.')
+                os.symlink(fn, '.')
             for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
-                os.symlink('-s', fn, '.')
+                os.symlink(fn, '.')
 
             # macOS is case-insensitive, and BUILD file in directory
             # containing setup.py causes the following error message:
