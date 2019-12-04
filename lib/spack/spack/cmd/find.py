@@ -168,9 +168,11 @@ def display_env(env, args, decorator):
         tty.msg('Root specs')
 
         # Root specs cannot be displayed with prefixes, since those are not
-        # set for abstract specs
+        # set for abstract specs. Same for hashes
         root_args = copy.copy(args)
         root_args.paths = False
+        root_args.long = False
+        root_args.very_long = False
 
         # Roots are displayed with variants, etc. so that we can see
         # specifically what the user asked for.
