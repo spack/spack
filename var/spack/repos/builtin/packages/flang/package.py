@@ -20,9 +20,9 @@ class Flang(CMakePackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
-    depends_on('llvm@develop+flang', when='@develop')
-    depends_on('llvm@7.0.1+flang', when='@20180921')
-    depends_on('llvm@6.0.0+flang', when='@20180612')
+    depends_on('llvm@develop+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@develop')
+    depends_on('llvm@7.0.1+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@20180921')
+    depends_on('llvm@6.0.0+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@20180612')
 
     depends_on('pgmath@develop', when='@develop')
     depends_on('pgmath@20180921', when='@20180921')

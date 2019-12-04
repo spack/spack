@@ -182,6 +182,15 @@ class Llvm(CMakePackage):
     # OMP TSAN exists in > 5.x
     conflicts('+omp_tsan', when='@:5.99')
 
+    # +flang conflicts other variants
+    conflicts('+gold', when='+flang')
+    conflicts('+lldb', when='+flang')
+    conflicts('+lld', when='+flang')
+    conflicts('+copiler-rt', when='+flang')
+    conflicts('+libcxx', when='+flang')
+    conflicts('+polly', when='+flang')
+    conflicts('+internal_unwind', when='+flang')
+
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
     # Backport from llvm master + additional fix
