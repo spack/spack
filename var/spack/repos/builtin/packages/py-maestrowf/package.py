@@ -26,6 +26,7 @@ class PyMaestrowf(PythonPackage):
     version('1.1.4dev1.1', sha256='c8612b5423b44f11e2a7c4fbc31eb741013245870512ee2dbf7367024517528f')
 
     # pypi releases
+    version('1.1.5', sha256='faf825332e14a350db7d11d2e0213ad10147bf358cd8cd7ef6ce7118777b0443')
     version('1.1.4', sha256='2cb0fa6f6281d8618ac79217ea5f4fd8cb24955c4315e873657f96b815f171d5')
     version('1.1.2', sha256='ebb45bff54625435bc9f2462e1bdc3b5bdc4d943378c53e7810c11836794c5e0')
     version('1.1.1', sha256='a476ad4b40846d7b7f9540d6413df1b42eb655735e8d3c6c07e0baa68e20a8bb')
