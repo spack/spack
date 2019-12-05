@@ -35,6 +35,10 @@ packages:
         paths:
             flex@2.6.2: /usr
         version: [2.6.2]
+    git:
+        paths:
+            git@2.17.1: /usr
+        version: [2.17.1]
     hdf5:
         paths:
             hdf5@1.10~mpi+hl: /usr/lib/x86_64-linux-gnu/hdf5/serial
