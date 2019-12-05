@@ -123,7 +123,9 @@ class Bazel(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
-        env.set('EXTRA_BAZEL_ARGS', '--host_javabase=@local_jdk//:jdk')
+        env.set('EXTRA_BAZEL_ARGS',
+                # Spack's logs don't handle colored output well
+                '--color=no --host_javabase=@local_jdk//:jdk')
 
     def bootstrap(self, spec, prefix):
         bash = which('bash')
@@ -138,7 +140,8 @@ class Bazel(Package):
     def test(self):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb
 
-        with working_dir('spack-test', create=True):
+        # Bazel does not work properly on NFS, switch to /tmp
+        with working_dir('/tmp/spack/bazel/spack-test', create=True):
             touch('WORKSPACE')
 
             with open('ProjectRunner.java', 'w') as f:
@@ -157,8 +160,10 @@ java_binary(
     main_class = "ProjectRunner",
 )""")
 
+            # Spack's logs don't handle colored output well
             bazel = Executable(self.prefix.bin.bazel)
-            bazel('build', '//:bazel-test')
+            bazel('--output_user_root=/tmp/spack/bazel/spack-test',
+                  'build', '--color=no', '//:bazel-test')
 
             exe = Executable('bazel-bin/bazel-test')
             assert exe(output=str) == 'Hi!\n'
