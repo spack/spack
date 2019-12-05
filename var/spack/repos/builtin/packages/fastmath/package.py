@@ -15,7 +15,7 @@ class Fastmath(BundlePackage):
 
     homepage = "https://fastmath-scidac.org/"
 
-    version('0.0.1')  # TODO: What should this be?
+    version('latest')
 
     depends_on('amrex')  # default is 3 dimensions
     depends_on('chombo@3.2')
