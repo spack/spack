@@ -425,6 +425,9 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                             output_file):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
+    with spack.concretize.disable_compiler_existence_check():
+        env.concretize()
+
     yaml_root = ev.config_dict(env.yaml)
 
     if 'gitlab-ci' not in yaml_root:
