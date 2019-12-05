@@ -22,6 +22,7 @@ RUN apt-get -yqq update                           \
         build-essential                           \
         ca-certificates                           \
         curl                                      \
+        file                                      \
         g++                                       \
         gcc                                       \
         gfortran                                  \
