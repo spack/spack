@@ -18,12 +18,12 @@ jobs:
   fast_finish: true
   include:
     - stage: 'style checks'
-      python: '3.7'
+      python: '3.8'
       os: linux
       language: python
       env: TEST_SUITE=flake8
 # Shell integration with module files
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=bootstrap ]
@@ -48,8 +48,12 @@ jobs:
     - python: '3.7'
       os: linux
       language: python
+      env: TEST_SUITE=unit
+    - python: '3.8'
+      os: linux
+      language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: TEST_SUITE=doc
@@ -64,41 +68,41 @@ jobs:
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
 # astyle (MakefilePackage)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=astyle' ]
 # tut (WafPackage)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=tut' ]
 # py-setuptools (PythonPackage)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
 # perl-dbi (PerlPackage)
-#    - python: '2.7'
+#    - python: '3.8'
 #      os: linux
 #      language: python
 #      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
 # openjpeg (CMakePackage + external cmake)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
 # r-rcpp (RPackage + external R)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
 # mpich (AutotoolsPackage)
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.6'
+    - python: '3.8'
       stage: 'docker build'
       os: linux
       language: python

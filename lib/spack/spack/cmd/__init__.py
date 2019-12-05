@@ -24,6 +24,7 @@ import spack.paths
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
+import spack.util.string
 from spack.error import SpackError
 
 
@@ -134,7 +135,9 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        sargs = args if isinstance(args, six.string_types) else ' '.join(args)
+        sargs = args
+        if not isinstance(args, six.string_types):
+            sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
@@ -328,7 +331,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg('format', None)
     if format_string is None:
-        nfmt = '{namespace}.{name}' if namespace else '{name}'
+        nfmt = '{fullname}' if namespace else '{name}'
         ffmt = ''
         if full_compiler or flags:
             ffmt += '{%compiler.name}'

@@ -165,12 +165,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
-        perl_bin_dirs = []
+        perl_lib_dirs = [join_path(self.spec.prefix.lib,
+                                   str(self.spec.version))]
+        perl_bin_dirs = [self.spec.prefix.bin]
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
@@ -178,12 +179,29 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl_bin_dirs.append(d.prefix.bin)
         if perl_bin_dirs:
             perl_bin_path = ':'.join(perl_bin_dirs)
-            spack_env.prepend_path('PATH', perl_bin_path)
-            run_env.prepend_path('PATH', perl_bin_path)
+            env.prepend_path('PATH', perl_bin_path)
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
-            spack_env.prepend_path('PERL5LIB', perl_lib_path)
-            run_env.prepend_path('PERL5LIB', perl_lib_path)
+            env.prepend_path('PERL5LIB', perl_lib_path)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set PATH and PERL5LIB to include the extension and
+           any other perl extensions it depends on,
+           assuming they were installed with INSTALL_BASE defined."""
+        perl_lib_dirs = [join_path(self.spec.prefix.lib,
+                                   str(self.spec.version))]
+        perl_bin_dirs = [self.spec.prefix.bin]
+        for d in dependent_spec.traverse(
+                deptype=('run',), deptype_query='run'):
+            if d.package.extends(self.spec):
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+                perl_bin_dirs.append(d.prefix.bin)
+        if perl_bin_dirs:
+            perl_bin_path = ':'.join(perl_bin_dirs)
+            env.prepend_path('PATH', perl_bin_path)
+        if perl_lib_dirs:
+            perl_lib_path = ':'.join(perl_lib_dirs)
+            env.prepend_path('PERL5LIB', perl_lib_path)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
