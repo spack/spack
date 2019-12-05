@@ -113,8 +113,8 @@ def test_simple_command_extension(hello_world_cmd):
 
 
 def test_multi_extension_search(hello_world_extension, tmpdir):
-    """Ensure we can find an extension command even if we search somewhere
-    it's isn't first.
+    """Ensure we can find an extension command even if it's not in the first
+    place we look.
     """
     extra_ext = tmpdir.mkdir('spack-testcommand2')
     extra_ext.ensure('testcommand2', 'cmd', dir=True)
@@ -124,8 +124,12 @@ def test_multi_extension_search(hello_world_extension, tmpdir):
 
 
 def test_duplicate_module_load(hello_world_cmd):
-    """Ensure we correctly deal with duplicate command load attempts."""
-    spack.cmd.get_command('hello-world')
+    """Ensure duplicate module load attempts are successful.
+
+    The command module will already have been loaded once by the
+    hello_world_cmd fixture.
+    """
+    assert('Hello world') in spack.main.SpackCommand('hello-world')()
 
 
 def test_command_with_import(hello_world_with_module_in_root):
@@ -149,8 +153,10 @@ def test_missing_command():
 
 
 def test_badly_named_extension():
-    """Ensure that we raise the expected exception if a configured exception
-    is not named according to the rules.
+    """Ensure that we raise the expected exception if the configured path of
+    an extension does not conform to .../spack-extname.
+
+    Note that the command name is irrelevant to this check.
     """
     with pytest.raises(spack.extensions.ExtensionNamingError):
         spack.extensions.load_command_extension("oopsie", "/my/bad/extension")

@@ -129,11 +129,12 @@ def get_module(cmd_name):
 
 
 def get_command(cmd_name):
-    """Imports the command's eponymous function from a module and returns it.
+    """Imports the command function associated with cmd_name.
+
+    The function's name is derived from cmd_name using python_name().
 
     Args:
-        cmd_name (str): name of the command for which to get a module
-            (contains ``-``, not ``_``).
+        cmd_name (str): name of the command (contains ``-``, not ``_``).
     """
     require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
