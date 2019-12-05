@@ -690,7 +690,6 @@ class PyTensorflow(Package, CudaPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def import_module_test(self):
-        if '+python' in self.spec:
-            with working_dir('spack-test', create=True):
-                for module in self.import_modules:
-                    python('-c', 'import {0}'.format(module))
+        with working_dir('spack-test', create=True):
+            for module in self.import_modules:
+                python('-c', 'import {0}'.format(module))
