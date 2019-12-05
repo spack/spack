@@ -417,7 +417,7 @@ templates = {
 
 
 def setup_parser(subparser):
-    options = templates.keys()
+    options = sorted(templates.keys())
     subparser.add_argument(
         'url', nargs='?',
         help="url of package archive")
