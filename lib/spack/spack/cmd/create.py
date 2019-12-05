@@ -417,6 +417,7 @@ templates = {
 
 
 def setup_parser(subparser):
+    options = templates.keys()
     subparser.add_argument(
         'url', nargs='?',
         help="url of package archive")
@@ -427,8 +428,9 @@ def setup_parser(subparser):
         '-n', '--name',
         help="name of the package to create")
     subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
-        help="build system template to use. options: %(choices)s")
+        '-t', '--template', metavar='TEMPLATE', choices=options,
+        help="build system template to use. options: {0}"
+        .format(', '.join(options)))
     subparser.add_argument(
         '-r', '--repo',
         help="path to a repository where the package should be created")
