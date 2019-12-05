@@ -13,6 +13,7 @@ class NlohmannJson(CMakePackage):
     url      = "https://github.com/nlohmann/json/archive/v3.1.2.tar.gz"
     maintainers = ['ax3l']
 
+    version('3.7.3', sha256='249548f4867417d66ae46b338dfe0a2805f3323e81c9e9b83c89f3adbfde6f31')
     version('3.4.0', sha256='c377963a95989270c943d522bfefe7b889ef5ed0e1e15d535fd6f6f16ed70732')
     version('3.3.0', sha256='2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801')
     version('3.2.0', sha256='2de558ff3b3b32eebfb51cf2ceb835a0fa5170e6b8712b02be9c2c07fcfe52a1')
