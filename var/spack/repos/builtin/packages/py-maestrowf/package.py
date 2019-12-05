@@ -20,8 +20,10 @@ class PyMaestrowf(PythonPackage):
     version('develop', branch='develop')
     version('master',  branch='master')
 
-    # pre-release candidates
-    version('1.1.5dev', sha256='eb3d6f31c233e2cde3b84e15c657002b83ff43d4d6b218b33d023a4f527b9e08')
+    # Pre-release candidates
+    version('1.1.5dev',    sha256='eb3d6f31c233e2cde3b84e15c657002b83ff43d4d6b218b33d023a4f527b9e08')
+    version('1.1.4dev1.0', sha256='67f59eed6fa69fc71b88a0a769de9f080300497d3c30d3a0893eabd0702bc48e')
+    version('1.1.4dev1.1', sha256='c8612b5423b44f11e2a7c4fbc31eb741013245870512ee2dbf7367024517528f')
 
     # pypi releases
     version('1.1.4', sha256='2cb0fa6f6281d8618ac79217ea5f4fd8cb24955c4315e873657f96b815f171d5')
