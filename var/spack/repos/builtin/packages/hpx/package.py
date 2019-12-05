@@ -76,7 +76,6 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
-    #depends_on('apex', when='instrumentation=apex')
     depends_on('otf2', when='instrumentation=apex')
     depends_on('gperftools', when='instrumentation=google_perftools')
     depends_on('papi', when='instrumentation=papi')
