@@ -65,7 +65,9 @@ class PyProtobuf(PythonPackage):
     depends_on('py-six@1.9:', when='@3:', type=('build', 'run'))
     depends_on('py-ordereddict', when='@3: ^python@:2', type=('build', 'run'))
     depends_on('py-unittest2', when='@3: ^python@:2', type=('build', 'run'))
-    depends_on('protobuf', when='+cpp')
+
+    same_version_as("protobuf", when="+cpp",
+                    pkg_to_dep_version=lambda v: v.up_to(3))
 
     @property
     def build_directory(self):
