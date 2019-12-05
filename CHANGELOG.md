@@ -1,3 +1,43 @@
+# v0.13.2 (2019-12-04)
+
+This release contains major performance improvements for Spack environments, as
+well as some bugfixes and minor changes.
+
+* allow missing modules if they are blacklisted (#13540)
+* speed up environment activation (#13557)
+* mirror path works for unknown versions (#13626)
+* environments: don't try to modify run-env if a spec is not installed (#13589)
+* use semicolons instead of newlines in module/python command (#13904)
+* verify.py: os.path.exists exception handling (#13656)
+* Document use of the maintainers field (#13479)
+* bugfix with config caching (#13755)
+* hwloc: added 'master' version pointing at the HEAD of the master branch (#13734)
+* config option to allow gpg warning suppression (#13744)
+* fix for relative symlinks when relocating binary packages (#13727)
+* allow binary relocation of strings in relative binaries (#13724)
+
+# v0.13.1 (2019-11-05)
+
+This is a bugfix release on top of `v0.13.0`.  Specific fixes include:
+
+* `spack find` now displays variants and other spec constraints
+* bugfix: uninstall should find concrete specs by DAG hash (#13598)
+* environments: make shell modifications partially unconditional (#13523)
+* binary distribution: relocate text files properly in relative binaries (#13578)
+* bugfix: fetch prefers to fetch local mirrors over remote resources (#13545)
+* environments: only write when necessary (#13546)
+* bugfix: spack.util.url.join() now handles absolute paths correctly (#13488)
+* sbang: use utf-8 for encoding when patching (#13490)
+* Specs with quoted flags containing spaces are parsed correctly (#13521)
+* targets: print a warning message before downgrading (#13513)
+* Travis CI: Test Python 3.8 (#13347)
+* Documentation: Database.query methods share docstrings (#13515)
+* cuda: fix conflict statements for x86-64 targets (#13472)
+* cpu: fix clang flags for generic x86_64 (#13491)
+* syaml_int type should use int.__repr__ rather than str.__repr__ (#13487)
+* elpa: prefer 2016.05.004 until sse/avx/avx2 issues are resolved (#13530)
+* trilinos: temporarily constrain netcdf@:4.7.1 (#13526)
+
 # v0.13.0 (2019-10-25)
 
 `v0.13.0` is our biggest Spack release yet, with *many* new major features.
