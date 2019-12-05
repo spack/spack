@@ -56,6 +56,7 @@ on these ideas for each distinct build system that Spack supports:
    :maxdepth: 1
    :caption: Other
 
+   build_systems/bundlepackage
    build_systems/cudapackage
    build_systems/intelpackage
    build_systems/custompackage
