@@ -171,7 +171,6 @@ def display_env(env, args, decorator):
         # set for abstract specs. Same for hashes
         root_args = copy.copy(args)
         root_args.paths = False
-        root_args.long = False
         root_args.very_long = False
 
         # Roots are displayed with variants, etc. so that we can see
