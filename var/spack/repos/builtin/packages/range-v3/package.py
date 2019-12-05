@@ -14,6 +14,7 @@ class RangeV3(CMakePackage):
     git      = "https://github.com/ericniebler/range-v3.git"
 
     version('develop', branch='master')
+    version('0.9.0', sha256='b76c571aa2b0047d94daf46e51c6bb7609618134df0770eab5ec4ad275fcba3b')
     version('0.3.6', sha256='ce6e80c6b018ca0e03df8c54a34e1fd04282ac1b068cd39e902e2e5201ac117f')
     version('0.3.5', sha256='0a0094b450fe17e1454468bef5b6bf60e73ef100aebe1663daf6fbdf2c353836')
     version('0.3.0', sha256='cc29fbed5b06b11e7f9a732f7e1211483ebbd3cfe29d86e40c93209014790d74')
@@ -24,6 +25,8 @@ class RangeV3(CMakePackage):
     version('0.2.2', sha256='01a7bee222570a55a79c84a54b2997ed718dac06f43a82122ff0150a11477f9d')
     version('0.2.1', sha256='25d5e3dad8052d668873e960bd78f068bebfba3bd28a278f805ea386f9438790')
     version('0.2.0', sha256='49b1a62a7a36dab582521c8034d8e736a8922af664d007c1529d3162b1294331')
+
+    patch('0001-Fix-warning-about-shadowing-in-adjacent_filter.patch', when='@0.9.0')
 
     variant('cxxstd',
             default='11',
