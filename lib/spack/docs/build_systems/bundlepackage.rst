@@ -3,7 +3,7 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _bundlepackage
+.. _bundlepackage:
 
 -------------
 BundlePackage
@@ -19,7 +19,13 @@ Creation
 ^^^^^^^^
 
 Be sure to specify the ``bundle`` template if you are using ``spack create``
-to generate a package from the template.
+to generate a package from the template.  For example, use the following
+command to create a bundle package whose class name will be ``Mybundle``:
+
+.. code-block:: console
+
+    $ spack create --template bundle --name mybundle
+
 
 
 ^^^^^^
