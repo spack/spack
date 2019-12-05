@@ -13,7 +13,7 @@ class PyMerlinwf(PythonPackage):
     url      = "https://pypi.io/packages/source/m/merlinwf/merlinwf-1.0.0.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
-    version('1.0.0', sha256='4a1843b9359d0cd0eeb19730f7a40653b8dfae4d3a72a5b4bbd957dd90eafbe3')
+    version('1.0.4', sha256='61dce3ea38f86e13528398500645d152d1894a581ff332d0e438dd19133995dc')
     version('master', branch='master')
     version('develop', branch='develop')
 
