@@ -670,9 +670,13 @@ class PyTensorflow(Package, CudaPackage):
             for fn in glob.iglob(join_path(
                     '../bazel-bin/tensorflow/tools/pip_package',
                     'build_pip_package.runfiles/org_tensorflow/*')):
-                os.symlink(fn, '.')
+                dst = os.path.basename(fn)
+                if not os.path.exists(dst):
+                    os.symlink(fn, dst)
             for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
-                os.symlink(fn, '.')
+                dst = os.path.basename(fn)
+                if not os.path.exists(dst):
+                    os.symlink(fn, dst)
 
             # macOS is case-insensitive, and BUILD file in directory
             # containing setup.py causes the following error message:
