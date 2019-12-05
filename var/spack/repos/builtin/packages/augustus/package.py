@@ -88,8 +88,7 @@ class Augustus(MakefilePackage):
         # Fix for using 'boost' on Spack. (only after ver.3.3.1-tag1)
         if self.version >= Version('3.3.1-tag1'):
             with working_dir(join_path('auxprogs', 'utrrnaseq', 'Debug')):
-                filter_file('g++',
-                            '{0}'.format(spack_cxx), 'makefile', string=True)
+                filter_file('g++', spack_cxx, 'makefile', string=True)
                 filter_file('g++ -I/usr/include/boost', '{0} -I{1}'
                             .format(spack_cxx,
                                     self.spec['boost'].prefix.include),
