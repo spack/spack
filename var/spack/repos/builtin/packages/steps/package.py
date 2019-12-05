@@ -75,6 +75,7 @@ class Steps(CMakePackage):
             args.append("-DENABLE_CODECOVERAGE:BOOL=True")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
+        args.append('-DPYTHON_EXECUTABLE=' + spec['python'].prefix.bin.python + str(spec['python'].version.up_to(1)))
         return args
 
     @property
