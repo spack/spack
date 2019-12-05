@@ -14,16 +14,20 @@ class IbmJava(Package):
 
     homepage = "https://developer.ibm.com/javasdk/"
 
-    # There are separate tar files for big and little-endian machine
-    # types.  When we add more versions, then turn this into a mapping
-    # from version and machine type to sha256sum.
-    mach = platform.machine() if platform.machine() == 'ppc64' else 'ppc64le'
-    if mach == 'ppc64le':
-        sha = 'dec6434d926861366c135aac6234fc28b3e7685917015aa3a3089c06c3b3d8f0'
-    else:
-        sha = 'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'
+    # Note: IBM is fairly aggressive about taking down old versions,
+    # so we may need to update this frequently.
 
-    version('8.0.5.30', sha256=sha, expand=False)
+    version_list = [
+        ('8.0.6.0', 'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
+        ('8.0.6.0', 'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
+    ]
+
+    # There are separate tar files for big and little-endian machine
+    # types.  And no, this won't work cross platform.
+
+    for (ver, mach, sha) in version_list:
+        if mach == platform.machine():
+            version(ver, sha256=sha, expand=False)
 
     provides('java@8')
 
@@ -36,7 +40,7 @@ class IbmJava(Package):
 
         url = ('http://public.dhe.ibm.com/ibmdl/export/pub/systems/cloud'
                '/runtimes/java/{0}/linux/{1}/ibm-java-sdk-{2}-{1}'
-               '-archive.bin').format(version, self.mach, dash)
+               '-archive.bin').format(version, platform.machine(), dash)
 
         return url
 
