@@ -34,6 +34,6 @@ class Fgsl(AutotoolsPackage):
     def create_m4_dir(self):
         mkdir('m4')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.compiler.name == 'gcc':
-            spack_env.append_flags('FCFLAGS', "-ffree-line-length-none")
+            env.append_flags('FCFLAGS', "-ffree-line-length-none")

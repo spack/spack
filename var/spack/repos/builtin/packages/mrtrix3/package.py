@@ -35,5 +35,5 @@ class Mrtrix3(Package):
         build()
         install_tree('.', prefix)
 
-    def setup_environment(self, spac_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)

@@ -245,5 +245,5 @@ class Libmesh(AutotoolsPackage):
 
         return options
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.append_flags('PERL', self.spec['perl'].command.path)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.append_flags('PERL', self.spec['perl'].command.path)

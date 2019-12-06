@@ -28,6 +28,6 @@ class Wordnet(AutotoolsPackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('WNHOME', self.prefix)
-        run_env.set('WNSEARCHDIR', self.prefix.dict)
+    def setup_run_environment(self, env):
+        env.set('WNHOME', self.prefix)
+        env.set('WNSEARCHDIR', self.prefix.dict)

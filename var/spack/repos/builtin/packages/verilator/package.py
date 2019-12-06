@@ -42,8 +42,8 @@ class Verilator(AutotoolsPackage):
     depends_on('flex')
     depends_on('perl',  type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('VERILATOR_ROOT', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('VERILATOR_ROOT', self.prefix)
 
     # verilator requires access to its shipped scripts (bin) and include
     # but the standard make doesn't put it in the correct places

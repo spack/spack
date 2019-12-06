@@ -64,13 +64,13 @@
         "clang": [
           {
             "versions": "0.0.0-apple:",
-            "family": "x86-64",
-            "flags": "-march={family}"
+            "name": "x86-64",
+            "flags": "-march={name}"
           },
           {
             "versions": ":",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu=generic"
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "intel": {
@@ -96,8 +96,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -122,8 +121,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -157,8 +155,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -188,8 +185,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -227,8 +223,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -274,8 +269,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -326,8 +320,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -373,8 +366,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -416,8 +408,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -463,8 +454,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "knl",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -515,8 +505,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "skylake-avx512",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -568,8 +557,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -618,8 +606,7 @@
         },
         "clang": {
           "versions": "8.0:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "19.0:",
@@ -685,13 +672,11 @@
           {
             "versions": "7.0:",
             "name": "icelake-client",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu={name}"
+            "flags": "-march={name} -mtune={name}"
           },
           {
             "versions": "6.0:6.9",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu={name}"
+            "flags": "-march={name} -mtune={name}"
           }
         ],
         "intel": {
@@ -723,8 +708,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "amdfam10",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -761,8 +745,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver1",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -803,8 +786,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver2",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -846,8 +828,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver3",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -892,8 +873,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver4",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -942,8 +922,7 @@
         "clang": {
           "versions": "4.0:",
           "name": "znver1",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -993,8 +972,7 @@
         "clang": {
           "versions": "9.0:",
           "name": "znver2",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
