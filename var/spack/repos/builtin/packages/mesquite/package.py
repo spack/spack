@@ -36,5 +36,7 @@ class Mesquite(AutotoolsPackage):
             args.append('CC=%s' % self.spec['mpi'].mpicc)
             args.append('CXX=%s' % self.spec['mpi'].mpicxx)
             args.append('--with-mpi=%s' % self.spec['mpi'].prefix)
+        else:
+            args.append('--without-mpi')
 
         return args
