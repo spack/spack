@@ -118,8 +118,8 @@ class Lua(Package):
         return lua_patterns, lua_cpatterns
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        lua_patterns, lua_cpatterns = _setup_dependent_env_helper(
-            self, env, dependent_spec)
+        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(
+            env, dependent_spec)
 
         env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
         env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
@@ -127,8 +127,8 @@ class Lua(Package):
     def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
         # prepend it to LUAPATH
-        lua_patterns, lua_cpatterns = _setup_dependent_env_helper(
-            self, env, dependent_spec)
+        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(
+            env, dependent_spec)
 
         if dependent_spec.package.extends(self.spec):
             env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
