@@ -103,6 +103,8 @@ packages:
         paths:
             tcl@8.6: /usr
         version: [8.6]
+    trilinos:
+        variants: ~hypre
     all:
         providers:
             mpi: [openmpi]

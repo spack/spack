@@ -57,8 +57,8 @@ class Zee(CMakePackage):
                 yield '-D' + cmake_var + ':BOOL=FALSE'
         yield '-DZee_OPSPLIT_CLIENTS_ONLY:BOOL=' + ('TRUE' if '+opsplit-only' in self.spec else 'FALSE')
         yield '-DZee_USE_PETSc:BOOL=' + ('TRUE' if '+petsc' in self.spec else 'FALSE')
-        yield '-DPYTHON_EXECUTABLE:FILEPATH=' + python.path
         if '+codechecks' in self.spec:
+            yield '-DPYTHON_EXECUTABLE:FILEPATH=' + self.spec['python'].command.path
             yield '-DZee_FORMATTING:BOOL=TRUE'
             yield '-DZee_TEST_FORMATTING:BOOL=TRUE'
 
