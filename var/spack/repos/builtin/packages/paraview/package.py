@@ -64,13 +64,13 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'run'))
 
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
 
     depends_on('py-matplotlib@:2', when='+python', type='run')
-    depends_on('py-matplotlib@3:', when='+python3', type='run')
+    depends_on('py-matplotlib', when='+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')

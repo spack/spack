@@ -2182,7 +2182,7 @@ class Spec(object):
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
-                if s.satisfies(cond):
+                if s.satisfies(cond, strict=True):
                     for patch in patch_list:
                         patches.append(patch)
             if patches:
@@ -2201,7 +2201,7 @@ class Spec(object):
 
             patches = []
             for cond, dependency in pkg_deps[dspec.spec.name].items():
-                if dspec.parent.satisfies(cond):
+                if dspec.parent.satisfies(cond, strict=True):
                     for pcond, patch_list in dependency.patches.items():
                         if dspec.spec.satisfies(pcond):
                             for patch in patch_list:

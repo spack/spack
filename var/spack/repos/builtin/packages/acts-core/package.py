@@ -34,6 +34,7 @@ class ActsCore(CMakePackage):
     maintainers = ['HadrienG2']
 
     version('develop', branch='master')
+    version('0.11.1', commit='c21196cd6c3ecc6da0f14d0a9ef227a274be584b')
     version('0.11.0', commit='22bcea1f19adb0021ca61b843b95cfd2462dd31d')
     version('0.10.5', commit='b6f7234ca8f18ee11e57709d019c14bf41cf9b19')
     version('0.10.4', commit='42cbc359c209f5cf386e620b5a497192c024655e')
@@ -86,7 +87,7 @@ class ActsCore(CMakePackage):
             cmake_variant("INTEGRATION_TESTS", "integration_tests"),
             cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
-            cmake_variant("IDENTIFICATION", "identification"),
+            cmake_variant("IDENTIFICATION_PLUGIN", "identification"),
             cmake_variant("JSON_PLUGIN", "json"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]

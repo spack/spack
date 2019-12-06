@@ -48,6 +48,8 @@ class Jdk(Package):
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz')
     version('10.0.1_10', sha256='ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
             url='http://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz')
+    version('1.8.0_231-b11', sha256='a011584a2c9378bf70c6903ef5fbf101b30b08937441dc2ec67932fb3620b2cf', curl_options=curl_options,
+            url='https://download.oracle.com/otn/java/jdk/8u231-b11/5b13a193868b4bf28bcb45c792fce896/jdk-8u231-linux-x64.tar.gz')
     version('1.8.0_212-b10', sha256='3160c50aa8d8e081c8c7fe0f859ea452922eca5d2ae8f8ef22011ae87e6fedfb', curl_options=curl_options,
             url='https://download.oracle.com/otn/java/jdk/8u212-b10/59066701cf1a433da9770636fbc4c9aa/jdk-8u212-linux-x64.tar.gz')
     version('1.8.0_202-b08', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0', curl_options=curl_options,

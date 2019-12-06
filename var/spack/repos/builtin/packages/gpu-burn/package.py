@@ -51,5 +51,5 @@ class GpuBurn(MakefilePackage, CudaPackage):
     # The gpu_burn program looks for the compare.ptx file in the current
     # working directory. Create an environment variable that can be pointed to
     # so that it can be copied or linked.
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('COMPARE_PTX', join_path(self.prefix.share, 'compare.ptx'))
+    def setup_run_environment(self, env):
+        env.set('COMPARE_PTX', join_path(self.prefix.share, 'compare.ptx'))

@@ -45,10 +45,7 @@ class BlasrLibcpp(Package):
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.hdf)
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.alignment)
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.pbdata)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.hdf)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.alignment)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.pbdata)

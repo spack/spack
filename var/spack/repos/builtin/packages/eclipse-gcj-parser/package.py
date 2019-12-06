@@ -45,6 +45,3 @@ class EclipseGcjParser(Package):
     def install(self, spec, prefix):
         mkdirp(spec.prefix.bin)
         install('ecj1', spec.prefix.bin)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.bin)

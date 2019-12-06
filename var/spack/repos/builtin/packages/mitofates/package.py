@@ -44,6 +44,6 @@ class Mitofates(Package):
         chmod = which('chmod')
         chmod('+x', join_path(prefix, 'MitoFates.pl'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # We want the main MitoFates.pl script in the path
-        run_env.prepend_path('PATH', self.prefix)
+        env.prepend_path('PATH', self.prefix)

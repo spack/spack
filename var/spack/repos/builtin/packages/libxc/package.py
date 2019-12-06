@@ -49,7 +49,7 @@ class Libxc(AutotoolsPackage):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env):
         optflags = '-O2'
         if self.compiler.name == 'intel':
             # Optimizations for the Intel compiler, suggested by CP2K
@@ -76,10 +76,10 @@ class Libxc(AutotoolsPackage):
             #
             optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
             if which('xiar'):
-                spack_env.set('AR', 'xiar')
+                env.set('AR', 'xiar')
 
-        spack_env.append_flags('CFLAGS',  optflags)
-        spack_env.append_flags('FCFLAGS', optflags)
+        env.append_flags('CFLAGS',  optflags)
+        env.append_flags('FCFLAGS', optflags)
 
     def configure_args(self):
         args = ['--enable-shared']

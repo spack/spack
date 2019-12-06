@@ -20,7 +20,7 @@ class Ocaml(Package):
 
     def url_for_version(self, version):
         url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
-        return url.format(version.up_to(2), version)
+        return url.format(str(version)[:-2], version)
 
     def install(self, spec, prefix):
         configure('-prefix', '{0}'.format(prefix))

@@ -139,7 +139,7 @@ class Qt(Package):
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl~krellpatch')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')

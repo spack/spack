@@ -35,22 +35,27 @@ class Chill(AutotoolsPackage):
         bash = which('bash')
         bash('./bootstrap')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         rose_home  = self.spec['rose'].prefix
         boost_home = self.spec['boost'].prefix
         iegen_home = self.spec['iegenlib'].prefix
 
-        spack_env.append_path('LD_LIBRARY_PATH', rose_home.lib)
-        spack_env.append_path('LD_LIBRARY_PATH', boost_home.lib)
-        spack_env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
+        env.set('ROSEHOME', rose_home)
+        env.set('BOOSTHOME', boost_home)
+        env.set('IEGENHOME', iegen_home)
 
-        run_env.append_path('LD_LIBRARY_PATH', rose_home.lib)
-        run_env.append_path('LD_LIBRARY_PATH', boost_home.lib)
-        run_env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
+        env.append_path('LD_LIBRARY_PATH', rose_home.lib)
+        env.append_path('LD_LIBRARY_PATH', boost_home.lib)
+        env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
 
-        spack_env.set('ROSEHOME', rose_home)
-        spack_env.set('BOOSTHOME', boost_home)
-        spack_env.set('IEGENHOME', iegen_home)
+    def setup_run_environment(self, env):
+        rose_home  = self.spec['rose'].prefix
+        boost_home = self.spec['boost'].prefix
+        iegen_home = self.spec['iegenlib'].prefix
+
+        env.append_path('LD_LIBRARY_PATH', rose_home.lib)
+        env.append_path('LD_LIBRARY_PATH', boost_home.lib)
+        env.append_path('LD_LIBRARY_PATH', iegen_home.lib)
 
     def configure_args(self):
         args = ['--with-rose={0}'.format(self.spec['rose'].prefix),
