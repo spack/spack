@@ -15,11 +15,14 @@ class IbmJava(Package):
     homepage = "https://developer.ibm.com/javasdk/"
 
     # Note: IBM is fairly aggressive about taking down old versions,
-    # so we may need to update this frequently.
+    # so we may need to update this frequently.  Also, old revs may
+    # not be available for download.
 
     version_list = [
-        ('8.0.6.0', 'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
-        ('8.0.6.0', 'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
+        ('8.0.6.0',  'ppc64',   'e142746a83e47ab91d71839d5776f112ed154ae180d0628e3f10886151dad710'),
+        ('8.0.6.0',  'ppc64le', '18c2eccf99225e6e7643141d8da4110cacc39f2fa00149fc26341d2272cc0102'),
+        ('8.0.5.30', 'ppc64',   'd39ce321bdadd2b2b829637cacf9c1c0d90235a83ff6e7dcfa7078faca2f212f'),
+        ('8.0.5.30', 'ppc64le', 'dec6434d926861366c135aac6234fc28b3e7685917015aa3a3089c06c3b3d8f0'),
     ]
 
     # There are separate tar files for big and little-endian machine
