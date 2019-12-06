@@ -198,14 +198,16 @@ def test_extension_naming(extension_data):
         spack.cmd.get_module("no-such-command")
 
 
-def test_missing_command_function(extension):
+def test_missing_command_function(extension, capsys):
     """Ensure we die as expected if a command module does not have the
     expected command function defined.
     """
     extension.add_command('bad-cmd', """
 description = "Empty command implementation"\n""")
-    with pytest.raises(SystemExit, matches="must define function 'bad-cmd'."):
+    with pytest.raises(SystemExit):
         spack.cmd.get_module('bad-cmd')
+    capture = capsys.readouterr()
+    assert "must define function 'bad_cmd'." in capture[1]
 
 
 @pytest.fixture()
