@@ -18,29 +18,31 @@ class Quantlib(AutotoolsPackage):
     depends_on('boost')
     depends_on('bash')
 
-    variant('examples', default=True, description="""
+    variant('benchmark', default=False, description="""
+        If enabled, the benchmark is built and installed when "make" and "make
+        install" are invoked. If disabled it is built but not installed.
+        """)
+    variant('examples', default=False, description="""
         If enabled, examples are built and installed when "make" and "make
         install" are invoked. If disabled they are built but not installed.
         """)
-    variant('intraday', default=True, description="""
-        If enabled, date objects will support an intraday
-        datetime resolution down to microseconds. Strickly
-        monotone daycounters (Actual360, Actual365Fixed and
-        ActualActual) will take the additional information
-        into account and allow for accurate intraday
-        pricing. If disabled (the default) the smallest
-        resolution of date objects will be a single day.
-        Intraday datetime resolution is experimental.
+    variant('intraday', default=False, description="""
+        If enabled, date objects will support an intraday datetime resolution
+        down to microseconds. Strickly monotone daycounters (Actual360,
+        Actual365Fixed and ActualActual) will take the additional information
+        into account and allow for accurate intraday pricing. If disabled the
+        smallest resolution of date objects will be a single day.  Intraday
+        datetime resolution is experimental.
         """)
-    variant('openmp', default=True, description="""
+    variant('openmp', default=False, description="""
         If enabled, configure will try to detect and enable OpenMP support.
         """)
     variant('static', default=True, description="Build static libraries")
     variant('shared', default=True, description="Build shared libraries")
-    variant('std-classes', default=True, description="""
+    variant('std-classes', default=False, description="""
         This is a shortcut for
         --enable-std-pointers --enable-std-unique-ptr --enable-std-function. If
-        enabled, this supersedes any --disable option passed
+        enabled, this supersedes any --disable option passed.
         """)
 
     def autoreconf(self, spec, prefix):
@@ -79,6 +81,11 @@ class Quantlib(AutotoolsPackage):
             args.append('--enable-examples')
         else:
             args.append('--disable-examples')
+
+        if '+benchmark' in spec:
+            args.append('--enable-benchmark')
+        else:
+            args.append('--disable-benchmark')
 
         if '+std-classes' in spec:
             args.append('--enable-std-classes')
