@@ -133,8 +133,8 @@ class BuildManager(object):
         # Mapping of build spec name to build task
         self.build_tasks = {}
 
-        # Cache of packages that have failed to install (with locks)
-        self.failed = {}
+        # Cache of packages that have failed to install
+        self.failed = []
 
         # Cache of installed packages
         self.installed = set()
@@ -211,31 +211,12 @@ class BuildManager(object):
         for spec_name in self.locks:
             self._release_lock(spec_name)
 
-        for spec_name in self.failed:
-            self._cleanup_failed(spec_name)
-
         task_names = list(self.build_tasks.keys())
         for name in task_names:
             try:
                 self._remove_task(name)
             except Exception:
                 pass
-
-    def _cleanup_failed(self, spec_name):
-        """Cleanup any failed mark for the spec."""
-        if spec_name in self.failed:
-            err = "{0} exception when removing failure mark for {1}: {2}"
-            msg = 'Removing failure mark on {0}'
-            lock = self.failed[spec_name]
-            if lock is not None:
-                try:
-                    tty.verbose(msg.format(spec_name))
-                    lock.release_write()
-                except AssertionError:
-                    pass
-                except Exception as exc:
-                    tty.warn(err.format(exc.__class__.__name__, spec_name,
-                                        str(exc)))
 
     def _cleanup_task(self, spec, remove_task):
         """Cleanup the build task for the spec."""
@@ -522,9 +503,8 @@ class BuildManager(object):
         name = task.name
         tty.debug('Flagging {0} as failed'.format(name))
         if mark:
-            self.failed[name] = spack.store.db.mark_failed(task.spec)
-        else:
-            self.failed[name] = None
+            spack.store.db.mark_failed(task.spec)
+        self.failed.append(name)
         task.status = STATUS_FAILED
         for dep_name in task.dependents:
             if dep_name in self.build_tasks:
