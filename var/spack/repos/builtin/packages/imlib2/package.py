@@ -13,7 +13,7 @@ class Imlib2(AutotoolsPackage):
 
     homepage = "http://sourceforge.net/projects/enlightenment/"
     url      = "http://downloads.sourceforge.net/enlightenment/imlib2-1.5.1.tar.bz2"
-    
+
     maintainers = ['TheQueasle']
 
     version('1.5.1', '390aa207693e051bb692f2db650c694b')
