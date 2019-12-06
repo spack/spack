@@ -14,7 +14,14 @@ import llnl.util.lang
 import spack.config
 from spack.error import SpackError
 
-_extension_regexp = re.compile(r'spack-([\w]+)')
+_extension_regexp = re.compile(r'spack-([-\w]+)$')
+
+
+# TODO: For consistency we should use spack.cmd.python_name(), but
+#       currently this would create a circular relationship between
+#       spack.cmd and spack.extensions.
+def _python_name(cmd_name):
+    return cmd_name.replace('-', '_')
 
 
 def extension_name(path):
@@ -44,15 +51,11 @@ def load_command_extension(command, path):
         A valid module if found and loadable; None if not found. Module
     loading exceptions are passed through.
     """
-    extension = extension_name(path)
+    extension = _python_name(extension_name(path))
 
     # Compute the name of the module we search, exit early if already imported
     cmd_package = '{0}.{1}.cmd'.format(__name__, extension)
-    # TODO: For consistency, the below conversion should utilize
-    #       spack.cmd.python_name(), but currently this would create a
-    #       circular relationship between spack.cmd and
-    #       spack.extensions.
-    python_name = command.replace('-', '_')
+    python_name = _python_name(command)
     module_name = '{0}.{1}'.format(cmd_package, python_name)
     if module_name in sys.modules:
         return sys.modules[module_name]
@@ -104,7 +107,7 @@ def get_command_paths():
     extension_paths = spack.config.get('config:extensions') or []
 
     for path in extension_paths:
-        extension = extension_name(path)
+        extension = _python_name(extension_name(path))
         if extension:
             command_paths.append(os.path.join(path, extension, 'cmd'))
 
