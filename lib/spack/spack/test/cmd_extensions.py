@@ -174,14 +174,28 @@ def test_missing_command():
         spack.cmd.get_module("no-such-command")
 
 
-def test_badly_named_extension():
-    """Ensure that we raise the expected exception if the configured path of
-    an extension does not conform to .../spack-extname.
-
-    Note that the command name is irrelevant to this check.
+@pytest.mark.parametrize('extension_data',
+                         [('/my/bad/extension', False),
+                          ('', False),
+                          ('/my/bad/spack--extra-hyphen', False),
+                          ('/my/good/spack-extension', True),
+                          ('/my/still/good/spack-extension/', True),
+                          ('/my/spack-hyphenated-extension', True)],
+                         ids=['no_stem', 'vacuous', 'leading_hyphen',
+                              'basic_good', 'trailing_slash', 'hyphenated'])
+def test_extension_naming(extension_data):
+    """Ensure that we are correctly validating configured extension paths
+    for conformity with the rules: basename match ``spack-<name>''; name may
+    have embedded extensions but not begin with one.
     """
-    with pytest.raises(spack.extensions.ExtensionNamingError):
-        spack.extensions.load_command_extension("oopsie", "/my/bad/extension")
+    ext_path = extension_data[0]
+    expected_exception\
+        = spack.extensions.CommandNotFoundError if \
+        extension_data[1] else \
+        spack.extensions.ExtensionNamingError
+    with spack.config.override('config:extensions',
+                               [ext_path]), pytest.raises(expected_exception):
+        spack.cmd.get_module("no-such-command")
 
 
 def test_missing_command_function(extension):

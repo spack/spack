@@ -14,7 +14,7 @@ import llnl.util.lang
 import spack.config
 from spack.error import SpackError
 
-_extension_regexp = re.compile(r'spack-([-\w]+)$')
+_extension_regexp = re.compile(r'spack-(\w[-\w]*)$')
 
 
 # TODO: For consistency we should use spack.cmd.python_name(), but
@@ -34,7 +34,8 @@ def extension_name(path):
         The extension name. An exception is raised if path doesn't match
         the expected format for a Spack command extension.
     """
-    regexp_match = re.search(_extension_regexp, os.path.basename(path))
+    regexp_match = re.search(_extension_regexp,
+                             os.path.basename(path.rstrip(os.sep)))
     if not regexp_match:
         raise ExtensionNamingError(path)
     return regexp_match.group(1)
@@ -108,8 +109,7 @@ def get_command_paths():
 
     for path in extension_paths:
         extension = _python_name(extension_name(path))
-        if extension:
-            command_paths.append(os.path.join(path, extension, 'cmd'))
+        command_paths.append(os.path.join(path, extension, 'cmd'))
 
     return command_paths
 
