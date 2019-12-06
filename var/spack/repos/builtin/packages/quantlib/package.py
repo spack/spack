@@ -16,6 +16,7 @@ class Quantlib(AutotoolsPackage):
     version('1.16', '1e7298cedcf74afdf8244391a2d9a99b')
 
     depends_on('boost')
+    depends_on('bash')
 
     variant('examples', default=True, description="""
         If enabled, examples are built and installed when "make" and "make
@@ -34,18 +35,12 @@ class Quantlib(AutotoolsPackage):
     variant('openmp', default=True, description="""
         If enabled, configure will try to detect and enable OpenMP support.
         """)
-    variant('static', default=False, description="Build static libraries")
+    variant('static', default=True, description="Build static libraries")
     variant('shared', default=True, description="Build shared libraries")
     variant('std-classes', default=True, description="""
         This is a shortcut for
         --enable-std-pointers --enable-std-unique-ptr --enable-std-function. If
-        enabled, this supersedes any --disable opti  on passed
-        """)
-    variant('std-functions', default=True, description="""
-        If enabled, std::function and std::bind will be used instead of
-        boost::function and boost::bind; this requires you to set your
-        compiler's standard to at least C++11. If disabled the Boost facilities
-        are used.
+        enabled, this supersedes any --disable option passed
         """)
 
     def autoreconf(self, spec, prefix):
@@ -89,10 +84,5 @@ class Quantlib(AutotoolsPackage):
             args.append('--enable-std-classes')
         else:
             args.append('--disable-std-classes')
-
-        if '+std-functions' in spec:
-            args.append('--enable-std-functions')
-        else:
-            args.append('--disable-std-functions')
 
         return args
