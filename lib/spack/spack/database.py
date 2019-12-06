@@ -351,7 +351,8 @@ class Database(object):
             raise ValueError('Concrete spec required for failure path for {0}'
                              .format(spec.name))
 
-        return os.path.join(self._failure_dir, spec.full_hash())
+        return os.path.join(self._failure_dir,
+                            '{0}-{1}'.format(spec.name, spec.full_hash()))
 
     def mark_failed(self, spec):
         """
