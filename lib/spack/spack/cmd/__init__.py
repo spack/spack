@@ -212,6 +212,9 @@ def disambiguate_spec(spec, env, local=False, installed=True):
 
 
 def gray_hash(spec, length):
+    if not length:
+        # default to maximum hash length
+        length = 32
     h = spec.dag_hash(length) if spec.concrete else '-' * length
     return colorize('@K{%s}' % h)
 
