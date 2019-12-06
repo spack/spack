@@ -5,6 +5,7 @@
 
 import pytest
 
+import os
 import sys
 
 import spack.cmd
@@ -208,6 +209,22 @@ description = "Empty command implementation"\n""")
         spack.cmd.get_module('bad-cmd')
     capture = capsys.readouterr()
     assert "must define function 'bad_cmd'." in capture[1]
+
+
+def test_get_command_paths():
+    """Exercise the construction of extension command search paths."""
+    extensions = ('extension-1', 'extension-2')
+    ext_paths = []
+    expected_cmd_paths = []
+    for ext in extensions:
+        ext_path = os.path.join('my', 'path', 'to', 'spack-' + ext)
+        ext_paths.append(ext_path)
+        expected_cmd_paths.append(os.path.join(ext_path,
+                                               spack.cmd.python_name(ext),
+                                               'cmd'))
+
+    with spack.config.override('config:extensions', ext_paths):
+        assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
 @pytest.fixture()
