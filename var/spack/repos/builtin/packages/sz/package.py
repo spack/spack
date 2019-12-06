@@ -35,6 +35,10 @@ class Sz(AutotoolsPackage):
     variant('fortran', default=False,
             description='Enable fortran compilation')
 
+    # Part of latest sources don't support -O3 optimization
+    # with Fujitsu compiler.
+    patch('fix_optimization.patch', when='@2.0.2.0:%fj')
+
     def configure_args(self):
         args = []
         if '+fortran' in self.spec:
