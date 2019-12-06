@@ -10,8 +10,8 @@ The return value of PyUnicode_AsUTF8AndSize is now "const char *".
 
 diff --git a/tools/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp b/tools/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
 index 6a9d57d5a..94f16b2c7 100644
---- a/tools/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
-+++ b/tools/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
+--- a/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
++++ b/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
 @@ -404,14 +404,16 @@ llvm::StringRef PythonString::GetString() const {
      return llvm::StringRef();
  
