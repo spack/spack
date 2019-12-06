@@ -26,7 +26,7 @@ class Libid3tag(AutotoolsPackage):
     @run_before('configure')
     def preclean(self):
         """
-        Regenerate compat.c and frametype.c from gperf sources
+        Remove compat.c and frametype.c in order to regenerate from gperf sources
         """
         rm = which('rm')
         rm('-v', 'compat.c')
