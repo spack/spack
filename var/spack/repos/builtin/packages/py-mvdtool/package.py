@@ -14,9 +14,9 @@ class PyMvdtool(PythonPackage):
     url      = "https://github.com/BlueBrain/MVDTool.git"
     git      = "https://github.com/BlueBrain/MVDTool.git"
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('2.3.0', tag='v2.3.0', submodules=True, clean=False)
-    version('2.2.1', tag='v2.2.1', submodules=True, clean=False)
+    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('2.3.0', tag='v2.3.0', submodules=True, get_full_repo=True)
+    version('2.2.1', tag='v2.2.1', submodules=True, get_full_repo=True)
 
     variant('mpi', default=True, description='Build with support for MPI')
 
