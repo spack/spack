@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
+import copy
 
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -166,11 +167,16 @@ def display_env(env, args, decorator):
     else:
         tty.msg('Root specs')
 
+        # Root specs cannot be displayed with prefixes, since those are not
+        # set for abstract specs. Same for hashes
+        root_args = copy.copy(args)
+        root_args.paths = False
+
         # Roots are displayed with variants, etc. so that we can see
         # specifically what the user asked for.
         cmd.display_specs(
             env.user_specs,
-            args,
+            root_args,
             decorator=lambda s, f: color.colorize('@*{%s}' % f),
             namespace=True,
             show_flags=True,

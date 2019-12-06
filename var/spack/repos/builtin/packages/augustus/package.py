@@ -84,6 +84,31 @@ class Augustus(MakefilePackage):
             makefile.filter('$(HTSLIB)/libhts.a',
                             '$(HTSLIB)/../lib/libhts.a', string=True)
 
+        # Set compile commands for each compiler and
+        # Fix for using 'boost' on Spack. (only after ver.3.3.1-tag1)
+        if self.version >= Version('3.3.1-tag1'):
+            with working_dir(join_path('auxprogs', 'utrrnaseq', 'Debug')):
+                filter_file('g++', spack_cxx, 'makefile', string=True)
+                filter_file('g++ -I/usr/include/boost', '{0} -I{1}'
+                            .format(spack_cxx,
+                                    self.spec['boost'].prefix.include),
+                            'src/subdir.mk', string=True)
+
+        # Set compile commands to all makefiles.
+        makefiles = [
+            'auxprogs/aln2wig/Makefile',
+            'auxprogs/bam2hints/Makefile',
+            'auxprogs/bam2wig/Makefile',
+            'auxprogs/checkTargetSortedness/Makefile',
+            'auxprogs/compileSpliceCands/Makefile',
+            'auxprogs/homGeneMapping/src/Makefile',
+            'auxprogs/joingenes/Makefile',
+            'src/Makefile'
+        ]
+        for makefile in makefiles:
+            filter_file('gcc', spack_cc, makefile, string=True)
+            filter_file('g++', spack_cxx, makefile, string=True)
+
     def install(self, spec, prefix):
         install_tree('bin', join_path(self.spec.prefix, 'bin'))
         install_tree('config', join_path(self.spec.prefix, 'config'))
