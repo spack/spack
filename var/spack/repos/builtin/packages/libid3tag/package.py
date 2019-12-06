@@ -6,6 +6,7 @@ from spack import *
 
 import os
 
+
 class Libid3tag(AutotoolsPackage):
     """library for id3 tagging"""
 
@@ -19,13 +20,13 @@ class Libid3tag(AutotoolsPackage):
     depends_on('zlib')
     depends_on('gperf')
 
-    ## source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/10_utf16.diff?h=packages/libid3tag
+    # source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/10_utf16.diff?h=packages/libid3tag
     patch('10_utf16.diff')
-    ## source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/11_unknown_encoding.diff?h=packages/libid3tag
+    # source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/11_unknown_encoding.diff?h=packages/libid3tag
     patch('11_unknown_encoding.dif')
-    ## source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/CVE-2008-2109.patch?h=packages/libid3tag
+    # source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/CVE-2008-2109.patch?h=packages/libid3tag
     patch('CVE-2008-2109.patch', level=0)
-    ## source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/libid3tag-gperf.patch?h=packages/libid3tag
+    # source: https://git.archlinux.org/svntogit/packages.git/tree/trunk/libid3tag-gperf.patch?h=packages/libid3tag
     patch('libid3tag-gperf.patch', when="^gperf@3.1:")
 
     @run_before('configure')
