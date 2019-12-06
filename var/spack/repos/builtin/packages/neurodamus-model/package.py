@@ -17,8 +17,8 @@ class NeurodamusModel(SimModel):
        Eventually in the future Models are independent entities, not tied to neurodamus
     """
     # NOTE: Several variants / dependencies come from SimModel
-    variant('synapsetool', default=True,  description="Enable Synapsetool reader")
-    variant('sonata',      default=False, description="Enable Synapsetool with Sonata")
+    variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
+    variant('mvdtool',     default=True , description="Enable MVDTool reader (for nodes)")
     variant('python',      default=False, description="Install neurodamus-python alongside")
     variant('common_mods', default=False, description="Source of common mods. '': no change,"
                                                       " other string: alternate path")
@@ -31,14 +31,13 @@ class NeurodamusModel(SimModel):
     depends_on("hdf5+mpi")
     depends_on('reportinglib')
     depends_on('reportinglib+profile', when='+profile')
-    depends_on('synapsetool+mpi', when='+synapsetool~sonata')
-    depends_on('synapsetool+mpi+sonata', when='+synapsetool+sonata')
+    depends_on('synapsetool+mpi', when='+synapsetool')
+    depends_on('py-mvdtool+mpi', type='run', when='+mvdtool')
+
     # NOTE: With Spack chain we no longer require support for external libs.
     # However, in some setups (notably tests) some libraries might still be
     # specificed as external and, if static, and we must bring their dependencies.
     depends_on('zlib')  # for hdf5
-
-    conflicts('+sonata', when='~synapsetool')
 
     phases = ['build_model', 'merge_hoc_mod', 'build', 'install']
 

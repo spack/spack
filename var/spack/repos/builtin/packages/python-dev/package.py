@@ -26,7 +26,6 @@ class PythonDev(BundlePackage):
     depends_on('py-lazy-property', type=('build', 'run'))
     depends_on('py-lxml', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
-    depends_on('py-pip', type=('build', 'run'))
     depends_on('py-pyspark', type=('build', 'run'))
     depends_on('py-pytest', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
@@ -44,6 +43,6 @@ class PythonDev(BundlePackage):
     depends_on('py-matplotlib', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
-        deps = ['py-pip', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark']
+        deps = ['py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark']
         for dep in deps:
             run_env.prepend_path('PATH', self.spec[dep].prefix.bin)

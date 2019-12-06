@@ -13,6 +13,7 @@ class Steps(CMakePackage):
     git      = "git@github.com:CNS-OIST/HBP_STEPS.git"
 
     version("develop", branch="master", submodules=True)
+    version("3.5.0a",  commit="30eb779", submodules=True)
     version("3.4.1", submodules=True)
     version("3.3.0", submodules=True)
     version("3.2.0", submodules=True)
@@ -74,6 +75,7 @@ class Steps(CMakePackage):
             args.append("-DENABLE_CODECOVERAGE:BOOL=True")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
+        args.append('-DPYTHON_EXECUTABLE=' + spec['python'].prefix.bin.python + str(spec['python'].version.up_to(1)))
         return args
 
     @property

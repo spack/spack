@@ -11,6 +11,18 @@ combinations: !include packages/toolchains.yaml
 
 packages:
 
+  gnu-stable-serial-py3-only:
+    target_matrix:
+      - gnu-stable
+    requires:
+      - architecture
+      - compiler
+      - python
+    specs:
+     - py-bb5
+     - py-mvdtool~mpi
+     - py-munkres
+
   gnu-stable-serial:
     target_matrix:
       - gnu-stable
@@ -23,7 +35,6 @@ packages:
       - py-argcomplete
       - py-argparse
       - py-babel
-      - py-bb5
       - py-beautifulsoup4
       - py-breathe
       # - py-bokeh
@@ -60,10 +71,13 @@ packages:
       - py-line-profiler
       - py-lxml
       - py-markdown
-      - py-mvdtool
+      # - py-memory-profiler
+      # - py-mpmath
+      # - py-multiprocess
+      # - py-neo
+      # - py-networkx
+      # - py-nose
       - py-morphio
-      - py-morpho-kit
-      - py-munkres
       - py-neurom
       - py-pandas
       - py-perf
@@ -113,3 +127,17 @@ packages:
       - py-matplotlib
       - python-dev
       - py-scikit-learn
+    # - py-scikit-learn@0.19.1 ^py-numpy@1.15.1 ^py-scipy@1.1.0
+    # - py-theano@1.0.2 ^py-numpy@1.15.1 ^py-scipy@1.1.0
+    # - py-pytorch@0.4.0 ^py-numpy@1.15.1
+
+  intel-stable-serial-lapack:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+      - lapack
+      - python
+    specs:
+      - py-numpy

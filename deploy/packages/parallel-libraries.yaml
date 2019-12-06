@@ -20,7 +20,9 @@ packages:
       - mpi
     specs:
       - hdf5+mpi@1.10.4
-      - highfive+mpi@2.0
+      - highfive+mpi
+      - ospray@1.7.3
+      - ospray@1.8.5
       - parmetis@4.0.3
       - mvdtool+mpi
 
@@ -45,6 +47,7 @@ packages:
       - lapack
     specs:
       - hypre@2.14.0
+      - omega-h+trilinos@9.31.1
       - superlu-dist@5.4.0
       - trilinos@xsdk-0.4.0-rc1
       - omega-h+trilinos@9.29.0
@@ -70,7 +73,7 @@ packages:
       - mpi
     specs:
       - hdf5+mpi@1.10.4
-      - highfive+mpi@2.0
+      - highfive+mpi@2.1.1
       - ospray@1.7.3
       - ospray@1.8.5
 
@@ -85,3 +88,5 @@ packages:
     specs:
       - neuron@7.6.8
       - neuron+debug@7.6.8
+      - py-h5py
+      - py-mpi4py

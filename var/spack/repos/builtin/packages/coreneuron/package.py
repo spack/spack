@@ -37,6 +37,7 @@ class Coreneuron(CMakePackage):
     url      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', git=url, submodules=True)
+    version('0.16', git=url, tag='0.16', submodules=True)
     version('0.15', git=url, tag='0.15', submodules=True)
     version('0.14', git=url, tag='0.14', submodules=True)
 
@@ -50,13 +51,26 @@ class Coreneuron(CMakePackage):
     variant('shared', default=True, description="Build shared library")
     variant('tests', default=False, description="Enable building tests")
 
+    # nmodl specific options
+    variant('nmodl', default=False, description="Use NMODL instead of MOD2C")
+    variant('sympy', default=False, description="Use NMODL with SymPy to solve ODEs")
+    variant('sympyopt', default=False, description="Use NMODL with SymPy Optimizations")
+    variant('ispc', default=False, description="Enable ISPC backend")
+
+    depends_on('bison', type='build')
     depends_on('boost', when='+tests')
     depends_on('cmake@3:', type='build')
     depends_on('cuda', when='+gpu')
+    depends_on('flex', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
+
+    # nmodl specific dependency
+    depends_on('nmodl', when='+nmodl')
+    depends_on('eigen@3.3.4:~metis~scotch~fftw~suitesparse~mpfr', when='+nmodl')
+    depends_on('ispc', when='+ispc')
 
     # Old versions. Required by previous neurodamus package.
     version('master',      git=url, submodules=True)
@@ -67,6 +81,11 @@ class Coreneuron(CMakePackage):
     depends_on('neurodamus-base@mousify', when='@mousify')
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
+
+   # sympy and ispc options are only usable with nmodl
+    conflicts('+sympyopt', when='~sympy')
+    conflicts('+sympy', when='~nmodl')
+    conflicts('+ispc', when='~nmodl')
 
     @run_before('build')
     def profiling_wrapper_on(self):
@@ -84,8 +103,6 @@ class Coreneuron(CMakePackage):
     def get_flags(self):
         spec = self.spec
         flags = "-g -O2"
-        if 'bgq' in spec.architecture and '%xl' in spec:
-            flags = '-O3 -qtune=qp -qarch=qp -q64 -qhot=simd -qsmp -qthreaded -g'
         if '%intel' in spec:
             flags = '-g -xHost -O2 -qopt-report=5'
             if '+knl' in spec:
@@ -101,20 +118,69 @@ class Coreneuron(CMakePackage):
             flags += ' -DTAU -DR123_USE_GNU_UINT128=0'
         return flags
 
-    def cmake_args(self):
+
+    def get_cmake_args(self):
         spec   = self.spec
         flags = self.get_flags()
 
         if spec.satisfies('+profile'):
             env['CC']  = 'tau_cc'
             env['CXX'] = 'tau_cxx'
-        elif 'bgq' in spec.architecture and spec.satisfies('+mpi'):
-            env['CC']  = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
 
-        options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
+        options = ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
                    '-DCMAKE_C_FLAGS=%s' % flags,
                    '-DCMAKE_CXX_FLAGS=%s' % flags,
+                   '-DCMAKE_BUILD_TYPE=CUSTOM',
+                   '-DCORENRN_ENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_UNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+                   '-DCORENRN_ENABLE_TIMEOUT=OFF'
+                   ]
+
+        if spec.satisfies('+nmodl'):
+            options.append('-DCORENRN_ENABLE_NMODL=ON')
+            options.append('-DCORENRN_NMODL_ROOT=%s' % spec['nmodl'].prefix)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+
+        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+ispc'):
+            options.append('-DCORENRN_ENABLE_ISPC=ON')
+            if '+knl' in spec:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+            else:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+
+        if spec.satisfies('+sympy'):
+            nmodl_options += ' sympy --analytic'
+
+        if spec.satisfies('+sympyopt'):
+            nmodl_options += ' --conductance --pade --cse'
+
+        options.append('-DCORENRN_NMODL_FLAGS=%s' % nmodl_options)
+
+        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
+            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+
+        if spec.satisfies('+gpu'):
+            gcc = which("gcc")
+            options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
+                            '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
+                            '-DCORENRN_ENABLE_GPU=ON'])
+            # PGI compiler not able to compile nrnreport.cpp when enabled
+            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
+            options.append('-DCORENRN_ENABLE_REPORTINGLIB=OFF')
+
+        return options
+
+
+    @when('@0:0.16')
+    def get_cmake_args(self):
+        spec   = self.spec
+        flags = self.get_flags()
+
+        options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
                    '-DCMAKE_BUILD_TYPE=CUSTOM',
                    '-DENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
                    '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
@@ -125,11 +191,37 @@ class Coreneuron(CMakePackage):
                    '-DDISABLE_NRN_TIMEOUT=ON'
                    ]
 
-        if spec.satisfies('~shared') or spec.satisfies('+gpu'):
-            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
+        if spec.satisfies('+profile'):
+            env['CC']  = 'tau_cc'
+            env['CXX'] = 'tau_cxx'
 
-        if 'bgq' in spec.architecture and '%xl' in spec:
-            options.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if spec.satisfies('+nmodl'):
+            options.append('-DCORENRN_ENABLE_NMODL=ON')
+            options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+
+        nmodl_options = 'codegen --force passes --verbatim-rename --inline'
+
+        if spec.satisfies('+ispc'):
+            options.append('-DENABLE_ISPC_TARGET=ON')
+            if '+knl' in spec:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+            else:
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+
+        if spec.satisfies('+sympy'):
+            nmodl_options += ' sympy --analytic'
+
+        if spec.satisfies('+sympyopt'):
+            nmodl_options += ' --conductance --pade --cse'
+
+        options.append('-DNMODL_EXTRA_FLAGS=%s' % nmodl_options)
+
+        options.extend(['-DCMAKE_C_FLAGS=%s' % flags,
+                        '-DCMAKE_CXX_FLAGS=%s' % flags])
+
+        if spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture:
+            options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         if spec.satisfies('+gpu'):
             gcc = which("gcc")
@@ -150,6 +242,11 @@ class Coreneuron(CMakePackage):
             options.append('-DADDITIONAL_MECHPATH=%s' % modlib_dir)
 
         return options
+
+
+    def cmake_args(self):
+        return self.get_cmake_args()
+
 
     @run_after('install')
     def filter_compilers(self):
@@ -173,7 +270,8 @@ class Coreneuron(CMakePackage):
         """
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
         spec = self.spec
-        is_shared = spec.satisfies('+shared') and spec.satisfies('~gpu')
+        # opposite of how static linkage is used
+        is_shared = not (spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture)
         for path, recursive in search_paths:
             libs = find_libraries(['libcoreneuron', 'libcorenrnmech'], root=path,
                                   shared=is_shared, recursive=False)

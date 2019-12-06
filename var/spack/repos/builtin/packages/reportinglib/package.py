@@ -34,7 +34,8 @@ class Reportinglib(CMakePackage):
     url      = "ssh://bbpcode.epfl.ch/sim/reportinglib/bbp"
 
     version('develop', git=url, branch='master')
-    version('2.5.1', git=url, tag='2.5.1', preferred=True)
+    version('2.5.2', git=url, tag='2.5.2', preferred=True)
+    version('2.5.1', git=url, tag='2.5.1')
     version('2.5.0', git=url, tag='2.5.0')
 
     variant('profile', default=False, description="Enable profiling using Tau")

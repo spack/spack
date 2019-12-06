@@ -13,6 +13,9 @@ class NeurodamusCore(Package):
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-core"
 
     version('develop', git=git, branch='master', clean=False)
+    version('2.8.0', git=git, tag='2.8.0', clean=False)
+    version('2.7.3', git=git, tag='2.7.3', clean=False)
+    version('2.7.2', git=git, tag='2.7.2', clean=False)
     version('2.7.0', git=git, tag='2.7.0', clean=False)
     version('2.6.0', git=git, tag='2.6.0', clean=False)
     version('2.5.0', git=git, tag='2.5.0', clean=False)
@@ -45,6 +48,7 @@ class NeurodamusCore(Package):
     depends_on('py-numpy',         type=('run',), when='+python')
     depends_on('py-enum34',        type=('run',), when='^python@2.4:2.7.999,3.1:3.3.999')
     depends_on('py-lazy-property', type=('run'), when='+python')
+    depends_on('py-docopt',        type=('run'), when='+python')
 
     def install(self, spec, prefix):
         shutil.copytree('hoc', prefix.hoc)

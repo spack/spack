@@ -13,14 +13,16 @@ class PyMorphTool(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/morph-tool"
 
     version('develop', branch='master')
-    version('0.1.3', tag='morph-tool-v0.1.3', preferred=True)
+    version('0.1.14', tag='morph-tool-v0.1.14')
+    version('0.1.3', tag='morph-tool-v0.1.3')
 
     variant('neuron', default=False, description='Neuron-based functionality')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-bluepyopt', type='run', when='+neuron')
     depends_on('py-click', type='run')
-    depends_on('py-functools32', when="^python@:2.99", type='run')
+    depends_on('py-functools32', when='^python@:2.99', type='run')
     depends_on('py-morphio', type='run')
     depends_on('py-numpy', type='run')
+    depends_on('py-neurom', type='run', when='@0.1.14:')

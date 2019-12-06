@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
-
 class SpatialIndex(PythonPackage):
     """Spatial indexer for geometries and morphologies"""
 
@@ -16,6 +15,9 @@ class SpatialIndex(PythonPackage):
     depends_on("cmake")
     depends_on("boost")
 
+    version('0.2.1', tag='0.2.1', submodules=True)
     version('0.1.0', tag='0.1.0', submodules=True)
 
-
+    @run_after('install')
+    def install_headers(self):
+        install_tree('include', self.prefix.include)

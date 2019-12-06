@@ -22,15 +22,12 @@ modules:
       - CMAKE_PREFIX_PATH
   tcl:
     all:
-      suffixes:
-          '+profile': 'profile'
-          '^coreneuron+knl': 'knl'
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
     naming_scheme: '${PACKAGE}/${VERSION}'
     hash_length: 0
     whitelist:
-      - 'neurodamus'
+      - 'neurodamus-hippocampus'
       - 'neuron'
     blacklist:
       - '%gcc'

@@ -7,8 +7,8 @@
 set -o errexit
 set -o nounset
 
-DEFAULT_DEPLOYMENT_ROOT="/gpfs/bbp.cscs.ch/apps/hpc/test/$(whoami)/deployment"
-DEFAULT_DEPLOYMENT_DATA="/gpfs/bbp.cscs.ch/apps/hpc/download"
+DEFAULT_DEPLOYMENT_ROOT="/gpfs/bbp.cscs.ch/ssd/apps/hpc/test/$(whoami)/deployment"
+DEFAULT_DEPLOYMENT_DATA="/gpfs/bbp.cscs.ch/ssd/apps/hpc/download"
 DEFAULT_DEPLOYMENT_DATE="$(date +%Y-%m-%d)"
 DEFAULT_DEPLOYMENT_TYPE="deploy"
 

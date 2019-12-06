@@ -21,4 +21,4 @@ class PyNeurotools(PythonPackage):
     depends_on('py-mpi4py', type='run')
     depends_on('py-pytables', type='run')
     depends_on('py-pyaml', type='run')
-    depends_on('py-interval', type='run')
+    # depends_on('py-interval', type='run') py-interval is py2 only and most probably not used

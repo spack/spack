@@ -36,7 +36,9 @@ modules:
       - petsc
       - py-mpi4py
       - python-dev
-      - trilinos
+      - py-h5py%gcc
+      - py-numpy%gcc
+      - py-virtualenv
       - 'tensorflow@1.12.0'
     blacklist:
       - '%gcc'

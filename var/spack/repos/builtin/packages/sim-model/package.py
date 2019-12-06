@@ -4,7 +4,6 @@ from spack import *
 from contextlib import contextmanager
 import os, shutil
 
-
 class SimModel(Package):
     """The abstract base package for simulation models.
 
@@ -70,9 +69,10 @@ class SimModel(Package):
         spec = self.spec
         assert os.path.isdir(mods_location), mods_location
         include_flag += ' -I%s' % (spec['coreneuron'].prefix.include)
-        which('nrnivmodl-core')(
-            '-i', include_flag, '-l', link_flag, '-n', self.mech_name,
-            '-v', str(spec.version), '-c', mods_location)
+        nrnivmodl_params = ['-i', include_flag,
+                            '-l', link_flag,
+                            '-n', self.mech_name]
+        which('nrnivmodl-core')(*nrnivmodl_params)
         output_dir = os.path.basename(self.neuron_archdir)
         expected_name = "libcorenrnmech" + ('_' + self.mech_name if self.mech_name else '')
         mechlib = find_libraries(expected_name + '*', output_dir)

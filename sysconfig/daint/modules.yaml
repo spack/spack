@@ -35,6 +35,7 @@ modules:
       - 'neurodamus-neocortex'
       - 'neurodamus-hippocampus'
       - 'neuron'
+      - 'py-bluepy'
     blacklist:
       - '%gcc'
       - '%intel'
