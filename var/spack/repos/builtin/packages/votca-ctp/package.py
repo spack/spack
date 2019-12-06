@@ -24,7 +24,6 @@ class VotcaCtp(CMakePackage):
     version('1.5', sha256='31eb6bcc9339e575116f0c91fe7a4ce7d4189f31f0640329c993fea911401d65')
 
     depends_on("cmake@2.8:", type='build')
-    for v in ["1.5", "1.5.1", "develop"]:
-        depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
-        depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
+    depends_on('votca-tools@1.5.1')
+    depends_on('votca-csg@1.5.1')
     depends_on("gsl")
