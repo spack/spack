@@ -9,11 +9,11 @@ from spack import *
 class PyMerlinwf(PythonPackage):
     """Merlin Workflow for HPC."""
 
-    homepage = "https://github.com/LLNL/merlin.git"
+    homepage = "https://github.com/LLNL/merlin"
     url      = "https://pypi.io/packages/source/m/merlinwf/merlinwf-1.0.0.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
-    version('1.0.4', sha256='61dce3ea38f86e13528398500645d152d1894a581ff332d0e438dd19133995dc')
+    version('1.0.5', sha256='')
     version('master', branch='master')
     version('develop', branch='develop')
 
@@ -29,7 +29,7 @@ class PyMerlinwf(PythonPackage):
     depends_on('py-coloredlogs@10.0:', type=('build', 'run'))
     depends_on('py-cryptography', type=('build', 'run'))
     depends_on('py-importlib-resources', when="^python@3.0:3.6.99", type=('build', 'run'))
-    depends_on('py-maestrowf@1.1.5:', type=('build', 'run'))
+    depends_on('py-maestrowf@1.1.6:', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-parse', type=('build', 'run'))
     depends_on('py-psutil@5.1.0:', type=('build', 'run'))
