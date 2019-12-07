@@ -76,10 +76,13 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
-    depends_on('apex', when='instrumentation=apex')
+    depends_on('otf2', when='instrumentation=apex')
     depends_on('gperftools', when='instrumentation=google_perftools')
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
+
+    # Patches APEX
+    patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
@@ -107,6 +110,10 @@ class Hpx(CMakePackage, CudaPackage):
 
         # Instrumentation
         args.extend(self.instrumentation_args())
+
+        if 'instrumentation=apex' in spec:
+            args += ['-DAPEX_WITH_OTF2=ON'
+                     '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
 
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(

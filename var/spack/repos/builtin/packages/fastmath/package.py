@@ -13,7 +13,9 @@ class Fastmath(BundlePackage):
     libraries for ODE's, Time Integrators, Iterative, Non-Linear, and Direct
     Solvers."""
 
-    homepage = "www.fastmath-scidac.org/"
+    homepage = "https://fastmath-scidac.org/"
+
+    version('latest')
 
     depends_on('amrex')  # default is 3 dimensions
     depends_on('chombo@3.2')

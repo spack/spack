@@ -203,6 +203,9 @@ class Llvm(CMakePackage):
     # for a bug report about this problem in llvm master.
     patch('llvm_py37.patch', when='@4:6 ^python@3.7:')
 
+    # https://bugs.llvm.org/show_bug.cgi?id=39696
+    patch('thread-p9.patch', when='@develop+libcxx')
+
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
         if not self.spec.satisfies('+lldb platform=darwin'):
