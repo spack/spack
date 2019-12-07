@@ -186,8 +186,9 @@ def test_missing_command():
                               'basic_good', 'trailing_slash', 'hyphenated'])
 def test_extension_naming(extension_data):
     """Ensure that we are correctly validating configured extension paths
-    for conformity with the rules: basename match ``spack-<name>''; name may
-    have embedded extensions but not begin with one.
+    for conformity with the rules: the basename should match
+    ``spack-<name>``; name may have embedded extensions but not begin
+    with one.
     """
     ext_path = extension_data[0]
     expected_exception\
