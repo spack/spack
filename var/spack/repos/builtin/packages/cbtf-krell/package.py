@@ -100,10 +100,10 @@ class CbtfKrell(CMakePackage):
 
     # MPI Installations
     depends_on("openmpi", when='+openmpi')
-    depends_on("mpich", when='+mpich')
-    depends_on("mpich2", when='+mpich2')
-    depends_on("mvapich2", when='+mvapich2')
-    depends_on("mvapich", when='+mvapich')
+    depends_on("mpich@:1", when='+mpich')
+    depends_on("mpich@2:", when='+mpich2')
+    depends_on("mvapich2@2:", when='+mvapich2')
+    depends_on("mvapich2@:1", when='+mvapich')
     depends_on("mpt", when='+mpt')
 
     depends_on("python", when='@develop', type=('build', 'run'))
