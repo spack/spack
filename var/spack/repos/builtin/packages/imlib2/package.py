@@ -16,7 +16,7 @@ class Imlib2(AutotoolsPackage):
 
     maintainers = ['TheQueasle']
 
-    version('1.5.1', '390aa207693e051bb692f2db650c694b')
+    version('1.5.1', 'fa4e57452b8843f4a70f70fd435c746ae2ace813250f8c65f977db5d7914baae')
 
     depends_on('libtiff')
     depends_on('giflib')
