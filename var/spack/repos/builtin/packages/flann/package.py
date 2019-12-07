@@ -68,13 +68,13 @@ class Flann(CMakePackage):
     depends_on("boost+mpi+system+serialization+thread", when="+mpi ^hdf5+mpi")
 
     # Doc deps
-    depends_on("latex", when="+doc")
+    depends_on("texlive", when="+doc")
 
     # Example uses hdf5.
     depends_on("hdf5", when="+examples")
 
     depends_on('hdf5', type='test')
-    depends_on('gtest', type='test')
+    depends_on('googletest', type='test')
 
     # See: https://github.com/mariusmuja/flann/issues/369
     patch('linux-gcc-cmakev3.11-plus.patch', when='%gcc^cmake@3.11:')
