@@ -194,9 +194,9 @@ def test_extension_naming(extension_data):
         = spack.extensions.CommandNotFoundError if \
         extension_data[1] else \
         spack.extensions.ExtensionNamingError
-    with spack.config.override('config:extensions',
-                               [ext_path]), pytest.raises(expected_exception):
-        spack.cmd.get_module("no-such-command")
+    with spack.config.override('config:extensions', [ext_path]):
+        with pytest.raises(expected_exception):
+            spack.cmd.get_module("no-such-command")
 
 
 def test_missing_command_function(extension, capsys):
