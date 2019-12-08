@@ -106,13 +106,8 @@ class Gromacs(CMakePackage):
             'axv128': 'AVX2_128',
             'avx2_256': 'AVX2_256',
             'avx512': 'AVX_512',
-            'avx512knl': 'AVX_512_KNL',
-            'qpx': 'IBM_QPX',
-            'ace': 'Sparc64_HPC_ACE',
-            'vmx': 'IBM_VMX',
-            'vsx': 'IBM_VSX',
-            'neon': 'ARM_NEON',
-            'neon_asimd': 'ARM_NEON_ASIMD'
+            'avx512er': 'AVX_512_KNL',
+            'neon': 'ARM_NEON_ASIMD'
         }
         for feature in simd_features:
             if feature in self.spec.target:
