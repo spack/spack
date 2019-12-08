@@ -30,10 +30,10 @@ class Hipsycl(CMakePackage):
 
     depends_on("boost +filesystem")
     depends_on("python@3:")
-    depends_on("llvm@8:", when="~cuda")
+    depends_on("llvm@8: +clang", when="~cuda")
     # LLVM debug builds don't work with hipSYCL CUDA backend:
     # https://github.com/illuhad/hipSYCL/blob/master/doc/install-cuda.md
-    depends_on("llvm@9: build_type=Release", when="+cuda")
+    depends_on("llvm@9: +clang build_type=Release", when="+cuda")
     # hipSYCL requires cuda@9:
     # LLVM PTX backend requires cuda7:10.1.9999 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1.9999", when="+cuda")
