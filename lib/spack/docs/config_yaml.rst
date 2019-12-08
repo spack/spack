@@ -227,6 +227,23 @@ them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
 
+--------------------
+``f90cache``
+--------------------
+
+When set to ``true`` Spack will use f90cache to cache compiles. This is
+useful specifically in two cases: (1) Use with ``spack setup``, (2)
+Build the same package with many different variants. The default is
+``false``.
+
+When enabled Spack will look inside your ``PATH`` for a ``f90cache``
+executable and stop if it is not found. Some systems come with
+``f90cache``, but it can also be installed using ``spack install
+f90cache``. ``f90cache`` comes with reasonable defaults for cache size
+and location. (See the *Configuration settings* secion of ``man
+f90cache`` to learn more about the default settings and how change
+them.)
+
 ------------------
 ``shared_linking``
 ------------------

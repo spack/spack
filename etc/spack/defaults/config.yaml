@@ -133,6 +133,10 @@ config:
   ccache: false
 
 
+  # If set to true, spack will use f90cache to cache fortran compilers.
+  f90cache: false
+
+  
   # How long to wait to lock the Spack installation database. This lock is used
   # when Spack needs to manage its own package metadata and all operations are
   # expected to complete within the default time limit. The timeout should

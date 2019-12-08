@@ -88,6 +88,7 @@ SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
+SPACK_F90CACHE_BINARY = 'SPACK_F90CACHE_BINARY'
 
 
 # Platform-specific library suffix.
@@ -409,6 +410,13 @@ def set_build_environment_variables(pkg, env, dirty):
         if not ccache:
             raise RuntimeError("No ccache binary found in PATH")
         env.set(SPACK_CCACHE_BINARY, ccache)
+
+    # Find f90cache binary and hand it to build environment
+    if spack.config.get('config:f90cache'):
+        f90cache = Executable('f90cache')
+        if not f90cache:
+            raise RuntimeError("No f90cache binary found in PATH")
+        env.set(SPACK_F90CACHE_BINARY, f90cache)
 
     # Add any pkgconfig directories to PKG_CONFIG_PATH
     for prefix in build_link_prefixes:

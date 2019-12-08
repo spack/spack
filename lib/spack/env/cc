@@ -522,6 +522,9 @@ if [ -n "$SPACK_CCACHE_BINARY" ]; then
             # see #3761#issuecomment-294352232
             export CCACHE_NOHASHDIR=yes
             ;;
+        F)  # f90cache only supports F languages
+            full_command=("${SPACK_F90CACHE_BINARY}" "$command" "${args[@]}")
+	    ;;
     esac
 fi
 

@@ -65,6 +65,7 @@ properties = {
             'build_language': {'type': 'string'},
             'build_jobs': {'type': 'integer', 'minimum': 1},
             'ccache': {'type': 'boolean'},
+            'f90cache': {'type': 'boolean'},
             'db_lock_timeout': {'type': 'integer', 'minimum': 1},
             'package_lock_timeout': {
                 'anyOf': [
