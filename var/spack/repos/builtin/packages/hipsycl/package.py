@@ -28,17 +28,22 @@ class Hipsycl(CMakePackage):
 
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
 
+    depends_on("cmake@3.5:", type="build")
     depends_on("boost +filesystem")
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
-    # LLVM debug builds don't work with hipSYCL CUDA backend:
-    # https://github.com/illuhad/hipSYCL/blob/master/doc/install-cuda.md
-    depends_on("llvm@9: +clang build_type=Release", when="+cuda")
+    depends_on("llvm@9: +clang", when="+cuda")
     # hipSYCL requires cuda@9:
     # LLVM PTX backend requires cuda7:10.1.9999 (https://tinyurl.com/v82k5qq)
     depends_on("cuda@9:10.1.9999", when="+cuda")
 
-    depends_on("cmake@3.5:", type="build")
+    conflicts(
+        "^llvm build_type=Debug",
+        when="+cuda",
+        msg="LLVM debug builds don't work with hipSYCL CUDA backend; for "
+        "further info please refer to: "
+        "https://github.com/illuhad/hipSYCL/blob/master/doc/install-cuda.md",
+    )
 
     def cmake_args(self):
         spec = self.spec
