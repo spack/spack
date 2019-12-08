@@ -770,7 +770,7 @@ Dependency:
         x       y
        /| (l)   | (b)
   (b) | y       z2
-       \| (b)              # noqa: W605
+       \| (b)
         z1
 
     """
