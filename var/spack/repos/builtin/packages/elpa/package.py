@@ -95,7 +95,7 @@ class Elpa(AutotoolsPackage):
             'CXX={0}'.format(spec['mpi'].mpicxx),
             'LDFLAGS={0}'.format(spec['lapack'].libs.search_flags),
             'LIBS={0}'.format(spec['lapack'].libs.link_flags),
-            'CALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
+            'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
         ])
 
         return options
