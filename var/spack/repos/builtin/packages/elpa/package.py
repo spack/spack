@@ -86,6 +86,8 @@ class Elpa(AutotoolsPackage):
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
+        else:
+            options.append('--disable-openmp')
 
         options.extend([
             'CC={0}'.format(spec['mpi'].mpicc),
