@@ -245,7 +245,7 @@ class AspGenerator(object):
 
         # version must be *one* of the ones the spec allows.
         allowed_versions = [
-            v for v in self.possible_versions[spec.name]
+            v for v in sorted(self.possible_versions[spec.name])
             if v.satisfies(spec.versions)
         ]
 
@@ -268,7 +268,7 @@ class AspGenerator(object):
         for compiler in compilers:
             compiler_versions[compiler.name].add(compiler.version)
 
-        for compiler in compiler_versions:
+        for compiler in sorted(compiler_versions):
             self.fact(fn.compiler(compiler))
             self.rule(
                 self._or(
@@ -307,7 +307,7 @@ class AspGenerator(object):
         self.out.write('\n')
 
         # variants
-        for name, variant in pkg.variants.items():
+        for name, variant in sorted(pkg.variants.items()):
             self.rule(fn.variant(pkg.name, name),
                       fn.node(pkg.name))
 
@@ -321,7 +321,7 @@ class AspGenerator(object):
             else:
                 self.rule(self._not(single), fn.node(pkg.name))
                 defaults = variant.default.split(',')
-                for val in defaults:
+                for val in sorted(defaults):
                     self.rule(
                         fn.variant_default_value(pkg.name, name, val),
                         fn.node(pkg.name))
@@ -335,7 +335,7 @@ class AspGenerator(object):
                     union.update(s)
                 values = union
 
-            for value in values:
+            for value in sorted(values):
                 self.fact(fn.variant_possible_value(pkg.name, name, value))
 
             self.out.write('\n')
@@ -344,21 +344,21 @@ class AspGenerator(object):
         self.package_compiler_defaults(pkg)
 
         # dependencies
-        for name, conditions in pkg.dependencies.items():
-            for cond, dep in conditions.items():
+        for name, conditions in sorted(pkg.dependencies.items()):
+            for cond, dep in sorted(conditions.items()):
                 named_cond = cond.copy()
                 if not named_cond.name:
                     named_cond.name = pkg.name
 
                 if cond == spack.spec.Spec():
-                    for t in dep.type:
+                    for t in sorted(dep.type):
                         self.fact(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
                             )
                         )
                 else:
-                    for t in dep.type:
+                    for t in sorted(dep.type):
                         self.rule(
                             fn.declared_dependency(
                                 dep.pkg.name, dep.spec.name, t
@@ -453,7 +453,7 @@ class AspGenerator(object):
                 clauses.append(f.arch_target(spec.name, arch.target))
 
         # variants
-        for vname, variant in spec.variants.items():
+        for vname, variant in sorted(spec.variants.items()):
             value = variant.value
             if isinstance(value, tuple):
                 for v in value:
@@ -503,9 +503,9 @@ class AspGenerator(object):
         assert self.possible_virtuals is not None
 
         # what provides what
-        for vspec in self.possible_virtuals:
+        for vspec in sorted(self.possible_virtuals):
             self.fact(fn.virtual(vspec))
-            for provider in spack.repo.path.providers_for(vspec):
+            for provider in sorted(spack.repo.path.providers_for(vspec)):
                 # TODO: handle versioned virtuals
                 self.fact(fn.provides_virtual(provider.name, vspec))
 
@@ -543,12 +543,12 @@ class AspGenerator(object):
         self.provider_defaults()
 
         self.h1('Package Constraints')
-        for pkg in pkgs:
+        for pkg in sorted(pkgs):
             self.h2('Package: %s' % pkg)
             self.pkg_rules(pkg)
 
         self.h1('Spec Constraints')
-        for spec in specs:
+        for spec in sorted(specs):
             self.fact(fn.root(spec.name))
             for dep in spec.traverse():
                 self.h2('Spec: %s' % str(dep))
