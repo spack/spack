@@ -23,15 +23,15 @@ section = 'developer'
 level = 'long'
 
 #: output options
-dump_options = ('asp', 'output', 'solutions')
+show_options = ('asp', 'output', 'solutions')
 
 
 def setup_parser(subparser):
     # Solver arguments
     subparser.add_argument(
-        '--dump', action='store', default=('solutions'),
+        '--show', action='store', default=('solutions'),
         help="outputs: a list with any of: "
-        "%s (default), all" % ', '.join(dump_options))
+        "%s (default), all" % ', '.join(show_options))
     subparser.add_argument(
         '--models', action='store', type=int, default=0,
         help="number of solutions to search (default 0 for all)")
@@ -71,14 +71,14 @@ def solve(parser, args):
     }
 
     # process dump options
-    dump = re.split(r'\s*,\s*', args.dump)
+    dump = re.split(r'\s*,\s*', args.show)
     if 'all' in dump:
-        dump = dump_options
+        dump = show_options
     for d in dump:
-        if d not in dump_options:
+        if d not in show_options:
             raise ValueError(
-                "Invalid dump option: '%s'\nchoose from: (%s)"
-                % (d, ', '.join(dump_options + ('all',))))
+                "Invalid option for '--show': '%s'\nchoose from: (%s)"
+                % (d, ', '.join(show_options + ('all',))))
 
     models = args.models
     if models < 0:
