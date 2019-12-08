@@ -45,15 +45,22 @@ class Hipsycl(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
+            "-DWITH_CPU_BACKEND:Bool=TRUE",
+            "-DWITH_ROCM_BACKEND:Bool=FALSE",
+            "-DWITH_CUDA_BACKEND:Bool={0}".format(
+                "TRUE" if "+cuda" in spec else "FALSE"
+            ),
+            "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
             "-DLLVM_DIR:String={0}".format(
-                path.dirname(
-                    filesystem.find(spec["llvm"].prefix, "LLVMExports.cmake"))
+                path.dirname(filesystem.find(
+                    spec["llvm"].prefix, "LLVMExports.cmake")[0]
+                )
             ),
             "-DCLANG_EXECUTABLE_PATH:String={0}".format(
-                path.join(spec["llvm"].bin, "clang")
+                path.join(spec["llvm"].prefix.bin, "clang")
             ),
             "-DCLANG_INCLUDE_PATH:String={0}".format(
-                path.join(spec["llvm"].include, "clang")
+                path.join(spec["llvm"].prefix.include, "clang")
             ),
         ]
         if "+cuda" in spec:
