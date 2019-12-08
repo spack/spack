@@ -7,7 +7,7 @@
 from spack import *
 
 
-class PyPythonHtmlgen(PythonPackage):
+class PyHtmlgen(PythonPackage):
     """Library to generate HTML from classes.
     """
 
@@ -16,9 +16,7 @@ class PyPythonHtmlgen(PythonPackage):
 
     version('1.2.2', sha256='9dc60e10511f0fd13014659514c6c333498c21779173deb585cd4964ea667770')
 
-    conflicts('python@3.0:3.3.99')
-
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    # dependencies for tests
+    depends_on('py-asserts@0.8.0:0.8.999', type='test')
     depends_on('py-typing', type='test')
-    depends_on('py-python-asserts', type='test')
