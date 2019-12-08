@@ -20,11 +20,8 @@ class Hipsycl(CMakePackage):
 
     provides("sycl")
 
-    version("master", branch="master")
-    version(
-        "0.8.0",
-        sha256="4ec5218103d1b38efae9a51ca752b9b44bbd02dada78c05e20e00c9c25e9ea19",
-    )
+    version("master", branch="master", submodules=True)
+    version("0.8.0", commit="2daf8407e49dd32ebd1c266e8e944e390d28b22a", submodules=True)
 
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
 
