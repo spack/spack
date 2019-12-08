@@ -104,7 +104,7 @@ class Gromacs(CMakePackage):
             'avx128fma': 'AVX_128_FMA',
             'avx': 'AVX_256',
             'axv128': 'AVX2_128',
-            'avx2_256': 'AVX2_256',
+            'avx2': 'AVX2_256',
             'avx512': 'AVX_512',
             'avx512er': 'AVX_512_KNL',
             'neon': 'ARM_NEON_ASIMD'
