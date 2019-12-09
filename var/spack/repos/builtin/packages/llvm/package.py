@@ -131,11 +131,8 @@ class Llvm(CMakePackage):
 
     extends("python", when="+python")
 
-    generator = "Ninja"
-
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
-    depends_on("ninja", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
     depends_on("python@2.7:2.8", when="@5: ~python +flang", type="build")
     depends_on("python", when="@5: ~python", type="build")
@@ -440,11 +437,11 @@ class Llvm(CMakePackage):
     def pre_install(self):
         with working_dir(self.build_directory):
             # When building shared libraries these need to be installed first
-            ninja("install-LLVMTableGen")
+            make("install-LLVMTableGen")
             if self.spec.version >= Version("4.0.0"):
                 # LLVMDemangle target was added in 4.0.0
-                ninja("install-LLVMDemangle")
-            ninja("install-LLVMSupport")
+                make("install-LLVMDemangle")
+            make("install-LLVMSupport")
 
     @run_after("install")
     def post_install(self):
