@@ -1,8 +1,0 @@
----
-modules:
-  tcl:
-    naming_scheme: '{name}/{version}-{compiler.name}{compiler.version}'
-    hash_length: 4
-    all:
-      conflict:
-        - '{name}'

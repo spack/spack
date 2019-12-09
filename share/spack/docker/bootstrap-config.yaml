@@ -1,5 +1,0 @@
----
-config:
-  install_tree: /spack-bootstrap/sw
-  module_roots:
-    tcl: /spack-bootstrap/modules

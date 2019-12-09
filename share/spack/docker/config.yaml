@@ -1,7 +1,0 @@
----
-config:
-  build_stage: /spack/stage
-  source_cache: /spack/cache
-  install_tree: /spack/sw
-  module_roots:
-    tcl: /spack/modules
