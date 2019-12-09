@@ -61,6 +61,7 @@ class Touchdetector(CMakePackage):
     depends_on('range-v3@:0.4', when='@5.0.2:5.3.2')
     depends_on('range-v3', when='@5.3.3:')
     depends_on('highfive+mpi', when='@5.3.0:')
+    depends_on('nlohmann-json', when='@5.3.3:')
 
     # Old dependencies
     depends_on('hpctools~openmp', when='~openmp@:4.4')
