@@ -9,6 +9,7 @@ from spack.cmd.common import arguments
 import spack.cmd
 import spack.environment as ev
 import spack.util.environment
+import spack.user_environment as uenv
 
 description = "add package to the user environment variables"
 section = "user environment"
@@ -58,7 +59,7 @@ def load(parser, args):
 
     env_mod = spack.util.environment.EnvironmentModifications()
     for spec in specs:
-        env_mod.extend(ev.environment_modifications_for_spec(spec))
+        env_mod.extend(uenv.environment_modifications_for_spec(spec))
     cmds = env_mod.shell_modifications()
 
     sys.stdout.write(cmds)

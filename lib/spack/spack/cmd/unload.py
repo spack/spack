@@ -8,6 +8,7 @@ import sys
 import spack.cmd
 import spack.environment as ev
 import spack.util.environment
+import spack.user_environment as uenv
 
 description = "remove package from the user environment variables`"
 section = "user environment"
@@ -50,7 +51,8 @@ def unload(parser, args):
 
     env_mod = spack.util.environment.EnvironmentModifications()
     for spec in specs:
-        env_mod.extend(ev.environment_modifications_for_spec(spec).reversed())
+        env_mod.extend(
+            uenv.environment_modifications_for_spec(spec).reversed())
     cmds = env_mod.shell_modifications()
 
     sys.stdout.write(cmds)
