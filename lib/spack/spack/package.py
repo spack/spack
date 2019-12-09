@@ -1509,6 +1509,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         )
         if not compilers:
             dep = spack.compilers.pkg_spec_for_compiler(self.spec.compiler)
+            dep.architecture = self.spec.architecture
             # concrete CompilerSpec has less info than concrete Spec
             # concretize as Spec to add that information
             dep.concretize()
