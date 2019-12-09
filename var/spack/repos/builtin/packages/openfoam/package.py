@@ -38,7 +38,7 @@
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
 # The spack 'develop' version of openfoam retains the upstream
-# WM_PROJECT_VERSION=plus naming internally.
+# WM_PROJECT_VERSION=com naming internally.
 #
 ##############################################################################
 import glob
@@ -259,7 +259,7 @@ class Openfoam(Package):
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
-    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
+    git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
@@ -341,7 +341,7 @@ class Openfoam(Package):
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
     # kahip patch (wmake)
-    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+    patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
           sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
     )
