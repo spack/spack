@@ -53,15 +53,20 @@ class Hipsycl(CMakePackage):
             ),
             "-DDISABLE_LLVM_VERSION_CHECK:Bool=TRUE",
             "-DLLVM_DIR:String={0}".format(
-                path.dirname(filesystem.find(
-                    spec["llvm"].prefix, "LLVMExports.cmake")[0]
+                path.dirname(
+                    filesystem.find(
+                        spec["llvm"].prefix, "LLVMExports.cmake")[0]
                 )
             ),
             "-DCLANG_EXECUTABLE_PATH:String={0}".format(
                 path.join(spec["llvm"].prefix.bin, "clang")
             ),
             "-DCLANG_INCLUDE_PATH:String={0}".format(
-                path.join(spec["llvm"].prefix.include, "clang")
+                path.dirname(
+                    filesystem.find(
+                        spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h"
+                    )[0]
+                )
             ),
         ]
         if "+cuda" in spec:
