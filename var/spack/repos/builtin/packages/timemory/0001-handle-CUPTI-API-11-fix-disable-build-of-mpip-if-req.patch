@@ -1,0 +1,45 @@
+From aa69eeed057b8758739d46ff0764a787dde00acb Mon Sep 17 00:00:00 2001
+From: Tristan Carel <tristan.carel@epfl.ch>
+Date: Thu, 5 Dec 2019 08:56:20 +0100
+Subject: [PATCH] handle CUPTI API 11 / fix disable build of mpip if
+ requirements are unmet
+
+---
+ source/timemory/components/cupti_activity.hpp | 4 ++++
+ source/tools/mpip/CMakeLists.txt              | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/source/timemory/components/cupti_activity.hpp b/source/timemory/components/cupti_activity.hpp
+index df6d4d9c..40913c6f 100644
+--- a/source/timemory/components/cupti_activity.hpp
++++ b/source/timemory/components/cupti_activity.hpp
+@@ -98,7 +98,11 @@ struct cupti_activity
+             {
+                 int iactivity = atoi(itr.c_str());
+                 if(iactivity > static_cast<int>(CUPTI_ACTIVITY_KIND_INVALID) &&
++#if CUPTI_API_VERSION < 11
+                    iactivity < static_cast<int>(CUPTI_ACTIVITY_KIND_COUNT))
++#else
++                   iactivity <= static_cast<int>(CUPTI_ACTIVITY_KIND_PCIE))
++#endif
+                 {
+                     _kinds.push_back(static_cast<cupti::activity_kind_t>(iactivity));
+                 }
+diff --git a/source/tools/mpip/CMakeLists.txt b/source/tools/mpip/CMakeLists.txt
+index 1c0548bb..2df06341 100644
+--- a/source/tools/mpip/CMakeLists.txt
++++ b/source/tools/mpip/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+ 
+ # this is for internal use
+-if(NOT TIMEMORY_BUILD_MPIP OR (NOT TIMEMORY_USE_MPI AND NOT TIMEMORY_USE_GOTCHA))
++if(NOT TIMEMORY_BUILD_MPIP OR (NOT TIMEMORY_USE_MPI OR NOT TIMEMORY_USE_GOTCHA))
+     return()
+ endif()
+ 
+
+base-commit: 36520ff4aedc09ea7b54981dd8c97c4960f6ee79
+-- 
+2.18.0
+
