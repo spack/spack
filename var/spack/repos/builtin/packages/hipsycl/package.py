@@ -30,9 +30,10 @@ class Hipsycl(CMakePackage):
     depends_on("python@3:")
     depends_on("llvm@8: +clang", when="~cuda")
     depends_on("llvm@9: +clang", when="+cuda")
-    # hipSYCL requires cuda@9:
     # LLVM PTX backend requires cuda7:10.1.9999 (https://tinyurl.com/v82k5qq)
-    depends_on("cuda@9:10.1.9999", when="+cuda")
+    depends_on("cuda@9:10.1.9999", when="@0.8.1: +cuda")
+    # hipSYCL@:0.8.0 requires cuda@9:10.0.9999 due to a known bug
+    depends_on("cuda@9:10.0.9999", when="@:0.8.0 +cuda")
 
     conflicts(
         "^llvm build_type=Debug",
