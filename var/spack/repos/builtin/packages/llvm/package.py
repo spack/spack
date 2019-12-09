@@ -49,15 +49,10 @@ class Llvm(CMakePackage):
     variant('clang', default=True,
             description="Build the LLVM C/C++/Objective-C compiler frontend")
 
-    # TODO: The current version of this package unconditionally disables CUDA.
-    #       Better would be to add a "cuda" variant that:
-    #        - Adds dependency on the "cuda" package when enabled
-    #        - Sets the necessary CMake flags when enabled
-    #        - Disables CUDA (as this current version does) only when the
-    #          variant is also disabled.
-
-    # variant('cuda', default=False,
-    #         description="Build the LLVM with CUDA features enabled")
+    variant('cuda', default=False,
+            description="Build the LLVM with CUDA features enabled, required for nvptx offload")
+    variant('nvptx_offload_ccs', default='35,60,70,75', multi=True,
+            description="NVIDIA compute cabailities to be supported by libomptarget, last used as default")
 
     variant('lldb', default=True, description="Build the LLVM debugger")
     variant('lld', default=True, description="Build the LLVM linker")
@@ -68,16 +63,15 @@ class Llvm(CMakePackage):
             "only builds for 3.7.0+")
     variant('libcxx', default=True,
             description="Build the LLVM C++ standard library")
+    variant('libcxx_default', default=False,
+            description="Use libcxx as the default C++ standard library")
     variant('compiler-rt', default=True,
             description="Build LLVM compiler runtime, including sanitizers")
-    variant('gold', default=True,
-            description="Add support for LTO with the gold linker plugin")
+    variant('split_dwarf', default=False,
+            description="Build with split dwarf information")
     variant('shared_libs', default=False,
             description="Build all components as shared libraries, faster, "
             "less memory to build, less stable")
-    variant('link_dylib', default=False,
-            description="Build and link the libLLVM shared library rather "
-            "than static")
     variant('all_targets', default=False,
             description="Build all supported targets, default targets "
             "<current arch>,NVPTX,AMDGPU,CppBackend")
@@ -92,8 +86,11 @@ class Llvm(CMakePackage):
 
     extends('python', when='+python')
 
+    generator = 'Ninja'
+
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
+    depends_on('ninja', type='build')
     depends_on('python@2.7:2.8', when='@:4.999 ~python', type='build')
     depends_on('python@2.7:2.8', when='@5: ~python +flang', type='build')
     depends_on('python', when='@5: ~python', type='build')
@@ -102,9 +99,16 @@ class Llvm(CMakePackage):
     depends_on('python@2.7:2.8', when='@:4.999+python')
     depends_on('python@2.7:2.8', when='@5:+python+flang')
     depends_on('python', when='@5:+python')
+    depends_on('z3', when='@9:')
+
+    # CUDA dependency
+    depends_on('cuda', when='+cuda')
 
     # openmp dependencies
     depends_on('perl-data-dumper', type=('build'))
+    depends_on('hwloc')
+    depends_on('libelf') # libomptarget
+    depends_on('libffi') # libomptarget
 
     # lldb dependencies
     depends_on('ncurses', when='+lldb')
@@ -112,8 +116,8 @@ class Llvm(CMakePackage):
     depends_on('libedit', when='+lldb')
     depends_on('py-six', when='@5.0.0: +lldb +python')
 
-    # gold support
-    depends_on('binutils+gold', when='+gold')
+    # gold support, required for some features
+    depends_on('binutils+gold')
 
     # polly plugin
     depends_on('gmp', when='@:3.6.999 +polly')
@@ -190,6 +194,7 @@ class Llvm(CMakePackage):
     conflicts('+libcxx', when='+flang')
     conflicts('+polly', when='+flang')
     conflicts('+internal_unwind', when='+flang')
+    conflicts('~libcxx', when='+libcxx_default')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
@@ -250,17 +255,25 @@ class Llvm(CMakePackage):
             '-DLLVM_ENABLE_EH:BOOL=ON',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
+            '-DLIBOMP_USE_HWLOC=On',
         ]
 
         projects = []
 
-        # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant
-        #       (see TODO above), and set the paths if enabled.
-        cmake_args.extend([
-            '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
-            '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
-            '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
-            '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
+        if '+cuda' in spec:
+            cmake_args.extend([
+                '-DCUDA_TOOLKIT_ROOT_DIR:PATH=' + spec['cuda'].prefix,
+                '-DCUDA_NVCC_EXECUTABLE:FILEPATH=' + spec['cuda'].prefix.bin + '/nvcc',
+                '-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES:LIST={0}'.format(','.join(spec.variants['nvptx_offload_ccs'].value)),
+                '-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}'.format(spec.variants['nvptx_offload_ccs'].value[-1]),
+            ])
+        else:
+            # still build libomptarget but disable cuda
+            cmake_args.extend([
+                '-DCUDA_TOOLKIT_ROOT_DIR:PATH=IGNORE',
+                '-DCUDA_SDK_ROOT_DIR:PATH=IGNORE',
+                '-DCUDA_NVCC_EXECUTABLE:FILEPATH=IGNORE',
+                '-DLIBOMPTARGET_DEP_CUDA_DRIVER_LIBRARIES:STRING=IGNORE'])
 
         if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
             cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
@@ -282,8 +295,8 @@ class Llvm(CMakePackage):
         if '+libcxx' in spec:
             projects.append('libcxx')
             projects.append('libcxxabi')
-            if spec.satisfies('@3.9.0:') and '+flang' not in spec:
-                cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
+        if '+libcxx_default' and '+flang' not in spec:
+            cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
         if '+internal_unwind' in spec:
             projects.append('libunwind')
         if '+polly' in spec:
@@ -293,8 +306,8 @@ class Llvm(CMakePackage):
         if '+shared_libs' in spec:
             cmake_args.append('-DBUILD_SHARED_LIBS:Bool=ON')
 
-        if '+link_dylib' in spec:
-            cmake_args.append('-DLLVM_LINK_LLVM_DYLIB:Bool=ON')
+        if '+split_dwarf' in spec:
+            cmake_args.append('-DLLVM_USE_SPLIT_DWARF:Bool=ON')
 
         if '+all_targets' not in spec:  # all is default on cmake
 
@@ -348,14 +361,38 @@ class Llvm(CMakePackage):
     def pre_install(self):
         with working_dir(self.build_directory):
             # When building shared libraries these need to be installed first
-            make('install-LLVMTableGen')
+            ninja('install-LLVMTableGen')
             if self.spec.version >= Version('4.0.0'):
                 # LLVMDemangle target was added in 4.0.0
-                make('install-LLVMDemangle')
-            make('install-LLVMSupport')
+                ninja('install-LLVMDemangle')
+            ninja('install-LLVMSupport')
 
     @run_after('install')
     def post_install(self):
+        spec = self.spec
+
+        # unnecessary if we get bootstrap builds in here
+        if '+cuda' in self.spec:
+            ompdir = 'build-bootstrapped-omp'
+            # rebuild libomptarget to get bytecode runtime library files
+            with working_dir(ompdir, create=True):
+                cmake_args = [
+                    self.stage.source_path + '/openmp',
+                      '-DCMAKE_C_COMPILER:PATH={0}'.format(spec.prefix.bin + '/clang'),
+                      '-DCMAKE_CXX_COMPILER:PATH={0}'.format(spec.prefix.bin + '/clang++'),
+                      '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(spec.prefix),
+                              ]
+                cmake_args.append('-DCMAKE_BUILD_TYPE:String={0}'.format(spec.variants['build_type'].value))
+                # work around bad libelf detection in libomptarget
+                cmake_args.append('-DCMAKE_CXX_FLAGS:String=-I{0}'.format(spec['libelf'].prefix.include))
+                cmake_args.append('-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES:LIST={0}'.format(','.join(spec.variants['nvptx_offload_ccs'].value)))
+                cmake_args.append('-DCUDA_TOOLKIT_ROOT_DIR:PATH=' + spec['cuda'].prefix)
+                cmake_args.append('-DCUDA_NVCC_EXECUTABLE:FILEPATH=' + spec['cuda'].prefix.bin + '/nvcc')
+                cmake_args.append('-DLIBOMP_USE_HWLOC=On')
+
+                cmake(*cmake_args)
+                make()
+                make('install')
         if '+clang' in self.spec and '+python' in self.spec:
             install_tree(
                 'tools/clang/bindings/python/clang',
@@ -363,3 +400,6 @@ class Llvm(CMakePackage):
 
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))
+
+
+
