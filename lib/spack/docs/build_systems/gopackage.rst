@@ -123,11 +123,11 @@ There are three steps to describing the dependencies in the package
 definition:
 
 * First, stage the application and use the Go tool chain to
-solve the set of required dependencies and build a vendor directory.
+  solve the set of required dependencies and build a vendor directory.
 
 * Second, run the newly created ``vendor/modules.txt`` file through
-``module2tuples`` to generate a JSON file containing resource
-definitions.
+  ``module2tuples`` to generate a JSON file containing resource
+  definitions.
 
 .. code-block:: console
 
@@ -136,8 +136,8 @@ definitions.
     $ modules2tuple -spack -app_version=1.2.3 vendor/modules.txt > resources-1.2.3.json
 
 * Finally, copy that file into the Spack package directory and add an
-`import_resources` statement that refers to it in the package
-definition.
+  `import_resources` statement that refers to it in the package
+  definition.
 
 .. code-block:: python
 
