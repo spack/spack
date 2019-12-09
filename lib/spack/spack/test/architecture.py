@@ -176,7 +176,7 @@ def test_arch_spec_container_semantic(item, architecture_str):
     ('gcc@4.7.2', 'ivybridge', '-march=core-avx-i -mtune=core-avx-i'),
     # Check mixed toolchains
     ('clang@8.0.0', 'broadwell', ''),
-    ('clang@3.5', 'x86_64', '-march=x86-64 -mcpu=generic'),
+    ('clang@3.5', 'x86_64', '-march=x86-64 -mtune=generic'),
     # Check clang compilers with 'apple' suffix
     ('clang@9.1.0-apple', 'x86_64', '-march=x86-64')
 ])

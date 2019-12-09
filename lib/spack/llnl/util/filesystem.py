@@ -1156,7 +1156,9 @@ class HeaderList(FileList):
 
     # Make sure to only match complete words, otherwise path components such
     # as "xinclude" will cause false matches.
-    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+    # Avoid matching paths such as <prefix>/include/something/detail/include,
+    # e.g. in the CUDA Toolkit which ships internal libc++ headers.
+    include_regex = re.compile(r'(.*?)(\binclude\b)(.*)')
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)

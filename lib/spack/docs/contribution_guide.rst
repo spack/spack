@@ -223,8 +223,7 @@ documentation. In order to prevent things like broken links and missing imports,
 we added documentation tests that build the documentation and fail if there
 are any warning or error messages.
 
-Building the documentation requires several dependencies, all of which can be
-installed with Spack:
+Building the documentation requires several dependencies:
 
 * sphinx
 * sphinxcontrib-programoutput
@@ -234,11 +233,18 @@ installed with Spack:
 * mercurial
 * subversion
 
+All of these can be installed with Spack, e.g.
+
+.. code-block:: console
+
+   $ spack install py-sphinx py-sphinxcontrib-programoutput py-sphinx-rtd-theme graphviz git mercurial subversion
+
 .. warning::
 
    Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
-   If you installed ``py-sphinx`` with Spack, make sure to add all of these
-   dependencies to your ``PYTHONPATH``. The easiest way to do this is to run:
+   If you're using a ``python`` from Spack and you installed
+   ``py-sphinx`` and friends, you need to make them available to your
+   ``python``. The easiest way to do this is to run:
 
    .. code-block:: console
 
@@ -246,8 +252,10 @@ installed with Spack:
       $ spack activate py-sphinx-rtd-theme
       $ spack activate py-sphinxcontrib-programoutput
 
-   so that all of the dependencies are symlinked to a central location.
-   If you see an error message like:
+   so that all of the dependencies are symlinked into that Python's
+   tree.  Alternatively, you could arrange for their library
+   directories to be added to PYTHONPATH.  If you see an error message
+   like:
 
    .. code-block:: console
 

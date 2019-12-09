@@ -24,8 +24,8 @@ class SharedMimeInfo(AutotoolsPackage):
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS",
-                               self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS",
-                             self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)

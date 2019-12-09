@@ -159,7 +159,8 @@ def activate(
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
     if add_view and default_view_name in env.views:
-        cmds += env.add_default_view_to_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += env.add_default_view_to_shell(shell)
 
     return cmds
 
@@ -207,7 +208,8 @@ def deactivate(shell='sh'):
         cmds += 'fi;\n'
 
     if default_view_name in _active_environment.views:
-        cmds += _active_environment.rm_default_view_from_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += _active_environment.rm_default_view_from_shell(shell)
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
@@ -811,7 +813,10 @@ class Environment(object):
                 raise SpackEnvironmentError(
                     'cannot add anonymous specs to an environment!')
             elif not spack.repo.path.exists(spec.name):
-                raise SpackEnvironmentError('no such package: %s' % spec.name)
+                virtuals = spack.repo.path.provider_index.providers.keys()
+                if spec.name not in virtuals:
+                    msg = 'no such package: %s' % spec.name
+                    raise SpackEnvironmentError(msg)
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list

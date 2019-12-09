@@ -21,6 +21,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, install_tree
 
 import spack.cmd
+import spack.config as config
 import spack.fetch_strategy as fs
 import spack.util.gpg as gpg_util
 import spack.relocate as relocate
@@ -271,7 +272,7 @@ def generate_package_index(cache_prefix):
 
     Creates (or replaces) the "index.html" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and signing key (*.key) under cache_prefix.
+    and public key (*.key) under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
     try:
@@ -520,8 +521,6 @@ def relocate_package(workdir, spec, allow_root):
     old_prefix = str(buildinfo.get('spackprefix',
                                    '/not/in/buildinfo/dictionary'))
     rel = buildinfo.get('relative_rpaths', False)
-    if rel:
-        return
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
@@ -594,7 +593,8 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
-                Gpg.verify('%s.asc' % specfile_path, specfile_path)
+                suppress = config.get('config:suppress_gpg_warnings', False)
+                Gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
                 shutil.rmtree(tmpdir)
                 tty.die(e)
@@ -679,7 +679,7 @@ def get_specs(force=False):
         return _cached_specs
 
     if not spack.mirror.MirrorCollection():
-        tty.warn("No Spack mirrors are currently configured")
+        tty.debug("No Spack mirrors are currently configured")
         return {}
 
     urls = set()

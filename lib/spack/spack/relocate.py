@@ -378,17 +378,21 @@ def replace_prefix_text(path_name, old_dir, new_dir):
     Replace old install prefix with new install prefix
     in text files using utf-8 encoded strings.
     """
-
-    def replace(match):
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8'))
     with open(path_name, 'rb+') as f:
         data = f.read()
         f.seek(0)
-        pat = re.compile(old_dir.encode('utf-8'))
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
+        # Replace old_dir with new_dir if it appears at the beginning of a path
+        # Negative lookbehind for a character legal in a path
+        # Then a match group for any characters legal in a compiler flag
+        # Then old_dir
+        # Then characters legal in a path
+        # Ensures we only match the old_dir if it's precedeed by a flag or by
+        # characters not legal in a path, but not if it's preceeded by other
+        # components of a path.
+        old_bytes = old_dir.encode('utf-8')
+        pat = b'(?<![\\w\\-_/])([\\w\\-_]*?)%s([\\w\\-_/]*)' % old_bytes
+        repl = b'\\1%s\\2' % new_dir.encode('utf-8')
+        ndata = re.sub(pat, repl, data)
         f.write(ndata)
         f.truncate()
 
@@ -651,8 +655,7 @@ def is_relocatable(spec):
     return True
 
 
-def file_is_relocatable(
-        file, paths_to_relocate=[spack.store.layout.root, spack.paths.prefix]):
+def file_is_relocatable(file, paths_to_relocate=None):
     """Returns True if the file passed as argument is relocatable.
 
     Args:
@@ -665,6 +668,8 @@ def file_is_relocatable(
 
         ValueError: if the file does not exist or the path is not absolute
     """
+    default_paths_to_relocate = [spack.store.layout.root, spack.paths.prefix]
+    paths_to_relocate = paths_to_relocate or default_paths_to_relocate
 
     if not (platform.system().lower() == 'darwin'
             or platform.system().lower() == 'linux'):

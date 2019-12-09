@@ -439,8 +439,35 @@ class Mfem(Package):
                 hdf5 = conduit['hdf5']
                 headers += find_headers('hdf5', hdf5.prefix.include)
                 libs += hdf5.libs
+
+            ##################
+            # cyrush note:
+            ##################
+            # spack's HeaderList is applying too much magic, undermining us:
+            #
+            #  It applies a regex to strip back to the last "include" dir
+            #  in the path. In our case we need to pass the following
+            #  as part of the CONDUIT_OPT flags:
+            #
+            #    -I<install_path>/include/conduit
+            #
+            #  I tried several ways to present this path to the HeaderList,
+            #  but the regex always kills the trailing conduit dir
+            #  breaking build.
+            #
+            #  To resolve the issue, we simply join our own string with
+            #  the headers results (which are important b/c they handle
+            #  hdf5 paths when enabled).
+            ##################
+
+            # construct proper include path
+            conduit_include_path = conduit.prefix.include.conduit
+            # add this path to the found flags
+            conduit_opt_flags = "-I{0} {1}".format(conduit_include_path,
+                                                   headers.cpp_flags)
+
             options += [
-                'CONDUIT_OPT=%s' % headers.cpp_flags,
+                'CONDUIT_OPT=%s' % conduit_opt_flags,
                 'CONDUIT_LIB=%s' % ld_flags_from_library_list(libs)]
 
         make('config', *options, parallel=False)

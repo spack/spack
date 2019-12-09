@@ -1,0 +1,27 @@
+From 443d9454e8a665cef01cbf63036648a6e0ad9ffd Mon Sep 17 00:00:00 2001
+From: Axel Huebl <axel.huebl@plasma.ninja>
+Date: Mon, 25 Nov 2019 17:56:38 -0800
+Subject: [PATCH] NVCC: Avoid Specific Constexpr Construct
+
+Out of the many C++14 `constexpr` constructs, one does not compile
+with NVCC - even when using `-std=c++14 --expt-relaxed-constexpr`.
+Seen with all versions of NVCC so far (latest tests with 10.1 and
+10.2).
+---
+ include/mpark/variant.hpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/mpark/variant.hpp b/include/mpark/variant.hpp
+index ef496619b..728e69395 100644
+--- a/include/mpark/variant.hpp
++++ b/include/mpark/variant.hpp
+@@ -1998,7 +1998,7 @@ namespace mpark {
+     return false;
+   }
+ 
+-#ifdef MPARK_CPP14_CONSTEXPR
++#if defined(MPARK_CPP14_CONSTEXPR) && !defined(__NVCC__)
+   namespace detail {
+ 
+     inline constexpr bool all(std::initializer_list<bool> bs) {
+

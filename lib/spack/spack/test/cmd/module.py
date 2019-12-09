@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os.path
+import re
 
 import pytest
 
@@ -142,6 +143,34 @@ def test_find_recursive():
     # be greater
     out = module('tcl', 'find', '-r', 'mpileaks ^zmpi')
     assert len(out.split()) > 1
+
+
+@pytest.mark.db
+def test_find_recursive_blacklisted(database, module_configuration):
+    module_configuration('blacklist')
+
+    module('lmod', 'refresh', '-y', '--delete-tree')
+    module('lmod', 'find', '-r', 'mpileaks ^mpich')
+
+
+@pytest.mark.db
+def test_loads_recursive_blacklisted(database, module_configuration):
+    module_configuration('blacklist')
+
+    module('lmod', 'refresh', '-y', '--delete-tree')
+    output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
+    lines = output.split('\n')
+
+    assert any(re.match(r'[^#]*module load.*mpileaks', l) for l in lines)
+    assert not any(re.match(r'[^#]module load.*callpath', l) for l in lines)
+    assert any(re.match(r'## blacklisted or missing.*callpath', l)
+               for l in lines)
+
+    # TODO: currently there is no way to separate stdout and stderr when
+    # invoking a SpackCommand. Supporting this requires refactoring
+    # SpackCommand, or log_output, or both.
+    # start_of_warning = spack.cmd.modules._missing_modules_warning[:10]
+    # assert start_of_warning not in output
 
 
 # Needed to make the 'module_configuration' fixture below work

@@ -16,5 +16,5 @@ class Signify(MakefilePackage):
 
     depends_on('libbsd@0.8:')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PREFIX', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('PREFIX', self.prefix)

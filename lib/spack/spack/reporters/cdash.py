@@ -302,7 +302,10 @@ class CDash(Reporter):
             request.get_method = lambda: 'PUT'
             response = opener.open(request)
             if self.current_package_name not in self.buildIds:
-                match = self.buildid_regexp.search(response.read())
+                resp_value = response.read()
+                if isinstance(resp_value, bytes):
+                    resp_value = resp_value.decode('utf-8')
+                match = self.buildid_regexp.search(resp_value)
                 if match:
                     buildid = match.group(1)
                     self.buildIds[self.current_package_name] = buildid

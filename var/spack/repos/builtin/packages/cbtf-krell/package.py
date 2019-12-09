@@ -50,6 +50,12 @@ class CbtfKrell(CMakePackage):
     # Dependencies for cbtf-krell
     depends_on("cmake@3.0.2:", type='build')
 
+    # For rpcgen
+    depends_on("rpcsvc-proto", type='build')
+
+    # For rpc
+    depends_on("libtirpc", type='link')
+
     # For binutils
     depends_on("binutils")
 
@@ -94,10 +100,10 @@ class CbtfKrell(CMakePackage):
 
     # MPI Installations
     depends_on("openmpi", when='+openmpi')
-    depends_on("mpich", when='+mpich')
-    depends_on("mpich2", when='+mpich2')
-    depends_on("mvapich2", when='+mvapich2')
-    depends_on("mvapich", when='+mvapich')
+    depends_on("mpich@:1", when='+mpich')
+    depends_on("mpich@2:", when='+mpich2')
+    depends_on("mvapich2@2:", when='+mvapich2')
+    depends_on("mvapich2@:1", when='+mvapich')
     depends_on("mpt", when='+mpt')
 
     depends_on("python", when='@develop', type=('build', 'run'))

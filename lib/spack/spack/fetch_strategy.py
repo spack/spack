@@ -1142,7 +1142,7 @@ class S3FetchStrategy(URLFetchStrategy):
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)
 
-            content_type = headers['Content-type']
+            content_type = web_util.get_header(headers, 'Content-type')
 
         if content_type == 'text/html':
             warn_content_type_mismatch(self.archive_file or "the archive")
@@ -1311,7 +1311,9 @@ def from_url_scheme(url, *args, **kwargs):
         {
             'file': 'url',
             'http': 'url',
-            'https': 'url'
+            'https': 'url',
+            'ftp': 'url',
+            'ftps': 'url',
         })
 
     scheme = parsed_url.scheme

@@ -56,6 +56,7 @@ properties = {
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'verify_ssl': {'type': 'boolean'},
+            'suppress_gpg_warnings': {'type': 'boolean'},
             'install_missing_compilers': {'type': 'boolean'},
             'debug': {'type': 'boolean'},
             'checksum': {'type': 'boolean'},

@@ -34,6 +34,12 @@ class Cbtf(CMakePackage):
 
     depends_on("cmake@3.0.2:", type='build')
 
+    # for rpcgen
+    depends_on("rpcsvc-proto", type='build')
+
+    # for rpc
+    depends_on("libtirpc", type='link')
+
     depends_on("boost@1.66.0:1.69.0")
 
     # For MRNet
