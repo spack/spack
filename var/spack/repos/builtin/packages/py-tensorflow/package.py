@@ -487,9 +487,6 @@ class PyTensorflow(Package, CudaPackage):
         tmp_path = '/tmp/spack/tf'
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
-        # TODO: Is setting this necessary? It breaks `spack build-env`
-        # because Bash can't find my .bashrc
-        env.set('HOME', tmp_path)
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
@@ -592,11 +589,15 @@ class PyTensorflow(Package, CudaPackage):
                         '.tf_configure.bazelrc')
 
     def build(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
+
         # https://docs.bazel.build/versions/master/command-line-reference.html
         args = [
             # Don't allow user or system .bazelrc to override build settings
             '--nohome_rc',
             '--nosystem_rc',
+            # Bazel does not work properly on NFS, switch to /tmp
+            '--output_user_root=' + tmp_path,
             'build',
             # Spack logs don't handle colored output well
             '--color=no',
@@ -665,7 +666,6 @@ class PyTensorflow(Package, CudaPackage):
 
         build_pip_package = Executable(
             'bazel-bin/tensorflow/tools/pip_package/build_pip_package')
-        tmp_path = env['TEST_TMPDIR']
         build_pip_package(tmp_path)
 
     def install(self, spec, prefix):
