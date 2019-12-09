@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Openmolcas(Package):
+class Openmolcas(CMakePackage):
     """OpenMolcas is a quantum chemistry software package.
        The key feature of OpenMolcas is the multiconfigurational approach to
        the electronic structure."""
@@ -20,15 +20,16 @@ class Openmolcas(Package):
     depends_on('hdf5')
     depends_on('lapack')
     depends_on('openblas+ilp64')
+    depends_on('python@3.7:', type=('build', 'run'))
+    depends_on('py-pyparsing', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        # configure paths to external libraries and compiler
-        conf_cmake = Executable('./configure-cmake')
-        conf_cmake('--openblas', self.spec['openblas'].prefix, '--prefix', prefix)
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('MOLCAS', self.prefix)
+        run_env.set('MOLCAS', self.prefix)
 
-        # run compile script
-        Executable('./make-gnu_dev_openblas')()
-
-        # install build
-        with working_dir('builds/gnu_dev_openblas'):
-            which('make')('install')
+    def cmake_args(self):
+        return [
+            '-DLINALG=OpenBLAS',
+            '-DOPENBLASROOT=%s' % self.spec['openblas'].prefix,
+            '-DPYTHON_EXECUTABLE=%s' % self.spec['python'].command,
+        ]
