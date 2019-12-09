@@ -53,30 +53,38 @@ RUN /spack/share/spack/docker/run-bootstrap.sh 2
 COPY share/spack/docker/conf/3* /spack/share/spack/docker/conf/
 RUN /spack/share/spack/docker/run-bootstrap.sh 3
 
- ### && spack clean -a \
+RUN spack clean -a
 
 WORKDIR /work
 
-# binutils
-# bzip2
-# coreutils
-# curl
-# diffutils
-# file
-# git
-# gmake
-# gnupg
-# gzip
-# nano
-# patch
-# patchelf
-# python
-# py-boto3
-# py-pip
-# sed
-# tar
-# unzip
-# xz
+# FROM ubuntu:18.04
+# 
+# COPY --from=bootstrap /spack /opt/spack
+# COPY --from=bootstrap /etc/spack /etc/spack
+# COPY --from=bootstrap /spack-bootstrap /spack-bootstrap
+# 
+# RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/local/bin/file \
+#  && ln -s /spack-bootstrap/sw/*/*/python*/bin/python /usr/local/bin/python \
+#  && /opt/spack/bin/spack view symlink --overwrite /usr/local \
+#       bzip2 \
+#       coreutils \
+#       curl \
+#       diffutils \
+#       file \
+#       git \
+#       gmake \
+#       gnupg \
+#       gzip \
+#       nano \
+#       patch \
+#       patchelf \
+#       python \
+#       py-boto3 \
+#       py-pip \
+#       sed \
+#       tar \
+#       unzip \
+#       xz
 
 
 

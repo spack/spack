@@ -7,8 +7,3 @@ config:
   install_tree: /spack-bootstrap/sw
   module_roots:
     tcl: /spack-bootstrap/modules
-upstreams:
-  spack-bootstrap:
-    install_tree: /spack-prebootstrap/sw
-    modules:
-      tcl: /spack-prebootstrap/modules

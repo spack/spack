@@ -129,7 +129,7 @@ while ls -d "$phase"* &> /dev/null ; do
                 for pkg in $( grep -v '^\(#\|$\)' "$entry" ) ; do
                     shout "[[Symlinking: $pkg]]"
                     spack view --dependencies no symlink /usr/local "$pkg"
-                    spack compiler find
+                    spack compiler find &> /dev/null
                 done
 
             elif [ "$( basename $entry .bs )" '!=' "$entry" ] ; then
