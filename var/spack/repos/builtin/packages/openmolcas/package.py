@@ -7,7 +7,9 @@ from spack import *
 
 
 class Openmolcas(Package):
-    """FIXME: Put a proper description of your package here."""
+    """OpenMolcas is a quantum chemistry software package.
+       The key feature of OpenMolcas is the multiconfigurational approach to
+       the electronic structure."""
 
     homepage = "https://gitlab.com/Molcas/OpenMolcas"
     url      = "https://github.com/Molcas/OpenMolcas/archive/v19.11.tar.gz"
