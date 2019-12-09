@@ -53,7 +53,7 @@ RUN /spack/share/spack/docker/run-bootstrap.sh 2
 COPY share/spack/docker/conf/3* /spack/share/spack/docker/conf/
 RUN /spack/share/spack/docker/run-bootstrap.sh 3
 
-RUN spack clean -a
+RUN /spack/bin/spack clean -a
 
 WORKDIR /work
 

@@ -68,6 +68,7 @@ while ls -d "$phase"* &> /dev/null ; do
     for entry in $( ls -1d "$phase"* | sort ) ; do
         (
             . /spack/share/spack/setup-env.sh
+            set -e
 
             if [ "$( basename "$entry" .yaml )" '!=' "$entry" ] ; then
                 scope="$( echo "$entry" | cut -d - -f 2 )"
@@ -113,6 +114,7 @@ while ls -d "$phase"* &> /dev/null ; do
             elif [ "$( basename "$entry" .py )" '!=' "$entry" ] ; then
                 shout "[[Installing bundle: $( basename "$entry" .py )]]"
                 mkpkg "$entry"
+                false
                 spack install --only dependencies \
                     "spack-bootstrap arch=$compatible_sys_type"
                 spack module tcl refresh --yes-to-all
