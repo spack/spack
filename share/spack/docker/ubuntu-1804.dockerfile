@@ -31,15 +31,13 @@ COPY lib /spack/lib
 COPY share/spack/csh /spack/share/spack/csh
 COPY share/spack/docs /spack/share/spack/docs
 COPY share/spack/logo /spack/share/spack/logo
-COPY share/spack/packages /spack/share/spack/packages
 COPY share/spack/qa /spack/share/spack/qa
 COPY share/spack/setup-env.* /spack/share/spack/
 COPY share/spack/spack-completion.bash /spack/share/spack
 COPY share/spack/templates /spack/share/spack/templates
 
-#RUN mkdir /spack/share/spack/docker
 COPY share/spack/docker/*.* /spack/share/spack/docker/
-#RUN mkdir /spack/share/spack/docker/conf
+COPY share/spack/docker/package-index /spack/share/spack/docker/package-index
 
 COPY var /spack/var
 
