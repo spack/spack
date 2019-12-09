@@ -1311,7 +1311,9 @@ def from_url_scheme(url, *args, **kwargs):
         {
             'file': 'url',
             'http': 'url',
-            'https': 'url'
+            'https': 'url',
+            'ftp': 'url',
+            'ftps': 'url',
         })
 
     scheme = parsed_url.scheme
