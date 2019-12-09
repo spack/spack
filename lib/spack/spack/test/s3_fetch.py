@@ -12,19 +12,18 @@ import spack.stage as spack_stage
 def test_s3fetchstrategy_sans_url():
     """Ensure constructor with no URL fails."""
     with pytest.raises(ValueError):
-        with spack_fs.S3FetchStrategy(None):
-            pass
+        spack_fs.S3FetchStrategy(None)
 
 
 def test_s3fetchstrategy_bad_url(tmpdir):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
 
-    with pytest.raises(spack_fs.FetchError):
-        fetcher = spack_fs.S3FetchStrategy(url='file:///does-not-exist')
-        assert fetcher is not None
+    fetcher = spack_fs.S3FetchStrategy(url='file:///does-not-exist')
+    assert fetcher is not None
 
-        with spack_stage.Stage(fetcher, path=testpath) as stage:
-            assert stage is not None
-            assert fetcher.archive_file is None
+    with spack_stage.Stage(fetcher, path=testpath) as stage:
+        assert stage is not None
+        assert fetcher.archive_file is None
+        with pytest.raises(spack_fs.FetchError):
             fetcher.fetch()

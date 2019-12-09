@@ -47,9 +47,6 @@ from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 # Timeout in seconds for web requests
 _timeout = 10
 
-# See docstring for get_header()
-_UNFUZZ_HEADER = lambda header: re.sub(r'[ _-]', '', header).lower()
-
 
 class LinkParser(HTMLParser):
     """This parser just takes an HTML page and strips out the hrefs on the
@@ -582,12 +579,16 @@ def get_header(headers, header_name):
     If header_name is not in headers, and no such fuzzy match exists, then a
     KeyError is raised.
     """
+
+    def unfuzz(header):
+        return re.sub(r'[ _-]', '', header).lower()
+
     try:
         return headers[header_name]
     except KeyError:
-        unfuzzed_header_name = _UNFUZZ_HEADER(header_name)
+        unfuzzed_header_name = unfuzz(header_name)
         for header, value in headers.items():
-            if _UNFUZZ_HEADER(header) == unfuzzed_header_name:
+            if unfuzz(header) == unfuzzed_header_name:
                 return value
         raise
 

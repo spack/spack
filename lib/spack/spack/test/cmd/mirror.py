@@ -16,11 +16,6 @@ add = SpackCommand('add')
 concretize = SpackCommand('concretize')
 
 
-def curry_scope_arg(command, index, scope_name, scope_arg='--scope'):
-    return lambda *args, **kwargs: (
-        command(args[0], scope_arg, scope_name, *args[1:], **kwargs))
-
-
 @pytest.fixture
 def tmp_scope():
     """Creates a temporary configuration scope"""
@@ -73,46 +68,45 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
 
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
-        mirror_ = curry_scope_arg(mirror, 1, tmp_scope)
+        mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
 
-        mirror_('add', 'mirror', 'http://spack.io')
-        output = mirror_('remove', 'mirror')
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
         assert 'Removed mirror' in output
 
-        mirror_('add', 'mirror', 'http://spack.io')
+        mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
 
         # no-op
-        output = mirror_('set-url', 'mirror', 'http://spack.io')
+        output = mirror('set-url', '--scope', tmp_scope,
+                        'mirror', 'http://spack.io')
         assert 'Url already set' in output
 
-        output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
+        output = mirror('set-url', '--scope', tmp_scope,
+                        '--push', 'mirror', 's3://spack-public')
         assert 'Changed (push) url' in output
 
         # no-op
-        output = mirror_('set-url', '--push', 'mirror', 's3://spack-public')
+        output = mirror('set-url', '--scope', tmp_scope,
+                        '--push', 'mirror', 's3://spack-public')
         assert 'Url already set' in output
 
-        output = mirror_('remove', 'mirror')
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
         assert 'Removed mirror' in output
 
-        output = mirror_('list')
+        output = mirror('list', '--scope', tmp_scope)
         assert 'No mirrors configured' in output
 
 
 def test_mirror_nonexisting(tmp_scope):
-    mirror_ = curry_scope_arg(mirror, 1, tmp_scope)
+    with pytest.raises(SpackCommandError):
+        mirror('remove', '--scope', tmp_scope, 'not-a-mirror')
 
     with pytest.raises(SpackCommandError):
-        mirror_('remove', 'not-a-mirror')
-
-    with pytest.raises(SpackCommandError):
-        mirror_('set-url', 'not-a-mirror', 'http://spack.io')
+        mirror('set-url', '--scope', tmp_scope,
+               'not-a-mirror', 'http://spack.io')
 
 
 def test_mirror_name_collision(tmp_scope):
-    mirror_ = curry_scope_arg(mirror, 1, tmp_scope)
-
-    mirror_('add', 'first', '1')
+    mirror('add', '--scope', tmp_scope, 'first', '1')
 
     with pytest.raises(SpackCommandError):
-        mirror_('add', 'first', '1')
+        mirror('add', '--scope', tmp_scope, 'first', '1')
