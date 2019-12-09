@@ -82,7 +82,7 @@ class Charmpp(Package):
         provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
         provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, spack_env, run_env, dependent_spec):
         spack_env.set('MPICC',  join_path(self.prefix.bin, 'ampicc'))
         spack_env.set('MPICXX', join_path(self.prefix.bin, 'ampicxx'))
         spack_env.set('MPIF77', join_path(self.prefix.bin, 'ampif77'))
