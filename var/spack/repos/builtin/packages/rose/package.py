@@ -34,15 +34,10 @@ class Rose(AutotoolsPackage):
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4:", type="build")
-    depends_on("boost@1.56.0:", when="~cxx11")
 
     # C++11 compatible boost and gcc versions required for +cxx11 variant:
-    # https://github.com/spack/spack/wiki/Telcon%3A-2015-05-14
-    depends_on("boost@1.60.0: cxxstd=11", when="+cxx11")
-
-    # TODO: Doesn't seem to be a way to require a specific compiler: https://github.com/spack/spack/issues/896
-    # https://www.gnu.org/software/gcc/projects/cxx-status.html#cxx11
-    # depends_on("%gcc@4.8.1:", when="^boost@1.60.0: cxxstd=11")
+    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0 cxxstd=11", when="+cxx11")
+    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0",           when="~cxx11")
 
     # --------------------------------------------------------------------------
     # Variants
