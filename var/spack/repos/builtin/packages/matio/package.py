@@ -9,8 +9,9 @@ from spack import *
 class Matio(AutotoolsPackage):
     """matio is an C library for reading and writing Matlab MAT files"""
     homepage = "http://sourceforge.net/projects/matio/"
-    url = "http://downloads.sourceforge.net/project/matio/matio/1.5.9/matio-1.5.9.tar.gz"
+    url = "https://github.com/tbeu/matio/releases/download/v1.5.17/matio-1.5.17.tar.gz"
 
+    version('1.5.17', '170075cce5c144e19f610af9b64cb63b')
     version('1.5.9', 'aab5b4219a3c0262afe7eeb7bdd2f463')
     version('1.5.2', '85b007b99916c63791f28398f6a4c6f1')
 
