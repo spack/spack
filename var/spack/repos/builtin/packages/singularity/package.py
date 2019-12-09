@@ -6,8 +6,6 @@
 from spack import *
 
 import llnl.util.tty as tty
-import os
-import shutil
 
 
 class Singularity(MakefilePackage):

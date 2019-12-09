@@ -46,11 +46,12 @@ class Direnv(Package):
     @run_before('install')
     def edit_makefile(self):
         if self.spec.satisfies('@2.20.0'):
-            makefile= FileFilter('GNUmakefile')
+            makefile = FileFilter('GNUmakefile')
             makefile.filter('direnv: stdlib.go *.go | $(base)',
                             'direnv: stdlib.go *.go', string=True)
-            makefile.filter('cd "$(base)" && $(GO) build $(GO_FLAGS) -o $(exe)',
-                            '$(GO) build $(GO_FLAGS) -o $(exe)', string=True)
+            makefile.filter(
+                'cd "$(base)" && $(GO) build $(GO_FLAGS) -o $(exe)',
+                '$(GO) build $(GO_FLAGS) -o $(exe)', string=True)
 
     def install(self, spec, prefix):
         make('install', "DESTDIR=%s" % prefix)

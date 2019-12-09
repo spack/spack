@@ -8,6 +8,7 @@ from spack import *
 
 from llnl.util.lang import match_predicate
 
+
 class Umoci(MakefilePackage):
     """umoci modifies Open Container images, intending to be a
     complete manipulation tool for OCI images."""
@@ -25,10 +26,13 @@ class Umoci(MakefilePackage):
     # uses the projects vendored dependencies
     # this works for @0.4.2:
     def edit(self, spec, prefix):
-        makefile=FileFilter('Makefile')
-        makefile.filter('export GO111MODULE=off', 'export GO111MODULE=on', string=True)
-        makefile.filter('PROJECT := github.com/openSUSE/umoci', 'PROJECT := .', string=True)
-        makefile.filter('BUILD_FLAGS ?=', 'BUILD_FLAGS ?= -mod=vendor', string=True)
+        makefile = FileFilter('Makefile')
+        makefile.filter('export GO111MODULE=off',
+                        'export GO111MODULE=on', string=True)
+        makefile.filter('PROJECT := github.com/openSUSE/umoci',
+                        'PROJECT := .', string=True)
+        makefile.filter('BUILD_FLAGS ?=',
+                        'BUILD_FLAGS ?= -mod=vendor', string=True)
 
     def build(self, spec, prefix):
         make()
