@@ -10,13 +10,12 @@ import spack.package
 
 class GNUMirrorPackage(spack.package.PackageBase):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
+    #: Path of the package in a GNU mirror
     gnu_path = None
 
-    #: Primary URL to search for GNU packages
-    base_url = 'https://ftp.gnu.org/gnu'
-
-    #: List of GNU mirrors we'll use as a fall-back
+    #: List of GNU mirrors used by Spack
     base_mirrors = [
+        'https://ftp.gnu.org/gnu',
         'https://ftpmirror.gnu.org/',
         # Fall back to http if https didn't work (for instance because
         # Spack is bootstrapping curl)
@@ -24,12 +23,7 @@ class GNUMirrorPackage(spack.package.PackageBase):
     ]
 
     @property
-    def url(self):
-        self._ensure_gnu_path_is_set_or_raise()
-        return os.path.join(self.base_url, self.gnu_path)
-
-    @property
-    def mirrors(self):
+    def urls(self):
         self._ensure_gnu_path_is_set_or_raise()
         return [
             os.path.join(m, self.gnu_path) for m in self.base_mirrors

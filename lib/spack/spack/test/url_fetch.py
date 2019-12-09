@@ -26,13 +26,17 @@ def checksum_type(request):
 @pytest.fixture
 def pkg_factory():
     Pkg = collections.namedtuple(
-        'Pkg', ['url_for_version', 'mirrors', 'url', 'versions']
+        'Pkg', ['url_for_version', 'urls', 'url', 'versions']
     )
 
-    def factory(url, mirrors):
-        fn = lambda v: spack.url.substitute_version(url, v)
+    def factory(url, urls):
+
+        def fn(v):
+            main_url = url or urls.pop(0)
+            return spack.url.substitute_version(main_url, v)
+
         return Pkg(
-            url_for_version=fn, url=url, mirrors=mirrors,
+            url_for_version=fn, url=url, urls=urls,
             versions=collections.defaultdict(dict)
         )
 
@@ -172,17 +176,18 @@ def test_url_extra_fetch(tmpdir, mock_archive):
         fetcher.fetch()
 
 
-@pytest.mark.parametrize('url,mirrors,version,expected', [
-    ('https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz',
-     ['https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'],
+@pytest.mark.parametrize('url,urls,version,expected', [
+    (None,
+     ['https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz',
+      'https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'],
      '2.62',
      ['https://ftpmirror.gnu.org/autoconf/autoconf-2.62.tar.gz',
       'https://ftp.gnu.org/gnu/autoconf/autoconf-2.62.tar.gz'])
 ])
-def test_candidate_urls(pkg_factory, url, mirrors, version, expected):
+def test_candidate_urls(pkg_factory, url, urls, version, expected):
     """Tests that candidate urls include mirrors and that they go through
     pattern matching and substitution for versions.
     """
-    pkg = pkg_factory(url, mirrors)
+    pkg = pkg_factory(url, urls)
     f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
     assert f.candidate_urls == expected

@@ -170,10 +170,14 @@ class FetchStrategy(object):
     def __str__(self):  # Should be human readable URL.
         return "FetchStrategy.__str___"
 
-    # This method is used to match fetch strategies to version()
-    # arguments in packages.
     @classmethod
     def matches(cls, args):
+        """Predicate that matches fetch strategies to arguments of
+        the version directive.
+
+        Args:
+            args: arguments of the version directive
+        """
         return cls.url_attr in args
 
 
@@ -227,10 +231,10 @@ class FetchStrategyComposite(object):
 
 @fetcher
 class URLFetchStrategy(FetchStrategy):
-    """
-    FetchStrategy that pulls source code from a URL for an archive, check the
-    archive against a checksum, and decompresses the archive.  The destination
-    for the resulting file(s) is the standard stage source path.
+    """URLFetchStrategy pulls source code from a URL for an archive, check the
+    archive against a checksum, and decompresses the archive.
+
+    The destination for the resulting file(s) is the standard stage path.
     """
     url_attr = 'url'
 
@@ -1233,14 +1237,13 @@ def _from_merged_attrs(fetcher, pkg, version):
     """Create a fetcher from merged package and version attributes."""
     if fetcher.url_attr == 'url':
         url = pkg.url_for_version(version)
+        mirrors = [spack.url.substitute_version(u, version)
+                   for u in getattr(pkg, 'urls', [])]
+        attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)
+        attrs = {fetcher.url_attr: url}
 
-    mirrors = getattr(pkg, 'mirrors', None)
-    if mirrors:
-        mirrors = [spack.url.substitute_version(u, version) for u in mirrors]
-
-    attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     attrs.update(pkg.versions[version])
     return fetcher(**attrs)
 

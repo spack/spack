@@ -558,19 +558,20 @@ Mirrors of the main URL
 """""""""""""""""""""""
 
 Spack supports listing mirrors of the main URL in a package by defining
-the ``mirrors`` attribute. This attribute must return a list of URLs:
+the ``urls`` attribute:
 
 .. code-block:: python
 
   class Foo(Package):
 
-    url = "http://example.com/foo-1.0.tar.gz"
-    mirrors = [
+    urls = [
+        'http://example.com/foo-1.0.tar.gz',
         'http://mirror.com/foo-1.0.tar.gz'
     ]
 
-When fetching a package Spack will always try first the main URL and
-proceed with mirrors in the order in which they are listed if that fails.
+instead of just a single ``url``. This attribute is a list of possible URLs that
+will be tried in order when fetching packages. Notice that either one of ``url``
+or ``urls`` can be present in a package, but not both at the same time.
 
 A well-known case of packages that can be fetched from multiple mirrors is that
 of GNU. For that, Spack goes a step further and defines a mixin class that
