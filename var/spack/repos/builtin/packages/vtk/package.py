@@ -20,6 +20,7 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')

@@ -159,7 +159,8 @@ def activate(
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
     if add_view and default_view_name in env.views:
-        cmds += env.add_default_view_to_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += env.add_default_view_to_shell(shell)
 
     return cmds
 
@@ -207,7 +208,8 @@ def deactivate(shell='sh'):
         cmds += 'fi;\n'
 
     if default_view_name in _active_environment.views:
-        cmds += _active_environment.rm_default_view_from_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += _active_environment.rm_default_view_from_shell(shell)
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
@@ -1117,7 +1119,7 @@ class Environment(object):
             self.default_view))
 
         for _, spec in self.concretized_specs():
-            if spec in self.default_view:
+            if spec in self.default_view and spec.package.installed:
                 env_mod.extend(self.environment_modifications_for_spec(
                     spec, self.default_view))
 
@@ -1138,7 +1140,7 @@ class Environment(object):
             self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
-            if spec in self.default_view:
+            if spec in self.default_view and spec.package.installed:
                 env_mod.extend(
                     self.environment_modifications_for_spec(
                         spec, self.default_view).reversed())

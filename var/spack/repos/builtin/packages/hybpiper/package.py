@@ -31,8 +31,8 @@ class Hybpiper(Package):
     depends_on('bwa')
     depends_on('samtools')
 
-    def setup_envionment(self, spack_env, run_env):
-        run_env.set('HYBPIPER_HOME', prefix)
+    def setup_run_environment(self, env):
+        env.set('HYBPIPER_HOME', self.prefix)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

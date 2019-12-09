@@ -20,10 +20,12 @@ class PyPythonMapnik(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('mapnik', type=('build', 'link', 'run'))
     depends_on('boost +python+thread')
+    # py-pycairo is need by mapnik.printing
+    depends_on('py-pycairo', type=('build', 'run'))
 
     # Package can't find boost_python without the following
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Inform the package that boost python library is of form
         # 'libboost_python27.so' as opposed to 'libboost_python.so'
         py_ver = str(self.spec['python'].version.up_to(2).joined)
-        spack_env.set('BOOST_PYTHON_LIB', 'boost_python' + py_ver)
+        env.set('BOOST_PYTHON_LIB', 'boost_python' + py_ver)

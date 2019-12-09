@@ -12,10 +12,11 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.3.1/modules-4.3.1.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.4.0/modules-4.4.0.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.4.0', sha256='4dd55ad6cc684905e891ad1ba9e3c542e79eea0a9cd9a0e99cd77abe6ed63fab')
     version('4.3.1', sha256='979efb5b3d3c8df2c3c364aaba61f97a459456fc5bbc092dfc02677da63e5654')
     version('4.3.0', sha256='231f059c4109a2d3028c771f483f6c92f1f3689eb0033648ce00060dad00e103')
     version('4.2.5', sha256='3375b454568e7bbec7748cd6173516ef9f30a3d8e13c3e99c02794a6a3bc3c8c')
@@ -67,6 +68,13 @@ class EnvironmentModules(Package):
 
         if '~X' in spec:
             config_args = ['--without-x'] + config_args
+
+        if '@4.4.0:' in self.spec:
+            config_args.extend([
+                '--with-icase=search',
+                '--enable-extended-default',
+                '--enable-advanced-version-spec'
+            ])
 
         if '@4.3.0:' in self.spec:
             config_args.extend([

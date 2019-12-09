@@ -19,4 +19,4 @@ class PyH5glance(PythonPackage):
 
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-h5py', type=('build', 'run'))
-    depends_on('py-python-htmlgen', type='run')
+    depends_on('py-htmlgen', type=('build', 'run'))

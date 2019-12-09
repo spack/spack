@@ -27,7 +27,7 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.25:', type=('build', 'run'), when='@0.40.1:')
     depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
 
-    depends_on('py-argparse', type=('build', 'run'))
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-funcsigs', type=('build', 'run'), when='^python@:3.3.99')
     depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
 

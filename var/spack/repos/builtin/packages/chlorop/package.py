@@ -29,5 +29,5 @@ class Chlorop(Package):
         os.rename('chlorop', 'bin/chlorop')
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('CHLOROP', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('CHLOROP', self.prefix)

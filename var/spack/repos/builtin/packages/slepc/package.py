@@ -101,6 +101,6 @@ class Slepc(Package):
 
         make('install', parallel=False)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package
-        spack_env.set('SLEPC_DIR', self.prefix)
+        env.set('SLEPC_DIR', self.prefix)

@@ -62,16 +62,16 @@ class PyTorch(PythonPackage):
     version('0.3.1', tag='v0.3.1', submodules=True)
 
     variant('cuda', default=True, description='Enables CUDA build')
-    variant('cudnn', default=False, description='Enables the cuDNN build')
+    variant('cudnn', default=True, description='Enables the cuDNN build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
     variant('test', default=False, description='Enables the test build')
     variant('miopen', default=False, description='Enables the MIOpen build')
-    variant('mkldnn', default=False, description='Enables use of MKLDNN')
+    variant('mkldnn', default=True, description='Enables use of MKLDNN')
     variant('nnpack', default=False, description='Enables NNPACK build')
     variant('qnnpack', default=False, description='Enables QNNPACK build (quantized 8-bit operators)')
     variant('distributed', default=False, description='Enables distributed (c10d, gloo, mpi, etc.) build')
-    variant('nccl', default=False, description='Use Spack-installed NCCL')
+    variant('nccl', default=True, description='Use Spack-installed NCCL')
     variant('caffe2', default=False, description='Enables Caffe2 operators build')
     variant('gloo', default=False, description='Enables features related to distributed support')
     variant('opencv', default=False, description='Enables use of OpenCV for additional operators')
@@ -125,12 +125,12 @@ class PyTorch(PythonPackage):
     depends_on('cudnn@7:', when='@1.1:+cudnn')
     depends_on('magma', when='+magma')
     # TODO: add dependency: https://github.com/pytorch/FBGEMM
-    depends_on('fbgemm', when='+fbgemm')
+    # depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
-    depends_on('miopen', when='+miopen')
-    depends_on('mkl', when='+mkldnn')
+    # depends_on('miopen', when='+miopen')
+    depends_on('intel-mkl-dnn', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
-    depends_on('nnpack', when='+nnpack')
+    # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
@@ -219,7 +219,7 @@ class PyTorch(PythonPackage):
 
         enable_or_disable('mkldnn')
         if '+mkldnn' in self.spec:
-            env.set('MKLDNN_HOME', self.spec['intel-mkl'].prefix)
+            env.set('MKLDNN_HOME', self.spec['intel-mkl-dnn'].prefix)
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')

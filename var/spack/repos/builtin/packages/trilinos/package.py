@@ -35,6 +35,7 @@ class Trilinos(CMakePackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
+    version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
     version('12.10.1', sha256='ab81d917196ffbc21c4927d42df079dd94c83c1a08bda43fef2dd34d0c1a5512')
@@ -192,6 +193,12 @@ class Trilinos(CMakePackage):
              when='+dtk @12.14.0:12.14.99')
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
+             commit='edfa050cd46e2274ab0a0b7558caca0079c2e4ca',  # tag 3.1-rc1
+             placement='DataTransferKit',
+             submodules=True,
+             when='+dtk @12.18:12.18.99')
+    resource(name='dtk',
+             git='https://github.com/ornl-cees/DataTransferKit.git',
              branch='master',
              placement='DataTransferKit',
              submodules=True,
@@ -255,7 +262,7 @@ class Trilinos(CMakePackage):
     conflicts('+dtk', when='~teuchos')
     conflicts('+dtk', when='~tpetra')
     # Only allow DTK with Trilinos 12.14 and develop
-    conflicts('+dtk', when='@0:12.12.99,12.16.0:99,master')
+    conflicts('+dtk', when='@0:12.12.99,master')
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')

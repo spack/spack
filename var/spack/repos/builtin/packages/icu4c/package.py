@@ -29,6 +29,9 @@ class Icu4c(AutotoolsPackage):
 
     depends_on('python', type='build', when='@64.1:')
 
+    conflicts('%intel@:16', when='@60.1:',
+              msg="Intel compilers have immature C++11 and multibyte support")
+
     configure_directory = 'source'
 
     def url_for_version(self, version):

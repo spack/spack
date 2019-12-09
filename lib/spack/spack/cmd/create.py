@@ -60,6 +60,10 @@ class {class_name}({base_class_name}):
     homepage = "https://www.example.com"
 {url_def}
 
+    # FIXME: Add a list of GitHub accounts to
+    # notify when the package is updated.
+    # maintainers = ['github_user1', 'github_user2']
+
 {versions}
 
 {dependencies}
@@ -423,7 +427,8 @@ def setup_parser(subparser):
         '-n', '--name',
         help="name of the package to create")
     subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
+        '-t', '--template', metavar='TEMPLATE',
+        choices=sorted(templates.keys()),
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',

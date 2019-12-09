@@ -39,7 +39,8 @@ class PyPillow(PythonPackage):
 
     # Required dependencies
     depends_on('binutils', type='build', when=sys.platform != 'darwin')
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@:5.4.1', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('jpeg')
     depends_on('zlib')
