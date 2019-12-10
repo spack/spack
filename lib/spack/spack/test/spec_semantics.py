@@ -9,7 +9,7 @@ import pytest
 from spack.spec import Spec, UnsatisfiableSpecError, SpecError
 from spack.spec import substitute_abstract_variants
 from spack.spec import SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError
+from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
 
 import spack.architecture
@@ -981,3 +981,9 @@ class TestSpecSematics(object):
     def test_target_constraints(self, spec, constraint, expected_result):
         s = Spec(spec)
         assert s.satisfies(constraint) is expected_result
+
+    @pytest.mark.regression('13124')
+    def test_error_message_unknown_variant(self):
+        s = Spec('mpileaks +unknown')
+        with pytest.raises(UnknownVariantError, match=r'package has no such'):
+            s.concretize()

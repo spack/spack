@@ -2661,7 +2661,7 @@ class Spec(object):
                 not_existing = set(spec.variants) - (
                     set(pkg_variants) | set(spack.directives.reserved_names))
                 if not_existing:
-                    raise UnknownVariantError(spec.name, not_existing)
+                    raise UnknownVariantError(spec, not_existing)
 
                 substitute_abstract_variants(spec)
 
