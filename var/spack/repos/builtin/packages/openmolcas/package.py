@@ -16,7 +16,6 @@ class Openmolcas(CMakePackage):
 
     version('19.11', sha256='8ebd1dcce98fc3f554f96e54e34f1e8ad566c601196ee68153763b6c0a04c7b9')
 
-    depends_on('cmake', type='build')
     depends_on('hdf5')
     depends_on('lapack')
     depends_on('openblas+ilp64')
