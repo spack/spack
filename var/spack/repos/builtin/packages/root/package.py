@@ -228,7 +228,6 @@ class Root(CMakePackage):
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
     depends_on('gsl',       when='+gsl')
-    depends_on('http',      when='+http')
     depends_on('jemalloc',  when='+jemalloc')
     depends_on('kerberos',  when='+kerberos')
     depends_on('ldap',      when='+ldap')
