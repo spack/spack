@@ -33,5 +33,5 @@ class Openmolcas(CMakePackage):
         return [
             '-DLINALG=OpenBLAS',
             '-DOPENBLASROOT=%s' % self.spec['openblas'].prefix,
-            '-DPYTHON_EXECUTABLE=%s' % self.spec['python'].command,
+            '-DPYTHON_EXECUTABLE=%s' % self.spec['python'].command.path,
         ]
