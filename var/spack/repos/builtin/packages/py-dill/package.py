@@ -10,7 +10,7 @@ class PyDill(PythonPackage):
     """Serialize all of python """
 
     homepage = "https://github.com/uqfoundation/dill"
-    url      = "https://pypi.io/packages/source/d/dill/dill-0.2.6.zip"
+    url      = "https://pypi.io/packages/source/d/dill/dill-0.2.7.tar.gz"
     
     version('0.2.7', sha256='ddda0107e68e4eb1772a9f434f62a513c080c7171bd0dd6fb65d992788509812')
     version('0.2.6', sha256='6c1ccca68be483fa8c66e85a89ffc850206c26373aa77a97b83d8d0994e7f1fd')
