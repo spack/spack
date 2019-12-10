@@ -40,6 +40,16 @@
 ########################################################################
 
 spack() {
+    # Store LD_LIBRARY_PATH variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # (DY?)LD_LIBRARY_PATH variables on process start.
+    if [ -n ${LD_LIBRARY_PATH+x} ]; then
+        export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+    fi
+    if [ -n ${DYLD_LIBRARY_PATH+x} ]; then
+        export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+    fi
+
     # Zsh does not do word splitting by default, this enables it for this
     # function only
     if [ -n "${ZSH_VERSION:-}" ]; then

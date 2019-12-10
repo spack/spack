@@ -60,10 +60,9 @@ def load(parser, args):
         specs = [dep for spec in specs
                  for dep in spec.traverse(root=True, order='post')]
 
-
     env_mod = spack.util.environment.EnvironmentModifications()
     for spec in specs:
         env_mod.extend(uenv.environment_modifications_for_spec(spec))
-    cmds = env_mod.shell_modifications()
+    cmds = env_mod.shell_modifications(args.shell)
 
     sys.stdout.write(cmds)
