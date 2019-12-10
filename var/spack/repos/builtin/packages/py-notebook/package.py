@@ -34,7 +34,7 @@ class PyNotebook(PythonPackage):
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))
-    depends_on('py-ipykernel@5.1.0:', when='@4.2.0:', type=('build', 'run'))
+    depends_on('py-ipykernel@5.1.0:', when='@4.2.0: ^python@3:', type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
     # required for 6.0.1, not sure about 5.x.x, as there is no version in spack
     # right now treat them as 6-or-newer dependencies
@@ -47,3 +47,10 @@ class PyNotebook(PythonPackage):
     depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6:')
     depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@6:')
     depends_on('py-ipaddress', type=('build', 'run'), when='@6: ^python@:2.8')
+
+
+    @when('@5.7.8')
+    def install_args(self, spec, prefix):
+        args = ['--prefix={0}'.format(prefix), '--root=/']
+        return args
+
