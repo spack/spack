@@ -275,10 +275,11 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --sh b
+contains "export LD_LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --sh b
 succeeds spack -m load b
 fails spack -m load -l
-contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh -r a
+# test a variable MacOS clears and one it doesn't
+contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh -r a
 contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh --dependencies a
 succeeds spack -m load -r a
 succeeds spack -m load --dependencies a
