@@ -43,10 +43,10 @@ spack() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
     # (DY?)LD_LIBRARY_PATH variables on process start.
-    if [ -n ${LD_LIBRARY_PATH+x} ]; then
+    if [ "${LD_LIBRARY_PATH+x}" == x ]; then
         export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
     fi
-    if [ -n ${DYLD_LIBRARY_PATH+x} ]; then
+    if [ "${DYLD_LIBRARY_PATH+x}" == x ]; then
         export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
     fi
 
@@ -151,16 +151,21 @@ spack() {
             return
             ;;
         "load"|"unload")
-            # get --sh or --csh arguments
-            _a="$@"
-            if [ "${_a#*--sh}" != "$_a" ] || \
-                [ "${_a#*--csh}" != "$_a" ];
+            # get --sh, --csh, --help, or -h arguments
+            # space is important for -h case to differentiate between `-h`
+            # argument and specs with "-h" in package name or variant settings
+            _a=" $@"
+            if [ "${_a#* --sh}" != "$_a" ] || \
+                [ "${_a#* --csh}" != "$_a" ] || \
+                [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --help}" != "$_a" ];
             then
                 # just  execute the command if --sh or --csh are provided
+                # or if the -h or --help arguments are provided
                 command spack $_sp_flags $_sp_subcommand "$@"
             else
-                # no args, source the output of the command
-                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@")
+                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
+                    echo "return 1")  # return 1 if spack command fails
             fi
             ;;
         *)

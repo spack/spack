@@ -115,12 +115,16 @@ case env:
     endif
 case load:
 case unload:
-    if ( "$_sp_spec" =~ "*--sh*" || "$_sp_spec" =~ "*--csh*") then
+    # Space in `-h` portion is important for differentiating -h option
+    # from variants that begin with "h" or packages with "-h" in name
+    if ( "$_sp_spec" =~ "*--sh*" || "$_sp_spec" =~ "*--csh*" || \
+         " $_sp_spec" =~ "* -h*" || "$_sp_spec" =~ "*--help*") then
         # IF a shell is given, print shell output
         \spack $_sp_flags $_sp_subcommand $_sp_spec
     else
         # otherwise eval with csh
-        eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec`
+        eval `\spack $_sp_flags $_sp_subcommand --csh $_sp_spec || \
+             echo "exit 1"`
     endif
     breaksw
 

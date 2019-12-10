@@ -275,20 +275,21 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "module load $b_module" spack -m load b
+contains "export LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --sh b
+succeeds spack -m load b
 fails spack -m load -l
-contains "module load -l --arg $b_module" spack -m load -l --arg b
-contains "module load $b_module $a_module" spack -m load -r a
-contains "module load $b_module $a_module" spack -m load --dependencies a
+contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh -r a
+contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh --dependencies a
+succeeds spack -m load -r a
+succeeds spack -m load --dependencies a
 fails spack -m load d
 contains "usage: spack load " spack -m load -h
 contains "usage: spack load " spack -m load -h d
 contains "usage: spack load " spack -m load --help
 
 title 'Testing `spack unload`'
-contains "module unload $b_module" spack -m unload b
+succeeds spack -m unload b
 fails spack -m unload -l
-contains "module unload -l --arg $b_module" spack -m unload -l --arg b
 fails spack -m unload d
 contains "usage: spack unload " spack -m unload -h
 contains "usage: spack unload " spack -m unload -h d
