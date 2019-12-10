@@ -12,7 +12,6 @@ class PyPox(PythonPackage):
     homepage = "https://github.com/uqfoundation/pox"
     url      = "https://pypi.io/packages/source/p/pox/pox-0.2.3.zip"
     list_url = "https://pypi.io/packages/source/p/pox/"
-    
 
     version('0.2.3', sha256='d3e8167a1ebe08ae56262a0b9359118d90bc4648cd284b5d10ae240343100a75')
     version('0.2.2', sha256='c0b88e59ef0e4f2fa4839e11bf90d2c32d6ceb5abaf01f0c8138f7558e6f87c1')
@@ -28,7 +27,6 @@ class PyPox(PythonPackage):
             url += 'pox-{0}.tar.gz'
         else:
             url += 'pox-{0}.zip'
-       
+
         url = url.format(str(version))
         return url
-
