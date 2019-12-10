@@ -22,8 +22,8 @@ class Umoci(MakefilePackage):
     depends_on('go@1.11:')
     depends_on('go-md2man', type='build')
 
-    # touch up project's Makefile so that ti runs go in module mode and
-    # uses the projects vendored dependencies
+    # touch up project's Makefile so that it runs go in module mode and
+    # uses the project's vendored dependencies
     # this works for @0.4.2:
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
