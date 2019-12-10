@@ -11,6 +11,7 @@ class PyPpft(PythonPackage):
 
     homepage = "https://github.com/uqfoundation/ppft"
     url      = "https://pypi.io/packages/source/p/ppft/ppft-1.6.4.7.1.zip"
+    list_url = "https://pypi.io/packages/source/p/ppft/"
 
     version('1.6.4.7.1',  sha256='f94b26491b4a36adc975fc51dba7568089a24756007a3a4ef3414a98d7337651')
     version('1.6.4.6',   sha256='92d09061f5425634c43dbf99c5558f2cf2a2e1e351929f8da7e85f4649c11095')
@@ -21,3 +22,14 @@ class PyPpft(PythonPackage):
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-six@1.7.3:', type=('build', 'run'))
     depends_on('py-dill@0.2.6:', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        url = self.list_url
+        if version >= Version('1.6.4.9'):
+            url += 'ppft-{0}.tar.gz'
+        else:
+            url += 'ppft-{0}.zip'
+        
+        url = url.format(str(version))
+        return url
+
