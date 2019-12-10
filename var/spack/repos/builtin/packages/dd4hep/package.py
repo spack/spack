@@ -38,6 +38,8 @@ class Dd4hep(CMakePackage):
             "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
-            "-DBUILD_TESTING={0}".format(spec.satisfies('+testing'))
+            "-DBUILD_TESTING={0}".format(spec.satisfies('+testing')),
+            "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
+            "-DBoost_NO_BOOST_CMAKE=ON",
         ]
         return args
