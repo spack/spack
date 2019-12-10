@@ -16,6 +16,7 @@ class Xtensor(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('0.21.0', sha256='62c9acd6a12fbd50f1379e6c60ffdceb317838d1d79a691d441bebaf7174aa12')
     version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
     version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 
@@ -23,7 +24,8 @@ class Xtensor(CMakePackage):
             description='Enable SIMD intrinsics')
 
     depends_on('xtl')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1:')
+    depends_on('xtl@0.6.9', when='@0.21.0:')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1:0.20.99')
     depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
     depends_on('xsimd@4.0.0', when='@0.15.1 +xsimd')
     depends_on('xsimd@3.1.0', when='@0.13.1 +xsimd')
