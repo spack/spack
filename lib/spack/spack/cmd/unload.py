@@ -5,6 +5,9 @@
 
 import argparse
 import sys
+
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.environment as ev
 import spack.util.environment
@@ -40,11 +43,11 @@ def unload(parser, args):
             "This command works best with Spack's shell support",
             ""
         ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack load` without initializing',
+            'Or, if you want to use `spack unload` without initializing',
             'shell support, you can run one of these:',
             '',
-            '    eval `spack unload --sh %s`   # for bash/sh' % ' '.join(specs),
-            '    eval `spack unload --csh %s`  # for csh/tcsh' % ' '.join(specs),
+            '    eval `spack unload --sh %s`   # for bash/sh' % args.specs,
+            '    eval `spack unload --csh %s`  # for csh/tcsh' % args.specs,
         ]
         tty.msg(*msg)
         return 1

@@ -22,7 +22,7 @@ def prefix_inspections(platform):
         'lib/pkgconfig': ['PKG_CONFIG_PATH'],
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
-        }
+    }
 
     if platform == 'darwin':
         for subdir in ('lib', 'lib64'):
