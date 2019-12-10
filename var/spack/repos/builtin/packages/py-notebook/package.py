@@ -48,9 +48,7 @@ class PyNotebook(PythonPackage):
     depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@6:')
     depends_on('py-ipaddress', type=('build', 'run'), when='@6: ^python@:2.8')
 
-
     @when('@5.7.8')
     def install_args(self, spec, prefix):
         args = ['--prefix={0}'.format(prefix), '--root=/']
         return args
-
