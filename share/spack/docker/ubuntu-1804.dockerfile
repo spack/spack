@@ -1,7 +1,6 @@
-FROM ubuntu:18.04 AS bootstrap
+FROM ubuntu:18.04 AS base
 
-ENV SPACK_ROOT=/spack \
-    FORCE_UNSAFE_CONFIGURE=1 \
+ENV FORCE_UNSAFE_CONFIGURE=1 \
     DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -yqq update \
@@ -10,12 +9,29 @@ RUN apt-get -yqq update \
      --no-install-suggests \
         base-files \
         ca-certificates \
-        curl \
         debianutils \
+        less \
+        locales \
+ && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+ && locale-gen \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV LANGUAGE=en_US.UTF-8 \
+    LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
+FROM base AS bootstrap
+
+ENV SPACK_ROOT=/spack
+
+RUN apt-get -yqq update \
+ && apt-get -yqq install \
+     --no-install-recommends \
+     --no-install-suggests \
+        curl \
         file \
         g++ \
         gcc \
-        less \
         libc-dev-bin \
         libc6-dev \
         locales \
@@ -55,14 +71,11 @@ RUN /spack/share/spack/docker/run-bootstrap.sh 3
 
 RUN /spack/bin/spack clean -a
 
-
-FROM ubuntu:18.04
+FROM base
 
 MAINTAINER Spack Maintainers <maintainers@spack.io>
 
-ENV SPACK_ROOT=/opt/spack \
-    FORCE_UNSAFE_CONFIGURE=1 \
-    DEBIAN_FRONTEND=noninteractive
+ENV SPACK_ROOT=/opt/spack
 
 COPY --from=bootstrap /spack /opt/spack
 
@@ -126,7 +139,10 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
 
 SHELL ["docker-shell"]
 
-RUN spack load gcc ; spack compiler find --scope system
+RUN spack load gcc \
+ && spack compiler find --scope system \
+ && find "$( spack location --install gcc )/libexec" \
+        -iname 'mkheaders' -exec '{}' ';' -quit
 
 USER spack
 WORKDIR /home/spack
