@@ -109,6 +109,9 @@ class R(AutotoolsPackage):
         prefix = self.prefix
 
         tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
+        if not os.path.exists(tcl_config_path):
+            tcl_config_path = join_path(spec['tcl'].prefix,
+                                        'lib64', 'tclConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
@@ -122,6 +125,9 @@ class R(AutotoolsPackage):
         ]
         if '^tk' in spec:
             tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
+            if not os.path.exists(tk_config_path):
+                tk_config_path = join_path(spec['tk'].prefix,
+                                           'lib64', 'tkConfig.sh')
             config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:
