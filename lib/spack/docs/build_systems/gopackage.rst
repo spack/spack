@@ -84,13 +84,15 @@ it's worth calling attention to its:
 The ``GoPackage`` provides a ``setup_build_environment`` that sets
 ``GO111MODULES=on`` and ``GOFLAGS=-mod=vendor`` and its default build
 step invokes ``go build``.  Additional arguments to ``go build`` can
-be provided by setting ``build_args``, e.g. one could
+be provided by providing a ``build_args`` function, e.g. from the Hugo
+package:
 
 .. code-block:: python
 
-        build_args = ['-p', '12']  # adjust parallelism of build cmd
+        def build_args(self):
+            return ['-tags', 'extended']
 
-to invoke ``go build -p 12``.
+to invoke ``go build -tags extended``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Packages without vendored dependencies

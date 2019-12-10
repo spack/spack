@@ -41,7 +41,6 @@ class GoPackage(PackageBase):
 
     go = Executable('go')
     executables = []
-    build_args = []
 
     def setup_build_environment(self, env):
         # forcibly enable module mode
@@ -51,7 +50,13 @@ class GoPackage(PackageBase):
 
     def build(self, spec, prefix):
         """Builds a Go package."""
-        self.go('build', *self.build_args)
+        args = self.build_args()
+
+        self.go('build', *args)
+
+    def build_args(self):
+        """Arguments to pass to build."""
+        return []
 
     def install(self, spec, prefix):
         """Installs a Go package."""

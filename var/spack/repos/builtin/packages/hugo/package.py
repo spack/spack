@@ -17,5 +17,7 @@ class Hugo(GoPackage):
     # hugo has used modules since its v0.48, so we do too.
     import_resources("hugo-resources-0.53.json")
 
-    build_args = ['-tags', 'extended']
+    def build_args(self):
+        return ['-tags', 'extended']
+
     executables = ['hugo']
