@@ -25,7 +25,7 @@ class FontUtil(AutotoolsPackage):
     depends_on('mkfontdir', type='build')
 
     font_baseurl = 'https://www.x.org/archive/individual/font/'
-    fonts = []
+    fonts = ['none']
     # name, version, sha256
     fonts_resource = [
         ['encodings', '1.0.4', '55861d9cf456bd717a3d30a3193402c02174ed3c0dcee828798165fe307ee324'],
@@ -83,6 +83,9 @@ class FontUtil(AutotoolsPackage):
 
     @run_after('install')
     def font_install(self):
+        if 'none' in fonts:
+            return
+
         autoconf_args = ['-ifv']
         p = join_path(self.spec['util-macros'].prefix, 'share', 'aclocal')
         autoconf_args.append('--include={0}'.format(p))
