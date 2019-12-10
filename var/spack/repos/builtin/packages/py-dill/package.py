@@ -13,6 +13,7 @@ class PyDill(PythonPackage):
     url      = "https://pypi.io/packages/source/d/dill/dill-0.2.6.zip"
     list_url = "https://pypi.io/packages/source/d/dill/"
 
+    version('0.2.7', sha256='ddda0107e68e4eb1772a9f434f62a513c080c7171bd0dd6fb65d992788509812')
     version('0.2.6', sha256='6c1ccca68be483fa8c66e85a89ffc850206c26373aa77a97b83d8d0994e7f1fd')
     version('0.2.5', sha256='e82b3db7b9d962911c9c2d5cf2bb4a04f43933f505a624fb7dc5f68b949f0a5c')
     version('0.2.4', sha256='db68929eef0e886055d6bcd86f830141c1f653ddbf5d081c086e9d1c45efb334')
@@ -33,5 +34,5 @@ class PyDill(PythonPackage):
         else:
             url += 'dill-{0}.zip'
 
-        url = url.format(str(version))
+        url = url.format(version)
         return url
