@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
-import glob
 
 
 class Geant4(CMakePackage):
@@ -125,7 +123,7 @@ class Geant4(CMakePackage):
         # install the data with geant4
         # options.append('-DGEANT4_INSTALL_DATA=' + on_or_off('data'))
         if '+data' in spec:
-            options.append('DGEANT4_INSTALL_DATA=ON')
+            options.append('-DGEANT4_INSTALL_DATA=ON')
         else:
             options.append('-DGEANT4_INSTALL_DATADIR=' + spec['geant4-data'].prefix)
 
