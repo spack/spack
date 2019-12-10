@@ -17,6 +17,8 @@ class Tmux(AutotoolsPackage):
     homepage = "http://tmux.github.io"
     url = "https://github.com/tmux/tmux/releases/download/2.6/tmux-2.6.tar.gz"
 
+    version('3.0a', sha256='523093fc71cb51345202ee50bd2a296a76a76060499958b9adc383cf7926ee66')
+    version('2.9', sha256='d8dde01f80c0a02e04d23eb6627e69972c41eb03fd1e4e03eeef9dabc9ec5112')
     version('2.8', sha256='7f6bf335634fafecff878d78de389562ea7f73a7367f268b66d37ea13617a2ba')
     version('2.7', sha256='9ded7d100313f6bc5a87404a4048b3745d61f2332f99ec1400a7c4ed9485d452')
     version('2.6', sha256='b17cd170a94d7b58c0698752e1f4f263ab6dc47425230df7e53a6435cc7cd7e8')
