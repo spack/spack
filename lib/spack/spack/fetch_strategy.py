@@ -867,7 +867,10 @@ class GitFetchStrategy(VCSFetchStrategy):
                 git(*args)
 
     def archive(self, destination):
-        super(GitFetchStrategy, self).archive(destination, exclude='.git')
+        kwargs = dict()
+        if not self.get_full_repo:
+            kwargs['exclude'] = '.git'
+        super(GitFetchStrategy, self).archive(destination, **kwargs)
 
     def get_commit(self):
         return self.git('rev-parse', 'HEAD', output=str).strip()
