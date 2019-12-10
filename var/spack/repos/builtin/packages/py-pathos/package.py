@@ -28,7 +28,6 @@ class PyPathos(PythonPackage):
             url += '/pathos-{0}.tar.gz'
         else:
             url += '/pathos-{0}.zip'
-        
+
         url = url.format(str(version))
         return url
-
