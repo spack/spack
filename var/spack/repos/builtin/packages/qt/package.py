@@ -70,6 +70,10 @@ class Qt(Package):
             description="Build with OpenSSL support.")
     variant('freetype', default='spack', description='Freetype2 support',
             values=('spack', 'qt', 'none'), multi=False)
+    variant('gold', default=False,
+            description='Use gold linker')
+    variant('xcb', default='spack', description='XCB support',
+            values=('spack', 'qt', 'none'), multi=False)
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
@@ -311,6 +315,7 @@ class Qt(Package):
             '-v',
             '-opensource',
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
+            '-{0}use-gold-linker'.format('' if '+gold' in self.spec else 'no-'),
             '-release',
             '-confirm-license',
             '-openssl-linked',
@@ -332,6 +337,17 @@ class Qt(Package):
             config_args.append('-qt-freetype')
         else:
             config_args.append('-no-freetype')
+
+        if self.spec.variants['xcb'].value == 'spack':
+            config_args.extend([
+                '-system-xcb',
+                '-I{0}/xcb'.format(self.spec['xcb-util'].prefix.include)
+            ])
+
+        elif self.spec.variants['xcb'].value == 'qt':
+            config_args.append('-qt-xcb')
+        else:
+            config_args.append('-no-xcb')
 
         if '+ssl' in self.spec:
             config_args.append('-openssl-linked')
@@ -488,11 +504,6 @@ class Qt(Package):
     @when('@5.7:')
     def configure(self, spec, prefix):
         config_args = self.common_config_args
-
-        if not MACOS_VERSION:
-            config_args.extend([
-                '-system-xcb',
-            ])
 
         if '~webkit' in spec:
             config_args.extend([
