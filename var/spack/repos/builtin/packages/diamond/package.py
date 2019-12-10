@@ -24,3 +24,6 @@ class Diamond(CMakePackage):
     version('0.8.26', sha256='00d2be32dad76511a767ab8e917962c0ecc572bc808080be60dec028df45439f')
 
     depends_on('zlib')
+
+    # fix error [-Wc++11-narrowing]
+    patch('fix_narrowing_error.patch')
