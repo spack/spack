@@ -21,3 +21,14 @@ class PyPathos(PythonPackage):
     depends_on('py-pox@0.2.2:', type=('build', 'run'))
     depends_on('py-ppft@1.6.4.5:', type=('build', 'run'))
     depends_on('py-dill@0.2.5:', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        url = self.url.rsplit('/', 1)[0]
+        if version >= Version('0.2.3'):
+            url += '/pathos-{0}.tar.gz'
+        else:
+            url += '/pathos-{0}.zip'
+        
+        url = url.format(str(version))
+        return url
+
