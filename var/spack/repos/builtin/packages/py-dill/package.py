@@ -11,6 +11,7 @@ class PyDill(PythonPackage):
 
     homepage = "https://github.com/uqfoundation/dill"
     url      = "https://pypi.io/packages/source/d/dill/dill-0.2.6.zip"
+    list_url = "https://pypi.io/packages/source/d/dill/"
 
     version('0.2.6', sha256='6c1ccca68be483fa8c66e85a89ffc850206c26373aa77a97b83d8d0994e7f1fd')
     version('0.2.5', sha256='e82b3db7b9d962911c9c2d5cf2bb4a04f43933f505a624fb7dc5f68b949f0a5c')
@@ -23,3 +24,14 @@ class PyDill(PythonPackage):
     depends_on('python@2.5:2.8,3.1:')
 
     depends_on('py-setuptools@0.6:', type='build')
+
+    def url_for_version(self, version):
+        url = self.list_url
+
+        if version >= Version('0.2.7'):
+            url += 'dill-{0}.tar.gz'
+        else:
+            url += 'dill-{0}.zip'
+
+        url = url.format(str(version))
+        return url
