@@ -21,3 +21,8 @@ class PyPkgconfig(PythonPackage):
     depends_on('pkgconfig', type=('build', 'run'))
 
     depends_on('py-nose@1.0:', type=('build', 'test'))
+
+    @when('@1.5.1')
+    def install_args(self, spec, prefix):
+        args = ['--prefix={0}'.format(prefix), '--root=/']
+        return args
