@@ -1,0 +1,11 @@
+--- geant4/cmake/Modules/Geant4MakeRules_cxx.cmake.bak	2019-07-05 17:35:06.000000000 +0200
++++ geant4/cmake/Modules/Geant4MakeRules_cxx.cmake	2019-07-05 17:58:54.000000000 +0200
+@@ -48,7 +48,7 @@
+ 
+   # Though it should be the default, always use libc++ with AppleClang
+   if(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
+-    set(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT} -stdlib=libc++")
++    set(CMAKE_CXX_FLAGS_INIT "${CMAKE_CXX_FLAGS_INIT} -stdlib=libc++ -Wno-register")
+   endif()
+ 
+   # Extra Geant4 modes

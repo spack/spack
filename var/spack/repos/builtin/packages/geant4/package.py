@@ -51,7 +51,8 @@ class Geant4(CMakePackage):
     depends_on("xerces-c cxxstd=17", when="cxxstd=17")
     depends_on("clhep@2.3.3.0: cxxstd=17", when="@10.03.p03: cxxstd=17")
     patch('cxx17.patch', when='@:10.03.p99 cxxstd=17')
-    patch('cxx17_geant4_10_0.patch', level=1, when='@10.04.00: cxxstd=17')
+    patch('cxx17_geant4_10_0.patch', level=1, when='@10.04.00:10.04.99 cxxstd=17')
+    patch('geant4-10.05.p01-Wno_register.patch', level=1, when='@10.05.p01')
     depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
@@ -71,6 +72,7 @@ class Geant4(CMakePackage):
 
     depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
     depends_on('geant4-data@10.04', when='@10.04 ~data')
+    depends_on('geant4-data@10.05.p01', when='@10.05.p01 ~data')
 
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
@@ -84,9 +86,8 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
             '-DGEANT4_USE_SYSTEM_CLHEP_GRANULAR=ON',
             '-DGEANT4_USE_G3TOG4=ON',
-            '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
-            '-DGEANT4_USE_SYSTEM_EXPAT=ON',
+            '-DGEANT4_USE_SYSTEM_EXPAT=OFF',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
             '-DXERCESC_ROOT_DIR:STRING=%s' %
             spec['xerces-c'].prefix, ]
@@ -109,15 +110,24 @@ class Geant4(CMakePackage):
                 spec['qt'].prefix.bin.qmake)
 
         if '+vecgeom' in spec:
-            options.append('-DGEANT4_USE_USOLIDS=ON')
-            options.append('-DUSolids_DIR=%s' % spec[
-                'vecgeom'].prefix.lib.CMake.USolids)
+            if spec.satisfies('@:10.04'):
+                options.append('-DGEANT4_USE_USOLIDS=ON')
+                options.append('-DUSolids_DIR=%s' % spec[
+                    'vecgeom'].prefix.lib.CMake.USolids)
+            else:
+                options.append('-DGEANT4_USE_USOLIDS=ALL')
+                options.append('-DVecGeom_DIR=%s' % spec[
+                    'vecgeom'].prefix.lib.CMake.VecGeom)
 
         on_or_off = lambda opt: 'ON' if '+' + opt in spec else 'OFF'
         options.append('-DGEANT4_BUILD_MULTITHREADED=' + on_or_off('threads'))
 
         # install the data with geant4
-        options.append('-DGEANT4_INSTALL_DATA=' + on_or_off('data'))
+        # options.append('-DGEANT4_INSTALL_DATA=' + on_or_off('data'))
+        if '+data' in spec:
+            options.append('DGEANT4_INSTALL_DATA=ON')
+        else:
+            options.append('-DGEANT4_INSTALL_DATADIR=' + spec['geant4-data'].prefix)
 
         return options
 
@@ -125,26 +135,26 @@ class Geant4(CMakePackage):
         """Handle Geant4's unusual version string."""
         return ("http://geant4.cern.ch/support/source/geant4.%s.tar.gz" % version)
 
-    @run_before('cmake')
-    def make_data_links(self):
-        if '+data' in self.spec:
-            return
-        spec = self.spec
-        version = self.version
-        major = version[0]
-        minor = version[1]
-        if len(version) > 2:
-            patch = version[-1]
-        else:
-            patch = 0
-        datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
-        with working_dir(join_path(spec.prefix.share, datadir),
-                         create=True):
-            dirs = glob.glob('%s/%s/*' %
-                             (spec['geant4-data'].prefix.share, datadir))
-            for d in dirs:
-                target = os.readlink(d)
-                os.symlink(target, os.path.basename(target))
+#    @run_before('cmake')
+#    def make_data_links(self):
+#        if '+data' in self.spec:
+#            return
+#        spec = self.spec
+#        version = self.version
+#        major = version[0]
+#        minor = version[1]
+#        if len(version) > 2:
+#            patch = version[-1]
+#        else:
+#            patch = 0
+#        datadir = 'Geant4-%s.%s.%s/data' % (major, minor, patch)
+#        with working_dir(join_path(spec.prefix.share, datadir),
+#                         create=True):
+#            dirs = glob.glob('%s/%s/*' %
+#                             (spec['geant4-data'].prefix.share, datadir))
+#            for d in dirs:
+#                target = os.readlink(d)
+#                os.symlink(target, os.path.basename(target))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         version = self.version
