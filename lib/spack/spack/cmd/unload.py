@@ -53,6 +53,6 @@ def unload(parser, args):
     for spec in specs:
         env_mod.extend(
             uenv.environment_modifications_for_spec(spec).reversed())
-    cmds = env_mod.shell_modifications()
+    cmds = env_mod.shell_modifications(args.shell)
 
     sys.stdout.write(cmds)

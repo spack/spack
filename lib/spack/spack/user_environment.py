@@ -69,6 +69,7 @@ def environment_modifications_for_spec(spec, view=None):
             spec, context='run'
         )
     )
+
     # Package specific modifications
     build_env.set_module_variables_for_package(spec.package)
     spec.package.setup_run_environment(env)
