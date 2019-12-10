@@ -12,6 +12,7 @@ class PyPathos(PythonPackage):
     homepage = "https://github.com/uqfoundation/pathos"
     url      = "https://pypi.io/packages/source/p/pathos/pathos-0.2.0.zip"
 
+    version('0.2.3', sha256='954c5b0a8b257c375e35d311c65fa62a210a3d65269195557de38418ac9f61f9')
     version('0.2.0', sha256='2f4e67e7914c95fb0cce766bab173eb2c5860ee420108fa183099557ac2e50e9')
 
     depends_on('python@2.6:2.8,3.1:')
