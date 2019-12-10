@@ -19,7 +19,7 @@ class JsonC(AutotoolsPackage):
 
     parallel = False
 
-    @when('@0.12:0.12.99 %gcc@7:')
+    @when('@0.12 %gcc@7:')
     def patch(self):
         filter_file('-Wextra',
                     '-Wextra -Wno-error=implicit-fallthrough '
