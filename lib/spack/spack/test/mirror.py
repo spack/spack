@@ -7,6 +7,7 @@ import filecmp
 import os
 import pytest
 
+import spack.caches
 import spack.repo
 import spack.mirror
 import spack.util.executable
@@ -192,3 +193,17 @@ def test_mirror_with_url_patches(mock_packages, config, monkeypatch):
             'abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234',
             'abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd.gz'  # NOQA: ignore=E501
         ]) - files_cached_in_mirror)
+
+
+@pytest.mark.regression('14067')
+def test_mirror_cache_symlinks(tmpdir):
+    """Tries to create a symlink structure in tmpdir and checks the
+    results are the expected one.
+    """
+    cosmetic_path = 'zlib/zlib-1.2.11.tar.gz'
+    global_path = '_source-cache/archive/c3/c3e5.tar.gz'
+    cache = spack.caches.MirrorCache(str(tmpdir))
+    reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
+
+    link_path = cache.symlink(reference)
+    assert link_path == os.path.join('..', global_path)

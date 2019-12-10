@@ -63,16 +63,21 @@ class MirrorCache(object):
         fetcher.archive(dst)
 
     def symlink(self, mirror_ref):
-        """Symlink a human readible path in our mirror to the actual
-        storage location."""
+        """Symlink a human readable path in our mirror to the actual
+        storage location.
+
+        Returns:
+            The relative path used for the symbolic link.
+        """
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
-        relative_dst = os.path.relpath(
-            mirror_ref.storage_path,
-            start=os.path.dirname(cosmetic_path))
+        cosmetic_dir = os.path.dirname(cosmetic_path)
+        storage_path = os.path.join(self.root, mirror_ref.storage_path)
+        relative_dst = os.path.relpath(storage_path, start=cosmetic_dir)
         if not os.path.exists(cosmetic_path):
-            mkdirp(os.path.dirname(cosmetic_path))
+            mkdirp(cosmetic_dir)
             os.symlink(relative_dst, cosmetic_path)
+        return relative_dst
 
 
 #: Spack's local cache for downloaded source archives
