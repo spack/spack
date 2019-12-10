@@ -22,6 +22,7 @@ class Openmolcas(CMakePackage):
     depends_on('openblas+ilp64')
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('MOLCAS', self.prefix)
