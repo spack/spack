@@ -765,13 +765,13 @@ def test_indirect_build_dep():
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
-Dependency:
+    dependency::
 
-        x       y
-       /| (l)   | (b)
-  (b) | y       z2
-       \| (b)
-        z1
+              x       y
+             /| (l)   | (b)
+        (b) | y       z2
+             \| (b)
+              z1
 
     """
     default = ('build', 'link')
