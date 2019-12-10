@@ -29,7 +29,6 @@ class PyPpft(PythonPackage):
             url += 'ppft-{0}.tar.gz'
         else:
             url += 'ppft-{0}.zip'
-        
+
         url = url.format(str(version))
         return url
-
