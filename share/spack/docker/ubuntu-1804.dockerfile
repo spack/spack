@@ -124,10 +124,12 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
  && chown -R spack:spack /spack \
  && rm -rf /usr/bin/file /usr/bin/python /root/*.* /root/.spack
 
+SHELL ["docker-shell"]
+
+RUN spack load gcc ; spack compiler find --scope system
+
 USER spack
 WORKDIR /home/spack
-
-SHELL ["docker-shell"]
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["interactive-shell"]

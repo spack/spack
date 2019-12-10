@@ -37,16 +37,6 @@ find_generic() {
     echo "${@}" "arch=$arch"
 }
 
-load_generic() {
-    spec="$( find_generic "${@}" )"
-    result="$?"
-    if [ "$result" '!=' '0' ] ; then
-        return $result
-    fi
-
-    spack load "$spec"
-}
-
 init_env_modules() {
     spec="$( find_generic environment-modules )"
     result="$?"
@@ -106,9 +96,6 @@ case "$mode" in
         # The shell script runs with spack pre-loaded and ready to use.
         init_env_modules init/bash
         . $SPACK_ROOT/share/spack/setup-env.sh
-        load_generic zlib
-        load_generic tcl
-        load_generic environment-modules
         unset CURRENTLY_BUILDING_DOCKER_IMAGE
         exec "$@"
         ;;
@@ -128,9 +115,6 @@ case "$mode" in
         #                      # No manual initialization necessary.
         init_env_modules init/bash
         . $SPACK_ROOT/share/spack/setup-env.sh
-        load_generic zlib
-        load_generic tcl
-        load_generic environment-modules
         exec bash -c "$*"
         ;;
 
@@ -151,9 +135,6 @@ case "$mode" in
             init_env_modules init/bash init/bash_completion
             . $SPACK_ROOT/share/spack/setup-env.sh
             . $SPACK_ROOT/share/spack/spack-completion.bash
-            load_generic zlib
-            load_generic tcl
-            load_generic environment-modules
             unset CURRENTLY_BUILDING_DOCKER_IMAGE
             exec bash -i
         else
@@ -208,9 +189,6 @@ case "$mode" in
 
         init_env_modules init/bash
         . $SPACK_ROOT/share/spack/setup-env.sh
-        load_generic zlib
-        load_generic tcl
-        load_generic environment-modules
         unset CURRENTLY_BUILDING_DOCKER_IMAGE
 
         exec 1>&3
