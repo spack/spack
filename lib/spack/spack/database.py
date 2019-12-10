@@ -44,7 +44,8 @@ from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
-from spack.util.lock import Lock, LockError, WriteTransaction, ReadTransaction
+from spack.util.lock import \
+    Lock, LockError, LockTimeoutError, WriteTransaction, ReadTransaction
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -206,54 +207,13 @@ class ForbiddenLock(object):
             "Cannot access attribute '{0}' of lock".format(name))
 
 
-_query_docstring = """
-
-        Args:
-            query_spec: queries iterate through specs in the database and
-                return those that satisfy the supplied ``query_spec``. If
-                query_spec is `any`, This will match all specs in the
-                database.  If it is a spec, we'll evaluate
-                ``spec.satisfies(query_spec)``
-
-            known (bool or any, optional): Specs that are "known" are those
-                for which Spack can locate a ``package.py`` file -- i.e.,
-                Spack "knows" how to install them.  Specs that are unknown may
-                represent packages that existed in a previous version of
-                Spack, but have since either changed their name or
-                been removed
-
-            installed (bool or any, or InstallStatus or iterable of
-                InstallStatus, optional): if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: True)
-
-            explicit (bool or any, optional): A spec that was installed
-                following a specific user request is marked as explicit. If
-                instead it was pulled-in as a dependency of a user requested
-                spec it's considered implicit.
-
-            start_date (datetime, optional): filters the query discarding
-                specs that have been installed before ``start_date``.
-
-            end_date (datetime, optional): filters the query discarding
-                specs that have been installed after ``end_date``.
-
-            hashes (container): list or set of hashes that we can use to
-                restrict the search
-
-        Returns:
-            list of specs that match the query
-
-        """
-
-
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
+
+    """Per-process failure (lock) objects for each install prefix."""
+    _prefix_failures = {}
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
                  is_upstream=False):
@@ -295,8 +255,13 @@ class Database(object):
         # This is for other classes to use to lock prefix directories.
         self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
 
-        # Ensure we have a place to deal with parallel installation failures
+        # Ensure a persistent location for dealing with parallel installation
+        # failures (e.g., across near-concurrent processes).
         self._failure_dir = os.path.join(self._db_dir, 'failures')
+
+        # Support special locks for handling parallel installation failures
+        # of a spec.
+        self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
@@ -354,34 +319,127 @@ class Database(object):
         return os.path.join(self._failure_dir,
                             '{0}-{1}'.format(spec.name, spec.full_hash()))
 
+    def clear_failure(self, spec, force=False):
+        """Remove any persistent failure tracking for the spec."""
+        if self.prefix_failure_locked(spec):
+            if not force:
+                tty.log('Retaining failure marking for {0} due to lock'
+                        .format(spec.name))
+                return
+            else:
+                tty.warn('Removing failure marking despite lock for {0}'
+                         .format(spec.name))
+
+        if self.prefix_failure_marked(spec):
+            try:
+                path = self._failed_spec_path(spec)
+                # TODO: Change to debug
+                tty.msg('Removing failure marking for {0}'.format(spec.name))
+                os.remove(path)
+            except Exception as exc:
+                tty.warn('Unable to remove failure marking for {0} ({1}): {2}'
+                         .format(spec.name, path, str(exc)))
+
     def mark_failed(self, spec):
         """
         Mark a spec as failing to install.
 
-        Marking takes the form of a file, named with the full hash and
+        Prefix failure marking takes the form of a byte range lock on the nth
+        byte of a file for coordinating between concurrent parallel build
+        processes and a persistent file, named with the full hash and
         containing the spec, in a subdirectory of the database to enable
-        persistence across processes.
+        persistence across overlapping but separate related build processes.
+
+        The failure lock file, ``spack.store.db.prefix_failures``, lives
+        alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
+        associated DAG hash to make the likelihood of collision very low with
+        no cleanup required.
         """
         # Dump the spec to the failure file for (manual) debugging purposes
         path = self._failed_spec_path(spec)
         with open(path, 'w') as f:
             spec.to_json(f)
 
-    def prefix_failed(self, spec):
-        """Return True if the spec (installation) is marked as failed."""
-        path = self._failed_spec_path(spec)
+        # Also ensure a failure lock is taken to prevent cleanup removal
+        # of failure status information during a concurrent parallel build.
+        err = 'Unable to mark {0.name} as failed.'
 
+        prefix = spec.prefix
+        if prefix not in self._prefix_failures:
+            mark = Lock(
+                self.prefix_fail_path,
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=self.package_lock_timeout, desc=spec.name)
+
+            try:
+                mark.acquire_write()
+                tty.debug('PID {0} succeeded in marking failure for {1}'
+                          .format(os.getpid(), spec.name))
+            except LockTimeoutError:
+                # Unlikely that another process failed to install at the same
+                # time but log it anyway.
+                tty.debug('PID {0} failed to mark install failure for {1}'
+                          .format(os.getpid(), spec.name))
+                tty.warn(err.format(spec))
+
+            # Whether we or another process marked it as a failure, track it
+            # as such locally.
+            self._prefix_failures[prefix] = mark
+
+        return self._prefix_failures[prefix]
+
+    def prefix_failed(self, spec):
+        """Return True if the prefix (installation) is marked as failed."""
+        # The failure was detected in this process.
+        if spec.prefix in self._prefix_failures:
+            return True
+
+        # The failure was detected by a concurrent process (e.g., an srun),
+        # which is expected to be holding a write lock if that is the case.
+        if self.prefix_failure_locked(spec):
+            return True
+
+        # Determine if the spec may have been marked as failed by a separate
+        # spack build process running concurrently.
+        return self.prefix_failure_marked(spec)
+
+    def prefix_failure_locked(self, spec):
+        """Return True if a process has a failure lock on the spec."""
         try:
+            check = Lock(
+                self.prefix_fail_path,
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=self.package_lock_timeout, desc=spec.name)
+
+            check.acquire_read()
+
+            # If we have a read lock then no other process has a failure lock
+            # indicating an active installation failure for the spec.  There
+            # is no reason to hang on to the read lock itself.
+            check.release_read()
+            del check
+        except LockTimeoutError:
+            # Installation of the prefix has failed in another process holding
+            # a write lock.
+            tty.debug('{0} is falure locked'.format(spec.name))
+            return True
+
+    def prefix_failure_marked(self, spec):
+        """Determine if the spec has a persistent failure marking."""
+        try:
+            path = self._failed_spec_path(spec)
             with open(path) as f:
                 spec2 = spack.spec.Spec.from_json(f)
 
-            # Spec read from file are always concrete
+            # Specs read from a file are always concrete
             spec2._mark_concrete()
-            failed = spec == spec2
+            marked = spec == spec2
         except Exception:
-            failed = False
+            marked = False
 
-        return failed
+        return marked
 
     def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
@@ -1248,8 +1306,48 @@ class Database(object):
             end_date=None,
             hashes=None
     ):
-        """Run a query on the database."""
+        """Run a query on the database
 
+        Args:
+            query_spec: queries iterate through specs in the database and
+                return those that satisfy the supplied ``query_spec``. If
+                query_spec is `any`, This will match all specs in the
+                database.  If it is a spec, we'll evaluate
+                ``spec.satisfies(query_spec)``
+
+            known (bool or any, optional): Specs that are "known" are those
+                for which Spack can locate a ``package.py`` file -- i.e.,
+                Spack "knows" how to install them.  Specs that are unknown may
+                represent packages that existed in a previous version of
+                Spack, but have since either changed their name or
+                been removed
+
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: True)
+
+            explicit (bool or any, optional): A spec that was installed
+                following a specific user request is marked as explicit. If
+                instead it was pulled-in as a dependency of a user requested
+                spec it's considered implicit.
+
+            start_date (datetime, optional): filters the query discarding
+                specs that have been installed before ``start_date``.
+
+            end_date (datetime, optional): filters the query discarding
+                specs that have been installed after ``end_date``.
+
+            hashes (container): list or set of hashes that we can use to
+                restrict the search
+
+        Returns:
+            list of specs that match the query
+
+        """
         # TODO: Specs are a lot like queries.  Should there be a
         # TODO: wildcard spec object, and should specs have attributes
         # TODO: like installed and known that can be queried?  Or are
@@ -1296,17 +1394,11 @@ class Database(object):
 
         return results
 
-    _query.__doc__ += _query_docstring
-
     def query_local(self, *args, **kwargs):
-        """Query only the local Spack database."""
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
-    query_local.__doc__ += _query_docstring
-
     def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases."""
         upstream_results = []
         for upstream_db in self.upstream_dbs:
             # queries for upstream DBs need to *not* lock - we may not
@@ -1320,8 +1412,6 @@ class Database(object):
             x for x in upstream_results if x not in local_results)
 
         return sorted(results)
-
-    query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.

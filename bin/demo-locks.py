@@ -133,8 +133,8 @@ class BuildManager(object):
         # Mapping of build spec name to build task
         self.build_tasks = {}
 
-        # Cache of packages that have failed to install
-        self.failed = []
+        # Cache of packages that have failed to install (with locks)
+        self.failed = {}
 
         # Cache of installed packages
         self.installed = set()
@@ -211,12 +211,31 @@ class BuildManager(object):
         for spec_name in self.locks:
             self._release_lock(spec_name)
 
+        for spec_name in self.failed:
+            self._cleanup_failed(spec_name)
+
         task_names = list(self.build_tasks.keys())
         for name in task_names:
             try:
                 self._remove_task(name)
             except Exception:
                 pass
+
+    def _cleanup_failed(self, spec_name):
+        """Cleanup any failed mark for the spec."""
+        if spec_name in self.failed:
+            err = "{0} exception when removing failure mark for {1}: {2}"
+            msg = 'Removing failure mark on {0}'
+            lock = self.failed[spec_name]
+            if lock is not None:
+                try:
+                    tty.verbose(msg.format(spec_name))
+                    lock.release_write()
+                except AssertionError:
+                    pass
+                except Exception as exc:
+                    tty.warn(err.format(exc.__class__.__name__, spec_name,
+                                        str(exc)))
 
     def _cleanup_task(self, spec, remove_task):
         """Cleanup the build task for the spec."""
@@ -247,8 +266,8 @@ class BuildManager(object):
                 if nolock:
                     tty.debug(msg.format('Acquiring', name))
                     op = 'acquire'
-                    timeout = spack.store.db.package_lock_timeout
-                    lock = spack.store.db.prefix_lock(spec, timeout)
+                    # timeout = spack.store.db.package_lock_timeout
+                    lock = spack.store.db.prefix_lock(spec, 2)
                     lock.acquire_read()
                 else:
                     tty.debug(msg.format('Downgrading to', name))
@@ -306,11 +325,16 @@ class BuildManager(object):
         return 'write', lock
 
     def _init_queue(self, install_self):
-        """Initialize the build task priority queue."""
+        """Initialize the build task priority queue and spec state."""
         tty.debug('Initializing the build queue for {0}'.format(self.name))
         for spec in self.spec.traverse():
             if spec.name != self.name:
                 self._push_task(spec, 0, 0, STATUS_ADDED)
+
+                # Clear any persistent failure markings _unless_ they are
+                # associated with another process in this parallel build
+                # of the spec.
+                spack.store.db.clear_failure(spec, force=False)
 
         # TODO/TBD: How should ensuring compilers installed for self.spec
         # TODO/TBD:   fit in when only installing dependencies?  Current
@@ -352,9 +376,13 @@ class BuildManager(object):
 
             # TODO: Fork the current build_process
             time.sleep(BUILD_TIME)
-            success = False if name == FAIL_SPEC else True
 
-            if success:
+            if name == FAIL_SPEC and not spack.store.db.prefix_failed(spec):
+                # TODO: Remove the following message
+                log('  Build of {0} failed'.format(name))
+                self._update_failed(task, mark=True)
+                spack.store.layout.remove_install_directory(spec)
+            else:
                 # TODO: Add the entry to the database
 
                 # TODO: Remove the following message
@@ -364,11 +392,6 @@ class BuildManager(object):
                 # Perform basic task cleanup for the installed spec to
                 # include downgrading the write to a read lock
                 self._cleanup_task(spec, True)
-            else:
-                # TODO: Remove the following message
-                log('  Build of {0} failed'.format(name))
-                self._update_failed(task, mark=True)
-                spack.store.layout.remove_install_directory(spec)
 
         except spack.directory_layout.InstallDirectoryAlreadyExistsError:
             tty.warn("Keeping existing install prefix in place.")
@@ -503,9 +526,11 @@ class BuildManager(object):
         name = task.name
         tty.debug('Flagging {0} as failed'.format(name))
         if mark:
-            spack.store.db.mark_failed(task.spec)
-        self.failed.append(name)
+            self.failed[name] = spack.store.db.mark_failed(task.spec)
+        else:
+            self.failed[name] = None
         task.status = STATUS_FAILED
+
         for dep_name in task.dependents:
             if dep_name in self.build_tasks:
                 tty.warn('Skipping build of {0} since {1} failed'
@@ -518,9 +543,9 @@ class BuildManager(object):
             else:
                 tty.verbose('No build task for {0} to skip since {1} failed'
                             .format(dep_name, name))
-            self._release_lock(dep_name)  # Should not have lock but make sure
+            # TODO: self._release_lock(dep_name)
 
-        self._release_lock(task.name)
+        # TODO: self._release_lock(task.name)
 
     def _update_installed(self, task):
         """
@@ -615,6 +640,12 @@ class BuildManager(object):
             if lock is None:
                 self._requeue_task(task)
                 continue
+
+            # # Determine if the installation of the spec failed.
+            # if name in self.failed or spack.store.db.prefix_failed(spec):
+            #     tty.warn('{0} failed to install'.format(name))
+            #     self._update_failed(task)
+            #     continue
 
             # Determine state of installation artifacts and adjust accordingly.
             restage = False
