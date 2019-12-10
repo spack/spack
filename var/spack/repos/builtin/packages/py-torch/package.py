@@ -125,12 +125,12 @@ class PyTorch(PythonPackage):
     depends_on('cudnn@7:', when='@1.1:+cudnn')
     depends_on('magma', when='+magma')
     # TODO: add dependency: https://github.com/pytorch/FBGEMM
-    depends_on('fbgemm', when='+fbgemm')
+    # depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
-    depends_on('miopen', when='+miopen')
+    # depends_on('miopen', when='+miopen')
     depends_on('intel-mkl-dnn', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
-    depends_on('nnpack', when='+nnpack')
+    # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
