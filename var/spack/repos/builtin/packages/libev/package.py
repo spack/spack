@@ -11,7 +11,7 @@ class Libev(AutotoolsPackage):
     after libevent, but without its limitations and bugs."""
 
     homepage = "http://software.schmorp.de/pkg/libev.html"
-    url      = "http://dist.schmorp.de/libev/libev-4.24.tar.gz"
+    url      = "http://dist.schmorp.de/libev/Attic/libev-4.24.tar.gz"
     git      = "https://github.com/enki/libev.git"
     list_url = "http://dist.schmorp.de/libev/Attic/"
 
