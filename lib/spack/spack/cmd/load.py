@@ -6,6 +6,8 @@
 import argparse
 import sys
 
+import llnl.util.tty as tty
+
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
@@ -50,8 +52,8 @@ def load(parser, args):
             'Or, if you want to use `spack load` without initializing',
             'shell support, you can run one of these:',
             '',
-            '    eval `spack load --sh %s`   # for bash/sh' % ' '.join(specs),
-            '    eval `spack load --csh %s`  # for csh/tcsh' % ' '.join(specs),
+            '    eval `spack load --sh %s`   # for bash/sh' % args.specs,
+            '    eval `spack load --csh %s`  # for csh/tcsh' % args.specs,
         ]
         tty.msg(*msg)
         return 1
