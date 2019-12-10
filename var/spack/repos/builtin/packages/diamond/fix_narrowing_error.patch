@@ -1,5 +1,5 @@
---- spack-src/src/basic/score_matrix.cpp.org	2019-12-10 14:49:46.698520161 +0900
-+++ spack-src/src/basic/score_matrix.cpp	2019-12-10 14:50:04.740418478 +0900
+--- diamond-0.9.25/src/basic/score_matrix.cpp.org	2019-12-10 15:16:46.549126025 +0900
++++ diamond-0.9.25/src/basic/score_matrix.cpp	2019-12-10 15:17:08.721466092 +0900
 @@ -36,7 +36,7 @@
  
  const double INT2_MAX = std::numeric_limits<double>::max();
@@ -14,5 +14,5 @@
  	constants[4] = K;
  	constants_ = constants;
 -}
-\ ファイル末尾に改行がありません
+\ No newline at end of file
 +}
