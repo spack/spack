@@ -315,7 +315,8 @@ class Qt(Package):
             '-v',
             '-opensource',
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
-            '-{0}use-gold-linker'.format('' if '+gold' in self.spec else 'no-'),
+            '-{0}use-gold-linker'.format(
+                '' if '+gold' in self.spec else 'no-'),
             '-release',
             '-confirm-license',
             '-openssl-linked',
