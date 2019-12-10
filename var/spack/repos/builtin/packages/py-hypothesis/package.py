@@ -27,5 +27,5 @@ class PyHypothesis(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-attrs@19.2.0:', type=('build', 'run'), when='@4.41.2:')
-    depends_on('py-attrs@19.1.0:', type=('build', 'run'), when='@4.24.3:')
+    depends_on('py-attrs@16.0.0:', type=('build', 'run'), when='@4.24.3:')
     depends_on('py-enum34', type=('build', 'run'), when='^python@:2')
