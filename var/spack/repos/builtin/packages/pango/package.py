@@ -70,4 +70,3 @@ class Pango(AutotoolsPackage):
         # ImportError: No module named site
         # during build phase when make runs glib-mkenums
         env.unset('PYTHONHOME')
-
