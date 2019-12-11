@@ -66,16 +66,16 @@ class HpeMpi(Package):
             prefix
         )
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         bindir = self.prefix.bin
-        spack_env.set('MPICC',  join_path(bindir, 'mpicc'))
-        spack_env.set('MPICXX', join_path(bindir, 'mpicxx'))
-        spack_env.set('MPIF77', join_path(bindir, 'mpif77'))
-        spack_env.set('MPIF90', join_path(bindir, 'mpif90'))
+        env.set('MPICC',  join_path(bindir, 'mpicc'))
+        env.set('MPICXX', join_path(bindir, 'mpicxx'))
+        env.set('MPIF77', join_path(bindir, 'mpif77'))
+        env.set('MPIF90', join_path(bindir, 'mpif90'))
 
-        spack_env.set('MPICC_CC', spack_cc)
-        spack_env.set('MPICXX_CXX', spack_cxx)
-        spack_env.set('MPIF90_F90', spack_fc)
+        env.set('MPICC_CC', spack_cc)
+        env.set('MPICXX_CXX', spack_cxx)
+        env.set('MPIF90_F90', spack_fc)
 
     def setup_dependent_package(self, module, dep_spec):
         bindir = self.prefix.bin

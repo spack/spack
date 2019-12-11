@@ -32,7 +32,6 @@ modules:
       - brainbuilder
       - brayns
       - brayns-brainatlas
-      - brayns-graphs
       - brayns-topologyviewer
       - brion
       - connectome-tools

@@ -20,3 +20,5 @@ class Emsim(CMakePackage):
     depends_on('brion')
     # Eyescale cmake requires Python (!)
     depends_on('python@3.6:', type='build')
+
+    patch('cmake.patch')

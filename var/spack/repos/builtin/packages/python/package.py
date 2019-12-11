@@ -698,6 +698,9 @@ class Python(AutotoolsPackage):
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
 
+        if self.spec.satisfies('%intel'):
+            env.set('LDSHARED', '%s -shared' % spack_cc)
+
         # If we set PYTHONHOME, we must also ensure that the corresponding
         # python is found in the build environment. This to prevent cases
         # where a system provided python is run against the standard libraries
@@ -724,9 +727,6 @@ class Python(AutotoolsPackage):
         if dependent_spec.package.extends(self.spec):
             env.prepend_path('PYTHONPATH', join_path(
                 dependent_spec.prefix, self.site_packages_dir))
-
-        if self.spec.satisfies('%intel'):
-            spack_env.set('LDSHARED', '%s -shared' % spack_cc)
 
         # For run time environment set path for all dependent_spec
         # recursively and prepend it to PYTHONPATH

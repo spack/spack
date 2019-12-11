@@ -286,25 +286,27 @@ class Neuron(Package):
         filter_file(env['CXX'], cxx_compiler, nrniv_makefile, **kwargs)
 
     @when('+python')
-    def set_python_path(self, run_env):
+    def set_python_path(self, env):
         for pydir in (self.spec.prefix.lib64.python, self.spec.prefix.lib.python):
             if os.path.isdir(pydir):
-                run_env.prepend_path('PYTHONPATH', pydir)
+                env.prepend_path('PYTHONPATH', pydir)
                 break
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         neuron_archdir = self.get_neuron_archdir()
-        run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
-        self.set_python_path(run_env)
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        self.set_python_path(env)
         if self.spec.satisfies('+mpi'):
-            run_env.set('MPICC_CC', self.compiler.cc)
+            env.set('MPICC_CC', self.compiler.cc)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
-        spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        spack_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
-        self.set_python_path(run_env)
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.set_python_path(env)
 
     def setup_dependent_package(self, module, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()

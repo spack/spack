@@ -77,15 +77,16 @@ class Spykfunc(PythonPackage):
     depends_on('py-pyspark@2.3.2rc2:', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
         # activate all python packages.
-        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
+        env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
-        run_env.set('JAVA_HOME', self.spec['java'].prefix)
-        run_env.set('SPARK_HOME', self.spec['spark'].prefix)
-        run_env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
+    def setup_run_environment(self, env):
+        env.set('JAVA_HOME', self.spec['java'].prefix)
+        env.set('SPARK_HOME', self.spec['spark'].prefix)
+        env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
 
-        run_env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
-        run_env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
-        run_env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))
+        env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
+        env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
+        env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))

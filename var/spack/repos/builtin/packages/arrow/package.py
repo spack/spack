@@ -53,6 +53,7 @@ class Arrow(CMakePackage):
     def cmake_args(self):
         args = [
             "-DBoost_DEBUG=ON",
+            "-DBUILD_SHARED_LIBS=ON",
             "-DARROW_USE_SSE=ON",
             "-DARROW_BUILD_SHARED=ON",
             "-DARROW_BUILD_STATIC=OFF",

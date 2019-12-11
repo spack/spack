@@ -147,10 +147,12 @@ class SimModel(Package):
         if self.spec.satisfies('+coreneuron'):
             shutil.move(join_path(arch, 'core/mod2c'), prefix.share.modc_core)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.unset('LC_ALL')
-        run_env.set('NRNMECH_LIB_PATH', self.spec.prefix.lib.join('libnrnmech.so'))
-        run_env.set('BGLIBPY_MOD_LIBRARY_PATH', self.spec.prefix.lib.join('libnrnmech.so'))
+    def setup_build_environment(self, env):
+        env.unset('LC_ALL')
+
+    def setup_run_environment(self, env):
+        env.set('NRNMECH_LIB_PATH', self.spec.prefix.lib.join('libnrnmech.so'))
+        env.set('BGLIBPY_MOD_LIBRARY_PATH', self.spec.prefix.lib.join('libnrnmech.so'))
 
 
 @contextmanager

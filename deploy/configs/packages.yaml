@@ -86,12 +86,14 @@ packages:
         version: [17.02]
     steps:
         variants: +lapack+petsc+mpi
+    superlu-dist:
+        variants: +int64
     tar:
         paths:
             tar@1.26: /usr
         version: [1.26]
     trilinos:
-        variants: +kokkos+teuchos+openmp~amesos~amesos2~aztec~epetra~epetraext~hypre~ifpack~ifpack2~superlu-dist~mumps~muelu~metis~suite-sparse~tpetra~zoltan~zoltan2
+        variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [xsdk-0.4.0-rc1]
     all:
         compiler: [gcc@8.3.0, intel@19.0.4]

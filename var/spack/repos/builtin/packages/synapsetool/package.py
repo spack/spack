@@ -59,7 +59,7 @@ class Synapsetool(CMakePackage):
     depends_on('libsonata+mpi', when='+mpi')
     depends_on('libsonata~mpi', when='~mpi')
 
-    patch("tests-unit-cmake.patch", when="@:0.5.4")
+    patch("tests-unit-cmake.patch")
 
     @property
     def libs(self):
