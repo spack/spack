@@ -13,6 +13,7 @@ class PyNotebook(PythonPackage):
     url      = "https://pypi.io/packages/source/n/notebook/notebook-4.2.3.tar.gz"
 
     version('6.0.1', sha256='660976fe4fe45c7aa55e04bf4bccb9f9566749ff637e9020af3422f9921f9a5d')
+    version('5.7.8', sha256='573e0ae650c5d76b18b6e564ba6d21bf321d00847de1d215b418acb64f056eb8')
     version('4.2.3', sha256='39a9603d3fe88b60de2903680c965cf643acf2c16fb2c6bac1d905e1042b5851')
     version('4.2.2', sha256='418ba230c9b2e7e739940cae9fb4625e10a63f038e9c95cf1a9b7a244256ba38')
     version('4.2.1', sha256='a49de524dabb99f214bdf2a58f26c7892650251a23a3669c6492fb180492e197')
