@@ -73,9 +73,7 @@ class FontUtil(AutotoolsPackage):
 
     variant('fonts',
             description='Installs fonts',
-            values=fonts,
-            default=','.join(fonts),
-            multi=True)
+            values=any_combination_of(*fonts).with_default(','.join(fonts)))
 
     def setup_build_environment(self, env):
         env.prepend_path('PATH', self.prefix.bin)
@@ -83,7 +81,7 @@ class FontUtil(AutotoolsPackage):
 
     @run_after('install')
     def font_install(self):
-        if 'none' in fonts:
+        if fonts == ('none',):
             return
 
         autoconf_args = ['-ifv']
