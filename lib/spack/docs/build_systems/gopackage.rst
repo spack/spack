@@ -104,10 +104,11 @@ bit of extra work.
 
 In particular, in order to satisfy Spack's requirement that nothing is
 downloaded during the build step, the package needs to define
-"resources" that describe from whence to fetch each dependency, where
-to emplace it, and the version of the package to which it applies.  It
-is possible (likely) that each release of the project will have a
-different set of resources definitions.
+"resources" (details in :ref:`resources`) that describe from whence to
+fetch each dependency, where to emplace it, and the version of the
+package to which it applies.  It is possible (likely) that each
+release of the project will have a different set of resources
+definitions.
 
 We're following the approach used by the FreeBSD Ports team (for the
 curious, their Porters Handbook includes more details about `how to
