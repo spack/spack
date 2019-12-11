@@ -66,6 +66,7 @@ class Llvm(CMakePackage):
         description="NVIDIA compute cabailities to make inlining capable",
     )
 
+    variant("omp_debug", default=False, description="Include debugging code in OpenMP runtime libraries")
     variant("lldb", default=True, description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
     variant(
@@ -345,6 +346,9 @@ class Llvm(CMakePackage):
                 ]
             )
 
+        if "+omp_debug" in spec:
+            cmake_args.append("-DLIBOMPTARGET_ENABLE_DEBUG:Bool=ON")
+
         if "+python" in spec and "+lldb" in spec and spec.satisfies("@5.0.0:"):
             cmake_args.append("-DLLDB_USE_SYSTEM_SIX:Bool=TRUE")
 
@@ -376,6 +380,8 @@ class Llvm(CMakePackage):
 
         if "+shared_libs" in spec:
             cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
+        if "+omp_debug" in spec:
+            cmake_args.append("-DLIBOMPTARGET_ENABLE_DEBUG:Bool=ON")
 
         if "+split_dwarf" in spec:
             cmake_args.append("-DLLVM_USE_SPLIT_DWARF:Bool=ON")
@@ -469,8 +475,9 @@ class Llvm(CMakePackage):
                 )
                 # work around bad libelf detection in libomptarget
                 cmake_args.append(
-                    "-DCMAKE_CXX_FLAGS:String=-I{0}".format(
-                        spec["libelf"].prefix.include
+                    "-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}".format(
+                        spec["libelf"].prefix.include,
+                        spec["hwloc"].prefix.include,
                     )
                 )
                 cmake_args.append(
