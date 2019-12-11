@@ -26,4 +26,5 @@ class Diamond(CMakePackage):
     depends_on('zlib')
 
     # fix error [-Wc++11-narrowing]
+    # Ref: https://github.com/bbuchfink/diamond/commit/155e076d662b0e9268e2b00bef6d33d90aede7ff
     patch('fix_narrowing_error.patch')
