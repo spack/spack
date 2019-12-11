@@ -27,7 +27,7 @@ class PyNotebook(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@6:')
     depends_on('py-setuptools', type='build', when='@5:')
     depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py_tornado@4.0:6.999', type=('build', 'run'), when='@:5.7.4')
+    depends_on('py-tornado@4.0:6.999', type=('build', 'run'), when='@:5.7.4')
     depends_on('py-tornado@4.1:6.999', type=('build', 'run'), when='@5.7.5:6.0.1')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
