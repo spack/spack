@@ -35,19 +35,6 @@ def get_env_var(variable_name):
     return None
 
 
-def find_nearest_repo_ancestor(somepath):
-    if os.path.isdir(somepath):
-        if '.git' in os.listdir(somepath):
-            return somepath
-
-        if somepath == '/':
-            return None
-
-    parent_path = os.path.dirname(somepath)
-
-    return find_nearest_repo_ancestor(parent_path)
-
-
 def setup_parser(subparser):
     setup_parser.parser = subparser
     subparsers = subparser.add_subparsers(help='CI sub-commands')

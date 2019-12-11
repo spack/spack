@@ -10,21 +10,30 @@ import llnl.util.filesystem as fs
 
 import spack
 import spack.ci as ci
+import spack.config
 import spack.environment as ev
+import spack.util.gpg as gpg_util
 from spack.main import SpackCommand
+import spack.paths as spack_paths
 import spack.repo as repo
 from spack.spec import Spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.util.executable as exe
+import spack.util.spack_yaml as syaml
 
 
 ci_cmd = SpackCommand('ci')
 env_cmd = SpackCommand('env')
+mirror_cmd = SpackCommand('mirror')
 git = exe.which('git', required=True)
 
 
-pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_packages')
+@pytest.fixture(scope='function')
+def testing_gpg_directory(tmpdir):
+    old_gpg_path = gpg_util.GNUPGHOME
+    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
+    yield
+    gpg_util.GNUPGHOME = old_gpg_path
 
 
 @pytest.fixture()
@@ -63,6 +72,10 @@ def get_repo_status(repo_path):
         current_sha = output.split()[0]
 
         return current_branch, current_sha
+
+
+def set_env_var(key, val):
+    os.environ[key] = val
 
 
 def test_specs_staging(config):
@@ -134,19 +147,31 @@ def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
         f.write("""\
 spack:
   definitions:
-    - packages: [archive-files]
+    - bootstrap:
+      - cmake@3.4.3
+    - old-gcc-pkgs:
+      - archive-files
+      - callpath
+      - hypre@0.2.15
   specs:
-    - $packages
+    - matrix:
+      - [$old-gcc-pkgs]
   mirrors:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
+    bootstrap:
+      - name: bootstrap
+        compiler-agnostic: true
     mappings:
       - match:
-          - archive-files
+          - arch=test-debian6-x86_64
         runner-attributes:
           tags:
             - donotcare
           image: donotcare
+    final-stage-rebuild-index:
+      image: donotcare
+      tags: [donotcare]
   cdash:
     build-group: Not important
     url: https://my.fake.cdash
@@ -162,8 +187,86 @@ spack:
 
         with open(outputfile) as f:
             contents = f.read()
-            assert('archive-files' in contents)
-            assert('stages: [stage-0' in contents)
+            yaml_contents = syaml.load(contents)
+            print(yaml_contents)
+            found_spec = False
+            for ci_key in yaml_contents.keys():
+                if '(bootstrap)' in ci_key:
+                    found_spec = True
+                    assert('cmake' in ci_key)
+            assert(found_spec)
+            assert('stages' in yaml_contents)
+            assert(len(yaml_contents['stages']) == 6)
+            assert(yaml_contents['stages'][0] == 'stage-0')
+            assert(yaml_contents['stages'][5] == 'stage-rebuild-index')
+
+
+def test_ci_rebuild_basic(tmpdir, mutable_mock_env_path, env_deactivate,
+                          install_mockery, mock_packages,
+                          testing_gpg_directory):
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    signing_key_dir = spack_paths.mock_gpg_keys_path
+    signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
+    with open(signing_key_path) as fd:
+        signing_key = fd.read()
+
+    spack_yaml_contents = """
+spack:
+ definitions:
+   - packages: [archive-files]
+ specs:
+   - $packages
+ mirrors:
+   test-mirror: {0}
+ gitlab-ci:
+   enable-artifacts-buildcache: True
+   mappings:
+     - match:
+         - archive-files
+       runner-attributes:
+         tags:
+           - donotcare
+         image: donotcare
+ cdash:
+   build-group: Not important
+   url: https://my.fake.cdash
+   project: Not used
+   site: Nothing
+""".format(mirror_url)
+
+    print('spack.yaml:\n{0}\n'.format(spack_yaml_contents))
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            root_spec = ('eJyNjsGOwyAMRO/5Ct96alRFFK34ldUqcohJ6BJAQFHUry9Nk66'
+                         'UXNY3v5mxJ3qSojoDBjnqTGelDUVRQZlMIWpnBZya+nJa0Mv1Fg'
+                         'G8waRcmAQkimkHWxcF9NRptHyVEoaBkoD5i7ecLVC6yZd/YTtpc'
+                         'SIBg5Tr/mnA6mt9qTZL9CiLr7trk7StJyd/F81jKGoqoe2gVAaH'
+                         '0uT7ZwPeH9A875HaA9MfidHdHxgxjgJuTGVtIrvfHGtynjkGyzi'
+                         'xRrkHy94t1lftvv1n4AkVK3kQ')
+
+            # Create environment variables as gitlab would do it
+            set_env_var('CI_PROJECT_DIR', working_dir.strpath)
+            set_env_var('SPACK_SIGNING_KEY', signing_key)
+            set_env_var('SPACK_ROOT_SPEC', root_spec)
+            set_env_var('SPACK_JOB_SPEC_PKG_NAME', 'archive-files')
+            set_env_var('SPACK_COMPILER_ACTION', 'NONE')
+            set_env_var('SPACK_CDASH_BUILD_NAME', '(specs) archive-files')
+            set_env_var('SPACK_RELATED_BUILDS_CDASH', '')
+
+            rebuild_output = ci_cmd(
+                'rebuild', fail_on_error=False, output=str)
+
+            print(rebuild_output)
 
 
 def test_ci_pushyaml(tmpdir):

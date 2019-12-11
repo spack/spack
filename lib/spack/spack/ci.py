@@ -761,7 +761,7 @@ def import_signing_key(base64_signing_key):
     tty.msg(signing_keys_output)
 
 
-def configure_compilers(compiler_action):
+def configure_compilers(compiler_action, scope=None):
     if compiler_action == 'INSTALL_MISSING':
         tty.msg('Make sure bootstrapped compiler will be installed')
         config = cfg.get('config')
@@ -769,7 +769,10 @@ def configure_compilers(compiler_action):
         cfg.set('config', config)
     elif compiler_action == 'FIND_ANY':
         tty.msg('Just find any available compiler')
-        output = spack_compiler('find')
+        find_args = ['find']
+        if scope:
+            find_args.extend(['--scope', scope])
+        output = spack_compiler(*find_args)
         tty.msg('spack compiler find')
         tty.msg(output)
         output = spack_compiler('list')
@@ -818,17 +821,7 @@ def get_concrete_specs(root_spec, job_name, related_builds, compiler_action,
         # compiler needed to be stripped from the spec when we generated
         # the job), and thus we need to concretize the root spec again.
         tty.msg('about to concretize {0}'.format(root_spec))
-        tty.msg('supposedly the only available compilers are:')
-        compiler_config = cfg.get('compilers')
-        for comp in compiler_config:
-            tty.msg('  {0}'.format(comp))
-        if real_compilers:
-            with cfg.override("compilers", real_compilers):
-                tty.msg('Overriding compiler cfg to concretize {0}'.format(
-                    root_spec))
-                concrete_root = Spec(root_spec).concretized()
-        else:
-            concrete_root = Spec(root_spec).concretized()
+        concrete_root = Spec(root_spec).concretized()
         tty.msg('And now here is my concrete root: {0}'.format(concrete_root))
     else:
         # in this case, either we're relying on Spack to install missing
