@@ -23,10 +23,10 @@ class PyPox(PythonPackage):
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/p/pox/"
-        if version >= Version('0.2.5'):
+        if version >= Version('0.2.4'):
             url += 'pox-{0}.tar.gz'
         else:
             url += 'pox-{0}.zip'
 
-        url = url.format(str(version))
+        url = url.format(version)
         return url
