@@ -27,7 +27,7 @@ class PyNotebook(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@6:')
     depends_on('py-setuptools', type='build', when='@5:')
     depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py_tornado@4.0:6.999', type=('build', 'run'), when='@:5.7.4'
+    depends_on('py_tornado@4.0:6.999', type=('build', 'run'), when='@:5.7.4')
     depends_on('py-tornado@4.1:6.999', type=('build', 'run'), when='@5.7.5:6.0.1')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
@@ -43,7 +43,7 @@ class PyNotebook(PythonPackage):
     depends_on('py-ipykernel@:5.0.0', when='@4.2.0: ^python@:2.8', type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
     depends_on('py-prometheus-client', type=('build', 'run'), when='@5.7.0:')
-    depends_on('py-terminado@0.3.3:', type=('build', 'run'), when='@:5.7.0)
+    depends_on('py-terminado@0.3.3:', type=('build', 'run'), when='@:5.7.0')
     depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-send2trash', type=('build', 'run'), when='@6:')
     depends_on('py-pyzmq@17:', type=('build', 'run'), when='@6:')
