@@ -433,11 +433,12 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
     if 'gitlab-ci' not in yaml_root:
         tty.die('Environment yaml does not have "gitlab-ci" section')
 
-    ci_mappings = yaml_root['gitlab-ci']['mappings']
+    gitlab_ci = yaml_root['gitlab-ci']
+    ci_mappings = gitlab_ci['mappings']
 
     final_job_config = None
-    if 'final-stage-rebuild-index' in yaml_root['gitlab-ci']:
-        final_job_config = yaml_root['gitlab-ci']['final-stage-rebuild-index']
+    if 'final-stage-rebuild-index' in gitlab_ci:
+        final_job_config = gitlab_ci['final-stage-rebuild-index']
 
     build_group = None
     enable_cdash_reporting = False
@@ -449,9 +450,6 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
         build_group = ci_cdash['build-group']
         cdash_url = ci_cdash['url']
         cdash_project = ci_cdash['project']
-        proj_enc = urlencode({'project': cdash_project})
-        eq_idx = proj_enc.find('=') + 1
-        cdash_project_enc = proj_enc[eq_idx:]
         cdash_site = ci_cdash['site']
 
         if cdash_credentials_path:
@@ -475,17 +473,24 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
             'popd',
             '. "${SPACK_CLONE_LOCATION}/spack/share/spack/setup-env.sh"',
         ]
-        after_script = [
-            'rm -rf "${SPACK_CLONE_LOCATION}"'
-        ]
+        # Variables defined in 'before_script' and 'script' may not be
+        # available in 'after_script', so this has moved into the 'script'
+        # section.
+        # after_script = [
+        #     'rm -rf "${SPACK_CLONE_LOCATION}"'
+        # ]
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
 
+    enable_artifacts_buildcache = False
+    if 'enable-artifacts-buildcache' in gitlab_ci:
+        enable_artifacts_buildcache = gitlab_ci['enable-artifacts-buildcache']
+
     bootstrap_specs = []
     phases = []
-    if 'bootstrap' in yaml_root['gitlab-ci']:
-        for phase in yaml_root['gitlab-ci']['bootstrap']:
+    if 'bootstrap' in gitlab_ci:
+        for phase in gitlab_ci['bootstrap']:
             try:
                 phase_name = phase.get('name')
                 strip_compilers = phase.get('compiler-agnostic')
@@ -577,7 +582,14 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                 job_name = get_job_name(phase_name, strip_compilers,
                                         release_spec, osname, build_group)
 
-                job_scripts = ['spack -d ci rebuild']
+                debug_flag = ''
+                if 'enable-debug-messages' in gitlab_ci:
+                    debug_flag = '-d '
+
+                job_scripts = ['spack {0}ci rebuild'.format(debug_flag)]
+
+                if custom_spack_repo:
+                    job_scripts.append('rm -rf "${SPACK_CLONE_LOCATION}"')
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:
@@ -586,7 +598,6 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                         compiler_action = 'INSTALL_MISSING'
 
                 job_vars = {
-                    'SPACK_MIRROR_URL': mirror_urls[0],
                     'SPACK_ROOT_SPEC': format_root_spec(
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
@@ -636,17 +647,19 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                             [spec_labels[d]['spec'].name
                                 for d in dependencies[spec_label]])
 
-                    job_vars['SPACK_CDASH_BASE_URL'] = cdash_url
-                    job_vars['SPACK_CDASH_PROJECT'] = cdash_project
-                    job_vars['SPACK_CDASH_PROJECT_ENC'] = cdash_project_enc
                     job_vars['SPACK_CDASH_BUILD_NAME'] = cdash_build_name
-                    job_vars['SPACK_CDASH_SITE'] = cdash_site
-                    job_vars['SPACK_RELATED_BUILDS'] = ';'.join(related_builds)
-                    job_vars['SPACK_JOB_SPEC_BUILDGROUP'] = build_group
-
-                job_vars['SPACK_ENABLE_CDASH'] = str(enable_cdash_reporting)
+                    job_vars['SPACK_RELATED_BUILDS_CDASH'] = ';'.join(
+                        related_builds)
 
                 variables.update(job_vars)
+
+                artifact_paths = [
+                    'jobs_scratch_dir',
+                    'cdash_report',
+                ]
+
+                if enable_artifacts_buildcache:
+                    artifact_paths.append('local_mirror/build_cache')
 
                 job_object = {
                     'stage': stage_name,
@@ -654,11 +667,7 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                     'script': job_scripts,
                     'tags': tags,
                     'artifacts': {
-                        'paths': [
-                            'jobs_scratch_dir',
-                            'cdash_report',
-                            'local_mirror/build_cache',
-                        ],
+                        'paths': artifact_paths,
                         'when': 'always',
                     },
                     'dependencies': job_dependencies,
@@ -778,38 +787,13 @@ def configure_compilers(compiler_action, scope=None):
         output = spack_compiler('list')
         tty.msg('spack compiler list')
         tty.msg(output)
-        compiler_config = cfg.get('compilers')
-        real_compilers = []
-
-        for comp in compiler_config:
-            tty.msg('Next compiler')
-            tty.msg('  {0}'.format(comp))
-            compiler_paths = comp['compiler']['paths']
-            for c_path in compiler_paths:
-                if compiler_paths[c_path]:
-                    break
-            else:
-                # Never found a "truthy" compiler path for this particular
-                # compiler
-                continue
-            real_compilers.append(comp)
-
-        tty.msg('Found real compilers')
-
-        for real_comp in real_compilers:
-            tty.msg('Next compiler')
-            tty.msg('  {0}'.format(real_comp))
-
-        cfg.set('compilers', real_compilers)
-        return real_compilers
     else:
         tty.msg('No compiler action to be taken')
 
     return None
 
 
-def get_concrete_specs(root_spec, job_name, related_builds, compiler_action,
-                       real_compilers=[]):
+def get_concrete_specs(root_spec, job_name, related_builds, compiler_action):
     spec_map = {
         'root': None,
         'deps': {},

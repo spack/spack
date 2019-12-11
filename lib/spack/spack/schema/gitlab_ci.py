@@ -96,6 +96,14 @@ properties = {
                     },
                 },
             },
+            'enable-artifacts-buildcache': {
+                'type': 'boolean',
+                'default': False,
+            },
+            'enable-debug-messages': {
+                'type': 'boolean',
+                'default': False,
+            },
             'final-stage-rebuild-index': {
                 'type': 'object',
                 'additionalProperties': False,

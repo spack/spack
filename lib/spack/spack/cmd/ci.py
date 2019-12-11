@@ -7,6 +7,8 @@ import os
 import shutil
 import sys
 
+from six.moves.urllib.parse import urlencode
+
 import llnl.util.tty as tty
 
 import spack.binary_distribution as bindist
@@ -238,56 +240,82 @@ def ci_rebuild(args):
        maybe still needing to be concretized) and 2) a package name used to
        index that root spec (once the root is, for certain, concrete)."""
     env = ev.get_env(args, 'ci rebuild', required=True)
+    yaml_root = ev.config_dict(env.yaml)
+
+    # The following environment variables should defined in the CI
+    # infrastructre (or some other external source) in the case that the
+    # remote mirror is an S3 bucket.  The AWS keys are used to upload
+    # buildcache entries to S3 using the boto3 api.
+    #
+    # AWS_ACCESS_KEY_ID
+    # AWS_SECRET_ACCESS_KEY
+    # S3_ENDPOINT_URL (only needed for non-AWS S3 implementations)
+    #
+    # If present, we will import the  SPACK_SIGNING_KEY using the
+    # "spack gpg trust" command, so it can be used both for verifying
+    # dependency buildcache entries and signing the buildcache entry we create
+    # for our target pkg.
+    #
+    # SPACK_SIGNING_KEY
 
     ci_artifact_dir = get_env_var('CI_PROJECT_DIR')
     signing_key = get_env_var('SPACK_SIGNING_KEY')
-    spack_enable_cdash = get_env_var('SPACK_ENABLE_CDASH')
     root_spec = get_env_var('SPACK_ROOT_SPEC')
-    remote_mirror_url = get_env_var('SPACK_MIRROR_URL')
-    enable_artifacts_mirror = get_env_var('SPACK_ENABLE_ARTIFACTS_MIRROR')
     job_spec_pkg_name = get_env_var('SPACK_JOB_SPEC_PKG_NAME')
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
-    cdash_base_url = get_env_var('SPACK_CDASH_BASE_URL')
-    cdash_project = get_env_var('SPACK_CDASH_PROJECT')
-    cdash_project_enc = get_env_var('SPACK_CDASH_PROJECT_ENC')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
-    cdash_site = get_env_var('SPACK_CDASH_SITE')
-    related_builds = get_env_var('SPACK_RELATED_BUILDS')
-    job_spec_buildgroup = get_env_var('SPACK_JOB_SPEC_BUILDGROUP')
+    related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
 
-    enable_cdash = True if spack_enable_cdash == 'True' else False
+    gitlab_ci = None
+    if 'gitlab-ci' in yaml_root:
+        gitlab_ci = yaml_root['gitlab-ci']
 
-    tty.msg('ci_artifact_dir = {0}'.format(ci_artifact_dir))
-    tty.msg('enable_cdash = {0}'.format(enable_cdash))
-    tty.msg('root_spec = {0}'.format(root_spec))
-    tty.msg('remote_mirror_url = {0}'.format(remote_mirror_url))
-    tty.msg('enable_artifacts_mirror = {0}'.format(enable_artifacts_mirror))
-    tty.msg('job_spec_pkg_name = {0}'.format(job_spec_pkg_name))
-    tty.msg('compiler_action = {0}'.format(compiler_action))
-    tty.msg('cdash_base_url = {0}'.format(cdash_base_url))
-    tty.msg('cdash_project = {0}'.format(cdash_project))
-    tty.msg('cdash_project_enc = {0}'.format(cdash_project_enc))
-    tty.msg('cdash_build_name = {0}'.format(cdash_build_name))
-    tty.msg('cdash_site = {0}'.format(cdash_site))
-    tty.msg('related_builds = {0}'.format(related_builds))
-    tty.msg('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
+    if not gitlab_ci:
+        tty.die('spack ci rebuild requires an env containing gitlab-ci cfg')
+
+    enable_cdash = False
+    if 'cdash' in yaml_root:
+        enable_cdash = True
+        ci_cdash = yaml_root['cdash']
+        job_spec_buildgroup = ci_cdash['build-group']
+        cdash_base_url = ci_cdash['url']
+        cdash_project = ci_cdash['project']
+        proj_enc = urlencode({'project': cdash_project})
+        eq_idx = proj_enc.find('=') + 1
+        cdash_project_enc = proj_enc[eq_idx:]
+        cdash_site = ci_cdash['site']
+
+    remote_mirror_url = None
+    if 'mirrors' in yaml_root:
+        ci_mirrors = yaml_root['mirrors']
+        mirror_urls = [url for url in ci_mirrors.values()]
+        remote_mirror_url = mirror_urls[0]
+
+    if not remote_mirror_url:
+        tty.die('spack ci rebuild requires and env containing a mirror')
+
+    enable_artifacts_mirror = False
+    if 'enable-artifacts-buildcache' in gitlab_ci:
+        enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
+
+    tty.debug('ci_artifact_dir = {0}'.format(ci_artifact_dir))
+    tty.debug('enable_cdash = {0}'.format(enable_cdash))
+    tty.debug('root_spec = {0}'.format(root_spec))
+    tty.debug('remote_mirror_url = {0}'.format(remote_mirror_url))
+    tty.debug('enable_artifacts_mirror = {0}'.format(enable_artifacts_mirror))
+    tty.debug('job_spec_pkg_name = {0}'.format(job_spec_pkg_name))
+    tty.debug('compiler_action = {0}'.format(compiler_action))
+    tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
+    tty.debug('cdash_project = {0}'.format(cdash_project))
+    tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
+    tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
+    tty.debug('cdash_site = {0}'.format(cdash_site))
+    tty.debug('related_builds = {0}'.format(related_builds))
+    tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     spack_cmd = exe.which('spack')
 
     os.environ['FORCE_UNSAFE_CONFIGURE'] = '1'
-
-    # The following environment variables should have been provided by the CI
-    # infrastructre (or some other external source) in the case that the remote
-    # mirror is an S3 bucket.  The AWS keys are used to upload buildcache
-    # entries to S3 using the boto3 api.  We import the SPACK_SIGNING_KEY using
-    # the "gpg2 --import" command, it is used both for verifying dependency
-    # buildcache entries and signing the buildcache entry we create for our
-    # target pkg.
-    #
-    # AWS_ACCESS_KEY_ID
-    # AWS_SECRET_ACCESS_KEY
-    # AWS_ENDPOINT_URL (only needed for non-AWS S3 implementations)
-    # SPACK_SIGNING_KEY
 
     cdash_report_dir = os.path.join(ci_artifact_dir, 'cdash_report')
     temp_dir = os.path.join(ci_artifact_dir, 'jobs_scratch_dir')
@@ -311,7 +339,7 @@ def ci_rebuild(args):
 
     job_spec_yaml_path = os.path.join(
         spec_dir, '{0}.yaml'.format(job_spec_pkg_name))
-    job_log_file = os.path.join(job_log_dir, 'cdash_log.txt')
+    job_log_file = os.path.join(job_log_dir, 'pipeline_log.txt')
 
     cdash_build_id = None
     cdash_build_stamp = None
@@ -320,29 +348,29 @@ def ci_rebuild(args):
         os.dup2(log_fd.fileno(), sys.stdout.fileno())
         os.dup2(log_fd.fileno(), sys.stderr.fileno())
 
-        tty.msg('job concrete spec path: {0}'.format(job_spec_yaml_path))
+        tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
 
-        spack_ci.import_signing_key(signing_key)
+        if signing_key:
+            spack_ci.import_signing_key(signing_key)
 
-        real_compilers = spack_ci.configure_compilers(compiler_action)
+        spack_ci.configure_compilers(compiler_action)
 
         spec_map = spack_ci.get_concrete_specs(
-            root_spec, job_spec_pkg_name, related_builds, compiler_action,
-            real_compilers)
+            root_spec, job_spec_pkg_name, related_builds, compiler_action)
 
         job_spec = spec_map[job_spec_pkg_name]
 
-        tty.msg('Here is the concrete spec: {0}'.format(job_spec))
+        tty.debug('Here is the concrete spec: {0}'.format(job_spec))
 
         with open(job_spec_yaml_path, 'w') as fd:
             fd.write(job_spec.to_yaml(hash=ht.build_hash))
 
-        tty.msg('Done writing concrete spec')
+        tty.debug('Done writing concrete spec')
 
         # DEBUG
         with open(job_spec_yaml_path) as fd:
-            tty.msg('Just wrote this file, reading it, here are the contents:')
-            tty.msg(fd.read())
+            tty.debug('Wrote spec file, read it back.  Contents:')
+            tty.debug(fd.read())
 
         # DEBUG the root spec
         root_spec_yaml_path = os.path.join(spec_dir, 'root.yaml')
@@ -358,7 +386,7 @@ def ci_rebuild(args):
             if enable_artifacts_mirror:
                 spack_cmd('mirror', 'add', 'local_mirror', artifact_mirror_url)
 
-            tty.msg('listing spack mirrors:')
+            tty.debug('listing spack mirrors:')
             spack_cmd('mirror', 'list')
 
             # 2) build up install arguments
@@ -367,7 +395,7 @@ def ci_rebuild(args):
 
             # 3) create/register a new build on CDash (if enabled)
             if enable_cdash:
-                tty.msg('Registering build with CDash')
+                tty.debug('Registering build with CDash')
                 (cdash_build_id,
                     cdash_build_stamp) = spack_ci.register_cdash_build(
                     cdash_build_name, cdash_base_url, cdash_project,
@@ -385,14 +413,14 @@ def ci_rebuild(args):
 
             install_args.extend(['-f', job_spec_yaml_path])
 
-            tty.msg('Installing package')
+            tty.debug('Installing package')
 
             try:
                 spack_cmd(*install_args)
                 # spack_install(*install_args)
             except Exception as inst:
-                tty.msg('Caught exception during install:')
-                tty.msg(inst)
+                tty.error('Caught exception during install:')
+                tty.error(inst)
 
             try:
                 job_pkg = spack.repo.get(job_spec)
@@ -417,7 +445,7 @@ def ci_rebuild(args):
                        'due to exception: {0}').format(inst)
                 tty.error(msg)
 
-            tty.msg('Creating buildcache')
+            tty.debug('Creating buildcache')
 
             # 4) create buildcache on remote mirror
             buildcache._createtarball(
@@ -425,7 +453,7 @@ def ci_rebuild(args):
                 True, False, False, True, False)
 
             if enable_cdash:
-                tty.msg('Writing .cdashid ({0}) to remote mirror ({1})'.format(
+                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
                     cdash_build_id, remote_mirror_url))
                 spack_ci.write_cdashid_to_mirror(
                     cdash_build_id, job_spec, remote_mirror_url)
@@ -433,14 +461,14 @@ def ci_rebuild(args):
             # 5) create another copy of that buildcache on "local artifact
             # mirror" (if enabled)
             if enable_artifacts_mirror:
-                tty.msg('Creating local artifact buildcache in {0}'.format(
+                tty.debug('Creating local artifact buildcache in {0}'.format(
                     artifact_mirror_url))
                 buildcache._createtarball(
                     env, job_spec_yaml_path, None, artifact_mirror_url, None,
                     True, True, False, False, True, False)
 
                 if enable_cdash:
-                    tty.msg('Writing .cdashid ({0}) to artifacts ({1})'.format(
+                    tty.debug('Writing cdashid ({0}) to artifacts: {1}'.format(
                         cdash_build_id, artifact_mirror_url))
                     spack_ci.write_cdashid_to_mirror(
                         cdash_build_id, job_spec, artifact_mirror_url)
@@ -459,10 +487,10 @@ def ci_rebuild(args):
             # enabled, in which case, we need to download the buildcache to
             # the local artifacts directory to be used by dependent jobs in
             # subsequent stages
-            tty.msg('No need to rebuild {0}'.format(job_spec_pkg_name))
+            tty.debug('No need to rebuild {0}'.format(job_spec_pkg_name))
             if enable_artifacts_mirror:
-                tty.msg('Getting buildcache for {0}'.format(job_spec_pkg_name))
-                tty.msg('Downloading to {0}'.format(build_cache_dir))
+                tty.debug('Getting {0} buildcache'.format(job_spec_pkg_name))
+                tty.debug('Downloading to {0}'.format(build_cache_dir))
                 buildcache.download_buildcache_files(
                     job_spec, build_cache_dir, True, remote_mirror_url)
 
