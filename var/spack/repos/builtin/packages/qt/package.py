@@ -73,7 +73,7 @@ class Qt(Package):
     variant('gold', default=False,
             description='Use gold linker')
     variant('xcb', default='spack', description='XCB support',
-            values=('spack', 'qt', 'none'), multi=False)
+            values=('spack', 'qt'), multi=False)
 
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
