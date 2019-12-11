@@ -35,7 +35,7 @@ class Fzf(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         fzf = glob.glob('target/fzf*')[0]
-        install(fzf, join_path(prefix.bin, 'fzf'))
+        install(fzf, prefix.bin.fzf)
         # also install the tmux helper
         install('bin/fzf-tmux', prefix.bin)
 

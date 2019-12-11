@@ -19,6 +19,7 @@ class Direnv(Package):
     version('2.11.3', sha256='2d34103a7f9645059270763a0cfe82085f6d9fe61b2a85aca558689df0e7b006')
 
     depends_on('go@1.11:', type='build')  # module/vendor support
+    depends_on('gmake')  # project uses a GNUmakefile
 
     # It takes a bit of sneaky to avoid downloading things at build time...
     # There's a vendor dir, but using it is tricksy (it dates from

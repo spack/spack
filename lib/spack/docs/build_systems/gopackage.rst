@@ -124,30 +124,30 @@ them without overly-complicating the package definition.
 There are four steps to describing the dependencies in the package
 definition:
 
-* First, stage the application and check the ``go.mod`` file for any
-  constraints on the go release (before overwriting it as a side
-  effect of the next step).
+#. Stage the application and check the ``go.mod`` file for any
+   constraints on the go release (before overwriting it as a side
+   effect of the next step).
 
-* Second, use the Go tool chain and the ``go.mod`` file to determine
-  the set of required dependencies and build a vendor directory.
+#. Use the Go toolchain and the ``go.mod`` file to determine
+   the set of required dependencies and build a vendor directory.
 
-* Third, run the newly created ``vendor/modules.txt`` file through
-  ``modules2tuple`` to generate a JSON file containing resource
-  definitions.
+#. Run the newly created ``vendor/modules.txt`` file through
+   ``modules2tuple`` to generate a JSON file containing resource
+   definitions.
 
-.. code-block:: console
+   .. code-block:: console
 
-    # in the root directory of the project (where the go.mod file lives)
-    $ go mod vendor
-    $ modules2tuple -spack -app_version=1.2.3 vendor/modules.txt > resources-1.2.3.json
+      # in the root directory of the project (where the go.mod file lives``
+      $ go mod vendor
+      $ modules2tuple -spack -app_version=1.2.3 vendor/modules.txt > resources-1.2.3.json
 
-* Finally, copy that file into the Spack package directory and add an
-  `import_resources` statement that refers to it in the package
-  definition.
+#. Finally, copy that file into the Spack package directory and add an
+   ``import_resources`` statement that refers to it in the package
+   definition.
 
-.. code-block:: python
+   .. code-block:: python
 
-        import_resources("resources-1.2.3.py", when="@1.2.3")
+      import_resources("resources-1.2.3.py", when="@1.2.3")
 
 ^^^^^^^^^^^^^^^
 Advanced topics
@@ -156,7 +156,11 @@ Advanced topics
 Packaging projects that don't fit into either of the previous two
 categories is "left as an exercise for the reader".
 
-More seriously, things to keep in mind include:
+More seriously, you'll need to understand how the project builds
+itself and use an appropriate Spack build system.  Most projects that
+can't use ``GoPackage`` seem to end up using ``MakefilePackage``.
+
+Things to keep in mind include:
 
 * the package should use only a *build* dependency on go (unless
   something wacky is happening at run time);

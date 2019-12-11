@@ -26,7 +26,7 @@ class GoPackage(PackageBase):
 
     :py:meth:`~.GoPackage.setup_build_environment` sets
     ``GO111MODULE=on`` to enable module mode and sets
-    ``GOFLAGS="-mod-vendor"`` to enable vendoring and prevent ``go``
+    ``GOFLAGS=-mod=vendor`` to enable vendoring and prevent ``go``
     from downloading libraries at build time.
     """
 

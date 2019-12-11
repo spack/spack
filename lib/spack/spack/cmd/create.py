@@ -407,7 +407,8 @@ class GoPackageTemplate(PackageTemplate):
     # depends_on('foo')"""
 
     body_def = """\
-    # FIXME: Add any add'l build flags (-mod=vendor is added automagically)
+    # FIXME: Add any additional build flags
+    # (-mod=vendor is added automagically)
     # build_flags = []
     # FIXME: [REQUIRED] Add names of executables to install into prefix.bin
     executables = []"""
