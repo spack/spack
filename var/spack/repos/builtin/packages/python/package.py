@@ -623,11 +623,15 @@ class Python(AutotoolsPackage):
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed."""
+        determine exactly where it is installed. Fall back on
+        ``spec['python'].prefix`` if that doesn't work."""
 
         dag_hash = self.spec.dag_hash()
         if dag_hash not in self._homes:
-            prefix = self.get_config_var('prefix')
+            try:
+                prefix = self.get_config_var('prefix')
+            except ProcessError:
+                prefix = self.prefix
             self._homes[dag_hash] = Prefix(prefix)
         return self._homes[dag_hash]
 
