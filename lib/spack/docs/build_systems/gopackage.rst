@@ -12,9 +12,12 @@ GoPackage
 There are a couple of things to be aware of about applications built
 with Go:
 
-* Go-based projects use a variety of build tools: simple invocations
-  of ``go build``, custom go "scripts" that leverage ``go run``,
-  Makefiles, and/or *etc...*.
+* The ``go`` command includes more build/install functionality than
+  C's ``cc`` but not as much e.g. Python's ``pip``.
+
+  As a result, Go-based projects use a variety of build strategies:
+  simple invocations of ``go build``, custom go "scripts" that
+  leverage ``go run``, Makefiles, and/or *etc...*.
 
 * Go's dependency management story has evolved from an initial
   do-it-yourself attitude through a small number of commonly used
@@ -28,19 +31,60 @@ with Go:
   Go 1.14.
 
 The best approach to packaging a Go-based project for Spack depends on
-the details of the project.  ``GoPackage`` might be a good fit but
-another package, e.g. ``MakefilePackage``, might be better.
+the details of the project.  ``GoPackage`` is a good fit for simple
+situations but another package, e.g. ``MakefilePackage``, might be
+better.
+
+In addition to a ``go.mod`` file and ``vendor`` directory (see
+:ref:`important_files`), you should check for "Install" documentation
+and makefiles in their various guises.  Applications that provide
+a makefile might be better built via ``MakefilePackage``; it's up to
+the packager to understand the actions taken by the makefile and
+decide whether to cut it out of the loop or use it.
 
 Ideas from ``GoPackage`` that might be useful when using other base
 classes include:
 
 - Use the package's ``setup_build_environment`` to set
   ``GO111MODULE=on`` to enable module mode and set
-  ``GOFLAGS=-mod-vendor`` to enable vendoring, which prevents ``go``
-  from downloading libraries at build time.
+  ``GOFLAGS=-mod-vendor`` to install dependencies from the ``vendor``,
+  which prevents ``go`` from downloading dependencies at build time.
 - If the application hasn't vendored its dependencies, use
   ``modules2tuple`` to generate "bulk" resource statements and include
-  them in the package definition via ``import_resources``.
+  them in the package definition via ``import_resources`` (see
+  :ref:`packages_without_vendor_dir`).
+
+.. _important_files:
+
+^^^^^^^^^^^^^^^
+Important files
+^^^^^^^^^^^^^^^
+
+Applications that are good candidates for ``GoPackage`` will have:
+
+* A ``go.mod`` file in the project's top level.  The ``go.mod`` file
+  contains a "module" line that names the module, a ``go X.Y`` line
+  that states that the project uses that particular version of go, and
+  a series of "require" and "replace" lines that describe the module's
+  dependencies.
+
+* A ``vendor`` directory that contains the project's dependencies.  A
+  missing ``vendir`` directory means that the packager will probably
+  need to define resources (see below) to pull in the dependencies.
+
+^^^^^^
+Phases
+^^^^^^
+
+The ``GoPackage`` base class comes with the following phases:
+
+#. ``build`` - build the package
+#. ``install`` - install the package
+
+By default, the build phase invokes ``go build`` in an environment
+that includes ``GO111MODULE=on`` and ``GOFLAGS=-mod-vendor`` and the
+install phase copies the files named in ``executables`` into
+``prefix.bin``
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Simple package definitions
@@ -89,10 +133,14 @@ package:
 
 .. code-block:: python
 
-        def build_args(self):
+    def build_args(self):
+        if self.spec.satisfies('+extended'):
             return ['-tags', 'extended']
+        return []
 
 to invoke ``go build -tags extended``.
+
+.. _packages_without_vendor_dir:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Packages without vendored dependencies
@@ -173,3 +221,22 @@ Things to keep in mind include:
 
 * ensure that the use of the ``GOFLAGS`` environment variable does not
   conflict with attempts to set arguments on the command line.
+
+^^^^^^^^^^^^^^^^^^^^^^
+External documentation
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+* The canonical `Go site <https://golang.org/>`_.
+
+* Digital Ocean's simple introduction to `building Go programs
+  <https://www.digitalocean.com/community/tutorials/how-to-build-and-install-go-programs>`_
+
+* The canonical `Using Go modules
+  <https://blog.golang.org/using-go-modules>`_ blog post.
+
+* The authoritative `Go modules wiki
+  <https://github.com/golang/go/wiki/Modules>`_ page.
+
+* Background and details about the `go command
+  <https://golang.org/doc/articles/go_command.html>`_.
