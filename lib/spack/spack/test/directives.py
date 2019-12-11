@@ -58,9 +58,11 @@ def test_several_import_resources(mock_packages):
 
 def test_bad_import_resources(mock_packages):
     caught_exception = None
+    pkg = None
     try:
         pkg = spack.repo.get("test-bad-import-resources")
-    except spack.directives.BadResourcesFileError as e:
+    except spack.directives.BadResourcesFileError:
         caught_exception = True
 
     assert(caught_exception and "Expected exception not thrown.")
+    assert(pkg is None)  # do something w/ pkg for flake8 joy

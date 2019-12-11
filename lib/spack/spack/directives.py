@@ -632,7 +632,7 @@ def import_resources(filename):
                 resources = json.load(fh)
                 for r in resources:
                     _resource(pkg, **r)
-        except Exception as e:
+        except Exception:
             raise BadResourcesFileError(
                 "Unable to load resources file: {0}".format(path))
 
