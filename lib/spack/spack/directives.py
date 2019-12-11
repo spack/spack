@@ -627,10 +627,14 @@ def import_resources(filename):
     def _execute_import_resources(pkg):
         pkg_dir = os.path.abspath(os.path.dirname(pkg.module.__file__))
         path = os.path.join(pkg_dir, filename)
-        with open(path) as fh:
-            resources = json.load(fh)
-            for r in resources:
-                _resource(pkg, **r)
+        try:
+            with open(path) as fh:
+                resources = json.load(fh)
+                for r in resources:
+                    _resource(pkg, **r)
+        except Exception as e:
+            raise BadResourcesFileError(
+                "Unable to load resources file: {0}".format(path))
 
     return _execute_import_resources
 
@@ -683,3 +687,7 @@ class DependencyPatchError(DirectiveError):
 
 class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
+
+
+class BadResourcesFileError(DirectiveError):
+    """Raised for errors while importing resources file."""

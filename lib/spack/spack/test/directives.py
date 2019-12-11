@@ -54,3 +54,13 @@ def test_several_import_resources(mock_packages):
     assert len(pkg.resources[Spec()]) == 1
     assert len(pkg.resources[Spec("@1")]) == 1
     assert len(pkg.resources[Spec("@2.2:")]) == 2
+
+
+def test_bad_import_resources(mock_packages):
+    caught_exception = None
+    try:
+        pkg = spack.repo.get("test-bad-import-resources")
+    except spack.directives.BadResourcesFileError as e:
+        caught_exception = True
+
+    assert(caught_exception and "Expected exception not thrown.")
