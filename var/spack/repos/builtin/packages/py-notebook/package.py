@@ -25,31 +25,27 @@ class PyNotebook(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'), when='@6:')
-    depends_on('py-setuptools', type='build', when='@6:')
+    depends_on('py-setuptools', type='build', when='@5:')
     depends_on('py-jinja2', type=('build', 'run'))
-    depends_on('py-tornado@5.0:', type=('build', 'run'))
+    depends_on('py_tornado@4.0:6.999', type=('build', 'run'), when='@:5.7.4'
+    depends_on('py-tornado@4.1:6.999', type=('build', 'run'), when='@5.7.5:6.0.1')
     depends_on('py-ipython-genutils', type=('build', 'run'))
     depends_on('py-traitlets', type=('build', 'run'))
+    depends_on('py-traitlets@4.2.1:', type=('build', 'run'), when='@5:')
     depends_on('py-jupyter-core', type=('build', 'run'))
+    depends_on('py-jupyter-core@4.4.0:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-jupyter-client', type=('build', 'run'))
+    depends_on('py-jupyter-client@5.2.0:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))
-    depends_on('py-ipykernel@5.1.0:', when='@4.2.0: ^python@3:', type=('build', 'run'))
+    depends_on('py-ipykernel@5.1.0:', when='@4.2.0: ^python@3.3:', type=('build', 'run'))
+    depends_on('py-ipykernel@:5.0.0', when='@4.2.0: ^python@:2.8', type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))
-    # required for 6.0.1, not sure about 5.x.x, as there is no version in spack
-    # right now treat them as 6-or-newer dependencies
-    depends_on('py-prometheus-client', type=('build', 'run'), when='@6:')
-    depends_on('py-terminado', type=('build', 'run'), when='@6:')
+    depends_on('py-prometheus-client', type=('build', 'run'), when='@5.7.0:')
+    depends_on('py-terminado@0.3.3:', type=('build', 'run'), when='@:5.7.0)
+    depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@5.7.0:')
     depends_on('py-send2trash', type=('build', 'run'), when='@6:')
     depends_on('py-pyzmq@17:', type=('build', 'run'), when='@6:')
     depends_on('py-traitlets@4.2.1:', type=('build', 'run'), when='@6:')
-    depends_on('py-jupyter-core@4.4.0:', type=('build', 'run'), when='@6:')
-    depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6:')
-    depends_on('py-terminado@0.8.1:', type=('build', 'run'), when='@6:')
-    depends_on('py-ipaddress', type=('build', 'run'), when='@6: ^python@:2.8')
-
-    @when('@5.7.8')
-    def install_args(self, spec, prefix):
-        args = ['--prefix={0}'.format(prefix), '--root=/']
-        return args
+    depends_on('py-ipaddress', type=('build', 'run'), when='@5.7.0: ^python@:2.8')
