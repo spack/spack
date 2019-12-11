@@ -14,10 +14,14 @@ class Hugo(GoPackage):
 
     version('0.53', sha256='48e65a33d3b10527101d13c354538379d9df698e5c38f60f4660386f4232e65c')
 
+    variant('extended', default='False', description='Extended Sass/SCSS support')
+
     # hugo has used modules since its v0.48, so we do too.
     import_resources("hugo-resources-0.53.json")
 
     def build_args(self):
-        return ['-tags', 'extended']
+        if self.spec.satisfies('+extended'):
+            return ['-tags', 'extended']
+        return []
 
     executables = ['hugo']
