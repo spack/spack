@@ -25,10 +25,10 @@ class PyPpft(PythonPackage):
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/p/ppft/"
-        if version >= Version('1.6.4.9'):
+        if version >= Version('1.6.4.8'):
             url += 'ppft-{0}.tar.gz'
         else:
             url += 'ppft-{0}.zip'
 
-        url = url.format(str(version))
+        url = url.format(version)
         return url
