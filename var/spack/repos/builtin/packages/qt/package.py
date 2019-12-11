@@ -158,12 +158,12 @@ class Qt(Package):
     if MACOS_VERSION is None:
         depends_on("fontconfig", when='freetype=spack')
         depends_on("libx11")
-        depends_on("libxcb")
-        depends_on("libxkbcommon")
-        depends_on("xcb-util-image")
-        depends_on("xcb-util-keysyms")
-        depends_on("xcb-util-renderutil")
-        depends_on("xcb-util-wm")
+        depends_on("libxcb", when='xcb=spack')
+        depends_on("libxkbcommon", when='xcb=spack')
+        depends_on("xcb-util-image", when='xcb=spack')
+        depends_on("xcb-util-keysyms", when='xcb=spack')
+        depends_on("xcb-util-renderutil", when='xcb=spack')
+        depends_on("xcb-util-wm", when='xcb=spack')
         depends_on("libxext", when='@3:4.99')
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
