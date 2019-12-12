@@ -11,6 +11,8 @@ RUN apt-get -yqq update \
         ca-certificates \
         debianutils \
         less \
+        libc-dev-bin \
+        libc6-dev \
         locales \
  && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
  && locale-gen \
@@ -32,8 +34,6 @@ RUN apt-get -yqq update \
         file \
         g++ \
         gcc \
-        libc-dev-bin \
-        libc6-dev \
         locales \
         make \
         python3 \
@@ -116,6 +116,7 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
  && ln -s /spack-bootstrap/sw/*/*/python*/bin/python /usr/bin/python \
  && /opt/spack/bin/spack view symlink /usr/local \
       bzip2 \
+      binutils \
       coreutils \
       curl \
       diffutils \
@@ -134,15 +135,16 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
       tar \
       unzip \
       xz \
+ && /opt/spack/bin/spack view --dependencies no symlink /usr/local gcc \
  && chown -R spack:spack /spack \
  && rm -rf /usr/bin/file /usr/bin/python /root/*.* /root/.spack
 
 SHELL ["docker-shell"]
 
-RUN spack load gcc \
- && spack compiler find --scope system \
- && find "$( spack location --install gcc )/libexec" \
-        -iname 'mkheaders' -exec '{}' ';' -quit
+# RUN spack load gcc \
+#  && spack compiler find --scope system \
+#  && find "$( spack location --install gcc )/libexec" \
+#         -iname 'mkheaders' -exec '{}' ';' -quit
 
 USER spack
 WORKDIR /home/spack
