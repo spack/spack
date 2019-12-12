@@ -25,7 +25,7 @@ class FontUtil(AutotoolsPackage):
     depends_on('mkfontdir', type='build')
 
     font_baseurl = 'https://www.x.org/archive/individual/font/'
-    fonts = ['none']
+    fonts = []
     # name, version, sha256
     fonts_resource = [
         ['encodings', '1.0.4', '55861d9cf456bd717a3d30a3193402c02174ed3c0dcee828798165fe307ee324'],
