@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 # -----------------------------------------------------------------------------
-# Author: Justin Too
+# Author: Justin Too, Nathan Pinnow
 # -----------------------------------------------------------------------------
 
 from spack import *
@@ -16,17 +16,46 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.10.0.zip"
-    git = "https://github.com/rose-compiler/rose-develop.git"
+    url = "https://github.com/rose-compiler/rose/archive/v0.9.12.45.zip"
+    git = "https://github.com/rose-compiler/rose.git"
 
     # --------------------------------------------------------------------------
     # ROSE Versions
     # --------------------------------------------------------------------------
-    version("0.9.10.0", sha256="7b53b6913fd6ca0c5050b630dae380f3e6b0897cde6148172ba01095f71cbaca")
+    # 
+    version("0.9.12.45", sha256="1c6768b8df2e4bcb9608ff5f0d15a56c237c37092968cadbef7294fa1d5256ae")
+    
+    #Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION and may be different then ROSE_VERSION
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.45.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.12.45 %gcc@4.9.0:4.9.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.45.tar.gz",
+             sha256="859330f70e58900dc3a6be294250de1868dfc853cd65e1d8e906c9b0134cc22a")
 
-    # git versions
-    version("0.9.9.52", commit="bd4fc0cc332ce62d9fa54db19879507d9e4f239b")
-    version("develop", branch="master")
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.45.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.12.45 %gcc@5.0:5.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.45.tar.gz",
+             sha256="822add985b8364d0ea81bf57786c73b6d89f7583f6765e556036a89ce8cfdfb8")
+    
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.45.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.12.45 %gcc@6.0:6.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.45.tar.gz",
+             sha256="45222ad510bf8350f1e0cb6945cb22646804e82b23dfffa4f11ff96d082323e7")
+
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.45.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.12.45 %gcc@7.0:7.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.45.tar.gz",
+             sha256="feb318b186919734de952bf3302c19a44f1d4c759cd0abaf554adc074b82ab03")
+
+    # git versions depends on internet connection at build time
+    version("develop", branch="develop")
 
     # --------------------------------------------------------------------------
     # Dependencies
@@ -48,6 +77,8 @@ class Rose(AutotoolsPackage):
     variant("tests", default=False, description="Build the tests directory")
     variant("tutorial", default=False, description="Build the tutorial directory")
 
+    variant("tools", default=False, description="Build a selection of ROSE based tools")
+
     variant(
         "mvapich2_backend",
         default=False,
@@ -63,12 +94,10 @@ class Rose(AutotoolsPackage):
     variant("cxx", default=True, description="Enable c++ language support")
 
     # Use spack install cxxflags=-std=c++11
-    variant("cxx11", default=False, description="Enable c++11 language support")
+    variant("cxx11", default=True, description="Enable c++11 language support")
 
     variant("fortran", default=False, description="Enable fortran language support")
-
-    variant("java", default=False, description="Enable java language support")
-    depends_on("jdk", when="+java")
+    depends_on("jdk", when="+fortran")
 
     variant("z3", default=False, description="Enable z3 theorem prover")
     depends_on("z3", when="+z3")
@@ -93,34 +122,7 @@ class Rose(AutotoolsPackage):
 
     build_directory = "rose-build"
 
-    def patch(self):
-        spec = self.spec
-
-        # ROSE needs its   to compute its EDG
-        # binary compatibility signature for C/C++ and for its
-        # --version information.
-        #
-        #       git rev-parse HEAD
-        #     git log -1 --format="%at"
-        #
-        with open("VERSION", "w") as f:
-            if "@0.9.9.104:" in spec:
-                # EDG: 27acd506c6b0e4b1c5f7573c642e3e407237eddd
-                f.write("66c87e9395126a7ab8663d81f0e0b99d6e09131e 1504924600")
-            elif "@0.9.9.0:" in spec:
-                # EDG: 46306e9f73d3ccd690be300aefdaf766a9ba3f70
-                f.write("14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff 1492716108")
-            elif "@0.9.7.0:" in spec:
-                # EDG: 8e63f421f9107ef6c7882b57f9c83e3878623ffa
-                f.write("992c21ad06893bc1e9e7688afe0562eee0fda021 1460595442")
-            elif "@0.9.10.0:" in spec:
-                # EDG: f4624773cb93dfcc67a00efb5e9e8affeb57fb73
-                f.write("277fea7e1e5305e5b3c86b550a0c1354e8285b96 1523991417")
-            else:
-                raise InstallError("Unknown ROSE version!")
-
     def autoreconf(self, spec, prefix):
-        #        if not spec.satisfies('@develop'):
         with working_dir(self.stage.source_path):
             bash = which("bash")
             bash("build")
@@ -140,7 +142,6 @@ class Rose(AutotoolsPackage):
             "binaries" if "+binanalysis" in spec else "",
             "c" if "+c" in spec else "",
             "c++" if "+cxx" in spec else "",
-            "java" if "+java" in spec else "",
             "fortran" if "+fortran" in spec else "",
         ]
         return list(filter(None, langs))
@@ -155,14 +156,8 @@ class Rose(AutotoolsPackage):
             cc = spack_cc
             cxx = spack_cxx
 
-        if spec.satisfies("@0.9.8:"):
-            edg = "4.12"
-        else:
-            edg = "4.9"
-
         args = [
             "--disable-boost-version-check",
-            "--enable-edg_version={0}".format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec["boost"].prefix),
@@ -184,8 +179,8 @@ class Rose(AutotoolsPackage):
         else:
             args.append("--disable-tutorial-directory")
 
-        if "+java" in spec:
-            args.append("--with-java={0}".format(spec["java"].prefix))
+        if "+fortran" in spec:
+            args.append("--with-java={0}".format(spec["jdk"].prefix))
         else:
             args.append("--without-java")
 
@@ -218,34 +213,42 @@ class Rose(AutotoolsPackage):
         #   $ srun -n1 spack install rose
         #
         with working_dir(self.build_directory):
-            # ROSE needs the EDG version for C/C++
-            with open("src/frontend/CxxFrontend/EDG-submodule-sha1", "w") as f:
-                if "@0.9.9.104" in spec:
-                    f.write("27acd506c6b0e4b1c5f7573c642e3e407237eddd")
-                elif "@0.9.9.52" in spec:
-                    f.write("56a826126289414db5436e6c49879b99d046d26d")
-                elif "@0.9.9.0" in spec:
-                    f.write("46306e9f73d3ccd690be300aefdaf766a9ba3f70")
-                elif "@0.9.7.0" in spec:
-                    f.write("8e63f421f9107ef6c7882b57f9c83e3878623ffa")
-                elif "@0.9.10.0" in spec:
-                    f.write("f4624773cb93dfcc67a00efb5e9e8affeb57fb73")
-                else:
-                    raise InstallError("Unknown ROSE version for EDG!")
 
             # Compile librose
-            with working_dir("src"):
-                make()
+            make("core")
 
-            # Install librose
-            with working_dir("src"):
-                make("install")
+            if "+tools" in spec:
+                make("tools")
 
-            # Install "official" ROSE-based tools
+            # -----------------------------------------------------------------
+            # ROSE-based Projects
+            # -----------------------------------------------------------------
+            if "+codethorn" in spec:
+                with working_dir("projects/CodeThorn"):
+                    make()
+
+            if "+autopar" in spec:
+                with working_dir("projects/autoParallelization"):
+                    make()
+
+            if "+polyopt" in spec:
+                mkdir = which("mkdir")
+                mkdir("-p", "projects/PolyOpt2")
+                with working_dir("projects/PolyOpt2"):
+                    env["ROSE_SRC"] = self.stage.source_path
+                    env["ROSE_ROOT"] = self.prefix
+
+                    bash = which("bash")
+                    bash(join_path(self.stage.source_path, "projects/PolyOpt2/install.sh"))
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+
+            # Compile and Install librose
             make("install-core")
 
-            with working_dir("tools"):
-                make("install")
+            if "+tools" in spec:
+                make("install-tools")
 
             # -----------------------------------------------------------------
             # ROSE-based Projects
@@ -257,18 +260,3 @@ class Rose(AutotoolsPackage):
             if "+autopar" in spec:
                 with working_dir("projects/autoParallelization"):
                     make("install")
-
-            if "+polyopt" in spec:
-                mkdir = which("mkdir")
-                mkdir("-p", "projects/PolyOpt2")
-                with working_dir("projects/PolyOpt2"):
-                    env["ROSE_SRC"] = self.stage.source_path
-                    env["ROSE_ROOT"] = self.prefix
-
-                    bash = which("bash")
-                    bash(
-                        join_path(
-                            self.stage.source_path,
-                            "projects/PolyOpt2/install.sh"
-                        )
-                    )
