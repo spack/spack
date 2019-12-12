@@ -28,6 +28,7 @@ modules:
     hash_length: 0
     whitelist:
       - allinea-forge@19.0.5
+      - blender
       - cmake
       - cuda
       - cudnn
