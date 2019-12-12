@@ -59,6 +59,7 @@ def unload(parser, args):
     for spec in specs:
         env_mod.extend(
             uenv.environment_modifications_for_spec(spec).reversed())
+        env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
     cmds = env_mod.shell_modifications(args.shell)
 
     sys.stdout.write(cmds)
