@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 # -----------------------------------------------------------------------------
-# Author: Justin Too, Nathan Pinnow
+# Author: Nathan Pinnow
 # -----------------------------------------------------------------------------
 
 from spack import *
@@ -97,7 +97,7 @@ class Rose(AutotoolsPackage):
     variant("cxx11", default=True, description="Enable c++11 language support")
 
     variant("fortran", default=False, description="Enable fortran language support")
-    depends_on("jdk", when="+fortran")
+    depends_on("openjdk@1.8.0_202-b08", when="+fortran")
 
     variant("z3", default=False, description="Enable z3 theorem prover")
     depends_on("z3", when="+z3")
@@ -180,7 +180,7 @@ class Rose(AutotoolsPackage):
             args.append("--disable-tutorial-directory")
 
         if "+fortran" in spec:
-            args.append("--with-java={0}".format(spec["jdk"].prefix))
+            args.append("--with-java={0}".format(spec["openjdk"].prefix))
         else:
             args.append("--without-java")
 
