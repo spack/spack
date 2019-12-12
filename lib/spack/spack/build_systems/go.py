@@ -43,16 +43,14 @@ class GoPackage(PackageBase):
     executables = []
 
     def setup_build_environment(self, env):
-        # forcibly enable module mode
+        # Set it, it's either on or off, and we want it *on*.
         env.set('GO111MODULE', 'on')
-        # forcibly enable vendoring, prevent network access
-        env.set('GOFLAGS', '-mod=vendor')
 
     def build(self, spec, prefix):
         """Builds a Go package."""
         args = self.build_args()
 
-        self.go('build', *args)
+        self.go('build', '-mod=vendor', *args)
 
     def build_args(self):
         """Arguments to pass to build."""
