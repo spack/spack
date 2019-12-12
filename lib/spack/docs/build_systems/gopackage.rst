@@ -229,6 +229,13 @@ External documentation
 
 * The canonical `Go site <https://golang.org/>`_.
 
+* Motivation, background and details about the `go command
+  <https://golang.org/doc/articles/go_command.html>`_, Go's general
+  purpose build tool.
+
+* `Everything you ever wanted to know <https://golang.org/cmd/go/>`_
+  about the go command.
+
 * Digital Ocean's simple introduction to `building Go programs
   <https://www.digitalocean.com/community/tutorials/how-to-build-and-install-go-programs>`_
 
@@ -237,6 +244,3 @@ External documentation
 
 * The authoritative `Go modules wiki
   <https://github.com/golang/go/wiki/Modules>`_ page.
-
-* Background and details about the `go command
-  <https://golang.org/doc/articles/go_command.html>`_.
