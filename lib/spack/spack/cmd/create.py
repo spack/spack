@@ -404,12 +404,17 @@ class GoPackageTemplate(PackageTemplate):
     # depends_on('go@1.X.Y:', type='build')
 
     # FIXME: Add additional dependencies if required.
-    # depends_on('foo')"""
+    # depends_on('foo')
+
+    # FIXME: Import resources if required.
+    # import_resources('resources-X.Y.Z.json')"""
 
     body_def = """\
     # FIXME: Add any additional build flags
     # (-mod=vendor is added automagically)
-    # build_flags = []
+    # def build_flags(self):
+    #     return []
+
     # FIXME: [REQUIRED] Add names of executables to install into prefix.bin
     executables = []"""
 
