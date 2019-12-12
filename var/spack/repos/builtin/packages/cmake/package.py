@@ -74,7 +74,7 @@ class Cmake(Package):
 
     # Fix builds with XLF + Ninja generator
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
-    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="3387faf4a71efe81c0fa17410b270ca7d352081ac88d2322df3da9bb6a6a3f2d", when="@3.15.5")
+    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="001736d791957225aadfc416b0cef915e8c8dcc04765b8e0fcbebf6058a05560", when="@3.15.5")
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
