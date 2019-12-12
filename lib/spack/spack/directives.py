@@ -632,9 +632,13 @@ def import_resources(filename):
                 resources = json.load(fh)
                 for r in resources:
                     _resource(pkg, **r)
-        except Exception:
-            raise BadResourcesFileError(
-                "Unable to load resources file: {0}".format(path))
+        except json.decoder.JSONDecodeError as e:
+            # json error message never says "JSON", be helpful...
+            raise ResourcesFileError(
+                "Unable to load resources file, bad JSON: {0}".format(e))
+        except Exception as e:
+            raise ResourcesFileError(
+                "Unable to load resources file: {0}".format(e))
 
     return _execute_import_resources
 
@@ -689,5 +693,10 @@ class UnsupportedPackageDirective(DirectiveError):
     """Raised when an invalid or unsupported package directive is specified."""
 
 
-class BadResourcesFileError(DirectiveError):
+class ResourcesFileError(DirectiveError):
     """Raised for errors while importing resources file."""
+
+    def __init__(self, message):
+        super(ResourcesFileError, self).__init__(
+            "Problem importing resources file: %s" %
+            message)

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class TestOneImportResources(Package):
+class ImportResourcesSeveral(Package):
     """Simple package that is used to test import_resources.
     """
 

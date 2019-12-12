@@ -34,20 +34,20 @@ def test_true_directives_exist(mock_packages):
     assert Spec() in cls.patches
 
 
-def test_zero_import_resources(mock_packages):
-    pkg = spack.repo.get("test-zero-import-resources")
+def test_import_resources_zero(mock_packages):
+    pkg = spack.repo.get("import-resources-zero")
     assert len(pkg.resources) == 0
 
 
-def test_one_import_resources(mock_packages):
-    pkg = spack.repo.get("test-one-import-resources")
+def test_import_resources_one(mock_packages):
+    pkg = spack.repo.get("import-resources-one")
     assert len(pkg.resources) == 1
     assert set(pkg.resources.keys()) == set([Spec()])
     assert len(pkg.resources[Spec()]) == 1
 
 
-def test_several_import_resources(mock_packages):
-    pkg = spack.repo.get("test-several-import-resources")
+def test_import_resources_several(mock_packages):
+    pkg = spack.repo.get("import-resources-several")
     assert len(pkg.resources) == 3
     assert set(pkg.resources.keys()) == set(
         [Spec(), Spec("@1"), Spec("@2.2:")])
@@ -56,13 +56,29 @@ def test_several_import_resources(mock_packages):
     assert len(pkg.resources[Spec("@2.2:")]) == 2
 
 
-def test_bad_import_resources(mock_packages):
+def test_import_resources_bad_json(mock_packages):
     caught_exception = None
     pkg = None
     try:
-        pkg = spack.repo.get("test-bad-import-resources")
-    except spack.directives.BadResourcesFileError:
+        pkg = spack.repo.get("import-resources-bad-json")
+    except spack.directives.ResourcesFileError as e:
+        message = str(e)
         caught_exception = True
 
+    assert(caught_exception and "Expected exception not thrown.")
+    assert("JSON" in message)
+    assert(pkg is None)  # do something w/ pkg for flake8 joy
+
+
+def test_import_resources_missing_file(mock_packages):
+    caught_exception = None
+    pkg = None
+    try:
+        pkg = spack.repo.get("import-resources-missing-file")
+    except spack.directives.ResourcesFileError as e:
+        message = str(e)
+        caught_exception = True
+
+    assert("No such file" in message)
     assert(caught_exception and "Expected exception not thrown.")
     assert(pkg is None)  # do something w/ pkg for flake8 joy

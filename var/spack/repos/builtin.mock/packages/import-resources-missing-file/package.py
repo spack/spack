@@ -6,7 +6,7 @@
 from spack import *
 
 
-class TestBadImportResources(Package):
+class ImportResourcesMissingFile(Package):
     """Simple package that is used to test import_resources.
     """
 
@@ -16,4 +16,4 @@ class TestBadImportResources(Package):
     version('2.0', 'hash2')
     version('1.0', 'hash1')
 
-    import_resources("resources.json")
+    import_resources("nonexistent.json")
