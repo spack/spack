@@ -238,6 +238,14 @@ class Charmpp(Package):
                         pass
         shutil.rmtree(join_path(prefix, "tmp"))
 
+        # A broken 'doc' link in the prefix can break the build.
+        # Remove it and replace it if it is broken.
+        try:
+            os.stat(prefix.doc)
+        except OSError:
+            os.remove(prefix.doc)
+            mkdirp(prefix.doc)
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
