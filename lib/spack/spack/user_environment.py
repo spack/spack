@@ -9,6 +9,8 @@ import spack.util.prefix as prefix
 import spack.util.environment as environment
 import spack.build_environment as build_env
 
+spack_loaded_hashes_var = 'SPACK_LOADED_HASHES'
+
 
 def prefix_inspections(platform):
     inspections = {
