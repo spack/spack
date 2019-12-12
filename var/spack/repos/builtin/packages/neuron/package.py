@@ -23,9 +23,12 @@ class Neuron(Package):
     url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
     git      = "https://github.com/nrnhines/nrn.git"
 
+    # Patch which reverts 81a7a39 for numerical compat
+    patch('revert_Import3d_numerical_format.patch', when='@7.8.0:')
+
     version('develop', branch='master')
-    version('7.8.0',   tag='7.8.0')
-    version('7.6.8',   tag='7.6.8', preferred=True)
+    version('7.8.0a',  commit='92a208b', preferred=True)
+    version('7.6.8',   tag='7.6.8')
     version('7.6.6',   tag='7.6.6')
     version('2018-10', commit='b3097b7')
     # versions from url, with checksum

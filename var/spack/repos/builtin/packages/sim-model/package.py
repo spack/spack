@@ -71,7 +71,8 @@ class SimModel(Package):
         include_flag += ' -I%s' % (spec['coreneuron'].prefix.include)
         nrnivmodl_params = ['-i', include_flag,
                             '-l', link_flag,
-                            '-n', self.mech_name]
+                            '-n', self.mech_name,
+                            mods_location]
         which('nrnivmodl-core')(*nrnivmodl_params)
         output_dir = os.path.basename(self.neuron_archdir)
         expected_name = "libcorenrnmech" + ('_' + self.mech_name if self.mech_name else '')

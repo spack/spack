@@ -11,6 +11,8 @@ class NeurodamusThalamus(NeurodamusModel):
     homepage = "ssh://bbpcode.epfl.ch/sim/models/thalamus"
     git      = "ssh://bbpcode.epfl.ch/sim/models/thalamus"
 
+    mech_name = "thalamus"
+
     version('develop', branch='master', submodules=True, clean=False)
     version('0.3', tag='0.3-1', submodules=True, clean=False)
     version('0.2', tag='0.2', submodules=True, clean=False)

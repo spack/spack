@@ -25,9 +25,9 @@ class Highfive(CMakePackage):
     # This is a header-only lib so dependencies shall be specified in the
     # target project directly and never specified here since they get truncated
     # when installed as external packages (which makes sense to improve reuse)
-    variant('boost', default=True, description='Support Boost')
-    variant('mpi', default=True, description='Support MPI')
-    variant('eigen', default=False, description='Support Eigen')
+    variant('boost',   default=True,  description='Support Boost')
+    variant('mpi',     default=True,  description='Support MPI')
+    variant('eigen',   default=False, description='Support Eigen')
     variant('xtensor', default=False, description='Support xtensor')
 
     # Develop builds tests which require boost
@@ -48,4 +48,5 @@ class Highfive(CMakePackage):
             '-DHIGHFIVE_EXAMPLES:Bool={0}'.format(self.spec.satisfies('@develop')),
             '-DHIGHFIVE_UNIT_TESTS:Bool={0}'.format(self.spec.satisfies('@develop')),
             '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool={0}'.format(self.spec.satisfies('@develop')),
+            '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=1',  # Dont use targets
         ]
