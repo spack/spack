@@ -14,8 +14,7 @@ RUN apt-get -yqq update \
         libc-dev-bin \
         libc6-dev \
         locales \
- && sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
- && locale-gen \
+ && locale-gen en_US.UTF-8 \
  && rm -rf /var/lib/apt/lists/*
 
 ENV LANGUAGE=en_US.UTF-8 \
@@ -34,42 +33,20 @@ RUN apt-get -yqq update \
         file \
         g++ \
         gcc \
-        locales \
         make \
         python3 \
         tar \
  && rm -rf /var/lib/apt/lists/*
 
-COPY bin /spack/bin
-COPY etc /spack/etc
-COPY lib /spack/lib
+COPY bin   /spack/bin
+COPY etc   /spack/etc
+COPY lib   /spack/lib
+COPY share /spack/share
+COPY var   /spack/var
 
-COPY share/spack/csh /spack/share/spack/csh
-COPY share/spack/docs /spack/share/spack/docs
-COPY share/spack/logo /spack/share/spack/logo
-COPY share/spack/qa /spack/share/spack/qa
-COPY share/spack/setup-env.* /spack/share/spack/
-COPY share/spack/spack-completion.bash /spack/share/spack
-COPY share/spack/templates /spack/share/spack/templates
-
-COPY share/spack/docker/*.* /spack/share/spack/docker/
-COPY share/spack/docker/package-index /spack/share/spack/docker/package-index
-
-COPY var /spack/var
-
-COPY share/spack/docker/conf/0* /spack/share/spack/docker/conf/
-RUN /spack/share/spack/docker/run-bootstrap.sh 0
-
-COPY share/spack/docker/conf/1* /spack/share/spack/docker/conf/
-RUN /spack/share/spack/docker/run-bootstrap.sh 1
-
-COPY share/spack/docker/conf/2* /spack/share/spack/docker/conf/
-RUN /spack/share/spack/docker/run-bootstrap.sh 2
-
-COPY share/spack/docker/conf/3* /spack/share/spack/docker/conf/
-RUN /spack/share/spack/docker/run-bootstrap.sh 3
-
-RUN /spack/bin/spack clean -a
+RUN /spack/share/spack/docker/run-bootstrap.sh \
+ && /spack/bin/spack clean -a \
+ && rm -rf /spack/cache /spack/var/spack/cache
 
 FROM base
 
@@ -80,11 +57,11 @@ ENV SPACK_ROOT=/opt/spack
 COPY --from=bootstrap /spack /opt/spack
 
 RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /bin/docker-shell \
+          /usr/local/bin/docker-shell \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /bin/interactive-shell \
+          /usr/local/bin/interactive-shell \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /bin/spack-env \
+          /usr/local/bin/spack-env \
 \
 # [WORKAROUND]
 # https://superuser.com/questions/1241548/
@@ -140,11 +117,6 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
  && rm -rf /usr/bin/file /usr/bin/python /root/*.* /root/.spack
 
 SHELL ["docker-shell"]
-
-# RUN spack load gcc \
-#  && spack compiler find --scope system \
-#  && find "$( spack location --install gcc )/libexec" \
-#         -iname 'mkheaders' -exec '{}' ';' -quit
 
 USER spack
 WORKDIR /home/spack

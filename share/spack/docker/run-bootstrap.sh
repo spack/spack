@@ -55,7 +55,10 @@ cd /work
 eval "$( /spack/bin/spack --print-shell-vars sh )"
 compatible_sys_type="$( echo $_sp_compatible_sys_types | sed 's/.*://g' )"
 
+set +e
 phase="$1" ; shift
+set -e
+
 counting=0
 if [ -z "$phase" ] ; then
     phase=0
