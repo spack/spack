@@ -307,8 +307,7 @@ def mirror_create(args):
         exclude_specs = _read_specs_from_file(args.exclude_file)
         mirror_specs = list(
             x for x in mirror_specs
-            if not any(x.satisfies(y, strict=True)
-            for y in exclude_specs))
+            if not any(x.satisfies(y, strict=True) for y in exclude_specs))
 
     mirror = spack.mirror.Mirror(
         args.directory or spack.config.get('config:source_cache'))
