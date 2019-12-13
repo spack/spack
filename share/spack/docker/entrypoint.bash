@@ -66,6 +66,13 @@ init_env_modules() {
     )
 }
 
+init() {
+    init_env_modules init/bash
+    mkdir -p /spack/junit-report
+}
+
+
+
 mode=oneshot
 
 if [ "$( basename "$0" )" '=' 'spack-env' ] ; then
@@ -94,7 +101,7 @@ case "$mode" in
         #   docker run ... --entrypoint spack-env ... sh -c "..."
         #
         # The shell script runs with spack pre-loaded and ready to use.
-        init_env_modules init/bash
+        init
         . $SPACK_ROOT/share/spack/setup-env.sh
         unset CURRENTLY_BUILDING_DOCKER_IMAGE
         exec "$@"
@@ -113,7 +120,7 @@ case "$mode" in
         #   COPY spack.yaml .
         #   RUN spack install  # <- Spack is loaded and ready to use.
         #                      # No manual initialization necessary.
-        init_env_modules init/bash
+        init
         . $SPACK_ROOT/share/spack/setup-env.sh
         exec bash -c "$*"
         ;;
@@ -132,7 +139,7 @@ case "$mode" in
         # ENTRYPOINT overrides:
         #   docker run -it spack/centos7
         if [ -t 0 ] ; then
-            init_env_modules init/bash init/bash_completion
+            init
             . $SPACK_ROOT/share/spack/setup-env.sh
             . $SPACK_ROOT/share/spack/spack-completion.bash
             unset CURRENTLY_BUILDING_DOCKER_IMAGE
@@ -187,7 +194,7 @@ case "$mode" in
         exec 1>&-
         exec 2>&-
 
-        init_env_modules init/bash
+        init
         . $SPACK_ROOT/share/spack/setup-env.sh
         unset CURRENTLY_BUILDING_DOCKER_IMAGE
 
