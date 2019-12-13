@@ -11,7 +11,7 @@ class BerkeleyDb(AutotoolsPackage):
 
     homepage = "http://www.oracle.com/technetwork/database/database-technologies/berkeleydb/overview/index.html"
     url      = "http://download.oracle.com/berkeley-db/db-5.3.28.tar.gz"
- 
+
     version('5.3.28', sha256='e0a992d740709892e81f9d93f06daf305cf73fb81b545afe72478043172c3628')
     version('6.0.35', sha256='24421affa8ae436fe427ae4f5f2d1634da83d3d55a5ad6354a98eeedb825de55')
     version('6.1.29', sha256='b3c18180e4160d97dd197ba1d37c19f6ea2ec91d31bbfaf8972d99ba097af17d')
