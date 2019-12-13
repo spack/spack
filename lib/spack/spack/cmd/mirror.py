@@ -49,6 +49,9 @@ def setup_parser(subparser):
              " (this requires significant time and space)")
     create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
+    create_parser.add_argument(
+        '--exclude-file',
+        help="specs which Spack should not try to add to a mirror")
 
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
@@ -299,6 +302,13 @@ def mirror_create(args):
             else:
                 mirror_specs = spack.mirror.get_matching_versions(
                     specs, num_versions=num_versions)
+
+    if args.exclude_file:
+        exclude_specs = _read_specs_from_file(args.exclude_file)
+        mirror_specs = list(
+            x for x in mirror_specs
+            if not any(x.satisfies(y, strict=True)
+            for y in exclude_specs))
 
     mirror = spack.mirror.Mirror(
         args.directory or spack.config.get('config:source_cache'))
