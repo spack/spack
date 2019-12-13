@@ -72,7 +72,7 @@ def run_stages() {
 
 pipeline {
     agent {
-        label 'bb5-full'
+        label 'bb5'
     }
 
     options {
@@ -107,9 +107,10 @@ pipeline {
         DOCKERDIR = "${DEPLOYMENT_ROOT}/spack/docker"
     }
 
-    triggers {
-        cron('H H(0-7) * * *')
-    }
+    // Configured via the UI to allow concurrent PR builds
+    // triggers {
+    //     cron('H H(0-7) * * *')
+    // }
 
     stages {
         stage('Setup') {
