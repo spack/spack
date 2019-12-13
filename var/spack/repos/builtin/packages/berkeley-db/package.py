@@ -27,7 +27,8 @@ class BerkeleyDb(AutotoolsPackage):
 #
 #    def url_for_version(self, version):
 #        # newer version need oracle login, so get them from gentoo mirror
-#        return 'http://distfiles.gentoo.org/distfiles/db-{0}.tar.gz'.format(version)
+#        url_fmt = 'http://distfiles.gentoo.org/distfiles/db-{0}.tar.gz'
+#        return url_fmt.format(version)
 
     def configure_args(self):
         return ['--disable-static', '--enable-cxx', '--enable-stl']
