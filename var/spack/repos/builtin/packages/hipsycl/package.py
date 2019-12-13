@@ -93,12 +93,12 @@ class Hipsycl(CMakePackage):
                 path.dirname(llvm_clang_include_dirs[0])
             )
         )
-        # target clang executable
-        llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang")
+        # target clang++ executable
+        llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang++")
         if not filesystem.is_exe(llvm_clang_bin):
             raise InstallError(
                 "concretized llvm dependency must provide a "
-                "valid clang executable, found invalid: "
+                "valid clang++ executable, found invalid: "
                 "{0}".format(llvm_clang_bin)
             )
         args.append(
