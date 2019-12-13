@@ -88,8 +88,8 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     """Test that spack load prints an error message without a shell."""
     install('mpileaks')
 
-    out = load('mpileaks')
-    assert 'This command works best with' in out
+    out = load('mpileaks', fail_on_error=False)
+    assert "To initialize spack's shell commands" in out
 
 
 def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
@@ -119,5 +119,5 @@ def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     """Test that spack unload prints an error message without a shell."""
     install('mpileaks')
 
-    out = unload('mpileaks')
-    assert 'This command works best with' in out
+    out = unload('mpileaks', fail_on_error=False)
+    assert "To initialize spack's shell commands" in out
