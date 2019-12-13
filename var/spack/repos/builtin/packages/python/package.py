@@ -286,6 +286,10 @@ class Python(AutotoolsPackage):
                     spec['tcl'].libs.ld_flags, spec['tk'].libs.ld_flags)
             ])
 
+        # https://docs.python.org/3.8/library/sqlite3.html#f1
+        if spec.satisfies('@3.2: +sqlite3'):
+            config_args.append('--enable-loadable-sqlite-extensions')
+
         return config_args
 
     @run_after('install')
