@@ -114,9 +114,9 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
     assert 'setenv %s garbage' % uenv.spack_loaded_hashes_var in csh_out
 
 
-def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
-                             mock_packages):
-    """Test that spack load prints an error message without a shell."""
+def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
+                               mock_packages):
+    """Test that spack unload prints an error message without a shell."""
     install('mpileaks')
 
     out = unload('mpileaks')
