@@ -151,38 +151,62 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="filename for the log file. if not passed a default will be used"
     )
     subparser.add_argument(
+        '--help-cdash',
+        action='store_true',
+        help="Show usage instructions for CDash reporting"
+    )
+    add_cdash_args(subparser, False)
+    arguments.add_common_arguments(subparser, ['yes_to_all'])
+
+
+def add_cdash_args(subparser, add_help):
+    cdash_help = {}
+    if add_help:
+        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
+        cdash_help['build'] = """The name of the build that will be reported to CDash.
+Defaults to spec of the package to install."""
+        cdash_help['site'] = """The site name that will be reported to CDash.
+Defaults to current system hostname."""
+        cdash_help['track'] = """Results will be reported to this group on CDash.
+Defaults to Experimental."""
+        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+    else:
+        cdash_help['upload-url'] = argparse.SUPPRESS
+        cdash_help['build'] = argparse.SUPPRESS
+        cdash_help['site'] = argparse.SUPPRESS
+        cdash_help['track'] = argparse.SUPPRESS
+        cdash_help['buildstamp'] = argparse.SUPPRESS
+
+    subparser.add_argument(
         '--cdash-upload-url',
         default=None,
-        help="CDash URL where reports will be uploaded"
+        help=cdash_help['upload-url']
     )
     subparser.add_argument(
         '--cdash-build',
         default=None,
-        help="""The name of the build that will be reported to CDash.
-Defaults to spec of the package to install."""
+        help=cdash_help['build']
     )
     subparser.add_argument(
         '--cdash-site',
         default=None,
-        help="""The site name that will be reported to CDash.
-Defaults to current system hostname."""
+        help=cdash_help['site']
     )
+
     cdash_subgroup = subparser.add_mutually_exclusive_group()
     cdash_subgroup.add_argument(
         '--cdash-track',
         default='Experimental',
-        help="""Results will be reported to this group on CDash.
-Defaults to Experimental."""
+        help=cdash_help['track']
     )
     cdash_subgroup.add_argument(
         '--cdash-buildstamp',
         default=None,
-        help="""Instead of letting the CDash reporter prepare the
-buildstamp which, when combined with build name, site and project,
-uniquely identifies the build, provide this argument to identify
-the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+        help=cdash_help['buildstamp']
     )
-    arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def default_log_file(spec):
@@ -221,6 +245,12 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 
 def install(parser, args, **kwargs):
+    if args.help_cdash:
+        parser = argparse.ArgumentParser()
+        add_cdash_args(parser, True)
+        parser.print_help()
+        return
+
     if not args.package and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
