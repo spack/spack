@@ -239,13 +239,13 @@ class Paraview(CMakePackage, CudaPackage):
             ])
 
         if '+shared' in spec:
-            cmake_args.extend([
+            cmake_args.append(
                 '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=ON'
-            ])
+            )
         else:
-            cmake_args.extend([
+            cmake_args.append(
                 '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
-            ])
+            )
 
         if '+cuda' in spec:
             cmake_args.extend([
