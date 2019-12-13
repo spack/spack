@@ -470,6 +470,7 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
             'pushd "${SPACK_CLONE_LOCATION}"',
             ('git clone "${SPACK_REPO}" --branch "${SPACK_REF}" --depth 1 '
              '--single-branch'),
+            'pushd ./spack && git rev-parse HEAD && popd',
             'popd',
             '. "${SPACK_CLONE_LOCATION}/spack/share/spack/setup-env.sh"',
         ]

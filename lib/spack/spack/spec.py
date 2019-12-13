@@ -2816,6 +2816,11 @@ class Spec(object):
 
         # The only way to satisfy a concrete spec is to match its hash exactly.
         if other.concrete:
+            tty.debug('other spec is concrete, this spec must match exactly')
+            tty.debug('This spec is {0}concrete'.format(
+                '' if self.concrete else 'not '))
+            tty.debug('this hash: {0}, other hash: {1}'.format(
+                self.dag_hash(), other.dag_hash()))
             return self.concrete and self.dag_hash() == other.dag_hash()
 
         # A concrete provider can satisfy a virtual dependency.

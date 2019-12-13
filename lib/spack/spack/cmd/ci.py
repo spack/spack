@@ -348,6 +348,13 @@ def ci_rebuild(args):
         os.dup2(log_fd.fileno(), sys.stdout.fileno())
         os.dup2(log_fd.fileno(), sys.stderr.fileno())
 
+        current_directory = os.getcwd()
+        tty.debug('Current working directory: {0}, Contents:'.format(
+            current_directory))
+        directory_list = os.listdir(current_directory)
+        for next_entry in directory_list:
+            tty.debug('  {0}'.format(next_entry))
+
         tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
 
         if signing_key:
