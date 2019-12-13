@@ -83,6 +83,15 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
     assert 'setenv FOOBAR mpileaks' in csh_out
 
 
+def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
+                             mock_packages):
+    """Test that spack load prints an error message without a shell."""
+    install('mpileaks')
+
+    out = load('mpileaks')
+    assert 'This command works best with' in out
+
+
 def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
                 working_env):
     """Tests that any variables set in the user environment are undone by the
@@ -103,3 +112,12 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
 
     assert 'export %s=garbage' % uenv.spack_loaded_hashes_var in sh_out
     assert 'setenv %s garbage' % uenv.spack_loaded_hashes_var in csh_out
+
+
+def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
+                             mock_packages):
+    """Test that spack load prints an error message without a shell."""
+    install('mpileaks')
+
+    out = unload('mpileaks')
+    assert 'This command works best with' in out
