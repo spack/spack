@@ -5,6 +5,7 @@
 
 from spack import *
 from os import path
+import json
 from llnl.util import filesystem
 
 
@@ -112,3 +113,19 @@ class Hipsycl(CMakePackage):
                 )
             )
         return args
+
+    @run_after("install")
+    def filter_config_file(self):
+        config_file_paths = filesystem.find(self.prefix, "syclcc.json")
+        if len(config_file_paths) != 1:
+            raise InstallError(
+                "installed hipSYCL must provide a unique compiler driver "
+                "configuration file, found: {0}".format(config_file_paths))
+        config_file_path = config_file_paths[0]
+        with open(config_file_path) as f:
+            config = json.load(f)
+        # 1. Fix compiler: use the real one in place of the Spack wrapper
+        config["default-cpu-cxx"] = self.compiler.cxx
+        # Replace the installed config file
+        with open(config_file_path, "w") as f:
+            json.dump(config, f, indent=2)
