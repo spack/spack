@@ -8,6 +8,11 @@ from spack import *
 
 class Hbase(Package):
     """
+    Apache HBase is an open-source, distributed, versioned, column-oriented
+    store modeled after Google' Bigtable: A Distributed Storage System for
+    Structured Data by Chang et al. Just as Bigtable leverages the distributed
+    data storage provided by the Google File System, HBase provides
+    Bigtable-like capabilities on top of Apache Hadoop.
     """
 
     homepage = "https://github.com/apache/hbase"
