@@ -28,9 +28,15 @@ class Motif(AutotoolsPackage):
     depends_on("xbitmaps")
     depends_on("jpeg")
 
+    # we need the following for autoreconf
+    depends_on("automake", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("m4", type="build")
+    depends_on("libtool", type="build")
+
     patch('add_xbitmaps_dependency.patch')
 
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
         with working_dir(self.configure_directory):
-            autoreconf('-ivf', '--warnings=none')
+            autoreconf('-ivf')
