@@ -607,6 +607,8 @@ class PyTensorflow(Package, CudaPackage):
             '--color=no',
             '--jobs={0}'.format(make_jobs),
             '--config=opt',
+            # Enable verbose output for failures
+            '--verbose_failures',
         ]
 
         # See .bazelrc for when each config flag is supported
