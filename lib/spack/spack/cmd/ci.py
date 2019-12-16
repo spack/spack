@@ -355,6 +355,12 @@ def ci_rebuild(args):
         for next_entry in directory_list:
             tty.debug('  {0}'.format(next_entry))
 
+        # Make a copy of the environment file, so we can overwrite the changed
+        # version in between the two invocations of "spack install"
+        env_src_path = os.path.join(current_directory, 'spack.yaml')
+        env_dst_path = os.path.join(current_directory, 'spack.yaml_BACKUP')
+        shutil.copyfile(env_src_path, env_dst_path)
+
         tty.debug('job concrete spec path: {0}'.format(job_spec_yaml_path))
 
         if signing_key:
@@ -438,6 +444,10 @@ def ci_rebuild(args):
                     tty.debug('First pass install arguments: {0}'.format(
                         first_pass_args))
                     spack_cmd(*first_pass_args)
+
+                    # Overwrite the changed environment file so it doesn't
+                    # the next install invocation.
+                    shutil.copyfile(env_dst_path, env_src_path)
 
                 second_pass_args = install_args + [
                     '--no-cache',
