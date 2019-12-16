@@ -22,10 +22,11 @@ class Rose(AutotoolsPackage):
     # --------------------------------------------------------------------------
     # ROSE Versions
     # --------------------------------------------------------------------------
-    # 
+
     version("0.9.13.0", sha256="64092793dfd38d476152696721e29a410bb31dc3eeb6064c7520087aa8c904a6")
-    
-    #Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION and may be different then ROSE_VERSION
+
+    # Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION
+    # EDG_VERSION may be different from ROSE_VERSION
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
@@ -39,7 +40,7 @@ class Rose(AutotoolsPackage):
              when="@0.9.13.0 %gcc@5.0:5.99",
              url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
              sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb")
-    
+
     resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
@@ -239,7 +240,12 @@ class Rose(AutotoolsPackage):
                     env["ROSE_ROOT"] = self.prefix
 
                     bash = which("bash")
-                    bash(join_path(self.stage.source_path, "projects/PolyOpt2/install.sh"))
+                    bash(
+                        join_path(
+                            self.stage.source_path,
+                            "projects/PolyOpt2/install.sh"
+                        )
+                    )
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
