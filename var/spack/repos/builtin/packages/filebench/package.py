@@ -36,6 +36,5 @@ class Filebench(AutotoolsPackage):
         sh('libtoolize')
         sh('aclocal')
         sh('autoheader')
-        sh_automake = Executable('automake --add-missing')
-        sh_automake()
+        sh('automake', '--add-missing')
         sh('autoconf')
