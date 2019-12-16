@@ -13,7 +13,7 @@ class PyGf256(PythonPackage):
     homepage = "https://github.com/DasIch/gf256/"
     url      = "https://github.com/DasIch/gf256/archive/0.2.0.tar.gz"
 
-    version('0.2.0', 'd56d7fe37ea66c16c4a05bc9d5da646a')
+    version('0.2.0', sha256='75966f57674d957fba361b4d41a19ea0989dd55532ca7df1797b1d5c5a67ad71')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi@1.7.0:', type=('build', 'run'))

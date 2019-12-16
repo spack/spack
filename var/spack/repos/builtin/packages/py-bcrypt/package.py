@@ -12,7 +12,7 @@ class PyBcrypt(PythonPackage):
     homepage = "https://github.com/pyca/bcrypt/"
     url      = "https://github.com/pyca/bcrypt/archive/3.1.4.tar.gz"
 
-    version('3.1.4', '2db1e1bf4a9e92f78297e1f090d7a30e')
+    version('3.1.4', sha256='ca122a2cdcdffb0fd04f9dfe3493766f298bef02dea2f190f35ea6fdee222b96')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-cffi@1.1:', type=('build', 'run'))

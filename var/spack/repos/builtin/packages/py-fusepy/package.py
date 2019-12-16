@@ -13,6 +13,6 @@ class PyFusepy(PythonPackage):
     homepage = "https://github.com/fusepy/fusepy"
     url      = "https://github.com/fusepy/fusepy/archive/v2.0.4.tar.gz"
 
-    version('2.0.4', '0b0bf1283d6fe9532ecbf6c8204f05d3')
+    version('2.0.4', sha256='802610ab25ad04fc9ef34d024a0abe41cdcaff6a2cb8b2fb92cdda0057c09d1f')
 
     depends_on('py-setuptools', type='build')
