@@ -20,7 +20,7 @@ class Nicstat(MakefilePackage):
 
     def edit(self, spec, prefix):
         copy('Makefile.Linux', 'makefile')
-        filter_file('CMODEL =\\s+-m32', '', 'makefile')
+        filter_file(r'CMODEL =\s+-m32', '', 'makefile')
         filter_file('sudo', '', 'makefile', string=True)
 
     def install(self, spec, prefix):
