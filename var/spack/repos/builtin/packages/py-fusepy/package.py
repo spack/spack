@@ -35,4 +35,3 @@ class PyFusepy(PythonPackage):
     version('2.0.4', '0b0bf1283d6fe9532ecbf6c8204f05d3')
 
     depends_on('py-setuptools', type='build')
-

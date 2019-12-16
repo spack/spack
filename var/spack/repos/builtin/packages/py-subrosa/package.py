@@ -37,4 +37,3 @@ class PySubrosa(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-gf256',        type=('build', 'run'))
-

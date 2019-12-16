@@ -37,4 +37,3 @@ class PyZxcvbn(PythonPackage):
     version('4.4.25', 'e9bdae7193e6e13438cc9bb11eedd846')
 
     depends_on('py-setuptools', type='build')
-
