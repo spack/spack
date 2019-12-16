@@ -6,6 +6,7 @@
 from spack import *
 import glob
 import os
+import platform
 
 
 class Likwid(Package):
@@ -41,6 +42,10 @@ class Likwid(Package):
     depends_on('perl', type=('build', 'run'))
 
     supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+    if platform.machine() == 'aarch64':
+        supported_compilers = {'gcc' : 'GCCARMv8'}
+    elif platform.machine().startswith('ppc64'):
+        supported_compilers = {'gcc' : 'GCCPOWER'}
 
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
