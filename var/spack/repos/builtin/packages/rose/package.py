@@ -16,43 +16,43 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    url = "https://github.com/rose-compiler/rose/archive/v0.9.12.45.zip"
+    url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
     git = "https://github.com/rose-compiler/rose.git"
 
     # --------------------------------------------------------------------------
     # ROSE Versions
     # --------------------------------------------------------------------------
     # 
-    version("0.9.12.45", sha256="1c6768b8df2e4bcb9608ff5f0d15a56c237c37092968cadbef7294fa1d5256ae")
+    version("0.9.13.0", sha256="64092793dfd38d476152696721e29a410bb31dc3eeb6064c7520087aa8c904a6")
     
     #Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION and may be different then ROSE_VERSION
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.45.tar.gz",
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.12.45 %gcc@4.9.0:4.9.99",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.45.tar.gz",
-             sha256="859330f70e58900dc3a6be294250de1868dfc853cd65e1d8e906c9b0134cc22a")
+             when="@0.9.13.0 %gcc@4.9.0:4.9.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
+             sha256="fb4b50606bdc681b864bbece46d344d7775780ffe7883aa96305d732c9c04a1c")
 
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.45.tar.gz",
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.12.45 %gcc@5.0:5.99",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.45.tar.gz",
-             sha256="822add985b8364d0ea81bf57786c73b6d89f7583f6765e556036a89ce8cfdfb8")
+             when="@0.9.13.0 %gcc@5.0:5.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
+             sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb")
     
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.45.tar.gz",
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.12.45 %gcc@6.0:6.99",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.45.tar.gz",
-             sha256="45222ad510bf8350f1e0cb6945cb22646804e82b23dfffa4f11ff96d082323e7")
+             when="@0.9.13.0 %gcc@6.0:6.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
+             sha256="561cd5a944d0dd01689aa0bea8eccf30fc994cd20c4c05da7943c6f36cec25b5")
 
-    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.45.tar.gz",
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
              expand=False,
              placement="rose-build/src/frontend/CxxFrontend/",
-             when="@0.9.12.45 %gcc@7.0:7.99",
-             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.45.tar.gz",
-             sha256="feb318b186919734de952bf3302c19a44f1d4c759cd0abaf554adc074b82ab03")
+             when="@0.9.13.0 %gcc@7.0:7.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
+             sha256="800a178804e8b5e936942b4eb036cc61e5d5ad43551cb4fd901ec42ba7e7a176")
 
     # git versions depends on internet connection at build time
     version("develop", branch="develop")
