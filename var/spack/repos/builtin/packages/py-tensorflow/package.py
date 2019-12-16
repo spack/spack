@@ -613,9 +613,9 @@ class PyTensorflow(Package, CudaPackage):
             '--subcommands=pretty_print',
             # Ask bazel to explain what it's up to
             # Needs a filename as argument
-            '--explain explainlogfile',
+            #'--explain=explainlogfile',
             # Increase verbosity of explanation,
-            '--verbose_explanations',
+            #'--verbose_explanations',
         ]
 
         # See .bazelrc for when each config flag is supported
