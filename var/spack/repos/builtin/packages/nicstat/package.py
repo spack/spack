@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
-class Nicstat(Package):
+class Nicstat(MakefilePackage):
     """
     Nicstat is a Solaris and Linux command-line that prints out network
     statistics for all network interface cards (NICs), including packets,
@@ -19,9 +18,10 @@ class Nicstat(Package):
 
     version('1.95', sha256='c4cc33f8838f4523f27c3d7584eedbe59f4c587f0821612f5ac2201adc18b367')
 
+    def edit(self, spec, prefix):
+        copy('Makefile.Linux', 'makefile')
+        filter_file('CMODEL =\\s+-m32', '', 'makefile')
+        filter_file('sudo', '', 'makefile', string=True)
+
     def install(self, spec, prefix):
-        os.popen("mv Makefile.Linux makefile && sed -i '23cCMODEL=""' makefile\
-        && sed -i 's/sudo/''/g' makefile && mkdir /usr/local/share/man/man1 ")
-        make()
-        make('install')
         install_tree(".", prefix)
