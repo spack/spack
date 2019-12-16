@@ -34,4 +34,4 @@ class PyHvac(PythonPackage):
     version('0.2.17', '62c42b422ebf336e7499422af4d30003')
 
     depends_on('py-setuptools', type='build')
-
+    depends_on('py-requests@2.7.0:', type=('build', 'run'))

@@ -29,14 +29,7 @@ class PyPythonLogstash(PythonPackage):
     """Python logging handler for Logstash."""
 
     homepage = "https://github.com/vklochan/python-logstash"
-    url      = "https://files.pythonhosted.org/packages/4e/8d/7ff2e8e8e2613e7bb7654790480bb4cf51a55721371adbb631b16cb16dce/python-logstash-0.4.6.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-logstash/python-logstash-0.4.6.tar.gz"
 
     version('0.4.6', '26fafa0ea306025fb7644d70cb38982a')
-
-    def patch(self):
-        filter_file(r'from distutils.core import setup', 
-                    'from setuptools import setup', 
-                    'setup.py')
-
-    depends_on('py-setuptools', type='build')
 

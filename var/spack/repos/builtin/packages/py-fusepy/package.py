@@ -27,13 +27,7 @@ from spack import *
 
 class PyFusepy(PythonPackage):
     """Fusepy is a Python module that provides a simple interface to FUSE and
-    MacFUSE. It's just one file and is implemented using ctypes.
-
-    The original version of fusepy was hosted on Google Code, but is now 
-    officially hosted on GitHub.
-
-    fusepy is written in 2x syntax, but trying to pay attention to bytes and other
-    changes 3x would care about."""
+    MacFUSE. It's just one file and is implemented using ctypes."""
 
     homepage = "https://github.com/fusepy/fusepy"
     url      = "https://github.com/fusepy/fusepy/archive/v2.0.4.tar.gz"
