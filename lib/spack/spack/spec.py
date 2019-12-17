@@ -2243,10 +2243,12 @@ class Spec(object):
 
         # If any spec in the DAG is deprecated, throw an error
         deprecated = []
-        for x in self.traverse():
-            _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
-            if rec and rec.deprecated_for:
-                deprecated.append(rec)
+        with spack.store.db.read_transaction():
+            for x in self.traverse():
+                _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+                if rec and rec.deprecated_for:
+                    deprecated.append(rec)
+
         if deprecated:
             msg = "\n    The following specs have been deprecated"
             msg += " in favor of specs with the hashes shown:\n"
