@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='dev')
+    version('0.10.2',  tag='0.10.2-alpha')
     version('0.10.1',  tag='0.10.1-alpha')
     version('0.10.0',  tag='0.10.0-alpha')
 
