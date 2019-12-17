@@ -607,6 +607,15 @@ class PyTensorflow(Package, CudaPackage):
             '--color=no',
             '--jobs={0}'.format(make_jobs),
             '--config=opt',
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
         ]
 
         # See .bazelrc for when each config flag is supported
