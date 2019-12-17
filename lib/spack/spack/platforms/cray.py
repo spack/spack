@@ -118,9 +118,10 @@ class Cray(Platform):
             env.add_default_arg('-')
             # CAUTION - $USER is generally needed in the sub-environment.
             # There may be other variables needed for general success.
+            # TODO: temporary workaround until upstream is merged
             output = env('USER=%s' % os.environ['USER'],
                          'HOME=%s' % os.environ['HOME'],
-                         '/bin/bash', '--noprofile', '--norc', '-c',
+                         '/bin/bash', '--noprofile', '-c',
                          '. /etc/profile; module list -lt',
                          output=str, error=str)
             self._defmods = _get_modules_in_modulecmd_output(output)

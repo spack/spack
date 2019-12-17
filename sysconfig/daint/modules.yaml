@@ -36,6 +36,7 @@ modules:
       - 'neurodamus-hippocampus'
       - 'neuron'
       - 'py-bluepy'
+      - 'py-bluepyopt'
     blacklist:
       - '%gcc'
       - '%intel'

@@ -1,8 +1,8 @@
 packages:
     mpich:
         modules:
-            mpich@7.7.2 arch=cray-cnl6-haswell: cray-mpich/7.7.2
-        version: [7.7.2]
+            mpich@7.7.10 arch=cray-cnl6-haswell: cray-mpich/7.7.10
+        version: [7.7.10]
         buildable: False
     autoconf:
         paths:
@@ -11,29 +11,29 @@ packages:
         version: [2.69]
     flex:
         paths:
-            flex@2.5.37: /usr
+            flex@2.6.4: /usr
         buildable: False
-        version: [2.5.37]
+        version: [2.6.4]
     bison:
         paths:
-            bison@2.7: /usr
+            bison@3.0.4: /usr
         buildable: False
-        version: [2.7]
+        version: [3.0.4]
     automake:
         paths:
-            automake@1.13.4: /usr
+            automake@1.15.1: /usr
         buildable: False
-        version: [1.13.4]
+        version: [1.15.1]
     pkg-config:
         paths:
-            pkg-config@0.28: /usr
+            pkg-config@0.29.2: /usr
         buildable: False
-        version: [0.28]
+        version: [0.29.2]
     libtool:
         paths:
-            libtool@2.4.2: /usr
+            libtool@2.4.6: /usr
         buildable: False
-        version: [2.4.2]
+        version: [2.4.6]
     openssl:
         paths:
             openssl@system: /usr
@@ -41,59 +41,58 @@ packages:
         version: [system]
     cmake:
         paths:
-            cmake@3.12.4: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/CMake/3.12.4
+            cmake@3.14.5: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/CMake/3.14.5
         buildable: False
-        version: [3.12.4]
+        version: [3.14.5]
     boost:
-        paths:
-            boost@1.67.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/Boost/1.67.0-CrayGNU-18.08
-        buildable: False
-        version: [1.67.0]
+        version: [1.68.0]
     ncurses:
         paths:
-            ncurses@6.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/ncurses/6.1-CrayGNU-18.08
+            ncurses@6.1: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/ncurses/6.1
         buildable: False
         version: [6.1]
     hdf5:
         paths:
-            hdf5@1.8.16~mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5/1.8.16/GNU/5.1
-            hdf5@1.8.16+mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5-parallel/1.8.16/GNU/5.1
+            hdf5@1.10.5.1~mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5/1.10.5.1/gnu/7.1
+            hdf5@1.10.5.1+mpi+hl arch=cray-cnl6-haswell: /opt/cray/pe/hdf5-parallel/1.10.5.1/gnu/7.1
         buildable: False
-        version: [1.8.16]
+        version: [1.10.5.1]
+    zeromq:
+        variants: ~libsodium
     zlib:
         paths:
-            zlib@1.2.11 arch=cray-cnl6-haswell: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/zlib/1.2.11-CrayGNU-18.08/
+            zlib@1.2.11 arch=cray-cnl6-haswell: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/zlib/1.2.11-CrayGNU-19.10
         buildable: False
         version: [1.2.11]
     python:
         paths:
-            python@2.7.15.1: /opt/python/2.7.15.1
-        version: [2.7.15.1]
+            python@2.7.15.7: /opt/python/2.7.15.7
+        version: [2.7.15.7]
     py-h5py:
         paths:
-            py-h5py~mpi@2.8.0: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/h5py/2.8.0-CrayGNU-18.08-python2-serial
+            py-h5py~mpi@2.8.0: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/h5py/2.8.0-CrayGNU-19.10-python2-serial
         version: [2.8.0]
     py-matplotlib:
         paths:
-            py-matplotlib@2.2.2: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/PyExtensions/2.7.15.1-CrayGNU-18.08
+            py-matplotlib@2.2.2: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/PyExtensions/2.7.15.7-CrayGNU-19.10
         version: [2.2.2]
     py-numpy:
         paths:
-            py-numpy@1.14.3: /opt/python/2.7.15.1
+            py-numpy@1.14.3: /opt/python/2.7.15.7
         version: [1.14.3]
     py-pandas:
         paths:
-            py-pandas@0.23.2: /apps/daint/UES/jenkins/6.0.UP07/mc/easybuild/software/PyExtensions/2.7.15.1-CrayGNU-18.08
+            py-pandas@0.23.2: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/PyExtensions/2.7.15.7-CrayGNU-19.10
         version: [0.23.2]
     py-scipy:
         paths:
-            py-scipy@1.1.0: /opt/python/2.7.15.1
+            py-scipy@1.1.0: /opt/python/2.7.15.7
         version: [1.1.0]
     neuron:
         variants: +mpi +cross-compile
     reportinglib:
         variants: +static
     all:
-        compiler: [intel@18.0.2.199]
+        compiler: [intel@19.0.1.144]
         providers:
-            mpi: [mpich@7.7.2]
+            mpi: [mpich@7.7.10]

@@ -38,6 +38,7 @@ class Highfive(CMakePackage):
     depends_on('hdf5 +mpi', when='+mpi')
     depends_on('eigen', when='+eigen')
     depends_on('xtensor', when='+xtensor')
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
         return [
