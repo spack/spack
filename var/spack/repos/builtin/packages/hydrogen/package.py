@@ -17,7 +17,7 @@ class Hydrogen(CMakePackage):
     git      = "https://github.com/LLNL/Elemental.git"
 
     version('develop', branch='hydrogen')
-    version('1.3.2', sha256='e15a087347d68c1bdadf695826803c4d43e0ce7c14846dc580182c125a4025dd')
+    version('1.3.2', sha256='50bc5e87955f8130003d04dfd9dcad63107e92b82704f8107baf95b0ccf98ed6')
     version('1.3.1', sha256='a8b8521458e9e747f2b24af87c4c2749a06e500019c383e0cefb33e5df6aaa1d')
     version('1.3.0', sha256='0f3006aa1d8235ecdd621e7344c99f56651c6836c2e1bc0cf006331b70126b36')
     version('1.2.0',   sha256='8545975139582ee7bfe5d00f8d83a8697afc285bf7026b0761e9943355974806')
