@@ -12,7 +12,7 @@ class Mpc(AutotoolsPackage, GNUMirrorPackage):
        result."""
 
     homepage = "http://www.multiprecision.org"
-    gnu_path = "mpc/mpc-1.1.0.tar.gz"
+    gnu_mirror_path = "mpc/mpc-1.1.0.tar.gz"
     list_url = "http://www.multiprecision.org/mpc/download.html"
 
     version('1.1.0', sha256='6985c538143c1208dcb1ac42cedad6ff52e267b47e5f970183a3e75125b43c2e')

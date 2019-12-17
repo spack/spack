@@ -11,7 +11,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
        floating-point computations with correct rounding."""
 
     homepage = "https://www.mpfr.org/"
-    gnu_path = "mpfr/mpfr-4.0.2.tar.bz2"
+    gnu_mirror_path = "mpfr/mpfr-4.0.2.tar.bz2"
 
     version('4.0.2', sha256='c05e3f02d09e0e9019384cdd58e0f19c64e6db1fd6f5ecf77b4b1c61ca253acc')
     version('4.0.1', sha256='a4d97610ba8579d380b384b225187c250ef88cfe1d5e7226b89519374209b86b')

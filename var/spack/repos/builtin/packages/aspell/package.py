@@ -12,7 +12,7 @@ class Aspell(AutotoolsPackage, GNUMirrorPackage):
     eventually replace Ispell."""
 
     homepage = "http://aspell.net/"
-    gnu_path = "aspell/aspell-0.60.6.1.tar.gz"
+    gnu_mirror_path = "aspell/aspell-0.60.6.1.tar.gz"
 
     extendable = True  # support activating dictionaries
 

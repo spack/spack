@@ -576,7 +576,7 @@ or ``urls`` can be present in a package, but not both at the same time.
 A well-known case of packages that can be fetched from multiple mirrors is that
 of GNU. For that, Spack goes a step further and defines a mixin class that
 takes care of all of the plumbing and requires packagers to just define a proper
-``gnu_path`` attribute:
+``gnu_mirror_path`` attribute:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/autoconf/package.py
    :lines: 9-18

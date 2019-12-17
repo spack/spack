@@ -13,7 +13,7 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
        operating system.
     """
     homepage = "http://www.gnu.org/software/coreutils/"
-    gnu_path = "coreutils/coreutils-8.26.tar.xz"
+    gnu_mirror_path = "coreutils/coreutils-8.26.tar.xz"
 
     version('8.29', sha256='92d0fa1c311cacefa89853bdb53c62f4110cdfda3820346b59cbd098f40f955e')
     version('8.26', sha256='155e94d748f8e2bc327c66e0cbebdb8d6ab265d2f37c3c928f7bf6c3beba9a8e')

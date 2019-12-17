@@ -11,7 +11,7 @@ class Libunistring(AutotoolsPackage, GNUMirrorPackage):
     and for manipulating C strings according to the Unicode standard."""
 
     homepage = "https://www.gnu.org/software/libunistring/"
-    gnu_path = "libunistring/libunistring-0.9.10.tar.xz"
+    gnu_mirror_path = "libunistring/libunistring-0.9.10.tar.xz"
 
     version('0.9.10', sha256='eb8fb2c3e4b6e2d336608377050892b54c3c983b646c561836550863003c05d7')
     version('0.9.9',  sha256='a4d993ecfce16cf503ff7579f5da64619cee66226fb3b998dafb706190d9a833')

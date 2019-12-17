@@ -18,7 +18,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    gnu_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
+    gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
@@ -229,11 +229,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before
-        # mirrors are tried. It takes care of modifying the suffix of gnu_path
-        # so that Spack will also look for the correct file in the mirrors
+        # mirrors are tried. It takes care of modifying the suffix of gnu
+        # mirror path so that Spack will also look for the correct file in
+        # the mirrors
         if (version < Version('6.4.0')and version != Version('5.5.0')) \
                 or version == Version('7.1.0'):
-            self.gnu_path = self.gnu_path.replace('xz', 'bz2')
+            self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
         return super(Gcc, self).url_for_version(version)
 
     def patch(self):

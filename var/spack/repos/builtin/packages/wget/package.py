@@ -13,7 +13,7 @@ class Wget(AutotoolsPackage, GNUMirrorPackage):
     cron jobs, terminals without X-Windows support, etc."""
 
     homepage = "http://www.gnu.org/software/wget/"
-    gnu_path = "wget/wget-1.19.1.tar.gz"
+    gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
     version('1.20.3', sha256='31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e')
     version('1.19.1', sha256='9e4f12da38cc6167d0752d934abe27c7b1599a9af294e73829be7ac7b5b4da40')

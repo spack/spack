@@ -15,7 +15,7 @@ class Gperf(AutotoolsPackage, GNUMirrorPackage):
     single string comparison only."""
 
     homepage = "https://www.gnu.org/software/gperf/"
-    gnu_path = "gperf/gperf-3.0.4.tar.gz"
+    gnu_mirror_path = "gperf/gperf-3.0.4.tar.gz"
 
     version('3.0.4', sha256='767112a204407e62dbc3106647cf839ed544f3cf5d0f0523aaa2508623aad63e')
 

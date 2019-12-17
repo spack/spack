@@ -11,7 +11,7 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    gnu_path = "gmp/gmp-6.1.2.tar.bz2"
+    gnu_mirror_path = "gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  sha256='5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2')
     version('6.1.1',  sha256='a8109865f2893f1373b0a8ed5ff7429de8db696fc451b1036bd7bdf95bbeffd6')

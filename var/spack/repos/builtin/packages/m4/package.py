@@ -10,7 +10,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
-    gnu_path = "m4/m4-1.4.18.tar.gz"
+    gnu_mirror_path = "m4/m4-1.4.18.tar.gz"
 
     version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
     version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')

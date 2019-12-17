@@ -16,7 +16,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
     # URL must remain http:// so Spack can bootstrap curl
-    gnu_path = "readline/readline-8.0.tar.gz"
+    gnu_mirror_path = "readline/readline-8.0.tar.gz"
 
     version('8.0', sha256='e339f51971478d369f8a053a330a190781acb9864cf4c541060f12078948e461')
     version('7.0', sha256='750d437185286f40a369e1e4f4764eda932b9459b5ec9a731628393dd3d32334')

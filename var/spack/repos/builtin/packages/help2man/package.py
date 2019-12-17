@@ -11,7 +11,7 @@ class Help2man(AutotoolsPackage, GNUMirrorPackage):
     output of other commands."""
 
     homepage = "https://www.gnu.org/software/help2man/"
-    gnu_path = "help2man/help2man-1.47.11.tar.xz"
+    gnu_mirror_path = "help2man/help2man-1.47.11.tar.xz"
 
     version('1.47.11', sha256='5985b257f86304c8791842c0c807a37541d0d6807ee973000cf8a3fe6ad47b88')
     version('1.47.8', sha256='528f6a81ad34cbc76aa7dce5a82f8b3d2078ef065271ab81fda033842018a8dc')

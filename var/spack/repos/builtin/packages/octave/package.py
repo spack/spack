@@ -15,7 +15,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     Matlab. It may also be used as a batch-oriented language."""
 
     homepage = "https://www.gnu.org/software/octave/"
-    gnu_path = "octave/octave-4.0.0.tar.gz"
+    gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
 
     extendable = True
 

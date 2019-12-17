@@ -13,7 +13,7 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
     synchronized."""
 
     homepage = "https://www.gnu.org/software/autogen/index.html"
-    gnu_path = "autogen/rel5.18.12/autogen-5.18.12.tar.gz"
+    gnu_mirror_path = "autogen/rel5.18.12/autogen-5.18.12.tar.gz"
     list_url = "https://ftp.gnu.org/gnu/autogen"
     list_depth = 1
 
