@@ -441,6 +441,7 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
+@memoized
 def get_platform(platform_name):
     """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()
