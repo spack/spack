@@ -17,6 +17,8 @@ class Lbann(CMakePackage):
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
 
+    maintainers = ['bvanessen']
+
     version('develop', branch='develop')
     version('0.99', branch='develop')
     version('0.98.1', sha256='9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66')
