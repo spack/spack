@@ -3,10 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# -----------------------------------------------------------------------------
-# Author: Nathan Pinnow
-# -----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -18,6 +14,8 @@ class Rose(AutotoolsPackage):
     homepage = "http://rosecompiler.org/"
     url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
     git = "https://github.com/rose-compiler/rose.git"
+
+    maintainers = ['pinnown']
 
     # --------------------------------------------------------------------------
     # ROSE Versions
@@ -98,7 +96,7 @@ class Rose(AutotoolsPackage):
     variant("cxx11", default=True, description="Enable c++11 language support")
 
     variant("fortran", default=False, description="Enable fortran language support")
-    depends_on("openjdk@1.8.0_202-b08", when="+fortran")
+    depends_on("java@8", when="+fortran")
 
     variant("z3", default=False, description="Enable z3 theorem prover")
     depends_on("z3", when="+z3")
@@ -181,7 +179,7 @@ class Rose(AutotoolsPackage):
             args.append("--disable-tutorial-directory")
 
         if "+fortran" in spec:
-            args.append("--with-java={0}".format(spec["openjdk"].prefix))
+            args.append("--with-java={0}".format(spec["java"].prefix))
         else:
             args.append("--without-java")
 
