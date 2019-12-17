@@ -397,10 +397,14 @@ def ci_rebuild(args):
             # FIXME: ensure mirror precedence causes this local mirror to
             # be chosen ahead of the remote one when installing deps
             if enable_artifacts_mirror:
-                spack_cmd('mirror', 'add', 'local_mirror', artifact_mirror_url)
+                mirror_add_output = spack_cmd(
+                    'mirror', 'add', 'local_mirror', artifact_mirror_url)
+                tty.debug('spack mirror add:')
+                tty.debug(mirror_add_output)
 
+            mirror_list_output = spack_cmd('mirror', 'list')
             tty.debug('listing spack mirrors:')
-            spack_cmd('mirror', 'list')
+            tty.debug(mirror_list_output)
 
             # 2) build up install arguments
             install_args = ['-d', '-v', '-k', 'install', '--keep-stage']
