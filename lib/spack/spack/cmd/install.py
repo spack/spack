@@ -230,8 +230,9 @@ def install(parser, args, **kwargs):
     kwargs['tests'] = tests
 
     try:
-        specs = spack.cmd.parse_specs(
-            args.package, concretize=True, tests=tests)
+        with spack.store.db.read_transaction():
+            specs = spack.cmd.parse_specs(
+                args.package, concretize=True, tests=tests)
     except SpackError as e:
         reporter.concretization_report(e.message)
         raise

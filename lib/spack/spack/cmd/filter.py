@@ -69,21 +69,22 @@ def setup_parser(subparser):
 
 
 def filter(parser, args):
-
     Request = collections.namedtuple('Request', 'abstract,concrete')
-    specs = [Request(s, s.concretized())
-             for s in spack.cmd.parse_specs(args.specs)]
 
-    # Filter specs eagerly
-    if args.installed is True:
-        specs = [s for s in specs if s.concrete.package.installed]
-    elif args.installed is False:
-        specs = [s for s in specs if not s.concrete.package.installed]
+    with spack.store.db.read_transaction():
+        specs = [Request(s, s.concretized())
+                 for s in spack.cmd.parse_specs(args.specs)]
 
-    if args.explicit is True:
-        specs = [s for s in specs if s.concrete._installed_explicitly()]
-    elif args.explicit is False:
-        specs = [s for s in specs if not s.concrete._installed_explicitly()]
+        # Filter specs eagerly
+        if args.installed is True:
+            specs = [s for s in specs if s.concrete.package.installed]
+        elif args.installed is False:
+            specs = [s for s in specs if not s.concrete.package.installed]
 
-    for spec in specs:
-        args.output.write(str(spec.abstract) + '\n')
+        if args.explicit is True:
+            specs = [s for s in specs if s.concrete._installed_explicitly()]
+        elif args.explicit is False:
+            specs = [s for s in specs if not s.concrete._installed_explicitly()]
+
+        for spec in specs:
+            args.output.write(str(spec.abstract) + '\n')

@@ -311,7 +311,8 @@ def refresh(module_type, specs, args):
         if spack.repo.path.exists(spec.name)]
 
     # Filter blacklisted packages early
-    writers = [x for x in writers if not x.conf.blacklisted]
+    with spack.store.db.read_transaction():
+        writers = [x for x in writers if not x.conf.blacklisted]
 
     # Detect name clashes in module files
     file2writer = collections.defaultdict(list)
@@ -320,8 +321,9 @@ def refresh(module_type, specs, args):
 
     if args.latest:
         writers = []
-        for fn, matches in file2writer.items():
-            writers.append(keep_latest(matches))
+        with spack.store.db.read_transaction():
+            for fn, matches in file2writer.items():
+                writers.append(keep_latest(matches))
     elif len(file2writer) != len(writers):
         message = 'Name clashes detected in module files:\n'
         for filename, writer_list in file2writer.items():
@@ -346,13 +348,15 @@ def refresh(module_type, specs, args):
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
-    for x in writers:
-        try:
-            x.write(overwrite=True)
-        except Exception as e:
-            msg = 'Could not write module file [{0}]'
-            tty.warn(msg.format(x.layout.filename))
-            tty.warn('\t--> {0} <--'.format(str(e)))
+    with spack.store.db.read_transaction():
+        for x in writers:
+            try:
+                x.write(overwrite=True)
+            except Exception as e:
+                tty.debug(e)
+                msg = 'Could not write module file [{0}]'
+                tty.warn(msg.format(x.layout.filename))
+                tty.warn('\t--> {0} <--'.format(str(e)))
 
 
 #: Dictionary populated with the list of sub-commands.
@@ -396,7 +400,8 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     query_args = query_arguments(args)
 
     # Get the specs that match the query from the DB
-    specs = args.specs(**query_args)
+    with spack.store.db.read_transaction():
+        specs = args.specs(**query_args)
 
     try:
 
