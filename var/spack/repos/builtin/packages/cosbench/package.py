@@ -26,4 +26,4 @@ class Cosbench(Package):
     depends_on('curl@7.22.0:', type='run')
 
     def install(self, spec, prefix):
-        copy_tree('.', prefix)
+        install_tree('.', prefix)
