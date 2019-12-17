@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Half(Package):
     """This is a C++ header-only library to provide an IEEE-754 conformant
     half-precision floating point type along with corresponding
@@ -21,6 +22,7 @@ class Half(Package):
     maintainers = ['bvanessen']
 
     version('2.1.0', sha256='ad1788afe0300fa2b02b0d1df128d857f021f92ccf7c8bddd07812685fa07a25')
+
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install_tree('include', prefix.include)
