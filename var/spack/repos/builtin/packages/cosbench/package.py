@@ -22,7 +22,7 @@ class Cosbench(Package):
     version('0.4.1.0',  sha256='a044cd232b3cc376802aa6a4a697988ec690a8b1d70040641710066acd322c5a')
     version('0.4.0.1',  sha256='384e4de218a9a61040f45cf9aa0a555e88ff25fb2b5cd11c540627cd604b4961')
 
-    depends_on('java@1.6:', type='run')
+    depends_on('java@6:', type='run')
     depends_on('curl@7.22.0:', type='run')
 
     def install(self, spec, prefix):
