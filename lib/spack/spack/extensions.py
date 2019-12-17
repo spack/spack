@@ -101,8 +101,8 @@ def load_command_extension(command, path):
 def get_command_paths():
     """Return the list of paths where to search for command files."""
     command_paths = []
-    extension_paths = spack.config.get('config:extensions') or []
-
+    extension_paths = [canonicalize_path(e) for e in
+                       spack.config.get('config:extensions')] or []
     for path in extension_paths:
         extension = extension_name(path)
         if extension:
@@ -139,8 +139,9 @@ def get_module(cmd_name):
     """
     # If built-in failed the import search the extension
     # directories in order
-    extensions = spack.config.get('config:extensions') or []
-    for folder in [canonicalize_path(e) for e in extensions]:
+    extensions = [canonicalize_path(e) for e in
+                  spack.config.get('config:extensions')] or []
+    for folder in extensions:
         module = load_command_extension(cmd_name, folder)
         if module:
             return module
@@ -152,6 +153,7 @@ def get_template_dirs():
     """Returns the list of directories where to search for templates
     in extensions.
     """
-    extension_dirs = spack.config.get('config:extensions') or []
+    extension_dirs = [canonicalize_path(e) for e in
+                      spack.config.get('config:extensions')] or []
     extensions = [os.path.join(x, 'templates') for x in extension_dirs]
     return extensions
