@@ -13,6 +13,7 @@ import types
 import llnl.util.lang
 import llnl.util.tty as tty
 import spack.config
+from spack.util.path import canonicalize_path
 
 extension_regexp = re.compile(r'spack-([\w]*)')
 
@@ -139,7 +140,7 @@ def get_module(cmd_name):
     # If built-in failed the import search the extension
     # directories in order
     extensions = spack.config.get('config:extensions') or []
-    for folder in extensions:
+    for folder in [canonicalize_path(e) for e in extensions]:
         module = load_command_extension(cmd_name, folder)
         if module:
             return module
