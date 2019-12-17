@@ -11,8 +11,8 @@ class PyScipy(PythonPackage):
     It provides many user-friendly and efficient numerical routines such
     as routines for numerical integration and optimization."""
 
-    homepage = "http://www.scipy.org/"
-    url = "https://pypi.io/packages/source/s/scipy/scipy-1.3.3.tar.gz"
+    homepage = "https://www.scipy.org/"
+    url      = "https://pypi.io/packages/source/s/scipy/scipy-1.4.0.tar.gz"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -30,6 +30,7 @@ class PyScipy(PythonPackage):
         'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
     ]
 
+    version('1.4.0',  sha256='31f7cfa93b01507c935c12b535e24812594002a02a56803d7cd063e9920d25e8')
     version('1.3.3',  sha256='64bf4e8ae0db2d42b58477817f648d81e77f0b381d0ea4427385bba3f959380a')
     version('1.3.2',  sha256='a03939b431994289f39373c57bbe452974a7da724ae7f9620a1beee575434da4')
     version('1.3.1',  sha256='2643cfb46d97b7797d1dbdb6f3c23fe3402904e3c90e6facfe6a9b98d808c1b5')
@@ -48,6 +49,7 @@ class PyScipy(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@0.18:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-pybind11@2.2.4:', when='@1.4:', type='build')
     depends_on('py-numpy@1.5.1:+blas+lapack', type=('build', 'run'))
     depends_on('py-numpy@1.6.2:+blas+lapack', when='@0.16:', type=('build', 'run'))
     depends_on('py-numpy@1.7.1:+blas+lapack', when='@0.18:', type=('build', 'run'))
