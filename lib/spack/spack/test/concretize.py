@@ -94,6 +94,10 @@ def current_host(request, monkeypatch):
     # preferred target via packages.yaml
     cpu, _, is_preference = request.param.partition('-')
     target = llnl.util.cpu.targets[cpu]
+
+    # this function is memoized, so clear its state for testing
+    spack.architecture.get_platform.cache.clear()
+
     if not is_preference:
         monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
@@ -103,6 +107,9 @@ def current_host(request, monkeypatch):
         PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
+
+    # clear any test values fetched
+    spack.architecture.get_platform.cache.clear()
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
