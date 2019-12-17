@@ -320,6 +320,7 @@ class URLFetchStrategy(FetchStrategy):
                          partial_file]  # use a .part file
         else:
             save_args = ['-O']
+
         curl_args = save_args + [
             '-f',  # fail on >400 errors
             '-D',
@@ -329,17 +330,22 @@ class URLFetchStrategy(FetchStrategy):
             '--connect-timeout', '10',
             url,
         ]
+
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
+
         if sys.stdout.isatty() and tty.msg_enabled():
             curl_args.append('-#')  # status bar when using a tty
         else:
             curl_args.append('-sS')  # just errors when not.
+
         curl_args += self.extra_curl_options
+
         # Run curl but grab the mime type from the http headers
         curl = self.curl
         with working_dir(self.stage.path):
             headers = curl(*curl_args, output=str, fail_on_error=False)
+
         if curl.returncode != 0:
             # clean up archive on failure.
             if self.archive_file:
@@ -370,6 +376,7 @@ class URLFetchStrategy(FetchStrategy):
                 raise FailedDownloadError(
                     self.url,
                     "Curl failed with error %d" % curl.returncode)
+
         # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
         # redirects properly.
