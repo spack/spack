@@ -14,7 +14,7 @@ import spack.environment as ev
 import spack.util.environment
 import spack.user_environment as uenv
 
-description = "add package to the user environment variables"
+description = "add package to the user environment"
 section = "user environment"
 level = "short"
 
@@ -34,16 +34,27 @@ def setup_parser(subparser):
         help="print csh commands to load the package")
 
     subparser.add_argument(
+        '--only',
+        default='package,dependencies',
+        dest='things_to_load',
+        choices=['package', 'dependencies'],
+        help="""select whether to load the package and its dependencies
+the default is to load the package and all dependencies
+alternatively one can decide to load only the package or only
+the dependencies"""
+    )
+
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help="spec of package to load"
     )
-    arguments.add_common_arguments(subparser, ['recurse_dependencies'])
 
 
 def load(parser, args):
     env = ev.get_env(args, 'load')
-    specs = list(map(lambda spec: spack.cmd.disambiguate_spec(spec, env),
-                     spack.cmd.parse_specs(args.specs)))
+    specs = [spack.cmd.disambiguate_spec(spec, env)
+             for spec in spack.cmd.parse_specs(args.specs)]
+
     if not args.shell:
         msg = [
             "This command works best with Spack's shell support",
@@ -58,9 +69,10 @@ def load(parser, args):
         tty.msg(*msg)
         return 1
 
-    if args.recurse_dependencies:
+    if 'dependencies' in args.things_to_load:
+        include_roots = 'package' in args.things_to_load
         specs = [dep for spec in specs
-                 for dep in spec.traverse(root=True, order='post')]
+                 for dep in spec.traverse(root=include_roots, order='post')]
 
     env_mod = spack.util.environment.EnvironmentModifications()
     for spec in specs:
