@@ -266,6 +266,7 @@ class Root(CMakePackage):
                 ['libcxx', False],
                 ['pch', True],
                 ['roottest', False],
+                ['rpath'],
                 ['runtime_cxxmodules', False],
                 ['shared', True],
                 ['soversion', True],
@@ -357,7 +358,6 @@ class Root(CMakePackage):
                 ['rfio', False],
                 ['roofit'],
                 ['root7'],  # See conflicts
-                ['rpath'],
                 ['ruby', False],
                 ['sapdb', False],
                 ['shadowpw', 'shadow'],
