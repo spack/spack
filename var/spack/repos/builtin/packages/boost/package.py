@@ -18,7 +18,7 @@ class Boost(Package):
        encourages both commercial and non-commercial use.
     """
     homepage = "http://www.boost.org"
-    url      = "http://downloads.sourceforge.net/project/boost/boost/1.71.0/boost_1_71_0.tar.bz2"
+    url      = "http://downloads.sourceforge.net/project/boost/boost/1.72.0/boost_1_72_0.tar.bz2"
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
