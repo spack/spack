@@ -20,6 +20,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution as bindist
+import spack.cmd.buildcache as buildcache
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
@@ -27,6 +28,7 @@ from spack.dependency import all_deptypes
 from spack.error import SpackError
 import spack.hash_types as ht
 from spack.main import SpackCommand
+import spack.repo
 from spack.spec import Spec
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
@@ -867,14 +869,19 @@ def register_cdash_build(build_name, base_url, project, site, track):
     return (build_id, build_stamp)
 
 
-def relate_cdash_builds(spec_map, cdash_api_url, job_build_id, cdash_project,
+def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
                         cdashids_mirror_url):
+    if not job_build_id:
+        return
+
     dep_map = spec_map['deps']
 
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     }
+
+    cdash_api_url = '{0}/api/v1/relateBuilds.php'.format(cdash_base_url)
 
     for dep_pkg_name in dep_map:
         tty.msg('Fetching cdashid file for {0}'.format(dep_pkg_name))
@@ -939,3 +946,39 @@ def read_cdashid_from_mirror(spec, mirror_url):
     contents = response.fp.read()
 
     return int(contents)
+
+
+def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id):
+    if mirror_url:
+        tty.debug('Creating buildcache')
+        buildcache._createtarball(env, yaml_path, None, mirror_url, None,
+                                  True, True, False, False, True, False)
+        if build_id:
+            tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
+                build_id, mirror_url))
+            write_cdashid_to_mirror(build_id, spec, mirror_url)
+
+
+def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
+    try:
+        job_pkg = spack.repo.get(job_spec)
+        tty.debug('job package: {0}'.format(job_pkg))
+        stage_dir = job_pkg.stage.path
+        tty.debug('stage dir: {0}'.format(stage_dir))
+        build_env_src = os.path.join(stage_dir, 'spack-build-env.txt')
+        build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
+        build_env_dst = os.path.join(
+            job_log_dir, 'spack-build-env.txt')
+        build_out_dst = os.path.join(
+            job_log_dir, 'spack-build-out.txt')
+        tty.debug('Copying logs to artifacts:')
+        tty.debug('  1: {0} -> {1}'.format(
+            build_env_src, build_env_dst))
+        shutil.copyfile(build_env_src, build_env_dst)
+        tty.debug('  2: {0} -> {1}'.format(
+            build_out_src, build_out_dst))
+        shutil.copyfile(build_out_src, build_out_dst)
+    except Exception as inst:
+        msg = ('Unable to copy build logs from stage to artifacts '
+               'due to exception: {0}').format(inst)
+        tty.error(msg)

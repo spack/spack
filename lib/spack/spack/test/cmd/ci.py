@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import filecmp
 import os
 import pytest
 
@@ -12,6 +13,7 @@ import spack
 import spack.ci as ci
 import spack.config
 import spack.environment as ev
+import spack.hash_types as ht
 import spack.util.gpg as gpg_util
 from spack.main import SpackCommand
 import spack.paths as spack_paths
@@ -25,6 +27,9 @@ import spack.util.spack_yaml as syaml
 ci_cmd = SpackCommand('ci')
 env_cmd = SpackCommand('env')
 mirror_cmd = SpackCommand('mirror')
+gpg_cmd = SpackCommand('gpg')
+install_cmd = SpackCommand('install')
+buildcache_cmd = SpackCommand('buildcache')
 git = exe.which('git', required=True)
 
 
@@ -188,7 +193,6 @@ spack:
         with open(outputfile) as f:
             contents = f.read()
             yaml_contents = syaml.load(contents)
-            print(yaml_contents)
             found_spec = False
             for ci_key in yaml_contents.keys():
                 if '(bootstrap)' in ci_key:
@@ -199,6 +203,146 @@ spack:
             assert(len(yaml_contents['stages']) == 6)
             assert(yaml_contents['stages'][0] == 'stage-0')
             assert(yaml_contents['stages'][5] == 'stage-rebuild-index')
+
+
+def test_ci_generate_with_env_missing_section(tmpdir, mutable_mock_env_path,
+                                              env_deactivate, install_mockery,
+                                              mock_packages):
+    """Make sure we get a reasonable message if we omit gitlab-ci section"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+""")
+
+    expect_out = 'Error: Environment yaml does not have "gitlab-ci" section'
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+
+        with ev.read('test'):
+            output = ci_cmd('generate', fail_on_error=False, output=str)
+            assert(expect_out in output)
+
+
+def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
+                                      env_deactivate, install_mockery,
+                                      mock_packages):
+    """Make sure we get a reasonable message if we omit gitlab-ci section"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    enable-artifacts-buildcache: True
+    enable-debug-messages: True
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+
+        with ev.read('test'):
+            fake_token = 'notreallyatokenbutshouldnotmatter'
+            copy_to_file = str(tmpdir.join('backup-ci.yml'))
+            output = ci_cmd('generate', '--cdash-token', fake_token,
+                            '--copy-to', copy_to_file, output=str)
+            # That fake token should have resulted in being unable to
+            # register build group with cdash, but the workload should
+            # still have been generated.
+            expect = 'Unable to populate buildgroup without CDash credentials'
+            assert(expect in output)
+
+            dir_contents = os.listdir(tmpdir.strpath)
+
+            print(dir_contents)
+
+            assert('backup-ci.yml' in dir_contents)
+
+            orig_file = str(tmpdir.join('.gitlab-ci.yml'))
+
+            assert(filecmp.cmp(orig_file, copy_to_file) is True)
+
+
+def test_ci_generate_debug_with_custom_spack(tmpdir, mutable_mock_env_path,
+                                             env_deactivate, install_mockery,
+                                             mock_packages):
+    """Make sure we generate cloning of spack in job script if needed"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    enable-artifacts-buildcache: True
+    enable-debug-messages: True
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            # The presence of these environment variables should influence
+            # the generation process to clone spack in a before_script
+            # section.
+            os.environ['SPACK_REPO'] = 'https://github.com/usera/spack.git'
+            os.environ['SPACK_REF'] = 'custom-branch'
+
+            ci_cmd('generate', '--output-file', outfile)
+
+            with open(outfile) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+                for ci_key in yaml_contents.keys():
+                    if '(specs)' in ci_key:
+                        next_job = yaml_contents[ci_key]
+                        print(next_job)
+                        assert('before_script' in next_job)
+                        before_script = next_job['before_script']
+                        for step in before_script:
+                            if 'git clone "${SPACK_REPO}"' in step:
+                                break
+                        else:
+                            msg = 'job "{0}" did not clone spack repo'.format(
+                                ci_key)
+                            print(msg)
+                            assert(False)
+
+                        assert('script' in next_job)
+                        script = next_job['script']
+                        for step in script:
+                            if 'spack -d ci rebuild' in step:
+                                break
+                        else:
+                            msg = 'job {0} missing rebuild command'.format(
+                                ci_key)
+                            print(msg)
+                            assert(False)
 
 
 def test_ci_rebuild_basic(tmpdir, mutable_mock_env_path, env_deactivate,
@@ -310,3 +454,83 @@ def test_ci_pushyaml(tmpdir):
         with open('.gitlab-ci.yml') as fd:
             pushed_contents = fd.read()
             assert pushed_contents == fake_yaml_contents
+
+
+@pytest.mark.disable_clean_stage_check
+def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
+                              install_mockery, mock_packages, mock_fetch,
+                              mock_stage, testing_gpg_directory):
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    signing_key_dir = spack_paths.mock_gpg_keys_path
+    signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
+    with open(signing_key_path) as fd:
+        signing_key = fd.read()
+
+    ci.import_signing_key(signing_key)
+
+    spack_yaml_contents = """
+spack:
+ definitions:
+   - packages: [patchelf]
+ specs:
+   - $packages
+ mirrors:
+   test-mirror: {0}
+""".format(mirror_url)
+
+    print('spack.yaml:\n{0}\n'.format(spack_yaml_contents))
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        with ev.read('test') as env:
+            spec_map = ci.get_concrete_specs(
+                'patchelf', 'patchelf', '', 'FIND_ANY')
+            concrete_spec = spec_map['patchelf']
+            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
+            yaml_path = str(tmpdir.join('spec.yaml'))
+            with open(yaml_path, 'w') as ypfd:
+                ypfd.write(spec_yaml)
+
+            install_cmd('--keep-stage', yaml_path)
+
+            # env, spec, yaml_path, mirror_url, build_id
+            ci.push_mirror_contents(
+                env, concrete_spec, yaml_path, mirror_url, '42')
+
+            buildcache_list_output = buildcache_cmd('list', output=str)
+
+            assert('patchelf' in buildcache_list_output)
+
+            logs_dir = working_dir.join('logs_dir')
+            if not os.path.exists(logs_dir.strpath):
+                os.makedirs(logs_dir.strpath)
+
+            ci.copy_stage_logs_to_artifacts(concrete_spec, logs_dir.strpath)
+
+            logs_dir_list = os.listdir(logs_dir.strpath)
+
+            assert('spack-build-env.txt' in logs_dir_list)
+            assert('spack-build-out.txt' in logs_dir_list)
+
+            # Also just make sure that if something goes wrong with the
+            # stage logs copy, no exception is thrown
+            ci.copy_stage_logs_to_artifacts(None, logs_dir.strpath)
+
+            dl_dir = working_dir.join('download_dir')
+            if not os.path.exists(dl_dir.strpath):
+                os.makedirs(dl_dir.strpath)
+
+            buildcache_cmd('download', '--spec-yaml', yaml_path, '--path',
+                           dl_dir.strpath, '--require-cdashid')
+
+            dl_dir_list = os.listdir(dl_dir.strpath)
+
+            assert(len(dl_dir_list) == 3)

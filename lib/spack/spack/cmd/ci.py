@@ -16,19 +16,12 @@ import spack.ci as spack_ci
 import spack.cmd.buildcache as buildcache
 import spack.environment as ev
 import spack.hash_types as ht
-# from spack.main import SpackCommand
-import spack.repo
 import spack.util.executable as exe
 
 
 description = "Implement various pieces of CI pipeline for spack"
 section = "packaging"     # TODO: where does this go?  new section?
 level = "long"
-
-
-# spack_buildcache = SpackCommand('buildcache')
-# spack_mirror = SpackCommand('mirror')
-# spack_install = SpackCommand('install')
 
 
 def get_env_var(variable_name):
@@ -284,6 +277,13 @@ def ci_rebuild(args):
         eq_idx = proj_enc.find('=') + 1
         cdash_project_enc = proj_enc[eq_idx:]
         cdash_site = ci_cdash['site']
+        tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
+        tty.debug('cdash_project = {0}'.format(cdash_project))
+        tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
+        tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
+        tty.debug('cdash_site = {0}'.format(cdash_site))
+        tty.debug('related_builds = {0}'.format(related_builds))
+        tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     remote_mirror_url = None
     if 'mirrors' in yaml_root:
@@ -292,28 +292,13 @@ def ci_rebuild(args):
         remote_mirror_url = mirror_urls[0]
 
     if not remote_mirror_url:
-        tty.die('spack ci rebuild requires and env containing a mirror')
-
-    enable_artifacts_mirror = False
-    if 'enable-artifacts-buildcache' in gitlab_ci:
-        enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
+        tty.die('spack ci rebuild requires an env containing a mirror')
 
     tty.debug('ci_artifact_dir = {0}'.format(ci_artifact_dir))
     tty.debug('root_spec = {0}'.format(root_spec))
     tty.debug('remote_mirror_url = {0}'.format(remote_mirror_url))
-    tty.debug('enable_artifacts_mirror = {0}'.format(enable_artifacts_mirror))
     tty.debug('job_spec_pkg_name = {0}'.format(job_spec_pkg_name))
     tty.debug('compiler_action = {0}'.format(compiler_action))
-
-    tty.debug('enable_cdash = {0}'.format(enable_cdash))
-    if enable_cdash:
-        tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
-        tty.debug('cdash_project = {0}'.format(cdash_project))
-        tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
-        tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
-        tty.debug('cdash_site = {0}'.format(cdash_site))
-        tty.debug('related_builds = {0}'.format(related_builds))
-        tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     spack_cmd = exe.which('spack')
 
@@ -327,7 +312,15 @@ def ci_rebuild(args):
     local_mirror_dir = os.path.join(ci_artifact_dir, 'local_mirror')
     build_cache_dir = os.path.join(local_mirror_dir, 'build_cache')
 
-    artifact_mirror_url = 'file://' + local_mirror_dir
+    enable_artifacts_mirror = False
+    artifact_mirror_url = None
+    if 'enable-artifacts-buildcache' in gitlab_ci:
+        enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
+        if enable_artifacts_mirror:
+            artifact_mirror_url = 'file://' + local_mirror_dir
+            mirror_msg = 'artifact buildcache enabled, mirror url: {0}'.format(
+                artifact_mirror_url)
+            tty.debug(mirror_msg)
 
     # Clean out scratch directory from last stage
     if os.path.exists(temp_dir):
@@ -410,7 +403,6 @@ def ci_rebuild(args):
 
             # 2) build up install arguments
             install_args = ['-d', '-v', '-k', 'install', '--keep-stage']
-            # install_args = ['--keep-stage']
 
             # 3) create/register a new build on CDash (if enabled)
             cdash_args = []
@@ -469,66 +461,22 @@ def ci_rebuild(args):
                 tty.error('Caught exception during install:')
                 tty.error(inst)
 
-            try:
-                job_pkg = spack.repo.get(job_spec)
-                tty.debug('job package: {0}'.format(job_pkg))
-                stage_dir = job_pkg.stage.path
-                tty.debug('stage dir: {0}'.format(stage_dir))
-                build_env_src = os.path.join(stage_dir, 'spack-build-env.txt')
-                build_out_src = os.path.join(stage_dir, 'spack-build-out.txt')
-                build_env_dst = os.path.join(
-                    job_log_dir, 'spack-build-env.txt')
-                build_out_dst = os.path.join(
-                    job_log_dir, 'spack-build-out.txt')
-                tty.debug('Copying logs to artifacts:')
-                tty.debug('  1: {0} -> {1}'.format(
-                    build_env_src, build_env_dst))
-                shutil.copyfile(build_env_src, build_env_dst)
-                tty.debug('  2: {0} -> {1}'.format(
-                    build_out_src, build_out_dst))
-                shutil.copyfile(build_out_src, build_out_dst)
-            except Exception as inst:
-                msg = ('Unable to copy build logs from stage to artifacts '
-                       'due to exception: {0}').format(inst)
-                tty.error(msg)
-
-            tty.debug('Creating buildcache')
+            spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
             # 4) create buildcache on remote mirror
-            buildcache._createtarball(
-                env, job_spec_yaml_path, None, remote_mirror_url, None, True,
-                True, False, False, True, False)
-
-            if enable_cdash:
-                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                    cdash_build_id, remote_mirror_url))
-                spack_ci.write_cdashid_to_mirror(
-                    cdash_build_id, job_spec, remote_mirror_url)
+            spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
+                                          remote_mirror_url, cdash_build_id)
 
             # 5) create another copy of that buildcache on "local artifact
-            # mirror" (if enabled)
-            if enable_artifacts_mirror:
-                tty.debug('Creating local artifact buildcache in {0}'.format(
-                    artifact_mirror_url))
-                buildcache._createtarball(
-                    env, job_spec_yaml_path, None, artifact_mirror_url, None,
-                    True, True, False, False, True, False)
-
-                if enable_cdash:
-                    tty.debug('Writing cdashid ({0}) to artifacts: {1}'.format(
-                        cdash_build_id, artifact_mirror_url))
-                    spack_ci.write_cdashid_to_mirror(
-                        cdash_build_id, job_spec, artifact_mirror_url)
+            # mirror" (only done if cash reporting is enabled)
+            spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
+                                          artifact_mirror_url, cdash_build_id)
 
             # 6) relate this build to its dependencies on CDash (if enabled)
             if enable_cdash:
-                mirror_url = remote_mirror_url
-                if enable_artifacts_mirror:
-                    mirror_url = artifact_mirror_url
-                post_url = '{0}/api/v1/relateBuilds.php'.format(cdash_base_url)
                 spack_ci.relate_cdash_builds(
-                    spec_map, post_url, cdash_build_id, cdash_project,
-                    mirror_url)
+                    spec_map, cdash_base_url, cdash_build_id, cdash_project,
+                    artifact_mirror_url or remote_mirror_url)
         else:
             # There is nothing to do here unless "local artifact mirror" is
             # enabled, in which case, we need to download the buildcache to

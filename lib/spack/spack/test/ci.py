@@ -143,6 +143,10 @@ def test_relate_cdash_builds(config, mock_packages):
         ci.relate_cdash_builds(spec_map, cdash_api_url, job_build_id,
                                cdash_project, cdashids_mirror_url)
 
+    # Just make sure passing None for build id doesn't throw exceptions
+    ci.relate_cdash_builds(spec_map, cdash_api_url, None, cdash_project,
+                           cdashids_mirror_url)
+
 
 def test_read_write_cdash_ids(config, tmp_scope, tmpdir, mock_packages):
     working_dir = tmpdir.join('working_dir')
