@@ -148,7 +148,7 @@ class Hipsycl(CMakePackage):
             )
         rpaths.add(path.dirname(so_paths[0]))
         config["default-cuda-link-line"] += " " + " ".join(
-            "-rpath '{0}'".format(p) for p in rpaths
+            "-rpath {0}".format(p) for p in rpaths
         )
         # Replace the installed config file
         with open(config_file_path, "w") as f:
