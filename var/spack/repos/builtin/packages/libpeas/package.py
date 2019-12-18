@@ -23,7 +23,7 @@ class Libpeas(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('gettext', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('atk')
     depends_on('intltool@0.40.0:')
     depends_on('xmlto', type='build')
