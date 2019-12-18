@@ -451,7 +451,8 @@ class Root(CMakePackage):
         def _process_opt(opt_name, cond_or_variant=None):
             val = cond_or_variant if \
                 isinstance(cond_or_variant, types.BooleanType) else \
-                ('+{variant}'.format(variant=cond_or_variant or opt_name) in self.spec)
+                ('+{variant}'.format(variant=cond_or_variant or opt_name)
+                 in self.spec)
             return '-D{opt}:BOOL={val}'.format(opt=opt_name, val='ON' if
                                                val else 'OFF')
 
