@@ -75,7 +75,7 @@ packages:
       - synapsetool@0.5.6
       - touchdetector@4.4.2
       - touchdetector@5.1.0
-      - touchdetector@5.3.2
+      - touchdetector@5.3.3
       - brayns +opendeck +brion ^ospray@1.7.3%intel
       - brayns@1.0.1 +brion ^ospray%intel
       - brayns@immersive +opendeck +brion +optix
