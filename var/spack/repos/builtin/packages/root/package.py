@@ -215,6 +215,7 @@ class Root(CMakePackage):
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    extends("python", when="+python")
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
     depends_on('r-rinside', when='+r', type=('build', 'run'))
