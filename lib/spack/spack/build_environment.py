@@ -53,11 +53,12 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
+import spack.user_environment as uenv
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
     EnvironmentModifications, validate, preserve_environment)
-from spack.util.environment import system_dirs
+from spack.util.environment import system_dirs, inspect_path
 from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module
@@ -689,28 +690,39 @@ def load_external_modules(pkg):
             load_module(dep.external_module)
 
 
-def setup_package(pkg, dirty):
+def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
-    build_env = EnvironmentModifications()
+    env = EnvironmentModifications()
 
+    # clean environment
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, build_env)
-    set_build_environment_variables(pkg, build_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
+    # setup compilers and build tools for build contexts
+    if context == 'build':
+        set_compiler_environment_variables(pkg, env)
+        set_build_environment_variables(pkg, env, dirty)
 
-    build_env.extend(
-        modifications_from_dependencies(pkg.spec, context='build')
+    # architecture specific setup
+    pkg.architecture.platform.setup_platform_environment(pkg, env)
+
+    # recursive post-order dependency information
+    env.extend(
+        modifications_from_dependencies(pkg.spec, context=context)
     )
 
-    if (not dirty) and (not build_env.is_unset('CPATH')):
+    if context == 'build' and (not dirty) and (not env.is_unset('CPATH')):
         tty.debug("A dependency has updated CPATH, this may lead pkg-config"
                   " to assume that the package is part of the system"
                   " includes and omit it when invoked with '--cflags'.")
 
+    # setup package itself
     set_module_variables_for_package(pkg)
-    pkg.setup_build_environment(build_env)
+    if context == 'build':
+        pkg.setup_build_environment(env)
+    elif context == 'test':
+        env.extend(inspect_path(pkg.spec.prefix,
+                                uenv.prefix_inspections(pkg.spec.platform)))
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -720,15 +732,16 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the build_env object has its
+        # functions have to occur after the env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
-        for mod in pkg.compiler.modules:
-            # Fixes issue https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                load_module("cce")
-            load_module(mod)
+        if context == 'build':
+            for mod in pkg.compiler.modules:
+                # Fixes issue https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                    load_module("cce")
+                load_module(mod)
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
@@ -736,8 +749,8 @@ def setup_package(pkg, dirty):
         load_external_modules(pkg)
 
     # Make sure nothing's strange about the Spack environment.
-    validate(build_env, tty.warn)
-    build_env.apply_modifications()
+    validate(env, tty.warn)
+    env.apply_modifications()
 
 
 def modifications_from_dependencies(spec, context):
@@ -757,7 +770,8 @@ def modifications_from_dependencies(spec, context):
     deptype_and_method = {
         'build': (('build', 'link', 'test'),
                   'setup_dependent_build_environment'),
-        'run': (('link', 'run'), 'setup_dependent_run_environment')
+        'run': (('link', 'run'), 'setup_dependent_run_environment'),
+        'test': (('link', 'run', 'test'), 'setup_dependent_run_environment')
     }
     deptype, method = deptype_and_method[context]
 
@@ -771,7 +785,7 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def fork(pkg, function, dirty, fake):
+def fork(pkg, function, dirty, fake, context='build'):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -783,6 +797,8 @@ def fork(pkg, function, dirty, fake):
         dirty (bool): If True, do NOT clean the environment before
             building.
         fake (bool): If True, skip package setup b/c it's not a real build
+        context (string): If 'build', setup build environment. If 'test', setup
+            test environment.
 
     Usage::
 
@@ -811,7 +827,7 @@ def fork(pkg, function, dirty, fake):
 
         try:
             if not fake:
-                setup_package(pkg, dirty=dirty)
+                setup_package(pkg, dirty=dirty, context=context)
             return_value = function()
             child_pipe.send(return_value)
         except StopIteration as e:

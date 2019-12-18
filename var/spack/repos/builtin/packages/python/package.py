@@ -906,3 +906,13 @@ class Python(AutotoolsPackage):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def test(self):
+        # contains python executable
+        python = which('python')
+        assert os.path.dirname(python.path) == os.path.dirname(self.command.path)
+
+        # run hello world
+        output = self.command('-c', 'print("hello world!")', output=str)
+        sys.stdout.write(output)
+        assert output == "hello world!\n"
