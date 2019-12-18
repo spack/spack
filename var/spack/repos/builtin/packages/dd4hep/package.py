@@ -18,9 +18,9 @@ class Dd4hep(CMakePackage):
     homepage = "https://dd4hep.web.cern.ch/dd4hep/"
     git      = "https://github.com/AIDASoft/DD4hep.git"
 
-    version('develop', branch='master')
-    version('1.10.0', commit='9835d1813c07d9d5850d1e68276c0171d1726801')
+    version('master', branch='master')
     version('1.11.0', commit='280c7d748d56a704699408ac8e57815d029b169a')
+    version('1.10.0', commit='9835d1813c07d9d5850d1e68276c0171d1726801')
 
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
