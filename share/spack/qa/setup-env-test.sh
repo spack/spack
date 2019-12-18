@@ -104,21 +104,24 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export LD_LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --sh b
+contains "export LD_LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --only package --sh b
 succeeds spack -m load b
 fails spack -m load -l
-# test a variable MacOS clears and one it doesn't
-contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh -r a
-contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh --dependencies a
-succeeds spack -m load -r a
-succeeds spack -m load --dependencies a
+# test a variable MacOS clears and one it doesn't for recursive loads
+contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
+contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
+succeeds spack -m load --only dependencies a
+succeeds spack -m load --only package a
 fails spack -m load d
 contains "usage: spack load " spack -m load -h
 contains "usage: spack load " spack -m load -h d
 contains "usage: spack load " spack -m load --help
 
 title 'Testing `spack unload`'
+spack -m load b a  # setup
 succeeds spack -m unload b
+succeeds spack -m unload --all
+spack -m unload --all # cleanup
 fails spack -m unload -l
 fails spack -m unload d
 contains "usage: spack unload " spack -m unload -h
