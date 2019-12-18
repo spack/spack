@@ -25,6 +25,7 @@ import spack.hash_types as ht
 import spack.repo
 import spack.schema.env
 import spack.spec
+import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
@@ -1232,13 +1233,16 @@ class Environment(object):
         Yields the user spec for non-concretized specs, and the concrete
         spec for already concretized but not yet installed specs.
         """
-        concretized = dict(self.concretized_specs())
-        for spec in self.user_specs:
-            concrete = concretized.get(spec)
-            if not concrete:
-                yield spec
-            elif not concrete.package.installed:
-                yield concrete
+        # use a transaction to avoid overhead of repeated calls
+        # to `package.installed`
+        with spack.store.db.read_transaction():
+            concretized = dict(self.concretized_specs())
+            for spec in self.user_specs:
+                concrete = concretized.get(spec)
+                if not concrete:
+                    yield spec
+                elif not concrete.package.installed:
+                    yield concrete
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
