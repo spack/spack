@@ -154,18 +154,16 @@ class Lock(object):
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
-        pid = os.getpid()
-        tty.debug("PID {0} {1} locking [{2}:{3}]: timeout {4} sec"
-                  .format(pid, lock_type[op], self._start, self._length,
-                          timeout))
+        tty.debug("{0} locking [{1}:{2}]: timeout {3} sec"
+                  .format(lock_type[op], self._start, self._length, timeout))
 
-        msg = "PID {0} {1} lock attempt #{2}"
+        msg = "{0} lock attempt #{1}"
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
             num_attempts += 1
-            self._verbose(msg.format(pid, lock_type[op], num_attempts))
+            self._verbose(msg.format(lock_type[op], num_attempts))
             if self._poll_lock(op):
                 total_wait_time = time.time() - start_time
                 return total_wait_time, num_attempts
@@ -175,12 +173,12 @@ class Lock(object):
         # TBD: Is an extra attempt after timeout needed/appropriate?
         num_attempts += 1
         if self._poll_lock(op):
-            self._verbose(msg.format(pid, lock_type[op], num_attempts))
+            self._verbose(msg.format(lock_type[op], num_attempts))
             total_wait_time = time.time() - start_time
             return total_wait_time, num_attempts
 
-        raise LockTimeoutError("PID {0} timed out waiting for a {1} lock."
-                               .format(pid, lock_type[op]))
+        raise LockTimeoutError("Timed out waiting for a {0} lock."
+                               .format(lock_type[op]))
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
@@ -198,8 +196,8 @@ class Lock(object):
             if self.debug:
                 # All locks read the owner PID and host
                 self._read_debug_data()
-                tty.debug('PID {0} {1} locked {2} [{3}:{4}] (owner={5})'
-                          .format(os.getpid(), lock_type[op], self.path,
+                tty.debug('{0} locked {1} [{2}:{3}] (owner={4})'
+                          .format(lock_type[op], self.path,
                                   self._start, self._length, self.pid))
 
                 # Exclusive locks write their PID/host

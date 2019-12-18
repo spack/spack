@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# TODO: Continue debugging parallel builds
 # TODO: Debug erroneous/failing (install) tests: 16 failed, 1 error
 # TODO: Add unit tests
 
@@ -94,8 +93,9 @@ def _check_install_locally(pkg, explicit):
         return False
 
     if pkg.installed_upstream:
-        tty.msg('{0} is installed in an upstream Spack instance at {1}'
-                .format(pkg.unique_name, pkg.spec.prefix))
+        tty.verbose('{0} is installed in an upstream Spack instance at {1}'
+                    .format(pkg.unique_name, pkg.spec.prefix))
+        _print_installed_pkg(pkg.prefix)
 
         # This will result in skipping all post-install hooks. In the case
         # of modules this is considered correct because we want to retrieve
@@ -222,8 +222,8 @@ def _installed_from_cache(pkg, cache_only, explicit):
             ``False`` otherwise
     """
     if _try_install_from_binary_cache(pkg, explicit):
-        tty.msg('Successfully installed {0} from binary cache by PID {1}'
-                .format(pkg.unique_id, os.getpid()))
+        tty.debug('Successfully installed {0} from binary cache'
+                  .format(pkg.unique_id))
         _print_installed_pkg(pkg.spec.prefix)
         spack.hooks.post_install(pkg.spec)
         return True
@@ -231,8 +231,8 @@ def _installed_from_cache(pkg, cache_only, explicit):
         tty.die('No binary for {0} found when cache-only specified'
                 .format(pkg.unique_id))
 
-    tty.msg('No binary for {0} found: installing from source'
-            .format(pkg.unique_id))
+    tty.debug('No binary for {0} found: installing from source'
+              .format(pkg.unique_id))
     return False
 
 
@@ -302,7 +302,7 @@ def _try_install_from_binary_cache(pkg, explicit):
         pkg (PackageBase): the package to be installed from binary cache
         explicit (bool): the package was explicitly requested by the user
     """
-    tty.msg('Searching for binary cache of {0}'.format(pkg.unique_id))
+    tty.debug('Searching for binary cache of {0}'.format(pkg.unique_id))
     specs = binary_distribution.get_specs()
     binary_spec = spack.spec.Spec.from_dict(pkg.spec.to_dict())
     binary_spec._mark_concrete()
@@ -566,7 +566,7 @@ class PackageInstaller(object):
             if comp_pkg.unique_id not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 
-    def _check_install_artifacts(self, pkg, keep_prefix, keep_stage,
+    def _check_install_artifacts(self, task, keep_prefix, keep_stage,
                                  restage=False):
         """
         Check the database and leftover installation directories/files and
@@ -582,17 +582,17 @@ class PackageInstaller(object):
                 source, otherwise ``False``
         """
         # Make sure the package is ready to be locally installed.
-        self._ensure_install_ready(pkg)
+        self._ensure_install_ready(task.pkg)
 
         # Skip file system operations if we've already gone through them for
         # this spec.
-        if pkg.unique_id in self.installed:
+        if task.pkg.unique_id in self.installed:
             # Already determined the spec has been installed
             return
 
         # Determine if the spec is flagged as installed in the database
         try:
-            rec = spack.store.db.get_record(pkg.spec)
+            rec = spack.store.db.get_record(task.pkg.spec)
             installed_in_db = rec.installed if rec else False
         except KeyError:
             rec = None
@@ -601,31 +601,30 @@ class PackageInstaller(object):
         # Make sure the installation directory is in the desired state
         # for uninstalled specs.
         partial = False
-        if not installed_in_db and os.path.isdir(pkg.spec.prefix):
+        if not installed_in_db and os.path.isdir(task.pkg.spec.prefix):
             if not keep_prefix:
-                pkg.remove_prefix()
+                task.pkg.remove_prefix()
             else:
-                # TODO: Change to verbose
-                tty.msg('{0} is partially installed'.format(pkg.unique_id))
+                tty.debug('{0} is partially installed'
+                          .format(task.pkg.unique_id))
                 partial = True
 
         # Destroy the stage for a locally installed, non-DIYStage, package
-        if restage and pkg.stage.managed_by_spack:
-            pkg.stage.destroy()
+        if restage and task.pkg.stage.managed_by_spack:
+            task.pkg.stage.destroy()
 
-        if not partial and self.layout.check_installed(pkg.spec):
-            msg = '{0} is already installed in {1}'
-            tty.msg(msg.format(pkg.unique_id, pkg.spec.prefix))
+        if not partial and self.layout.check_installed(task.pkg.spec):
+            self._update_installed(task)
 
             # Only update the explicit entry once for the explicit package
-            if pkg.unique_id == self.pkg.unique_id:
-                _update_explicit_entry_in_db(pkg, rec, True)
+            if task.pkg.unique_id == self.pkg.unique_id:
+                _update_explicit_entry_in_db(task.pkg, rec, True)
 
             # In case the stage directory has already been created, this
             # check ensures it is removed after we checked that the spec is
             # installed.
             if not keep_stage:
-                pkg.stage.destroy()
+                task.pkg.stage.destroy()
 
     def _check_last_phase(self, **kwargs):
         """
@@ -688,11 +687,6 @@ class PackageInstaller(object):
             pkg (PackageBase): the package being installed
             remove_task (bool): ``True`` if the build task should be removed
         """
-        if pkg.unique_id in self.installed:
-            # TODO: destroy stage if not expected to keep it
-            # TODO: update the spec entry in the database
-            pass
-
         if remove_task:
             self._remove_task(pkg.unique_id)
 
@@ -743,13 +737,13 @@ class PackageInstaller(object):
 
             try:
                 if nolock:
-                    tty.debug(msg.format('Acquiring', pkg_id))
+                    tty.verbose(msg.format('Acquiring', pkg_id))
                     op = 'acquire'
                     timeout = spack.store.db.package_lock_timeout
                     lock = spack.store.db.prefix_lock(pkg.spec, timeout)
                     lock.acquire_read()
                 else:
-                    tty.debug(msg.format('Downgrading to', pkg_id))
+                    tty.verbose(msg.format('Downgrading to', pkg_id))
                     op = 'downgrade to'
                     lock.downgrade_write()
                 tty.verbose('{0} is now read locked'.format(pkg_id))
@@ -789,12 +783,12 @@ class PackageInstaller(object):
 
             try:
                 if nolock:
-                    tty.debug(msg.format('Acquiring', pkg_id))
+                    tty.verbose(msg.format('Acquiring', pkg_id))
                     res = 'acquire'
                     lock = spack.store.db.prefix_lock(pkg.spec, timeout)
                     lock.acquire_write()
                 else:
-                    tty.debug(msg.format('Upgrading to', pkg_id))
+                    tty.verbose(msg.format('Upgrading to', pkg_id))
                     res = 'upgrade to'
                     lock.upgrade_read(timeout)
                 tty.verbose('{0} is now write locked'.format(pkg_id))
@@ -962,8 +956,7 @@ class PackageInstaller(object):
             pkg._total_time = time.time() - start_time
             build_time = pkg._total_time - pkg._fetch_time
 
-            tty.msg('Successfully installed {0} by PID {1}'
-                    .format(pkg.unique_id, os.getpid()),
+            tty.msg('Successfully installed {0}'.format(pkg.unique_id),
                     'Fetch: {0}.  Build: {1}.  Total: {2}.'
                     .format(_hms(pkg._fetch_time), _hms(build_time),
                             _hms(pkg._total_time)))
@@ -985,6 +978,8 @@ class PackageInstaller(object):
             spack.package.PackageBase._verbose = spack.build_environment.fork(
                 pkg, build_process, dirty=dirty, fake=fake)
 
+            self._update_installed(task)
+
             # If we installed then we should keep the prefix
             last_phase = getattr(pkg, 'last_phase', None)
             keep_prefix = last_phase is None or keep_prefix
@@ -999,8 +994,6 @@ class PackageInstaller(object):
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
 
-            self._update_installed(task)
-
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
             self._cleanup_task(pkg, True)
@@ -1012,6 +1005,12 @@ class PackageInstaller(object):
             tty.msg('Package stage directory : {0}'
                     .format(pkg.stage.source_path))
             self._cleanup_task(pkg, True)
+
+        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
+            tty.warn("Keeping existing install prefix in place.")
+            self._cleanup_task(pkg, True)
+            # TODO: Does "best effort" installation mean raise exception here?
+            raise
 
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
             err = 'Failed to install {0} due to {1}: {2}'
@@ -1127,7 +1126,7 @@ class PackageInstaller(object):
         Args:
             task (BuildTask): the installation build task for a package
         """
-        if task.status != STATUS_INSTALLING:
+        if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
             tty.msg('{0} {1}'.format(get_install_msg(task.pkg.unique_id),
                                      'in progress by another process'))
 
@@ -1142,32 +1141,26 @@ class PackageInstaller(object):
         Args:
             pkg (Package): the package to be installed and built
         """
-        try:
-            if not os.path.exists(pkg.spec.prefix):
-                tty.verbose('Creating the installation directory {0}'
-                            .format(pkg.spec.prefix))
-                spack.store.layout.create_install_directory(pkg.spec)
-            else:
-                # Set the proper group for the prefix
-                group = get_package_group(pkg.spec)
-                if group:
-                    chgrp(pkg.spec.prefix, group)
+        if not os.path.exists(pkg.spec.prefix):
+            tty.verbose('Creating the installation directory {0}'
+                        .format(pkg.spec.prefix))
+            spack.store.layout.create_install_directory(pkg.spec)
+        else:
+            # Set the proper group for the prefix
+            group = get_package_group(pkg.spec)
+            if group:
+                chgrp(pkg.spec.prefix, group)
 
-                # Set the proper permissions.
-                # This has to be done after group because changing groups blows
-                # away the sticky group bit on the directory
-                mode = os.stat(pkg.spec.prefix).st_mode
-                perms = get_package_dir_permissions(pkg.spec)
-                if mode != perms:
-                    os.chmod(pkg.spec.prefix, perms)
+            # Set the proper permissions.
+            # This has to be done after group because changing groups blows
+            # away the sticky group bit on the directory
+            mode = os.stat(pkg.spec.prefix).st_mode
+            perms = get_package_dir_permissions(pkg.spec)
+            if mode != perms:
+                os.chmod(pkg.spec.prefix, perms)
 
-                # Ensure the metadata path exists as well
-                mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
-        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-            tty.warn("Keeping existing install prefix in place.")
-            self._cleanup_task(pkg, True)
-            # TODO: Does "best effort" installation mean raise exception here?
-            raise
+            # Ensure the metadata path exists as well
+            mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
 
     def _update_failed(self, task, mark=False):
         """
@@ -1199,9 +1192,6 @@ class PackageInstaller(object):
             else:
                 tty.verbose('No build task for {0} to skip since {1} failed'
                             .format(dep_id, pkg_id))
-            # TODO: self._release_lock(dep_id)
-
-        # TODO: self._release_lock(pkg_id)
 
     def _update_installed(self, task):
         """
@@ -1247,7 +1237,7 @@ class PackageInstaller(object):
         install_self = kwargs.pop('install_package', True)
 
         # TODO: Should this be first or after package updates?
-        # TODO: Was being done AFTER external, upstream, and already
+        # TODO: It was being done AFTER external, upstream, and already
         # TODO:   installed checks in _do_install_pop_kwargs() (i.e., just
         # TODO:   before recursively installing dependencies and or bootstrap
         # TODO:   compiler.
@@ -1255,9 +1245,6 @@ class PackageInstaller(object):
 
         # Skip out early if the spec is not being installed locally (i.e., if
         # external or upstream).
-        #
-        # TODO: Should we try to "lock" the package even though we have no
-        # TODO:   control over it?
         if not _check_install_locally(self.pkg, True):
             return
 
@@ -1292,15 +1279,13 @@ class PackageInstaller(object):
             # TODO: Add check to ensure no attempt is made to install the pkg
             # TODO: before any of its dependencies?
 
-            # TODO: Should we timeout if a task is taking "too long"?
-
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
             if pkg_id != self.pkg.unique_id and \
                     not _check_install_locally(pkg, False):
-                tty.msg('{0.name} is installed in {0.prefix}'.format(spec))
                 self._update_installed(task)
+                _print_installed_pkg(pkg.prefix)
                 continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
@@ -1329,7 +1314,7 @@ class PackageInstaller(object):
                 continue
 
             # Determine state of installation artifacts and adjust accordingly.
-            self._check_install_artifacts(pkg, keep_prefix, keep_stage,
+            self._check_install_artifacts(task, keep_prefix, keep_stage,
                                           restage)
 
             # Flag an already installed pkg
@@ -1342,8 +1327,8 @@ class PackageInstaller(object):
                 # the write and acquiring the read.
                 ltype, lock = self._ensure_read_locked(pkg)
                 if lock is not None:
-                    tty.msg('{0.name} is installed in {0.prefix}'.format(spec))
                     self._update_installed(task)
+                    _print_installed_pkg(pkg.prefix)
                 else:
                     # Since we cannot assess their intentions at this point,
                     # requeue the task so we can re-check the status presumably
@@ -1432,7 +1417,6 @@ class BuildTask(object):
         self.attempts = attempts + 1
 
         # Set of dependents
-        # TODO: Is this returning packages?
         self.dependents = set(d.package.unique_id for d
                               in self.spec.dependents())
 
@@ -1441,7 +1425,6 @@ class BuildTask(object):
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        # TODO: Is this returning packages?
         self.dependencies = set(d.package.unique_id for d in
                                 self.spec.dependencies() if
                                 d.package.unique_id != self.pkg.unique_id)
