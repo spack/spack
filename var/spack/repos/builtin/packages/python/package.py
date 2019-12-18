@@ -1109,3 +1109,18 @@ class Python(AutotoolsPackage):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def test(self):
+        # contains python executable
+        python = which('python')
+        assert os.path.dirname(python.path) == os.path.dirname(self.command.path)
+
+        # run hello world
+        output = self.command('-c', 'print("hello world!")',
+                              output=str.split, error=str.split)
+        assert output == "hello world!\n"
+
+#        error = self.command('-c', 'print("Error: failed.")',
+#                             output=str.split, error=str.split)
+
+#        assert error.strip() == 'Error: failed.'
