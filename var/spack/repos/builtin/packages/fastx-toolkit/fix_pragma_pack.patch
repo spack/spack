@@ -1,0 +1,10 @@
+--- spack-src/src/libfastx/fastx.h.org	2019-12-18 14:45:33.191492491 +0900
++++ spack-src/src/libfastx/fastx.h	2019-12-18 14:45:55.843830041 +0900
+@@ -58,7 +58,6 @@
+ 	OUTPUT_SAME_AS_INPUT=3
+ } OUTPUT_FILE_TYPE;
+ 
+-#pragma pack(1) 
+ typedef struct 
+ {
+ 	/* Record data - common for FASTA/FASTQ */
