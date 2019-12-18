@@ -5,6 +5,7 @@
 
 import argparse
 import sys
+import os
 
 import llnl.util.tty as tty
 
@@ -13,7 +14,7 @@ import spack.environment as ev
 import spack.util.environment
 import spack.user_environment as uenv
 
-description = "remove package from the user environment variables`"
+description = "remove package from the user environment"
 section = "user environment"
 level = "short"
 
@@ -29,15 +30,26 @@ def setup_parser(subparser):
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
 
+    subparser.add_argument('-a', '--all', action='store_true',
+                           help='unload all loaded Spack packages.')
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help='spec of package to unload with modules')
 
 
 def unload(parser, args):
-    env = ev.get_env(args, 'unload')
-    specs = list(map(lambda spec: spack.cmd.disambiguate_spec(spec, env),
-                     spack.cmd.parse_specs(args.specs)))
+    """Unload spack packages from the user environment."""
+    if args.specs and args.all:
+        raise SpackError("Cannot specify specs on command line if you choose"
+                         " to unload all specs with '--all'")
+
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
+    if args.specs:
+        specs = [spack.cmd.disambiguate_spec_from_hashes(spec, hashes)
+                 for spec in spack.cmd.parse_specs(args.specs)]
+    else:
+        specs = spack.store.db.query(hashes=hashes)
+
     if not args.shell:
         msg = [
             "This command works best with Spack's shell support",

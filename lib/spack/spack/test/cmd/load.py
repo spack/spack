@@ -23,8 +23,8 @@ def test_load(install_mockery, mock_fetch, mock_archive, mock_packages):
     install('mpileaks')
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
-    sh_out = load('--sh', 'mpileaks')
-    csh_out = load('--csh', 'mpileaks')
+    sh_out = load('--sh', '--only', 'package', 'mpileaks')
+    csh_out = load('--csh', '--only', 'package', 'mpileaks')
 
     # Test prefix inspections
     sh_out_test = 'export CMAKE_PREFIX_PATH=%s' % mpileaks_spec.prefix
@@ -48,8 +48,8 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive,
     install('mpileaks')
     mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
 
-    sh_out = load('--sh', '-r', 'mpileaks')
-    csh_out = load('--csh', '-r', 'mpileaks')
+    sh_out = load('--sh', 'mpileaks')
+    csh_out = load('--csh', 'mpileaks')
 
     # Test prefix inspections
     prefix_test_replacement = ':'.join(reversed(
@@ -115,9 +115,11 @@ def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
 
 
 def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
-                               mock_packages):
+                               mock_packages, working_env):
     """Test that spack unload prints an error message without a shell."""
     install('mpileaks')
+    mpileaks_spec = spack.spec.Spec('mpileaks').concretized()
+    os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
 
     out = unload('mpileaks', fail_on_error=False)
     assert "To initialize spack's shell commands" in out
