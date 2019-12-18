@@ -639,8 +639,13 @@ class Delegate(object):
 
 class Composite(list):
     def __init__(self, fns_to_delegate):
-        for fn in fns_to_delegate:
-            setattr(self, fn, Delegate(fn, self))
+        self.fns_to_delegate = fns_to_delegate
+
+    def __getattr__(self, name):
+        if name in self.fns_to_delegate:
+            return Delegate(name, self)
+        else:
+            return self.__getattribute__(name)
 
 
 class StageComposite(Composite):
