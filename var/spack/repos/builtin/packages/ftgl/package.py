@@ -15,7 +15,11 @@ class Ftgl(AutotoolsPackage):
     url      = "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/2.1.2/ftgl-2.1.2.tar.gz/download"
     list_url = "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/"
     list_depth = 1
+    git      = "https://github.com/frankheckenbach/ftgl.git"
 
+    version('master', branch='master')
+    version('2.4.0', commit='483639219095ad080538e07ceb5996de901d4e74')
+    version('2.3.1', commit='3c0fdf367824b6381f29df3d8b4590240db62ab7')
     version('2.1.3-rc5', sha256='5458d62122454869572d39f8aa85745fc05d5518001bcefa63bd6cbb8d26565b')
     version('2.1.2', sha256='2759cbd5fac0b631e8b012923cd0d2add320f6e541b399a7cda37163ad034075')
 
