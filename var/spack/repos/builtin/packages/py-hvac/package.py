@@ -9,7 +9,7 @@ from spack import *
 class PyHvac(PythonPackage):
     """HashiCorp Vault API client"""
 
-    homepage = "https://github.com/ianunruh/hvac/"
+    homepage = "https://github.com/hvac/hvac/"
     url      = "https://github.com/ianunruh/hvac/archive/v0.2.17.tar.gz"
 
     version('0.9.6', sha256='ff60972edc512c73ac4811e91bcffccdb99f0d8975c0b41e44a4c79d73c711af')
