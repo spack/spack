@@ -299,19 +299,21 @@ def ci_rebuild(args):
         enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
 
     tty.debug('ci_artifact_dir = {0}'.format(ci_artifact_dir))
-    tty.debug('enable_cdash = {0}'.format(enable_cdash))
     tty.debug('root_spec = {0}'.format(root_spec))
     tty.debug('remote_mirror_url = {0}'.format(remote_mirror_url))
     tty.debug('enable_artifacts_mirror = {0}'.format(enable_artifacts_mirror))
     tty.debug('job_spec_pkg_name = {0}'.format(job_spec_pkg_name))
     tty.debug('compiler_action = {0}'.format(compiler_action))
-    tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
-    tty.debug('cdash_project = {0}'.format(cdash_project))
-    tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
-    tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
-    tty.debug('cdash_site = {0}'.format(cdash_site))
-    tty.debug('related_builds = {0}'.format(related_builds))
-    tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
+
+    tty.debug('enable_cdash = {0}'.format(enable_cdash))
+    if enable_cdash:
+        tty.debug('cdash_base_url = {0}'.format(cdash_base_url))
+        tty.debug('cdash_project = {0}'.format(cdash_project))
+        tty.debug('cdash_project_enc = {0}'.format(cdash_project_enc))
+        tty.debug('cdash_build_name = {0}'.format(cdash_build_name))
+        tty.debug('cdash_site = {0}'.format(cdash_site))
+        tty.debug('related_builds = {0}'.format(related_builds))
+        tty.debug('job_spec_buildgroup = {0}'.format(job_spec_buildgroup))
 
     spack_cmd = exe.which('spack')
 
