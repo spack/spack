@@ -3,28 +3,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-cinema-lib
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-cinema-lib
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
 class PyCinemaLib(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """cinema_lib is a set of tools and library for interacting with a Cinema database
+    (currently Spec A and Spec D) through Python and the command line tool, cinema."""
 
     homepage      = "https://cinemascience.github.io/"
     url           = "https://github.com/cinemascience/cinema_lib/archive/1.2.1.tar.gz"
@@ -32,7 +16,6 @@ class PyCinemaLib(PythonPackage):
     list_depth    = 1
     git           = "https://github.com/cinemascience/cinema_lib.git"
 
-    # notify when the package is updated.
     maintainers = ['EthanS94']
 
     version('develop', branch='master')
