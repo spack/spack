@@ -724,7 +724,8 @@ class Trilinos(CMakePackage):
         if '+explicit_template_instantiation' in spec and '+tpetra' in spec:
             options.extend([
                 '-DTpetra_INST_DOUBLE:BOOL=ON',
-                '-DTpetra_INST_INT_LONG:BOOL=ON',
+                '-DTpetra_INST_INT_INT:BOOL=OFF',
+                '-DTpetra_INST_INT_LONG:BOOL=OFF',
                 '-DTpetra_INST_INT_LONG_LONG:BOOL=ON',
                 '-DTpetra_INST_COMPLEX_DOUBLE=%s' % complex_s,
                 '-DTpetra_INST_COMPLEX_FLOAT=%s' % complex_float_s,

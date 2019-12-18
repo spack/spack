@@ -14,8 +14,8 @@ class Albany(CMakePackage):
        including fluid mechanics, solid mechanics (elasticity and plasticity),
        ice-sheet flow, quantum device modeling, and many other applications."""
 
-    homepage = "http://gahansen.github.io/Albany"
-    git      = "https://github.com/gahansen/Albany.git"
+    homepage = "http://SNLComputation.github.io/Albany"
+    git      = "https://github.com/SNLComputation/Albany.git"
 
     maintainers = ['gahansen']
 
@@ -25,10 +25,6 @@ class Albany(CMakePackage):
             description='Enable LCM')
     variant('aeras',          default=False,
             description='Enable AERAS')
-    variant('qcad',          default=False,
-            description='Enable QCAD')
-    variant('hydride',          default=False,
-            description='Enable HYDRIDE')
     variant('lcm_spec',          default=False,
             description='Enable LCM_SPECULATIVE')
     variant('lame',          default=False,
@@ -39,14 +35,10 @@ class Albany(CMakePackage):
             description='Enable CHECK_FPE')
     variant('scorec',          default=False,
             description='Enable SCOREC')
-    variant('felix',          default=False,
-            description='Enable FELIX')
-    variant('mor',          default=False,
-            description='Enable MOR')
+    variant('ali',          default=False,
+            description='Enable ALI')
     variant('confgui',          default=False,
             description='Enable Albany configuration (CI) GUI')
-    variant('ascr',          default=False,
-            description='Enable ALBANY_ASCR')
     variant('perf',          default=False,
             description='Enable PERFORMANCE_TESTS')
     variant('64bit',          default=True,
@@ -71,10 +63,6 @@ class Albany(CMakePackage):
                            'ON' if '+lcm' in spec else 'OFF'),
                        '-DENABLE_AERAS:BOOL=%s' % (
                            'ON' if '+aeras' in spec else 'OFF'),
-                       '-DENABLE_QCAD:BOOL=%s' % (
-                           'ON' if '+qcad' in spec else 'OFF'),
-                       '-DENABLE_HYDRIDE:BOOL=%s' % (
-                           'ON' if '+hydride' in spec else 'OFF'),
                        '-DENABLE_LCM_SPECULATIVE:BOOL=%s' % (
                            'ON' if '+lcm_spec' in spec else 'OFF'),
                        '-DENABLE_LAME:BOOL=%s' % (
@@ -85,14 +73,10 @@ class Albany(CMakePackage):
                            'ON' if '+fpe' in spec else 'OFF'),
                        '-DENABLE_SCOREC:BOOL=%s' % (
                            'ON' if '+scorec' in spec else 'OFF'),
-                       '-DENABLE_FELIX:BOOL=%s' % (
-                           'ON' if '+felix' in spec else 'OFF'),
-                       '-DENABLE_MOR:BOOL=%s' % (
-                           'ON' if '+mor' in spec else 'OFF'),
+                       '-DENABLE_ALI:BOOL=%s' % (
+                           'ON' if '+ali' in spec else 'OFF'),
                        '-DENABLE_ALBANY_CI:BOOL=%s' % (
                            'ON' if '+ci' in spec else 'OFF'),
-                       '-DENABLE_ASCR:BOOL=%s' % (
-                           'ON' if '+ascr' in spec else 'OFF'),
                        '-DENABLE_PERFORMANCE_TESTS:BOOL=%s' % (
                            'ON' if '+perf' in spec else 'OFF'),
                        '-DENABLE_64BIT_INT:BOOL=%s' % (
