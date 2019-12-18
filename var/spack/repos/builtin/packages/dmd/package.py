@@ -37,7 +37,7 @@ class Dmd(MakefilePackage):
         env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
 
-    def setup_dependent_build_environment(self, env):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
 
     def edit(self, spec, prefix):
