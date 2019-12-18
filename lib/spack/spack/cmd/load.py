@@ -9,7 +9,6 @@ import sys
 import llnl.util.tty as tty
 
 import spack.cmd
-from spack.cmd.common import arguments
 import spack.environment as ev
 import spack.util.environment
 import spack.user_environment as uenv
