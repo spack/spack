@@ -1592,6 +1592,28 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     do_install.__doc__ += install_args_docstring
 
+    def do_test(self, log_file, dirty=False):
+        def test_process():
+            with log_output(log_file) as logger:
+                with logger.force_echo():
+                    tty.msg('Testing package %s' %
+                            self.spec.format('{name}-{hash:7}'))
+                old_debug = tty.is_debug()
+                tty.set_debug(True)
+                self.test()
+                tty.set_debug(old_debug)
+
+        try:
+            spack.build_environment.fork(
+                self, test_process, dirty=dirty, fake=False, context='test')
+        except Exception as e:
+            tty.error('Tests failed. See test log for details\n'
+                      '  %s\n' % log_file)
+
+
+    def test(self):
+        pass
+
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
 

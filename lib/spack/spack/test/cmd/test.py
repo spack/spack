@@ -5,7 +5,7 @@
 
 from spack.main import SpackCommand
 
-spack_test = SpackCommand('test')
+spack_test = SpackCommand('unit-test')
 cmd_test_py = 'lib/spack/spack/test/cmd/test.py'
 
 
