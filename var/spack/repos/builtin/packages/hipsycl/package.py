@@ -45,6 +45,10 @@ class Hipsycl(CMakePackage):
     depends_on("cuda@9:10.0.9999", when="@:0.8.0 +cuda")
 
     conflicts(
+        "%gcc@:4.9999",
+        msg="hipSYCL needs proper C++14 support to be built, %gcc is too old",
+    )
+    conflicts(
         "^llvm build_type=Debug",
         when="+cuda",
         msg="LLVM debug builds don't work with hipSYCL CUDA backend; for "
