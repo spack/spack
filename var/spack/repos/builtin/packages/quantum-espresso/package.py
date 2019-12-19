@@ -17,10 +17,11 @@ class QuantumEspresso(Package):
     """
 
     homepage = 'http://quantum-espresso.org'
-    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.4.1/q-e-qe-6.4.1.tar.gz'
+    url = 'https://gitlab.com/QEF/q-e/-/archive/qe-6.5/q-e-qe-6.5.tar.gz'
     git = 'https://gitlab.com/QEF/q-e.git'
 
     version('develop', branch='develop')
+    version('6.5', sha256='258b2a8a6280e86dad779e5c56356d8b35dc96d12ff33dabeee914bc03d6d602')
     version('6.4.1', sha256='b0d7e9f617b848753ad923d8c6ca5490d5d82495f82b032b71a0ff2f2e9cfa08')
     version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')
     version('6.3',   sha256='4067c8fffa957aabbd5cf2439e2fcb6cf3752325393c67a17d99fd09edf8689c')
