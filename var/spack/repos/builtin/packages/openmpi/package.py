@@ -57,6 +57,19 @@ def _tm_dir():
     return None
 
 
+def _knem_dir():
+    """Look for default directory where the KNEM package is
+    installed. Return None if not found.
+    """
+    # Possible locations for knem install
+    paths_list = ('/opt', )
+    for path in paths_list:
+        for sub_directory in os.listdir(path):
+            if 'knem' in sub_directory:
+                return os.path.join(path, sub_directory)
+    return None
+
+
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
 
@@ -204,7 +217,7 @@ class Openmpi(AutotoolsPackage):
     variant(
         'fabrics',
         values=disjoint_sets(
-            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric', 'knem')
         ).with_non_feature_values('auto', 'none'),
         description="List of fabrics that are enabled; "
         "'auto' lets openmpi determine",
@@ -281,6 +294,7 @@ class Openmpi(AutotoolsPackage):
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
+    conflicts('fabrics=knem', when='@:1.4')  # KNEM support was added in 1.5
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
@@ -373,6 +387,26 @@ class Openmpi(AutotoolsPackage):
         path = _tm_dir()
         if path is not None:
             line += '={0}'.format(path)
+        return line
+
+    def with_or_without_knem(self, activated):
+        opt = 'knem'
+        # If the option has not been activated return --without-knem
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _knem_dir()
+        if path is not None:
+            line += '={0}'.format(path)
+        return line
+
+    def with_or_without_ucx(self, activated):
+        opt = 'ucx'
+        # If the option has not been activated return --without-knem
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}={1}'.format(
+            opt, self.spec['ucx'].prefix)
         return line
 
     @run_before('autoreconf')
