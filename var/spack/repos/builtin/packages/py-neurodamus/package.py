@@ -22,3 +22,4 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-numpy',         type='run')
     depends_on('py-lazy-property', type='run')
     depends_on('py-docopt',        type='run')
+    depends_on('py-six',           type='run')

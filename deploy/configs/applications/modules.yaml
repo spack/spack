@@ -59,6 +59,7 @@ modules:
       - py-jupyter-notebook
       - py-morph-tool
       - 'py-mvdtool%gcc'
+      - py-neurodamus
       - py-simwriter
       - py-pytouchreader
       - reportinglib

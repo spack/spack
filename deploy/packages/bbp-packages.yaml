@@ -28,6 +28,7 @@ packages:
       - brainbuilder@0.11.5
       - brainbuilder@0.11.6
       - brainbuilder@0.11.7
+      - brion@3.0.0 +python ^boost@1.65.0
       - connectome-tools@0.3.2
       - spatial-index@0.1.0
       - spykfunc@0.15.2
@@ -36,9 +37,9 @@ packages:
       - py-basalt@0.2.4
       - py-entity-management@1.0.16
       - py-jupyter-notebook@4.2.3
-      - brion@3.0.0 +python ^boost@1.65.0
       - py-bbp-analysis-framework@1.6.40
       - py-morph-tool@0.1.14
+      - py-neurodamus
 
   gnu-stable-serial-ophiophob:
     target_matrix:
