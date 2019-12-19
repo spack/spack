@@ -27,7 +27,7 @@ class PyCinemaLib(PythonPackage):
     version('1.0.2', sha256='3ebe52546e1325bd23732cd171146dbb2a9e0c25ac616224bf6f8fff9e8d48b1')
     version('1.0.1', sha256='5c2d220aa1dc28aec18f73c5cf0c4be3c834fffa0580e85b07050ff46364095d')
     version('1.0.0', sha256='9e2967fd22f1b1324ca2579df6501d0bfbc5fb142ca41c7a02f9b7d109767d3c')
-    version('ECPMilestone2018', sha256='dfb7b1d0e3d8d1865814622879ddb019c2a16efb947201832a56a98186ff46ce')
+    version('ECPMilestone201806', sha256='dfb7b1d0e3d8d1865814622879ddb019c2a16efb947201832a56a98186ff46ce')
 
     variant('numpy', default=True,
             description='Include numpy with cinema_lib')
