@@ -13,8 +13,6 @@ class PyCinemaLib(PythonPackage):
 
     homepage = "https://cinemascience.github.io/"
     url = "https://github.com/cinemascience/cinema_lib/archive/1.2.1.tar.gz"
-    list_url = "https://github.com/cinemascience/cinema_lib/archive"
-    list_depth = 1
     git = "https://github.com/cinemascience/cinema_lib.git"
 
     maintainers = ['EthanS94']
@@ -29,16 +27,15 @@ class PyCinemaLib(PythonPackage):
     version('1.0.0', sha256='9e2967fd22f1b1324ca2579df6501d0bfbc5fb142ca41c7a02f9b7d109767d3c')
     version('ECPMilestone201806', sha256='dfb7b1d0e3d8d1865814622879ddb019c2a16efb947201832a56a98186ff46ce')
 
-    variant('numpy', default=True,
-            description='Include numpy with cinema_lib')
-    variant('scikit-image', default=True,
-            description='Include scikit-image with cinema_lib')
+    variant('image', default=True,
+            description='Enable image-processing algorithms from scikit-image')
     variant('opencv', default=False,
-            description='Include opencv with cinema_lib')
+            description='Enable computer vision algorithms from OpenCV')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.13:', when='+numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.13:', when='+image', type=('build', 'run'))
+    depends_on('py-numpy@1.13:', when='+opencv', type=('build', 'run'))
     depends_on('py-scikit-image@0.13.1:', when='+scikit-image',
                type=('build', 'run'))
-    depends_on('opencv@3.4:', when='+opencv', type=('build', 'run'))
+    depends_on('opencv@3.4:+python', when='+opencv', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
