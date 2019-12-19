@@ -354,8 +354,7 @@ class Root(CMakePackage):
                 ['pgsql', 'postgres'],
                 ['pythia6'],
                 ['pythia8', False],
-                ['python', self.spec.satisfies('+python ^python@2.7:2.99.99')],
-                ['python3', self.spec.satisfies('+python ^python@3.0:')],
+                ['python', self.spec.satisfies('+python')],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],
