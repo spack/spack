@@ -35,7 +35,7 @@ modules:
       - brayns-topologyviewer
       - brion+python
       - connectome-tools
-      - emsim~python
+      - emsim
       - functionalizer
       - meshball
       - nest
