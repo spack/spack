@@ -467,7 +467,7 @@ class Database(object):
         except LockTimeoutError:
             # Installation of the prefix has failed in another process holding
             # a write lock.
-            tty.debug('{0} is falure locked'.format(spec.name))
+            tty.debug('{0} is failure locked'.format(spec.name))
             return True
 
     def prefix_failure_marked(self, spec):
@@ -508,6 +508,8 @@ class Database(object):
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
                 default_timeout=timeout, desc=spec.name)
+        elif timeout != self._prefix_locks[prefix].default_timeout:
+            self._prefix_locks[prefix].default_timeout = timeout
 
         return self._prefix_locks[prefix]
 

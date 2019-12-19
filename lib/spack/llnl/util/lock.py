@@ -297,6 +297,11 @@ class Lock(object):
             self._log_acquired(lock_type, wait_time, nattempts)
             return True
         else:
+            # TODO: Problem if the timeout does not get reset if different?
+            if timeout != self.default_timeout:
+                tty.warn('Using current lock timeout {0}, not requested {1}'
+                         .format(self.default_timeout, timeout))
+
             # TODO/TBD: Still increment reads if have a write lock?
             #  (See masquerading comment.)
             self._reads += 1
@@ -324,6 +329,11 @@ class Lock(object):
             self._log_acquired(lock_type, wait_time, nattempts)
             return True
         else:
+            # TODO: Problem if the timeout does not get reset if different?
+            if timeout != self.default_timeout:
+                tty.warn('Using current lock timeout {0}, not requested {1}'
+                         .format(self.default_timeout, timeout))
+
             # TODO/TBD: Still increment writes if have a write lock?
             #  (See masquerading comment.)
             self._writes += 1

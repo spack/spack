@@ -732,19 +732,35 @@ class PackageInstaller(object):
             else ('read', None)
         nolock = lock is None
         if nolock or ltype == 'write':
-            msg = '{0} a read lock on {1}'
+            msg = '{0} a read lock on {1} with timeout {2}'
             err = 'Failed to {0} a read lock for {1} due to {2}: {3}'
+
+            # Wait until the other process finishes if there are no more
+            # build tasks with priority 0 (i.e., with no uninstalled
+            # dependencies).
+            no_p0 = len(self.build_pq) <= 0 or self.build_pq[0] != 0
+            timeout = None if no_p0 else 3
 
             try:
                 if nolock:
-                    tty.verbose(msg.format('Acquiring', pkg_id))
+                    tty.debug(msg.format('Acquiring', pkg_id, timeout))
                     op = 'acquire'
-                    timeout = spack.store.db.package_lock_timeout
                     lock = spack.store.db.prefix_lock(pkg.spec, timeout)
+                    if timeout != lock.default_timeout:
+                        tty.warn('Expected prefix lock timeout {0}, not {1}'
+                                 .format(timeout, lock.default_timeout))
                     lock.acquire_read()
                 else:
-                    tty.verbose(msg.format('Downgrading to', pkg_id))
+                    tty.debug(msg.format('Downgrading to', pkg_id,
+                                         lock.default_timeout))
                     op = 'downgrade to'
+                    # The timeout here defaults to that used to acquire the
+                    # lock.  Since it is most likely a write lock, the timeout
+                    # is near zero.
+
+                    #  TODO: Does providing this resolve console install
+                    #  TODO:   concurrency issues?
+                    # lock.downgrade_write(timeout)
                     lock.downgrade_write()
                 tty.verbose('{0} is now read locked'.format(pkg_id))
             except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
@@ -777,18 +793,18 @@ class PackageInstaller(object):
             ('write', None)
         nolock = lock is None
         if nolock or ltype == 'read':
-            msg = '{0} a write lock for {1}'
+            msg = '{0} a write lock for {1} with timeout {2}'
             err = 'Failed to {0} a write lock for {1} due to {2}: {3}'
             timeout = 1e-9  # Near 0 to iterate through install specs quickly
 
             try:
                 if nolock:
-                    tty.verbose(msg.format('Acquiring', pkg_id))
+                    tty.debug(msg.format('Acquiring', pkg_id, timeout))
                     res = 'acquire'
                     lock = spack.store.db.prefix_lock(pkg.spec, timeout)
                     lock.acquire_write()
                 else:
-                    tty.verbose(msg.format('Upgrading to', pkg_id))
+                    tty.debug(msg.format('Upgrading to', pkg_id, timeout))
                     res = 'upgrade to'
                     lock.upgrade_read(timeout)
                 tty.verbose('{0} is now write locked'.format(pkg_id))
@@ -1262,7 +1278,7 @@ class PackageInstaller(object):
             action = 'Processing' if task.attempts <= 0 else 'Reprocessing'
             tty.verbose('{0} {1}: task={2}'.format(action, pkg_id, task))
 
-            # Ensure that the current spec as NO uninstalled dependencies,
+            # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
             #
             # If the spec has uninstalled dependencies, then there must be
@@ -1276,8 +1292,8 @@ class PackageInstaller(object):
                 tty.die('Cannot proceed from {0}: {1} uninstalled dependencies'
                         .format(pkg_id, task.priority))
 
-            # TODO: Add check to ensure no attempt is made to install the pkg
-            # TODO: before any of its dependencies?
+            # TODO: Add a check to ensure no attempt is made to install the pkg
+            # TODO:   before any of its dependencies?
 
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
