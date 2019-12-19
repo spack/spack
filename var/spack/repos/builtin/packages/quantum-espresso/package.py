@@ -90,8 +90,9 @@ class QuantumEspresso(Package):
     # HDF5 support introduced in 6.1.0, but the configure had some limitations.
     # In recent tests (Oct 2019), GCC and Intel work with the HDF5 Spack
     # package for the default variant. This is only for hdf5=parallel variant.
-    # Support, for hdf5=serial was introduced later with some limitation. See
-    # the last conflict.
+    # Support, for hdf5=serial was introduced in 6.4.1 but required a patch
+    # for the serial (no MPI) case. This patch was to work around an issue
+    # that only manifested itself inside the Spack environment.
     conflicts(
         'hdf5=parallel',
         when='@:6.0',
@@ -108,12 +109,6 @@ class QuantumEspresso(Package):
         'hdf5=parallel',
         when='~mpi',
         msg='parallel HDF5 requires MPI support'
-    )
-
-    conflicts(
-        'hdf5=serial',
-        when='~mpi',
-        msg='serial HDF5 detection with serial QE is broken'
     )
 
     # Elpa is formally supported by @:5.4.0, but QE configure searches
@@ -158,6 +153,13 @@ class QuantumEspresso(Package):
     patch('https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff',
           sha256='b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca',
           when='@6.3:6.3.0')
+
+    # QE 6.4.1 patch to work around configure issues that only appear in the
+    # Spack environment. We now are able to support:
+    # `spack install qe~mpi~scalapack hdf5=serial`
+    patch('https://gitlab.com/QEF/q-e/commit/5fb1195b0844e1052b7601f18ab5c700f9cbe648.diff',
+          sha256='b1aa3179ee1c069964fb9c21f3b832aebeae54947ce8d3cc1a74e7b154c3c10f',
+          when='@6.4.1:6.5.0')
 
     def install(self, spec, prefix):
 
@@ -246,6 +248,15 @@ class QuantumEspresso(Package):
 
         if spec.variants['hdf5'].value != 'none':
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
+            if '@6.4.1' or '@6.5' in spec:
+                options.extend([
+                    '--with-hdf5-include={0}'.format(
+                        spec['hdf5'].headers.directories[0]
+                    ),
+                    '--with-hdf5-libs={0}'.format(
+                        spec['hdf5:hl,fortran'].libs.ld_flags
+                    )
+                ])
 
         configure(*options)
 
