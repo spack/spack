@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 
 import spack.paths
 from spack.util.executable import Executable
@@ -32,6 +33,13 @@ class Gpg(object):
     def gpg():
         # TODO: Support loading up a GPG environment from a built gpg.
         gpg = Executable('gpg2')
+        # The gnupg2 Homebrew package install /usr/local/bin/gpg
+        # Requires the use of
+        # spack test --basetemp /tmp/spack
+        # on macOS when creating keys
+        # because $TMPDIR path is too long.
+        if platform.system().lower() == 'darwin':
+            gpg = Executable('gpg')
         if not os.path.exists(GNUPGHOME):
             os.makedirs(GNUPGHOME)
             os.chmod(GNUPGHOME, 0o700)
