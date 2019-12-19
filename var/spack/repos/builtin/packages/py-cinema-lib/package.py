@@ -19,7 +19,7 @@ class PyCinemaLib(PythonPackage):
 
     maintainers = ['EthanS94']
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('1.2.1', sha256='13c6c7b3df7dae3e05c2f44009b7c149841f604b7c51f36067bbcea9e2d088eb')
     version('1.2.0', sha256='f76b55517b7cfe7311d953426e08ce364b2e7e1cf84699828c229dd068ee3a08')
     version('1.1.1', sha256='90001554b0f3207d57da9fcab768732449d89a9d5bf54cfe0928a76649caebe8')
