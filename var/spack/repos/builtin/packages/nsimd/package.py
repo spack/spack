@@ -7,7 +7,6 @@ from spack import *
 
 
 class Nsimd(CMakePackage):
-
     """NSIMD is a vectorization library that abstracts SIMD programming.
     It was designed to exploit the maximum power of processors
     at a low development cost."""
@@ -17,9 +16,7 @@ class Nsimd(CMakePackage):
 
     maintainers = ['eschnett']
 
-    version('1.0', 'a692d25ed0335f1a6bb901c4b2c9fc47e26f8bf3')
-
-
+    version('1.0', sha256='523dae83f1d93eab30114321f1c9a67e2006a52595da4c51f121ca139abe0857')
 
     variant('simd',
             default='none',
@@ -37,18 +34,15 @@ class Nsimd(CMakePackage):
             values=('FMA', 'FP16'),
             multi=True)
 
+    conflicts('simd=none', msg="SIMD instruction set not defined")
+
     # Requires a C++14 compiler for building.
     # The C++ interface requires a C++11 compiler to use.
     depends_on('cmake@2.8.7:', type='build')
     depends_on('python@3:', type='build')
 
-    # Add 'check_options' and 'generate_code' phases in the beginning
-    phases = ['check_options', 'generate_code'] + CMakePackage.phases
-
-    def check_options(self, spec, prefix):
-        simd = self.spec.variants['simd'].value
-        if simd == 'none':
-            raise InstallError("'simd' variant is not set")
+    # Add a 'generate_code' phase in the beginning
+    phases = ['generate_code'] + CMakePackage.phases
 
     def generate_code(self, spec, prefix):
         """Auto-generates code in the build directory"""
@@ -58,7 +52,7 @@ class Nsimd(CMakePackage):
             '--force',
             '--disable-clang-format',
         ]
-        python = which('python')
+        python = spec['python'].command
         python(*options)
 
     def cmake_args(self):
