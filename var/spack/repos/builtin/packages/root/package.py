@@ -432,13 +432,14 @@ class Root(CMakePackage):
             env.append_path('SPACK_INCLUDE_DIRS',
                             self.spec['fontconfig'].prefix.include)
             env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['glew'].prefix.include)
-            env.append_path('SPACK_INCLUDE_DIRS',
                             self.spec['libx11'].prefix.include)
             env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['mesa-glu'].prefix.include)
-            env.append_path('SPACK_INCLUDE_DIRS',
                             self.spec['xproto'].prefix.include)
+        if '+opengl' in self.spec:
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['glew'].prefix.include)
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['mesa-glu'].prefix.include)
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
