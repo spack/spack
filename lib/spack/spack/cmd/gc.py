@@ -18,7 +18,7 @@ def setup_parser(subparser):
     spack.cmd.common.arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
-def autoremove(parser, args):
+def gc(parser, args):
     specs = spack.store.unused_specs()
     if not specs:
         msg = "There are no unused specs. Spack's store is clean."

@@ -8,13 +8,13 @@ import pytest
 import spack.spec
 import spack.main
 
-autoremove = spack.main.SpackCommand('autoremove')
+gc = spack.main.SpackCommand('gc')
 
 
 @pytest.mark.db
 def test_no_packages_to_remove(config, mutable_database, capsys):
     with capsys.disabled():
-        output = autoremove('-y')
+        output = gc('-y')
     assert 'There are no unused specs.' in output
 
 
@@ -24,5 +24,5 @@ def test_packages_are_removed(config, mutable_database, capsys):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
     with capsys.disabled():
-        output = autoremove('-y')
+        output = gc('-y')
     assert 'Successfully uninstalled cmake' in output
