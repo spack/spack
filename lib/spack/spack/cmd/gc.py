@@ -22,16 +22,19 @@ def setup_parser(subparser):
 def gc(parser, args):
     specs = spack.store.unused_specs()
 
-    # If we are in an env context be sure to preserve root specs
+    # Restrict garbage collection to the active environment
+    # speculating over roots that are yet to be installed
     env = spack.environment.get_env(args=None, cmd_name='gc')
     if env:
+        msg = 'Restricting the garbage collection to the "{0}" environment'
+        tty.msg(msg.format(env.name))
         env.concretize()
-        hashes = set([s.dag_hash() for x in env.roots()
-                      for s in x.traverse(deptype=('link', 'run'))])
-        if hashes:
-            msg = 'Filtering out specs needed by the "{0}" environment'
-            tty.msg(msg.format(env.name))
-            specs = [s for s in specs if s.dag_hash() not in hashes]
+        roots = [s for s in env.roots()]
+        all_hashes = set([s.dag_hash() for r in roots for s in r.traverse()])
+        lr_hashes = set([s.dag_hash() for r in roots
+                         for s in r.traverse(deptype=('link', 'run'))])
+        maybe_to_be_removed = all_hashes - lr_hashes
+        specs = [s for s in specs if s.dag_hash() in maybe_to_be_removed]
 
     if not specs:
         msg = "There are no unused specs. Spack's store is clean."
