@@ -70,6 +70,7 @@ class Gromacs(CMakePackage):
             ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
+    variant('hwloc', default=True, description='Use the hwloc portable hardware locality library')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -78,6 +79,7 @@ class Gromacs(CMakePackage):
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
+    depends_on('hwloc', when='+hwloc')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
@@ -98,6 +100,11 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+
+        if '+hwloc' in self.spec:
+            options.append('-DGMX_HWLOC:BOOL=ON')
+        else:
+            options.append('-DGMX_HWLOC:BOOL=OFF')
 
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')
