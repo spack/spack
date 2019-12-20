@@ -109,7 +109,7 @@ packages:
       - python
     specs:
       - steps@3.4.1+petsc
-      - steps@3.5.0a+petsc
+      - steps@3.5.0b+petsc
       - nest@2.18.0
 
   gnu-stable-lapack-parallel:
