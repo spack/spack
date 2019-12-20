@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Guile(AutotoolsPackage):
+class Guile(AutotoolsPackage, GNUMirrorPackage):
     """Guile is the GNU Ubiquitous Intelligent Language for Extensions,
     the official extension language for the GNU operating system."""
 
     homepage = "https://www.gnu.org/software/guile/"
-    url      = "https://ftpmirror.gnu.org/guile/guile-2.2.0.tar.gz"
+    gnu_mirror_path = "guile/guile-2.2.0.tar.gz"
 
     version('2.2.6', sha256='08c0e7487777740b61cdd97949b69e8a5e2997d8c2fe6c7e175819eb18444506')
     version('2.2.5', sha256='c3c7a2f6ae0d8321a240c7ebc532a1d47af8c63214157a73789e2b2305b4c927')

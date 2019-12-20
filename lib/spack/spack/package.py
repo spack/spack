@@ -510,8 +510,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
-                      'make_jobs']
+    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
+                      'parallel', 'make_jobs']
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -523,6 +523,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Keep track of whether or not this package was installed from
         # a binary cache.
         self.installed_from_binary_cache = False
+
+        # Ensure that only one of these two attributes are present
+        if getattr(self, 'url', None) and getattr(self, 'urls', None):
+            msg = "a package can have either a 'url' or a 'urls' attribute"
+            msg += " [package '{0.name}' defines both]"
+            raise ValueError(msg.format(self))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -750,7 +756,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return version_urls[version]
 
         # If no specific URL, use the default, class-level URL
-        default_url = getattr(self, 'url', None)
+        url = getattr(self, 'url', None)
+        urls = getattr(self, 'urls', [None])
+        default_url = url or urls.pop(0)
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
