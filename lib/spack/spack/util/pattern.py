@@ -23,7 +23,7 @@ class Composite(list):
         self.fns_to_delegate = fns_to_delegate
 
     def __getattr__(self, name):
-        if name in self.fns_to_delegate:
+        if name != 'fns_to_delegate' and name in self.fns_to_delegate:
             return Delegate(name, self)
         else:
             return self.__getattribute__(name)
