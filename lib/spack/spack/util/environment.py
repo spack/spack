@@ -17,7 +17,6 @@ import six
 
 import llnl.util.tty as tty
 import spack.util.executable as executable
-from spack.util.executable import ProcessError
 
 from llnl.util.lang import dedupe
 
@@ -920,7 +919,6 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file = ' '.join(source_file)
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-
         dump_environment = sys.executable + ' -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
