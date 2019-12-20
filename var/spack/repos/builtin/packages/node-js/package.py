@@ -29,7 +29,6 @@ class NodeJs(Package):
     version('6.3.0',   sha256='4ed7a99985f8afee337cc22d5fef61b495ab4238dfff3750ac9019e87fc6aae6')
     version('6.2.2',   sha256='b6baee57a0ede496c7c7765001f7495ad74c8dfe8c34f1a6fb2cd5d8d526ffce')
 
-    # variant('bash-completion', default=False, description='Build with bash-completion support for npm')  # NOQA: ignore=E501
     variant('debug', default=False, description='Include debugger support')
     variant('doc', default=False, description='Compile with documentation')
     variant('icu4c', default=False, description='Build with support for all locales instead of just English')
@@ -40,25 +39,22 @@ class NodeJs(Package):
     depends_on('gmake@3.81:', type='build')
     depends_on('libtool', type='build', when=sys.platform != 'darwin')
     depends_on('pkgconfig', type='build')
-    depends_on('python@2.7:2.8,3.5:', when='@13:', type='build')
-    depends_on('python@2.7:2.8', when='@:12', type='build')
+    depends_on('python@2.7:2.8,3.5:', when='@12:', type='build')
+    depends_on('python@2.7:2.8', when='@:11', type='build')
     # depends_on('bash-completion', when="+bash-completion")
     depends_on('icu4c', when='+icu4c')
     depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
     depends_on('openssl@1.1:', when='@10:+openssl')
     depends_on('zlib', when='+zlib')
 
+    phases = ['configure', 'build', 'install']
+
     def setup_build_environment(self, env):
+        # Force use of experimental Python 3 support
         env.set('PYTHON', self.spec['python'].command.path)
+        env.set('NODE_GYP_FORCE_PYTHON', self.spec['python'].command.path)
 
-    def install(self, spec, prefix):
-        options = []
-        options.extend(['--prefix={0}'.format(prefix)])
-
-        # Note: npm is updated more regularly than node.js, so we build the
-        #       package instead of using the bundled version
-        options.extend(['--without-npm'])
-
+    def configure_args(self):
         # On OSX, the system libtool must be used
         # So, we ensure that this is the case by...
         if sys.platform == 'darwin':
@@ -73,37 +69,52 @@ class NodeJs(Package):
                 '(temporarily) remove \n %s or its link to libtool from'
                 'path')
 
-        # TODO: Add bash-completion
+        args = [
+            '--prefix={0}'.format(self.prefix),
+            # Note: npm is updated more regularly than node.js, so we build
+            # the package instead of using the bundled version
+            '--without-npm'
+        ]
 
-        if '+debug' in spec:
-            options.extend(['--debug'])
+        if '+debug' in self.spec:
+            args.append('--debug')
 
-        if '+openssl' in spec:
-            options.extend([
+        if '+openssl' in self.spec:
+            args.extend([
                 '--shared-openssl',
-                '--shared-openssl-includes=%s' % spec['openssl'].prefix.include,  # NOQA: ignore=E501
-                '--shared-openssl-libpath=%s' % spec['openssl'].prefix.lib,
+                '--shared-openssl-includes={0}'.format(
+                    self.spec['openssl'].prefix.include),
+                '--shared-openssl-libpath={0}'.format(
+                    self.spec['openssl'].prefix.lib),
             ])
 
-        if '+zlib' in spec:
-            options.extend([
+        if '+zlib' in self.spec:
+            args.extend([
                 '--shared-zlib',
-                '--shared-zlib-includes=%s' % spec['zlib'].prefix.include,
-                '--shared-zlib-libpath=%s' % spec['zlib'].prefix.lib,
+                '--shared-zlib-includes={0}'.format(
+                    self.spec['zlib'].prefix.include),
+                '--shared-zlib-libpath={0}'.format(
+                    self.spec['zlib'].prefix.lib),
             ])
 
-        if '+icu4c' in spec:
-            options.extend(['--with-intl=full-icu'])
-        # else:
-        #     options.extend(['--with-intl=system-icu'])
+        if '+icu4c' in self.spec:
+            args.append('--with-intl=full-icu')
 
-        configure(*options)
+        return args
 
-        if self.run_tests:
-            make('test')
-            make('test-addons')
+    def configure(self, spec, prefix):
+        python('configure.py', *self.configure_args())
 
+    def build(self, spec, prefix):
+        make()
         if '+doc' in spec:
             make('doc')
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        make('test')
+        make('test-addons')
+
+    def install(self, spec, prefix):
         make('install')
