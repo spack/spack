@@ -771,14 +771,14 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def _setup_pkg_and_run(pkg, function, child_pipe, input_stream, dirty, fake):
+def _setup_pkg_and_run(pkg, function, child_pipe, input_fd, dirty, fake):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
     # that the parent process is not going to read from it till we
     # are done with the child, so we undo Python's precaution.
-    if input_stream is not None:
-        sys.stdin = input_stream
+    if input_fd is not None:
+        sys.stdin = os.fdopen(input_fd)
 
     try:
         if not fake:
@@ -849,15 +849,15 @@ def fork(pkg, function, dirty, fake):
     expected to handle (or re-raise) the ChildError.
     """
     parent_pipe, child_pipe = multiprocessing.Pipe()
-    input_stream = None
+    input_fd = None
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
-            input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+            input_fd = os.dup(sys.stdin.fileno())
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
-            args=(pkg, function, child_pipe, input_stream, dirty, fake))
+            args=(pkg, function, child_pipe, input_fd, dirty, fake))
         p.start()
 
     except InstallError as e:
@@ -866,8 +866,8 @@ def fork(pkg, function, dirty, fake):
 
     finally:
         # Close the input stream in the parent process
-        if input_stream is not None:
-            input_stream.close()
+        if input_fd is not None:
+            os.close(input_fd)
 
     child_result = parent_pipe.recv()
     p.join()
