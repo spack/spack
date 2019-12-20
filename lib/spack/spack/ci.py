@@ -551,7 +551,6 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
             stage_id += 1
 
             for spec_label in stage_jobs:
-                # release_spec = spec_labels[spec_label]['spec']
                 root_spec = spec_labels[spec_label]['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
@@ -609,7 +608,6 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
 
                 job_dependencies = []
                 if spec_label in dependencies:
-                    job_dependencies = []
                     for dep_label in dependencies[spec_label]:
                         dep_pkg = pkg_name_from_spec_label(dep_label)
                         dep_spec = spec_labels[dep_label]['rootSpec'][dep_pkg]
@@ -842,7 +840,7 @@ def register_cdash_build(build_name, base_url, project, site, track):
         "stamp": build_stamp,
     }
 
-    tty.debug('Registing cdash build to {0}, payload:'.format(url))
+    tty.debug('Registering cdash build to {0}, payload:'.format(url))
     tty.debug(payload)
 
     enc_data = json.dumps(payload).encode('utf-8')
