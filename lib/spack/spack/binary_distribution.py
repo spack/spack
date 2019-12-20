@@ -705,11 +705,8 @@ def get_specs(force=False):
                 if re.search("spec.yaml", link):
                     urls.add(link)
 
-    tty.msg('Done spidering all the mirrors')
-
     _cached_specs = []
     for link in urls:
-        tty.msg('  link: {0}'.format(link))
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
                 os.remove(stage.save_filename)
@@ -724,7 +721,6 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                tty.msg('    added spec to cache: {0}'.format(spec))
                 _cached_specs.append(spec)
 
     return _cached_specs

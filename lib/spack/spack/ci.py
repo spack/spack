@@ -693,7 +693,7 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
                 output_object[job_name] = job_object
                 job_id += 1
 
-    tty.msg('{0} build jobs generated in {1} stages'.format(
+    tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))
 
     # Use "all_job_names" to populate the build group for this set
@@ -741,14 +741,14 @@ def import_signing_key(base64_signing_key):
     if not base64_signing_key:
         tty.die('No key found for signing/verifying packages')
 
-    tty.msg('hello from import_signing_key')
+    tty.debug('ci.import_signing_key() will attempt to import a key')
 
     # This command has the side-effect of creating the directory referred
     # to as GNUPGHOME in setup_environment()
     list_output = spack_gpg('list', output=str)
 
-    tty.msg('spack gpg list:')
-    tty.msg(list_output)
+    tty.debug('spack gpg list:')
+    tty.debug(list_output)
 
     decoded_key = base64.b64decode(base64_signing_key)
     if isinstance(decoded_key, bytes):
@@ -760,38 +760,38 @@ def import_signing_key(base64_signing_key):
             fd.write(decoded_key)
 
         key_import_output = spack_gpg('trust', sign_key_path, output=str)
-        tty.msg('spack gpg trust {0}'.format(sign_key_path))
-        tty.msg(key_import_output)
+        tty.debug('spack gpg trust {0}'.format(sign_key_path))
+        tty.debug(key_import_output)
 
     # Now print the keys we have for verifying and signing
     trusted_keys_output = spack_gpg('list', '--trusted', output=str)
     signing_keys_output = spack_gpg('list', '--signing', output=str)
 
-    tty.msg('spack list --trusted')
-    tty.msg(trusted_keys_output)
-    tty.msg('spack list --signing')
-    tty.msg(signing_keys_output)
+    tty.debug('spack gpg list --trusted')
+    tty.debug(trusted_keys_output)
+    tty.debug('spack gpg list --signing')
+    tty.debug(signing_keys_output)
 
 
 def configure_compilers(compiler_action, scope=None):
     if compiler_action == 'INSTALL_MISSING':
-        tty.msg('Make sure bootstrapped compiler will be installed')
+        tty.debug('Make sure bootstrapped compiler will be installed')
         config = cfg.get('config')
         config['install_missing_compilers'] = True
         cfg.set('config', config)
     elif compiler_action == 'FIND_ANY':
-        tty.msg('Just find any available compiler')
+        tty.debug('Just find any available compiler')
         find_args = ['find']
         if scope:
             find_args.extend(['--scope', scope])
         output = spack_compiler(*find_args)
-        tty.msg('spack compiler find')
-        tty.msg(output)
+        tty.debug('spack compiler find')
+        tty.debug(output)
         output = spack_compiler('list')
-        tty.msg('spack compiler list')
-        tty.msg(output)
+        tty.debug('spack compiler list')
+        tty.debug(output)
     else:
-        tty.msg('No compiler action to be taken')
+        tty.debug('No compiler action to be taken')
 
     return None
 
@@ -807,9 +807,9 @@ def get_concrete_specs(root_spec, job_name, related_builds, compiler_action):
         # rely on any available compiler to build the package (i.e. the
         # compiler needed to be stripped from the spec when we generated
         # the job), and thus we need to concretize the root spec again.
-        tty.msg('about to concretize {0}'.format(root_spec))
+        tty.debug('About to concretize {0}'.format(root_spec))
         concrete_root = Spec(root_spec).concretized()
-        tty.msg('And now here is my concrete root: {0}'.format(concrete_root))
+        tty.debug('Resulting concrete root: {0}'.format(concrete_root))
     else:
         # in this case, either we're relying on Spack to install missing
         # compiler bootstrapped in a previous phase, or else we only had one
@@ -842,8 +842,8 @@ def register_cdash_build(build_name, base_url, project, site, track):
         "stamp": build_stamp,
     }
 
-    tty.msg('Registing cdash build to {0}, payload:'.format(url))
-    tty.msg(payload)
+    tty.debug('Registing cdash build to {0}, payload:'.format(url))
+    tty.debug(payload)
 
     enc_data = json.dumps(payload).encode('utf-8')
 
@@ -884,7 +884,7 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
     cdash_api_url = '{0}/api/v1/relateBuilds.php'.format(cdash_base_url)
 
     for dep_pkg_name in dep_map:
-        tty.msg('Fetching cdashid file for {0}'.format(dep_pkg_name))
+        tty.debug('Fetching cdashid file for {0}'.format(dep_pkg_name))
         dep_spec = dep_map[dep_pkg_name]
         dep_build_id = read_cdashid_from_mirror(dep_spec, cdashids_mirror_url)
 
@@ -910,7 +910,7 @@ def relate_cdash_builds(spec_map, cdash_base_url, job_build_id, cdash_project,
             raise SpackError(msg)
 
         response_text = response.read()
-        tty.msg('Relate builds response: {0}'.format(response_text))
+        tty.debug('Relate builds response: {0}'.format(response_text))
 
 
 def write_cdashid_to_mirror(cdashid, spec, mirror_url):
@@ -927,9 +927,9 @@ def write_cdashid_to_mirror(cdashid, spec, mirror_url):
         remote_url = os.path.join(
             mirror_url, bindist.build_cache_relative_path(), cdashid_file_name)
 
-        tty.msg('pushing cdashid to url')
-        tty.msg('  local file path: {0}'.format(local_cdash_path))
-        tty.msg('  remote url: {0}'.format(remote_url))
+        tty.debug('pushing cdashid to url')
+        tty.debug('  local file path: {0}'.format(local_cdash_path))
+        tty.debug('  remote url: {0}'.format(remote_url))
         web_util.push_to_url(local_cdash_path, remote_url)
 
 

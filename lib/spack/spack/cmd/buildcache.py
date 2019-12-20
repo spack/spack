@@ -307,7 +307,6 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
                    rel, unsigned, allow_root, no_rebuild_index):
     if spec_yaml:
         packages = set()
-        tty.msg('createtarball, reading spec from {0}'.format(spec_yaml))
         with open(spec_yaml, 'r') as fd:
             yaml_text = fd.read()
             tty.debug('createtarball read spec yaml:')

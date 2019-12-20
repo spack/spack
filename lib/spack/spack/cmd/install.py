@@ -228,7 +228,6 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
-            tty.debug('Installing {0} in environment'.format(abstract_spec))
             env.install(abstract_spec, spec, **kwargs)
             env.write()
         else:
