@@ -428,6 +428,9 @@ class Root(CMakePackage):
             env.append_path('CMAKE_PREFIX_PATH',
                             self.spec['lz4'].prefix)
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+        if self.spec.satisfies('@:6.12.99'):
+            env.append_path('SPACK_INCLUDE_DIRS',
+                            self.spec['zlib'].prefix.include)
         if '+x' in self.spec:
             env.append_path('SPACK_INCLUDE_DIRS',
                             self.spec['fontconfig'].prefix.include)
