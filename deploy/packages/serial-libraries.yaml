@@ -31,6 +31,7 @@ packages:
       - compiler
       - python
     specs:
+      - boost+python
       - tensorflow@1.12.0+cuda
 
   gnu-intel-stable-serial:
@@ -53,7 +54,6 @@ packages:
     specs:
       - assimp
       - boost
-      - brion
       - deflect
       - eigen
       - fmt
