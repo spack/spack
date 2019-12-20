@@ -14,6 +14,8 @@ class Pgmath(CMakePackage):
     url      = "https://github.com/flang-compiler/flang/archive/flang_20190329.tar.gz"
     git      = "https://github.com/flang-compiler/flang.git"
 
+    maintainers = ['naromero77']
+
     version('master', branch='master')
     version('20190329', sha256='b8c621da53829f8c53bad73125556fb1839c9056d713433b05741f7e445199f2')
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
