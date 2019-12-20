@@ -85,10 +85,6 @@ class Tfel(CMakePackage):
             description='Enables python bindings')
     variant('java', default=False,
             description='Enables java interface')
-    variant('java', default=False,
-            description='Enables java interface')
-    variant('java', default=False,
-            description='Enables java interface')
 
     # only since TFEL-3.3
     variant('comsol', default=False,

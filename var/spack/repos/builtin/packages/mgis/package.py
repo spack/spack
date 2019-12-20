@@ -18,7 +18,7 @@ class Mgis(CMakePackage):
     """
 
     homepage = "https://thelfer.github.io/mgis/web/index.html"
-    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.0.tar.gz"
+    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.1.tar.gz"
     git      = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
     maintainers = ['thelfer']
 
