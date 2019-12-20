@@ -62,32 +62,40 @@ class Elpa(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    def setup_build_environment(self, env):
-        spec = self.spec
-
-        env.set('CC', spec['mpi'].mpicc)
-        env.set('FC', spec['mpi'].mpifc)
-        env.set('CXX', spec['mpi'].mpicxx)
-
-        env.append_flags('LDFLAGS', spec['lapack'].libs.search_flags)
-        env.append_flags('LIBS', spec['lapack'].libs.link_flags)
-        env.set('SCALAPACK_LDFLAGS', spec['scalapack'].libs.joined())
-
     def configure_args(self):
-        # TODO: set optimum flags for platform+compiler combo, see
-        # https://github.com/hfp/xconfigure/tree/master/elpa
-        # also see:
-        # https://src.fedoraproject.org/cgit/rpms/elpa.git/
-        # https://packages.qa.debian.org/e/elpa.html
+        spec = self.spec
         options = []
-        # without -march=native there is configure error for 2017.05.02
-        # Could not compile test program, try with --disable-sse, or
-        # adjust the C compiler or CFLAGS
-        if '+optflags' in self.spec:
+
+        # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
+        # and --enable-neon-arch64
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq']
+
+        for feature in simd_features:
+            msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
+            options.append(msg.format(feature))
+
+        # If no features are found, enable the generic ones
+        if not any(f in spec.target for f in simd_features):
+            options.append('--enable-generic')
+
+        if '+optflags' in spec:
             options.extend([
                 'FCFLAGS=-O2 -ffree-line-length-none',
                 'CFLAGS=-O2'
             ])
-        if '+openmp' in self.spec:
+
+        if '+openmp' in spec:
             options.append('--enable-openmp')
+        else:
+            options.append('--disable-openmp')
+
+        options.extend([
+            'CC={0}'.format(spec['mpi'].mpicc),
+            'FC={0}'.format(spec['mpi'].mpifc),
+            'CXX={0}'.format(spec['mpi'].mpicxx),
+            'LDFLAGS={0}'.format(spec['lapack'].libs.search_flags),
+            'LIBS={0}'.format(spec['lapack'].libs.link_flags),
+            'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
+        ])
+
         return options

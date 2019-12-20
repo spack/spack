@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import contextlib
 import sys
 
 import llnl.util.tty as tty
@@ -14,6 +15,7 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.spec
+import spack.store
 import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
@@ -45,6 +47,14 @@ def setup_parser(subparser):
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
+@contextlib.contextmanager
+def nullcontext():
+    """Empty context manager.
+    TODO: replace with contextlib.nullcontext() if we ever require python 3.7.
+    """
+    yield
+
+
 def spec(parser, args):
     name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
     fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
@@ -56,6 +66,12 @@ def spec(parser, args):
         'show_types': args.types,
         'status_fn': install_status_fn if args.install_status else None
     }
+
+    # use a read transaction if we are getting install status for every
+    # spec in the DAG.  This avoids repeatedly querying the DB.
+    tree_context = nullcontext
+    if args.install_status:
+        tree_context = spack.store.db.read_transaction
 
     if not args.specs:
         tty.die("spack spec requires at least one spec")
@@ -73,13 +89,14 @@ def spec(parser, args):
                 print(spec.to_json(hash=ht.build_hash))
             continue
 
-        kwargs['hashes'] = False  # Always False for input spec
-        print("Input spec")
-        print("--------------------------------")
-        print(spec.tree(**kwargs))
+        with tree_context():
+            kwargs['hashes'] = False  # Always False for input spec
+            print("Input spec")
+            print("--------------------------------")
+            print(spec.tree(**kwargs))
 
-        kwargs['hashes'] = args.long or args.very_long
-        print("Concretized")
-        print("--------------------------------")
-        spec.concretize()
-        print(spec.tree(**kwargs))
+            kwargs['hashes'] = args.long or args.very_long
+            print("Concretized")
+            print("--------------------------------")
+            spec.concretize()
+            print(spec.tree(**kwargs))

@@ -20,15 +20,9 @@ class Flang(CMakePackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
-    depends_on('llvm@flang-develop', when='@develop')
-    depends_on('llvm@flang-20180921', when='@20180921 target=x86_64:')
-    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64:')
-
-    depends_on('llvm@flang-20180921', when='@20180921 target=aarch64:')
-
-    # LLVM version specific to OpenPOWER.
-    depends_on('llvm@flang-ppc64le-20180921', when='@20180921 target=ppc64le:')
-    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le:')
+    depends_on('llvm@develop+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@develop')
+    depends_on('llvm@7.0.1+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@20180921')
+    depends_on('llvm@6.0.0+flang~gold~lldb~lld~compiler-rt~libcxx~polly~internal_unwind', when='@20180612')
 
     depends_on('pgmath@develop', when='@develop')
     depends_on('pgmath@20180921', when='@20180921')
@@ -71,9 +65,11 @@ class Flang(CMakePackage):
         chmod = which('chmod')
         chmod('+x', flang)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # to find llvm's libc++.so
-        spack_env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'flang'))
+        env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('FC',  self.spec.prefix.bin.flang)
+        env.set('F77', self.spec.prefix.bin.flang)
+        env.set('F90', self.spec.prefix.bin.flang)

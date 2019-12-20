@@ -63,6 +63,27 @@ def test_add():
     assert Spec('mpileaks') in e.user_specs
 
 
+def test_env_add_virtual():
+    env('create', 'test')
+
+    e = ev.read('test')
+    e.add('mpi')
+    e.concretize()
+
+    hashes = e.concretized_order
+    assert len(hashes) == 1
+    spec = e.specs_by_hash[hashes[0]]
+    assert spec.satisfies('mpi')
+
+
+def test_env_add_nonexistant_fails():
+    env('create', 'test')
+
+    e = ev.read('test')
+    with pytest.raises(ev.SpackEnvironmentError, match=r'no such package'):
+        e.add('thispackagedoesnotexist')
+
+
 def test_env_list(mutable_mock_env_path):
     env('create', 'foo')
     env('create', 'bar')
@@ -765,13 +786,13 @@ def test_indirect_build_dep():
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
-Dependency:
+    dependency::
 
-        x       y
-       /| (l)   | (b)
-  (b) | y       z2
-       \| (b)              # noqa: W605
-        z1
+              x       y
+             /| (l)   | (b)
+        (b) | y       z2
+             \| (b)
+              z1
 
     """
     default = ('build', 'link')
@@ -1777,7 +1798,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
 
 
 def test_env_write_only_non_default():
-    print(env('create', 'test'))
+    env('create', 'test')
 
     e = ev.read('test')
     with open(e.manifest_path, 'r') as f:

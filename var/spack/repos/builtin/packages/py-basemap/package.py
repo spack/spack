@@ -34,8 +34,8 @@ class PyBasemap(PythonPackage):
         else:
             return 'https://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-{0}/basemap-{0}.tar.gz'.format(version)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GEOS_DIR', self.spec['geos'].prefix)
+    def setup_build_environment(self, env):
+        env.set('GEOS_DIR', self.spec['geos'].prefix)
 
     def install(self, spec, prefix):
         """Install everything from build directory."""

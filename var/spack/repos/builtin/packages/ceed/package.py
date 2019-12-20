@@ -16,6 +16,8 @@ class Ceed(BundlePackage):
 
     homepage = "https://ceed.exascaleproject.org"
 
+    version('2.0')
+
     variant('cuda', default=False,
             description='Build MAGMA; enable CUDA support in libCEED and OCCA')
     variant('mfem', default=True, description='Build MFEM and Laghos')

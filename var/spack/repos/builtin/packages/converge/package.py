@@ -215,7 +215,7 @@ class Converge(Package):
             if not os.path.exists('make_surface'):
                 os.symlink(make_surface, 'make_surface')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # CONVERGE searches for a valid license file in:
         #     $CONVERGE_ROOT/license/license.lic
-        run_env.set('CONVERGE_ROOT', self.prefix)
+        env.set('CONVERGE_ROOT', self.prefix)

@@ -44,10 +44,13 @@ class Paraview(CMakePackage, CudaPackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
 
     conflicts('+python', when='+python3')
     conflicts('+python', when='@5.6:')
     conflicts('+python3', when='@:5.5')
+    conflicts('+shared', when='+cuda')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -64,13 +67,13 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     depends_on('python@3:', when='+python3', type=('build', 'run'))
 
-    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python+mpi', type=('build', 'run'))
     depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
 
     depends_on('py-matplotlib@:2', when='+python', type='run')
-    depends_on('py-matplotlib@3:', when='+python3', type='run')
+    depends_on('py-matplotlib', when='+python3', type='run')
 
     depends_on('mpi', when='+mpi')
     depends_on('qt+opengl', when='@5.3.0:+qt+opengl2')
@@ -234,6 +237,15 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
                 '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
             ])
+
+        if '+shared' in spec:
+            cmake_args.append(
+                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=ON'
+            )
+        else:
+            cmake_args.append(
+                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
+            )
 
         if '+cuda' in spec:
             cmake_args.extend([

@@ -46,7 +46,7 @@ class EqR(AutotoolsPackage):
         if not os.path.exists(r_location):
             rscript = which('Rscript')
             if rscript is not None:
-                r_location = rscript('-e', 'cat(R.home())')
+                r_location = rscript('-e', 'cat(R.home())', output=str)
             else:
                 msg = 'couldn\'t locate Rscript on your PATH'
                 raise RuntimeError(msg)

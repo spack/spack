@@ -12,6 +12,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     homepage = "http://stellar.cct.lsu.edu/tag/hpx/"
     url = "https://github.com/STEllAR-GROUP/hpx/archive/1.2.1.tar.gz"
+    maintainers = ['msimberg', 'albestro']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
@@ -29,6 +30,10 @@ class Hpx(CMakePackage, CudaPackage):
         description='Define which allocator will be linked in',
         values=('system', 'tcmalloc', 'jemalloc', 'tbbmalloc')
     )
+
+    variant('max_cpu_count', default='64',
+            description='Max number of OS-threads for HPX applications',
+            values=lambda x: isinstance(x, str) and x.isdigit())
 
     variant('instrumentation', values=any_combination_of(
         'apex', 'google_perftools', 'papi', 'valgrind'
@@ -71,10 +76,13 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
-    depends_on('apex', when='instrumentation=apex')
+    depends_on('otf2', when='instrumentation=apex')
     depends_on('gperftools', when='instrumentation=google_perftools')
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
+
+    # Patches APEX
+    patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
@@ -103,6 +111,10 @@ class Hpx(CMakePackage, CudaPackage):
         # Instrumentation
         args.extend(self.instrumentation_args())
 
+        if 'instrumentation=apex' in spec:
+            args += ['-DAPEX_WITH_OTF2=ON'
+                     '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
+
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(
             'OFF' if 'networking=none' in spec else 'ON'
@@ -127,6 +139,11 @@ class Hpx(CMakePackage, CudaPackage):
         # Tools
         args.append('-DHPX_WITH_TOOLS={0}'.format(
             'ON' if '+tools' in spec else 'OFF'
+        ))
+
+        # MAX_CPU_COUNT
+        args.append('-DHPX_WITH_MAX_CPU_COUNT={0}'.format(
+            spec.variants['max_cpu_count'].value
         ))
 
         # Examples

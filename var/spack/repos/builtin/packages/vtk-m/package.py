@@ -22,7 +22,7 @@ class VtkM(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
-    version('1.5.0', sha256="cd38957bb552e28b5197e4f738d5bb0b2c6f4025c3e17a66c8b19ee501273fbe")
+    version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
     version('1.4.0', sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a")
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
@@ -36,7 +36,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
-    variant("logging", default=True, description="build logging support")
+    variant("logging", default=False, description="build logging support")
     variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
@@ -58,22 +58,30 @@ class VtkM(CMakePackage, CudaPackage):
                           '30': 'kepler',  '32': 'kepler',  '35': 'kepler',
                           '50': 'maxwell', '52': 'maxwell', '53': 'maxwell',
                           '60': 'pascal',  '61': 'pascal',  '62': 'pascal',
-                          '70': 'turing',  '72': 'turing',  '75': 'turing'}
+                          '70': 'volta',   '72': 'turing',  '75': 'turing'}
         with working_dir('spack-build', create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
-            # shared vs static libs
-            if "+shared" in spec:
-                options.append('-DBUILD_SHARED_LIBS=ON')
-            else:
+            # shared vs static libs logic
+            # force building statically with cuda
+            if "+cuda" in spec:
                 options.append('-DBUILD_SHARED_LIBS=OFF')
+            else:
+                if "+shared" in spec:
+                    options.append('-DBUILD_SHARED_LIBS=ON')
+                else:
+                    options.append('-DBUILD_SHARED_LIBS=OFF')
             # cuda support
             if "+cuda" in spec:
                 options.append("-DVTKm_ENABLE_CUDA:BOOL=ON")
+                options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(
+                               env["SPACK_CXX"]))
                 if 'cuda_arch' in spec.variants:
                     cuda_value = spec.variants['cuda_arch'].value
-                    name = gpu_name_table[cuda_value[0]]
-                    options.append(
-                        '-DVTKm_CUDA_Architecture={0}'.format(name))
+                    cuda_arch = cuda_value[0]
+                    if cuda_arch in gpu_name_table:
+                        vtkm_cuda_arch = gpu_name_table[cuda_arch]
+                        options.append('-DVTKm_CUDA_Architecture={0}'.format(
+                                       vtkm_cuda_arch))
                 else:
                     # this fix is necessary if compiling platform has cuda, but
                     # no devices (this's common for front end nodes on hpc clus

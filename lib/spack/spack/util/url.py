@@ -9,6 +9,7 @@ Utility functions for parsing, formatting, and manipulating URLs.
 
 import itertools
 import os.path
+import re
 
 from six import string_types
 import six.moves.urllib.parse as urllib_parse
@@ -69,8 +70,7 @@ def parse(url, scheme='file'):
 
     if scheme == 'file':
         path = spack.util.path.canonicalize_path(netloc + path)
-        while path.startswith('//'):
-            path = path[1:]
+        path = re.sub(r'^/+', '/', path)
         netloc = ''
 
     return urllib_parse.ParseResult(scheme=scheme,

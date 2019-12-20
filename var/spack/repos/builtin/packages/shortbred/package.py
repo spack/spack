@@ -28,5 +28,5 @@ class Shortbred(Package):
         install('shortbred_quantify.py', prefix.bin)
         install_tree('src', prefix.src)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix)

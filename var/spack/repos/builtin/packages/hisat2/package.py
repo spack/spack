@@ -40,5 +40,5 @@ class Hisat2(MakefilePackage):
             if os.path.isfile(file):
                 install(file, prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

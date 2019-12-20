@@ -635,12 +635,13 @@ function _spack_info {
 function _spack_install {
     if $list_options
     then
-        compgen -W "-h --help --only -j --jobs -I --install-status
-                    --overwrite --keep-prefix --keep-stage --dont-restage
-                    --use-cache --no-cache --show-log-on-error --source
-                    -n --no-checksum -v --verbose --fake --only-concrete
-                    -f --file --clean --dirty --test --log-format --log-file
-                    --cdash-upload-url -y --yes-to-all" -- "$cur"
+        compgen -W "-h --help --only -j --jobs --overwrite --keep-prefix
+                    --keep-stage --dont-restage --use-cache --no-cache
+                    --cache-only --show-log-on-error --source -n --no-checksum
+                    -v --verbose --fake --only-concrete -f --file --clean
+                    --dirty --test --run-tests --log-format --log-file
+                    --cdash-upload-url --cdash-build --cdash-site --cdash-track
+                    --cdash-buildstamp --help-cdash -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi

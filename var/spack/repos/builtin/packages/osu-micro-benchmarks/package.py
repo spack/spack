@@ -46,9 +46,9 @@ class OsuMicroBenchmarks(AutotoolsPackage):
 
         return config_args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         mpidir = join_path(self.prefix.libexec, 'osu-micro-benchmarks', 'mpi')
-        run_env.prepend_path('PATH', join_path(mpidir, 'startup'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'pt2pt'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'one-sided'))
-        run_env.prepend_path('PATH', join_path(mpidir, 'collective'))
+        env.prepend_path('PATH', join_path(mpidir, 'startup'))
+        env.prepend_path('PATH', join_path(mpidir, 'pt2pt'))
+        env.prepend_path('PATH', join_path(mpidir, 'one-sided'))
+        env.prepend_path('PATH', join_path(mpidir, 'collective'))

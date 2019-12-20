@@ -25,6 +25,7 @@ import spack.hash_types as ht
 import spack.repo
 import spack.schema.env
 import spack.spec
+import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
@@ -159,7 +160,8 @@ def activate(
             cmds += 'export PS1="%s ${PS1}";\n' % prompt
 
     if add_view and default_view_name in env.views:
-        cmds += env.add_default_view_to_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += env.add_default_view_to_shell(shell)
 
     return cmds
 
@@ -207,7 +209,8 @@ def deactivate(shell='sh'):
         cmds += 'fi;\n'
 
     if default_view_name in _active_environment.views:
-        cmds += _active_environment.rm_default_view_from_shell(shell)
+        with spack.store.db.read_transaction():
+            cmds += _active_environment.rm_default_view_from_shell(shell)
 
     tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
     _active_environment = None
@@ -811,7 +814,10 @@ class Environment(object):
                 raise SpackEnvironmentError(
                     'cannot add anonymous specs to an environment!')
             elif not spack.repo.path.exists(spec.name):
-                raise SpackEnvironmentError('no such package: %s' % spec.name)
+                virtuals = spack.repo.path.provider_index.providers.keys()
+                if spec.name not in virtuals:
+                    msg = 'no such package: %s' % spec.name
+                    raise SpackEnvironmentError(msg)
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
@@ -1230,13 +1236,16 @@ class Environment(object):
         Yields the user spec for non-concretized specs, and the concrete
         spec for already concretized but not yet installed specs.
         """
-        concretized = dict(self.concretized_specs())
-        for spec in self.user_specs:
-            concrete = concretized.get(spec)
-            if not concrete:
-                yield spec
-            elif not concrete.package.installed:
-                yield concrete
+        # use a transaction to avoid overhead of repeated calls
+        # to `package.installed`
+        with spack.store.db.read_transaction():
+            concretized = dict(self.concretized_specs())
+            for spec in self.user_specs:
+                concrete = concretized.get(spec)
+                if not concrete:
+                    yield spec
+                elif not concrete.package.installed:
+                    yield concrete
 
     def concretized_specs(self):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
