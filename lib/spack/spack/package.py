@@ -2624,16 +2624,16 @@ def build_process(pkg, build_kwargs):
     with pkg._stage_and_write_lock():
         # Run the pre-install hook in the child process after
         # the directory is created.
-        spack.hooks.pre_install(self.spec)
+        spack.hooks.pre_install(pkg.spec)
         if fake:
-            self.do_fake_install()
+            pkg.do_fake_install()
         else:
             source_path = pkg.stage.source_path
             if install_source and os.path.isdir(source_path):
                 src_target = os.path.join(
                     pkg.spec.prefix, 'share', pkg.name, 'src')
                 tty.msg('Copying source to {0}'.format(src_target))
-                install_tree(self.stage.source_path, src_target)
+                install_tree(pkg.stage.source_path, src_target)
 
             # Do the real install in the source directory.
             with working_dir(pkg.stage.source_path):
