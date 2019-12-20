@@ -627,28 +627,7 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-class Delegate(object):
-    def __init__(self, name, container):
-        self.name = name
-        self.container = container
-
-    def __call__(self, *args, **kwargs):
-        return [getattr(item, self.name)(*args, **kwargs)
-                for item in self.container]
-
-
-class Composite(list):
-    def __init__(self, fns_to_delegate):
-        self.fns_to_delegate = fns_to_delegate
-
-    def __getattr__(self, name):
-        if name in self.fns_to_delegate:
-            return Delegate(name, self)
-        else:
-            return self.__getattribute__(name)
-
-
-class StageComposite(Composite):
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
