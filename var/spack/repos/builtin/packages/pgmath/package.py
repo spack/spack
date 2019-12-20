@@ -23,7 +23,7 @@ class Pgmath(CMakePackage):
 
     # workaround for this issue
     # https://github.com/flang-compiler/flang/issues/838
-    patch('libpgmath_symbols.patch')
+    patch('libpgmath_symbols.patch', when='@20190329,master')
 
     depends_on("awk", type="build")
     conflicts("%gcc@:7.1.9999")
