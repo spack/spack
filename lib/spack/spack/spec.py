@@ -190,6 +190,10 @@ default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
 default_format += '{variants}{arch=architecture}'
 
 
+# Platform-specific library suffix.
+dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
+
+
 def colorize_spec(spec):
     """Returns a spec colorized according to the colors specified in
        color_formats."""

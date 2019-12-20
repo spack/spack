@@ -1565,6 +1565,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         dirty = kwargs.get('dirty', False)
         restage = kwargs.get('restage', False)
 
+        build_kwargs = kwargs.copy()
+        build_kwargs['dirty'] = kwargs.get('dirty', False)
+        build_kwargs['fake'] = kwargs.get('fake', False)
+
         # install_self defaults True and is popped so that dependencies are
         # always installed regardless of whether the root was installed
         install_self = kwargs.pop('install_package', True)
@@ -1646,90 +1650,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.run_tests = (tests is True or
                           tests and self.name in tests)
 
-        # Then install the package itself.
-        def build_process():
-            """This implements the process forked for each build.
-
-            Has its own process and python module space set up by
-            build_environment.fork().
-
-            This function's return value is returned to the parent process.
-            """
-
-            start_time = time.time()
-            if not fake:
-                if not skip_patch:
-                    self.do_patch()
-                else:
-                    self.do_stage()
-
-            tty.msg(
-                'Building {0} [{1}]'.format(self.name, self.build_system_class)
-            )
-
-            # get verbosity from do_install() parameter or saved value
-            echo = verbose
-            if PackageBase._verbose is not None:
-                echo = PackageBase._verbose
-
-            self.stage.keep = keep_stage
-            with self._stage_and_write_lock():
-                # Run the pre-install hook in the child process after
-                # the directory is created.
-                spack.hooks.pre_install(self.spec)
-                if fake:
-                    self.do_fake_install()
-                else:
-                    source_path = self.stage.source_path
-                    if install_source and os.path.isdir(source_path):
-                        src_target = os.path.join(
-                            self.spec.prefix, 'share', self.name, 'src')
-                        tty.msg('Copying source to {0}'.format(src_target))
-                        install_tree(self.stage.source_path, src_target)
-
-                    # Do the real install in the source directory.
-                    with working_dir(self.stage.source_path):
-                        # Save the build environment in a file before building.
-                        dump_environment(self.env_path)
-
-                        # cache debug settings
-                        debug_enabled = tty.is_debug()
-
-                        # Spawn a daemon that reads from a pipe and redirects
-                        # everything to log_path
-                        with log_output(self.log_path, echo, True) as logger:
-                            for phase_name, phase_attr in zip(
-                                    self.phases, self._InstallPhase_phases):
-
-                                with logger.force_echo():
-                                    inner_debug = tty.is_debug()
-                                    tty.set_debug(debug_enabled)
-                                    tty.msg(
-                                        "Executing phase: '%s'" % phase_name)
-                                    tty.set_debug(inner_debug)
-
-                                # Redirect stdout and stderr to daemon pipe
-                                phase = getattr(self, phase_attr)
-                                phase(self.spec, self.prefix)
-
-                    echo = logger.echo
-                    self.log()
-
-                # Run post install hooks before build stage is removed.
-                spack.hooks.post_install(self.spec)
-
-            # Stop timer.
-            self._total_time = time.time() - start_time
-            build_time = self._total_time - self._fetch_time
-
-            tty.msg("Successfully installed %s" % self.name,
-                    "Fetch: %s.  Build: %s.  Total: %s." %
-                    (_hms(self._fetch_time), _hms(build_time),
-                     _hms(self._total_time)))
-            print_pkg(self.prefix)
-
-            # preserve verbosity across runs
-            return echo
 
         # hook that allow tests to inspect this Package before installation
         # see unit_test_check() docs.
@@ -1759,7 +1679,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             # Fork a child to do the actual installation.
             # Preserve verbosity settings across installs.
             PackageBase._verbose = spack.build_environment.fork(
-                self, build_process, dirty=dirty, fake=fake)
+                self, build_process, build_kwargs)
 
             # If we installed then we should keep the prefix
             keep_prefix = self.last_phase is None or keep_prefix
@@ -2660,6 +2580,104 @@ def dump_packages(spec, path):
             install_tree(source_pkg_dir, dest_pkg_dir)
         else:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
+
+
+def build_process(pkg, build_kwargs):
+    """This implements the process forked for each build.
+
+    Has its own process and python module space set up by
+    build_environment.fork().
+
+    This function's return value is returned to the parent process.
+    """
+    kwargs = build_kwargs
+
+    keep_prefix = kwargs.get('keep_prefix', False)
+    keep_stage = kwargs.get('keep_stage', False)
+    install_source = kwargs.get('install_source', False)
+    install_deps = kwargs.get('install_deps', True)
+    skip_patch = kwargs.get('skip_patch', False)
+    verbose = kwargs.get('verbose', False)
+    fake = kwargs.get('fake', False)
+    explicit = kwargs.get('explicit', False)
+    tests = kwargs.get('tests', False)
+    dirty = kwargs.get('dirty', False)
+    restage = kwargs.get('restage', False)
+
+    start_time = time.time()
+    if not fake:
+        if not skip_patch:
+            pkg.do_patch()
+        else:
+            pkg.do_stage()
+
+    tty.msg(
+        'Building {0} [{1}]'.format(pkg.name, pkg.build_system_class)
+    )
+
+    # get verbosity from do_install() parameter or saved value
+    echo = verbose
+    if PackageBase._verbose is not None:
+        echo = PackageBase._verbose
+
+    pkg.stage.keep = keep_stage
+    with pkg._stage_and_write_lock():
+        # Run the pre-install hook in the child process after
+        # the directory is created.
+        spack.hooks.pre_install(self.spec)
+        if fake:
+            self.do_fake_install()
+        else:
+            source_path = pkg.stage.source_path
+            if install_source and os.path.isdir(source_path):
+                src_target = os.path.join(
+                    pkg.spec.prefix, 'share', pkg.name, 'src')
+                tty.msg('Copying source to {0}'.format(src_target))
+                install_tree(self.stage.source_path, src_target)
+
+            # Do the real install in the source directory.
+            with working_dir(pkg.stage.source_path):
+                # Save the build environment in a file before building.
+                dump_environment(pkg.env_path)
+
+                # cache debug settings
+                debug_enabled = tty.is_debug()
+
+                # Spawn a daemon that reads from a pipe and redirects
+                # everything to log_path
+                with log_output(pkg.log_path, echo, True) as logger:
+                    for phase_name, phase_attr in zip(
+                            pkg.phases, pkg._InstallPhase_phases):
+
+                        with logger.force_echo():
+                            inner_debug = tty.is_debug()
+                            tty.set_debug(debug_enabled)
+                            tty.msg(
+                                "Executing phase: '%s'" % phase_name)
+                            tty.set_debug(inner_debug)
+
+                        # Redirect stdout and stderr to daemon pipe
+                        phase = getattr(pkg, phase_attr)
+                        phase(pkg.spec, pkg.prefix)
+
+            echo = logger.echo
+            pkg.log()
+
+        # Run post install hooks before build stage is removed.
+        spack.hooks.post_install(pkg.spec)
+
+    # Stop timer.
+    pkg._total_time = time.time() - start_time
+    build_time = pkg._total_time - pkg._fetch_time
+
+    tty.msg("Successfully installed %s" % pkg.name,
+            "Fetch: %s.  Build: %s.  Total: %s." %
+            (_hms(pkg._fetch_time), _hms(build_time),
+             _hms(pkg._total_time)))
+    print_pkg(pkg.prefix)
+
+    # preserve verbosity across runs
+    return echo
 
 
 def print_pkg(message):

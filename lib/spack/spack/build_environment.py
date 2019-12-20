@@ -53,6 +53,7 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
+from spack.spec import dso_suffix
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -88,10 +89,6 @@ SPACK_DEBUG_LOG_ID = 'SPACK_DEBUG_LOG_ID'
 SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
-
-
-# Platform-specific library suffix.
-dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
 class MakeExecutable(Executable):
@@ -771,7 +768,7 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def _setup_pkg_and_run(pkg, function, child_pipe, input_fd, dirty, fake):
+def _setup_pkg_and_run(pkg, function, kwargs, child_pipe, input_fd):
     # We are in the child process. Python sets sys.stdin to
     # open(os.devnull) to prevent our process and its parent from
     # simultaneously reading from the original stdin. But, we assume
@@ -781,9 +778,9 @@ def _setup_pkg_and_run(pkg, function, child_pipe, input_fd, dirty, fake):
         sys.stdin = os.fdopen(input_fd)
 
     try:
-        if not fake:
-            setup_package(pkg, dirty=dirty)
-        return_value = function()
+        if not kwargs['fake']:
+            setup_package(pkg, dirty=kwargs['dirty'])
+        return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
     except StopIteration as e:
         # StopIteration is used to stop installations
@@ -820,7 +817,7 @@ def _setup_pkg_and_run(pkg, function, child_pipe, input_fd, dirty, fake):
         child_pipe.close()
 
 
-def fork(pkg, function, dirty, fake):
+def fork(pkg, function, kwargs):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -857,7 +854,7 @@ def fork(pkg, function, dirty, fake):
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
-            args=(pkg, function, child_pipe, input_fd, dirty, fake))
+            args=(pkg, function, kwargs, child_pipe, input_fd))
         p.start()
 
     except InstallError as e:
