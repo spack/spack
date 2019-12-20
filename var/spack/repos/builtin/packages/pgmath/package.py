@@ -19,7 +19,10 @@ class Pgmath(CMakePackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
+    # workaround for this issue
+    # https://github.com/flang-compiler/flang/issues/838
     patch('libpgmath_symbols.patch')
+
     depends_on("awk", type="build")
     conflicts("%gcc@:7.1.9999")
 
