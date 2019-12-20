@@ -17,6 +17,7 @@ import six
 
 import llnl.util.tty as tty
 import spack.util.executable as executable
+from spack.util.executable import ProcessError
 
 from llnl.util.lang import dedupe
 
@@ -919,7 +920,14 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file = ' '.join(source_file)
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+
+        # On RHEL-8/CentOS-8 there is no python by default
+        # Check for availability of python, else use python3.
+        try:
+            shell('python', error=str)
+            dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        except ProcessError:
+            dump_environment = 'python3 -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([
