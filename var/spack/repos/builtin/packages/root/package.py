@@ -234,6 +234,9 @@ class Root(CMakePackage):
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
 
+    # ROOT was incompatible with the GCC 5+ ABI until v6.08
+    conflicts('%gcc@5.0.0:', when=':6.06.99')
+
     # See README.md
     conflicts('+http',
               msg='HTTP server currently unsupported due to dependency issues')
