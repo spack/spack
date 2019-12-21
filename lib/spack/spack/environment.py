@@ -1179,7 +1179,12 @@ class Environment(object):
         self.specs_by_hash[h] = concrete
 
     def install_all(self, args=None):
-        """Install all concretized specs in an environment."""
+        """Install all concretized specs in an environment.
+
+        Note: this does not regenerate the views for the environment;
+        that needs to be done separately with a call to write().
+
+        """
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
@@ -1199,8 +1204,6 @@ class Environment(object):
                     if os.path.lexists(build_log_link):
                         os.remove(build_log_link)
                     os.symlink(spec.package.build_log_path, build_log_link)
-
-            self.regenerate_views()
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
@@ -1367,10 +1370,17 @@ class Environment(object):
             self.concretized_order = [
                 old_hash_to_new.get(h, h) for h in self.concretized_order]
 
-    def write(self):
+    def write(self, regenerate_views=True):
         """Writes an in-memory environment to its location on disk.
 
-        This will also write out package files for each newly concretized spec.
+        Write out package files for each newly concretized spec.  Also
+        regenerate any views associated with the environment, if
+        regenerate_views is True.
+
+        Arguments:
+            regenerate_views (bool): regenerate views as well as
+                writing if True.
+
         """
         # ensure path in var/spack/environments
         fs.mkdirp(self.path)
@@ -1478,9 +1488,14 @@ class Environment(object):
             with fs.write_tmp_and_move(self.manifest_path) as f:
                 _write_yaml(self.yaml, f)
 
-        # TODO: for operations that just add to the env (install etc.) this
-        # could just call update_view
-        self.regenerate_views()
+        # TODO: rethink where this needs to happen along with
+        # writing. For some of the commands (like install, which write
+        # concrete specs AND regen) this might as well be a separate
+        # call.  But, having it here makes the views consistent witht the
+        # concretized environment for most operations.  Which is the
+        # special case?
+        if regenerate_views:
+            self.regenerate_views()
 
     def __enter__(self):
         self._previous_active = _active_environment
