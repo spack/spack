@@ -992,19 +992,22 @@ class Environment(object):
 
         spec = Spec(user_spec)
 
-        if self.add(spec):
-            concrete = concrete_spec if concrete_spec else spec.concretized()
-            self._add_concrete_spec(spec, concrete)
-        else:
-            # spec might be in the user_specs, but not installed.
-            # TODO: Redo name-based comparison for old style envs
-            spec = next(s for s in self.user_specs if s.satisfies(user_spec))
-            concrete = self.specs_by_hash.get(spec.build_hash())
-            if not concrete:
-                concrete = spec.concretized()
+        with spack.store.db.read_transaction():
+            if self.add(spec):
+                concrete = concrete_spec or spec.concretized()
                 self._add_concrete_spec(spec, concrete)
+            else:
+                # spec might be in the user_specs, but not installed.
+                # TODO: Redo name-based comparison for old style envs
+                spec = next(
+                    s for s in self.user_specs if s.satisfies(user_spec)
+                )
+                concrete = self.specs_by_hash.get(spec.build_hash())
+                if not concrete:
+                    concrete = spec.concretized()
+                    self._add_concrete_spec(spec, concrete)
 
-        self._install(concrete, **install_args)
+            self._install(concrete, **install_args)
 
     def _install(self, spec, **install_args):
         spec.package.do_install(**install_args)
@@ -1177,26 +1180,27 @@ class Environment(object):
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment."""
-        for concretized_hash in self.concretized_order:
-            spec = self.specs_by_hash[concretized_hash]
+        with spack.store.db.read_transaction():
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
 
-            # Parse cli arguments and construct a dictionary
-            # that will be passed to Package.do_install API
-            kwargs = dict()
-            if args:
-                spack.cmd.install.update_kwargs_from_args(args, kwargs)
+                # Parse cli arguments and construct a dictionary
+                # that will be passed to Package.do_install API
+                kwargs = dict()
+                if args:
+                    spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-            self._install(spec, **kwargs)
+                self._install(spec, **kwargs)
 
-            if not spec.external:
-                # Link the resulting log file into logs dir
-                build_log_link = os.path.join(
-                    self.log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-                if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                if not spec.external:
+                    # Link the resulting log file into logs dir
+                    log_name = '%s-%s' % (spec.name, spec.dag_hash(7))
+                    build_log_link = os.path.join(self.log_path, log_name)
+                    if os.path.lexists(build_log_link):
+                        os.remove(build_log_link)
+                    os.symlink(spec.package.build_log_path, build_log_link)
 
-        self.regenerate_views()
+            self.regenerate_views()
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
