@@ -516,20 +516,23 @@ class ViewDescriptor(object):
             if spec.concrete:  # Do not link unconcretized roots
                 specs_for_view.append(spec.copy(deps=('link', 'run')))
 
-        installed_specs_for_view = set(s for s in specs_for_view
-                                       if s in self and s.package.installed)
+        # regeneration queries the database quite a bit; this read
+        # transaction ensures that we don't repeatedly lock/unlock.
+        with spack.store.db.read_transaction():
+            installed_specs_for_view = set(
+                s for s in specs_for_view if s in self and s.package.installed)
 
-        view = self.view()
+            view = self.view()
 
-        view.clean()
-        specs_in_view = set(view.get_all_specs())
-        tty.msg("Updating view at {0}".format(self.root))
+            view.clean()
+            specs_in_view = set(view.get_all_specs())
+            tty.msg("Updating view at {0}".format(self.root))
 
-        rm_specs = specs_in_view - installed_specs_for_view
-        view.remove_specs(*rm_specs, with_dependents=False)
+            rm_specs = specs_in_view - installed_specs_for_view
+            view.remove_specs(*rm_specs, with_dependents=False)
 
-        add_specs = installed_specs_for_view - specs_in_view
-        view.add_specs(*add_specs, with_dependencies=False)
+            add_specs = installed_specs_for_view - specs_in_view
+            view.add_specs(*add_specs, with_dependencies=False)
 
 
 class Environment(object):
