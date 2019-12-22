@@ -1,3 +1,9 @@
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
 #################################################################################
 # This file is part of Spack's fish (friendly interactive shell) support
 # Ported from bash (setup-env.sh) by Johannes Blaschke,
