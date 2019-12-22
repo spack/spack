@@ -42,6 +42,7 @@ node-local filesystem, and multi-node tests will fail if the locks aren't
 actually on a shared filesystem.
 
 """
+import collections
 import os
 import socket
 import shutil
@@ -776,188 +777,257 @@ def test_complex_acquire_and_release_chain(lock_path):
     multiproc_test(p1, p2, p3)
 
 
-def test_transaction(lock_path):
+class AssertLock(lk.Lock):
+    """Test lock class that marks acquire/release events."""
+    def __init__(self, lock_path, vals):
+        super(AssertLock, self).__init__(lock_path)
+        self.vals = vals
+
+    def acquire_read(self, timeout=None):
+        self.assert_acquire_read()
+        result = super(AssertLock, self).acquire_read(timeout)
+        self.vals['acquired_read'] = True
+        return result
+
+    def acquire_write(self, timeout=None):
+        self.assert_acquire_write()
+        result = super(AssertLock, self).acquire_write(timeout)
+        self.vals['acquired_write'] = True
+        return result
+
+    def release_read(self, release_fn=None):
+        self.assert_release_read()
+        result = super(AssertLock, self).release_read(release_fn)
+        self.vals['released_read'] = True
+        return result
+
+    def release_write(self, release_fn=None):
+        self.assert_release_write()
+        result = super(AssertLock, self).release_write(release_fn)
+        self.vals['released_write'] = True
+        return result
+
+
+@pytest.mark.parametrize(
+    "transaction,type",
+    [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
+)
+def test_transaction(lock_path, transaction, type):
+    class MockLock(AssertLock):
+        def assert_acquire_read(self):
+            assert not vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_release_read(self):
+            assert vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_acquire_write(self):
+            assert not vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_release_write(self):
+            assert vals['entered_fn']
+            assert not vals['exited_fn']
+
     def enter_fn():
-        vals['entered'] = True
+        # assert enter_fn is called while lock is held
+        assert vals['acquired_%s' % type]
+        vals['entered_fn'] = True
 
     def exit_fn(t, v, tb):
-        vals['exited'] = True
+        # assert exit_fn is called while lock is held
+        assert not vals['released_%s' % type]
+        vals['exited_fn'] = True
         vals['exception'] = (t or v or tb)
 
-    lock = lk.Lock(lock_path)
-    vals = {'entered': False, 'exited': False, 'exception': False}
-    with lk.ReadTransaction(lock, enter_fn, exit_fn):
-        pass
+    vals = collections.defaultdict(lambda: False)
+    lock = MockLock(lock_path, vals)
 
-    assert vals['entered']
-    assert vals['exited']
-    assert not vals['exception']
+    with transaction(lock, acquire=enter_fn, release=exit_fn):
+        assert vals['acquired_%s' % type]
+        assert not vals['released_%s' % type]
 
-    vals = {'entered': False, 'exited': False, 'exception': False}
-    with lk.WriteTransaction(lock, enter_fn, exit_fn):
-        pass
-
-    assert vals['entered']
-    assert vals['exited']
+    assert vals['entered_fn']
+    assert vals['exited_fn']
+    assert vals['acquired_%s' % type]
+    assert vals['released_%s' % type]
     assert not vals['exception']
 
 
-def test_transaction_with_exception(lock_path):
+@pytest.mark.parametrize(
+    "transaction,type",
+    [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
+)
+def test_transaction_with_exception(lock_path, transaction, type):
+    class MockLock(AssertLock):
+        def assert_acquire_read(self):
+            assert not vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_release_read(self):
+            assert vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_acquire_write(self):
+            assert not vals['entered_fn']
+            assert not vals['exited_fn']
+
+        def assert_release_write(self):
+            assert vals['entered_fn']
+            assert not vals['exited_fn']
+
     def enter_fn():
-        vals['entered'] = True
+        assert vals['acquired_%s' % type]
+        vals['entered_fn'] = True
 
     def exit_fn(t, v, tb):
-        vals['exited'] = True
+        assert not vals['released_%s' % type]
+        vals['exited_fn'] = True
         vals['exception'] = (t or v or tb)
+        return exit_result
 
-    lock = lk.Lock(lock_path)
+    exit_result = False
+    vals = collections.defaultdict(lambda: False)
+    lock = MockLock(lock_path, vals)
 
-    def do_read_with_exception():
-        with lk.ReadTransaction(lock, enter_fn, exit_fn):
+    with pytest.raises(Exception):
+        with transaction(lock, acquire=enter_fn, release=exit_fn):
             raise Exception()
 
-    def do_write_with_exception():
-        with lk.WriteTransaction(lock, enter_fn, exit_fn):
-            raise Exception()
-
-    vals = {'entered': False, 'exited': False, 'exception': False}
-    with pytest.raises(Exception):
-        do_read_with_exception()
-    assert vals['entered']
-    assert vals['exited']
+    assert vals['entered_fn']
+    assert vals['exited_fn']
     assert vals['exception']
 
-    vals = {'entered': False, 'exited': False, 'exception': False}
-    with pytest.raises(Exception):
-        do_write_with_exception()
-    assert vals['entered']
-    assert vals['exited']
+    # test suppression of exceptions from exit_fn
+    exit_result = True
+    vals.clear()
+
+    # should not raise now.
+    with transaction(lock, acquire=enter_fn, release=exit_fn):
+        raise Exception()
+
+    assert vals['entered_fn']
+    assert vals['exited_fn']
     assert vals['exception']
 
 
-def test_transaction_with_context_manager(lock_path):
-    class TestContextManager(object):
+@pytest.mark.parametrize(
+    "transaction,type",
+    [(lk.ReadTransaction, "read"), (lk.WriteTransaction, "write")]
+)
+def test_transaction_with_context_manager(lock_path, transaction, type):
+    class MockLock(AssertLock):
+        def assert_acquire_read(self):
+            assert not vals['entered_ctx']
+            assert not vals['exited_ctx']
 
-        def __enter__(self):
-            vals['entered'] = True
+        def assert_release_read(self):
+            assert vals['entered_ctx']
+            assert vals['exited_ctx']
 
-        def __exit__(self, t, v, tb):
-            vals['exited'] = True
-            vals['exception'] = (t or v or tb)
+        def assert_acquire_write(self):
+            assert not vals['entered_ctx']
+            assert not vals['exited_ctx']
 
-    def exit_fn(t, v, tb):
-        vals['exited_fn'] = True
-        vals['exception_fn'] = (t or v or tb)
+        def assert_release_write(self):
+            assert vals['entered_ctx']
+            assert vals['exited_ctx']
 
-    lock = lk.Lock(lock_path)
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with lk.ReadTransaction(lock, TestContextManager, exit_fn):
-        pass
-
-    assert vals['entered']
-    assert vals['exited']
-    assert not vals['exception']
-    assert vals['exited_fn']
-    assert not vals['exception_fn']
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with lk.ReadTransaction(lock, TestContextManager):
-        pass
-
-    assert vals['entered']
-    assert vals['exited']
-    assert not vals['exception']
-    assert not vals['exited_fn']
-    assert not vals['exception_fn']
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with lk.WriteTransaction(lock, TestContextManager, exit_fn):
-        pass
-
-    assert vals['entered']
-    assert vals['exited']
-    assert not vals['exception']
-    assert vals['exited_fn']
-    assert not vals['exception_fn']
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with lk.WriteTransaction(lock, TestContextManager):
-        pass
-
-    assert vals['entered']
-    assert vals['exited']
-    assert not vals['exception']
-    assert not vals['exited_fn']
-    assert not vals['exception_fn']
-
-
-def test_transaction_with_context_manager_and_exception(lock_path):
     class TestContextManager(object):
         def __enter__(self):
-            vals['entered'] = True
+            vals['entered_ctx'] = True
 
         def __exit__(self, t, v, tb):
-            vals['exited'] = True
-            vals['exception'] = (t or v or tb)
+            assert not vals['released_%s' % type]
+            vals['exited_ctx'] = True
+            vals['exception_ctx'] = (t or v or tb)
+            return exit_ctx_result
 
     def exit_fn(t, v, tb):
+        assert not vals['released_%s' % type]
         vals['exited_fn'] = True
         vals['exception_fn'] = (t or v or tb)
+        return exit_fn_result
 
-    lock = lk.Lock(lock_path)
+    exit_fn_result, exit_ctx_result = False, False
+    vals = collections.defaultdict(lambda: False)
+    lock = MockLock(lock_path, vals)
 
-    def do_read_with_exception(exit_fn):
-        with lk.ReadTransaction(lock, TestContextManager, exit_fn):
-            raise Exception()
+    with transaction(lock, acquire=TestContextManager, release=exit_fn):
+        pass
 
-    def do_write_with_exception(exit_fn):
-        with lk.WriteTransaction(lock, TestContextManager, exit_fn):
-            raise Exception()
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with pytest.raises(Exception):
-        do_read_with_exception(exit_fn)
-    assert vals['entered']
-    assert vals['exited']
-    assert vals['exception']
+    assert vals['entered_ctx']
+    assert vals['exited_ctx']
     assert vals['exited_fn']
-    assert vals['exception_fn']
-
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with pytest.raises(Exception):
-        do_read_with_exception(None)
-    assert vals['entered']
-    assert vals['exited']
-    assert vals['exception']
-    assert not vals['exited_fn']
+    assert not vals['exception_ctx']
     assert not vals['exception_fn']
 
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with pytest.raises(Exception):
-        do_write_with_exception(exit_fn)
-    assert vals['entered']
-    assert vals['exited']
-    assert vals['exception']
-    assert vals['exited_fn']
-    assert vals['exception_fn']
+    vals.clear()
+    with transaction(lock, acquire=TestContextManager):
+        pass
 
-    vals = {'entered': False, 'exited': False, 'exited_fn': False,
-            'exception': False, 'exception_fn': False}
-    with pytest.raises(Exception):
-        do_write_with_exception(None)
-    assert vals['entered']
-    assert vals['exited']
-    assert vals['exception']
+    assert vals['entered_ctx']
+    assert vals['exited_ctx']
     assert not vals['exited_fn']
+    assert not vals['exception_ctx']
     assert not vals['exception_fn']
+
+    # below are tests for exceptions with and without suppression
+    def assert_ctx_and_fn_exception(raises=True):
+        vals.clear()
+
+        if raises:
+            with pytest.raises(Exception):
+                with transaction(
+                        lock, acquire=TestContextManager, release=exit_fn):
+                    raise Exception()
+        else:
+            with transaction(
+                    lock, acquire=TestContextManager, release=exit_fn):
+                raise Exception()
+
+        assert vals['entered_ctx']
+        assert vals['exited_ctx']
+        assert vals['exited_fn']
+        assert vals['exception_ctx']
+        assert vals['exception_fn']
+
+    def assert_only_ctx_exception(raises=True):
+        vals.clear()
+
+        if raises:
+            with pytest.raises(Exception):
+                with transaction(lock, acquire=TestContextManager):
+                    raise Exception()
+        else:
+            with transaction(lock, acquire=TestContextManager):
+                raise Exception()
+
+        assert vals['entered_ctx']
+        assert vals['exited_ctx']
+        assert not vals['exited_fn']
+        assert vals['exception_ctx']
+        assert not vals['exception_fn']
+
+    # no suppression
+    assert_ctx_and_fn_exception(raises=True)
+    assert_only_ctx_exception(raises=True)
+
+    # suppress exception only in function
+    exit_fn_result, exit_ctx_result = True, False
+    assert_ctx_and_fn_exception(raises=False)
+    assert_only_ctx_exception(raises=True)
+
+    # suppress exception only in context
+    exit_fn_result, exit_ctx_result = False, True
+    assert_ctx_and_fn_exception(raises=False)
+    assert_only_ctx_exception(raises=False)
+
+    # suppress exception in function and context
+    exit_fn_result, exit_ctx_result = True, True
+    assert_ctx_and_fn_exception(raises=False)
+    assert_only_ctx_exception(raises=False)
 
 
 def test_lock_debug_output(lock_path):
