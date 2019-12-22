@@ -351,7 +351,13 @@ class Lock(object):
 
         else:
             self._writes -= 1
-            return False
+
+            # when the last *write* is released, we call release_fn here
+            # instead of immediately before releasing the lock.
+            if self._writes == 0:
+                return release_fn() if release_fn is not None else True
+            else:
+                return False
 
     def _debug(self, *args):
         tty.debug(*args)
