@@ -268,6 +268,7 @@ function spack -d "wrapper for the `spack` command"
 
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
+        return
     end
 
 
