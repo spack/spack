@@ -13,7 +13,7 @@ class Slepc(Package):
 
     homepage = "http://slepc.upv.es"
     url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
-    git      = "https://bitbucket.org/slepc/slepc.git"
+    git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
