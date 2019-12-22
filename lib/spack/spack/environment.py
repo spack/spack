@@ -534,9 +534,12 @@ class ViewDescriptor(object):
             tty.msg("Updating view at {0}".format(self.root))
 
             rm_specs = specs_in_view - installed_specs_for_view
-            view.remove_specs(*rm_specs, with_dependents=False)
-
             add_specs = installed_specs_for_view - specs_in_view
+
+            # pass all_specs in, as it's expensive to read all the
+            # spec.yaml files twice.
+            view.remove_specs(*rm_specs, with_dependents=False,
+                              all_specs=specs_in_view)
             view.add_specs(*add_specs, with_dependencies=False)
 
 
