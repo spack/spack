@@ -783,6 +783,12 @@ class AssertLock(lk.Lock):
         super(AssertLock, self).__init__(lock_path)
         self.vals = vals
 
+    # assert hooks for subclasses
+    assert_acquire_read = lambda self: None
+    assert_acquire_write = lambda self: None
+    assert_release_read = lambda self: None
+    assert_release_write = lambda self: None
+
     def acquire_read(self, timeout=None):
         self.assert_acquire_read()
         result = super(AssertLock, self).acquire_read(timeout)
@@ -1028,6 +1034,57 @@ def test_transaction_with_context_manager(lock_path, transaction, type):
     exit_fn_result, exit_ctx_result = True, True
     assert_ctx_and_fn_exception(raises=False)
     assert_only_ctx_exception(raises=False)
+
+
+def test_nested_write_transaction(lock_path):
+    """Ensure that the outermost write transaction writes."""
+
+    def write(t, v, tb):
+        vals['wrote'] = True
+
+    vals = collections.defaultdict(lambda: False)
+    lock = AssertLock(lock_path, vals)
+
+    # write/write
+    with lk.WriteTransaction(lock, release=write):
+        assert not vals['wrote']
+        with lk.WriteTransaction(lock, release=write):
+            assert not vals['wrote']
+        assert not vals['wrote']
+    assert vals['wrote']
+
+    # read/write
+    vals.clear()
+    with lk.ReadTransaction(lock):
+        assert not vals['wrote']
+        with lk.WriteTransaction(lock, release=write):
+            assert not vals['wrote']
+        assert vals['wrote']
+
+    # write/read/write
+    vals.clear()
+    with lk.WriteTransaction(lock, release=write):
+        assert not vals['wrote']
+        with lk.ReadTransaction(lock):
+            assert not vals['wrote']
+            with lk.WriteTransaction(lock, release=write):
+                assert not vals['wrote']
+            assert not vals['wrote']
+        assert not vals['wrote']
+    assert vals['wrote']
+
+    # read/write/read/write
+    vals.clear()
+    with lk.ReadTransaction(lock):
+        with lk.WriteTransaction(lock, release=write):
+            assert not vals['wrote']
+            with lk.ReadTransaction(lock):
+                assert not vals['wrote']
+                with lk.WriteTransaction(lock, release=write):
+                    assert not vals['wrote']
+                assert not vals['wrote']
+            assert not vals['wrote']
+        assert vals['wrote']
 
 
 def test_lock_debug_output(lock_path):
