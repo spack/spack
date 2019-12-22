@@ -511,10 +511,15 @@ class ViewDescriptor(object):
         specs = all_specs if self.link == 'all' else roots
         for spec in specs:
             # The view does not store build deps, so if we want it to
-            # recognize environment specs (which do store build deps), then
-            # they need to be stripped
+            # recognize environment specs (which do store build deps),
+            # then they need to be stripped.
             if spec.concrete:  # Do not link unconcretized roots
-                specs_for_view.append(spec.copy(deps=('link', 'run')))
+                # We preserve _hash _normal to avoid recomputing DAG
+                # hashes (DAG hashes don't consider build deps)
+                spec_copy = spec.copy(deps=('link', 'run'))
+                spec_copy._hash = spec._hash
+                spec_copy._normal = spec._normal
+                specs_for_view.append(spec_copy)
 
         # regeneration queries the database quite a bit; this read
         # transaction ensures that we don't repeatedly lock/unlock.

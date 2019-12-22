@@ -2999,7 +2999,7 @@ class Spec(object):
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
             caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_concrete``, and ``_cmp_key_cache``. By
+                ``_normal``, ``_hash``, and ``_cmp_key_cache``. By
                 default this is ``False`` if DAG structure would be
                 changed by the copy, ``True`` if it's an exact copy.
 
