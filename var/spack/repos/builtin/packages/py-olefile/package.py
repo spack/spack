@@ -14,6 +14,6 @@ class PyOlefile(PythonPackage):
 
     import_modules = ['olefile']
 
-    version('0.44', 'fc625554e4e7f0c2ddcd00baa3c74ff5')
+    version('0.44', sha256='61f2ca0cd0aa77279eb943c07f607438edf374096b66332fae1ee64a6f0f73ad')
 
     depends_on('python@2.6:', type=('build', 'run'))

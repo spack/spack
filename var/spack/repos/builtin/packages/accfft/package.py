@@ -20,9 +20,12 @@ class Accfft(CMakePackage, CudaPackage):
     variant('shared', default=True, description='Enables the build of shared libraries')
 
     # See: http://accfft.org/articles/install/#installing-dependencies
-    depends_on('fftw+float+double~mpi+openmp')
+    depends_on('fftw precision=float,double ~mpi+openmp')
 
     depends_on('parallel-netcdf', when='+pnetcdf')
+
+    # fix error [-Wc++11-narrowing]
+    patch('fix_narrowing_error.patch')
 
     parallel = False
 

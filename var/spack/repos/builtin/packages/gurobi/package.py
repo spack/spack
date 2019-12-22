@@ -23,6 +23,7 @@ class Gurobi(Package):
     $GUROBI_HOME/docs/quickstart_linux.pdf for more details."""
 
     homepage = "http://www.gurobi.com/index"
+    manual_download = True
 
     version('7.5.2', '01f6dbb8d165838cca1664a1a14e4a85')
 
@@ -34,8 +35,8 @@ class Gurobi(Package):
     def url_for_version(self, version):
         return "file://{0}/gurobi{1}_linux64.tar.gz".format(os.getcwd(), version)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('GUROBI_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('GUROBI_HOME', self.prefix)
 
     def install(self, spec, prefix):
         install_tree('linux64', prefix)

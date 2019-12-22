@@ -12,4 +12,4 @@ class PyDiscover(PythonPackage):
     homepage = "https://pypi.python.org/pypi/discover"
     url      = "https://pypi.io/packages/source/d/discover/discover-0.4.0.tar.gz"
 
-    version('0.4.0', '30bb643af4f5ea47fff572b5c346207d')
+    version('0.4.0', sha256='05c3fa9199e57d4b16fb653e02d65713adc1f89ef55324fb0c252b1cf9070d79')

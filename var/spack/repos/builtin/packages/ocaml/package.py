@@ -11,16 +11,16 @@ class Ocaml(Package):
        functional, imperative and object-oriented styles"""
 
     homepage = "http://ocaml.org/"
-    url      = "http://caml.inria.fr/pub/distrib/ocaml-4.03/ocaml-4.03.0.tar.gz"
+    url      = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
-    version('4.06.0', '66e5439eb63dbb8b8224cba5d1b20947')
-    version('4.03.0', '43812739ea1b4641cf480f57f977c149')
+    version('4.06.0', sha256='c17578e243c4b889fe53a104d8927eb8749c7be2e6b622db8b3c7b386723bf50')
+    version('4.03.0', sha256='7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2')
 
     depends_on('ncurses')
 
     def url_for_version(self, version):
         url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
-        return url.format(version.up_to(2), version)
+        return url.format(str(version)[:-2], version)
 
     def install(self, spec, prefix):
         configure('-prefix', '{0}'.format(prefix))

@@ -546,6 +546,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         timeout_write(lock_path, 5, 1))
 
 
+@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
     touch(lock_path)
@@ -573,6 +574,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
+@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):

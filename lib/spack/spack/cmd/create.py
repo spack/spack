@@ -13,6 +13,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.util.web
 import spack.repo
+import spack.stage
 from spack.spec import Spec
 from spack.util.editor import editor
 from spack.util.executable import which, ProcessError
@@ -56,8 +57,12 @@ class {class_name}({base_class_name}):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
-    homepage = "http://www.example.com"
+    homepage = "https://www.example.com"
 {url_def}
+
+    # FIXME: Add a list of GitHub accounts to
+    # notify when the package is updated.
+    # maintainers = ['github_user1', 'github_user2']
 
 {versions}
 
@@ -241,6 +246,7 @@ class PythonPackageTemplate(PackageTemplate):
 
     dependencies = """\
     # FIXME: Add dependencies if required.
+    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))"""
 
@@ -421,7 +427,8 @@ def setup_parser(subparser):
         '-n', '--name',
         help="name of the package to create")
     subparser.add_argument(
-        '-t', '--template', metavar='TEMPLATE', choices=templates.keys(),
+        '-t', '--template', metavar='TEMPLATE',
+        choices=sorted(templates.keys()),
         help="build system template to use. options: %(choices)s")
     subparser.add_argument(
         '-r', '--repo',
@@ -453,7 +460,7 @@ class BuildSystemGuesser:
         the contents of its archive or the URL it was downloaded from."""
 
         # Most octave extensions are hosted on Octave-Forge:
-        #     http://octave.sourceforge.net/index.html
+        #     https://octave.sourceforge.net/index.html
         # They all have the same base URL.
         if url is not None and 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
@@ -566,7 +573,7 @@ def get_url(args):
     """
 
     # Default URL
-    url = 'http://www.example.com/example-1.2.3.tar.gz'
+    url = 'https://www.example.com/example-1.2.3.tar.gz'
 
     if args.url:
         # Use a user-supplied URL if one is present
@@ -618,7 +625,7 @@ def get_versions(args, name):
             version = parse_version(args.url)
             url_dict = {version: args.url}
 
-        versions = spack.util.web.get_checksums_for_versions(
+        versions = spack.stage.get_checksums_for_versions(
             url_dict, name, first_stage_function=guesser,
             keep_stage=args.keep_stage)
     else:

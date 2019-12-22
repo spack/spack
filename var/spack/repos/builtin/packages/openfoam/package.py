@@ -38,7 +38,7 @@
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
 # The spack 'develop' version of openfoam retains the upstream
-# WM_PROJECT_VERSION=plus naming internally.
+# WM_PROJECT_VERSION=com naming internally.
 #
 ##############################################################################
 import glob
@@ -259,18 +259,21 @@ class Openfoam(Package):
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
-    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
+    git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
-    version('1906', 'ab7017e262c0c0fceec55c31e2153180')
-    version('1812_190531', 'a4b416838a8a76fdec22706a33c96de3')
-    version('1812', '6a315687b3601eeece7ff7c7aed3d9a5')
-    version('1806', 'bb244a3bde7048a03edfccffc46c763f')
-    version('1712', '6ad92df051f4d52c7d0ec34f4b8eb3bc')
-    version('1706', '630d30770f7b54d6809efbf94b7d7c8f')
-    version('1612', 'ca02c491369150ab127cbb88ec60fbdf')
+    version('master', branch='master', submodules='True')
+    version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
+    version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
+    version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')
+    version('1812_190531', sha256='51f0ef49a199edf3cd94e2ccfc7330e54e93c8e4ddb29ee66fe3e6b443583b34')
+    version('1812', sha256='d4d23d913419c6a364b1fe91509c1fadb5661bdf2eedb8fe9a8a005924eb2032')
+    version('1806', sha256='6951aab6405294fe59cec90b0a4e425f5403043191cda02ebaaa890ce1fcc819')
+    version('1712', sha256='4d22caa25d638d4c59bb93ee4dec51e8f71724f9f507eeb4162f771ebe885d21')
+    version('1706', sha256='7779048bb53798d9a5bd2b2be0bf302c5fd3dff98e29249d6e0ef7eeb83db79a')
+    version('1612', sha256='2909c43506a68e1f23efd0ca6186a6948ae0fc8fe1e39c78cc23ef0d69f3569d')
 
     variant('float32', default=False,
             description='Use single-precision')
@@ -337,7 +340,11 @@ class Openfoam(Package):
 
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
-    patch('1806-have-kahip.patch', when='@1806')
+    # kahip patch (wmake)
+    patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
+          when='@1806',
+          sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
+    )
 
     # Some user config settings
     # default: 'compile-option': 'RpathOpt',
@@ -364,28 +371,40 @@ class Openfoam(Package):
     #
 
     def url_for_version(self, version):
-        # Prior to 'v1706' and additional '+' in the naming
-        fmt = self.list_url
+        """Handles locations for patched and unpatched versions.
+        Patched version (eg '1906_191103') are located in the
+        corresponding unpatched directories (eg '1906').
+        Older versions (eg, v1612+) had additional '+' in naming
+        """
+        tty.info('openfoam: {0}'.format(version))
         if version <= Version('1612'):
-            fmt += 'v{0}+/OpenFOAM-v{0}+.tgz'
+            fmt = 'v{0}+/OpenFOAM-v{1}+.tgz'
         else:
-            fmt += 'v{0}/OpenFOAM-v{0}.tgz'
-        return fmt.format(version, version)
+            fmt = 'v{0}/OpenFOAM-v{1}.tgz'
+        return self.list_url + fmt.format(version.up_to(1), version)
 
-    def setup_environment(self, spack_env, run_env):
-        """Add environment variables to the generated module file.
-        These environment variables come from running:
+    def setup_minimal_environment(self, env):
+        """Sets a minimal openfoam environment.
+        """
+        tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('WM_PROJECT_DIR', self.projectdir)
+        for d in ['wmake', self.archbin]:  # bin added automatically
+            env.prepend_path('PATH', join_path(self.projectdir, d))
+
+    def setup_build_environment(self, env):
+        """Sets the build environment (prior to unpacking the sources).
+        """
+        pass
+
+    def setup_run_environment(self, env):
+        """Sets the run environment (post-installation).
+        The environment comes from running:
 
         .. code-block:: console
 
            $ . $WM_PROJECT_DIR/etc/bashrc
         """
-
-        # NOTE: Spack runs setup_environment twice.
-        # 1) pre-build to set up the build environment
-        # 2) post-install to determine runtime environment variables
-        # The etc/bashrc is only available (with corrrect content)
-        # post-installation.
 
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
@@ -423,8 +442,7 @@ class Openfoam(Package):
                         'MPI_ARCH_PATH',  # Can be needed for compilation
                     ])
 
-                run_env.extend(mods)
-                spack_env.extend(mods)
+                env.extend(mods)
                 minimal = False
                 tty.info('OpenFOAM bashrc env: {0}'.format(bashrc))
             except Exception:
@@ -432,22 +450,23 @@ class Openfoam(Package):
 
         if minimal:
             # pre-build or minimal environment
-            tty.info('OpenFOAM minimal env {0}'.format(self.prefix))
-            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            run_env.set('WM_PROJECT_DIR', self.projectdir)
-            spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            spack_env.set('WM_PROJECT_DIR', self.projectdir)
-            for d in ['wmake', self.archbin]:  # bin added automatically
-                run_env.prepend_path('PATH', join_path(self.projectdir, d))
-                spack_env.prepend_path('PATH', join_path(self.projectdir, d))
+            self.setup_minimal_environment(env)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        """Location of the OpenFOAM project directory.
-        This is identical to the WM_PROJECT_DIR value, but we avoid that
-        variable since it would mask the normal OpenFOAM cleanup of
-        previous versions.
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when building.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
         """
-        self.setup_environment(spack_env, run_env)
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Use full OpenFOAM environment when running.
+        Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
+        masking the normal OpenFOAM cleanup of previous versions.
+        """
+        self.setup_run_environment(env)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):
@@ -480,6 +499,18 @@ class Openfoam(Package):
         """Adjust OpenFOAM build for spack.
            Where needed, apply filter as an alternative to normal patching."""
         add_extra_files(self, self.common, self.assets)
+
+        # Prior to 1812, required OpenFOAM-v{VER} directory when sourcing
+        projdir = "OpenFOAM-v{0}".format(self.version)
+        if not os.path.exists(join_path(self.stage.path, projdir)):
+            tty.info('Added directory link {0}'.format(projdir))
+            os.symlink(
+                os.path.relpath(
+                    self.stage.source_path,
+                    self.stage.path
+                ),
+                join_path(self.stage.path, projdir)
+            )
 
         # Avoid WM_PROJECT_INST_DIR for ThirdParty
         # This modification is non-critical

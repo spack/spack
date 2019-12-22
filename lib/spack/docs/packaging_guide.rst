@@ -136,6 +136,10 @@ generates a boilerplate template for your package, and opens up the new
        homepage = "http://www.example.com"
        url      = "https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2"
 
+       # FIXME: Add a list of GitHub accounts to
+       # notify when the package is updated.
+       # maintainers = ['github_user1', 'github_user2']
+
        version('6.1.2', '8ddbb26dc3bd4e2302984debba1406a5')
        version('6.1.1', '4c175f86e11eb32d8bf9872ca3a8e11d')
        version('6.1.0', '86ee6e54ebfc4a90b643a65e402c4048')
@@ -183,6 +187,17 @@ The rest of the tasks you need to do are as follows:
 
    The ``homepage`` is displayed when users run ``spack info`` so
    that they can learn more about your package.
+
+#. Add a comma-separated list of maintainers.
+
+   The ``maintainers`` field is a list of GitHub accounts of people
+   who want to be notified any time the package is modified. When a
+   pull request is submitted that updates the package, these people
+   will be requested to review the PR. This is useful for developers
+   who maintain a Spack package for their own software, as well as
+   users who rely on a piece of software and want to ensure that the
+   package doesn't break. It also gives users a list of people to
+   contact for help when someone reports a build error with the package.
 
 #. Add ``depends_on()`` calls for the package's dependencies.
 
@@ -537,6 +552,34 @@ specify their own ``url``. Spack will use the nearest URL *before* the requested
 version. This is useful for packages that have an easy to extrapolate URL, but
 keep changing their URL format every few releases. With this method, you only
 need to specify the ``url`` when the URL changes.
+
+"""""""""""""""""""""""
+Mirrors of the main URL
+"""""""""""""""""""""""
+
+Spack supports listing mirrors of the main URL in a package by defining
+the ``urls`` attribute:
+
+.. code-block:: python
+
+  class Foo(Package):
+
+    urls = [
+        'http://example.com/foo-1.0.tar.gz',
+        'http://mirror.com/foo-1.0.tar.gz'
+    ]
+
+instead of just a single ``url``. This attribute is a list of possible URLs that
+will be tried in order when fetching packages. Notice that either one of ``url``
+or ``urls`` can be present in a package, but not both at the same time.
+
+A well-known case of packages that can be fetched from multiple mirrors is that
+of GNU. For that, Spack goes a step further and defines a mixin class that
+takes care of all of the plumbing and requires packagers to just define a proper
+``gnu_mirror_path`` attribute:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/autoconf/package.py
+   :lines: 9-18
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
@@ -1464,8 +1507,8 @@ that the same package with different patches applied will have different
 hash identifiers.  To ensure that the hashing scheme is consistent, you
 must use a ``sha256`` checksum for the patch.  Patches will be fetched
 from their URLs, checked, and applied to your source code.  You can use
-the ``spack sha256`` command to generate a checksum for a patch file or
-URL.
+the GNU utils ``sha256sum`` or the macOS ``shasum -a 256`` commands to
+generate a checksum for a patch file.
 
 Spack can also handle compressed patches.  If you use these, Spack needs
 a little more help.  Specifically, it needs *two* checksums: the
@@ -2032,55 +2075,58 @@ appear in the package file (or in this case, in the list).
 
 .. _setup-dependent-environment:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``setup_dependent_environment()``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Influence how dependents are built or run
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack provides a mechanism for dependencies to provide variables that
-can be used in their dependents' build.  Any package can declare a
-``setup_dependent_environment()`` function, and this function will be
-called before the ``install()`` method of any dependent packages.
-This allows dependencies to set up environment variables and other
-properties to be used by dependents.
-
-The function declaration should look like this:
+Spack provides a mechanism for dependencies to influence the
+environment of their dependents by overriding  the
+:meth:`setup_dependent_run_environment <spack.package.PackageBase.setup_dependent_run_environment>`
+or the
+:meth:`setup_dependent_build_environment <spack.package.PackageBase.setup_dependent_build_environment>`
+methods.
+The Qt package, for instance, uses this call:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_environment
+   :pyobject: Qt.setup_dependent_build_environment
    :linenos:
 
-Here, the Qt package sets the ``QTDIR`` environment variable so that
-packages that depend on a particular Qt installation will find it.
-
-The arguments to this function are:
-
-* **spack_env**: List of environment modifications to be applied when
-  the dependent package is built within Spack.
-* **run_env**: List of environment modifications to be applied when
-  the dependent package is run outside of Spack. These are added to the
-  resulting module file.
-* **dependent_spec**: The spec of the dependent package about to be
-  built. This allows the extendee (self) to query the dependent's state.
-  Note that *this* package's spec is available as ``self.spec``.
-
-A good example of using these is in the Python package:
+to set the ``QTDIR`` environment variable so that packages
+that depend on a particular Qt installation will find it.
+Another good example of how a dependency can influence
+the build environment of dependents is the Python package:
 
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
-   :pyobject: Python.setup_dependent_environment
+   :pyobject: Python.setup_dependent_build_environment
    :linenos:
 
-The first thing that happens here is that the ``python`` command is
-inserted into module scope of the dependent.  This allows most python
-packages to have a very simple install method, like this:
+In the method above it is ensured that any package that depends on Python
+will have the ``PYTHONPATH``, ``PYTHONHOME`` and ``PATH`` environment
+variables set appropriately before starting the installation. To make things
+even simpler the ``python setup.py`` command is also inserted into the module
+scope of dependents by overriding a third method called
+:meth:`setup_dependent_package <spack.package.PackageBase.setup_dependent_package>`
+:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+   :pyobject: Python.setup_dependent_package
+   :linenos:
+
+This allows most python packages to have a very simple install procedure,
+like the following:
 
 .. code-block:: python
 
    def install(self, spec, prefix):
-       python('setup.py', 'install', '--prefix={0}'.format(prefix))
+       setup_py('install', '--prefix={0}'.format(prefix))
 
-Python's ``setup_dependent_environment`` method also sets up some
-other variables, creates a directory, and sets up the ``PYTHONPATH``
-so that dependent packages can find their dependencies at build time.
+Finally the Python package takes also care of the modifications to ``PYTHONPATH``
+to allow dependencies to run correctly:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/python/package.py
+    :pyobject: Python.setup_dependent_run_environment
+    :linenos:
+
 
 .. _packaging_conflicts:
 

@@ -19,6 +19,8 @@ class Graphviz(AutotoolsPackage):
     homepage = 'http://www.graphviz.org'
     git      = 'https://gitlab.com/graphviz/graphviz.git'
 
+    # This commit hash is tag='stable_release_2.42.2'
+    version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
@@ -55,7 +57,7 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
-    patch('http://www.linuxfromscratch.org/patches/blfs/svn/graphviz-2.40.1-qt5-1.patch',
+    patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='+qt^qt@5:')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
@@ -92,7 +94,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
-    depends_on('zlib', when='+pangocairo')
+    depends_on('zlib')
     depends_on('qt@4', when='+qt')
     depends_on('libx11', when="+x")
 
@@ -116,9 +118,9 @@ class Graphviz(AutotoolsPackage):
         bash = which('bash')
         bash('./autogen.sh', 'NOCONFIG')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+quartz' in self.spec:
-            spack_env.set('OBJC', self.compiler.cc)
+            env.set('OBJC', self.compiler.cc)
 
     @when('%clang platform=darwin')
     def patch(self):

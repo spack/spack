@@ -24,7 +24,7 @@ class Awscli(PythonPackage):
                when='^python@2.6:2.6.99')
     depends_on('py-pyyaml@3.10:5.1', type=('build', 'run'),
                when='^python@2.7:')
-    depends_on('py-argparse@1.1:', when='^python@2.6:2.6.99',
+    depends_on('py-argparse@1.1:', when='^python@:2.6',
                type=('build', 'run'))
     depends_on('py-s3transfer@0.2.0:0.2.999', type=('build', 'run'))
     depends_on('py-botocore@1.12.169', type=('build', 'run'))

@@ -36,9 +36,9 @@ class Citcoms(AutotoolsPackage):
     conflicts('+pyre', when='@3.3:', msg='Pyre support was removed from 3.3+')
     conflicts('+exchanger', when='@3.3:', msg='Exchanger support was removed from 3.3+')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+ggrd' in self.spec:
-            spack_env.set('HC_HOME', self.spec['hc'].prefix)
+            env.set('HC_HOME', self.spec['hc'].prefix)
 
     def configure_args(self):
         args = ['CC={0}'.format(self.spec['mpi'].mpicc)]

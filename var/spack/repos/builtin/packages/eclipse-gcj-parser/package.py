@@ -19,7 +19,7 @@ class EclipseGcjParser(Package):
 
     maintainers = ['citibeth']
 
-    version('4.8', 'd7cd6a27c8801e66cbaa964a039ecfdb', expand=False)
+    version('4.8', sha256='98fd128f1d374d9e42fd9d4836bdd249c6d511ebc6c0df17fbc1b9df96c3d781', expand=False)
 
     phases = ('build', 'install')
 
@@ -45,6 +45,3 @@ class EclipseGcjParser(Package):
     def install(self, spec, prefix):
         mkdirp(spec.prefix.bin)
         install('ecj1', spec.prefix.bin)
-
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.bin)

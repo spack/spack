@@ -13,7 +13,7 @@ class PyIpdb(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ipdb"
     url      = "https://pypi.io/packages/source/i/ipdb/ipdb-0.10.1.tar.gz"
 
-    version('0.10.1', '4aeab65f633ddc98ebdb5eebf08dc713')
+    version('0.10.1', sha256='bb2948e726dbfb2687f4a582088b3f170b2556ba8e54ae1231c783c97e99ec87')
 
     # :TODO:
     # There might be potential to add variants here, but at the time of writing

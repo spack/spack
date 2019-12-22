@@ -100,8 +100,11 @@ class Gpg(object):
         cls.gpg()(*args)
 
     @classmethod
-    def verify(cls, signature, file):
-        cls.gpg()('--verify', signature, file)
+    def verify(cls, signature, file, suppress_warnings=False):
+        if suppress_warnings:
+            cls.gpg()('--verify', signature, file, error=str)
+        else:
+            cls.gpg()('--verify', signature, file)
 
     @classmethod
     def list(cls, trusted, signing):

@@ -16,12 +16,12 @@ class PyOpppy(PythonPackage):
     git = "https://github.com/lanl/opppy.git"
 
     version('master', branch='master')
-    version('0.1.1', '852a1329ce68d678623beed3fd01ea98')
+    version('0_1_1', sha256='505c023853e75552abc65de9777a125ecb6a99a1cb4e605a4f702af837e3168b')
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy@1.6:', type=('build', 'run'))
     depends_on('python@3:',     type=('build', 'run'))
-    depends_on('py-argparse',   type=('build', 'run'))
+    depends_on('py-argparse',   type=('build', 'run'), when='^python@:2.6')
     depends_on('py-scipy',      type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-sphinx',     type=('build', 'run'))

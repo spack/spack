@@ -14,7 +14,7 @@ class PyTuiview(PythonPackage):
     homepage = "https://bitbucket.org/chchrsc/tuiview"
     url      = "https://bitbucket.org/chchrsc/tuiview/get/tuiview-1.1.7.tar.gz"
 
-    version('1.1.7', '4b3b38a820cc239c8ab4a181ac5d4c30')
+    version('1.1.7', sha256='fbf0bf29cc775357dad4f8a2f0c2ffa98bbf69d603a96353e75b321adef67573')
 
     depends_on("py-pyqt4", type=('build', 'run'))
     depends_on("py-numpy", type=('build', 'run'))

@@ -63,6 +63,7 @@ schema = {
                 {
                     'include': {
                         'type': 'array',
+                        'default': [],
                         'items': {
                             'type': 'string'
                         },
@@ -119,6 +120,11 @@ schema = {
                                 }
                             }
                         ]
+                    },
+                    'concretization': {
+                        'type': 'string',
+                        'enum': ['together', 'separately'],
+                        'default': 'separately'
                     }
                 }
             )

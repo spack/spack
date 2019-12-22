@@ -12,5 +12,5 @@ class OctaveStruct(OctavePackage):
     homepage = "https://octave.sourceforge.io/struct/"
     url      = "https://downloads.sourceforge.net/octave/struct-1.0.14.tar.gz"
 
-    version('1.0.14', '3589d5eb8000f18426e2178587eb82f4')
+    version('1.0.14', sha256='ad4e17687bc24650f032757271b20b70fe32c35513d4dd9ab1e549919df36b47')
     extends('octave@2.9.7:')

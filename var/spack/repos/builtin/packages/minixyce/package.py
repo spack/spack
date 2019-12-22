@@ -17,7 +17,7 @@ class Minixyce(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0', '6fc0e5a561af0b8ff581d9f704194133')
+    version('1.0', sha256='40e3b4ed5c65cb1d210e828460e99b755cac922a7e27e70c687d5bb6ed19a21b')
 
     variant('mpi', default=True, description='Build with MPI Support')
 

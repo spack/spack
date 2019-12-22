@@ -13,7 +13,7 @@ class PyNumba(PythonPackage):
     url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
 
     version('0.40.1', sha256='52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33')
-    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
+    version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3')
 
     depends_on('python@3.3:3.7.9999', type=('build', 'run'), when='@0.40.1:')
     depends_on('python@3.3:3.6.9999', type=('build', 'run'), when='@:0.35.0')
@@ -27,7 +27,7 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.25:', type=('build', 'run'), when='@0.40.1:')
     depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
 
-    depends_on('py-argparse', type=('build', 'run'))
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-funcsigs', type=('build', 'run'), when='^python@:3.3.99')
     depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
 

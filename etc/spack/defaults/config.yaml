@@ -80,6 +80,14 @@ config:
   verify_ssl: true
 
 
+  # Suppress gpg warnings from binary package verification
+  # Only suppresses warnings, gpg failure will still fail the install
+  # Potential rationale to set True: users have already explicitly trusted the
+  # gpg key they are using, and may not want to see repeated warnings that it
+  # is self-signed or something of the sort.
+  suppress_gpg_warnings: false
+
+
   # If set to true, Spack will attempt to build any compiler on the spec
   # that is not already available. If set to False, Spack will only use
   # compilers already configured in compilers.yaml
@@ -138,3 +146,8 @@ config:
   # anticipates that a significant delay indicates that the lock attempt will
   # never succeed.
   package_lock_timeout: null
+
+  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
+  # Has no effect on macOS. DO NOT MIX these within the same install tree.
+  # See the Spack documentation for details.
+  shared_linking: 'rpath'

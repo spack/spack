@@ -72,7 +72,21 @@ properties = {
                 'additionalProperties': False
             }
         },
-
+    },
+    'conversions': {
+        'type': 'object',
+        'properties': {
+            'description': {
+                'type': 'string'
+            },
+            'arm_vendors': {
+                'type': 'object',
+            },
+            'darwin_flags': {
+                'type': 'object'
+            }
+        },
+        'additionalProperties': False
     }
 }
 

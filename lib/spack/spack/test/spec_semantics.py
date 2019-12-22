@@ -9,7 +9,7 @@ import pytest
 from spack.spec import Spec, UnsatisfiableSpecError, SpecError
 from spack.spec import substitute_abstract_variants
 from spack.spec import SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError
+from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
 
 import spack.architecture
@@ -972,7 +972,18 @@ class TestSpecSematics(object):
         ('libelf target=haswell', 'target=:haswell', True),
         ('libelf target=haswell', 'target=icelake,:nocona', False),
         ('libelf target=haswell', 'target=haswell,:nocona', True),
+        # Check that a single target is not treated as the start
+        # or the end of an open range
+        ('libelf target=haswell', 'target=x86_64', False),
+        ('libelf target=x86_64', 'target=haswell', False),
     ])
+    @pytest.mark.regression('13111')
     def test_target_constraints(self, spec, constraint, expected_result):
         s = Spec(spec)
         assert s.satisfies(constraint) is expected_result
+
+    @pytest.mark.regression('13124')
+    def test_error_message_unknown_variant(self):
+        s = Spec('mpileaks +unknown')
+        with pytest.raises(UnknownVariantError, match=r'package has no such'):
+            s.concretize()

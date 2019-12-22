@@ -91,9 +91,10 @@ the selected ``build_stage`` path.
 .. warning:: We highly recommend specifying ``build_stage`` paths that
    distinguish between staging and other activities to ensure 
    ``spack clean`` does not inadvertently remove unrelated files.
-   This can be accomplished by using a combination of ``spack`` and or
-   ``stage`` in each path as shown in the default settings and documented
-   examples.
+   Spack prepends ``spack-stage-`` to temporary staging directory names to
+   reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
+   each specified path, as shown in the default settings and documented
+   examples, will add another layer of protection.
 
 By default, Spack's ``build_stage`` is configured like this:
 
@@ -225,3 +226,24 @@ ccache`` to learn more about the default settings and how to change
 them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
+
+------------------
+``shared_linking``
+------------------
+
+Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
+so that they can find their dependencies. Has no effect on macOS.
+Two options are allowed:
+
+ 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker
+ 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker
+
+``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``
+and ld.so will search for libraries in transitive ``RPATHs`` of
+parent objects.
+
+``RUNPATH`` search paths have lower precedence than ``LD_LIBRARY_PATH``,
+and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
+the loading object.
+
+DO NOT MIX the two options within the same install tree.

@@ -13,7 +13,7 @@ class Genometools(MakefilePackage):
     homepage = "http://genometools.org/"
     url      = "http://genometools.org/pub/genometools-1.5.9.tar.gz"
 
-    version('1.5.9', 'e400d69092f9f13db09b33f9dea39d2e')
+    version('1.5.9', sha256='36923198a4214422886fd1425ef986bd7e558c73b94194982431cfd3dc7eb387')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('cairo')
@@ -25,5 +25,5 @@ class Genometools(MakefilePackage):
     def install(self, spec, prefix):
         make('install', 'prefix=%s' % prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('CPATH', self.prefix.include.genometools)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('CPATH', self.prefix.include.genometools)

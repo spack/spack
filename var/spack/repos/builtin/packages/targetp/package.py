@@ -18,6 +18,7 @@ class Targetp(Package):
 
     homepage = "http://www.cbs.dtu.dk/services/TargetP/"
     url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('1.1b', '80233d0056e11abfd22a4ce73d1808c6')
 
@@ -43,6 +44,6 @@ class Targetp(Package):
         install_tree('tmp', prefix.tmp)
         install('targetp', prefix.targetp)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('TARGETP', self.prefix)
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('TARGETP', self.prefix)
+        env.prepend_path('PATH', self.prefix)

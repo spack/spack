@@ -15,13 +15,13 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
-    version('5.2.0', '41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
-    version('5.1.2', 'eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
-    version('5.1.1', 'f15c6b5dd8c71b1241004cd19818259d')
-    version('5.0.2', '591bcb2c205dcb0283872608cdf04927')
+    version('5.2.0', sha256='41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
+    version('5.1.2', sha256='eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
+    version('5.1.1', sha256='a2a1f89c470f2b66e9982953cbd047d429a002fab9975400cef7190d01084a06')
+    version('5.0.2', sha256='77292b204942640256097a3da482c2abcd1e0d5a74ecd1d4bab0f5ef6e60fe45')
     # Alternate location if main server is down.
-    # version('5.0.1', 'b477573fdcc87babe861f62316833db0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
-    version('5.0.1', 'b477573fdcc87babe861f62316833db0')
+    # version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0', url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
+    version('5.0.1', sha256='50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0')
 
     variant('mpi', default=True,
             description='Compile MUMPS with MPI support')
@@ -55,11 +55,6 @@ class Mumps(Package):
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
     patch('gfortran8.patch', when='@5.1.2')
 
-    # this function is not a patch function because in case scalapack
-    # is needed it uses self.spec['scalapack'].fc_link set by the
-    # setup_dependent_environment in scalapck. This happen after patch
-    # end before install
-    # def patch(self):
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
                 '+mpi' not in self.spec):
@@ -119,6 +114,7 @@ class Mumps(Package):
         using_pgi = self.compiler.name == "pgi"
         using_intel = self.compiler.name == "intel"
         using_xl = self.compiler.name in ['xl', 'xl_r']
+        using_fj = self.compiler.name == "fj"
 
         # The llvm compiler suite does not contain a Fortran compiler by
         # default.  Its possible that a Spack user may have configured
@@ -176,17 +172,18 @@ class Mumps(Package):
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
-                ["CC = cc",
-                 "FC = fc",
-                 "FL = fc",
+                ["CC = {0}".format(spack_cc),
+                 "FC = {0}".format(spack_fc),
+                 "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if using_intel or using_pgi:
-            # Intel & PGI Fortran compiler provides the main() function so
-            # C examples linked with the Fortran compiler require a
-            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+        if using_intel or using_pgi or using_fj:
+            # Intel, PGI, and Fujitsu Fortran compiler provides
+            # the main() function so C examples linked with the Fortran
+            # compiler require a hack defined by _DMAIN_COMP
+            # (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
             if not using_xlf:

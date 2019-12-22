@@ -13,8 +13,8 @@ class PyBasemap(PythonPackage):
 
     homepage = "http://matplotlib.org/basemap/"
 
-    version('1.2.0', 'f8e64bd150590223701a48d60408e939')
-    version('1.0.7', '48c0557ced9e2c6e440b28b3caff2de8')
+    version('1.2.0', sha256='bd5bf305918a2eb675939873b735238f9e3dfe6b5c290e37c41e5b082ff3639a')
+    version('1.0.7', sha256='e07ec2e0d63b24c9aed25a09fe8aff2598f82a85da8db74190bac81cbf104531')
 
     # Per Github issue #3813, setuptools is required at runtime in order
     # to make mpl_toolkits a namespace package that can span multiple
@@ -34,8 +34,8 @@ class PyBasemap(PythonPackage):
         else:
             return 'https://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-{0}/basemap-{0}.tar.gz'.format(version)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GEOS_DIR', self.spec['geos'].prefix)
+    def setup_build_environment(self, env):
+        env.set('GEOS_DIR', self.spec['geos'].prefix)
 
     def install(self, spec, prefix):
         """Install everything from build directory."""

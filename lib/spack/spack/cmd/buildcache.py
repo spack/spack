@@ -14,6 +14,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.hash_types as ht
+import spack.mirror
 import spack.relocate
 import spack.repo
 import spack.spec
@@ -21,6 +22,8 @@ import spack.store
 import spack.config
 import spack.repo
 import spack.store
+import spack.util.url as url_util
+
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 
@@ -205,6 +208,13 @@ def setup_parser(subparser):
         help='Destination mirror url')
     copy.set_defaults(func=buildcache_copy)
 
+    # Update buildcache index without copying any additional packages
+    update_index = subparsers.add_parser(
+        'update-index', help=buildcache_update_index.__doc__)
+    update_index.add_argument(
+        '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.set_defaults(func=buildcache_update_index)
+
 
 def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     """Returns a list of specs matching the not necessarily
@@ -312,9 +322,14 @@ def createtarball(args):
                 " yaml file containing a spec to install")
     pkgs = set(packages)
     specs = set()
+
     outdir = '.'
     if args.directory:
         outdir = args.directory
+
+    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    outdir = url_util.format(mirror.push_url)
+
     signkey = None
     if args.key:
         signkey = args.key
@@ -401,11 +416,9 @@ def listspecs(args):
     """list binary packages available from mirrors"""
     specs = bindist.get_specs(args.force)
     if args.packages:
-        pkgs = set(args.packages)
-        specs = [s for s in specs for p in pkgs if s.satisfies(p)]
-        display_specs(specs, args, all_headers=True)
-    else:
-        display_specs(specs, args, all_headers=True)
+        constraints = set(args.packages)
+        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+    display_specs(specs, args, all_headers=True)
 
 
 def getkeys(args):
@@ -647,6 +660,19 @@ def buildcache_copy(args):
     if os.path.exists(cdashid_src_path):
         tty.msg('Copying {0}'.format(cdashidfile_rel_path))
         shutil.copyfile(cdashid_src_path, cdashid_dest_path)
+
+
+def buildcache_update_index(args):
+    """Update a buildcache index."""
+    outdir = '.'
+    if args.mirror_url:
+        outdir = args.mirror_url
+
+    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    outdir = url_util.format(mirror.push_url)
+
+    bindist.generate_package_index(
+        url_util.join(outdir, bindist.build_cache_relative_path()))
 
 
 def buildcache(parser, args):
