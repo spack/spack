@@ -69,7 +69,7 @@ end
 # STREAM_ARGS and SHIFT_ARGS: helper functions manipulating the `argv` array:
 #   -> STREAM_ARGS: echos the `argv` array element-by-element
 #   -> SHIFT_ARGS:  echos the `argv` array element-by-element starting with the
-#                   second element. If # `argv` has only one element, echo the
+#                   second element. If `argv` has only one element, echo the
 #                   empty string `""`.
 # NOTE: while `stream_args` is not strictly necessary, it adds a nice symmetry
 #       to `shift_args`
@@ -91,8 +91,8 @@ end
 function shift_args -d "simulates bash shift"
     #
     # Returns argv[2..-1] (as an array)
-    #  -> if argv has only 1 element, then returns the empty string simulates
-    #     the behavior of bash `shift`
+    #  -> if argv has only 1 element, then returns the empty string. This
+    #     simulates the behavior of bash `shift`
     #
 
     if test -z "$argv[2]"
