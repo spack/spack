@@ -275,7 +275,12 @@ class Lock(object):
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._acquired_debug('WRITE LOCK', wait_time, nattempts)
             self._writes += 1
-            return True
+
+            # return True only if we weren't nested in a read lock.
+            # TODO: we may need to return two values: whether we got
+            # the write lock, and whether this is acquiring a read OR
+            # write lock for the first time. Now it returns the latter.
+            return self._reads == 0
         else:
             self._writes += 1
             return False

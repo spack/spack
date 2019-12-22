@@ -1087,6 +1087,62 @@ def test_nested_write_transaction(lock_path):
         assert vals['wrote']
 
 
+def test_nested_reads(lock_path):
+    """Ensure that write transactions won't re-read data."""
+
+    def read():
+        vals['read'] += 1
+
+    vals = collections.defaultdict(lambda: 0)
+    lock = AssertLock(lock_path, vals)
+
+    # read/read
+    vals.clear()
+    assert vals['read'] == 0
+    with lk.ReadTransaction(lock, acquire=read):
+        assert vals['read'] == 1
+        with lk.ReadTransaction(lock, acquire=read):
+            assert vals['read'] == 1
+
+    # write/write
+    vals.clear()
+    assert vals['read'] == 0
+    with lk.WriteTransaction(lock, acquire=read):
+        assert vals['read'] == 1
+        with lk.WriteTransaction(lock, acquire=read):
+            assert vals['read'] == 1
+
+    # read/write
+    vals.clear()
+    assert vals['read'] == 0
+    with lk.ReadTransaction(lock, acquire=read):
+        assert vals['read'] == 1
+        with lk.WriteTransaction(lock, acquire=read):
+            assert vals['read'] == 1
+
+    # write/read/write
+    vals.clear()
+    assert vals['read'] == 0
+    with lk.WriteTransaction(lock, acquire=read):
+        assert vals['read'] == 1
+        with lk.ReadTransaction(lock, acquire=read):
+            assert vals['read'] == 1
+            with lk.WriteTransaction(lock, acquire=read):
+                assert vals['read'] == 1
+
+    # read/write/read/write
+    vals.clear()
+    assert vals['read'] == 0
+    with lk.ReadTransaction(lock, acquire=read):
+        assert vals['read'] == 1
+        with lk.WriteTransaction(lock, acquire=read):
+            assert vals['read'] == 1
+            with lk.ReadTransaction(lock, acquire=read):
+                assert vals['read'] == 1
+                with lk.WriteTransaction(lock, acquire=read):
+                    assert vals['read'] == 1
+
+
 def test_lock_debug_output(lock_path):
     host = socket.getfqdn()
 
