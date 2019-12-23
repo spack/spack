@@ -14,8 +14,9 @@ class PyNumpy(PythonPackage):
     Fortran code, and useful linear algebra, Fourier transform, and random
     number capabilities"""
 
-    homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.4.zip"
+    homepage = "https://numpy.org/"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.0.zip"
+    git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -27,6 +28,8 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('master', branch='master')
+    version('1.18.0', sha256='a9d72d9abaf65628f0f31bbb573b7d9304e43b1e6bbae43149c17737a42764c4')
     version('1.17.4', sha256='f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316')
     version('1.17.3', sha256='a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e')
     version('1.17.2', sha256='73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df')
@@ -72,6 +75,7 @@ class PyNumpy(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
     depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
     depends_on('py-setuptools', type='build')
+    depends_on('py-cython@0.29.13:', when='@1.18:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
