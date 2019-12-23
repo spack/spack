@@ -180,11 +180,6 @@ class PyTorch(PythonPackage):
                 else:
                     env.set('NO_' + var, 'ON')
 
-        # Build system has problems locating MKL libraries
-        # See https://github.com/pytorch/pytorch/issues/24334
-        if 'mkl' in self.spec:
-            env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
-
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)
 
