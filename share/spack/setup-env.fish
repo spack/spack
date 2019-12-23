@@ -268,6 +268,7 @@ function spack -d "wrapper for the `spack` command"
 
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
+        delete_sp_shared
         return
     end
 
@@ -277,7 +278,7 @@ function spack -d "wrapper for the `spack` command"
     # Isolate subcommand and subcommand specs
     #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
     #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    #     Instead, encapsulate `argv` in a string, and test the string.
     #
 
     set -l sp_subcommand ""
@@ -307,9 +308,9 @@ function spack -d "wrapper for the `spack` command"
 
             # Extract the first subcommand argument:
             # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-            #    undefined, or if it is an array, `test -n $argv` is unpredictable.
-            #    Instead, encapsulate `argv` in a string, and test the string
-            #    instead.
+            #    undefined, or if it is an array, `test -n $argv` is
+            #    unpredictable. Instead, encapsulate `argv` in a string, and test
+            #    the string.
             if test -n "$__sp_remaining_args[1]"
                 set sp_arg $__sp_remaining_args[1]
                 set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
