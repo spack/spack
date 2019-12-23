@@ -269,7 +269,7 @@ function spack -d "wrapper for the `spack` command"
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
         delete_sp_shared
-        return
+        return 0
     end
 
 
@@ -316,10 +316,8 @@ function spack -d "wrapper for the `spack` command"
                 set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
             end
 
-
-
-            if test "x$sp_arg" = "x-h"
-                # nothing more needs to be done for `-h`
+            if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
+                # nothing more needs to be done for `-h` or `--help`
                 command spack cd -h
             else
                 # extract location using the subcommand (fish `(...)`)
@@ -337,6 +335,36 @@ function spack -d "wrapper for the `spack` command"
 
             delete_sp_shared
             return 0
+
+
+        # CASE: spack subcommand is `env`:
+
+        case "env"
+
+            set -l sp_arg ""
+
+            # Extract the first subcommand argument:
+            # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+            #    undefined, or if it is an array, `test -n $argv` is
+            #    unpredictable. Instead, encapsulate `argv` in a string, and test
+            #    the string.
+            if test -n "$__sp_remaining_args[1]"
+                set sp_arg $__sp_remaining_args[1]
+                set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
+            end
+
+            if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
+                # nothing more needs to be done for `-h` or `--help`
+                command spack cd -h
+            else
+                switch $sp_arg
+                    case "activate"
+                        set -l _a (stream_args $__sp_remaining_args)
+                    case "deactivate"
+                end
+            end
+ 
+
 
 
         # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
@@ -412,6 +440,7 @@ function spack -d "wrapper for the `spack` command"
 
 
         # CASE: Catch-all
+
         case "*"
             command spack $argv
 
