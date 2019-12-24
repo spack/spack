@@ -12,6 +12,7 @@ class Nektar(CMakePackage):
     homepage = "https://www.nektar.info/"
     url      = "https://gitlab.nektar.info/nektar/nektar/-/archive/v4.4.1/nektar-v4.4.1.tar.bz2"
 
+    version('5.0.0', sha256='5c594453fbfaa433f732a55405da9bba27d4a00c32d7b9d7515767925fb4a818')
     version('4.4.1', sha256='71cfd93d848a751ae9ae5e5ba336cee4b4827d4abcd56f6b8dc5c460ed6b738c')
 
     variant('mpi', default=True, description='Builds with mpi support')
