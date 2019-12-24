@@ -603,6 +603,11 @@ end
 
 
 
+function sp_multi_pathadd
+
+end
+
+
 
 
 
@@ -644,8 +649,13 @@ end
 # Make environment-modules available to shell
 #
 function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set a b`"
+
+    # convert `a='b' to array variable `a b`
     set -l expr_token (string trim -c "'" (string split "=" $argv))
-    set -xg $expr_token[1] $expr_token[2]
+
+    # run set command to takes, converting lists of type `a:b:c` to array
+    # variables `a b c` by splitting around the `:` character
+    set -xg $expr_token[1] (string split ":" $expr_token[2])
 end
 
 
@@ -684,4 +694,5 @@ end
 set -xg DK_NODE
 set -xg MODULEPATH
 spack_pathadd DK_NODE "$_sp_dotkit_root/$_sp_sys_type"
-spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
+# spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
+spack_pathadd MODULEPATH $_sp_tcl_roots
