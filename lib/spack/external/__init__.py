@@ -82,14 +82,6 @@ py
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
 
-pyqver
-------
-
-* Homepage: https://github.com/ghewgill/pyqver
-* Usage: External script to query required python version of
-  python source code. Used for ensuring 2.6 compatibility.
-* Version: Unversioned
-
 pytest
 ------
 
