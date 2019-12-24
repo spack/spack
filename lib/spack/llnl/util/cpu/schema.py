@@ -6,7 +6,7 @@ import json
 import os.path
 
 try:
-    from collections.abc import MutableMapping
+    from collections.abc import MutableMapping  # novm
 except ImportError:
     from collections import MutableMapping
 

@@ -21,7 +21,7 @@ import spack.directives
 import spack.error as error
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
 
