@@ -215,8 +215,9 @@ end
 
 
 function check_sp_flags -d "check spack flags for h/V flags"
-
-    # check if inputs contain h or V flags.
+    #
+    # Check if inputs contain h or V flags.
+    #
 
     # combine argument array into single string (space seperated), to be passed
     # to regular expression matching (`string match -r`)
@@ -241,8 +242,9 @@ end
 
 
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, or --csh"
-
-    # check if inputs contain -h, --sh, or --csh
+    #
+    # Check if inputs contain -h, --sh, or --csh
+    #
 
     # combine argument array into single string (space seperated), to be passed
     # to regular expression matching (`string match -r`)
@@ -275,8 +277,9 @@ end
 
 
 function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, or --csh"
-
-    # check if inputs contain -h, --sh, or --csh
+    #
+    # Check if inputs contain -h, --sh, or --csh
+    #
 
     # combine argument array into single string (space seperated), to be passed
     # to regular expression matching (`string match -r`)
@@ -476,7 +479,7 @@ function spack -d "wrapper for the `spack` command"
             set __sp_module_args              #       __sp_subcommand_args
             get_mod_args $__sp_remaining_args #       __sp_module_args
 
-            set sp_spec $__sp_remaining_args
+            set -l sp_spec $__sp_remaining_args
 
 
             # Here the user has run use or unuse with a spec. Find a matching spec
@@ -486,6 +489,7 @@ function spack -d "wrapper for the `spack` command"
 
             switch $sp_subcommand
 
+                #TODO: do we still need this?
                 case "use"
                     set -l dotkit_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
@@ -495,6 +499,8 @@ function spack -d "wrapper for the `spack` command"
                         return 1
                     end
 
+
+                #TODO: do we still need this?
                 case "unuse"
                     set -l dotkit_args $__sp_subcommand_args $sp_spec
                     if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
@@ -553,7 +559,13 @@ end
 #      pathadd /path/to/dir            # add to PATH
 # or   pathadd OTHERPATH /path/to/dir  # add to OTHERPATH
 #################################################################################
-function spack_pathadd
+function spack_pathadd -d "Add path to specified variable (defaults to fish_user_paths)"
+    #
+    # Adds (existing only) paths to specified (defaults to fish_user_paths)
+    # variable. Does not warn attempting to add non-existing path. This is not a
+    # bug because the MODULEPATH setup tries add all possible compatible systems
+    # and therefore sp_multi_pathadd relies on this function failing silently.
+    #
 
     # If no variable name is supplied, just append to PATH otherwise append to
     # that variable.
@@ -568,7 +580,7 @@ function spack_pathadd
              # statement fails, the `status` flag is set to 1. `true` resets
              # this. since `set` passes `status` along, we thus avoid the
              # function returning 1 by mistake.
-        set pa_varname PATH
+        set pa_varname fish_user_paths
         set pa_new_path $argv[1]
     end
 
@@ -603,7 +615,12 @@ end
 
 
 
-function sp_multi_pathadd
+function sp_multi_pathadd -d "Helper for adding module-style paths by incorporating compatible systems into pathadd"
+    #
+    # Calls spack_pathadd in path inputs, adding all compatible system types
+    # (sourced from $_sp_compatible_sys_types) to input paths.
+    #
+
     for pth in $argv[2]
         for systype in $_sp_compatible_sys_types
             spack_pathadd $argv[1] "$pth/$systype"
@@ -693,7 +710,10 @@ end
 #
 # set module system roots
 #
+#TODO: do we still need this?
 set -xg DK_NODE
-set -xg MODULEPATH
 spack_pathadd DK_NODE "$_sp_dotkit_root/$_sp_sys_type"
+
+# Search of MODULESPATHS by trying all possible compatible system types as module roots.
+set -xg MODULEPATH
 sp_multi_pathadd MODULEPATH $_sp_tcl_roots
