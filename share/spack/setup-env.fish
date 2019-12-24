@@ -554,9 +554,12 @@ end
 # or   pathadd OTHERPATH /path/to/dir  # add to OTHERPATH
 #################################################################################
 function spack_pathadd
+
     # If no variable name is supplied, just append to PATH otherwise append to
     # that variable.
-
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
     if test -n "$argv[2]"
         set pa_varname $argv[1]
         set pa_new_path $argv[2]
@@ -571,8 +574,19 @@ function spack_pathadd
 
     set pa_oldvalue $$pa_varname
 
+    # skip path is not existing directory
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
     if test -d "$pa_new_path"
-        if not string match -q "$pa_new_path" $pa_oldvalue
+
+        # combine argument array into single string (space seperated), to be
+        # passed to regular expression matching (`string match -r`)
+        set -l _a "$pa_oldvalue"
+
+        # note spaces in regular expression: we're matching to a space delimited
+        # list of paths
+        if not echo $_a | string match -q -r " *$pa_new_path *"
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
