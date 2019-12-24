@@ -604,10 +604,12 @@ end
 
 
 function sp_multi_pathadd
-
+    for pth in $argv[2]
+        for systype in $_sp_compatible_sys_types
+            spack_pathadd $argv[1] "$pth/$systype"
+        end
+    end
 end
-
-
 
 
 
@@ -694,5 +696,4 @@ end
 set -xg DK_NODE
 set -xg MODULEPATH
 spack_pathadd DK_NODE "$_sp_dotkit_root/$_sp_sys_type"
-# spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-spack_pathadd MODULEPATH $_sp_tcl_roots
+sp_multi_pathadd MODULEPATH $_sp_tcl_roots
