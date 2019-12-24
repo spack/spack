@@ -229,9 +229,14 @@ def install(parser, args, **kwargs):
             if not args.only_concrete:
                 concretized_specs = env.concretize()
                 ev.display_specs(concretized_specs)
-                env.write()
+
+                # save view regeneration for later, so that we only do it
+                # once, as it can be slow.
+                env.write(regenerate_views=False)
+
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
+            env.regenerate_views()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")

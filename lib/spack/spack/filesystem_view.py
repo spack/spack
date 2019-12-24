@@ -371,6 +371,9 @@ class YamlFilesystemView(FilesystemView):
         with_dependents = kwargs.get("with_dependents", True)
         with_dependencies = kwargs.get("with_dependencies", False)
 
+        # caller can pass this in, as get_all_specs() is expensive
+        all_specs = kwargs.get("all_specs", None) or set(self.get_all_specs())
+
         specs = set(specs)
 
         if with_dependencies:
@@ -378,8 +381,6 @@ class YamlFilesystemView(FilesystemView):
 
         if kwargs.get("exclude", None):
             specs = set(filter_exclude(specs, kwargs["exclude"]))
-
-        all_specs = set(self.get_all_specs())
 
         to_deactivate = specs
         to_keep = all_specs - to_deactivate
