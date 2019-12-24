@@ -1214,11 +1214,11 @@
           },
           {
             "versions": "7:7.9",
-            "flags": "-march=armv8.2a+crc+crypto+fp16"
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
             "versions": "8:",
-            "flags": "-march=armv8.2a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
+            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
           }
         ],
         "clang": [
