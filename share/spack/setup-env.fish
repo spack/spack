@@ -584,6 +584,7 @@ function spack_pathadd
         # passed to regular expression matching (`string match -r`)
         set -l _a "$pa_oldvalue"
 
+        # skip path if it is already contained in the variable
         # note spaces in regular expression: we're matching to a space delimited
         # list of paths
         if not echo $_a | string match -q -r " *$pa_new_path *"
@@ -647,6 +648,7 @@ function sp_apply_shell_vars -d "applies expressions of the type `a='b'` as `set
     set -xg $expr_token[1] $expr_token[2]
 end
 
+
 if test "$need_module" = "yes"
     set -l sp_shell_vars (command spack --print-shell-vars sh,modules)
 
@@ -657,7 +659,7 @@ if test "$need_module" = "yes"
     # _sp_module_prefix is set by spack --print-sh-vars
     if test "$_sp_module_prefix" != "not_installed"
         set -xg MODULE_PREFIX $_sp_module_prefix
-        set -xg fish_user_paths "$MODULE_PREFIX/bin" $fish_user_paths
+        spack_pathadd fish_user_paths "$MODULE_PREFIX/bin"
     end
 
 else
