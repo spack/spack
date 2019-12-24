@@ -107,7 +107,7 @@ def test_module_suffixes(module_suffixes_schema):
     'repos'
 ])
 def test_schema_validation(meta_schema, config_name):
-    import importlib
+    import importlib  # novm
     module_name = 'spack.schema.{0}'.format(config_name)
     module = importlib.import_module(module_name)
     schema = getattr(module, 'schema')

@@ -24,7 +24,7 @@ import ruamel.yaml.error as yaml_error
 from ordereddict_backport import OrderedDict
 
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 
