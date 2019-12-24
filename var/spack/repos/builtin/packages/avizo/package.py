@@ -1,4 +1,3 @@
-@@ -0,0 +1,36 @@
 # Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -26,12 +25,13 @@ class Avizo(Package):
         return "file://{0}/avizo_{1}_linux64_gcc44.tar.gz".format(os.getcwd(), version)
 
     def install(self, spec, prefix):
-        ver = str(self.version).replace(".", "")
-        os.system('sh Avizo-{0}-Linux64-gcc44.bin --noexec --keep'.format(ver))
+        ver = self.version.joined
+        sh = which('sh')
+        sh('Avizo-{0}-Linux64-gcc44.bin'.format(ver), '--noexec', '--keep')
 
-        os.chdir(join_path(self.stage.source_path, 'Avizo'))
-        avizo_tar = tarfile.open(name='Avizo-{0}-Linux64-gcc44.tar.bz2'.format(self.version))
-        avizo_tar.extractall()
-
-        install_tree(join_path(self.stage.source_path, 'Avizo/Avizo-{0}'.format(self.version)), prefix)
-        intsall('file://{0}/password.dat'.format(os.getcwd()), join_path(prefix, 'share/license')
+        with working_dir('Avizo'):
+            avizo_tar = tarfile.open(name='Avizo-{0}-Linux64-gcc44.tar.bz2'.format(self.version))
+            avizo_tar.extractall()
+            install_tree(join_path(self.stage.source_path, 'Avizo/Avizo-{0}'.format(self.version)), prefix)
+            intsall('password.dat', prefix.share.license)
+                
