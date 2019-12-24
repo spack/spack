@@ -218,15 +218,82 @@ function check_sp_flags -d "check spack flags for h/V flags"
 
     # check if inputs contain h or V flags.
 
+    # combine argument array into single string (space seperated), to be passed
+    # to regular expression matching (`string match -r`)
+    set -l _a "$argv"
+
     # skip if called with blank input
     #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
     #     undefined, or if it is an array, `test -n $argv` is unpredictable.
     #     Instead, encapsulate `argv` in a string, and test the string instead.
-    if test -n "$argv"
-        if echo $argv | string match -r -q ".*h.*"
+    if test -n "$_a"
+        if echo $_a | string match -r -q ".*h.*"
             return 0
         end
-        if echo $argv | string match -r -q ".*V.*"
+        if echo $_a | string match -r -q ".*V.*"
+            return 0
+        end
+    end
+
+    return 1
+end
+
+
+
+function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, or --csh"
+
+    # check if inputs contain -h, --sh, or --csh
+
+    # combine argument array into single string (space seperated), to be passed
+    # to regular expression matching (`string match -r`)
+    set -l _a "$argv"
+
+    # skip if called with blank input
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    if test -n "$_a"
+        # looks for a single `-h` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *-h *"
+            return 0
+        end
+
+        # looks for a single `--sh` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--sh *"
+            return 0
+        end
+
+        # looks for a single `--csh` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--csh *"
+            return 0
+        end
+    end
+
+    return 1
+end
+
+
+
+function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, or --csh"
+
+    # check if inputs contain -h, --sh, or --csh
+
+    # combine argument array into single string (space seperated), to be passed
+    # to regular expression matching (`string match -r`)
+    set -l _a "$argv"
+
+    # skip if called with blank input
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    if test -n "$_a"
+        # looks for a single `--sh` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--sh *"
+            return 0
+        end
+
+        # looks for a single `--csh` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--csh *"
             return 0
         end
     end
@@ -355,16 +422,46 @@ function spack -d "wrapper for the `spack` command"
 
             if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
-                command spack cd -h
+                command spack env -h
             else
                 switch $sp_arg
                     case "activate"
                         set -l _a (stream_args $__sp_remaining_args)
+
+                        if check_env_activate_flags $_a
+                            # no args or args contain -h/--help, --sh, or --csh: just execute
+                            command spack env activate $_a
+                        else
+                            # actual call to activate: source the output
+                            eval (command spack $sp_flags env activate --sh $__sp_remaining_args)
+                        end
+
                     case "deactivate"
+                        set -l _a (stream_args $__sp_remaining_args)
+
+                        if check_env_deactivate_flags $_a
+                            # just  execute the command if --sh or --csh are provided
+                            command spack env deactivate $_a
+
+                        # Test of further (unparsed arguments). Any other
+                        # arguments are an error or help, so just run help
+                        # -> TODO: This should throw and error but leave as is
+                        #    for compatibility with setup-env.sh
+                        # -> bit of a hack: test -n requires exactly 1 argument.
+                        #    If `argv` is undefined, or if it is an array,
+                        #    `test -n $argv` is unpredictable. Instead,
+                        #    encapsulate `argv` in a string, and test the string.
+                        else if test -n "$__sp_remaining_args"
+                            command spack env deactivate -h
+                        else
+                            # no args: source the output of the command
+                            eval (command spack $sp_flags env deactivate --sh)
+                        end
+
+                    case "*"
+                        command spack env $sp_arg $__sp_remaining_args
                 end
             end
- 
-
 
 
         # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
