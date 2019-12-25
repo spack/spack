@@ -17,13 +17,11 @@ class Avizo(Package):
     interface."""
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
-    version('9.7.0', 'ed3947e61a1d17839005c824df975030')
+    version('9.7.0', 'ed3947e61a1d17839005c824df975030', expand=False)
 
-    # You have to create the tarball for the source code to be 
-    # processed correctly.
     def url_for_version(self, version):
-        return "file://{0}/avizo_{1}_linux64_gcc44.tar.gz"
-                .format(os.getcwd(), version)
+        return "file://{0}/Avizo-{1}-Linux64-gcc44.bin"
+            .format(os.getcwd(), version.joined)
 
     def install(self, spec, prefix):
         ver = self.version.joined
