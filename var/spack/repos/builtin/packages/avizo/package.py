@@ -21,27 +21,27 @@ class Avizo(Package):
             expand=False)
 
     def url_for_version(self, version):
-        return "file://{}/Avizo-{}-Linux64-gcc44.bin".format(os.getcwd(),
-                                                             version.joined)
+        return "file://{0}/Avizo-{1}-Linux64-gcc44.bin".format(os.getcwd(),
+                                                               version.joined)
 
     def install(self, spec, prefix):
         ver = self.version.joined
         sh = which('sh')
-        sh('Avizo-{}-Linux64-gcc44.bin'.format(ver), '--noexec', '--keep')
+        sh('Avizo-{0}-Linux64-gcc44.bin'.format(ver), '--noexec', '--keep')
 
         with working_dir('Avizo'):
-            avizo_tar = tarfile.open(name='Avizo-{}-Linux64-gcc44.tar.bz2'
+            avizo_tar = tarfile.open(name='Avizo-{0}-Linux64-gcc44.tar.bz2'
                                      .format(self.version))
             avizo_tar.extractall()
-            install_tree(join_path('Avizo-{}/bin'.format(self.version)),
+            install_tree(join_path('Avizo-{0}/bin'.format(self.version)),
                          prefix.bin)
-            install_tree(join_path('Avizo-{}/lib'.format(self.version)),
+            install_tree(join_path('Avizo-{0}/lib'.format(self.version)),
                          prefix.lib)
-            install_tree(join_path('Avizo-{}/data'.format(self.version)),
+            install_tree(join_path('Avizo-{0}/data'.format(self.version)),
                          prefix.data)
-            install_tree(join_path('Avizo-{}/share'.format(self.version)),
+            install_tree(join_path('Avizo-{0}/share'.format(self.version)),
                          prefix.share)
-            install_tree(join_path('Avizo-{}/python'.format(self.version)),
+            install_tree(join_path('Avizo-{0}/python'.format(self.version)),
                          prefix.python)
 
         intsall('password.dat', prefix.share.license)
