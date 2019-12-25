@@ -22,7 +22,7 @@ class Avizo(Package):
 
     def url_for_version(self, version):
         return "file://{}/Avizo-{}-Linux64-gcc44.bin".format(os.getcwd(),
-                                                               version.joined)
+                                                             version.joined)
 
     def install(self, spec, prefix):
         ver = self.version.joined
