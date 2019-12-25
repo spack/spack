@@ -17,7 +17,8 @@ class Avizo(Package):
     interface."""
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
-    version('9.7.0', 'ed3947e61a1d17839005c824df975030', expand=False)
+    version('9.7.0', '9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
+            expand=False)
 
     def url_for_version(self, version):
         return "file://{0}/Avizo-{1}-Linux64-gcc44.bin".format(os.getcwd(),
