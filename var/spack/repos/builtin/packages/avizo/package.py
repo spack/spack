@@ -20,8 +20,8 @@ class Avizo(Package):
     version('9.7.0', 'ed3947e61a1d17839005c824df975030', expand=False)
 
     def url_for_version(self, version):
-        return "file://{0}/Avizo-{1}-Linux64-gcc44.bin"
-            .format(os.getcwd(), version.joined)
+        return "file://{0}/Avizo-{1}-Linux64-gcc44.bin".format(os.getcwd(),
+                                                               version.joined)
 
     def install(self, spec, prefix):
         ver = self.version.joined
