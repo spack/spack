@@ -11,13 +11,13 @@ diff -ur spack-src.org/src/mtl_headers/mtl/linalg_vec.h spack-src/src/mtl_header
    public:
 diff -ur spack-src.org/src/utils/toolbox/database/HDFDatabase.cc spack-src/src/utils/toolbox/database/HDFDatabase.cc
 --- spack-src.org/src/utils/toolbox/database/HDFDatabase.cc	2019-12-25 13:38:14.201696799 +0900
-+++ spack-src/src/utils/toolbox/database/HDFDatabase.cc	2019-12-25 13:39:13.617945248 +0900
++++ spack-src/src/utils/toolbox/database/HDFDatabase.cc	2019-12-25 14:50:42.627965265 +0900
 @@ -686,7 +686,7 @@
     herr_t errf;
     if (nelements > 0) {
  
 -      hsize_t dim[] = {nelements};
-+      hsize_t dim[] = {(unsigned long)nelements};
++      hsize_t dim[] = {(unsigned long long)nelements};
        hid_t space = H5Screate_simple(1, dim, NULL);
  #ifdef ASSERT_HDF5_RETURN_VALUES
        assert( space >= 0 );
@@ -26,7 +26,7 @@ diff -ur spack-src.org/src/utils/toolbox/database/HDFDatabase.cc spack-src/src/u
     if (nelements > 0) {
  
 -      hsize_t dim[] = {nelements};
-+      hsize_t dim[] = {(unsigned long)nelements};
++      hsize_t dim[] = {(unsigned long long)nelements};
        hid_t space = H5Screate_simple(1, dim, NULL);
  #ifdef ASSERT_HDF5_RETURN_VALUES
        assert( space >= 0 );
@@ -35,7 +35,7 @@ diff -ur spack-src.org/src/utils/toolbox/database/HDFDatabase.cc spack-src/src/u
     if (nelements > 0) {
  
 -      hsize_t dim[] = {nelements};
-+      hsize_t dim[] = {(unsigned long)nelements};
++      hsize_t dim[] = {(unsigned long long)nelements};
        hid_t space = H5Screate_simple(1, dim, NULL);
  #ifdef ASSERT_HDF5_RETURN_VALUES
        assert( space >= 0 );
@@ -44,7 +44,7 @@ diff -ur spack-src.org/src/utils/toolbox/database/HDFDatabase.cc spack-src/src/u
     if (nelements > 0) {
  
 -      hsize_t dim[] = {nelements};
-+      hsize_t dim[] = {(unsigned long)nelements};
++      hsize_t dim[] = {(unsigned long long)nelements};
        hid_t space = H5Screate_simple(1, dim, NULL);
  #ifdef ASSERT_HDF5_RETURN_VALUES
        assert(space >= 0);
@@ -53,7 +53,7 @@ diff -ur spack-src.org/src/utils/toolbox/database/HDFDatabase.cc spack-src/src/u
  #endif
  
 -      hsize_t dim[] = {nelements};
-+      hsize_t dim[] = {(unsigned long)nelements};
++      hsize_t dim[] = {(unsigned long long)nelements};
        hid_t space = H5Screate_simple(1, dim, NULL);
  #ifdef ASSERT_HDF5_RETURN_VALUES
        assert( space >= 0 );
