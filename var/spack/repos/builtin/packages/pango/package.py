@@ -25,7 +25,9 @@ class Pango(AutotoolsPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("harfbuzz")
-    depends_on("cairo")
+    depends_on("freetype")
+    depends_on("fontconfig")
+    depends_on("cairo+ft+fc")
     depends_on("cairo~X", when='~X')
     depends_on("cairo+X", when='+X')
     depends_on("libxft", when='+X')
