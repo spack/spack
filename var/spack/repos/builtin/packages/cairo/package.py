@@ -36,6 +36,9 @@ class Cairo(AutotoolsPackage):
     depends_on('glib')
     depends_on('pixman')
     depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('freetype', when='+ft')
     depends_on('pkgconfig', type='build')
     depends_on('fontconfig@2.10.91:', when='+fc')  # Require newer version of fontconfig.
