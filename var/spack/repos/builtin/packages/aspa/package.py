@@ -28,6 +28,8 @@ class Aspa(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('hdf5')
 
+    patch('fix_common_errors.patch')
+
     @property
     def build_targets(self):
         targets = [
