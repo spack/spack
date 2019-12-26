@@ -34,7 +34,7 @@ class Avizo(Package):
         run_env.set('MCSLMD_LICENSE_FILE', join_path(self.prefix.share.license,
                                                      'password.dat'))
 
-        def install(self, spec, prefix):
+    def install(self, spec, prefix):
         ver = self.version.joined
         sh = which('sh')
         sh('Avizo-{0}-Linux64-gcc44.bin'.format(ver), '--noexec', '--keep')
