@@ -84,7 +84,7 @@ function fail
 end
 
 # echo SUCCESS in green; increment successes
-function __spt_success
+function pass
     echo_green SUCCESS
     set __spt_success (math $__spt_success+1)
 end
@@ -108,6 +108,8 @@ function spt_succeeds
         else
             echo_msg "No output."
         end
+    else
+        pass
     end
 end
 
@@ -130,6 +132,8 @@ function spt_fails
         else
             echo_msg "No output."
         end
+    else
+        pass
     end
 end
 
@@ -157,6 +161,8 @@ function spt_contains
         else
             echo_msg "No output."
         end
+    else
+        pass
     end
 end
 
@@ -170,6 +176,8 @@ function is_set
     if test -z "$argv[1]"
         fail
         echo_msg "'$argv[1]' was not set!"
+    else
+        pass
     end
 end
 
@@ -185,6 +193,8 @@ function is_not_set
         fail
         echo_msg "'$argv[1]' was set!"
         echo "    $argv[1]"
+    else
+        pass
     end
 end
 
@@ -198,10 +208,14 @@ end
 # We make that happen by defining the sh functions below.
 # -----------------------------------------------------------------------
 
-function module
+function spt_module
     echo "module $argv"
 end
 
+# mock cd command (intentionally define only AFTER setup-env.sh)
+function spt_cd
+    echo "cd $argv"
+end
 
 
 # -----------------------------------------------------------------------
@@ -224,4 +238,59 @@ title "Testing setup-env.fish with $_sp_shell"
 spt_succeeds which spack
 
 
-delete_testing_global
+# create a fake mock package install and store its location for later
+title "Setup"
+echo "Creating a mock package installation"
+spack -m install --fake a
+set a_install (spack location -i a)
+set a_module (spack -m module tcl find a)
+
+set b_install (spack location -i b)
+set b_module (spack -m module tcl find b)
+
+# create a test environment for tesitng environment commands
+echo "Creating a mock environment"
+spack env create spack_test_env
+set test_env_location (spack location -e spack_test_env)
+
+# ensure that we uninstall b on exit
+function spt_cleanup
+
+    set trapped_error false
+    if test $status -ne 0
+        set trapped_error true
+    end
+
+    echo "Removing test environment before exiting."
+    spack env deactivate 2>&1 > /dev/null
+    spack env rm -y spack_test_env
+
+    title "Cleanup"
+    echo "Removing test packages before exiting."
+    spack -m uninstall -yf b a
+
+    echo
+    echo "$__spt_success tests succeeded."
+    echo "$__spt_errors tests failed."
+
+    if test "$trapped_error" = false
+        echo "Exited due to an error."
+    end
+
+    if test "$__spt_errors" -eq 0
+        if test "$trapped_error" = false
+            pass
+            exit 0
+        else
+            fail
+            exit 1
+        end
+    else
+        fail
+        exit 1
+    end
+
+    delete_testing_global
+end
+
+trap spt_cleanup EXIT

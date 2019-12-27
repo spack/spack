@@ -462,7 +462,13 @@ function spack -d "wrapper for the `spack` command"
                         end
 
                     case "*"
-                        command spack env $sp_arg $__sp_remaining_args
+                        # if $__sp_remaining_args is empty, then don't include it
+                        # as argument (it can be passed as a blank string input!)
+                        if test -n "$__sp_remaining_args"
+                            command spack env $sp_arg $__sp_remaining_args
+                        else
+                            command spack env $sp_arg
+                        end
                 end
             end
 
