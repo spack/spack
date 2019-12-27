@@ -6,10 +6,10 @@
 from spack import *
 
 
-class Aspell6De(AspellDictPackage):
+class Aspell6De(AspellDictPackage, GNUMirrorPackage):
     """German (de) dictionary for aspell."""
 
     homepage = "http://aspell.net/"
-    url      = "https://ftpmirror.gnu.org/aspell/dict/de/aspell6-de-20030222-1.tar.bz2"
+    gnu_mirror_path = "aspell/dict/de/aspell6-de-20030222-1.tar.bz2"
 
     version('6-de-20030222-1', sha256='ba6c94e11bc2e0e6e43ce0f7822c5bba5ca5ac77129ef90c190b33632416e906')

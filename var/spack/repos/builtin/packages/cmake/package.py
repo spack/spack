@@ -13,6 +13,9 @@ class Cmake(Package):
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
+    version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
+    version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
+    version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
     version('3.15.5',   sha256='fbdd7cef15c0ced06bb13024bfda0ecc0dedbcaaaa6b8a5d368c75255243beb4')
     version('3.15.4',   sha256='8a211589ea21374e49b25fc1fc170e2d5c7462b795f1b29c84dd0e984301ed7a')
     version('3.15.3',   sha256='13958243a01365b05652fa01b21d40fa834f70a9e30efa69c02604e64f58b8f5')
@@ -71,6 +74,10 @@ class Cmake(Package):
     # Fix linker error when using external libs on darwin.
     # See https://gitlab.kitware.com/cmake/cmake/merge_requests/2873
     patch('cmake-macos-add-coreservices.patch', when='@3.11.0:3.13.3')
+
+    # Fix builds with XLF + Ninja generator
+    # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
+    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="001736d791957225aadfc416b0cef915e8c8dcc04765b8e0fcbebf6058a05560", when="@3.15.5")
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always

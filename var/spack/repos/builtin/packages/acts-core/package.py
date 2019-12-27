@@ -31,8 +31,14 @@ class ActsCore(CMakePackage):
 
     homepage = "http://acts.web.cern.ch/ACTS/"
     git      = "https://gitlab.cern.ch/acts/acts-core.git"
+    maintainers = ['HadrienG2']
 
     version('develop', branch='master')
+    version('0.13.0', commit='b33f7270ddbbb33050b7ec60b4fa255dc2bfdc88')
+    version('0.12.1', commit='a8b3d36e7c6cb86487637589e0eff7bbe626054a')
+    version('0.12.0', commit='f9cda77299606d78c889fb1db2576c1971a271c4')
+    version('0.11.1', commit='c21196cd6c3ecc6da0f14d0a9ef227a274be584b')
+    version('0.11.0', commit='22bcea1f19adb0021ca61b843b95cfd2462dd31d')
     version('0.10.5', commit='b6f7234ca8f18ee11e57709d019c14bf41cf9b19')
     version('0.10.4', commit='42cbc359c209f5cf386e620b5a497192c024655e')
     version('0.10.3', commit='a3bb86b79a65b3d2ceb962b60411fd0df4cf274c')
@@ -84,7 +90,7 @@ class ActsCore(CMakePackage):
             cmake_variant("INTEGRATION_TESTS", "integration_tests"),
             cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
-            cmake_variant("IDENTIFICATION", "identification"),
+            cmake_variant("IDENTIFICATION_PLUGIN", "identification"),
             cmake_variant("JSON_PLUGIN", "json"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]

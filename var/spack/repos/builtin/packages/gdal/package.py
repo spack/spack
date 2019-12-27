@@ -32,6 +32,7 @@ class Gdal(AutotoolsPackage):
     version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
+    version('2.4.3',  sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60')
     version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
     version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
     version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
@@ -94,9 +95,9 @@ class Gdal(AutotoolsPackage):
 
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
-    depends_on('libgeotiff@1.2.1:')
-    depends_on('libgeotiff@:1.4', when='@:2.4')
-    depends_on('libgeotiff@1.5:', when='@3:')
+    depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.2')
+    depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
 

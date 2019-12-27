@@ -37,4 +37,3 @@ class Clara(CMakePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         install_tree('single_include', prefix.include)
-        mkdirp(join_path(prefix, 'bin'))

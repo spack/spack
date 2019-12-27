@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Gdb(AutotoolsPackage):
+class Gdb(AutotoolsPackage, GNUMirrorPackage):
     """GDB, the GNU Project debugger, allows you to see what is going on
     'inside' another program while it executes -- or what another
     program was doing at the moment it crashed.
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
+    gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
     version('8.3', sha256='b2266ec592440d0eec18ee1790f8558b3b8a2845b76cc83a872e39b501ce8a28')
     version('8.2.1', sha256='0107985f1edb8dddef6cdd68a4f4e419f5fec0f488cc204f0b7d482c0c6c9282')

@@ -25,12 +25,13 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
+    version('2019.5', sha256='438061a4a2d45bbb5cf5c3aadd6c6df32d2d77ce8c715f1c8ffe56156994083a')
     version('2019.4', sha256='ba4366eedfc8a1dbf6bddcef190be8cd75de53691133f305a7f9c296e5ca1867')
     version('2019.3', sha256='4211a598bf3b7aca2b14ad991448947da9032566f13239b1a05a2d4824357573')
     version('2019.2', sha256='bcbf5cc071926bc67baa5be6fb04f0986a2b107e1573e15fadcb7d7fc4fb9f7e')
     version('2019.1', sha256='b2c37ed2fcd0e64c4efcabdc8ee581143986527192e6e647a197c76d9c4583ec')
     version('2019', sha256='c5b281a5f0b5b4eeb1f4c7d4dc72f96985b566561ca28acc9c7c16f6ee110d0b')
-    version('2018.8', sha256='3776923415df4bc78869d7f387c834141fdcda930b2e75be979dc59ecfa6ebec')
+    version('2018.8', sha256='776923415df4bc78869d7f387c834141fdcda930b2e75be979dc59ecfa6ebecf')
     version('2018.5', sha256='32261df6f7ec4149fc0508f9af416953d056e281590359838c1ed6644ba097b8')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
     version('2018.3', sha256='4423a49224972969c52af7b1f151579cea6ab52148d8d7cbae28c183520aa291')
@@ -70,6 +71,7 @@ class Gromacs(CMakePackage):
             ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
+    variant('hwloc', default=True, description='Use the hwloc portable hardware locality library')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -78,6 +80,7 @@ class Gromacs(CMakePackage):
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
+    depends_on('hwloc', when='+hwloc')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
@@ -98,6 +101,11 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+
+        if '+hwloc' in self.spec:
+            options.append('-DGMX_HWLOC:BOOL=ON')
+        else:
+            options.append('-DGMX_HWLOC:BOOL=OFF')
 
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')

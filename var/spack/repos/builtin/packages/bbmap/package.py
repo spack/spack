@@ -20,6 +20,6 @@ class Bbmap(Package):
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('BBMAP_CONFIG', self.prefix.bin.config)
-        run_env.set('BBMAP_RESOURCES', self.prefix.bin.resources)
+    def setup_run_environment(self, env):
+        env.set('BBMAP_CONFIG', self.prefix.bin.config)
+        env.set('BBMAP_RESOURCES', self.prefix.bin.resources)

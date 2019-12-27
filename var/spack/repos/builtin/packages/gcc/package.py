@@ -13,12 +13,12 @@ import os
 import sys
 
 
-class Gcc(AutotoolsPackage):
+class Gcc(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
@@ -228,16 +228,14 @@ class Gcc(AutotoolsPackage):
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
-        url = 'https://ftpmirror.gnu.org/gcc/gcc-{0}/gcc-{0}.tar.{1}'
-        suffix = 'xz'
-
-        if version < Version('6.4.0') or version == Version('7.1.0'):
-            suffix = 'bz2'
-
-        if version == Version('5.5.0'):
-            suffix = 'xz'
-
-        return url.format(version, suffix)
+        # This function will be called when trying to fetch from url, before
+        # mirrors are tried. It takes care of modifying the suffix of gnu
+        # mirror path so that Spack will also look for the correct file in
+        # the mirrors
+        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+                or version == Version('7.1.0'):
+            self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
+        return super(Gcc, self).url_for_version(version)
 
     def patch(self):
         spec = self.spec

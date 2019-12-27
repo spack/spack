@@ -2182,7 +2182,7 @@ class Spec(object):
             # Add any patches from the package to the spec.
             patches = []
             for cond, patch_list in s.package_class.patches.items():
-                if s.satisfies(cond):
+                if s.satisfies(cond, strict=True):
                     for patch in patch_list:
                         patches.append(patch)
             if patches:
@@ -2201,7 +2201,7 @@ class Spec(object):
 
             patches = []
             for cond, dependency in pkg_deps[dspec.spec.name].items():
-                if dspec.parent.satisfies(cond):
+                if dspec.parent.satisfies(cond, strict=True):
                     for pcond, patch_list in dependency.patches.items():
                         if dspec.spec.satisfies(pcond):
                             for patch in patch_list:
@@ -2243,10 +2243,12 @@ class Spec(object):
 
         # If any spec in the DAG is deprecated, throw an error
         deprecated = []
-        for x in self.traverse():
-            _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
-            if rec and rec.deprecated_for:
-                deprecated.append(rec)
+        with spack.store.db.read_transaction():
+            for x in self.traverse():
+                _, rec = spack.store.db.query_by_spec_hash(x.dag_hash())
+                if rec and rec.deprecated_for:
+                    deprecated.append(rec)
+
         if deprecated:
             msg = "\n    The following specs have been deprecated"
             msg += " in favor of specs with the hashes shown:\n"
@@ -2661,7 +2663,7 @@ class Spec(object):
                 not_existing = set(spec.variants) - (
                     set(pkg_variants) | set(spack.directives.reserved_names))
                 if not_existing:
-                    raise UnknownVariantError(spec.name, not_existing)
+                    raise UnknownVariantError(spec, not_existing)
 
                 substitute_abstract_variants(spec)
 
@@ -2997,7 +2999,7 @@ class Spec(object):
                 before possibly copying the dependencies of ``other`` onto
                 ``self``
             caches (bool or None): preserve cached fields such as
-                ``_normal``, ``_concrete``, and ``_cmp_key_cache``. By
+                ``_normal``, ``_hash``, and ``_cmp_key_cache``. By
                 default this is ``False`` if DAG structure would be
                 changed by the copy, ``True`` if it's an exact copy.
 

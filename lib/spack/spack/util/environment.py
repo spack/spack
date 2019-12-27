@@ -919,7 +919,7 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file = ' '.join(source_file)
 
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        dump_environment = sys.executable + ' -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([

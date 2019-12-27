@@ -11,7 +11,9 @@ class Mpip(AutotoolsPackage):
     """mpiP: Lightweight, Scalable MPI Profiling"""
     homepage = "http://mpip.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/mpip/mpiP/mpiP-3.4.1/mpiP-3.4.1.tar.gz"
+    git      = "https://github.com/llnl/mpip.git"
 
+    version('master', branch='master')
     version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
     depends_on("elf")

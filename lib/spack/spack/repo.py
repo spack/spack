@@ -20,7 +20,7 @@ import traceback
 from six import string_types, add_metaclass
 
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 

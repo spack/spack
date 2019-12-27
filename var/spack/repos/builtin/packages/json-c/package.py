@@ -22,5 +22,6 @@ class JsonC(AutotoolsPackage):
     @when('@0.12.1 %gcc@7:')
     def patch(self):
         filter_file('-Wextra',
-                    '-Wextra -Wno-error=implicit-fallthrough',
+                    '-Wextra -Wno-error=implicit-fallthrough '
+                    '-Wno-error=unused-but-set-variable',
                     'Makefile.in')

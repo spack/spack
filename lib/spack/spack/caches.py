@@ -68,10 +68,17 @@ class MirrorCache(object):
         storage location."""
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
+        storage_path = os.path.join(self.root, mirror_ref.storage_path)
         relative_dst = os.path.relpath(
-            mirror_ref.storage_path,
+            storage_path,
             start=os.path.dirname(cosmetic_path))
+
         if not os.path.exists(cosmetic_path):
+            if os.path.lexists(cosmetic_path):
+                # In this case the link itself exists but it is broken: remove
+                # it and recreate it (in order to fix any symlinks broken prior
+                # to https://github.com/spack/spack/pull/13908)
+                os.unlink(cosmetic_path)
             mkdirp(os.path.dirname(cosmetic_path))
             os.symlink(relative_dst, cosmetic_path)
 

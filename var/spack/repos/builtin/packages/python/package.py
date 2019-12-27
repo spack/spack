@@ -163,6 +163,9 @@ class Python(AutotoolsPackage):
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
 
+    # Used to cache home locations, since computing them might be expensive
+    _homes = {}
+
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
 
@@ -285,6 +288,10 @@ class Python(AutotoolsPackage):
                 '--with-tcltk-libs={0} {1}'.format(
                     spec['tcl'].libs.ld_flags, spec['tk'].libs.ld_flags)
             ])
+
+        # https://docs.python.org/3.8/library/sqlite3.html#f1
+        if spec.satisfies('@3.2: +sqlite3'):
+            config_args.append('--enable-loadable-sqlite-extensions')
 
         return config_args
 
@@ -620,10 +627,17 @@ class Python(AutotoolsPackage):
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed."""
+        determine exactly where it is installed. Fall back on
+        ``spec['python'].prefix`` if that doesn't work."""
 
-        prefix = self.get_config_var('prefix')
-        return Prefix(prefix)
+        dag_hash = self.spec.dag_hash()
+        if dag_hash not in self._homes:
+            try:
+                prefix = self.get_config_var('prefix')
+            except ProcessError:
+                prefix = self.prefix
+            self._homes[dag_hash] = Prefix(prefix)
+        return self._homes[dag_hash]
 
     @property
     def libs(self):

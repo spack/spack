@@ -240,9 +240,6 @@ def mock_fetch_cache(monkeypatch):
             return MockCacheFetcher()
 
     class MockCacheFetcher(object):
-        def set_stage(self, stage):
-            pass
-
         def fetch(self):
             raise FetchError('Mock cache always fails for tests')
 

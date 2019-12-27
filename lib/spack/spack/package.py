@@ -510,8 +510,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
-                      'make_jobs']
+    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
+                      'parallel', 'make_jobs']
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -523,6 +523,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Keep track of whether or not this package was installed from
         # a binary cache.
         self.installed_from_binary_cache = False
+
+        # Ensure that only one of these two attributes are present
+        if getattr(self, 'url', None) and getattr(self, 'urls', None):
+            msg = "a package can have either a 'url' or a 'urls' attribute"
+            msg += " [package '{0.name}' defines both]"
+            raise ValueError(msg.format(self))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -556,16 +562,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     @classmethod
     def possible_dependencies(
             cls, transitive=True, expand_virtuals=True, deptype='all',
-            visited=None):
+            visited=None, missing=None):
         """Return dict of possible dependencies of this package.
 
         Args:
-            transitive (bool): return all transitive dependencies if True,
-                only direct dependencies if False.
-            expand_virtuals (bool): expand virtual dependencies into all
-                possible implementations.
-            deptype (str or tuple): dependency types to consider
-            visited (set): set of names of dependencies visited so far.
+            transitive (bool, optional): return all transitive dependencies if
+                True, only direct dependencies if False (default True)..
+            expand_virtuals (bool, optional): expand virtual dependencies into
+                all possible implementations (default True)
+            deptype (str or tuple, optional): dependency types to consider
+            visited (dicct, optional): dict of names of dependencies visited so
+                far, mapped to their immediate dependencies' names.
+            missing (dict, optional): dict to populate with packages and their
+                *missing* dependencies.
 
         Returns:
             (dict): dictionary mapping dependency names to *their*
@@ -576,7 +585,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         *immediate* dependencies. If ``expand_virtuals`` is ``False``,
         virtual package names wil be inserted as keys mapped to empty
         sets of dependencies.  Virtuals, if not expanded, are treated as
-        though they have no immediate dependencies
+        though they have no immediate dependencies.
+
+        Missing dependencies by default are ignored, but if a
+        missing dict is provided, it will be populated with package names
+        mapped to any dependencies they have that are in no
+        repositories. This is only populated if transitive is True.
 
         Note: the returned dict *includes* the package itself.
 
@@ -585,6 +599,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         if visited is None:
             visited = {cls.name: set()}
+
+        if missing is None:
+            missing = {cls.name: set()}
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
@@ -609,12 +626,24 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
             # recursively traverse dependencies
             for dep_name in dep_names:
-                if dep_name not in visited:
-                    visited.setdefault(dep_name, set())
-                    if transitive:
-                        dep_cls = spack.repo.path.get_pkg_class(dep_name)
-                        dep_cls.possible_dependencies(
-                            transitive, expand_virtuals, deptype, visited)
+                if dep_name in visited:
+                    continue
+
+                visited.setdefault(dep_name, set())
+
+                # skip the rest if not transitive
+                if not transitive:
+                    continue
+
+                try:
+                    dep_cls = spack.repo.path.get_pkg_class(dep_name)
+                except spack.repo.UnknownPackageError:
+                    # log unknown packages
+                    missing.setdefault(cls.name, set()).add(dep_name)
+                    continue
+
+                dep_cls.possible_dependencies(
+                    transitive, expand_virtuals, deptype, visited, missing)
 
         return visited
 
@@ -727,7 +756,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return version_urls[version]
 
         # If no specific URL, use the default, class-level URL
-        default_url = getattr(self, 'url', None)
+        url = getattr(self, 'url', None)
+        urls = getattr(self, 'urls', [None])
+        default_url = url or urls.pop(0)
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
@@ -1086,7 +1117,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.stage.cache_local()
 
         for patch in self.spec.patches:
-            patch.fetch(self.stage)
+            patch.fetch()
             if patch.cache():
                 patch.cache().cache_local()
 
@@ -1509,6 +1540,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         )
         if not compilers:
             dep = spack.compilers.pkg_spec_for_compiler(self.spec.compiler)
+            dep.architecture = self.spec.architecture
             # concrete CompilerSpec has less info than concrete Spec
             # concretize as Spec to add that information
             dep.concretize()
@@ -2660,6 +2692,35 @@ def dump_packages(spec, path):
             install_tree(source_pkg_dir, dest_pkg_dir)
         else:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
+
+
+def possible_dependencies(*pkg_or_spec, **kwargs):
+    """Get the possible dependencies of a number of packages.
+
+    See ``PackageBase.possible_dependencies`` for details.
+    """
+    transitive = kwargs.get('transitive', True)
+    expand_virtuals = kwargs.get('expand_virtuals', True)
+    deptype = kwargs.get('deptype', 'all')
+    missing = kwargs.get('missing')
+
+    packages = []
+    for pos in pkg_or_spec:
+        if isinstance(pos, PackageMeta):
+            pkg = pos
+        elif isinstance(pos, spack.spec.Spec):
+            pkg = pos.package
+        else:
+            pkg = spack.spec.Spec(pos).package
+
+        packages.append(pkg)
+
+    visited = {}
+    for pkg in packages:
+        pkg.possible_dependencies(
+            transitive, expand_virtuals, deptype, visited, missing)
+
+    return visited
 
 
 def print_pkg(message):

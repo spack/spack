@@ -8,11 +8,11 @@ from spack import *
 import sys
 
 
-class Emacs(AutotoolsPackage):
+class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "https://ftpmirror.gnu.org/emacs/emacs-24.5.tar.gz"
+    gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
     version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')

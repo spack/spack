@@ -10,8 +10,7 @@ import collections
 
 import spack.spec
 import spack.modules.tcl
-from spack.modules.common import (
-    UpstreamModuleIndex, ModuleNotFoundError)
+from spack.modules.common import UpstreamModuleIndex
 
 import spack.error
 
@@ -133,18 +132,15 @@ module_index:
     assert m1.path == '/path/to/a'
 
     # No modules are defined for the DB associated with s2
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s2, 'tcl')
+    assert not upstream_index.upstream_module(s2, 'tcl')
 
     # Modules are defined for the index associated with s1, but none are
     # defined for the requested type
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s1, 'lmod')
+    assert not upstream_index.upstream_module(s1, 'lmod')
 
     # A module is registered with a DB and the associated module index has
     # modules of the specified type defined, but not for the requested spec
-    with pytest.raises(ModuleNotFoundError):
-        upstream_index.upstream_module(s3, 'tcl')
+    assert not upstream_index.upstream_module(s3, 'tcl')
 
     # The spec isn't recorded as installed in any of the DBs
     with pytest.raises(spack.error.SpackError):

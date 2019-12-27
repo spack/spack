@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Texinfo(AutotoolsPackage):
+class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     """Texinfo is the official documentation format of the GNU project.
 
     It was invented by Richard Stallman and Bob Chassell many years ago,
@@ -15,7 +15,7 @@ class Texinfo(AutotoolsPackage):
     of the time. It is used by many non-GNU projects as well."""
 
     homepage = "https://www.gnu.org/software/texinfo/"
-    url      = "https://ftpmirror.gnu.org/texinfo/texinfo-6.0.tar.gz"
+    gnu_mirror_path = "texinfo/texinfo-6.0.tar.gz"
 
     version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
     version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')

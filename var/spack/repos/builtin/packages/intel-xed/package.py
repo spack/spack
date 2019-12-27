@@ -84,18 +84,22 @@ class IntelXed(Package):
 
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
+        mkdirp(prefix.bin)
 
         libs = glob.glob(join_path('obj', 'lib*.a'))
         for lib in libs:
             install(lib, prefix.lib)
 
-        # Build and install shared libxed.so.
+        # Build and install shared libxed.so and examples (to get the CLI).
         mfile('--clean')
-        mfile('--shared', *args)
+        mfile('examples', '--shared', *args)
 
         libs = glob.glob(join_path('obj', 'lib*.so'))
         for lib in libs:
             install(lib, prefix.lib)
+
+        # Install the xed program
+        install(join_path('obj', 'examples', 'xed'), prefix.bin)
 
         # Install header files.
         hdrs = glob.glob(join_path('include', 'public', 'xed', '*.h'))  \
