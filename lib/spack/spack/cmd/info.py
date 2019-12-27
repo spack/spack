@@ -106,7 +106,9 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            yield '\n'
+            underline = tuple([l * "=" for l in self.column_widths])
+            yield '    ' + self.fmt % underline
+            yield ''
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
                     '{0} [{1}]'.format(k, self.default(v)),
