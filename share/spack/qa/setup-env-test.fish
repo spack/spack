@@ -201,19 +201,18 @@ end
 
 
 # -----------------------------------------------------------------------
-# Instead of invoking the module commands, we print the
-# arguments that Spack invokes the command with, so we can check that
-# Spack passes the expected arguments in the tests below.
+# Instead of invoking the module and cd commands, we print the arguments that
+# Spack invokes the command with, so we can check that Spack passes the expected
+# arguments in the tests below.
 #
 # We make that happen by defining the sh functions below.
 # -----------------------------------------------------------------------
 
-function spt_module
+function module
     echo "module $argv"
 end
 
-# mock cd command (intentionally define only AFTER setup-env.sh)
-function spt_cd
+function cd
     echo "cd $argv"
 end
 
@@ -307,4 +306,9 @@ spt_contains "usage: spack " spack -h
 spt_contains "usage: spack " spack help
 spt_contains "usage: spack " spack -H
 spt_contains "usage: spack " spack help --all
+
+title 'Testing `spack cd`'
+spt_contains "usage: spack cd " spack cd -h
+spt_contains "usage: spack cd " spack cd --help
+spt_contains "cd $b_install" spack cd -i b
 
