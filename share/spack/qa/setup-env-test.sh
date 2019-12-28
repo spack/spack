@@ -229,7 +229,7 @@ cleanup() {
     fi
 
     echo "Removing test environment before exiting."
-    spack env deactivate 2>1 > /dev/null
+    spack env deactivate 2>&1 > /dev/null
     spack env rm -y spack_test_env
 
     title "Cleanup"
