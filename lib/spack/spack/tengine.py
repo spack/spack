@@ -5,15 +5,11 @@
 import itertools
 import textwrap
 
-import jinja2
 import llnl.util.lang
 import six
 
 import spack.config
 from spack.util.path import canonicalize_path
-
-
-TemplateNotFound = jinja2.TemplateNotFound
 
 
 class ContextMeta(type):
@@ -76,6 +72,10 @@ def make_environment(dirs=None):
         extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
+
+    # avoid importing this at the top level as it's used infrequently and
+    # slows down startup a bit.
+    import jinja2
 
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
