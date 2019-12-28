@@ -654,15 +654,21 @@ def module_configuration(monkeypatch, request):
         with open(file) as f:
             configuration = yaml.load(f)
 
+        def mock_config_function():
+            return configuration
+
+        def writer_key_function():
+            return mock_config_function()[writer_key]
+
         monkeypatch.setattr(
             spack.modules.common,
             'configuration',
-            configuration
+            mock_config_function
         )
         monkeypatch.setattr(
             writer_mod,
             'configuration',
-            configuration[writer_key]
+            writer_key_function
         )
         monkeypatch.setattr(
             writer_mod,
