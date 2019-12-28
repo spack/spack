@@ -218,6 +218,7 @@ function spt_cd
 end
 
 
+
 # -----------------------------------------------------------------------
 # Setup test environment and do some preliminary checks
 # -----------------------------------------------------------------------
@@ -294,3 +295,16 @@ function spt_cleanup
 end
 
 trap spt_cleanup EXIT
+
+
+
+# -----------------------------------------------------------------------
+# Test all spack commands with special env support
+# -----------------------------------------------------------------------
+title 'Testing `spack`'
+spt_contains 'usage: spack ' spack
+spt_contains "usage: spack " spack -h
+spt_contains "usage: spack " spack help
+spt_contains "usage: spack " spack -H
+spt_contains "usage: spack " spack help --all
+
