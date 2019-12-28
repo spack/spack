@@ -7,7 +7,7 @@ from spack import *
 
 
 class Graphite2(CMakePackage):
-    """Graphite is a system that can be used to create “smart fonts” capable of
+    """Graphite is a system that can be used to create "smart fonts" capable of
     displaying writing systems with various complex behaviors. A smart font
     contains not only letter shapes but also additional instructions indicating
     how to combine and position the letters in complex ways."""
