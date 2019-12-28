@@ -518,7 +518,12 @@ function spack -d "wrapper for the `spack` command"
 
                 case "load"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
-                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                    
+                    # Note: if the subprocess in the if statement outputs to
+                    # stderr, we cannot redirect this later (I don't know why
+                    # at the moment) => HACK: capture stderr here and output if
+                    # $status is set to 1
+                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args 2>&1)
                         # This is a strange behavior of `modulecmd fish load
                         # $args`. In fish, `load` returns a list of `set`
                         # imperatives rather than applying them outright. So
@@ -527,12 +532,19 @@ function spack -d "wrapper for the `spack` command"
                         set load_cmd (module load $__sp_module_args $sp_full_spec)
                         eval $load_cmd
                     else
+                        # HERE: $sp_full_spec is the contents of stderr => output
+                        echo -s \n$sp_full_spec 1>&2
                         delete_sp_shared
                         return 1
                     end
 
                 case "unload"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
+
+                    # Note: if the subprocess in the if statement outputs to
+                    # stderr, we cannot redirect this later (I don't know why
+                    # at the moment) => HACK: capture stderr here and output if
+                    # $status is set to 1
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
                         # This is a strange behavior of `modulecmd fish load
                         # $args`. In fish, `unload` returns a list of `set`
@@ -542,6 +554,8 @@ function spack -d "wrapper for the `spack` command"
                         set unload_cmd (module unload $__sp_module_args $sp_full_spec)
                         eval $unload_cmd
                     else
+                        # HERE: $sp_full_spec is the contents of stderr => output
+                        echo -s \n$sp_full_spec 1>&2
                         delete_sp_shared
                         return 1
                     end
@@ -555,6 +569,7 @@ function spack -d "wrapper for the `spack` command"
 
     end
 
+    return 0
     delete_sp_shared
 end
 
