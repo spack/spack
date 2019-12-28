@@ -30,14 +30,6 @@ env = SpackCommand('env')
 add = SpackCommand('add')
 
 
-@pytest.fixture(scope='module')
-def parser():
-    """Returns the parser for the module command"""
-    parser = argparse.ArgumentParser()
-    spack.cmd.install.setup_parser(parser)
-    return parser
-
-
 @pytest.fixture()
 def noop_install(monkeypatch):
     def noop(*args, **kwargs):
@@ -115,7 +107,9 @@ def test_install_package_already_installed(
     (['--clean'], False),
     (['--dirty'], True),
 ])
-def test_install_dirty_flag(parser, arguments, expected):
+def test_install_dirty_flag(arguments, expected):
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
     args = parser.parse_args(arguments)
     assert args.dirty == expected
 
