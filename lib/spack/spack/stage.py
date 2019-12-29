@@ -742,7 +742,7 @@ def purge():
 
 
 def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False):
+        url_dict, name, first_stage_function=None, keep_stage=False, batch=False):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -775,8 +775,11 @@ def get_checksums_for_versions(
                  for v in sorted_versions]))
     print()
 
-    archives_to_fetch = tty.get_number(
-        "How many would you like to checksum?", default=1, abort='q')
+    if not batch:
+        archives_to_fetch = tty.get_number(
+            "How many would you like to checksum?", default=1, abort='q')
+    else:
+        archives_to_fetch = len(sorted_versions)
 
     if not archives_to_fetch:
         tty.die("Aborted.")
