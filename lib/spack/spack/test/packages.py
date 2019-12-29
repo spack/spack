@@ -182,7 +182,7 @@ def test_urls_for_versions(mock_packages, config):
         assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
 
 
-def test_url_for_version_with_no_urls():
+def test_url_for_version_with_no_urls(mock_packages, config):
     pkg = spack.repo.get('git-test')
     with pytest.raises(spack.package.NoURLError):
         pkg.url_for_version('1.0')

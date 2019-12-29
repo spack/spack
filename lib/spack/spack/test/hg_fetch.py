@@ -29,7 +29,7 @@ def test_fetch(
         secure,
         mock_hg_repository,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Tries to:
 

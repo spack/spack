@@ -26,7 +26,7 @@ import spack.util.spack_json as sjson
 
 # everything here uses the mock_env_path
 pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_packages')
+    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
