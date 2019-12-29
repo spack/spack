@@ -147,7 +147,7 @@ function spt_contains
     set -l target_string $argv[1]
     set -l remaining_args $argv[2..-1]
 
-    printf "'$remaining_args' output contains '$target_string'"
+    printf "'$remaining_args' output contains '$target_string' ... "
 
     set -l output (eval $remaining_args 2>&1)
 
@@ -201,24 +201,6 @@ end
 
 
 # -----------------------------------------------------------------------
-# Instead of invoking the module and cd commands, we print the arguments that
-# Spack invokes the command with, so we can check that Spack passes the expected
-# arguments in the tests below.
-#
-# We make that happen by defining the sh functions below.
-# -----------------------------------------------------------------------
-
-function module
-    echo "module $argv"
-end
-
-function cd
-    echo "cd $argv"
-end
-
-
-
-# -----------------------------------------------------------------------
 # Setup test environment and do some preliminary checks
 # -----------------------------------------------------------------------
 
@@ -229,7 +211,34 @@ true # ingnore failing `set -e`
 # Source setup-env.sh before tests
 source share/spack/setup-env.fish
 
+
+
+# -----------------------------------------------------------------------
+# Instead of invoking the module and cd commands, we print the arguments that
+# Spack invokes the command with, so we can check that Spack passes the expected
+# arguments in the tests below.
+#
+# We make that happen by defining the fish functions below. NOTE: these overwrite
+# existing functions => define them last
+# -----------------------------------------------------------------------
+
+
+function module
+    echo "module $argv"
+end
+
+function cd
+    echo "cd $argv"
+end
+
+
 allocate_testing_global
+
+
+
+# -----------------------------------------------------------------------
+# Let the testing begin!
+# -----------------------------------------------------------------------
 
 
 title "Testing setup-env.fish with $_sp_shell"
@@ -312,3 +321,18 @@ spt_contains "usage: spack cd " spack cd -h
 spt_contains "usage: spack cd " spack cd --help
 spt_contains "cd $b_install" spack cd -i b
 
+title 'Testing `spack module`'
+spt_contains "usage: spack module " spack -m module -h
+spt_contains "usage: spack module " spack -m module --help
+spt_contains "usage: spack module " spack -m module
+
+title 'Testing `spack load`'
+spt_contains "module load $b_module" spack -m load b
+spt_fails spack -m load -l
+spt_contains "module load -l --arg $b_module" spack -m load -l --arg b
+spt_contains "module load $b_module $a_module" spack -m load -r a
+spt_contains "module load $b_module $a_module" spack -m load --dependencies a
+spt_fails spack -m load d
+spt_contains "usage: spack load " spack -m load -h
+spt_contains "usage: spack load " spack -m load -h d
+spt_contains "usage: spack load " spack -m load --help

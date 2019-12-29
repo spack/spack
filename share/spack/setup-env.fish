@@ -159,10 +159,9 @@ function get_sp_flags -d "return leading flags"
 
     end
 
-    # if all elements in `argv` are matched, make sure that
-    # `__sp_remaining_args` is initialized to an empty array (this might be
-    # overkill...).
-    set __sp_remaining_args
+    # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
+    # is deleted (this might be overkill...).
+    set -e __sp_remaining_args
 end
 
 
@@ -206,10 +205,9 @@ function get_mod_args -d "return submodule flags"
 
     end
 
-    # if all elements in `argv` are matched, make sure that
-    # `__sp_remaining_args` is initialized to an empty array (this might be
-    # overkill...).
-    set __sp_remaining_args
+    # if all elements in `argv` are matched, make sure that `__sp_remaining_args`
+    # is deleted (this might be overkill...).
+    set -e __sp_remaining_args
 end
 
 
@@ -232,6 +230,36 @@ function check_sp_flags -d "check spack flags for h/V flags"
             return 0
         end
         if echo $_a | string match -r -q ".*V.*"
+            return 0
+        end
+    end
+
+    return 1
+end
+
+
+
+function contains_help_flags -d "checks for help (-h/--help) flags"
+    #
+    # Check if inputs contain -h or --help
+    #
+
+    # combine argument array into single string (space seperated), to be passed
+    # to regular expression matching (`string match -r`)
+    set -l _a "$argv"
+
+    # skip if called with blank input
+    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
+    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
+    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    if test -n "$_a"
+        # looks for a single `-h` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *-h *"
+            return 0
+        end
+
+        # looks for a single `--help` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--help *"
             return 0
         end
     end
@@ -486,6 +514,13 @@ function spack -d "wrapper for the `spack` command"
             get_mod_args $__sp_remaining_args #       __sp_module_args
 
             set -l sp_spec $__sp_remaining_args
+
+            # any -h flags would have "landed" in __sp_module_args
+            if contains_help_flags $__sp_module_args
+                command spack $sp_flags $sp_subcommand $__sp_subcommand_args $__sp_module_args $__sp_remaining_args
+                delete_sp_shared
+                return 0
+            end
 
 
             # Here the user has run use or unuse with a spec. Find a matching spec
