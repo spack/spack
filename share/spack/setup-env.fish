@@ -555,8 +555,8 @@ function spack -d "wrapper for the `spack` command"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
                     
                     # Note: if the subprocess in the if statement outputs to
-                    # stderr, we cannot redirect this later (I don't know why
-                    # at the moment) => HACK: capture stderr here and output if
+                    # stderr, we cannot redirect this later (this is a current
+                    # fish bug) => HACK: capture stderr here and output if
                     # $status is set to 1
                     if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args 2>&1)
                         # This is a strange behavior of `modulecmd fish load
@@ -577,10 +577,10 @@ function spack -d "wrapper for the `spack` command"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
 
                     # Note: if the subprocess in the if statement outputs to
-                    # stderr, we cannot redirect this later (I don't know why
-                    # at the moment) => HACK: capture stderr here and output if
+                    # stderr, we cannot redirect this later (this is a current
+                    # fish bug) => HACK: capture stderr here and output if
                     # $status is set to 1
-                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args)
+                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args 2>&1)
                         # This is a strange behavior of `modulecmd fish load
                         # $args`. In fish, `unload` returns a list of `set`
                         # imperatives rather than applying them outright. So

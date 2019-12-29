@@ -336,3 +336,13 @@ spt_fails spack -m load d
 spt_contains "usage: spack load " spack -m load -h
 spt_contains "usage: spack load " spack -m load -h d
 spt_contains "usage: spack load " spack -m load --help
+
+
+title 'Testing `spack unload`'
+spt_contains "module unload $b_module" spack -m unload b
+spt_fails spack -m unload -l
+spt_contains "module unload -l --arg $b_module" spack -m unload -l --arg b
+spt_fails spack -m unload d
+spt_contains "usage: spack unload " spack -m unload -h
+spt_contains "usage: spack unload " spack -m unload -h d
+spt_contains "usage: spack unload " spack -m unload --help
