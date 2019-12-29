@@ -742,7 +742,8 @@ def purge():
 
 
 def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False, batch=False):
+        url_dict, name, first_stage_function=None,
+        keep_stage=False, batch=False):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
