@@ -65,14 +65,6 @@ jobs:
 stages:
   - 'style checks'
   - 'unit tests + documentation'
-  - 'build tests'
-
-stages:
-  - 'flake8 + documentation'
-  - 'unit tests'
-  - 'build tests'
-  - name: 'unit tests - osx'
-    if: type IN (cron)
 
 
 #=============================================================================
