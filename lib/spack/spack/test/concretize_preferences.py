@@ -23,7 +23,6 @@ def concretize_scope(config, tmpdir):
     yield
 
     config.pop_scope()
-    spack.package_prefs.PackagePrefs.clear_caches()
     spack.repo.path._provider_index = None
 
 
@@ -60,7 +59,6 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.set('packages', conf, scope='concretize')
-    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 def assert_variant_values(spec, **variants):
@@ -204,7 +202,6 @@ all:
         spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
-        spack.package_prefs.PackagePrefs.clear_caches()
         spack.package_prefs.get_packages_config()
 
     def test_external_mpi(self):

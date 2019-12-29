@@ -403,8 +403,6 @@ env:
     mpileaks:
       version: [2.2]
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
@@ -423,8 +421,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -452,7 +448,6 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    spack.package_prefs.PackagePrefs.clear_caches()
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
@@ -483,9 +478,6 @@ env:
   specs:
   - mpileaks
 """
-
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -519,8 +511,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
