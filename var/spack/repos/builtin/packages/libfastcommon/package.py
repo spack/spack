@@ -25,8 +25,7 @@ class Libfastcommon(Package):
     version('1.0.39', sha256='72ca36f83f3453564ca09d2d0c31354b868cf52ef5a24cfb15e66d0e505c90ac')
 
     def install(self, spec, prefix):
-        make = Executable('sh make.sh')
-        install = Executable('sh make.sh install')
-        make()
-        install()
+        sh = which('sh')
+        sh('make.sh')
+        sh('make.sh', 'install')
         install_tree('.', prefix)
