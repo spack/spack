@@ -406,8 +406,8 @@ env:
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -431,8 +431,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -460,8 +460,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -490,8 +490,8 @@ packages:
     version: [0.8.11]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     # ensure included scope took effect
     assert any(
@@ -530,8 +530,8 @@ packages:
     version: [0.8.12]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(
         x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
