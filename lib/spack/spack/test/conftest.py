@@ -349,8 +349,6 @@ def configuration_dir(tmpdir_factory, linux_os):
 def config(configuration_dir):
     """Hooks the mock configuration files into spack.config"""
     # Set up a mock config scope
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     real_configuration = spack.config.config
 
     defaults = spack.config.InternalConfigScope(
@@ -367,14 +365,11 @@ def config(configuration_dir):
     yield spack.config.config
 
     spack.config.config = real_configuration
-    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 @pytest.fixture(scope='function')
 def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     """Like config, but tests can modify the configuration."""
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
@@ -388,8 +383,6 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     yield spack.config.config
-
-    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 @pytest.fixture()
