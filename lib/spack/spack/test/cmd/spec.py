@@ -9,7 +9,7 @@ import pytest
 import spack.spec
 from spack.main import SpackCommand
 
-pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 
 spec = SpackCommand('spec')
 
