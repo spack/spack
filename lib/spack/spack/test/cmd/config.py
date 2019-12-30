@@ -14,13 +14,13 @@ from spack.main import SpackCommand
 config = SpackCommand('config')
 
 
-def test_get_config_scope(mock_config):
+def test_get_config_scope(mock_low_high_config):
     assert config('get', 'compilers').strip() == 'compilers: {}'
 
 
-def test_get_config_scope_merged(mock_config):
-    low_path = mock_config.scopes['low'].path
-    high_path = mock_config.scopes['high'].path
+def test_get_config_scope_merged(mock_low_high_config):
+    low_path = mock_low_high_config.scopes['low'].path
+    high_path = mock_low_high_config.scopes['high'].path
 
     mkdirp(low_path)
     mkdirp(high_path)
