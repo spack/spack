@@ -50,6 +50,8 @@ class Timemory(CMakePackage):
     depends_on('caliper', when='+caliper')
     depends_on('gperftools', when='+gperftools')
 
+    conflicts('+cupti', when='~cuda', msg='CUPTI requires CUDA')
+
     def cmake_args(self):
         spec = self.spec
 
@@ -108,8 +110,7 @@ class Timemory(CMakePackage):
 
         if '+cuda' in spec:
             args.append('-DTIMEMORY_USE_CUDA=ON')
-        elif '+cupti' not in spec:
-            # CUPTI requires CUDA
+        else:
             args.append('-DTIMEMORY_USE_CUDA=OFF')
 
         if '+cupti' in spec:
