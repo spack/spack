@@ -52,6 +52,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to activate the environment")
+    shells.add_argument(
+        '--fish', action='store_const', dest='shell', const='fish',
+        help="print fish commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -127,6 +130,9 @@ def env_deactivate_setup_parser(subparser):
     shells.add_argument(
         '--csh', action='store_const', dest='shell', const='csh',
         help="print csh commands to deactivate the environment")
+    shells.add_argument(
+        '--fish', action='store_const', dest='shell', const='fish',
+        help="print fish commands to activate the environment")
 
 
 def env_deactivate(args):

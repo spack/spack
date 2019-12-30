@@ -171,7 +171,7 @@ end
 # Ensure that a variable is set.
 #
 function is_set
-    prinf "'$argv[1]' is set ... "
+    printf "'$argv[1]' is set ... "
 
     if test -z "$argv[1]"
         fail
@@ -187,7 +187,7 @@ end
 # Fails and prints the value of the variable if it is set.
 #
 function is_not_set
-    prinf "'$argv[1]' is not set ... "
+    printf "'$argv[1]' is not set ... "
 
     if test -n "$argv[1]"
         fail
@@ -359,3 +359,14 @@ spt_contains "No such environment:" spack env activate no_such_environment
 spt_contains "usage: spack env activate " spack env activate
 spt_contains "usage: spack env activate " spack env activate -h
 spt_contains "usage: spack env activate " spack env activate --help
+
+title 'Testing `spack env deactivate`'
+spt_contains "Error: No environment is currently active" spack env deactivate
+spt_contains "usage: spack env deactivate " spack env deactivate no_such_environment
+spt_contains "usage: spack env deactivate " spack env deactivate -h
+spt_contains "usage: spack env deactivate " spack env deactivate --help
+
+title 'Testing activate and deactivate together'
+echo "Testing 'spack env activate spack_test_env'"
+spack env activate spack_test_env
+is_set SPACK_ENV

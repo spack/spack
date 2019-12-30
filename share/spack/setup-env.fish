@@ -496,11 +496,11 @@ function spack -d "wrapper for the `spack` command"
                             command spack env activate $_a
                         else
                             # actual call to activate: source the output
-                            # eval (command spack $sp_flags env activate --sh $__sp_remaining_args)
-                            set -l sp_env_cmd "command spack $sp_flags env activate --sh $__sp_remaining_args"
+                            set -l sp_env_cmd "command spack $sp_flags env activate --fish $__sp_remaining_args"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            echo $__sp_stdout
-                            echo $__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                            # echo -s \n$__sp_stdout
+                            eval $__sp_stdout
+                            echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                         end
 
                     case "deactivate"
@@ -522,11 +522,11 @@ function spack -d "wrapper for the `spack` command"
                             command spack env deactivate -h
                         else
                             # no args: source the output of the command
-                            # eval (command spack $sp_flags env deactivate --sh)
-                            set -l sp_env_cmd "command spack $sp_flags env deactivate --sh"
+                            set -l sp_env_cmd "command spack $sp_flags env deactivate --fish"
                             capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
-                            echo $__sp_stdout
-                            echo $__sp_stderr 1>&2  # current fish bug: handle stderr manually
+                            # echo -s \n$__sp_stdout
+                            eval $__sp_stdout
+                            echo -s \n$__sp_stderr 1>&2  # current fish bug: handle stderr manually
                         end
 
                     case "*"
