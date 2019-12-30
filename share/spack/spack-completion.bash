@@ -1072,7 +1072,8 @@ function _spack_test {
     if $list_options
     then
         compgen -W "-h --help -H --pytest-help -l --list
-                    -L --long-list" -- "$cur"
+                    -L --list-long -N --list-names -s -k
+                    --showlocals" -- "$cur"
     else
         compgen -W "$(_tests)" -- "$cur"
     fi
