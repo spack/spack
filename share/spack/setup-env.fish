@@ -58,6 +58,9 @@ function allocate_sp_shared -d "allocate shared (global variables)"
     set -gx __sp_remaining_args
     set -gx __sp_subcommand_args
     set -gx __sp_module_args
+    set -gx __sp_stat
+    set -gx __sp_stdout
+    set -gx __sp_stderr
 end
 
 
@@ -66,6 +69,9 @@ function delete_sp_shared -d "deallocate shared (global variables)"
     set -e __sp_remaining_args
     set -e __sp_subcommand_args
     set -e __sp_module_args
+    set -e __sp_stat
+    set -e __sp_stdout
+    set -e __sp_stderr
 end
 
 
@@ -115,6 +121,32 @@ function shift_args -d "simulates bash shift"
         end
     end
 
+end
+
+
+
+
+#
+# CAPTURE_ALL: helper function used to capture stdout, stderr, and status
+#   -> CAPTURE_ALL: there is a bug in fish, that prevents stderr re-capture
+#                   from nested command substitution:
+#                   https://github.com/fish-shell/fish-shell/issues/6459
+#
+
+
+function capture_all
+    begin;
+        begin;
+            eval $argv[1]
+            set $argv[2] $status  # read sets the `status` flag => capture here
+        end 2>| read -z __err
+    end 1>| read -z __out
+
+    # output arrays
+    set $argv[3] (echo $__out | string split \n)
+    set $argv[4] (echo $__err | string split \n)
+
+    return 0
 end
 
 
@@ -464,7 +496,11 @@ function spack -d "wrapper for the `spack` command"
                             command spack env activate $_a
                         else
                             # actual call to activate: source the output
-                            eval (command spack $sp_flags env activate --sh $__sp_remaining_args)
+                            # eval (command spack $sp_flags env activate --sh $__sp_remaining_args)
+                            set -l sp_env_cmd "command spack $sp_flags env activate --sh $__sp_remaining_args"
+                            capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
+                            echo $__sp_stdout
+                            echo $__sp_stderr 1>&2  # current fish bug: handle stderr manually
                         end
 
                     case "deactivate"
@@ -486,7 +522,11 @@ function spack -d "wrapper for the `spack` command"
                             command spack env deactivate -h
                         else
                             # no args: source the output of the command
-                            eval (command spack $sp_flags env deactivate --sh)
+                            # eval (command spack $sp_flags env deactivate --sh)
+                            set -l sp_env_cmd "command spack $sp_flags env deactivate --sh"
+                            capture_all $sp_env_cmd __sp_stat __sp_stdout __sp_stderr
+                            echo $__sp_stdout
+                            echo $__sp_stderr 1>&2  # current fish bug: handle stderr manually
                         end
 
                     case "*"
@@ -553,34 +593,33 @@ function spack -d "wrapper for the `spack` command"
 
                 case "load"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
-                    
-                    # Note: if the subprocess in the if statement outputs to
-                    # stderr, we cannot redirect this later (this is a current
-                    # fish bug) => HACK: capture stderr here and output if
-                    # $status is set to 1
-                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args 2>&1)
+                    set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
+                    capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
+
+                    if test $__sp_stat -eq 0
+                        set sp_full_spec $__sp_stdout
+
                         # This is a strange behavior of `modulecmd fish load
-                        # $args`. In fish, `load` returns a list of `set`
+                        # $args`. In fish, `unload` returns a list of `set`
                         # imperatives rather than applying them outright. So
                         # what we'll do is to dump them into a `load_cmd` array
                         # and then evaluate the contents.
                         set load_cmd (module load $__sp_module_args $sp_full_spec)
                         eval $load_cmd
                     else
-                        # HERE: $sp_full_spec is the contents of stderr => output
-                        echo -s \n$sp_full_spec 1>&2
+                        echo -s \n$__sp_stderr 1>&2
                         delete_sp_shared
                         return 1
                     end
 
                 case "unload"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
+                    set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
+                    capture_all $sp_mod_cmd __sp_stat __sp_stdout __sp_stderr
 
-                    # Note: if the subprocess in the if statement outputs to
-                    # stderr, we cannot redirect this later (this is a current
-                    # fish bug) => HACK: capture stderr here and output if
-                    # $status is set to 1
-                    if set sp_full_spec (command spack $sp_flags module tcl find $tcl_args 2>&1)
+                    if test $__sp_stat -eq 0
+                        set sp_full_spec $__sp_stdout
+
                         # This is a strange behavior of `modulecmd fish load
                         # $args`. In fish, `unload` returns a list of `set`
                         # imperatives rather than applying them outright. So
@@ -589,8 +628,7 @@ function spack -d "wrapper for the `spack` command"
                         set unload_cmd (module unload $__sp_module_args $sp_full_spec)
                         eval $unload_cmd
                     else
-                        # HERE: $sp_full_spec is the contents of stderr => output
-                        echo -s \n$sp_full_spec 1>&2
+                        echo -s \n$__sp_stderr 1>&2
                         delete_sp_shared
                         return 1
                     end
@@ -707,6 +745,8 @@ set -xg SPACK_ROOT $sp_prefix
 # No need to determine which shell is being used (obviously it's fish)
 #
 set -xg SPACK_SHELL "fish"
+set -xg _sp_shell "fish"
+
 
 
 

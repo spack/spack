@@ -337,7 +337,6 @@ spt_contains "usage: spack load " spack -m load -h
 spt_contains "usage: spack load " spack -m load -h d
 spt_contains "usage: spack load " spack -m load --help
 
-
 title 'Testing `spack unload`'
 spt_contains "module unload $b_module" spack -m unload b
 spt_fails spack -m unload -l
@@ -346,3 +345,17 @@ spt_fails spack -m unload d
 spt_contains "usage: spack unload " spack -m unload -h
 spt_contains "usage: spack unload " spack -m unload -h d
 spt_contains "usage: spack unload " spack -m unload --help
+
+title 'Testing `spack env`'
+spt_contains "usage: spack env " spack env -h
+spt_contains "usage: spack env " spack env --help
+
+title 'Testing `spack env list`'
+spt_contains " spack env list " spack env list -h
+spt_contains " spack env list " spack env list --help
+
+title 'Testing `spack env activate`'
+spt_contains "No such environment:" spack env activate no_such_environment
+spt_contains "usage: spack env activate " spack env activate
+spt_contains "usage: spack env activate " spack env activate -h
+spt_contains "usage: spack env activate " spack env activate --help
