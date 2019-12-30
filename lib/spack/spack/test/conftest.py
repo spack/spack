@@ -430,7 +430,7 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
 
 
 @pytest.fixture()
-def mock_config(tmpdir):
+def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
     config = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
