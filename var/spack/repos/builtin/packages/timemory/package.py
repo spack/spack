@@ -30,7 +30,8 @@ class Timemory(CMakePackage):
     variant('gotcha', default=True, description='Enable GOTCHA support')
     variant('likwid', default=True, description='Enable LIKWID support')
     variant('caliper', default=True, description='Enable Caliper support')
-    variant('gperftools', default=True, description='Enable gperftools support')
+    variant('gperftools', default=True,
+            description='Enable gperftools support')
 
     depends_on('cmake@3.11:', type='build')
 
@@ -114,7 +115,6 @@ class Timemory(CMakePackage):
             args.append('-DTIMEMORY_USE_CUDA=OFF')
 
         if '+cupti' in spec:
-            args.append('-DTIMEMORY_USE_CUDA=ON')
             args.append('-DTIMEMORY_USE_CUPTI=ON')
         else:
             args.append('-DTIMEMORY_USE_CUPTI=OFF')
