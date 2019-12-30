@@ -118,7 +118,7 @@ def activate(
         use_env_repo (bool): use the packages exactly as they appear in the
             environment's repository
         add_view (bool): generate commands to add view to path variables
-        shell (string): One of `sh`, `csh`.
+        shell (string): One of `sh`, `csh`, `fish`.
         prompt (string): string to add to the users prompt, or None
 
     Returns:
@@ -189,7 +189,7 @@ def deactivate(shell='sh'):
     """Undo any configuration or repo settings modified by ``activate()``.
 
     Arguments:
-        shell (string): One of `sh`, `csh`. Shell style to use.
+        shell (string): One of `sh`, `csh`, `fish`. Shell style to use.
 
     Returns:
         (string): shell commands for `shell` to undo environment variables
