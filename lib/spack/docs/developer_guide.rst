@@ -363,11 +363,11 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-.. _cmd-spack-test:
-
 ^^^^^^^^^^^^^^
 ``spack test``
 ^^^^^^^^^^^^^^
+
+See the :ref:`contributor guide section <cmd-spack-test>` on ``spack test``.
 
 .. _cmd-spack-python:
 
