@@ -572,27 +572,6 @@ function spack -d "wrapper for the `spack` command"
 
             switch $sp_subcommand
 
-                #TODO: do we still need this?
-                case "use"
-                    set -l dotkit_args $__sp_subcommand_args $sp_spec
-                    if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                        use $__sp_module_args $sp_full_spec
-                    else
-                        delete_sp_shared
-                        return 1
-                    end
-
-
-                #TODO: do we still need this?
-                case "unuse"
-                    set -l dotkit_args $__sp_subcommand_args $sp_spec
-                    if set sp_full_spec (command spack $sp_flags module dotkit find $dotkit_args)
-                        unuse $__sp_module_args $sp_full_spec
-                    else
-                        delete_sp_shared
-                        return 1
-                    end
-
                 case "load"
                     set -l tcl_args $__sp_subcommand_args $sp_spec
                     set -l sp_mod_cmd "command spack $sp_flags module tcl find $tcl_args"
@@ -808,9 +787,6 @@ end
 #
 # set module system roots
 #
-#TODO: do we still need this?
-set -xg DK_NODE
-spack_pathadd DK_NODE "$_sp_dotkit_root/$_sp_sys_type"
 
 # Search of MODULESPATHS by trying all possible compatible system types as module roots.
 set -xg MODULEPATH
