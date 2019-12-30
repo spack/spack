@@ -173,7 +173,7 @@ end
 function is_set
     printf "'$argv[1]' is set ... "
 
-    if test -z "$argv[1]"
+    if test -z "$$argv[1]"
         fail
         echo_msg "'$argv[1]' was not set!"
     else
@@ -189,10 +189,10 @@ end
 function is_not_set
     printf "'$argv[1]' is not set ... "
 
-    if test -n "$argv[1]"
+    if test -n "$$argv[1]"
         fail
         echo_msg "'$argv[1]' was set!"
-        echo "    $argv[1]"
+        echo "    $$argv[1]"
     else
         pass
     end
@@ -370,3 +370,29 @@ title 'Testing activate and deactivate together'
 echo "Testing 'spack env activate spack_test_env'"
 spack env activate spack_test_env
 is_set SPACK_ENV
+
+echo "Testing 'spack env deactivate'"
+spack env deactivate
+is_not_set SPACK_ENV
+
+echo "Testing 'spack env activate spack_test_env'"
+spack env activate spack_test_env
+is_set SPACK_ENV
+
+echo "Testing 'despacktivate'"
+despacktivate
+is_not_set SPACK_ENV
+
+#
+# NOTE: `--prompt` on fish does nothing => currently not implemented.
+#
+
+echo "Testing 'spack env activate --prompt spack_test_env'"
+spack env activate --prompt spack_test_env
+is_set SPACK_ENV
+is_set SPACK_OLD_PS1
+
+echo "Testing 'despacktivate'"
+despacktivate
+is_not_set SPACK_ENV
+is_not_set SPACK_OLD_PS1
