@@ -18,7 +18,7 @@ class PyZarr(PythonPackage):
     depends_on('python@3.5:',           type=('build', 'run'))
     depends_on('py-asciitree',          type=('build', 'run'))
     depends_on('py-fasteners',          type=('build', 'run'))
-    depends_on('py-setuptools',         type='build')
+    depends_on('py-setuptools@38.6.0:', type='build')
     depends_on('py-numcodecs@0.6.4:',   type=('build', 'run'))
     depends_on('py-numpy@1.7:',         type=('build', 'run'))
 
