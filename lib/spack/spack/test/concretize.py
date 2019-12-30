@@ -276,7 +276,7 @@ class TestConcretize(object):
         Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(
-            self, mutable_mock_packages
+            self, mutable_mock_repo
     ):
         """Test a package with multiple virtual dependencies and one preset."""
         Spec('hypre ^openblas').concretize()
@@ -302,7 +302,7 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self, mock_config):
+    def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec('a %gcc@0.0.0')

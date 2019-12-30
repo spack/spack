@@ -75,7 +75,7 @@ def test_fetch(
         secure,
         checksum_type,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Fetch an archive and make sure we can checksum it."""
     mock_archive.url
