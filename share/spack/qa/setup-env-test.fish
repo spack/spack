@@ -387,12 +387,12 @@ is_not_set SPACK_ENV
 # NOTE: `--prompt` on fish does nothing => currently not implemented.
 #
 
-echo "Testing 'spack env activate --prompt spack_test_env'"
-spack env activate --prompt spack_test_env
-is_set SPACK_ENV
-is_set SPACK_OLD_PS1
-
-echo "Testing 'despacktivate'"
-despacktivate
-is_not_set SPACK_ENV
-is_not_set SPACK_OLD_PS1
+# echo "Testing 'spack env activate --prompt spack_test_env'"
+# spack env activate --prompt spack_test_env
+# is_set SPACK_ENV
+# is_set SPACK_OLD_PS1
+# 
+# echo "Testing 'despacktivate'"
+# despacktivate
+# is_not_set SPACK_ENV
+# is_not_set SPACK_OLD_PS1
