@@ -20,6 +20,6 @@ class PyZarr(PythonPackage):
     depends_on('py-fasteners',              type=('build', 'run'))
     depends_on('py-msgpack',                type=('build', 'run'))
     depends_on('py-setuptools@18.1:',     type='build')
-    depends_on('py-setuptools-scm@1.5.4:',  type='build')
+    depends_on('py-setuptools-scm@1.5.5:',  type='build')
     depends_on('py-numcodecs@0.6.2:',       type=('build', 'run'))
     depends_on('py-numpy@1.7:',             type=('build', 'run'))
