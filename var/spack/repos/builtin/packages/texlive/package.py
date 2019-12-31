@@ -18,7 +18,7 @@ class Texlive(AutotoolsPackage):
     around the world."""
 
     homepage = "http://www.tug.org/texlive"
-    url='http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2019/texlive-20190410-source.tar.xz'
+    url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/2019/texlive-20190410-source.tar.xz'
     base_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive/{year}/texlive-{version}-{dist}.tar.xz'
     list_url = 'http://ftp.math.utah.edu/pub/tex/historic/systems/texlive'
     list_depth = 1
@@ -109,7 +109,8 @@ class Texlive(AutotoolsPackage):
     build_directory = 'spack-build'
 
     def tex_arch(self):
-        tex_arch = '{0}-{1}'.format(platform.machine(), platform.system().lower())
+        tex_arch = '{0}-{1}'.format(platform.machine(),
+                                    platform.system().lower())
         return tex_arch
 
     @when('@2019:')
@@ -151,12 +152,16 @@ class Texlive(AutotoolsPackage):
             with working_dir('spack-build'):
                 make('texlinks')
 
-            copy_tree('texlive-{0}-texmf'.format(self.version.string), self.prefix)
+            copy_tree('texlive-{0}-texmf'.format(self.version.string),
+                      self.prefix)
 
             # Create and run setup utilities
-            fmtutil_sys = Executable(join_path(self.prefix.bin, self.tex_arch(), 'fmtutil-sys'))
-            mktexlsr = Executable(join_path(self.prefix.bin, self.tex_arch(), 'mktexlsr'))
-            mtxrun = Executable(join_path(self.prefix.bin, self.tex_arch(), 'mtxrun'))
+            fmtutil_sys = Executable(join_path(self.prefix.bin,
+                                               self.tex_arch(), 'fmtutil-sys'))
+            mktexlsr = Executable(join_path(self.prefix.bin, self.tex_arch(),
+                                            'mktexlsr'))
+            mtxrun = Executable(join_path(self.prefix.bin, self.tex_arch(),
+                                          'mtxrun'))
             mktexlsr()
             fmtutil_sys('--all')
             mtxrun('--generate')
