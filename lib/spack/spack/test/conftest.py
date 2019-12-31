@@ -363,23 +363,16 @@ def configuration_dir(tmpdir_factory, linux_os):
     """
     tmpdir = tmpdir_factory.mktemp('configurations')
 
-    # Name of the yaml files in the test/data folder
-    test_path = py.path.local(spack.paths.test_path)
-    compilers_yaml = test_path.join('data', 'compilers.yaml')
-    packages_yaml = test_path.join('data', 'packages.yaml')
-    config_yaml = test_path.join('data', 'config.yaml')
-    repos_yaml = test_path.join('data', 'repos.yaml')
+    # <test_path>/data/config has mock config yaml files in it
+    # copy these to the site config.
+    test_config = py.path.local(spack.paths.test_path).join('data', 'config')
+    test_config.copy(tmpdir.join('site'))
 
-    # Create temporary 'site' and 'user' folders
-    tmpdir.ensure('site', dir=True)
+    # Create temporary 'defaults', 'site' and 'user' folders
     tmpdir.ensure('user', dir=True)
 
-    # Copy the configurations that don't need further work
-    packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
-    config_yaml.copy(tmpdir.join('site', 'config.yaml'))
-    repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
-
-    # Write the one that needs modifications
+    # Slightly modify compilers.yaml to look like Linux
+    compilers_yaml = test_config.join('compilers.yaml')
     content = ''.join(compilers_yaml.read()).format(linux_os)
     t = tmpdir.join('site', 'compilers.yaml')
     t.write(content)
