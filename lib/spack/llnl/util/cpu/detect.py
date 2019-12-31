@@ -101,13 +101,21 @@ def sysctl_info_dict():
             ['sysctl'] + list(args), env=child_environment
         ).strip()
 
-    flags = (sysctl('-n', 'machdep.cpu.features').lower() + ' '
-             + sysctl('-n', 'machdep.cpu.leaf7_features').lower())
+    # get all the sysctl info we need in one call
+    output = sysctl('-n',
+                    'machdep.cpu.vendor',
+                    'machdep.cpu.features',
+                    'machdep.cpu.leaf7_features',
+                    'machdep.cpu.model',
+                    'machdep.cpu.brand_string')
+    lines = [line.strip() for line in re.split(r"\n", output)]
+
+    # put the info into a dictionary
     info = {
-        'vendor_id': sysctl('-n', 'machdep.cpu.vendor'),
-        'flags': flags,
-        'model': sysctl('-n', 'machdep.cpu.model'),
-        'model name': sysctl('-n', 'machdep.cpu.brand_string')
+        'vendor_id': lines[0],
+        'flags': "%s %s" % (lines[1].lower(), lines[2].lower()),
+        'model': lines[3],
+        'model name': lines[4],
     }
     return info
 
@@ -148,19 +156,27 @@ def raw_info_dictionary():
     This function calls all the viable factories one after the other until
     there's one that is able to produce the requested information.
     """
-    info = {}
-    for factory in info_factory[platform.system()]:
-        try:
-            info = factory()
-        except Exception as e:
-            warnings.warn(str(e))
+    # memoize result as an attribute on this function
+    fn = raw_info_dictionary
 
-        if info:
-            adjust_raw_flags(info)
-            adjust_raw_vendor(info)
-            break
+    if raw_info_dictionary.info is None:
+        fn.info = {}
+        for factory in info_factory[platform.system()]:
+            try:
+                fn.info = factory()
+            except Exception as e:
+                warnings.warn(str(e))
 
-    return info
+            if fn.info:
+                adjust_raw_flags(fn.info)
+                adjust_raw_vendor(fn.info)
+                break
+
+    return fn.info
+
+
+#: memoized result of raw_info_dictionary
+raw_info_dictionary.info = None
 
 
 def compatible_microarchitectures(info):
