@@ -15,11 +15,12 @@ class PyZarr(PythonPackage):
 
     version('2.3.2', sha256='c62d0158fb287151c978904935a177b3d2d318dea3057cfbeac8541915dfa105')
 
-    depends_on('python@3.5:',               type=('build', 'run'))
     depends_on('py-asciitree',              type=('build', 'run'))
     depends_on('py-fasteners',              type=('build', 'run'))
     depends_on('py-msgpack',                type=('build', 'run'))
-    depends_on('py-setuptools@18.1:',     type='build')
+    depends_on('py-setuptools@18.1:',       type='build')
     depends_on('py-setuptools-scm@1.5.5:',  type='build')
     depends_on('py-numcodecs@0.6.2:',       type=('build', 'run'))
     depends_on('py-numpy@1.7:',             type=('build', 'run'))
+    depends_on('py-scandir',     type=('build', 'run'), when='^python@:3.4')
+    depends_on('py-pyosreplace', type=('build', 'run'), when='^python@:3.2')
