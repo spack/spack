@@ -4,8 +4,8 @@ coverage:
   range: 60...90
   status:
     project:
-      default: yes
-      threshold: 0.3
+      default:
+        threshold: 0.3%
 
 ignore:
   - lib/spack/spack/test/.*
