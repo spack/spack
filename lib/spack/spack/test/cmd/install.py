@@ -676,7 +676,7 @@ def test_install_help_cdash(capsys):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, capfd):
+def test_cdash_auth_token(tmpdir, install_mockery, capfd):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
