@@ -44,8 +44,72 @@ COPY lib   /spack/lib
 COPY share /spack/share
 COPY var   /spack/var
 
-RUN /spack/share/spack/docker/run-bootstrap.sh \
- && /spack/bin/spack clean -a \
+RUN . /spack/share/spack/setup-env.sh \
+ && if [ -z "$SPACK_SYS" ] ; then \
+      eval "$( spack --print-shell-vars sh )" \
+  ;   SPACK_SYS="$( echo $_sp_compatible_sys_types | sed 's/.*://g' )" \
+  ; fi \
+ && mkdir -p /etc/spack $HOME/.spack \
+ && ( echo '---' \
+ &&   echo 'config:' \
+ &&   echo '  build_stage: /spack/stage' \
+ &&   echo '  source_cache: /spack/cache' \
+ &&   echo '  install_tree: /spack/sw' \
+ &&   echo '  module_roots:' \
+ &&   echo '    tcl: /spack/modules' ) > /etc/spack/config.yaml \
+ && ( echo '---' \
+ &&   echo 'modules:' \
+ &&   echo '  tcl:' \
+  ;   scheme='{name}/{version}-{compiler.name}{compiler.version}' \
+ &&   echo '    naming_scheme: "'$scheme'"' \
+ &&   echo '    hash_length: 4' \
+ &&   echo '    all:' \
+ &&   echo '      conflict:' \
+ &&   echo '        - "{name}"' ) > /etc/spack/modules.yaml \
+ && ( echo '---' \
+ &&   echo 'config:' \
+ &&   echo '  install_tree: /spack-prebootstrap/sw' \
+ &&   echo '  module_roots:' \
+ &&   echo '    tcl: /spack-prebootstrap/modules' ) > $HOME/.spack/config.yaml \
+ && spack repo add --scope user /spack/share/spack/docker/bootstrap-repo \
+ && spack bootstrap \
+ && spack module tcl refresh --yes-to-all \
+ && spack install --only dependencies spack-bootstrap@1 "arch=$SPACK_SYS" \
+ && spack view --dependencies no symlink /usr/local tar xz \
+ && spack install --only dependencies spack-bootstrap@2 "arch=$SPACK_SYS" \
+ && spack view --dependencies no symlink /usr/local gzip patch sed unzip \
+ && ( echo '---' \
+ &&   echo 'config:' \
+ &&   echo '  install_tree: /spack-bootstrap/sw' \
+ &&   echo '  module_roots:' \
+ &&   echo '    tcl: /spack-bootstrap/modules' ) > $HOME/.spack/config.yaml \
+ && spack install --only dependencies spack-bootstrap@3 "arch=$SPACK_SYS" \
+ && spack view --dependencies no symlink /usr/local gcc \
+ && spack compiler find \
+ && ( echo '---' \
+ &&   echo 'upstreams:' \
+ &&   echo '  spack-bootstrap:' \
+ &&   echo '    install_tree: /spack-bootstrap/sw' \
+ &&   echo '    modules:' \
+ &&   echo '      tcl: /spack-bootstrap/modules' ) > /etc/spack/upstreams.yaml \
+ && spack install --only dependencies spack-bootstrap@4 "arch=$SPACK_SYS" \
+ && spack view --dependencies no symlink /usr/local git \
+ && spack install --only dependencies spack-bootstrap@5 "arch=$SPACK_SYS" \
+ && spack view --dependencies no symlink /usr/local \
+        binutils \
+        bzip2 \
+        coreutils \
+        curl \
+        diffutils \
+        file \
+        gmake \
+        gnupg \
+        nano \
+        patchelf \
+        python \
+        py-boto3 \
+        py-pip \
+ && spack clean -a \
  && rm -rf /spack/cache /spack/var/spack/cache
 
 FROM base
