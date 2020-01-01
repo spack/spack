@@ -74,7 +74,7 @@ class Concretizer(object):
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
             if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
+                raise spack.error.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.

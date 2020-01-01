@@ -10,6 +10,7 @@ import shutil
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 from spack.package import InstallError, PackageBase, PackageStillNeededError
+import spack.error
 import spack.patch
 import spack.repo
 import spack.store
@@ -136,7 +137,7 @@ def test_installed_dependency_request_conflicts(
     dependency_hash = dependency.dag_hash()
     dependent = Spec(
         'conflicting-dependent ^/' + dependency_hash)
-    with pytest.raises(spack.spec.UnsatisfiableSpecError):
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
         dependent.concretize()
 
 

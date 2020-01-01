@@ -17,9 +17,10 @@ from spack.parse import Token
 from spack.spec import Spec
 from spack.spec import SpecParseError, RedundantSpecError
 from spack.spec import AmbiguousHashError, InvalidHashError, NoSuchHashError
-from spack.spec import DuplicateArchitectureError, DuplicateVariantError
+from spack.spec import DuplicateArchitectureError
 from spack.spec import DuplicateDependencyError, DuplicateCompilerSpecError
 from spack.spec import SpecFilenameError, NoSuchSpecFileError
+from spack.variant import DuplicateVariantError
 
 
 # Sample output for a complex lexing.
