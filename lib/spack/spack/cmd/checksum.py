@@ -30,7 +30,7 @@ def setup_parser(subparser):
         help="don't clean up staging area when command completes")
     subparser.add_argument(
         '-y', '--yes', action='store_true',
-        help='non-interacitve mode')
+        help='non-interactive mode')
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
         help='versions to generate checksums for')
