@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Mpc(AutotoolsPackage):
+class Mpc(AutotoolsPackage, GNUMirrorPackage):
     """Gnu Mpc is a C library for the arithmetic of complex numbers
        with arbitrarily high precision and correct rounding of the
        result."""
 
     homepage = "http://www.multiprecision.org"
-    url      = "https://ftpmirror.gnu.org/mpc/mpc-1.1.0.tar.gz"
+    gnu_mirror_path = "mpc/mpc-1.1.0.tar.gz"
     list_url = "http://www.multiprecision.org/mpc/download.html"
 
     version('1.1.0', sha256='6985c538143c1208dcb1ac42cedad6ff52e267b47e5f970183a3e75125b43c2e')
@@ -24,14 +24,6 @@ class Mpc(AutotoolsPackage):
     depends_on('gmp@5.0.0:', when='@1.1.0:')
     depends_on('mpfr@2.4.2:')
     depends_on('mpfr@3.0.0:', when='@1.1.0:')
-
-    def url_for_version(self, version):
-        if version < Version("1.0.1"):
-            url = "http://www.multiprecision.org/mpc/download/mpc-{0}.tar.gz"
-        else:
-            url = "https://ftpmirror.gnu.org/mpc/mpc-{0}.tar.gz"
-
-        return url.format(version)
 
     def configure_args(self):
         spec = self.spec

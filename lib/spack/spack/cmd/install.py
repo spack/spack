@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import argparse
 import os
 import shutil
 import sys
+import textwrap
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -246,7 +247,13 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
 def install(parser, args, **kwargs):
     if args.help_cdash:
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=textwrap.dedent('''\
+environment variables:
+  SPACK_CDASH_AUTH_TOKEN
+                        authentication token to present to CDash
+                        '''))
         add_cdash_args(parser, True)
         parser.print_help()
         return
@@ -259,9 +266,14 @@ def install(parser, args, **kwargs):
             if not args.only_concrete:
                 concretized_specs = env.concretize()
                 ev.display_specs(concretized_specs)
-                env.write()
+
+                # save view regeneration for later, so that we only do it
+                # once, as it can be slow.
+                env.write(regenerate_views=False)
+
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
+            env.regenerate_views()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")

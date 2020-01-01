@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Gperf(AutotoolsPackage):
+class Gperf(AutotoolsPackage, GNUMirrorPackage):
     """GNU gperf is a perfect hash function generator. For a given
     list of strings, it produces a hash function and hash table, in
     form of C or C++ code, for looking up a value depending on the
@@ -15,7 +15,7 @@ class Gperf(AutotoolsPackage):
     single string comparison only."""
 
     homepage = "https://www.gnu.org/software/gperf/"
-    url      = "https://ftpmirror.gnu.org/gperf/gperf-3.0.4.tar.gz"
+    gnu_mirror_path = "gperf/gperf-3.0.4.tar.gz"
 
     version('3.0.4', sha256='767112a204407e62dbc3106647cf839ed544f3cf5d0f0523aaa2508623aad63e')
 

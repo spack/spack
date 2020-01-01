@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,8 @@ class ActsCore(CMakePackage):
     maintainers = ['HadrienG2']
 
     version('develop', branch='master')
+    version('0.13.0', commit='b33f7270ddbbb33050b7ec60b4fa255dc2bfdc88')
+    version('0.12.1', commit='a8b3d36e7c6cb86487637589e0eff7bbe626054a')
     version('0.12.0', commit='f9cda77299606d78c889fb1db2576c1971a271c4')
     version('0.11.1', commit='c21196cd6c3ecc6da0f14d0a9ef227a274be584b')
     version('0.11.0', commit='22bcea1f19adb0021ca61b843b95cfd2462dd31d')

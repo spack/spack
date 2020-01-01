@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,6 @@ def concretize_scope(config, tmpdir):
     yield
 
     config.pop_scope()
-    spack.package_prefs.PackagePrefs.clear_caches()
     spack.repo.path._provider_index = None
 
 
@@ -60,7 +59,6 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.set('packages', conf, scope='concretize')
-    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 def assert_variant_values(spec, **variants):
@@ -85,7 +83,7 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_compilers(self, mutable_mock_packages):
+    def test_preferred_compilers(self, mutable_mock_repo):
         """Test preferred compilers are applied correctly
         """
         update_packages('mpileaks', 'compiler', ['clang@3.3'])
@@ -96,7 +94,7 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
-    def test_preferred_target(self, mutable_mock_packages):
+    def test_preferred_target(self, mutable_mock_repo):
         """Test preferred compilers are applied correctly
         """
         spec = concretize('mpich')
@@ -204,7 +202,6 @@ all:
         spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
-        spack.package_prefs.PackagePrefs.clear_caches()
         spack.package_prefs.get_packages_config()
 
     def test_external_mpi(self):

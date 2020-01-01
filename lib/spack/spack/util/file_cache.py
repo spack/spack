@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,7 +107,8 @@ class FileCache(object):
 
         """
         return ReadTransaction(
-            self._get_lock(key), lambda: open(self.cache_path(key)))
+            self._get_lock(key), acquire=lambda: open(self.cache_path(key))
+        )
 
     def write_transaction(self, key):
         """Get a write transaction on a file cache item.
@@ -117,6 +118,10 @@ class FileCache(object):
         moves the file into place on top of the old file atomically.
 
         """
+        # TODO: this nested context manager adds a lot of complexity and
+        # TODO: is pretty hard to reason about in llnl.util.lock. At some
+        # TODO: point we should just replace it with functions and simplify
+        # TODO: the locking code.
         class WriteContextManager(object):
 
             def __enter__(cm):  # noqa
@@ -142,7 +147,8 @@ class FileCache(object):
                 else:
                     os.rename(cm.tmp_filename, cm.orig_filename)
 
-        return WriteTransaction(self._get_lock(key), WriteContextManager)
+        return WriteTransaction(
+            self._get_lock(key), acquire=WriteContextManager)
 
     def mtime(self, key):
         """Return modification time of cache file, or 0 if it does not exist.
