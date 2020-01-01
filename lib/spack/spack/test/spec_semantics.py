@@ -6,11 +6,11 @@
 import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError, SpecError
-from spack.spec import substitute_abstract_variants
-from spack.spec import SpecFormatSigilError, SpecFormatStringError
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
 from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
+from spack.variant import substitute_abstract_variants
 
 import spack.architecture
 import spack.directives
