@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -917,10 +917,8 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path):
-        real_path = os.path.realpath(path)
-        if not os.path.exists(real_path):
-            os.unlink(path)
+    if os.path.islink(path) and not os.path.exists(path):
+        os.unlink(path)
 
 
 def remove_linked_tree(path):

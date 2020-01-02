@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -94,6 +94,10 @@ def current_host(request, monkeypatch):
     # preferred target via packages.yaml
     cpu, _, is_preference = request.param.partition('-')
     target = llnl.util.cpu.targets[cpu]
+
+    # this function is memoized, so clear its state for testing
+    spack.architecture.get_platform.cache.clear()
+
     if not is_preference:
         monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
@@ -103,6 +107,9 @@ def current_host(request, monkeypatch):
         PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
+
+    # clear any test values fetched
+    spack.architecture.get_platform.cache.clear()
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -269,7 +276,7 @@ class TestConcretize(object):
         Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(
-            self, mutable_mock_packages
+            self, mutable_mock_repo
     ):
         """Test a package with multiple virtual dependencies and one preset."""
         Spec('hypre ^openblas').concretize()
@@ -295,7 +302,7 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self, mock_config):
+    def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec('a %gcc@0.0.0')

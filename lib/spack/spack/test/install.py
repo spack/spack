@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -128,7 +128,7 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
 
 
 def test_installed_dependency_request_conflicts(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
@@ -141,7 +141,7 @@ def test_installed_dependency_request_conflicts(
 
 
 def test_install_dependency_symlinks_pkg(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     """Test dependency flattening/symlinks mock package."""
     spec = Spec('flatten-deps')
     spec.concretize()
@@ -154,7 +154,7 @@ def test_install_dependency_symlinks_pkg(
 
 
 def test_flatten_deps(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     """Explicitly test the flattening code for coverage purposes."""
     # Unfortunately, executing the 'flatten-deps' spec's installation does
     # not affect code coverage results, so be explicit here.
