@@ -342,7 +342,11 @@ def get_module(module_type, spec, get_full_path, required=True):
         The module name or path. May return ``None`` if the module is not
         available.
     """
-    if spec.package.installed_upstream:
+    try:
+        upstream = spec.package.installed_upstream
+    except spack.repo.UnknownPackageError:
+        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    if upstream:
         module = (spack.modules.common.upstream_module_index
                   .upstream_module(spec, module_type))
         if not module:
