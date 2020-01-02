@@ -25,12 +25,17 @@ class Otf2(AutotoolsPackage):
     version('1.2.1', sha256='1db9fb0789de4a9c3c96042495e4212a22cb581f734a1593813adaf84f2288e4')
 
     def configure_args(self):
+        ld = spack.paths.build_env_path
+        cc = os.path.join(ld, self.compiler.link_paths['cc'])
+        cxx = os.path.join(ld, self.compiler.link_paths['cxx'])
+        f77 = os.path.join(ld, self.compiler.link_paths['f77'])
+        fc = os.path.join(ld, self.compiler.link_paths['fc'])
         return [
             '--enable-shared',
-            'CC={0}'.format(spack_cc),
-            'CXX={0}'.format(spack_cxx),
-            'F77={0}'.format(spack_f77),
-            'FC={0}'.format(spack_fc),
+            'CC={0}'.format(cc),
+            'CXX={0}'.format(cxx),
+            'F77={0}'.format(f77),
+            'FC={0}'.format(fc),
             'CFLAGS={0}'.format(self.compiler.pic_flag),
             'CXXFLAGS={0}'.format(self.compiler.pic_flag)
         ]
