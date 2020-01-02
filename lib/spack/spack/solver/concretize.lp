@@ -143,45 +143,46 @@ arch_target_set(D, A) :- node(D), depends_on(P, D), arch_target_set(P, A).
 %-----------------------------------------------------------------------------
 
 % one compiler per node
-{ node_compiler(P, C) : node_compiler(P, C) } = 1 :- node(P).
-{ node_compiler_version(P, C, V) :
-  node_compiler_version(P, C, V) } = 1            :- node(P).
+1 { node_compiler(P, C) : compiler(C) } 1 :- node(P).
+1 { node_compiler_version(P, C, V) : compiler_version(C, V) } 1 :- node(P).
+1 { compiler_weight(P, N) : compiler_weight(P, N) } 1 :- node(P).
 
-% compiler fields are set if set to anything
-node_compiler_set(P) :- node_compiler_set(P, _).
-node_compiler_version_set(P, C) :- node_compiler_version_set(P, C, _).
+% dependencies imply we should try to match hard compiler constraints
+% todo: look at what to do about intersecting constraints here. we'd
+% ideally go with the "lowest" pref in the DAG
+node_compiler_match_pref(P, C) :- node_compiler_hard(P, C).
+node_compiler_match_pref(D, C)
+    :- depends_on(P, D), node_compiler_match_pref(P, C),
+       not node_compiler_hard(D, _).
+compiler_match(P, 1) :- node_compiler(P, C), node_compiler_match_pref(P, C).
 
-% avoid warnings: these are set by generated code and it's ok if they're not
-#defined node_compiler_set/2.
-#defined node_compiler_version_set/3.
+node_compiler_version_match_pref(P, C, V)
+    :- node_compiler_version_hard(P, C, V).
+node_compiler_version_match_pref(D, C, V)
+    :- depends_on(P, D), node_compiler_version_match_pref(P, C, V),
+       not node_compiler_version_hard(D, C, _).
+compiler_version_match(P, 1)
+    :- node_compiler_version(P, C, V),
+       node_compiler_version_match_pref(P, C, V).
 
-% if compiler value of node is set to anything, it's the value.
-node_compiler(P, C)
-  :- node(P), compiler(C), node_compiler_set(P, C).
-node_compiler_version(P, C, V)
-  :- node(P), compiler(C), compiler_version(C, V), node_compiler(P, C),
-     node_compiler_version_set(P, C, V).
+#defined node_compiler_hard/2.
+#defined node_compiler_version_hard/3.
 
-% node compiler versions can only be from the available compiler versions
-:- node(P), compiler(C), node_compiler(P, C), node_compiler_version(P, C, V),
-   not compiler_version(C, V).
+% compilers weighted by preference acccording to packages.yaml
+compiler_weight(P, N)
+    :- node_compiler(P, C), node_compiler_version(P, C, V),
+       node_compiler_preference(P, C, V, N).
+compiler_weight(P, N)
+    :- node_compiler(P, C), node_compiler_version(P, C, V),
+       not node_compiler_preference(P, C, _, _),
+       default_compiler_preference(C, V, N).
+compiler_weight(P, 100)
+    :- node_compiler(P, C), node_compiler_version(P, C, V),
+       not node_compiler_preference(P, C, _, _),
+       not default_compiler_preference(C, _, _).
 
-% if no compiler is set, fall back to default.
-node_compiler(P, C)
-  :- node(P), compiler(C), not node_compiler_set(P),
-     node_compiler_default(P, C).
-node_compiler_version(P, C, V)
-  :- node(P), compiler(C), compiler_version(C, V),
-     not node_compiler_version_set(P, C, V),
-     node_compiler_default_version(P, C, V).
-
-% propagate compiler, compiler version to dependencies
-node_compiler_set(D, C)
-  :- node(D), compiler(C), depends_on(P, D), node_compiler_set(P, C).
-node_compiler_version_set(D, C, V)
-  :- node(D), compiler(C), depends_on(P, D), node_compiler(D, C),
-     node_compiler_version_set(P, C, V).
-
+#defined node_compiler_preference/4.
+#defined default_compiler_preference/3.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
@@ -206,11 +207,15 @@ node_compiler_version_set(D, C, V)
 root(D, 2) :- root(D), node(D).
 root(D, 1) :- not root(D), node(D).
 
+% prefer default variants
+#minimize { N*R@5,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
+
+% prefer more recent versions.
+#minimize{ N@4,P,V : version_weight(P, V, N) }.
+
 % pick most preferred virtual providers
 #minimize{ N*R@3,D : provider_weight(D, N), root(P, R) }.
 
-% prefer default variants
-#minimize { N*R@2,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
-
-% prefer more recent versions.
-#minimize{ N@1,P,V : version_weight(P, V, N) }.
+% compiler preferences
+#maximize{ N@2,P : compiler_match(P, N) }.
+#minimize{ N@1,P : compiler_weight(P, N) }.
