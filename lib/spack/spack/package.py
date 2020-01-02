@@ -1262,7 +1262,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise spack.error.SpackError(err_msg)
 
         hash_content = list()
-        source_id = fs.for_package_version(self, self.version).source_id()
+        source_id = False
+        try:
+            source_id = fs.for_package_version(self, self.version).source_id()
+        except spack.fetch_strategy.ExtrapolationError:
+            pass
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
             # should this attempt to download the source and set one? This
