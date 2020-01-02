@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1072,7 +1072,8 @@ function _spack_test {
     if $list_options
     then
         compgen -W "-h --help -H --pytest-help -l --list
-                    -L --long-list" -- "$cur"
+                    -L --list-long -N --list-names -s -k
+                    --showlocals" -- "$cur"
     else
         compgen -W "$(_tests)" -- "$cur"
     fi

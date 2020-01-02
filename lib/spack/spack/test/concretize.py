@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,9 @@ import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
+from spack.error import SpecError
 from spack.package_prefs import PackagePrefs
-from spack.spec import Spec, CompilerSpec
-from spack.spec import ConflictsInSpecError, SpecError
+from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.compilers

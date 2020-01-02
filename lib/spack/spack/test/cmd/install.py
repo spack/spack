@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -673,3 +673,17 @@ def test_install_help_cdash(capsys):
     install_cmd = SpackCommand('install')
     out = install_cmd('--help-cdash')
     assert 'CDash URL' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with tmpdir.as_cwd():
+        with capfd.disabled():
+            os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
+            out = install(
+                '-v',
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'a')
+            assert 'Using CDash auth token from environment' in out

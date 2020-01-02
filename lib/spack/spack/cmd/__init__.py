@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,13 +19,13 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
+import spack.error
 import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
 import spack.util.string
-from spack.error import SpackError
 
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -150,15 +150,15 @@ def parse_specs(args, **kwargs):
     except spack.spec.SpecParseError as e:
         msg = e.message + "\n" + str(e.string) + "\n"
         msg += (e.pos + 2) * " " + "^"
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
-    except spack.spec.SpecError as e:
+    except spack.error.SpecError as e:
 
         msg = e.message
         if e.long_message:
             msg += e.long_message
 
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
 
 def elide_list(line_list, max_num=10):
