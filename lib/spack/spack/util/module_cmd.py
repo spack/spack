@@ -9,6 +9,7 @@ parsing environment modules.
 """
 import subprocess
 import os
+import sys
 import json
 import re
 
@@ -31,7 +32,7 @@ def module(*args):
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        module_cmd += ' >/dev/null; python -c %s' % py_cmd
+        module_cmd += ' >/dev/null;' + sys.executable + ' -c %s' % py_cmd
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,
