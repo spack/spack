@@ -28,6 +28,6 @@ class Ftgl(CMakePackage):
     patch('remove-ftlibrary-from-sources.diff', when='@:2.4.0')
 
     def cmake_args(self):
-        args = ['-DBUILD_SHARED_LIBS={0}'.format(
-                    self.spec.satisfies('+shared'))]
+        spec = self.spec
+        args = ['-DBUILD_SHARED_LIBS={0}'.format(spec.satisfies('+shared'))]
         return args
