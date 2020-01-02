@@ -12,12 +12,11 @@ class Bref3(Package):
 
     homepage = "http://faculty.washington.edu/browning/beagle/beagle.html"
 
-    version('25Nov19', sha256='969c0881050c4a48d19be9ea64bf49fa68c1403b69f9f739bbfd865dda639b2d', 
-            expand=False, url='http://faculty.washington.edu/browning/beagle/bref3.25Nov19.28d.jar',
-            preferred=True)
-    version('12Jul19', sha256='8a9c3b6c38e36ef4c05a61108f083005fd985026c67d75a8173088f88816a202',
+    version('2019-11-25', sha256='969c0881050c4a48d19be9ea64bf49fa68c1403b69f9f739bbfd865dda639b2d', 
+            expand=False, url='http://faculty.washington.edu/browning/beagle/bref3.25Nov19.28d.jar')
+    version('2019-07-12', sha256='8a9c3b6c38e36ef4c05a61108f083005fd985026c67d75a8173088f88816a202',
             expand=False, url='https://faculty.washington.edu/browning/beagle/bref3.12Jul19.0df.jar')
-    version('27Jan18', sha256='4d32f0b6d536c88d5332d961309466c8c3dd9572907a3755450d26d7ba841083',
+    version('2018-01-27', sha256='4d32f0b6d536c88d5332d961309466c8c3dd9572907a3755450d26d7ba841083',
             expand=False, url='https://faculty.washington.edu/browning/beagle/bref.27Jan18.7e1.jar')
     depends_on('java@8', type='run')
 
@@ -28,12 +27,11 @@ class Bref3(Package):
 
         # Set up a helper script to call java on the jar file,
         # explicitly codes the path for java and the jar file.
-        versions_bref3 = ['25Nov19', '12Jul19']
-        versions_bref  = ['27Jan18']
-        if str(self.version) in versions_bref:
-            script = prefix.bin.bref
-        elif str(self.version) in versions_bref3:
+
+        if self.version >= Version('2019'):
             script = prefix.bin.bref3
+        else:
+            script = prefix.bin.bref
 
         script_sh = join_path(os.path.dirname(__file__), "bref.sh")
         install(script_sh, script)
