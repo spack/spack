@@ -288,9 +288,9 @@ end
 
 
 
-function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, or --csh"
+function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, or --csh
+    # Check if inputs contain -h, --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -315,6 +315,12 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
         if echo $_a | string match -r -q " *--csh *"
             return 0
         end
+
+        # looks for a single `--fish` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--fish *"
+            return 0
+        end
+
     end
 
     return 1
@@ -322,9 +328,9 @@ end
 
 
 
-function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, or --csh"
+function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
     #
-    # Check if inputs contain -h, --sh, or --csh
+    # Check if inputs contain -h, --sh, --csh, or --fish
     #
 
     # combine argument array into single string (space seperated), to be passed
@@ -345,6 +351,12 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
         if echo $_a | string match -r -q " *--csh *"
             return 0
         end
+
+        # looks for a single `--fish` (possibly surrounded by spaces)
+        if echo $_a | string match -r -q " *--fish *"
+            return 0
+        end
+
     end
 
     return 1

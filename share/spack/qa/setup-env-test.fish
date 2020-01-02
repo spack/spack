@@ -385,7 +385,7 @@ is_not_set SPACK_ENV
 # spack env activate --prompt spack_test_env
 # is_set SPACK_ENV
 # is_set SPACK_OLD_PS1
-# 
+#
 # echo "Testing 'despacktivate'"
 # despacktivate
 # is_not_set SPACK_ENV
