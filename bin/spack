@@ -61,6 +61,8 @@ if 'ruamel' in sys.modules:
 
 import spack.main  # noqa
 
+spack.repo.reload_path()
+
 # Once we've set up the system path, run the spack main method
 if __name__ == "__main__":
     sys.exit(spack.main.main())

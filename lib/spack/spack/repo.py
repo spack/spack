@@ -1198,6 +1198,11 @@ def _path():
 path = llnl.util.lang.Singleton(_path)
 
 
+def reload_path():
+    global path
+    path = _path()
+
+
 def get(spec):
     """Convenience wrapper around ``spack.repo.get()``."""
     return path.get(spec)
