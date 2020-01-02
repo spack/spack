@@ -666,7 +666,7 @@ end
 
 
 
-function sp_multi_pathadd -d "Helper for adding module-style paths by incorporating compatible systems into pathadd"
+function sp_multi_pathadd -d "Helper for adding module-style paths by incorporating compatible systems into pathadd" --inherit-variable _sp_compatible_sys_types
     #
     # Calls spack_pathadd in path inputs, adding all compatible system types
     # (sourced from $_sp_compatible_sys_types) to input paths.
@@ -755,7 +755,7 @@ else
 end
 
 if test "$need_module" = "yes"
-    function module -d "wrapper for the `module` command to point at Spack's modules instance"
+    function module -d "wrapper for the `module` command to point at Spack's modules instance" --inherit-variable MODULE_PREFIX
         eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
     end
 end
