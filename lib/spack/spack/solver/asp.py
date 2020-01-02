@@ -141,6 +141,7 @@ class AspGenerator(object):
         self.func = AspFunctionBuilder()
         self.possible_versions = {}
         self.possible_virtuals = None
+        self.possible_compilers = []
 
     def title(self, name, char):
         self.out.write('\n')
@@ -260,7 +261,7 @@ class AspGenerator(object):
             return [self.one_of(*predicates)]
         return []
 
-    def compiler_defaults(self):
+    def available_compilers(self):
         """Facts about available compilers."""
         compilers = spack.compilers.all_compiler_specs()
 
@@ -276,28 +277,44 @@ class AspGenerator(object):
                     for v in sorted(compiler_versions[compiler])),
                 fn.compiler(compiler))
 
-    def package_compiler_defaults(self, pkg):
-        """Add facts about the default compiler.
+    def compilers_for_default_arch(self):
+        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        return [
+            compiler.spec
+            for compiler in spack.compilers.compilers_for_arch(default_arch)
+        ]
 
-        TODO: integrate full set of preferences into the solve (this only
-        TODO: considers the top preference)
-        """
-        # get list of all compilers
-        compiler_list = spack.compilers.all_compiler_specs()
-        if not compiler_list:
-            raise spack.compilers.NoCompilersError()
+    def compiler_defaults(self):
+        """Set compiler defaults, given a list of possible compilers."""
+        self.h2("Default compiler preferences")
 
-        # prefer package preferences, then latest version
-        ppk = spack.package_prefs.PackagePrefs(pkg.name, 'compiler')
+        compiler_list = self.possible_compilers.copy()
         compiler_list = sorted(
             compiler_list, key=lambda x: (x.name, x.version), reverse=True)
-        compiler_list = sorted(compiler_list, key=ppk)
+        ppk = spack.package_prefs.PackagePrefs("all", 'compiler', all=False)
+        matches = sorted(compiler_list, key=ppk)
 
-        # write out default rules for this package's compilers
-        default_compiler = compiler_list[0]
-        self.fact(fn.node_compiler_default(pkg.name, default_compiler.name))
-        self.fact(fn.node_compiler_default_version(
-            pkg.name, default_compiler.name, default_compiler.version))
+        for i, cspec in enumerate(matches):
+            f = fn.default_compiler_preference(cspec.name, cspec.version, i)
+            self.fact(f)
+
+    def package_compiler_defaults(self, pkg):
+        """Facts about packages' compiler prefs."""
+
+        packages = spack.config.get("packages")
+        pkg_prefs = packages.get(pkg)
+        if not pkg_prefs or "compiler" not in pkg_prefs:
+            return
+
+        compiler_list = self.possible_compilers.copy()
+        compiler_list = sorted(
+            compiler_list, key=lambda x: (x.name, x.version), reverse=True)
+        ppk = spack.package_prefs.PackagePrefs(pkg.name, 'compiler', all=False)
+        matches = sorted(compiler_list, key=ppk)
+
+        for i, cspec in enumerate(matches):
+            self.fact(fn.node_compiler_preference(
+                pkg.name, cspec.name, cspec.version, i))
 
     def pkg_rules(self, pkg):
         pkg = packagize(pkg)
@@ -422,8 +439,8 @@ class AspGenerator(object):
             arch_os = fn.arch_os_set
             arch_target = fn.arch_target_set
             variant = fn.variant_set
-            node_compiler = fn.node_compiler_set
-            node_compiler_version = fn.node_compiler_version_set
+            node_compiler = fn.node_compiler
+            node_compiler_version = fn.node_compiler_version
 
         class Body(object):
             node = fn.node
@@ -464,9 +481,27 @@ class AspGenerator(object):
         # compiler and compiler version
         if spec.compiler:
             clauses.append(f.node_compiler(spec.name, spec.compiler.name))
+            clauses.append(
+                fn.node_compiler_hard(spec.name, spec.compiler.name))
+
             if spec.compiler.concrete:
                 clauses.append(f.node_compiler_version(
                     spec.name, spec.compiler.name, spec.compiler.version))
+
+            elif spec.compiler.versions:
+                compiler_list = spack.compilers.all_compiler_specs()
+                possible_compiler_versions = [
+                    f.node_compiler_version(
+                        spec.name, spec.compiler.name, compiler.version
+                    )
+                    for compiler in compiler_list
+                    if compiler.satisfies(spec.compiler)
+                ]
+                clauses.append(self.one_of(*possible_compiler_versions))
+                for version in possible_compiler_versions:
+                    clauses.append(
+                        fn.node_compiler_version_hard(
+                            spec.name, spec.compiler.name, version))
 
         # TODO
         # external_path
@@ -525,11 +560,18 @@ class AspGenerator(object):
         for name in pkg_names:
             pkg = spack.repo.path.get_pkg_class(name)
             possible.update(
-                pkg.possible_dependencies(virtuals=self.possible_virtuals)
+                pkg.possible_dependencies(
+                    virtuals=self.possible_virtuals,
+                    deptype=("build", "link", "run")
+                )
             )
 
         pkgs = set(possible) | set(pkg_names)
 
+        # get possible compilers
+        self.possible_compilers = self.compilers_for_default_arch()
+
+        # read the main ASP program from concrtize.lp
         concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
         self.out.write(concretize_lp.decode("utf-8"))
 
@@ -537,6 +579,7 @@ class AspGenerator(object):
         self.build_version_dict(possible, specs)
 
         self.h1('General Constraints')
+        self.available_compilers()
         self.compiler_defaults()
         self.arch_defaults()
         self.virtual_providers()
@@ -628,10 +671,13 @@ class ResultParser(object):
                     for s in args]
             functions.append((name, args))
 
-        # Functions don't seem to be in particular order in output.
-        # Sort them here so that nodes are first, and so created
-        # before directives that need them (depends_on(), etc.)
-        functions.sort(key=lambda f: f[0] != "node")
+        # Functions don't seem to be in particular order in output.  Sort
+        # them here so that directives that build objects (like node and
+        # node_compiler) are called in the right order.
+        functions.sort(key=lambda f: {
+            "node": -2,
+            "node_compiler": -1,
+        }.get(f[0], 0))
 
         self._specs = {}
         for name, args in functions:
@@ -639,6 +685,7 @@ class ResultParser(object):
             if not action:
                 print("%s(%s)" % (name, ", ".join(str(a) for a in args)))
                 continue
+
             assert action and callable(action)
             action(*args)
 

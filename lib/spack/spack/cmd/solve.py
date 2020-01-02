@@ -16,7 +16,6 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.package
 import spack.solver.asp as asp
-from spack.util.string import plural
 
 description = "concretize a specs using an ASP solver"
 section = 'developer'
