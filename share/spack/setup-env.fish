@@ -754,8 +754,10 @@ else
 
 end
 
-function module -d "wrapper for the `module` command to point at Spack's modules instance"
-    eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+if test "$need_module" = "yes"
+    function module -d "wrapper for the `module` command to point at Spack's modules instance"
+        eval $MODULE_PREFIX/bin/modulecmd $SPACK_SHELL $argv
+    end
 end
 
 
