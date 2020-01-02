@@ -157,6 +157,18 @@ def compiler_info(args):
 
 def compiler_list(args):
     tty.msg("Available compilers")
+
+    # If no compilers are known, do not look for them
+    #     The default behavior of `spack.compilers.all_compilers`
+    #     is to search for compilers if none are known
+    if not spack.config.get('compilers', scope=args.scope):
+        msg = "No compilers found"
+        if args.scope:
+            msg += " in scope '{0:s}'".format(args.scope)
+        tty.msg(msg)
+        tty.msg("Try using 'spack compiler find' to add some")
+        return
+
     index = index_by(spack.compilers.all_compilers(scope=args.scope),
                      lambda c: (c.spec.name, c.operating_system, c.target))
     ordered_sections = sorted(index.items(), key=lambda item: item[0])
