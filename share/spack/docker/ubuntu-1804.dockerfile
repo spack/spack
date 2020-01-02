@@ -114,7 +114,15 @@ RUN ln -s /spack-bootstrap/sw/*/*/file*/bin/file /usr/bin/file \
       xz \
  && /opt/spack/bin/spack view --dependencies no symlink /usr/local gcc \
  && chown -R spack:spack /spack \
- && rm -rf /usr/bin/file /usr/bin/python /root/*.* /root/.spack
+ && rm -rf /usr/bin/file \
+           /usr/bin/python \
+           /root/*.* \
+           /root/.spack \
+\
+           # Need to remove the symlinked libintl.  Otherwise, the builds for
+           # some packages with optional NLS support get terribly confused on
+           # when & how to enable gettext().
+           /usr/local/lib/libintl.*
 
 SHELL ["docker-shell"]
 
