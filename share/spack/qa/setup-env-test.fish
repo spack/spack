@@ -12,12 +12,6 @@
 # in any of these shells.
 #
 
-#################################################################################
-# This file is part of Spack's fish (friendly interactive shell) support
-# Ported from bash (setup-env-test.sh) by Johannes Blaschke,
-#                                      johannes@blaschke.science
-#################################################################################
-
 
 function allocate_testing_global -d "allocate global variables used for testing"
 

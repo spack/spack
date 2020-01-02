@@ -5,14 +5,6 @@
 
 
 #################################################################################
-# This file is part of Spack's fish (friendly interactive shell) support
-# Ported from bash (setup-env.sh) by Johannes Blaschke,
-#                                    johannes@blaschke.science
-#################################################################################
-
-
-
-#################################################################################
 #
 # This file is part of Spack and sets up the spack environment for the friendly
 # interactive shell (fish). This includes dotkit support, module support, and it
@@ -216,6 +208,7 @@ function get_mod_args -d "return submodule flags"
 
         if echo $elt | string match -r -q "^-"
 
+            # Notes: [2] (cf. EOF)
             if test "x$elt" = "x-r"
                 set __sp_subcommand_args $__sp_subcommand_args $elt
             else if test "x$elt" = "x--dependencies"
@@ -253,10 +246,7 @@ function check_sp_flags -d "check spack flags for h/V flags"
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
-    # skip if called with blank input
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
         if echo $_a | string match -r -q ".*h.*"
             return 0
@@ -280,10 +270,7 @@ function contains_help_flags -d "checks for help (-h/--help) flags"
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
-    # skip if called with blank input
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
         # looks for a single `-h` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *-h *"
@@ -310,21 +297,20 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
-    # skip if called with blank input
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
         # looks for a single `-h` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *-h *"
             return 0
         end
 
+        # TODO: should this crash (we're clearly using fish, not bash, here)?
         # looks for a single `--sh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--sh *"
             return 0
         end
 
+        # TODO: should this crash (we're clearly using fish, not csh, here)?
         # looks for a single `--csh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--csh *"
             return 0
@@ -345,16 +331,16 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # to regular expression matching (`string match -r`)
     set -l _a "$argv"
 
-    # skip if called with blank input
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
+
+        # TODO: should this crash (we're clearly using fish, not csh, here)?
         # looks for a single `--sh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--sh *"
             return 0
         end
 
+        # TODO: should this crash (we're clearly using fish, not csh, here)?
         # looks for a single `--csh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--csh *"
             return 0
@@ -436,16 +422,13 @@ function spack -d "wrapper for the `spack` command"
 
             set -l sp_arg ""
 
-            # Extract the first subcommand argument:
-            # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-            #    undefined, or if it is an array, `test -n $argv` is
-            #    unpredictable. Instead, encapsulate `argv` in a string, and test
-            #    the string.
+            # Extract the first subcommand argument. Notes: [1] (cf. EOF)
             if test -n "$__sp_remaining_args[1]"
                 set sp_arg $__sp_remaining_args[1]
                 set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
             end
 
+            # Notes: [2] (cf. EOF)
             if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack cd -h
@@ -473,16 +456,13 @@ function spack -d "wrapper for the `spack` command"
 
             set -l sp_arg ""
 
-            # Extract the first subcommand argument:
-            # -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-            #    undefined, or if it is an array, `test -n $argv` is
-            #    unpredictable. Instead, encapsulate `argv` in a string, and test
-            #    the string.
+            # Extract the first subcommand argument.  Notes: [1] (cf. EOF)
             if test -n "$__sp_remaining_args[1]"
                 set sp_arg $__sp_remaining_args[1]
                 set __sp_remaining_args (shift_args $__sp_remaining_args) # simulates bash shift
             end
 
+            # Notes: [2] (cf. EOF)
             if test "x$sp_arg" = "x-h" || test "x$sp_arg" = "x--help"
                 # nothing more needs to be done for `-h` or `--help`
                 command spack env -h
@@ -508,17 +488,14 @@ function spack -d "wrapper for the `spack` command"
                         set -l _a (stream_args $__sp_remaining_args)
 
                         if check_env_deactivate_flags $_a
-                            # just  execute the command if --sh or --csh are provided
+                            # just  execute the command if --sh, --csh, or --fish are provided
                             command spack env deactivate $_a
 
                         # Test of further (unparsed arguments). Any other
                         # arguments are an error or help, so just run help
                         # -> TODO: This should throw and error but leave as is
                         #    for compatibility with setup-env.sh
-                        # -> bit of a hack: test -n requires exactly 1 argument.
-                        #    If `argv` is undefined, or if it is an array,
-                        #    `test -n $argv` is unpredictable. Instead,
-                        #    encapsulate `argv` in a string, and test the string.
+                        # -> Notes: [1] (cf. EOF).
                         else if test -n "$__sp_remaining_args"
                             command spack env deactivate -h
                         else
@@ -533,7 +510,8 @@ function spack -d "wrapper for the `spack` command"
 
                     case "*"
                         # if $__sp_remaining_args is empty, then don't include it
-                        # as argument (it can be passed as a blank string input!)
+                        # as argument (otherwise it will be confused as a blank
+                        # string input!)
                         if test -n "$__sp_remaining_args"
                             command spack env $sp_arg $__sp_remaining_args
                         else
@@ -543,12 +521,12 @@ function spack -d "wrapper for the `spack` command"
             end
 
 
-        # CASE: spack subcommand is either `use`, `unuse`, `load`, or `unload`.
+        # CASE: spack subcommand is either `load`, or `unload`.
         # These statements deal with the technical details of actually using
         # modules. Especially to deal with the substituting latest version
         # numbers to the module command.
 
-        case "use" or "unuse" or "load" or "unload"
+        case "load" or "unload"
 
             # Shift any other args for use off before parsing spec.
             set __sp_subcommand_args          # sets: __sp_remaining_args
@@ -580,15 +558,13 @@ function spack -d "wrapper for the `spack` command"
                     if test $__sp_stat -eq 0
                         set sp_full_spec $__sp_stdout
 
-                        # This is a strange behavior of `modulecmd fish load
-                        # $args`. In fish, `unload` returns a list of `set`
-                        # imperatives rather than applying them outright. So
-                        # what we'll do is to dump them into a `load_cmd` array
-                        # and then evaluate the contents.
+                        # Notes: [3] (cf. EOF).
                         set load_cmd (module load $__sp_module_args $sp_full_spec)
                         eval $load_cmd
                     else
-                        echo -s \n$__sp_stderr 1>&2
+                        if test -n "$__sp_stderr"
+                            echo -s \n$__sp_stderr 1>&2
+                        end
                         delete_sp_shared
                         return 1
                     end
@@ -601,15 +577,13 @@ function spack -d "wrapper for the `spack` command"
                     if test $__sp_stat -eq 0
                         set sp_full_spec $__sp_stdout
 
-                        # This is a strange behavior of `modulecmd fish load
-                        # $args`. In fish, `unload` returns a list of `set`
-                        # imperatives rather than applying them outright. So
-                        # what we'll do is to dump them into a `load_cmd` array
-                        # and then evaluate the contents.
+                        # Notes: [3] (cf. EOF).
                         set unload_cmd (module unload $__sp_module_args $sp_full_spec)
                         eval $unload_cmd
                     else
-                        echo -s \n$__sp_stderr 1>&2
+                        if test -n "$__sp_stderr"
+                            echo -s \n$__sp_stderr 1>&2
+                        end
                         delete_sp_shared
                         return 1
                     end
@@ -644,17 +618,12 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
 
     # If no variable name is supplied, just append to PATH otherwise append to
     # that variable.
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    #  -> Notes: [1] (cf. EOF).
     if test -n "$argv[2]"
         set pa_varname $argv[1]
         set pa_new_path $argv[2]
     else
-        true # this is a bit of a strange hack! when the test in the if
-             # statement fails, the `status` flag is set to 1. `true` resets
-             # this. since `set` passes `status` along, we thus avoid the
-             # function returning 1 by mistake.
+        true # this is a bit of a strange hack! Notes: [4] (cf EOF).
         set pa_varname fish_user_paths
         set pa_new_path $argv[1]
     end
@@ -662,9 +631,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
     set pa_oldvalue $$pa_varname
 
     # skip path is not existing directory
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string instead.
+    #  -> Notes: [1] (cf. EOF).
     if test -d "$pa_new_path"
 
         # combine argument array into single string (space seperated), to be
@@ -678,10 +645,7 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
             if test -n "$pa_oldvalue"
                 set $pa_varname $pa_new_path $pa_oldvalue
             else
-                true # this is a bit of a strange hack! when the test in the if
-                     # statement fails, the `status` flag is set to 1. `true`
-                     # resets this. since `set` passes `status` along, we thus
-                     # avoid the function returning 1 by mistake.
+                true # this is a bit of a strange hack! Notes: [4] (cf. EOF)
                 set $pa_varname $pa_new_path
             end
         end
@@ -788,6 +752,29 @@ end
 # set module system roots
 #
 
-# Search of MODULESPATHS by trying all possible compatible system types as module roots.
+# Search of MODULESPATHS by trying all possible compatible system types as
+# module roots.
 set -xg MODULEPATH
 sp_multi_pathadd MODULEPATH $_sp_tcl_roots
+
+
+
+#
+# NOTES
+#
+# [1]: `test -n` requires exactly 1 argument. If `argv` is undefined, or if it
+#      is an array, `test -n $argv` is unpredictable. Instead, encapsulate
+#      `argv` in a string, and test the string.
+#
+# [2]: `test "$a" = "$b$` is dangerous if `a` and `b` contain flags at index 1,
+#      as `test $a` can be interpreted as `test $a[1] $a[2..-1]`. Solution is to
+#      prepend a non-flag character, eg: `test "x$a" = "x$b"`.
+#
+# [3]: This is a strange behavior of `modulecmd fish load $args`. In fish,
+#      `unload` returns a list of `set` imperatives rather than applying them
+#      outright. So what we'll do is to dump them into a `load_cmd` array
+#      and then evaluate the contents.
+#
+# [4]: When the test in the if statement fails, the `status` flag is set to 1.
+#      `true` here manuallt resets the value of `status` to 0. Since `set`
+#      passes `status` along, we thus avoid the function returning 1 by mistake.
