@@ -19,6 +19,8 @@ class Timemory(CMakePackage):
     version('develop', branch='develop', submodules=True)
     version('3.0.0', commit='b36b1673b2c6b7ff3126d8261bef0f8f176c7beb',
             submodules=True)
+    version('3.0.1', commit='ef638e1cde90275ce7c0e12fc4902c27bcbdeefd',
+            submodules=True)
 
     variant('python', default=True, description='Enable Python support')
     variant('mpi', default=False, description='Enable MPI support')
