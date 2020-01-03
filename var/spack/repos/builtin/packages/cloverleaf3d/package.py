@@ -17,7 +17,7 @@ class Cloverleaf3d(MakefilePackage):
     """
 
     homepage = "http://uk-mac.github.io/CloverLeaf3D/"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/CloverLeaf3D/CloverLeaf3D-1.0.tar.gz"
+    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/CloverLeaf3D-1.0.tar.gz"
 
     tags = ['proxy-app']
 
