@@ -174,6 +174,70 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
+    def define_from_variant(self, variant, cmake_var=None):
+        """Return a configure command line argument from the current spec.
+
+        The resulting argument will correctly convert boolean values to OFF/ON
+        and multi-valued variants to CMake semicolon-separated lists.
+
+        If the CMake variable is not specified, it defaults to the uppercase
+        transformation of the variant..
+
+        This utility function is similar to
+        :py:meth:`~.AutotoolsPackage.with_or_without`.
+
+        Examples:
+
+            Given a package with:
+
+            .. code-block:: python
+
+                variant('cxxstd', default='11', values=('11', '14'),
+                        multi=False, description='')
+                variant('shared', default=True, description='')
+                variant('swr', values=any_combination_of('avx', 'avx2'),
+                        description='')
+
+            calling this function like:
+
+            .. code-block:: python
+
+                [define_from_variant('shared', 'BUILD_SHARED_LIBS'),
+                 define_from_variant('cxxstd', 'CMAKE_CXX_STANDARD'),
+                 define_from_variant('swr')]
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                ["-DBUILD_SHARED_LIBS:BOOL=ON",
+                 "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DSWR:STRING=avx;avx2]
+
+            for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+        """
+        spec = self.spec
+
+        if variant not in self.variants:
+            raise KeyError(
+                '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+
+        if cmake_var is None:
+            cmake_var = variant.upper()
+
+        # Create a list of pairs. Each pair includes a configuration
+        # option and whether or not that option is activated
+        value = spec.variants[variant].value
+        if isinstance(value, bool):
+            kind = 'BOOL'
+            value = "ON" if value else "OFF"
+        else:
+            kind = 'STRING'
+            if isinstance(value, (list, tuple)):
+                value = ";".join(value)
+
+        return "".join(["-D", cmake_var, ":", kind, "=", value])
+
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
         compiler flags to cmake. Note CMAKE does not have a cppflags option,
