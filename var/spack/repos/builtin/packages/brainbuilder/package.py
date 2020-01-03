@@ -37,4 +37,4 @@ class Brainbuilder(PythonPackage):
     depends_on('py-tqdm@4.0:', type='run')
 
     depends_on('py-bluepy@0.12.5:', type='run')
-    depends_on('py-voxcell@2.6:', type='run')
+    depends_on('py-voxcell@2.6.2:', type='run')

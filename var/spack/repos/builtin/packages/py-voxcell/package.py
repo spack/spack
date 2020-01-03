@@ -13,6 +13,7 @@ class PyVoxcell(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/voxcell"
 
     version('develop', branch='master')
+    version('2.6.2', tag='voxcell-v2.6.2')
     version('2.6.1', tag='voxcell-v2.6.1')
     version('2.6.0', tag='voxcell-v2.6.0')
     version('2.5.6', tag='voxcell-v2.5.6')
