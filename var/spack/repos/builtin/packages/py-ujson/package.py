@@ -11,6 +11,8 @@ class PyUjson(PythonPackage):
        bindings."""
 
     homepage = "https://github.com/esnme/ultrajson"
-    url      = "https://github.com/esnme/ultrajson/archive/v1.35.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/16/c4/79f3409bc710559015464e5f49b9879430d8f87498ecdc335899732e5377/ujson-1.35.tar.gz"
 
-    version('1.35', sha256='1e7761583065873bed8466a3692fa5539d4f15bebc7af1c8fcc63d322a46804f')
+    version('1.35', sha256='f66073e5506e91d204ab0c614a148d5aa938bdbf104751be66f8ad7a222f5f86')
+
+    depends_on('py-setuptools', type='build')
