@@ -13,7 +13,7 @@ class Minixyce(MakefilePackage):
     """
 
     homepage = "https://mantevo.org"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniXyce/miniXyce_1.0.tar.gz"
+    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/miniXyce_1.0.tar.gz"
 
     tags = ['proxy-app']
 
