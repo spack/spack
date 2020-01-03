@@ -327,23 +327,19 @@ class AspGenerator(object):
 
         # variants
         for name, variant in sorted(pkg.variants.items()):
-            self.rule(fn.variant(pkg.name, name),
-                      fn.node(pkg.name))
+            self.fact(fn.variant(pkg.name, name))
 
             single_value = not variant.multi
             single = fn.variant_single_value(pkg.name, name)
             if single_value:
-                self.rule(single, fn.node(pkg.name))
-                self.rule(
-                    fn.variant_default_value(pkg.name, name, variant.default),
-                    fn.node(pkg.name))
+                self.fact(single)
+                self.fact(
+                    fn.variant_default_value(pkg.name, name, variant.default))
             else:
                 self.rule(self._not(single), fn.node(pkg.name))
                 defaults = variant.default.split(',')
                 for val in sorted(defaults):
-                    self.rule(
-                        fn.variant_default_value(pkg.name, name, val),
-                        fn.node(pkg.name))
+                    self.fact(fn.variant_default_value(pkg.name, name, val))
 
             values = variant.values
             if values is None:
