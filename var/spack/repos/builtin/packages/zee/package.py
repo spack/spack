@@ -32,6 +32,9 @@ class Zee(CMakePackage):
     variant('codechecks', default=False,
             description='Perform additional code checks like ' +
                         'formatting or static analysis')
+    variant('timemory', default=False,
+            description='Add timemory API for time/memory measurement')
+
     depends_on('boost')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
@@ -46,6 +49,7 @@ class Zee(CMakePackage):
 
     depends_on('metis+int64')
     depends_on('petsc +int64', when='+petsc')
+    depends_on('timemory', when='+timemory')
 
     def _bob_options(self):
         cmake_var_prefix = self.name.capitalize() + '_CXX_'
@@ -61,6 +65,8 @@ class Zee(CMakePackage):
             yield '-DPYTHON_EXECUTABLE:FILEPATH=' + self.spec['python'].command.path
             yield '-DZee_FORMATTING:BOOL=TRUE'
             yield '-DZee_TEST_FORMATTING:BOOL=TRUE'
+        if '+timemory' in self.spec:
+            yield '-DZee_USE_TIMEMORY:BOOL=ON'
 
     def cmake_args(self):
         return list(self._bob_options())
