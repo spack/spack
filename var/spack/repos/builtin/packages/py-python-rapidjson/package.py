@@ -14,6 +14,9 @@ class PyPythonRapidjson(PythonPackage):
 
     version('0.9.1', sha256='ad80bd7e4bb15d9705227630037a433e2e2a7982b54b51de2ebabdd1611394a1')
 
+    depends_on('python@3.4:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+
     depends_on('py-readme-renderer@24.0', type=('build', 'run'))
     depends_on('py-twine@1.13.0', type=('build', 'run'))
     depends_on('py-simplejson@3.16.0', type=('build', 'run'))
