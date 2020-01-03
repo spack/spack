@@ -210,11 +210,11 @@ root(D, 1) :- not root(D), node(D).
 % prefer default variants
 #minimize { N*R@5,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
 
-% prefer more recent versions.
-#minimize{ N@4,P,V : version_weight(P, V, N) }.
-
 % pick most preferred virtual providers
-#minimize{ N*R@3,D : provider_weight(D, N), root(P, R) }.
+#minimize{ N*R@4,D : provider_weight(D, N), root(P, R) }.
+
+% prefer more recent versions.
+#minimize{ N@3,P,V : version_weight(P, V, N) }.
 
 % compiler preferences
 #maximize{ N@2,P : compiler_match(P, N) }.

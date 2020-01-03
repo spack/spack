@@ -541,7 +541,7 @@ class AspGenerator(object):
         for vspec in sorted(self.possible_virtuals):
             self.fact(fn.virtual(vspec))
             for provider in sorted(spack.repo.path.providers_for(vspec)):
-                # TODO: handle versioned virtuals
+                # TODO: handle versioned and conditional virtuals
                 self.fact(fn.provides_virtual(provider.name, vspec))
 
     def generate_asp_program(self, specs):
