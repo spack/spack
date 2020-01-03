@@ -237,6 +237,9 @@ class Root(CMakePackage):
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
     conflicts('%gcc@5.0.0:', when='@:6.07.99')
 
+    # ROOT <6.14 was incompatible with Python 3.7+
+    conflicts('python@3.7:', when='@:6.13.99 +python')
+
     # See README.md
     conflicts('+http',
               msg='HTTP server currently unsupported due to dependency issues')
