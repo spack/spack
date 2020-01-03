@@ -73,13 +73,12 @@ def _id(thing):
 
 
 class AspFunction(AspObject):
-    def __init__(self, name):
+    def __init__(self, name, args=None):
         self.name = name
-        self.args = []
+        self.args = [] if args is None else args
 
     def __call__(self, *args):
-        self.args[:] = args
-        return self
+        return AspFunction(self.name, args)
 
     def __getitem___(self, *args):
         self.args[:] = args
@@ -88,6 +87,9 @@ class AspFunction(AspObject):
     def __str__(self):
         return "%s(%s)" % (
             self.name, ', '.join(_id(arg) for arg in self.args))
+
+    def __repr__(self):
+        return str(self)
 
 
 class AspAnd(AspObject):
@@ -394,6 +396,7 @@ class AspGenerator(object):
                             *self.spec_clauses(named_cond, body=True)
                         )
                     )
+            self.out.write('\n')
 
         # virtual preferences
         self.virtual_preferences(
