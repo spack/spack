@@ -181,3 +181,21 @@ class TestAutotoolsPackage(object):
         assert '--without-bar' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestCMakePackage(object):
+
+    def test_define_from_variant(self):
+        s = Spec('cmake-client multi=up,right ~truthy single=red')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        arg = pkg.define_from_variant('multi')
+        assert arg == '-DMULTI:STRING=right;up'
+
+        arg = pkg.define_from_variant('truthy', 'ENABLE_TRUTH')
+        assert arg == '-DENABLE_TRUTH:BOOL=OFF'
+
+        arg = pkg.define_from_variant('single')
+        assert arg == '-DSINGLE:STRING=red'
