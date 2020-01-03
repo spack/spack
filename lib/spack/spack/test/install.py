@@ -16,6 +16,7 @@ import spack.repo
 import spack.store
 from spack.spec import Spec
 from spack.package import _spack_build_envfile, _spack_build_logfile
+import spack.modules.common
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -39,6 +40,8 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
         with pytest.raises(spack.repo.UnknownPackageError):
             spec.package
 
+        module_path = spack.modules.common.get_module('tcl', spec, True)
+        assert module_path
         pkg.do_uninstall()
     except Exception:
         pkg.remove_prefix()
