@@ -33,9 +33,9 @@ depends_on(P, D, T) :- declared_dependency(P, D, T), not virtual(D), node(P).
 1 { depends_on(P, Q, T) : provides_virtual(Q, V) } 1
     :- declared_dependency(P, V, T), virtual(V), node(P).
 
-% for any virtual, there can only be one node providing it in the DAG
+% for any virtual, there can be at most one provider in the DAG
 provider(P, V) :- node(P), provides_virtual(P, V).
-1 { provider(P, V) : node(P) } 1 :- virtual(V).
+0 { provider(P, V) : node(P) } 1 :- virtual(V).
 
 % give dependents the virtuals they want
 provider_weight(D, N)
