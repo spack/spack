@@ -354,6 +354,10 @@ class AspGenerator(object):
                     union.update(s)
                 values = union
 
+            # make sure that every variant has at least one posisble value
+            if not values:
+                values = [variant.default]
+
             for value in sorted(values):
                 self.fact(fn.variant_possible_value(pkg.name, name, value))
 
