@@ -768,7 +768,6 @@ end
 
 # Search of MODULESPATHS by trying all possible compatible system types as
 # module roots.
-set -xg MODULEPATH
 sp_multi_pathadd MODULEPATH $_sp_tcl_roots
 
 
