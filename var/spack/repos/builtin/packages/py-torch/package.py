@@ -58,7 +58,8 @@ class PyTorch(PythonPackage, CudaPackage):
     version('1.1.0', tag='v1.1.0', submodules=True)
     version('1.0.1', tag='v1.0.1', submodules=True)
     version('1.0.0', tag='v1.0.0', submodules=True)
-    version('0.4.1', tag='v0.4.1', submodules=True)
+    version('0.4.1', tag='v0.4.1', submodules=True,
+            submodules_delete=['third_party/nervanagpu'])
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 

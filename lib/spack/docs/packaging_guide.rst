@@ -929,6 +929,9 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``submodules_delete``: An array of submodules to forcibly delete from the repository
+  after fetching. Useful if a version in the repository has submodules that
+  have disappeared/are no longer accessible.
 * ``get_full_repo``: Ensure the full git history is checked out with all remote
   branch information. Normally (``get_full_repo=False``, the default), the git
   option ``--depth 1`` will be used if the version of git and the specified
