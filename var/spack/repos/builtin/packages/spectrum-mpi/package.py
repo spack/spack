@@ -15,6 +15,26 @@ class SpectrumMpi(Package):
     def install(self, spec, prefix):
         raise InstallError('IBM MPI is not installable; it is vendor supplied')
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('MANPATH', os.path.join(self.prefix, 'share', 'man'))
+        env.prepend_path('LD_RUN_PATH', self.prefix.lib)
+        env.prepend_path(
+            'PKG_CONFIG_PATH', os.path.join(self.prefix, 'lib', 'pkgconfig'))
+
+        for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH']:
+            env.prepend_path(path, self.prefix.lib)
+            env.prepend_path(
+                path, os.path.join(self.prefix, 'lib', 'pami_port'))
+
+        env.prepend_path('LDFLAGS','-Wl,-rpath=' + self.prefix.lib)
+        env.prepend_path('OMPI_LDFLAGS', '-Wl,-rpath='+ self.prefix.lib)
+        env.prepend_path('OMPI_LDFLAGS', '-L' + self.prefix.lib)
+        env.prepend_path('OMPI_CPPFLAGS', '-I' + self.prefix.include)
+        env.prepend_path('OMPI_FCFLAGS', '-I{0} -I{1}'.format(
+            self.prefix.include, self.prefix.lib))
+
+
     def setup_dependent_package(self, module, dependent_spec):
         # get the compiler names
         if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
