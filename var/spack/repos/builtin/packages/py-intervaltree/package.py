@@ -16,3 +16,4 @@ class PyIntervaltree(PythonPackage):
 
     depends_on('py-sortedcontainers@2:3', type=('build', 'run'))
     depends_on('py-pytest', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
