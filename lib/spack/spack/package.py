@@ -2154,11 +2154,6 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
 
     See ``PackageBase.possible_dependencies`` for details.
     """
-    transitive = kwargs.get('transitive', True)
-    expand_virtuals = kwargs.get('expand_virtuals', True)
-    deptype = kwargs.get('deptype', 'all')
-    missing = kwargs.get('missing')
-
     packages = []
     for pos in pkg_or_spec:
         if isinstance(pos, PackageMeta):
@@ -2172,8 +2167,7 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
 
     visited = {}
     for pkg in packages:
-        pkg.possible_dependencies(
-            transitive, expand_virtuals, deptype, visited, missing)
+        pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
 
