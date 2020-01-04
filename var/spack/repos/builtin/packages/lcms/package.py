@@ -21,3 +21,7 @@ class Lcms(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('libtiff')
     depends_on('zlib')
+
+    @property
+    def libs(self):
+        return find_libraries('liblcms2', root=self.prefix, recursive=True)
