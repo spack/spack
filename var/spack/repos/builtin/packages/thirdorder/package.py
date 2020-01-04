@@ -32,7 +32,7 @@ class PyThirdorder(PythonPackage):
         sourcefile.filter('#include "spglib.*"', '#include "spglib.h"')
 
     def post_install(self, spec, prefix):
-        mkdirp(prefix.bin)        
+        mkdirp(prefix.bin)
         install('thirdorder_espresso.py', prefix.bin)
         install('thirdorder_vasp.py', prefix.bin)
         install('thirdorder_castep.py', prefix.bin)
