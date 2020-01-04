@@ -37,6 +37,7 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
+    variant('static', default=True, description='Build static libraries')
 
     variant(
         'threads', default='none',
@@ -89,6 +90,7 @@ class Openblas(MakefilePackage):
     patch('openblas_fujitsu.patch', when='%fj')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+    conflicts('~shared~static')
 
     @property
     def parallel(self):
@@ -189,6 +191,7 @@ class Openblas(MakefilePackage):
         # Add target and architecture flags
         make_defs += self._microarch_target_args(spec.target)
 
+        make_defs.append('NO_STATIC=' + '0' if '+static' in spec else '1')
         make_defs.append('NO_SHARED=' + '0' if '+shared' in spec else '1')
         if '~shared +pic' in self.spec:
             make_defs += ['CFLAGS=' + self.compiler.pic_flag,
