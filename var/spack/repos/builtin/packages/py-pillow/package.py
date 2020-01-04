@@ -80,9 +80,6 @@ class PyPillow(PythonPackage):
             library_dirs.extend(query.libs.directories)
             include_dirs.extend(query.headers.directories)
 
-        print('library_dirs:', library_dirs)
-        print('include_dirs:', include_dirs)
-
         setup = FileFilter('setup.py')
         setup.filter('library_dirs = []',
                      'library_dirs = {0}'.format(library_dirs), string=True)
@@ -94,13 +91,14 @@ class PyPillow(PythonPackage):
             able = 'enable' if '+' + variant in spec else 'disable'
             return '--{0}-{1}'.format(able, variant)
 
-        variants = [
-            'zlib', 'jpeg', 'tiff', 'freetype', 'lcms',
-            'webp', 'webpmux', 'jpeg2000'
-        ]
-        args = list(map(variant_to_flag, variants))
+        args = ['--enable-zlib', '--enable-jpeg']
+
+        variants = ['tiff', 'freetype', 'lcms', 'webp', 'webpmux', 'jpeg2000']
+        args.extend(list(map(variant_to_flag, variants)))
+
         # Spack does not (yet) support these modes of building
         args.append('--disable-imagequant')
+
         args.append('--rpath={0}'.format(':'.join(self.rpath)))
         return args
 
