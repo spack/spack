@@ -78,6 +78,10 @@ node(D) :- node(P), depends_on(P, D).
 1 { variant_value(P, V, X) : variant_possible_value(P, V, X) } 1
     :- node(P), variant(P, V), variant_single_value(P, V).
 
+% at least one variant value for multi-valued variants.
+1 { variant_value(P, V, X) : variant_possible_value(P, V, X) }
+    :- node(P), variant(P, V), not variant_single_value(P, V).
+
 % if a variant is set to anything, it is considered 'set'.
 variant_set(P, V) :- variant_set(P, V, _).
 
