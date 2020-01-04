@@ -7,7 +7,7 @@ import os
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
-import spack.architecture
+import llnl.util.tty as tty
 
 
 class Openblas(MakefilePackage):
@@ -33,41 +33,16 @@ class Openblas(MakefilePackage):
     version('0.2.16', sha256='766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b')
     version('0.2.15', sha256='73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044')
 
-    variant(
-        'shared',
-        default=True,
-        description='Build shared libraries as well as static libs.'
-    )
-    variant('ilp64', default=False, description='64 bit integers')
-    variant('pic', default=True, description='Build position independent code')
 
-    variant('cpu_target', default='auto',
-            description='Set CPU target architecture (leave empty for '
-                        'autodetection; GENERIC, SSE_GENERIC, NEHALEM, ...)')
+    variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
+    variant('pic', default=True, description='Build position independent code')
+    variant('shared', default=True, description='Build shared libraries')
 
     variant(
         'threads', default='none',
         description='Multithreading support',
         values=('pthreads', 'openmp', 'none'),
         multi=False
-    )
-
-    variant(
-        'virtual_machine',
-        default=False,
-        description="Adding options to build openblas on Linux virtual machine"
-    )
-
-    variant(
-        'avx2',
-        default=True,
-        description='Enable use of AVX2 instructions'
-    )
-
-    variant(
-        'avx512',
-        default=False,
-        description='Enable use of AVX512 instructions'
     )
 
     # virtual dependency
@@ -142,70 +117,98 @@ class Openblas(MakefilePackage):
                     'OpenBLAS @:0.2.19 does not support OpenMP with clang!'
                 )
 
+    @staticmethod
+    def _microarch_target_args(microarch):
+        # This function is constructed using output of compare-micros.py as of:
+        #   OpenBLAS v0.2.20-1615-gfd2ff271 (1/3/2020)
+        #   Spack    v0.13.2-700-gf7b9592eb (1/3/2020)
+        # and information in OpenBLAS' Makefile.system and Spack's
+        # microarchitectures.json
+
+        family = microarch.family
+        no_openblas = ['a64fx', 'i686', 'k10', 'mic_knl', 'nocona', 'pentium2',
+                       'pentium3', 'pentium4', 'power8le', 'power9le']
+        if microarch.name in no_openblas:
+            # Replace microarch with generic ancestor
+            tty.warn("Microarchitecture '{0}' is unknown to OpenBLAS; using "
+                     "generic '{1}'".format(microarch.name, family.name))
+            microarch = family
+
+        # Explicitly specify the *target* architecture
+        family_name = family.name
+        if family_name == 'aarch64':
+            family_name = 'arm64'
+
+        args = ['ARCH=' + family_name]
+        target = None
+        if microarch.vendor == 'generic':
+            args.append('DYNAMIC_ARCH=1')
+        elif microarch.name == 'skylake':
+            # Special case for disabling avx512 instructions
+            target = 'skylakex'
+            args.append('NO_AVX512=1')
+        else:
+            spack_to_openblas = {
+                'thunderx2': 'thunderx',
+                'skylake_avx512': 'skylakex',
+                'broadwell': 'haswell',
+                'westmere': 'nehalem',
+                'ivybridge': 'sandybridge',
+                'cannonlake': 'skylakex',
+                'cascadelake': 'skylakex',
+                'icelake': 'skylakex',
+                'zen2': 'zen'
+            }
+            target = spack_to_openblas.get(microarch.name, microarch.name)
+
+        if target is not None:
+            args.append('TARGET=' + target.upper())
+
+        return args
+
     @property
     def make_defs(self):
+        spec = self.spec
+
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
-
         make_defs = [
-            'CC={0}'.format(spack_cc),
-            'FC={0}'.format(spack_fc),
+            'CC=' + spack_cc,
+            'FC=' + spack_fc,
         ]
 
         # force OpenBLAS to use externally defined parallel build
-        if self.spec.version < Version('0.3'):
+        if spec.version < Version('0.3'):
             make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
         else:
             make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
-        if self.spec.variants['virtual_machine'].value:
-            make_defs += [
-                'DYNAMIC_ARCH=1',
-                'NUM_THREADS=64',  # OpenBLAS stores present no of CPUs as max
-            ]
+        # Add target and architecture flags
+        make_defs += self._microarch_target_args(spec.target)
 
-        if self.spec.variants['cpu_target'].value != 'auto':
-            make_defs += [
-                'TARGET={0}'.format(self.spec.variants['cpu_target'].value)
-            ]
-        # invoke make with the correct TARGET for aarch64
-        elif 'aarch64' in spack.architecture.sys_type():
-            make_defs += [
-                'TARGET=ARMV8'
-            ]
-        if self.spec.satisfies('%gcc@:4.8.4'):
-            make_defs += ['NO_AVX2=1']
-        if '~shared' in self.spec:
-            if '+pic' in self.spec:
-                make_defs.extend([
-                    'CFLAGS={0}'.format(self.compiler.pic_flag),
-                    'FFLAGS={0}'.format(self.compiler.pic_flag)
-                ])
-            make_defs += ['NO_SHARED=1']
+        make_defs.append('NO_SHARED=' + '0' if '+shared' in spec else '1')
+        if '~shared +pic' in self.spec:
+            make_defs += ['CFLAGS=' + self.compiler.pic_flag,
+                          'FFLAGS=' + self.compiler.pic_flag]
         # fix missing _dggsvd_ and _sggsvd_
-        if self.spec.satisfies('@0.2.16'):
-            make_defs += ['BUILD_LAPACK_DEPRECATED=1']
+        if spec.satisfies('@0.2.16'):
+            make_defs.append('BUILD_LAPACK_DEPRECATED=1')
 
         # Add support for multithreading
-        if self.spec.satisfies('threads=openmp'):
-            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
-        elif self.spec.satisfies('threads=pthreads'):
-            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
-        else:
-            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
+        threads = spec.variants['threads'].value
+        make_defs.append('USE_THREAD=' + ('0' if threads == 'none' else '1'))
+        make_defs.append('USE_OPENMP=' + ('1' if threads == 'openmp' else '0'))
 
-        # 64bit ints
+        # Force 64-bit native Fortran integer type
         if '+ilp64' in self.spec:
-            make_defs += ['INTERFACE64=1']
+            make_defs.append('INTERFACE64=1')
 
-        if self.spec.target.family == 'x86_64':
-            if '~avx2' in self.spec:
-                make_defs += ['NO_AVX2=1']
-            if '~avx512' in self.spec:
-                make_defs += ['NO_AVX512=1']
+        # Prevent errors in `as` assembler from newer instructions
+        if self.spec.satisfies('%gcc@:4.8.4'):
+            make_defs.append('NO_AVX2=1')
 
         return make_defs
 
