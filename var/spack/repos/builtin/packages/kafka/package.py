@@ -16,7 +16,7 @@ class Kafka(Package):
     homepage = "https://www-eu.apache.org/dist/kafka"
     url      = "https://www-eu.apache.org/dist/kafka/2.3.1/kafka_2.12-2.3.1.tgz"
     list_url = "https://www-eu.apache.org/dist/kafka/"
-    list_depth = 2
+    list_depth = 1
 
     version('2.13-2.4.0', sha256='c1c5246c7075459687b3160b713a001f5cd1cc563b9a3db189868d2f22aa9110')
     version('2.12-2.4.0', sha256='b9582bab0c3e8d131953b1afa72d6885ca1caae0061c2623071e7f396f2ccfee')
