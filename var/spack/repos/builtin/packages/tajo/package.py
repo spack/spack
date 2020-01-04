@@ -21,7 +21,7 @@ class Tajo(Package):
     homepage = "http://tajo.apache.org/"
     url      = "https://www-eu.apache.org/dist/tajo/tajo-0.11.3/tajo-0.11.3.tar.gz"
     list_url = "https://www-eu.apache.org/dist/tajo/"
-    list_depth = 2
+    list_depth = 1
 
     version('0.11.3', sha256='9be736f13575aefc68f94eff376ef284ca3af8b0bdceb6d9d825980bb10a44e8')
     version('0.11.2', sha256='8a7a5b63b799cd3db275f3a3e265063594c60ec6b8ca394bf2c88b1d1867779f')
