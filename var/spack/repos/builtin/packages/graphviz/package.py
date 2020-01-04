@@ -63,10 +63,10 @@ class Graphviz(AutotoolsPackage):
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
           sha256='393a0a772315a89dcc970b5efd4765d22dba83493d7956303673eb89c45b949f',
           level=0,
-          when='%intel')
+          when='@:2.40%intel')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
-          when='%intel')
+          when='@:2.40%intel')
 
     if not MACOS_VERSION:
         conflicts('+quartz',
