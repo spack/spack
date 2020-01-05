@@ -71,6 +71,9 @@ class Qt(Package):
     variant('freetype', default='spack', description='Freetype2 support',
             values=('spack', 'qt', 'none'), multi=False)
 
+    conflicts('%intel', when='@5:',
+              msg='qt-5 does not build with the Intel compiler')
+
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
     patch('restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
