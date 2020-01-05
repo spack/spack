@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Opencv(CMakePackage):
+class Opencv(CMakePackage, CudaPackage):
     """OpenCV is released under a BSD license and hence it's free for both
     academic and commercial use. It has C++, C, Python and Java interfaces and
     supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
@@ -78,9 +78,6 @@ class Opencv(CMakePackage):
     variant('videoio', default=True, description='videoio module')
 
     # Optional 3rd party components
-    variant('cuda', default=True, description='Activates support for CUDA')
-    # Cuda@10.0.130 does not support gcc > 7
-    conflicts('%gcc@7:', when='+cuda')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
