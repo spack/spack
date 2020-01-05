@@ -30,8 +30,8 @@ class PyThirdorder(PythonPackage):
 
     @run_after('install')
     def post_install(self):
-        mkdirp(prefix.bin)
-        install('thirdorder_espresso.py', prefix.bin)
-        install('thirdorder_vasp.py', prefix.bin)
-        install('thirdorder_castep.py', prefix.bin)
-        install('thirdorder_common.py', prefix.bin)
+        mkdirp(self.prefix.bin)
+        install('thirdorder_espresso.py', self.prefix.bin)
+        install('thirdorder_vasp.py', self.prefix.bin)
+        install('thirdorder_castep.py', self.prefix.bin)
+        install('thirdorder_common.py', self.prefix.bin)
