@@ -278,3 +278,14 @@ def test_version_components(version, expected_number, expected_suffix):
     number, suffix = llnl.util.cpu.version_components(version)
     assert number == expected_number
     assert suffix == expected_suffix
+
+
+def test_invalid_family():
+    targets = llnl.util.cpu.targets
+    multi_parents = Microarchitecture(
+        name='chimera', parents=[targets['pentium4'], targets['power7']],
+        vendor='Imagination', features=[], compilers={}, generation=0
+    )
+    with pytest.raises(AssertionError,
+                       matches='target chimera does not belong'):
+        multi_parents.family
