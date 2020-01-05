@@ -12,7 +12,7 @@ class PyThirdorder(PythonPackage):
     homepage = "http://www.shengbte.org"
     url      = "http://www.shengbte.org/downloads/thirdorder-v1.1.1-8526f47.tar.bz2"
 
-    version('1.1.1-8526f47', 'c39ff34056a0e57884a6ff262581dbbe')
+    version('1.1.1-8526f47', '5e1cc8d6ffa7efdb7325c397ca236863ea8a9c5bed1c558acca68b140f89167e')
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
