@@ -28,7 +28,15 @@ class Flang(CMakePackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
-    depends_on('pgmath@develop', when='@develop')
+    depends_on('llvm-flang@release_70', when='@master')
+    depends_on('llvm-flang@20190329', when='@20190329')
+    depends_on('llvm-flang@20181226_70', when='@20181226')
+    depends_on('llvm-flang@20180921', when='@20180921')
+    depends_on('llvm-flang@20180612', when='@20180612')
+
+    depends_on('pgmath@master', when='@master')
+    depends_on('pgmath@20190329', when='@20190329')
+    depends_on('pgmath@20181226', when='@20181226')
     depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
