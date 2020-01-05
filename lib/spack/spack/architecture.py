@@ -351,10 +351,10 @@ class OperatingSystem(object):
         return (self.name, self.version)
 
     def to_dict(self):
-        return {
-            'name': self.name,
-            'version': self.version
-        }
+        return syaml_dict([
+            ('name', self.name),
+            ('version', self.version)
+        ])
 
 
 @key_ordering
