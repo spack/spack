@@ -22,6 +22,12 @@ class Pgmath(CMakePackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
+    # work around for this issue
+    # https://github.com/flang-compiler/flang/issues/602
+    patch('https://github.com/flang-compiler/flang/commit/7fcd6346a9427977afe4534c0f19bbbba04c99a3.diff',
+          sha256='4014df1e5855dd21242b0fc938a4e7835941c20f9a89c3a7a5314e74b6232bcb',
+          when='@20190329')
+
     # workaround for this issue
     # https://github.com/flang-compiler/flang/issues/838
     patch('libpgmath_symbols.patch', when='@20190329,master')
