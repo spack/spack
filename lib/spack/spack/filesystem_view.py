@@ -398,15 +398,14 @@ class YamlFilesystemView(FilesystemView):
                      "The following packages will be unusable: %s"
                      % ", ".join((s.name for s in dependents)))
 
-        # depmap maps each package to its list of dependencies. This is used to
-        # sort the packages into dependency post-order.
+        # Determine the order that packages should be removed from the view;
+        # dependents come before their dependencies.
+        to_deactivate_sorted = list()
         depmap = dict()
         for spec in to_deactivate:
             depmap[spec] = set(d for d in spec.traverse(root=False)
                                if d in to_deactivate)
 
-        # to_deactivate_sorted is the packages to deactivate in post-order.
-        to_deactivate_sorted = []
         while depmap:
             for spec in [s for s, d in depmap.items() if not d]:
                 to_deactivate_sorted.append(spec)
