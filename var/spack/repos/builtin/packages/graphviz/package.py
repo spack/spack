@@ -24,6 +24,11 @@ class Graphviz(AutotoolsPackage):
     # This commit hash is tag='stable_release_2.40.1'
     version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
 
+    conflicts('%gcc@:5.9',
+              when='@2.40.1+qt ^qt@5:',
+              msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
+              'suppport')
+
     # Language bindings
     language_bindings = ['java']
 
@@ -59,7 +64,7 @@ class Graphviz(AutotoolsPackage):
 
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
-          when='+qt^qt@5:')
+          when='@:2.40+qt^qt@5:')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
           sha256='393a0a772315a89dcc970b5efd4765d22dba83493d7956303673eb89c45b949f',
           level=0,
@@ -95,7 +100,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
     depends_on('zlib')
-    depends_on('qt@4', when='+qt')
+    depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
     # Build dependencies
