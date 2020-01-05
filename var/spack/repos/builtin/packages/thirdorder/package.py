@@ -14,14 +14,11 @@ class PyThirdorder(PythonPackage):
 
     version('1.1.1-8526f47', 'c39ff34056a0e57884a6ff262581dbbe')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('spglib', type=('build', 'run'))
 
-    phases = ['edit', 'build', 'install', "post_install"]
-
-    def edit(self, spec, prefix):
+    def patch(self):
         setupfile = FileFilter('setup.py')
         setupfile.filter('LIBRARY_DIRS = .*', 'LIBRARY_DIRS = ["%s"]'
                          % self.spec['spglib'].prefix.lib)
@@ -31,7 +28,8 @@ class PyThirdorder(PythonPackage):
         sourcefile = FileFilter('thirdorder_core.c')
         sourcefile.filter('#include "spglib.*"', '#include "spglib.h"')
 
-    def post_install(self, spec, prefix):
+    @run_after('install')
+    def post_install(self):
         mkdirp(prefix.bin)
         install('thirdorder_espresso.py', prefix.bin)
         install('thirdorder_vasp.py', prefix.bin)
