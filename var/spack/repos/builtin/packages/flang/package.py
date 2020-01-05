@@ -41,16 +41,19 @@ class Flang(CMakePackage):
     depends_on('pgmath@20180612', when='@20180612')
 
     def cmake_args(self):
+        spec = self.spec
         options = [
             '-DWITH_WERROR=OFF',
             '-DCMAKE_C_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'clang'),
+                spec['llvm-flang'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'clang++'),
+                spec['llvm-flang'].prefix.bin, 'clang++'),
             '-DCMAKE_Fortran_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'flang'),
+                spec['llvm-flang'].prefix.bin, 'flang'),
             '-DFLANG_LIBOMP=%s' % find_libraries(
-                'libomp', root=self.spec['llvm'].prefix.lib)
+                'libomp', root=spec['llvm-flang'].prefix.lib),
+            '-DPYTHON_EXECUTABLE={0}'.format(
+                os.path.join(spec['python'].prefix.bin, 'python'))
         ]
 
         return options
@@ -67,7 +70,7 @@ class Flang(CMakePackage):
             out.write('#!/bin/bash\n')
             out.write(
                 '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
-                    self.spec['llvm'].prefix.bin.flang,
+                    self.spec['llvm-flang'].prefix.bin.flang,
                     self.prefix.include, self.prefix.lib,
                     self.spec['pgmath'].prefix.lib,
                     self.compiler.fc_rpath_arg, self.prefix.lib,
@@ -79,7 +82,7 @@ class Flang(CMakePackage):
 
     def setup_build_environment(self, env):
         # to find llvm's libc++.so
-        env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
+        env.set('LD_LIBRARY_PATH', self.spec['llvm-flang'].prefix.lib)
 
     def setup_run_environment(self, env):
         env.set('FC',  self.spec.prefix.bin.flang)
