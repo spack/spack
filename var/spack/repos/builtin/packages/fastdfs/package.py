@@ -30,6 +30,6 @@ class Fastdfs(Package):
 
     def install(self, spec, prefix):
         sh = which('sh')
-        sh('sh make.sh')
-        sh('sh make.sh', 'install')
+        sh('make.sh')
+        sh('make.sh', 'install')
         install_tree('.', prefix)
