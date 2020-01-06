@@ -994,8 +994,7 @@
         },
         "clang": {
           "versions": ":",
-          "family": "ppc64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1011,9 +1010,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr7",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1036,9 +1033,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr8",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1054,9 +1049,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr9",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1072,8 +1065,7 @@
         },
         "clang": {
           "versions": ":",
-          "family": "ppc64le",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1099,8 +1091,8 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "pwr8",
-          "flags": "-march={family} -mcpu={name}"
+          "name": "power8",
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1118,8 +1110,8 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "pwr9",
-          "flags": "-march={family} -mcpu={name}"
+          "name": "power9",
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1222,11 +1214,11 @@
           },
           {
             "versions": "7:7.9",
-            "flags": "-march=armv8.2a+crc+crypto+fp16"
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
           },
           {
             "versions": "8:",
-            "flags": "-march=armv8.2a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
+            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
           }
         ],
         "clang": [

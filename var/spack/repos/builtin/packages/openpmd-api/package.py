@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='dev')
+    version('0.10.3',  tag='0.10.3-alpha')
     version('0.10.2',  tag='0.10.2-alpha')
     version('0.10.1',  tag='0.10.1-alpha')
     version('0.10.0',  tag='0.10.0-alpha')

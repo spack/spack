@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,5 +43,6 @@ class Dd4hep(CMakePackage):
             "-DBUILD_TESTING={0}".format(spec.satisfies('+testing')),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
+            "-DPYTHON_EXECUTABLE={0}".format(spec['python'].command.path),
         ]
         return args
