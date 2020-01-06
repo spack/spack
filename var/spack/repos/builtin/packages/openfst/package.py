@@ -13,7 +13,7 @@ class Openfst(AutotoolsPackage):
         an input label, an output label, and a weight."""
 
     homepage = "http://www.openfst.org"
-    url      = "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.6.7.tar.gz"
+    url      = "http://www.openfst.org/twiki/pub/FST/FstDownload/openfst-1.6.1.tar.gz"
     list_url = "http://www.openfst.org/twiki/bin/view/FST/FstDownload"
 
     version('1.6.7',  sha256='e21a486d827cde6a592c8e91721e4540ad01a5ae35a60423cf17be4d716017f7')
