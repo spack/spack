@@ -39,6 +39,18 @@
 
 
 
+#
+# SPACK wrapper function, preprocessing arguments and flags.
+#
+
+
+function spack -d "wrapper for the `spack` command"
+
+
+#
+# DEFINE SUPPORT FUNCTIONS HERE
+#
+
 
 #
 # ALLOCATE_SP_SHARED, and DELETE_SP_SHARED allocate (and delete) temporary
@@ -79,7 +91,6 @@ end
 #       to `shift_args`
 #
 
-
 function stream_args -d "echos args as a stream"
     # return the elements of `$argv` as an array
     #  -> since we want to be able to call it as part of `set x (shift_args
@@ -89,7 +100,6 @@ function stream_args -d "echos args as a stream"
         echo $elt
     end
 end
-
 
 
 function shift_args -d "simulates bash shift"
@@ -125,7 +135,6 @@ end
 #                   https://github.com/fish-shell/fish-shell/issues/6459
 #
 
-
 function capture_all
     begin;
         begin;
@@ -145,11 +154,10 @@ end
 
 
 #
-# GET_SP_FLAGS, GET_MOD_ARGS, and CHECK_SP_FLAGS: support functions for
-# extracting and checking arguments and flags. Note bash's `shift` operation is
-# simulated by tracking the `__sp_remaining_args` array.
+# GET_SP_FLAGS, and GET_MOD_ARGS: support functions for extracting arguments and
+# flags. Note bash's `shift` operation is simulated by the `__sp_remaining_args`
+# array which is roughly equivalent to `$@` in bash.
 #
-
 
 function get_sp_flags -d "return leading flags"
     #
@@ -187,7 +195,6 @@ function get_sp_flags -d "return leading flags"
     # is deleted (this might be overkill...).
     set -e __sp_remaining_args
 end
-
 
 
 function get_mod_args -d "return submodule flags"
@@ -237,6 +244,12 @@ end
 
 
 
+
+#
+# CHECK_SP_FLAGS, CONTAINS_HELP_FLAGS, CHECK_ENV_ACTIVATE_FLAGS, and 
+# CHECK_ENV_DEACTIVATE_FLAGS: support functions for checking arguments and flags.
+#
+
 function check_sp_flags -d "check spack flags for h/V flags"
     #
     # Check if inputs contain h or V flags.
@@ -258,7 +271,6 @@ function check_sp_flags -d "check spack flags for h/V flags"
 
     return 1
 end
-
 
 
 function contains_help_flags -d "checks for help (-h/--help) flags"
@@ -285,7 +297,6 @@ function contains_help_flags -d "checks for help (-h/--help) flags"
 
     return 1
 end
-
 
 
 function check_env_activate_flags -d "check spack env subcommand flags for -h, --sh, --csh, or --fish"
@@ -327,7 +338,6 @@ function check_env_activate_flags -d "check spack env subcommand flags for -h, -
 end
 
 
-
 function check_env_deactivate_flags -d "check spack env subcommand flags for --sh, --csh, or --fish"
     #
     # Check if inputs contain -h, --sh, --csh, or --fish
@@ -340,7 +350,7 @@ function check_env_deactivate_flags -d "check spack env subcommand flags for --s
     # skip if called with blank input. Notes: [1] (cf. EOF)
     if test -n "$_a"
 
-        # TODO: should this crash (we're clearly using fish, not csh, here)?
+        # TODO: should this crash (we're clearly using fish, not bash, here)?
         # looks for a single `--sh` (possibly surrounded by spaces)
         if echo $_a | string match -r -q " *--sh *"
             return 0
@@ -364,21 +374,13 @@ end
 
 
 
+
 #
-# SPACK wrapper function, preprocessing arguments and flags.
+# SPACK RUNNER function, this does all the work!
 #
 
 
-function spack -d "wrapper for the `spack` command"
-
-    #
-    # Allocate temporary global variables used for return extra arguments from
-    # functions. NOTE: remember to call delete_sp_shared whenever returning from
-    # this function.
-    #
-
-    allocate_sp_shared
-
+function spack_runner -d "Runner function for the `spack` wrapper"
 
 
     #
@@ -389,24 +391,18 @@ function spack -d "wrapper for the `spack` command"
     set -l sp_flags (get_sp_flags $argv) # sets __sp_remaining_args
 
 
-
     #
     # h and V flags don't require further output parsing.
     #
 
     if check_sp_flags $sp_flags
         command spack $sp_flags $__sp_remaining_args
-        delete_sp_shared
         return 0
     end
 
 
-
     #
-    # Isolate subcommand and subcommand specs
-    #  -> bit of a hack: test -n requires exactly 1 argument. If `argv` is
-    #     undefined, or if it is an array, `test -n $argv` is unpredictable.
-    #     Instead, encapsulate `argv` in a string, and test the string.
+    # Isolate subcommand and subcommand specs. Notes: [1] (cf. EOF)
     #
 
     set -l sp_subcommand ""
@@ -420,8 +416,8 @@ function spack -d "wrapper for the `spack` command"
 
 
     #
-    # Filter out cd, and use and unuse (or similarly module's load and unload).
-    # For any other commands, just run the command.
+    # Filter out cd, env, and load and unload. For any other commands, just run
+    # the spack command as is.
     #
 
     switch $sp_subcommand
@@ -452,17 +448,18 @@ function spack -d "wrapper for the `spack` command"
                 if test -d "$LOC"
                     cd $LOC
                 else
-                    delete_sp_shared
                     return 1
                 end
 
             end
 
-            delete_sp_shared
             return 0
 
 
-        # CASE: spack subcommand is `env`:
+        # CASE: spack subcommand is `env`. Here we get the spack runtime to
+        # supply the appropriate shell commands for setting the environment
+        # varibles. These commands are then run by fish (using the `capture_all`
+        # function, instead of a command substitution).
 
         case "env"
 
@@ -533,10 +530,10 @@ function spack -d "wrapper for the `spack` command"
             end
 
 
-        # CASE: spack subcommand is either `load`, or `unload`.
-        # These statements deal with the technical details of actually using
-        # modules. Especially to deal with the substituting latest version
-        # numbers to the module command.
+        # CASE: spack subcommand is either `load`, or `unload`. These statements
+        # deal with the technical details of actually using modules. Especially
+        # to deal with the substituting latest version numbers to the module
+        # command.
 
         case "load" or "unload"
 
@@ -550,15 +547,14 @@ function spack -d "wrapper for the `spack` command"
             # any -h flags would have "landed" in __sp_module_args
             if contains_help_flags $__sp_module_args
                 command spack $sp_flags $sp_subcommand $__sp_subcommand_args $__sp_module_args $__sp_remaining_args
-                delete_sp_shared
                 return 0
             end
 
 
-            # Here the user has run use or unuse with a spec. Find a matching spec
-            # using 'spack module find', then use the appropriate module tool's
-            # commands to add/remove the result from the environment. If spack
-            # module command comes back with an error, do nothing.
+            # Here the user has run load or unload with a spec. Find a matching
+            # spec using 'spack module find', then use the appropriate module
+            # tool's commands to add/remove the result from the environment. If
+            # spack module command comes back with an error, do nothing.
 
             switch $sp_subcommand
 
@@ -577,7 +573,6 @@ function spack -d "wrapper for the `spack` command"
                         if test -n "$__sp_stderr"
                             echo -s \n$__sp_stderr 1>&2
                         end
-                        delete_sp_shared
                         return 1
                     end
 
@@ -596,7 +591,6 @@ function spack -d "wrapper for the `spack` command"
                         if test -n "$__sp_stderr"
                             echo -s \n$__sp_stderr 1>&2
                         end
-                        delete_sp_shared
                         return 1
                     end
             end
@@ -610,7 +604,44 @@ function spack -d "wrapper for the `spack` command"
     end
 
     return 0
-    delete_sp_shared
+end
+
+
+
+
+#
+# RUN SPACK_RUNNER HERE
+#
+
+
+#
+# Allocate temporary global variables used for return extra arguments from
+# functions. NOTE: remember to call delete_sp_shared whenever returning from
+# this function.
+#
+
+allocate_sp_shared
+
+
+#
+# Run spack command using the spack_runner.
+#
+
+spack_runner $argv
+# Capture state of spack_runner (returned below)
+set -l stat $status
+
+
+#
+# Delete temprary global variabels allocated in `allocated_sp_shared`.
+#
+
+delete_sp_shared
+
+
+
+return $stat
+
 end
 
 
@@ -663,7 +694,6 @@ function spack_pathadd -d "Add path to specified variable (defaults to fish_user
         end
     end
 end
-
 
 
 function sp_multi_pathadd -d "Helper for adding module-style paths by incorporating compatible systems into pathadd" --inherit-variable _sp_compatible_sys_types
