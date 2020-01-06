@@ -437,9 +437,9 @@ class Qt(Package):
                 platform = 'unsupported/macx-' + cname
         elif cname != 'g++':
             if NEW_QT:
-                platform.append('linux-' + cname)
+                platform = 'linux-' + cname
             else:
-                platform.append('unsupported/linux-' + cname)
+                platform = 'unsupported/linux-' + cname
 
         if platform is not None:
             config.args.extend(['-platform', platform])
@@ -503,8 +503,8 @@ class Qt(Package):
             '-no-eglfs',
             '-no-directfb',
             '-{0}gtk{1}'.format(
-                  '' if '+gtk' in spec else 'no-',
-                  '' if version >= Version('5.8') else 'style')
+                '' if '+gtk' in spec else 'no-',
+                '' if version >= Version('5.8') else 'style')
         ])
 
         if MACOS_VERSION:
