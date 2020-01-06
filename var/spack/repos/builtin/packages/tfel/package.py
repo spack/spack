@@ -86,11 +86,11 @@ class Tfel(CMakePackage):
     variant('java', default=False,
             description='Enables java interface')
 
-    # only since TFEL-3.3
-    variant('comsol', default=False,
+    # only since TFEL-3.3, no effect on version below
+    variant('comsol', default=True,
             description='Enables comsol interface')
-    variant('diana-fea', default=False,
-            description='Enables comsol interface')
+    variant('diana-fea', default=True,
+            description='Enables DIANA-FEA interface')
 
     variant('build_type', default='Release',
             description='The build type to build',
@@ -110,7 +110,8 @@ class Tfel(CMakePackage):
         args = []
 
         for i in ['fortran', 'java', 'aster', 'abaqus', 'calculix',
-                  'ansys', 'europlexus', 'cyrano', 'lsdyna', 'python']:
+                  'ansys', 'europlexus', 'cyrano', 'lsdyna', 'python',
+                  'comsol', 'diana-fea']:
             if '+' + i in self.spec:
                 args.append("-Denable-{0}=ON".format(i))
             else:
@@ -139,5 +140,7 @@ class Tfel(CMakePackage):
         if '+python_bindings' in self.spec:
             args.append('-DBOOST_ROOT={0}'.
                         format(self.spec['boost'].prefix))
-
+            args.append('-DBoost_NO_SYSTEM_PATHS=ON')
+            args.append('-DBoost_NO_BOOST_CMAKE=ON')
+            
         return args
