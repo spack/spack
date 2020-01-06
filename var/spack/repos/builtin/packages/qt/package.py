@@ -502,7 +502,7 @@ class Qt(Package):
         config_args.extend([
             '-no-eglfs',
             '-no-directfb',
-            '-{0}gtk{0}'.format(
+            '-{0}gtk{1}'.format(
                   '' if '+gtk' in spec else 'no-',
                   '' if version >= Version('5.8') else 'style')
         ])
