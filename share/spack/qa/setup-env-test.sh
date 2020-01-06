@@ -12,159 +12,11 @@
 # in any of these shells.
 #
 
-# ------------------------------------------------------------------------
-# Functions for color output.
-# ------------------------------------------------------------------------
+export QA_DIR=$(dirname "$0")
+export SHARE_DIR=$(cd "$QA_DIR/.." && pwd)
+export SPACK_ROOT=$(cd "$QA_DIR/../../.." && pwd)
 
-# Colors for output
-red='\033[1;31m'
-cyan='\033[1;36m'
-green='\033[1;32m'
-reset='\033[0m'
-
-echo_red() {
-    printf "${red}$*${reset}\n"
-}
-
-echo_green() {
-    printf "${green}$*${reset}\n"
-}
-
-echo_msg() {
-    printf "${cyan}$*${reset}\n"
-}
-
-# ------------------------------------------------------------------------
-# Generic functions for testing shell code.
-# ------------------------------------------------------------------------
-
-# counts of test successes and failures.
-success=0
-errors=0
-
-# Print out a header for a group of tests.
-title() {
-    echo
-    echo_msg "$@"
-    echo_msg "---------------------------------"
-}
-
-# echo FAIL in red text; increment failures
-fail() {
-    echo_red FAIL
-    errors=$((errors+1))
-}
-
-#
-# Echo SUCCESS in green; increment successes
-#
-pass() {
-    echo_green SUCCESS
-    success=$((success+1))
-}
-
-#
-# Run a command and suppress output unless it fails.
-# On failure, echo the exit code and output.
-#
-succeeds() {
-    printf "'%s' succeeds ... " "$*"
-    output=$($* 2>&1)
-    err="$?"
-
-    if [ "$err" != 0 ]; then
-        fail
-        echo_red "Command failed with error $err."
-        if [ -n "$output" ]; then
-            echo_msg "Output:"
-            echo "$output"
-        else
-            echo_msg "No output."
-        fi
-    else
-        pass
-    fi
-}
-
-#
-# Run a command and suppress output unless it succeeds.
-# If the command succeeds, echo the output.
-#
-fails() {
-    printf "'%s' fails ... " "$*"
-    output=$("$@" 2>&1)
-    err="$?"
-
-    if [ "$err" = 0 ]; then
-        fail
-        echo_red "Command failed with error $err."
-        if [ -n "$output" ]; then
-            echo_msg "Output:"
-            echo "$output"
-        else
-            echo_msg "No output."
-        fi
-    else
-        pass
-    fi
-}
-
-#
-# Ensure that a string is in the output of a command.
-# Suppresses output on success.
-# On failure, echo the exit code and output.
-#
-contains() {
-    string="$1"
-    shift
-
-    printf "'%s' output contains '$string' ... " "$*"
-    output=$("$@" 2>&1)
-    err="$?"
-
-    if [ "${output#*$string}" = "${output}" ]; then
-        fail
-        echo_red "Command exited with error $err."
-        echo_red "'$string' was not in output."
-        if [ -n "$output" ]; then
-            echo_msg "Output:"
-            echo "$output"
-        else
-            echo_msg "No output."
-        fi
-    else
-        pass
-    fi
-}
-
-#
-# Ensure that a variable is set.
-#
-is_set() {
-    printf "'%s' is set ... " "$1"
-    if eval "[ -z \${${1:-}+x} ]"; then
-        fail
-        echo_msg "$1 was not set!"
-    else
-        pass
-    fi
-}
-
-#
-# Ensure that a variable is not set.
-# Fails and prints the value of the variable if it is set.
-#
-is_not_set() {
-    printf "'%s' is not set ... " "$1"
-    if eval "[ ! -z \${${1:-}+x} ]"; then
-        fail
-        echo_msg "$1 was set:"
-        echo "    $1"
-    else
-        pass
-    fi
-}
-
+. "$QA_DIR/test-framework.sh"
 
 # -----------------------------------------------------------------------
 # Instead of invoking the module commands, we print the
@@ -184,28 +36,28 @@ module() {
 # Make sure no environment is active
 unset SPACK_ENV
 
-# fail on undefined variables
+# Fail on undefined variables
 set -u
 
 # Source setup-env.sh before tests
-.  share/spack/setup-env.sh
+. "$SHARE_DIR/setup-env.sh"
 
-# bash should expand aliases even when non-interactive
+# Bash should expand aliases even when non-interactive
 if [ -n "${BASH:-}" ]; then
     shopt -s expand_aliases
 fi
 
 title "Testing setup-env.sh with $_sp_shell"
 
-# spack command is now avaialble
+# Spack command is now available
 succeeds which spack
 
-# mock cd command (intentionally define only AFTER setup-env.sh)
+# Mock cd command (intentionally define only AFTER setup-env.sh)
 cd() {
     echo cd "$@"
 }
 
-# create a fake mock package install and store its location for later
+# Create a fake mock package install and store its location for later
 title "Setup"
 echo "Creating a mock package installation"
 spack -m install --fake a
@@ -215,19 +67,13 @@ a_module=$(spack -m module tcl find a)
 b_install=$(spack location -i b)
 b_module=$(spack -m module tcl find b)
 
-# create a test environment for tesitng environment commands
+# Create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
 test_env_location=$(spack location -e spack_test_env)
 
-# ensure that we uninstall b on exit
+# Ensure that we uninstall b on exit
 cleanup() {
-    if [ "$?" != 0 ]; then
-        trapped_error=true
-    else
-        trapped_error=false
-    fi
-
     echo "Removing test environment before exiting."
     spack env deactivate 2>&1 > /dev/null
     spack env rm -y spack_test_env
@@ -235,24 +81,7 @@ cleanup() {
     title "Cleanup"
     echo "Removing test packages before exiting."
     spack -m uninstall -yf b a
-
-    echo
-    echo "$success tests succeeded."
-    echo "$errors tests failed."
-
-    if [ "$trapped_error" = true ]; then
-        echo "Exited due to an error."
-    fi
-
-    if [ "$errors" = 0 ] && [ "$trapped_error" = false ]; then
-        pass
-        exit 0
-    else
-        fail
-        exit 1
-    fi
 }
-trap cleanup EXIT
 
 # -----------------------------------------------------------------------
 # Test all spack commands with special env support
