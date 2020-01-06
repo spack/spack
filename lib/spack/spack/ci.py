@@ -381,6 +381,10 @@ def compute_spec_deps(spec_list):
         rkey, rlabel = spec_deps_key_label(spec)
 
         for s in spec.traverse(deptype=deptype):
+            if s.external:
+                tty.msg('Will not stage external pkg: {0}'.format(s))
+                continue
+
             skey, slabel = spec_deps_key_label(s)
             spec_labels[slabel] = {
                 'spec': get_spec_string(s),
@@ -390,6 +394,10 @@ def compute_spec_deps(spec_list):
 
             for d in s.dependencies(deptype=deptype):
                 dkey, dlabel = spec_deps_key_label(d)
+                if d.external:
+                    tty.msg('Will not stage external dep: {0}'.format(d))
+                    continue
+
                 append_dep(slabel, dlabel)
 
     for l, d in spec_labels.items():

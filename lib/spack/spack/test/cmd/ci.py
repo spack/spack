@@ -232,7 +232,7 @@ spack:
 def test_ci_generate_with_cdash_token(tmpdir, mutable_mock_env_path,
                                       env_deactivate, install_mockery,
                                       mock_packages):
-    """Make sure we get a reasonable message if we omit gitlab-ci section"""
+    """Make sure we it doesn't break if we configure cdash"""
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -276,6 +276,48 @@ spack:
             orig_file = str(tmpdir.join('.gitlab-ci.yml'))
 
             assert(filecmp.cmp(orig_file, copy_to_file) is True)
+
+
+def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
+                                       env_deactivate, install_mockery,
+                                       mock_packages):
+    """Make sure we do not generate jobs for external pkgs"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+    - externaltest
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    mappings:
+      - match:
+          - archive-files
+          - externaltest
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            ci_cmd('generate', '--output-file', outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            print('generated contents: ')
+            print(contents)
+            yaml_contents = syaml.load(contents)
+            for ci_key in yaml_contents.keys():
+                if 'externaltool' in ci_key:
+                    print('Erroneously staged "externaltool" pkg')
+                    assert(False)
 
 
 def test_ci_generate_debug_with_custom_spack(tmpdir, mutable_mock_env_path,
