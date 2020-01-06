@@ -442,7 +442,7 @@ class Qt(Package):
                 platform = 'unsupported/linux-' + cname
 
         if platform is not None:
-            config.args.extend(['-platform', platform])
+            config_args.extend(['-platform', platform])
 
         return config_args
 
