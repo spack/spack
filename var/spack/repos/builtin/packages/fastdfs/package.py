@@ -29,8 +29,7 @@ class Fastdfs(Package):
     depends_on('libfastcommon', type='build')
 
     def install(self, spec, prefix):
-        make = Executable('sh make.sh')
-        install = Executable('sh make.sh install')
-        make()
-        install()
+        sh = which('sh')
+        sh('sh make.sh')
+        sh('sh make.sh', 'install')
         install_tree('.', prefix)
