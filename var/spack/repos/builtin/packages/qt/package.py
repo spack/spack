@@ -428,15 +428,15 @@ class Qt(Package):
         spec = self.spec
         cname = spec.compiler.name
         cname = self.compiler_mapping.get(cname, cname)
-        NEW_QT = spec.satisfies('@5:')
+        is_new_qt = spec.satisfies('@5:')
         platform = None
         if MACOS_VERSION:
-            if NEW_QT and cname != "clang":
+            if is_new_qt and cname != "clang-libc++":
                 platform = 'macx-' + cname
-            elif not NEW_QT and cname != "g++":
+            elif not is_new_qt and cname != "g++":
                 platform = 'unsupported/macx-' + cname
         elif cname != 'g++':
-            if NEW_QT:
+            if is_new_qt:
                 platform = 'linux-' + cname
             else:
                 platform = 'unsupported/linux-' + cname
