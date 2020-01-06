@@ -434,7 +434,7 @@ def spack_is_git_repo():
         return os.path.isdir('.git')
 
 
-class PythonNameError(SpackError):
+class PythonNameError(spack.error.SpackError):
     """Exception class thrown for impermissible python names"""
     def __init__(self, name):
         self.name = name
@@ -442,7 +442,7 @@ class PythonNameError(SpackError):
             '{0} is not a permissible Python name.'.format(name))
 
 
-class CommandNameError(SpackError):
+class CommandNameError(spack.error.SpackError):
     """Exception class thrown for impermissible command names"""
     def __init__(self, name):
         self.name = name
