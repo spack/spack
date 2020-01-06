@@ -5,6 +5,7 @@
 
 
 from spack import *
+from spack.util.environment import is_system_path
 import sys
 
 
@@ -427,25 +428,35 @@ class Root(CMakePackage):
         if 'lz4' in self.spec:
             env.append_path('CMAKE_PREFIX_PATH',
                             self.spec['lz4'].prefix)
+
+        # This hack is made necessary by a header name collision between
+        # asimage's "import.h" and Python's "import.h" headers...
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+
+        # ...but it breaks header search for any ROOT dependency which does not
+        # use CMake. To resolve this, we must bring back those dependencies's
+        # include paths into SPACK_INCLUDE_DIRS.
+        #
+        # But in doing so, we must be careful not to inject system header paths
+        # into SPACK_INCLUDE_DIRS, even in a deprioritized form, because some
+        # system/compiler combinations don't like having -I/usr/include around.
+        def add_include_path(dep_name):
+            include_path = self.spec[dep_name].prefix.include
+            if not is_system_path(include_path):
+                env.append_path('SPACK_INCLUDE_DIRS', include_path)
+
+        # With that done, let's go fixing those deps
         if self.spec.satisfies('@:6.08.99'):
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['xextproto'].prefix.include)
+            add_include_path('xextproto')
         if self.spec.satisfies('@:6.12.99'):
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['zlib'].prefix.include)
+            add_include_path('zlib')
         if '+x' in self.spec:
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['fontconfig'].prefix.include)
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['libx11'].prefix.include)
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['xproto'].prefix.include)
+            add_include_path('fontconfig')
+            add_include_path('libx11')
+            add_include_path('xproto')
         if '+opengl' in self.spec:
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['glew'].prefix.include)
-            env.append_path('SPACK_INCLUDE_DIRS',
-                            self.spec['mesa-glu'].prefix.include)
+            add_include_path('glew')
+            add_include_path('mesa-glu')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)
