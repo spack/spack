@@ -169,6 +169,9 @@ class Qt(Package):
 
     use_xcode = True
 
+    # Mapping for compilers in the QT 'mkspecs'
+    compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
         url = self.list_url
@@ -425,11 +428,27 @@ class Qt(Package):
                 config_args.append('-no-xinput2')
         # FIXME: else: -system-xcb ?
 
+        # Note: QT defaults to the following compilers
+        #  QT4 mac: gcc
+        #  QT5 mac: clang
+        #  linux: gcc
+        # In QT4, unsupported compilers lived under an 'unsupported'
+        # subdirectory but are now in the main platform directory.
+        spec = self.spec
+        cname = spec.compiler.name
+        cname = self.compiler_mapping.get(cname, cname)
+        NEW_QT = spec.satisfies('@5:')
         platform = None
         if MACOS_VERSION:
-            platform = 'unsupported/macx-clang-libc++'
-        elif self.compiler.name == 'clang':
-            platform = 'unsupported/linux-clang-libc++'
+            if NEW_QT and cname != "clang":
+                platform = 'macx-' + cname
+            elif not NEW_QT and cname != "g++":
+                platform = 'unsupported/macx-' + cname
+        elif cname != 'g++':
+            if NEW_QT:
+                platform.append('linux-' + cname)
+            else:
+                platform.append('unsupported/linux-' + cname)
 
         if platform is not None:
             config.args.extend(['-platform', platform])
