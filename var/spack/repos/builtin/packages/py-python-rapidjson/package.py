@@ -16,9 +16,3 @@ class PyPythonRapidjson(PythonPackage):
 
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-readme-renderer@24.0', type=('build', 'run'))
-    depends_on('py-twine@1.13.0', type=('build', 'run'))
-    depends_on('py-simplejson@3.16.0', type=('build', 'run'))
-    depends_on('py-ujson@1.35', type=('build', 'run'))
-    depends_on('py-yajl@0.3.5', type=('build', 'run'))
