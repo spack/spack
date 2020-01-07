@@ -41,8 +41,10 @@ class OmegaH(CMakePackage):
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
     variant('warnings', default=False, description='Compile C++ with warnings')
+    variant('gmsh', default=False, description='Use Gmsh C++ API')
 
     depends_on('gmsh', when='+examples', type='build')
+    depends_on('gmsh', when='+gmsh@4.4.1:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos +teuchos', when='+trilinos')
     depends_on('zlib', when='+zlib')
@@ -73,6 +75,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_USE_MPI:BOOL=OFF')
         if '+trilinos' in self.spec:
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
+        if '+gmsh' in self.spec:
+            args.append('-DOmega_h_USE_Gmsh:BOOL=ON')
         if '+zlib' in self.spec:
             args.append('-DOmega_h_USE_ZLIB:BOOL=ON')
             args.append('-DZLIB_ROOT:PATH={0}'.format(
