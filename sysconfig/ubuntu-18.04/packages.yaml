@@ -7,6 +7,10 @@ packages:
         paths:
             automake@1.15.1: /usr
         version: [1.15.1]
+    binutils:
+        paths:
+            binutils@2.30: /usr
+        version: [2.30]
     bison:
         paths:
             bison@3.0.4: /usr
@@ -35,6 +39,10 @@ packages:
         paths:
             flex@2.6.2: /usr
         version: [2.6.2]
+    freetype:
+        paths:
+            freetype@2.8.1: /usr
+        version: [2.8.1]
     git:
         paths:
             git@2.17.1: /usr
@@ -47,6 +55,10 @@ packages:
     libpciaccess:
         paths:
             libpciaccess@0.14: /usr
+    libpng:
+        paths:
+            libpng@1.6.34: /usr
+        version: [1.6.34]
     libtool:
         paths:
             libtool@2.4.6: /usr
@@ -62,6 +74,10 @@ packages:
     mvapich2:
         variants: fabrics=nemesis
         version: [2.3]
+    nasm:
+        paths:
+            nasm@2.13.02: /usr
+        version: [2.13.02]
     ncurses:
         paths:
             ncurses@6.1: /usr
@@ -105,6 +121,10 @@ packages:
         version: [8.6]
     timemory:
         variants: ~caliper~cuda~cupti~gperftools~papi~python~mpi
+    tk:
+        paths:
+            tk@8.6: /usr
+        version: [8.6]
     trilinos:
         variants: ~hypre
     all:
