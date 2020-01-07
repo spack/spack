@@ -147,31 +147,34 @@ class CMakePackage(PackageBase):
         except KeyError:
             build_type = 'RelWithDebInfo'
 
+        define = CMakePackage.define
         args = [
             '-G', generator,
-            '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
+            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
+            define('CMAKE_BUILD_TYPE', build_type),
         ]
 
         if primary_generator == 'Unix Makefiles':
-            args.append('-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON')
+            args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:
             args.extend([
-                '-DCMAKE_FIND_FRAMEWORK:STRING=LAST',
-                '-DCMAKE_FIND_APPBUNDLE:STRING=LAST'
+                define('CMAKE_FIND_FRAMEWORK', "LAST"),
+                define('CMAKE_FIND_APPBUNDLE', "LAST"),
             ])
 
         # Set up CMake rpath
-        args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ';'.join(spack.build_environment.get_rpaths(pkg))
-        args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
+        args.extend([
+            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
+            define('CMAKE_INSTALL_RPATH',
+                   spack.build_environment.get_rpaths(pkg)),
+        ])
         # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
         # to find immediate link dependencies in right places:
         deps = [d.prefix for d in
                 pkg.spec.dependencies(deptype=('build', 'link'))]
         deps = filter_system_paths(deps)
-        args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
+        args.append(define('CMAKE_PREFIX_PATH', deps))
         return args
 
     @staticmethod
