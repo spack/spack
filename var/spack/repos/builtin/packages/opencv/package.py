@@ -122,6 +122,11 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
 
+    # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
+    # exists, otherwise build will fail
+    # See https://github.com/opencv/opencv_contrib/issues/1786
+    conflicts('cuda@10:', when='+cudacodec')
+
     extends('python', when='+python')
 
     def cmake_args(self):
@@ -148,6 +153,8 @@ class Opencv(CMakePackage, CudaPackage):
                 'ON' if '+calib3d' in spec else 'OFF')),
             '-DBUILD_opencv_core:BOOL={0}'.format((
                 'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_cudacodec={0}'.format((
+                'ON' if '+cudacodec' in spec else 'OFF')),
             '-DBUILD_opencv_dnn:BOOL={0}'.format((
                 'ON' if '+dnn' in spec else 'OFF')),
             '-DBUILD_opencv_features2d={0}'.format((
@@ -311,19 +318,6 @@ class Opencv(CMakePackage, CudaPackage):
             ])
 
         return args
-
-        # CudaCodec
-        # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
-        # exists, otherwise build will fail
-        # See https://github.com/opencv/opencv_contrib/issues/1786
-        if '+cudacodec' in spec and spec['cuda'].version.up_to(1) == '9':
-            args.extend([
-                '-DBUILD_opencv_cudacodec=ON'
-            ])
-        else:
-            args.extend([
-                '-DBUILD_opencv_cudacodec=OFF'
-            ])
 
     @property
     def libs(self):
