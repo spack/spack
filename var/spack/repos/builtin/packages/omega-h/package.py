@@ -18,7 +18,7 @@ class OmegaH(CMakePackage):
     git      = "https://github.com/BlueBrain/omega_h.git"
 
     version('develop', branch='master')
-    version('9.31.2.dev1', sha256='6969951a952a3a6bcd4bb795a9cae1f3f8535fc7f49916240d94a859d4e1d2f7')
+    version('9.31.2.dev2', sha256='08be63b68a012ed8fcf4b7a217cbaadf46faa3f3c937ec8224ff9c542eb6ae62')
     version('9.31.2', sha256='df859bc8ae0e4bcd9c4f6654b6951c7e34110ac3b3e7d2b0c1e413ce2645772d')
     version('9.30.0', sha256='7160045ea12718269f345c7be93a386533ebb76788504df413f22fbcb072f158')
     version('9.29.2', sha256='8eea6da0ebde44176a6d19fb858f89f872611cbad08cad65700757e096058465')
