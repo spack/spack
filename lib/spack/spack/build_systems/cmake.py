@@ -174,14 +174,48 @@ class CMakePackage(PackageBase):
         args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
         return args
 
-    def define_from_variant(self, variant, cmake_var=None):
-        """Return a configure command line argument from the current spec.
+    @staticmethod
+    def define(cmake_var, value):
+        """Return a CMake command line argument that defines a variable.
 
         The resulting argument will correctly convert boolean values to OFF/ON
         and multi-valued variants to CMake semicolon-separated lists.
 
-        If the CMake variable is not specified, it defaults to the uppercase
-        transformation of the variant..
+        Examples:
+
+            .. code-block:: python
+
+                [define('shared', True),
+                 define('cxxstd', 14),
+                 define('swr', ['avx', 'avx2'])]
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                ["-DBUILD_SHARED_LIBS:BOOL=ON",
+                 "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DSWR:STRING=avx;avx2]
+        """
+        # Create a list of pairs. Each pair includes a configuration
+        # option and whether or not that option is activated
+        if isinstance(value, bool):
+            kind = 'BOOL'
+            value = "ON" if value else "OFF"
+        else:
+            kind = 'STRING'
+            if isinstance(value, (list, tuple)):
+                value = ";".join(str(v) for v in value)
+            else:
+                value = str(value)
+
+        return "".join(["-D", cmake_var, ":", kind, "=", value])
+
+    def define_from_variant(self, cmake_var, variant=None):
+        """Return a CMake command line argument from the given variant's value.
+
+        The optional ``variant`` argument defaults to the lower-case transform
+        of ``cmake_var``.
 
         This utility function is similar to
         :py:meth:`~.AutotoolsPackage.with_or_without`.
@@ -202,9 +236,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define_from_variant('shared', 'BUILD_SHARED_LIBS'),
-                 define_from_variant('cxxstd', 'CMAKE_CXX_STANDARD'),
-                 define_from_variant('swr')]
+                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 define_from_variant('SWR')]
 
             will generate the following configuration options:
 
@@ -216,27 +250,15 @@ class CMakePackage(PackageBase):
 
             for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
         """
-        spec = self.spec
+
+        if variant is None:
+            variant = cmake_var.lower()
 
         if variant not in self.variants:
             raise KeyError(
                 '"{0}" is not a variant of "{1}"'.format(variant, self.name))
-
-        if cmake_var is None:
-            cmake_var = variant.upper()
-
-        # Create a list of pairs. Each pair includes a configuration
-        # option and whether or not that option is activated
-        value = spec.variants[variant].value
-        if isinstance(value, bool):
-            kind = 'BOOL'
-            value = "ON" if value else "OFF"
-        else:
-            kind = 'STRING'
-            if isinstance(value, (list, tuple)):
-                value = ";".join(value)
-
-        return "".join(["-D", cmake_var, ":", kind, "=", value])
+        value = self.spec.variants[variant].value
+        return self.define(cmake_var, value)
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
