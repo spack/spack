@@ -251,6 +251,11 @@ spack:
           tags:
             - donotcare
           image: donotcare
+  cdash:
+    build-group: Not important
+    url: https://my.fake.cdash
+    project: Not used
+    site: Nothing
 """)
 
     with tmpdir.as_cwd():
@@ -264,7 +269,7 @@ spack:
             # That fake token should still have resulted in being unable to
             # register build group with cdash, but the workload should
             # still have been generated.
-            expect = 'Unable to populate buildgroup without CDash credentials'
+            expect = 'Problem populating buildgroup'
             assert(expect in output)
 
             dir_contents = os.listdir(tmpdir.strpath)

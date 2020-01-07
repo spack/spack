@@ -47,12 +47,13 @@ located `here <https://github.com/spack/spack-infrastructure/tree/master/gitlab-
 
 #. Add any secrets required by the CI process to environment variables using the
    CI web ui
-#. Push a commit containing the above to the gitlab repository
+#. Push a commit containing the ``spack.yaml`` and ``.gitlab-ci.yml`` mentioned above
+   to the gitlab repository
 
 The ``<custom-tag>``, above, is required to pick one of your configured runners,
 while the use of the ``spack ci start`` command implies that runner has an
 appropriate version of spack installed and configured for use.  Of course, there
-are myriad ways to customize the process.  You can configuring CDash reporting
+are myriad ways to customize the process.  You can configure CDash reporting
 on the progress of your builds, set up S3 buckets to mirror binaries built by
 the pipeline, clone a custom spack repository/ref for use by the pipeline, and
 more.
@@ -161,12 +162,35 @@ familiar, as they are part of spack :ref:`environments`.  So let's take a more
 in-depth look some of the pipeline-related sections in that environment file
 which might not be as familiar.
 
-The ``gitlab-ci`` section describes a set of gitlab runners and the conditions
-under which the specs described in the environment should be assigned to be
-built by one of the runners.  Each entry within the list of ``mappings``
+The ``gitlab-ci`` section is used to configure how the pipeline workload should be
+generated, mainly how the jobs for building specs should be assigned to the
+configured runners on your instance.  Each entry within the list of ``mappings``
 corresponds to a known gitlab runner, where the ``match`` section is used
 in assigning a release spec to one of the runners, and the ``runner-attributes``
 section is used to configure the spec/job for that particular runner.
+
+There are other pipeline options you can configure within the ``gitlab-ci`` section
+as well.  The ``bootstrap`` section allows you to specify lists of specs from
+your ``definitions`` that should be staged ahead of the environment's ``specs`` (this
+section is described in more detail below).  The ``enable-artifacts-buildcache`` key
+takes a boolean and determines whether the pipeline uses artifacts to store and
+pass along the buildcaches from one stage to the next (the default if you don't
+provide this option is ``False``).  The ``enable-debug-messages`` key takes a boolean
+and allows you to choose whether the pipeline build jobs are run as ``spack -d ci rebuild``
+or just ``spack ci rebuild`` (the default is not to enable debug messages).  The
+``final-stage-rebuild-index`` section controls whether an extra job is added to the
+end of your pipeline (in a stage by itself) which will regenerate the mirror's
+buildcache index.  Under normal operation, each pipeline job that rebuilds a package
+will re-generate the mirror's buildcache index after the buildcache entry for that
+job has been created and pushed to the mirror.  Since jobs in the same stage can run in
+parallel, there is the possibility that at the end of some stage, the index may not
+reflect all the binaries in the buildcache.  Adding the ``final-stage-rebuild-index``
+section ensures that at the end of the pipeline, the index will be in sync with the
+binaries on the mirror.  If the mirror lives in an S3 bucket, this job will need to
+run on a machine with the Python ``boto3`` module installed, and consequently the
+``final-stage-rebuild-index`` needs to specify a list of ``tags`` to pick a runner
+satisfying that condition.  It can also take an ``image`` key so Docker executor type
+runners can pick the right image for the index regeneration job.
 
 The optional ``cdash`` section provides information that will be used by the
 ``spack ci generate`` command (invoked by ``spack ci start``) for reporting
@@ -223,15 +247,15 @@ description that will be used by Gitlab CI. Once all the jobs have been assigned
 a runner, the ``.gitlab-ci.yml`` is written to disk.
 
 The short example provided above would result in the ``readline``, ``ncurses``,
-and ``pkgconf`` packages getting staged and built on two different runners.  The
-runner named ``spack-cloud-centos`` (the names have no meaning, and can be
-anything) will be assigned to build all three packages for ``centos7``, while
-the ``spack-cloud-ubuntu`` runner will be assigned to build the same set of
-packages for ``ubuntu-18.04``. The resulting ``.gitlab-ci.yml`` will contain 6
-jobs in three stages.  Once the jobs have been generated, the presence of a
-``--cdash-credentials`` argument to the ``spack ci generate`` command would result
-in all of the jobs being put in a build group on CDash called "Release Testing"
-(that group will be created if it didn't already exist).
+and ``pkgconf`` packages getting staged and built on the runner chosen by the
+``spack-k8s`` tag.  In this example, we assume the runner is a Docker executor
+type runner, and thus certain jobs will be run in the ``centos7`` container,
+and others in the ``ubuntu-18.04`` container.  The resulting ``.gitlab-ci.yml``
+will contain 6 jobs in three stages.  Once the jobs have been generated, the
+presence of a ``SPACK_CDASH_AUTH_TOKEN`` environment variable during the
+``spack ci generate`` command would result in all of the jobs being put in a
+build group on CDash called "Release Testing" (that group will be created if
+it didn't already exist).
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional compiler bootstrapping
