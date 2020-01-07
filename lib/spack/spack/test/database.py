@@ -714,6 +714,6 @@ def test_query_unused_specs(mutable_database):
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
 
-    unused = spack.store.unused_specs()
+    unused = spack.store.db.unused_specs
     assert len(unused) == 1
     assert unused[0].name == 'cmake'
