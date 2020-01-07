@@ -42,6 +42,6 @@ def gc(parser, args):
         return
 
     if not args.yes_to_all:
-        spack.cmd.uninstall.confirmation_before_removal(specs)
+        spack.cmd.uninstall.confirm_removal(specs)
 
     spack.cmd.uninstall.do_uninstall(None, specs, force=False)

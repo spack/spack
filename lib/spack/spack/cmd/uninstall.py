@@ -325,7 +325,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        confirmation_before_removal(anything_to_do)
+        confirm_removal(anything_to_do)
 
     # just force-remove things in the remove list
     for spec in remove_list:
@@ -335,9 +335,8 @@ def uninstall_specs(args, specs):
     do_uninstall(env, uninstall_list, args.force)
 
 
-def confirmation_before_removal(specs):
-    """Displays the list of specs that are candidate for removal and asks
-    user for interactive confirmation before uninstalling them.
+def confirm_removal(specs):
+    """Display the list of specs to be removed and ask for confirmation.
 
     Args:
         specs (list): specs to be removed

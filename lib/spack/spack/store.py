@@ -112,8 +112,13 @@ def _construct_upstream_dbs_from_install_roots(
 
 
 def unused_specs():
-    """Returns a list of all the specs that are currently installed but
-    unused.
+    """Return all the specs that are currently installed but not needed
+    at runtime to satisfy user's requests.
+
+    Specs in the return list are those which are not either:
+        1. Installed on an explicit user request
+        2. Installed as a "run" or "link" dependency (even transitive) of
+           a spec at point 1.
     """
     # Create a scratch duplicate of the database. It will be useful to
     # perform a dry run and compute the specs that are to be returned.
