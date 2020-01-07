@@ -90,9 +90,6 @@ class Openblas(MakefilePackage):
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
 
-    # Use newer assembler to allow avx2 instructions
-    depends_on('binutils', type='build', when='os=rhel6')
-
     @property
     def parallel(self):
         # unclear whether setting `-j N` externally was supported before 0.3
