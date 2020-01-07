@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
@@ -120,51 +121,67 @@ class Openblas(MakefilePackage):
                 )
 
     @staticmethod
-    def _microarch_target_args(microarch):
-        # This function is constructed using output of compare-micros.py as of:
-        #   OpenBLAS v0.2.20-1615-gfd2ff271 (1/3/2020)
-        #   Spack    v0.13.2-700-gf7b9592eb (1/3/2020)
-        # and information in OpenBLAS' Makefile.system and Spack's
-        # microarchitectures.json
+    def _read_targets(target_file):
+        """Parse a list of available targets from the OpenBLAS/TargetList.txt
+        file.
+        """
+        micros = []
+        re_target = re.compile(r'^[A-Z0-9_]+$')
+        for line in target_file:
+            match = re_target.match(line)
+            if match is not None:
+                micros.append(line.strip().lower())
 
-        family = microarch.family
-        no_openblas = ['a64fx', 'i686', 'k10', 'mic_knl', 'nocona', 'pentium2',
-                       'pentium3', 'pentium4', 'power8le', 'power9le']
-        if microarch.name in no_openblas:
-            # Replace microarch with generic ancestor
-            tty.warn("Microarchitecture '{0}' is unknown to OpenBLAS; using "
-                     "generic '{1}'".format(microarch.name, family.name))
-            microarch = family
+        return micros
 
-        # Explicitly specify the *target* architecture
-        family_name = family.name
-        if family_name == 'aarch64':
-            family_name = 'arm64'
+    @staticmethod
+    def _microarch_target_args(microarch, available_targets):
+        """Given a spack microarchitecture and a list of targets found in
+        OpenBLAS' TargetList.txt, determine the best command-line arguments.
+        """
+        args = [] # Return value
 
-        args = ['ARCH=' + family_name]
-        target = None
+        # List of available architectures, and possible aliases
+        openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
+                'power', 'sparc', 'zarch'])
+        openblas_arch_map = {
+            'amd64': 'x86_64',
+            'powerpc64': 'power',
+            'i386': 'x86',
+            'aarch64': 'arm64',
+        }
+        openblas_arch.update(openblas_arch_map.keys())
+        openblas_arch.update(openblas_arch_map.values())
+
+        # Add spack-only microarchitectures to list
+        skylake = set(["skylake", "skylake_avx512"])
+        available_targets = set(available_targets) | skylake | openblas_arch
+
+        # Find closest ancestor that is known to build in blas
+        if microarch.name not in available_targets:
+            for microarch in microarch.ancestors:
+                if microarch.name in available_targets:
+                    break
+
+        arch_name = microarch.family.name
+        if arch_name in openblas_arch:
+            # Apply possible spack->openblas arch name mapping
+            arch_name = openblas_arch_map.get(arch_name, arch_name)
+            args.append('ARCH=' + arch_name)
+
         if microarch.vendor == 'generic':
+            # User requested a generic platform, or we couldn't find a good
+            # match for the requested one. Allow OpenBLAS to determine
+            # an optimized kernel at run time.
             args.append('DYNAMIC_ARCH=1')
-        elif microarch.name == 'skylake':
-            # Special case for disabling avx512 instructions
-            target = 'skylakex'
-            args.append('NO_AVX512=1')
+        elif microarch.name in skylake:
+            # Special case for renaming skylake family
+            args.append('TARGET=SKYLAKEX')
+            if microarch.name == "skylake":
+                # Special case for disabling avx512 instructions
+                args.append('NO_AVX512=1')
         else:
-            spack_to_openblas = {
-                'thunderx2': 'thunderx',
-                'skylake_avx512': 'skylakex',
-                'broadwell': 'haswell',
-                'westmere': 'nehalem',
-                'ivybridge': 'sandybridge',
-                'cannonlake': 'skylakex',
-                'cascadelake': 'skylakex',
-                'icelake': 'skylakex',
-                'zen2': 'zen'
-            }
-            target = spack_to_openblas.get(microarch.name, microarch.name)
-
-        if target is not None:
-            args.append('TARGET=' + target.upper())
+            args.append('TARGET=' + microarch.name.upper())
 
         return args
 
@@ -189,7 +206,13 @@ class Openblas(MakefilePackage):
             make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
         # Add target and architecture flags
-        make_defs += self._microarch_target_args(spec.target)
+        targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
+        if os.path.exists(targetlist_name):
+            with open(targetlist_name) as f:
+                avail_targets = self._read_targets(f)
+        else:
+            avail_targets = []
+        make_defs += self._microarch_target_args(spec.target, avail_targets)
 
         if '~shared' in self.spec:
             if '+pic' in self.spec:
