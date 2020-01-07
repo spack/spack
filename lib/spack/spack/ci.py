@@ -431,8 +431,7 @@ def pkg_name_from_spec_label(spec_label):
     return spec_label[:spec_label.index('/')]
 
 
-def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
-                            output_file):
+def generate_gitlab_ci_yaml(env, print_summary, output_file):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -462,10 +461,9 @@ def generate_gitlab_ci_yaml(env, cdash_credentials_path, print_summary,
         cdash_project = ci_cdash['project']
         cdash_site = ci_cdash['site']
 
-        if cdash_credentials_path:
-            with open(cdash_credentials_path) as fd:
-                cdash_auth_token = fd.read()
-                cdash_auth_token = cdash_auth_token.strip()
+        if 'SPACK_CDASH_AUTH_TOKEN' in os.environ:
+            tty.verbose("Using CDash auth token from environment")
+            cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
     # Make sure we use a custom spack if necessary
     custom_spack_repo = os.environ.get('SPACK_REPO')

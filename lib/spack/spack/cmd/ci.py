@@ -38,23 +38,8 @@ def setup_parser(subparser):
     start.add_argument(
         '--output-file', default=None,
         help="Absolute path to file where generated jobs file should be " +
-             "written.  The default is ${SPACK_ROOT}/.gitlab-ci.yml")
-    start.add_argument(
-        '--env-repo', default=None,
-        help="Url to repository where environment file lives.  The default " +
-             "is the local spack repo.")
-    start.add_argument(
-        '--env-path', default='',
-        help="Relative path to location of spack.yaml environment file, " +
-             "where path is relative to root of environment repository.  " +
-             "The default is the empty string, indicating the file lives at " +
-             "the root of the repository.")
-    start.add_argument(
-        '--cdash-token', default=None,
-        help="Token to use for registering a (possibly new) buildgroup with " +
-             "CDash, assuming the spack ci environment file includes " +
-             "reporting to one or more CDash instances.  The default is " +
-             "None, which prevents CDash build group registration.")
+             "written.  The default is .gitlab-ci.yml in the root of the " +
+             "repository.")
     start.add_argument(
         '--copy-to', default=None,
         help="Absolute path of additional location where generated jobs " +
@@ -76,23 +61,8 @@ def setup_parser(subparser):
     generate.add_argument(
         '--output-file', default=None,
         help="Absolute path to file where generated jobs file should be " +
-             "written.  The default is ${SPACK_ROOT}/.gitlab-ci.yml")
-    generate.add_argument(
-        '--env-repo', default=None,
-        help="Url to repository where environment file lives.  The default " +
-             "is the local spack repo.")
-    generate.add_argument(
-        '--env-path', default='',
-        help="Relative path to location of spack.yaml environment file, " +
-             "where path is relative to root of environment repository.  " +
-             "The default is the empty string, indicating the file lives at " +
-             "the root of the repository.")
-    generate.add_argument(
-        '--cdash-token', default=None,
-        help="Token to use for registering a (possibly new) buildgroup with " +
-             "CDash, assuming the spack ci environment file includes " +
-             "reporting to one or more CDash instances.  The default is " +
-             "None, which prevents CDash build group registration.")
+             "written.  The default is .gitlab-ci.yml in the root of the " +
+             "repository.")
     generate.add_argument(
         '--copy-to', default=None,
         help="Absolute path of additional location where generated jobs " +
@@ -116,25 +86,19 @@ def setup_parser(subparser):
     # Check a spec against mirror. Rebuild, create buildcache and push to
     # mirror (if necessary).
     rebuild = subparsers.add_parser('rebuild', help=ci_rebuild.__doc__)
-    rebuild.add_argument(
-        '--downstream-repo', default=None,
-        help="Url to repository where commit containing jobs yaml file " +
-             "should be pushed.")
-    rebuild.add_argument(
-        '--branch-name', default='default-branch',
-        help="Name of current branch, used in generation of pushed commit.")
-    rebuild.add_argument(
-        '--commit-sha', default='none',
-        help="SHA of current commit, used in generation of pushed commit.")
     rebuild.set_defaults(func=ci_rebuild)
 
 
 def ci_generate(args):
-    """Generate jobs file from a spack environment file containing CI info"""
+    """Generate jobs file from a spack environment file containing CI info.
+       Before invoking this command, you can set the environment variable
+       SPACK_CDASH_AUTH_TOKEN to contain the CDash authorization token
+       for creating a build group for the generated workload and registering
+       all generated jobs under that build group.  If this environment
+       variable is not set, no build group will be created on CDash."""
     env = ev.get_env(args, 'ci generate', required=True)
 
     output_file = args.output_file
-    cdash_auth_token = args.cdash_token
     copy_yaml_to = args.copy_to
 
     if not output_file:
@@ -145,23 +109,14 @@ def ci_generate(args):
         if not os.path.exists(gen_ci_dir):
             os.makedirs(gen_ci_dir)
 
-    # Create a temporary working directory
-    with spack_ci.TemporaryDirectory() as temp_dir:
-        # Write cdash auth token to file system
-        token_file = None
-        if cdash_auth_token:
-            token_file = os.path.join(temp_dir, cdash_auth_token)
-            with open(token_file, 'w') as fd:
-                fd.write('{0}\n'.format(cdash_auth_token))
+    # Generate the jobs
+    spack_ci.generate_gitlab_ci_yaml(env, True, output_file)
 
-        # Generate the jobs
-        spack_ci.generate_gitlab_ci_yaml(env, token_file, True, output_file)
-
-        if copy_yaml_to:
-            copy_to_dir = os.path.dirname(copy_yaml_to)
-            if not os.path.exists(copy_to_dir):
-                os.makedirs(copy_to_dir)
-            shutil.copyfile(output_file, copy_yaml_to)
+    if copy_yaml_to:
+        copy_to_dir = os.path.dirname(copy_yaml_to)
+        if not os.path.exists(copy_to_dir):
+            os.makedirs(copy_to_dir)
+        shutil.copyfile(output_file, copy_yaml_to)
 
 
 def ci_pushyaml(args):

@@ -258,10 +258,10 @@ spack:
 
         with ev.read('test'):
             fake_token = 'notreallyatokenbutshouldnotmatter'
+            os.environ['SPACK_CDASH_AUTH_TOKEN'] = fake_token
             copy_to_file = str(tmpdir.join('backup-ci.yml'))
-            output = ci_cmd('generate', '--cdash-token', fake_token,
-                            '--copy-to', copy_to_file, output=str)
-            # That fake token should have resulted in being unable to
+            output = ci_cmd('generate', '--copy-to', copy_to_file, output=str)
+            # That fake token should still have resulted in being unable to
             # register build group with cdash, but the workload should
             # still have been generated.
             expect = 'Unable to populate buildgroup without CDash credentials'
