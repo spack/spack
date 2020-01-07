@@ -236,11 +236,10 @@ remove dependent packages *before* removing their dependencies or use the
 Garbage collection
 ^^^^^^^^^^^^^^^^^^
 
-Spack is a package manager that builds software from sources. As such
-it will often install tools that are needed just to build or test other
-software and are not otherwise necessary at runtime.
-To support cases where removing those tools can be a benefit, Spack provides
-the ``spack gc`` command that can uninstall all of them at once:
+When Spack builds software from sources, if often installs tools that are needed
+just to build or test other software. These are not necessary at runtime.
+To support cases where removing these tools can be a benefit Spack provides
+the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
 
 .. code-block:: console
 
@@ -267,6 +266,15 @@ the ``spack gc`` command that can uninstall all of them at once:
    ==> 9 installed packages
    -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
    hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
+
+In the example above Spack went through all the packages in the DB
+and removed everything that is not either:
+
+1. A package installed upon explicit request of the user
+2. A ``link`` or ``run`` dependency, even transitive, of one of the packages at point 1.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
+or :ref:`dependency-types` for a more thorough treatment of dependency types.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
@@ -449,6 +457,8 @@ Running ``spack find`` with no arguments lists installed packages:
 Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
+
+.. _cmd-spack-find-metadata:
 
 """"""""""""""""""""""""""""""""
 Viewing more metadata
