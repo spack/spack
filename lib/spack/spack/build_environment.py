@@ -53,7 +53,6 @@ import spack.config
 import spack.main
 import spack.paths
 import spack.store
-import spack.user_environment as uenv
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -721,6 +720,7 @@ def setup_package(pkg, dirty, context='build'):
     if context == 'build':
         pkg.setup_build_environment(env)
     elif context == 'test':
+        import spack.user_environment as uenv  # avoid circular import
         env.extend(inspect_path(pkg.spec.prefix,
                                 uenv.prefix_inspections(pkg.spec.platform)))
 
