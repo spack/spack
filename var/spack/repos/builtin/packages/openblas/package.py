@@ -36,7 +36,6 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=True, description='Build static libraries')
 
     variant(
         'threads', default='none',
@@ -89,7 +88,6 @@ class Openblas(MakefilePackage):
     patch('openblas_fujitsu.patch', when='%fj')
 
     conflicts('%intel@16', when='@0.2.15:0.2.19')
-    conflicts('~shared~static')
 
     # Use newer assembler to allow avx2 instructions
     depends_on('binutils', type='build', when='os=rhel6')
@@ -180,12 +178,12 @@ class Openblas(MakefilePackage):
         # $SPACK_ROOT/lib/spack/env/<compiler> have symlinks with reasonable
         # names and hack them inside lib/spack/spack/compilers/<compiler>.py
         make_defs = [
-            'CC=' + spack_cc,
-            'FC=' + spack_fc,
+            'CC={0}'.format(spack_cc),
+            'FC={0}'.format(spack_fc),
         ]
 
         # force OpenBLAS to use externally defined parallel build
-        if spec.version < Version('0.3'):
+        if self.spec.version < Version('0.3'):
             make_defs.append('MAKE_NO_J=1')  # flag defined by our make.patch
         else:
             make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
@@ -193,23 +191,28 @@ class Openblas(MakefilePackage):
         # Add target and architecture flags
         make_defs += self._microarch_target_args(spec.target)
 
-        make_defs.append('NO_STATIC=' + '0' if '+static' in spec else '1')
-        make_defs.append('NO_SHARED=' + '0' if '+shared' in spec else '1')
-        if '~shared +pic' in self.spec:
-            make_defs += ['CFLAGS=' + self.compiler.pic_flag,
-                          'FFLAGS=' + self.compiler.pic_flag]
+        if '~shared' in self.spec:
+            if '+pic' in self.spec:
+                make_defs.extend([
+                    'CFLAGS={0}'.format(self.compiler.pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.pic_flag)
+                ])
+            make_defs += ['NO_SHARED=1']
         # fix missing _dggsvd_ and _sggsvd_
-        if spec.satisfies('@0.2.16'):
-            make_defs.append('BUILD_LAPACK_DEPRECATED=1')
+        if self.spec.satisfies('@0.2.16'):
+            make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
         # Add support for multithreading
-        threads = spec.variants['threads'].value
-        make_defs.append('USE_THREAD=' + ('0' if threads == 'none' else '1'))
-        make_defs.append('USE_OPENMP=' + ('1' if threads == 'openmp' else '0'))
+        if self.spec.satisfies('threads=openmp'):
+            make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
+        elif self.spec.satisfies('threads=pthreads'):
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=1']
+        else:
+            make_defs += ['USE_OPENMP=0', 'USE_THREAD=0']
 
-        # Force 64-bit native Fortran integer type
+        # 64bit ints
         if '+ilp64' in self.spec:
-            make_defs.append('INTERFACE64=1')
+            make_defs += ['INTERFACE64=1']
 
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
