@@ -39,6 +39,7 @@ class Umpire(CMakePackage):
     variant('fortran', default=False, description='Build Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
+    variant('openmp', default=False, description='Build with OpenMP support')
 
     depends_on('cuda', when='+cuda')
     depends_on('cmake@3.8:', type='build')
@@ -67,5 +68,8 @@ class Umpire(CMakePackage):
 
         if '+numa' in spec:
             options.append('-DENABLE_NUMA=On')
+
+        if '+openmp' in spec:
+            options.append('-DENABLE_OPENMP=On')
 
         return options
