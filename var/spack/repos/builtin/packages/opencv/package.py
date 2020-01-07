@@ -318,13 +318,12 @@ class Opencv(CMakePackage, CudaPackage):
         # See https://github.com/opencv/opencv_contrib/issues/1786
         if '+cudacodec' in spec and spec['cuda'].version.up_to(1) == '9':
             args.extend([
-            '-DBUILD_opencv_cudacodec=ON',
+                '-DBUILD_opencv_cudacodec=ON'
             ])
         else:
             args.extend([
-            '-DBUILD_opencv_cudacodec=OFF',
+                '-DBUILD_opencv_cudacodec=OFF'
             ])
-
 
     @property
     def libs(self):
