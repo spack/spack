@@ -265,6 +265,8 @@ class AspGenerator(object):
 
     def available_compilers(self):
         """Facts about available compilers."""
+
+        self.h2("Available compilers")
         compilers = spack.compilers.all_compiler_specs()
 
         compiler_versions = collections.defaultdict(lambda: set())
@@ -438,18 +440,18 @@ class AspGenerator(object):
         # TODO: do this with consistent suffixes.
         class Head(object):
             node = fn.node
-            arch_platform = fn.arch_platform_set
-            arch_os = fn.arch_os_set
-            arch_target = fn.arch_target_set
+            node_platform = fn.node_platform_set
+            node_os = fn.node_os_set
+            node_target = fn.node_target_set
             variant = fn.variant_set
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
 
         class Body(object):
             node = fn.node
-            arch_platform = fn.arch_platform
-            arch_os = fn.arch_os
-            arch_target = fn.arch_target
+            node_platform = fn.node_platform
+            node_os = fn.node_os
+            node_target = fn.node_target
             variant = fn.variant_value
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
@@ -466,11 +468,11 @@ class AspGenerator(object):
         arch = spec.architecture
         if arch:
             if arch.platform:
-                clauses.append(f.arch_platform(spec.name, arch.platform))
+                clauses.append(f.node_platform(spec.name, arch.platform))
             if arch.os:
-                clauses.append(f.arch_os(spec.name, arch.os))
+                clauses.append(f.node_os(spec.name, arch.os))
             if arch.target:
-                clauses.append(f.arch_target(spec.name, arch.target))
+                clauses.append(f.node_target(spec.name, arch.target))
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
@@ -528,13 +530,83 @@ class AspGenerator(object):
                 if dep.versions.concrete:
                     self.possible_versions[dep.name].add(dep.version)
 
+    def _supported_targets(self, compiler, targets):
+        """Get a list of which targets are supported by the compiler.
+
+        Results are ordered most to least recent.
+        """
+        supported = []
+
+        for target in targets:
+            compiler_info = target.compilers.get(compiler.name)
+            if not compiler_info:
+                # if we don't know, we assume it's supported and leave it
+                # to the user to debug
+                supported.append(target)
+                continue
+
+            if not isinstance(compiler_info, list):
+                compiler_info = [compiler_info]
+
+            for info in compiler_info:
+                version = ver(info['versions'])
+                if compiler.version.satisfies(version):
+                    supported.append(target)
+
+        return sorted(supported, reverse=True)
+
     def arch_defaults(self):
         """Add facts about the default architecture for a package."""
         self.h2('Default architecture')
-        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-        self.fact(fn.arch_platform_default(default_arch.platform))
-        self.fact(fn.arch_os_default(default_arch.os))
-        self.fact(fn.arch_target_default(default_arch.target))
+        default = spack.spec.ArchSpec(spack.architecture.sys_type())
+        self.fact(fn.node_platform_default(default.platform))
+        self.fact(fn.node_os_default(default.os))
+        self.fact(fn.node_target_default(default.target))
+
+        uarch = default.target.microarchitecture
+
+        self.h2('Target compatibility')
+
+        # listing too many targets can be slow, at least with our current
+        # encoding. To reduce the number of options to consider, only
+        # consider the *best* target that each compiler supports, along
+        # with the family.
+        compatible_targets = [uarch] + uarch.ancestors
+        compilers = self.compilers_for_default_arch()
+
+        # this loop can be used to limit the number of targets
+        # considered. Right now we consider them all, but it seems that
+        # many targets can make things slow.
+        # TODO: investigate this.
+        best_targets = set([uarch.family.name])
+        for compiler in compilers:
+            supported = self._supported_targets(compiler, compatible_targets)
+            if not supported:
+                continue
+
+            for target in supported:
+                best_targets.add(target.name)
+                self.fact(fn.compiler_supports_target(
+                    compiler.name, compiler.version, target.name))
+                self.fact(fn.compiler_supports_target(
+                    compiler.name, compiler.version, uarch.family.name))
+
+        i = 0
+        for target in compatible_targets:
+            self.fact(fn.target(target.name))
+            self.fact(fn.target_family(target.name, target.family.name))
+            for parent in sorted(target.parents):
+                self.fact(fn.target_parent(target.name, parent.name))
+
+            # prefer best possible targets; weight others poorly so
+            # they're not used unless set explicitly
+            if target.name in best_targets:
+                self.fact(fn.target_weight(target.name, i))
+                i += 1
+            else:
+                self.fact(fn.target_weight(target.name, 100))
+
+            self.out.write("\n")
 
     def virtual_providers(self):
         self.h2("Virtual providers")
@@ -556,20 +628,13 @@ class AspGenerator(object):
             specs (list): list of Specs to solve
         """
         # get list of all possible dependencies
-        pkg_names = set(spec.fullname for spec in specs)
-
-        possible = set()
         self.possible_virtuals = set()
-        for name in pkg_names:
-            pkg = spack.repo.path.get_pkg_class(name)
-            possible.update(
-                pkg.possible_dependencies(
-                    virtuals=self.possible_virtuals,
-                    deptype=("build", "link", "run")
-                )
-            )
-
-        pkgs = set(possible) | set(pkg_names)
+        possible = spack.package.possible_dependencies(
+            *specs,
+            virtuals=self.possible_virtuals,
+            deptype=("build", "link", "run")
+        )
+        pkgs = set(possible)
 
         # get possible compilers
         self.possible_compilers = self.compilers_for_default_arch()
@@ -623,13 +688,13 @@ class ResultParser(object):
             self._specs[pkg].architecture = arch
         return arch
 
-    def arch_platform(self, pkg, platform):
+    def node_platform(self, pkg, platform):
         self._arch(pkg).platform = platform
 
-    def arch_os(self, pkg, os):
+    def node_os(self, pkg, os):
         self._arch(pkg).os = os
 
-    def arch_target(self, pkg, target):
+    def node_target(self, pkg, target):
         self._arch(pkg).target = target
 
     def variant_value(self, pkg, name, value):

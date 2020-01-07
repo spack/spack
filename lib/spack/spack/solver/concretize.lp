@@ -107,40 +107,47 @@ variant_not_default(P, V, X, 0)
 #defined variant_single_value/2.
 
 %-----------------------------------------------------------------------------
-% Architecture semantics
+% Platform/OS semantics
 %-----------------------------------------------------------------------------
-
-% one platform, os, target per node.
-1 { arch_platform(P, A) : arch_platform(P, A) } 1 :- node(P).
-1 { arch_os(P, A) : arch_os(P, A) } 1             :- node(P).
-1 { arch_target(P, T) : arch_target(P, T) } 1     :- node(P).
+% one platform, os per node
+% TODO: convert these to use optimization, like targets.
+1 { node_platform(P, A) : node_platform(P, A) } 1 :- node(P).
+1 { node_os(P, A) : node_os(P, A) } 1 :- node(P).
 
 % arch fields for pkg P are set if set to anything
-arch_platform_set(P) :- arch_platform_set(P, _).
-arch_os_set(P) :- arch_os_set(P, _).
-arch_target_set(P) :- arch_target_set(P, _).
+node_platform_set(P) :- node_platform_set(P, _).
+node_os_set(P) :- node_os_set(P, _).
+
+% if no platform/os is set, fall back to the defaults
+node_platform(P, A)
+    :- node(P), not node_platform_set(P), node_platform_default(A).
+node_os(P, A) :- node(P), not node_os_set(P), node_os_default(A).
+
+% setting os/platform on a node is a hard constraint
+node_platform(P, A) :- node(P), node_platform_set(P, A).
+node_os(P, A) :- node(P), node_os_set(P, A).
 
 % avoid info warnings (see variants)
-#defined arch_platform_set/2.
-#defined arch_os_set/2.
-#defined arch_target_set/2.
+#defined node_platform_set/2.
+#defined node_os_set/2.
 
-% if architecture value is set, it's the value
-arch_platform(P, A) :- node(P), arch_platform_set(P, A).
-arch_os(P, A) :- node(P), arch_os_set(P, A).
-arch_target(P, A) :- node(P), arch_target_set(P, A).
+%-----------------------------------------------------------------------------
+% Target semantics
+%-----------------------------------------------------------------------------
+% one target per node -- optimization will pick the "best" one
+1 { node_target(P, T) : target(T) } 1 :- node(P).
 
-% if no architecture is set, fall back to the default architecture value.
-arch_platform(P, A) :- node(P), not arch_platform_set(P),
-                       arch_platform_default(A).
-arch_os(P, A)       :- node(P), not arch_os_set(P), arch_os_default(A).
-arch_target(P, A)   :- node(P), not arch_target_set(P), arch_target_default(A).
+% can't use targets on node if the compiler for the node doesn't support them
+:- node_target(P, T), not compiler_supports_target(C, V, T),
+   node_compiler(P, C), node_compiler_version(P, C, V).
 
-% propagate platform, os, target downwards
-% TODO: handle multiple dependents and arch compatibility
-arch_platform_set(D, A) :- node(D), depends_on(P, D), arch_platform_set(P, A).
-arch_os_set(D, A) :- node(D), depends_on(P, D), arch_os_set(P, A).
-arch_target_set(D, A) :- node(D), depends_on(P, D), arch_target_set(P, A).
+% if a target is set explicitly, respect it
+node_target(P, T) :- node(P), node_target_set(P, T).
+
+% each node has the weight of its assigned target
+node_target_weight(P, N) :- node(P), node_target(P, T), target_weight(T, N).
+
+#defined node_target_set/2.
 
 %-----------------------------------------------------------------------------
 % Compiler semantics
@@ -212,14 +219,21 @@ root(D, 2) :- root(D), node(D).
 root(D, 1) :- not root(D), node(D).
 
 % prefer default variants
-#minimize { N*R@5,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
+#minimize { N*R@10,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
 
 % pick most preferred virtual providers
-#minimize{ N*R@4,D : provider_weight(D, N), root(P, R) }.
+#minimize{ N*R@9,D : provider_weight(D, N), root(P, R) }.
 
 % prefer more recent versions.
-#minimize{ N@3,P,V : version_weight(P, V, N) }.
+#minimize{ N@8,P,V : version_weight(P, V, N) }.
 
 % compiler preferences
-#maximize{ N@2,P : compiler_match(P, N) }.
-#minimize{ N@1,P : compiler_weight(P, N) }.
+#maximize{ N@7,P : compiler_match(P, N) }.
+#minimize{ N@6,P : compiler_weight(P, N) }.
+
+% fastest target for node
+
+% TODO: if these are slightly different by compiler (e.g., skylake is
+% best, gcc supports skylake and broadweell, clang's best is haswell)
+% things seem to get really slow.
+#minimize{ N@5,P : node_target_weight(P, N) }.
