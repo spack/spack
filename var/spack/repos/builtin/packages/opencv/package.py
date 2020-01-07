@@ -60,6 +60,7 @@ class Opencv(CMakePackage, CudaPackage):
     # OpenCV modules
     variant('calib3d', default=True, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
+    variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
     variant('dnn', default=True, description='Build DNN support')
     variant('features2d', default=True, description='features2d module')
     variant('flann', default=True, description='flann module')
@@ -310,6 +311,20 @@ class Opencv(CMakePackage, CudaPackage):
             ])
 
         return args
+
+        # CudaCodec
+        # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
+        # exists, otherwise build will fail
+        # See https://github.com/opencv/opencv_contrib/issues/1786
+        if '+cudacodec' in spec and spec['cuda'].version.up_to(1) == '9':
+            args.extend([
+            '-DBUILD_opencv_cudacodec=ON',
+            ])
+        else:
+            args.extend([
+            '-DBUILD_opencv_cudacodec=OFF',
+            ])
+
 
     @property
     def libs(self):
