@@ -4,8 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from shutil import rmtree
-from os import symlink
 
 
 class PyYajl(PythonPackage):
