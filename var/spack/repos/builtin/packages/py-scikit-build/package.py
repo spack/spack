@@ -22,6 +22,6 @@ class PyScikitBuild(PythonPackage):
 
     version('0.10.0', sha256='2beec252813b20327072c15e9d997f15972aedcc6a130d0154979ff0fdb1b010')
 
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools@28.0.0:', type=('build', 'run'))
     depends_on('py-packaging',  type=('build', 'run'))
     depends_on('py-wheel',      type=('build', 'run'))
