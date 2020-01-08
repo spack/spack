@@ -7,9 +7,9 @@ from spack import *
 
 
 class PyScikitBuild(PythonPackage):
-    """scikit-build is an improved build system generator for CPython 
-       C/C++/Fortran/Cython extensions. It provides better support for 
-       additional compilers, build systems, cross compilation, and 
+    """scikit-build is an improved build system generator for CPython
+       C/C++/Fortran/Cython extensions. It provides better support for
+       additional compilers, build systems, cross compilation, and
        locating dependencies and their associated build requirements.
 
        The scikit-build package is fundamentally just glue between
