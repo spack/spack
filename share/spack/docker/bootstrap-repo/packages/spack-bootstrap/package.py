@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# flake8: noqa
 
 from spack import *
+
 
 class SpackBootstrap(BundlePackage):
     # bootstrap phase 1
