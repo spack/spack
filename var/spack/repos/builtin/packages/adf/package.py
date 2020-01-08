@@ -37,5 +37,5 @@ class Adf(Package):
             if os.path.isdir(filename):
                 shutil.copytree(filename, join_path(self.prefix, filename))
             elif not fnmatch.fnmatch(filename, "spack-build.*") or \
-                fnmatch.fnmatch(filename, "adf*"):
+                     fnmatch.fnmatch(filename, "adf*"):
                 shutil.copy(filename, self.prefix)
