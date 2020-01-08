@@ -15,8 +15,8 @@ class Adf(Package):
     version('2017.113', '666ef15d253b74c707dd14da35e7cf283ca20e21e24ed43cb953fb9d1f2f1e15')
 
     def url_for_version(self, version):
-        return "file://{0}/adf/adf{1}.pc64_linux.openmpi.bin.tgz"
-                .format(os.getcwd(), version)
+        return "file://{0}/adf/adf{1}.pc64_linux.openmpi.bin.tgz".format(
+               os.getcwd(), version)
 
     # Licensing
     license_required = True
@@ -36,6 +36,6 @@ class Adf(Package):
         for filename in os.listdir(self.stage.source_path):
             if os.path.isdir(filename):
                 shutil.copytree(filename, join_path(self.prefix, filename))
-            elif not fnmatch.fnmatch(filename, "spack-build.*")
-                 or fnmatch.fnmatch(filename, "adf*"):
+            elif not fnmatch.fnmatch(filename, "spack-build.*") \
+                or fnmatch.fnmatch(filename, "adf*"):
                 shutil.copy(filename, self.prefix)
