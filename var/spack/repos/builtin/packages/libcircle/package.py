@@ -14,7 +14,7 @@ class Libcircle(AutotoolsPackage):
     git      = "https://github.com/hpc/libcircle.git"
 
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('0.2.1-rc.1', sha256='5747f91cf4417023304dcc92fd07e3617ac712ca1eeb698880979bbca3f54865',
             url='https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz')
 
@@ -26,4 +26,3 @@ class Libcircle(AutotoolsPackage):
             # Bootstrap with autotools
             bash = which('bash')
             bash('./autogen.sh')
-
