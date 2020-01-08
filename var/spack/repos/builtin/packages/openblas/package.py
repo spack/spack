@@ -8,7 +8,6 @@ import re
 
 from spack import *
 from spack.package_test import compare_output_file, compile_c_and_execute
-import llnl.util.tty as tty
 
 
 class Openblas(MakefilePackage):
@@ -136,11 +135,11 @@ class Openblas(MakefilePackage):
         """Given a spack microarchitecture and a list of targets found in
         OpenBLAS' TargetList.txt, determine the best command-line arguments.
         """
-        args = [] # Return value
+        args = []  # Return value
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
-                'power', 'sparc', 'zarch'])
+                             'power', 'sparc', 'zarch'])
         openblas_arch_map = {
             'amd64': 'x86_64',
             'powerpc64': 'power',
