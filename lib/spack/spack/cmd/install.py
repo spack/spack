@@ -160,65 +160,8 @@ packages. If neither are chosen, don't run tests for any packages."""
         action='store_true',
         help="Show usage instructions for CDash reporting"
     )
-    subparser.add_argument(
-        '-y', '--yes-to-all',
-        action='store_true',
-        dest='yes_to_all',
-        help="""assume "yes" is the answer to every confirmation request.
-To run completely non-interactively, also specify '--no-checksum'."""
-    )
-    add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['spec'])
-
-
-def add_cdash_args(subparser, add_help):
-    cdash_help = {}
-    if add_help:
-        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
-        cdash_help['build'] = """The name of the build that will be reported to CDash.
-Defaults to spec of the package to install."""
-        cdash_help['site'] = """The site name that will be reported to CDash.
-Defaults to current system hostname."""
-        cdash_help['track'] = """Results will be reported to this group on CDash.
-Defaults to Experimental."""
-        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
-buildstamp which, when combined with build name, site and project,
-uniquely identifies the build, provide this argument to identify
-the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
-    else:
-        cdash_help['upload-url'] = argparse.SUPPRESS
-        cdash_help['build'] = argparse.SUPPRESS
-        cdash_help['site'] = argparse.SUPPRESS
-        cdash_help['track'] = argparse.SUPPRESS
-        cdash_help['buildstamp'] = argparse.SUPPRESS
-
-    subparser.add_argument(
-        '--cdash-upload-url',
-        default=None,
-        help=cdash_help['upload-url']
-    )
-    subparser.add_argument(
-        '--cdash-build',
-        default=None,
-        help=cdash_help['build']
-    )
-    subparser.add_argument(
-        '--cdash-site',
-        default=None,
-        help=cdash_help['site']
-    )
-
-    cdash_subgroup = subparser.add_mutually_exclusive_group()
-    cdash_subgroup.add_argument(
-        '--cdash-track',
-        default='Experimental',
-        help=cdash_help['track']
-    )
-    cdash_subgroup.add_argument(
-        '--cdash-buildstamp',
-        default=None,
-        help=cdash_help['buildstamp']
-    )
+    arguments.add_cdash_args(subparser, False)
+    arguments.add_common_arguments(subparser, ['yes_to_all'])
 
 
 def default_log_file(spec):
@@ -270,7 +213,7 @@ environment variables:
   SPACK_CDASH_AUTH_TOKEN
                         authentication token to present to CDash
                         '''))
-        add_cdash_args(parser, True)
+        arguments.add_cdash_args(parser, True)
         parser.print_help()
         return
 

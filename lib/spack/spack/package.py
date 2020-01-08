@@ -1592,9 +1592,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     do_install.__doc__ += install_args_docstring
 
-    def do_test(self, log_file, dirty=False):
+    def do_test(self, dirty=False):
         def test_process():
-            with log_output(log_file) as logger:
+            test_log_file = os.path.join(
+                os.getcwd(), 'test-%s' % self.spec.format('{name}-{hash:7}'))
+            with log_output(test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
                             self.spec.format('{name}-{hash:7}'))
