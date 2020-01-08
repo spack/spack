@@ -399,23 +399,31 @@ class YamlFilesystemView(FilesystemView):
                      "The following packages will be unusable: %s"
                      % ", ".join((s.name for s in dependents)))
 
-        extensions = set(filter(lambda s: s.package.is_extension,
-                         to_deactivate))
-        standalones = to_deactivate - extensions
+        # Determine the order that packages should be removed from the view;
+        # dependents come before their dependencies.
+        to_deactivate_sorted = list()
+        depmap = dict()
+        for spec in to_deactivate:
+            depmap[spec] = set(d for d in spec.traverse(root=False)
+                               if d in to_deactivate)
 
-        # Please note that a traversal of the DAG in post-order and then
-        # forcibly removing each package should remove the need to specify
-        # with_dependents for deactivating extensions/allow removal without
-        # additional checks (force=True). If removal performance becomes
-        # unbearable for whatever reason, this should be the first point of
-        # attack.
-        #
-        # see: https://github.com/spack/spack/pull/3227#discussion_r117147475
-        remove_extension = ft.partial(self.remove_extension,
-                                      with_dependents=with_dependents)
+        while depmap:
+            for spec in [s for s, d in depmap.items() if not d]:
+                to_deactivate_sorted.append(spec)
+                for s in depmap.keys():
+                    depmap[s].discard(spec)
+                depmap.pop(spec)
+        to_deactivate_sorted.reverse()
 
-        set(map(remove_extension, extensions))
-        set(map(self.remove_standalone, standalones))
+        # Ensure that the sorted list contains all the packages
+        assert set(to_deactivate_sorted) == to_deactivate
+
+        # Remove the packages from the view
+        for spec in to_deactivate_sorted:
+            if spec.package.is_extension:
+                self.remove_extension(spec, with_dependents=with_dependents)
+            else:
+                self.remove_standalone(spec)
 
         self._purge_empty_directories()
 
