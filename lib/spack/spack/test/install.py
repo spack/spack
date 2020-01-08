@@ -431,7 +431,7 @@ def test_pkg_install_log(install_mockery):
 
     # Attempt installing log without the build log file
     with pytest.raises(IOError, match="No such file or directory"):
-        spec.package.log()
+        spack.installer.log(spec.package)
 
     # Set up mock build files and try again
     log_path = spec.package.log_path
@@ -444,7 +444,7 @@ def test_pkg_install_log(install_mockery):
     install_path = os.path.dirname(spec.package.install_log_path)
     mkdirp(install_path)
 
-    spec.package.log()
+    spack.installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
