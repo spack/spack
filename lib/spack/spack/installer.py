@@ -94,7 +94,7 @@ def _check_install_locally(pkg, explicit):
 
     if pkg.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
-                    .format(pkg.unique_name, pkg.spec.prefix))
+                    .format(pkg.unique_id, pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
 
         # This will result in skipping all post-install hooks. In the case
@@ -527,7 +527,7 @@ class PackageInstaller(object):
         """
         if isinstance(pkg, spack.package.PackageBase):
             if not pkg.spec.concrete:
-                raise ValueError("{0} must have a concrete spec"
+                raise ValueError("{0}: Can only install concrete packages."
                                  .format(pkg.spec.name))
         else:
             raise ValueError("{0} must be a package".format(str(pkg)))
@@ -1366,7 +1366,7 @@ class PackageInstaller(object):
                 continue
 
             # Proceed with the installation since this is the only process
-            # that can work on the current pkg.
+            # that can work on the current package.
             self._install_task(task, **kwargs)
 
         # Cleanup, which includes releasing all of the read locks
