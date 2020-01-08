@@ -84,7 +84,7 @@ class OpenfoamOrg(Package):
 
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('flex',  type='build')
+    depends_on('flex')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -93,6 +93,8 @@ class OpenfoamOrg(Package):
 
     depends_on('metis@5:', when='+metis')
     depends_on('metis+int64', when='+metis+int64')
+
+    conflicts('%gcc@9:', when='@:6')
 
     # General patches - foamEtcFile as per openfoam.com (robuster)
     common = ['spack-Allwmake', 'README-spack']
@@ -292,6 +294,24 @@ class OpenfoamOrg(Package):
                     subdict,
                     posix=join_path('etc', 'config.sh',  component),
                     cshell=join_path('etc', 'config.csh', component))
+
+        # Fix gcc 9 build errors for all build targets
+        if '%gcc@9:' in self.spec:
+            extra_warning_flags = [
+                '-Wno-error=deprecated-copy',
+                '-Wno-deprecated-copy',
+            ]
+
+            with working_dir(self.stage.source_path):
+                for lang in ('c', 'c++'):
+                    rule_files = glob.glob(
+                        join_path('wmake', 'rules', '*Gcc*', lang))
+                    for rule_file in rule_files:
+                        filter_file(
+                            r'({0}WARN.* = )'.format(re.escape(lang)),
+                            r'\1 {0} '.format(' '.join(extra_warning_flags)),
+                            rule_file,
+                            backup=False)
 
     def build(self, spec, prefix):
         """Build using the OpenFOAM Allwmake script, with a wrapper to source
