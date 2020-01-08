@@ -29,8 +29,8 @@ class Extension:
         cmd.write(contents)
 
 
-@pytest.fixture(params=['testcommand'])
-def extension(request, tmpdir):
+@pytest.fixture(params=['testcommand'], scope='function')
+def extension(request, tmpdir, config):
     """Create a basic extension command directory structure"""
     extension_name = request.param
     root = tmpdir.mkdir('spack-' + extension_name)
@@ -45,7 +45,7 @@ def extension(request, tmpdir):
         del sys.modules[module_name]
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def hello_world_extension(extension):
     """Create an extension with a hello-world command."""
     extension.add_command('hello-world', """
@@ -63,13 +63,13 @@ def hello_world(parser, args):
     yield extension
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def hello_world_cmd(hello_world_extension):
     """Create and return an invokable "hello-world" extension command."""
     yield spack.main.SpackCommand('hello-world')
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def hello_world_with_module_in_root(extension):
     """Create a "hello-world" extension command with additional code in the
     root folder.
@@ -136,9 +136,7 @@ def test_multi_extension_search(hello_world_extension, tmpdir):
     extra_ext_name = 'testcommand2'
     extra_ext = Extension(extra_ext_name,
                           tmpdir.mkdir('spack-' + extra_ext_name))
-    with spack.config.override('config:extensions',
-                               [str(extra_ext.root),
-                                str(hello_world_extension.root)]):
+    with spack.config.override('config:extensions', [str(extra_ext.root)]):
         assert ('Hello world') in spack.main.SpackCommand('hello-world')()
 
 
@@ -184,7 +182,7 @@ def test_missing_command():
                           ('/my/spack-hyphenated-extension', True)],
                          ids=['no_stem', 'vacuous', 'leading_hyphen',
                               'basic_good', 'trailing_slash', 'hyphenated'])
-def test_extension_naming(extension_data):
+def test_extension_naming(extension_data, config):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
     ``spack-<name>``; name may have embedded extensions but not begin
@@ -212,7 +210,7 @@ description = "Empty command implementation"\n""")
     assert "must define function 'bad_cmd'." in capture[1]
 
 
-def test_get_command_paths():
+def test_get_command_paths(config):
     """Exercise the construction of extension command search paths."""
     extensions = ('extension-1', 'extension-2')
     ext_paths = []
@@ -228,7 +226,7 @@ def test_get_command_paths():
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def failing_command(extension):
     """Ensure that the configured command fails to import with the specified
     error.
@@ -241,7 +239,7 @@ def failing_command(extension):
     return _fc
 
 
-# The following tests---test_failed_command_import_X)---ensure that the
+# The following tests---test_failed_command_import_X---ensure that the
 # import system passes through the exception caused by attempting to
 # import the failed command.
 def test_failed_command_import_importerror(failing_command):
