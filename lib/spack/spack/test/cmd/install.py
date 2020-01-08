@@ -185,7 +185,9 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 2
+
+    # Note we now get an additional ChildError set reported with a traceback
+    assert len(errors) == 3
 
 
 def test_install_overwrite(
