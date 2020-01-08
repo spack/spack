@@ -423,9 +423,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     # These are default values for instance variables.
     #
 
+    #: A list or set of build time test functions to be called when tests
+    #: are executed or 'None' if there are no such test functions.
+    build_time_test_callbacks = None
+
     #: Most Spack packages are used to install source or binary code while
     #: those that do not can be used to install a set of other Spack packages.
     has_code = True
+
+    #: A list or set of install time test functions to be called when tests
+    #: are executed or 'None' if there are no such test functions.
+    install_time_test_callbacks = None
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -1988,8 +1996,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         return " ".join("-Wl,-rpath,%s" % p for p in self.rpath)
 
-    build_time_test_callbacks = None
-
     @on_package_attributes(run_tests=True)
     def _run_default_build_time_test_callbacks(self):
         """Tries to call all the methods that are listed in the attribute
@@ -2008,8 +2014,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except AttributeError:
                 msg = 'RUN-TESTS: method not implemented [{0}]'
                 tty.warn(msg.format(name))
-
-    install_time_test_callbacks = None
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
