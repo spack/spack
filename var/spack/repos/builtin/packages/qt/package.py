@@ -71,9 +71,6 @@ class Qt(Package):
     variant('freetype', default='spack', description='Freetype2 support',
             values=('spack', 'qt', 'none'), multi=False)
 
-    conflicts('%intel', when='@5:',
-              msg='qt-5 does not build with the Intel compiler')
-
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
     patch('restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
@@ -120,6 +117,10 @@ class Qt(Package):
     patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
     patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
+    # patch overflow builtins
+    patch('qt5_11-intel-overflow.patch', when='@5.11')
+    patch('qt5_12-intel-overflow.patch', when='@5.12:')
+
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
     depends_on("flex", when='+webkit', type='build')
@@ -138,6 +139,7 @@ class Qt(Package):
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
     depends_on("sqlite", when='+sql', type=('build', 'run'))
+    depends_on("sqlite+column_metadata", when='+sql%intel', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
@@ -163,7 +165,8 @@ class Qt(Package):
         depends_on("xcb-util-keysyms")
         depends_on("xcb-util-renderutil")
         depends_on("xcb-util-wm")
-        depends_on("libxext", when='@3:4.99')
+        depends_on("libxext")
+        depends_on("libxrender")
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
@@ -345,7 +348,11 @@ class Qt(Package):
             config_args.append('-no-openssl')
 
         if '+sql' in self.spec:
-            config_args.append('-system-sqlite')
+            sqlite = self.spec['sqlite']
+            config_args.extend([
+                '-system-sqlite',
+                '-R', '{0}'.format(sqlite.prefix.lib),
+            ])
         else:
             comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
                      'sqlite', 'sqlite2']
@@ -507,7 +514,7 @@ class Qt(Package):
             '-no-directfb',
             '-{0}gtk{1}'.format(
                 '' if '+gtk' in spec else 'no-',
-                '' if version >= Version('5.8') else 'style')
+                '' if version >= Version('5.7') else 'style')
         ])
 
         if MACOS_VERSION:
