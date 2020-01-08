@@ -280,6 +280,7 @@ class InternalConfigScope(ConfigScope):
         self.sections = syaml.syaml_dict()
 
         if data:
+            data = _process_dict(data)
             for section in data:
                 dsec = data[section]
                 validate({section: dsec}, section_schemas[section])
@@ -505,14 +506,14 @@ class Configuration(object):
 
         Accepts the path syntax described in ``get()``.
         """
-        section, _, rest = path.partition(':')
+        parts = _process_path(path)
+        section = parts.pop(0)
 
-        if not rest:
+        if not parts:
             self.update_config(section, value, scope=scope)
         else:
             section_data = self.get_config(section, scope=scope)
 
-            parts = rest.split(':')
             data = section_data
             while len(parts) > 1:
                 key = parts.pop(0)
@@ -612,7 +613,7 @@ def _config():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
-    it. It is bundled inside a function so that configuratoin can be
+    it. It is bundled inside a function so that configuration can be
     initialized lazily.
 
     Return:
@@ -752,7 +753,7 @@ def _mark_internal(data, name):
     return d
 
 
-def _merge_yaml(dest, source):
+def _merge_yaml(dest, source, override=False):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
@@ -764,57 +765,93 @@ def _merge_yaml(dest, source):
     with `::` instead of `:`, and the key will override that of the
     parent instead of merging.
 
+    If override is True, then source will be copied to dest unconditionally.
     """
     def they_are(t):
         return isinstance(dest, t) and isinstance(source, t)
 
-    # If both are None, handle specially and return None.
-    if source is None and dest is None:
+    if source is None:
         return None
 
-    # If source is None, overwrite with source.
-    elif source is None:
-        return None
+    if not override:
+        # Source list is prepended (for precedence)
+        if they_are(list):
+            dest[:] = source + [x for x in dest if x not in source]
+            return dest
 
-    # Source list is prepended (for precedence)
-    if they_are(list):
-        dest[:] = source + [x for x in dest if x not in source]
-        return dest
+        # Source dict is merged into dest.
+        elif they_are(dict):
+            # track keys for marking
+            key_marks = {}
 
-    # Source dict is merged into dest.
-    elif they_are(dict):
-        # track keys for marking
-        key_marks = {}
+            for sk, sv in iteritems(source):
+                if _override(sk) or sk not in dest:
+                    # if sk ended with ::, or if it's new, completely override
+                    dest[sk] = copy.copy(sv)
+                else:
+                    # otherwise, merge the YAML
+                    dest[sk] = _merge_yaml(dest[sk], source[sk], _override(sk))
 
-        for sk, sv in iteritems(source):
-            if _override(sk) or sk not in dest:
-                # if sk ended with ::, or if it's new, completely override
-                dest[sk] = copy.copy(sv)
-            else:
-                # otherwise, merge the YAML
-                dest[sk] = _merge_yaml(dest[sk], source[sk])
+                # this seems unintuitive, but see below. We need this because
+                # Python dicts do not overwrite keys on insert, and we want
+                # to copy mark information on source keys to dest.
+                key_marks[sk] = sk
 
-            # this seems unintuitive, but see below. We need this because
-            # Python dicts do not overwrite keys on insert, and we want
-            # to copy mark information on source keys to dest.
-            key_marks[sk] = sk
+            # ensure that keys are marked in the destination. The
+            # key_marks dict ensures we can get the actual source key
+            # objects from dest keys
+            for dk in list(dest.keys()):
+                if dk in key_marks and syaml.markable(dk):
+                    syaml.mark(dk, key_marks[dk])
+                elif dk in key_marks:
+                    # The destination key may not be markable if it was derived
+                    # from a schema default. In this case replace the key.
+                    val = dest.pop(dk)
+                    dest[key_marks[dk]] = val
 
-        # ensure that keys are marked in the destination.  the key_marks dict
-        # ensures we can get the actual source key objects from dest keys
-        for dk in list(dest.keys()):
-            if dk in key_marks and syaml.markable(dk):
-                syaml.mark(dk, key_marks[dk])
-            elif dk in key_marks:
-                # The destination key may not be markable if it was derived
-                # from a schema default. In this case replace the key.
-                val = dest.pop(dk)
-                dest[key_marks[dk]] = val
+            return dest
 
-        return dest
+    # If we reach here, overwrite with a copy of the source value.
+    return copy.copy(source)
 
-    # In any other case, overwrite with a copy of the source value.
-    else:
-        return copy.copy(source)
+
+#
+# Process a path argument to config.set() that may contain overrides ('::' or
+# trailing ':')
+#
+def _process_path(path):
+    result = []
+    if path.startswith(':'):
+        raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".
+                                   format(path), '')
+    while path:
+        front, _, path = path.partition(':')
+        if (_ and not path) or path.startswith(':'):
+            path = path.lstrip(':')
+            front = syaml.syaml_str(front)
+            front.override = True
+        result.append(front)
+    return result
+
+
+#
+# Process a dict whose keys may describe overrides (trailing ':')
+#
+def _process_dict(data):
+    result = {}
+    for sk, sv in iteritems(data):
+        if sk.endswith(':'):
+            key = syaml.syaml_str(sk[:-1])
+            key.override = True
+        else:
+            key = sk
+
+        if isinstance(sv, dict):
+            result[key] = _process_dict(sv)
+        else:
+            result[key] = copy.copy(sv)
+
+    return result
 
 
 #
