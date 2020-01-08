@@ -17,7 +17,14 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
-    version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
+    version('3.10.1', sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
+    version('3.10.0', sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
+    version('3.8.3', sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
+    version('3.8.2', sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
+    # Prefer v3.8.1 for now as we haven't checked if newer versions compile
+    version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99', preferred=True)
+    # Latest long term release
+    version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
     variant('grass7', default=False, description='Build with GRASS providers and plugin')
 
