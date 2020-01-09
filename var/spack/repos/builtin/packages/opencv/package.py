@@ -60,6 +60,7 @@ class Opencv(CMakePackage, CudaPackage):
     # OpenCV modules
     variant('calib3d', default=True, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
+    variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
     variant('dnn', default=True, description='Build DNN support')
     variant('features2d', default=True, description='features2d module')
     variant('flann', default=True, description='flann module')
@@ -121,6 +122,11 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
 
+    # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
+    # exists, otherwise build will fail
+    # See https://github.com/opencv/opencv_contrib/issues/1786
+    conflicts('cuda@10:', when='+cudacodec')
+
     extends('python', when='+python')
 
     def cmake_args(self):
@@ -147,6 +153,8 @@ class Opencv(CMakePackage, CudaPackage):
                 'ON' if '+calib3d' in spec else 'OFF')),
             '-DBUILD_opencv_core:BOOL={0}'.format((
                 'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_cudacodec={0}'.format((
+                'ON' if '+cudacodec' in spec else 'OFF')),
             '-DBUILD_opencv_dnn:BOOL={0}'.format((
                 'ON' if '+dnn' in spec else 'OFF')),
             '-DBUILD_opencv_features2d={0}'.format((

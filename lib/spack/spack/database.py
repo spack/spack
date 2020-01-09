@@ -1295,6 +1295,30 @@ class Database(object):
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
 
+    @property
+    def unused_specs(self):
+        """Return all the specs that are currently installed but not needed
+        at runtime to satisfy user's requests.
+
+        Specs in the return list are those which are not either:
+            1. Installed on an explicit user request
+            2. Installed as a "run" or "link" dependency (even transitive) of
+               a spec at point 1.
+        """
+        needed, visited = set(), set()
+        with self.read_transaction():
+            for key, rec in self._data.items():
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
+
+            unused = [rec.spec for key, rec in self._data.items()
+                      if key not in needed and rec.installed]
+
+        return unused
+
 
 class UpstreamDatabaseLockingError(SpackError):
     """Raised when an operation would need to lock an upstream database"""
