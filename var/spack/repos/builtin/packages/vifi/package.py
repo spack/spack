@@ -17,6 +17,8 @@ class Vifi(Package):
 
     depends_on('perl', type='run')
     depends_on('python', type='run')
+    depends_on('py-pysam', type='run')
+    depends_on('hmmer', type='run')
 
     def install(self, spec, prefix):
         install_tree('scripts', prefix.bin)
