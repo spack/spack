@@ -42,7 +42,9 @@ class Libfabric(AutotoolsPackage):
                'rxd',
                'mlx',
                'tcp',
-               'efa')
+               'efa',
+               'mrail',
+               'shm')
 
     variant('fabrics',
             default='sockets',
