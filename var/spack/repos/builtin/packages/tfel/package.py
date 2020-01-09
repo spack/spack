@@ -142,5 +142,5 @@ class Tfel(CMakePackage):
                         format(self.spec['boost'].prefix))
             args.append('-DBoost_NO_SYSTEM_PATHS=ON')
             args.append('-DBoost_NO_BOOST_CMAKE=ON')
-            
+
         return args
