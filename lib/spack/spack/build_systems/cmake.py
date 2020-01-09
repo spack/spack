@@ -181,8 +181,15 @@ class CMakePackage(PackageBase):
     def define(cmake_var, value, kind=None):
         """Return a CMake command line argument that defines a variable.
 
-        The resulting argument will correctly convert boolean values to OFF/ON
-        and multi-valued variants to CMake semicolon-separated lists.
+        The "kind" argument corresponds to the CMake variable type annotation,
+        one of BOOL/STRING/PATH/FILEPATH/LIST . If not specified, it will be
+        detected from the ``value``'s type. String types with a leading slash
+        will assume ``kind="PATH"``.
+
+        If ``kind == "BOOL"``, then the value is cast to a ``bool`` and
+        converted to the cmake OFF/ON value. For ``kind == LIST``, where the
+        value is a container, its items will be converted to strings and joined
+        with semicolons.
 
         Examples:
 
@@ -211,6 +218,8 @@ class CMakePackage(PackageBase):
                 kind = "PATH"
             else:
                 kind = "STRING"
+        else:
+            kind = kind.upper()
 
         if kind == "BOOL":
             value = "ON" if value else "OFF"
