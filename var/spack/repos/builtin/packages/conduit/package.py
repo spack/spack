@@ -89,9 +89,7 @@ class Conduit(Package):
     #######################
     # Python
     #######################
-    # we need a shared version of python b/c linking with static python lib
-    # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python")
+    depends_on("python", when="+python")
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=('build', 'run'))
 
