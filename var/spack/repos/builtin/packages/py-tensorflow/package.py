@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -205,6 +205,11 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+computecpp', when='~opencl')
     conflicts('+rocm', when='@:1.11')
     conflicts('+cuda', when='platform=darwin', msg='There is no GPU support for macOS')
+    conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
+    conflicts('cuda_arch=20', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=30', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=32', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=20', when='@1.4:1.12.0,1.12.2:1.12.3', msg='Only compute capabilities 3.0 or higher are supported')
     conflicts('+tensorrt', when='@:1.5')
     conflicts('+tensorrt', when='~cuda')
     conflicts('+tensorrt', when='platform=darwin', msg='Currently TensorRT is only supported on Linux platform')
@@ -423,10 +428,9 @@ class PyTensorflow(Package, CudaPackage):
             # Please note that each additional compute capability significantly
             # increases your build time and binary size, and that TensorFlow
             # only supports compute capabilities >= 3.5
-            if spec.variants['cuda_arch'].value != 'none':
-                capabilities = ','.join('{0:.1f}'.format(
-                    float(i) / 10.0) for i in spec.variants['cuda_arch'].value)
-                env.set('TF_CUDA_COMPUTE_CAPABILITIES', capabilities)
+            capabilities = ','.join('{0:.1f}'.format(
+                float(i) / 10.0) for i in spec.variants['cuda_arch'].value)
+            env.set('TF_CUDA_COMPUTE_CAPABILITIES', capabilities)
         else:
             env.set('TF_NEED_CUDA', '0')
 
@@ -603,6 +607,15 @@ class PyTensorflow(Package, CudaPackage):
             '--color=no',
             '--jobs={0}'.format(make_jobs),
             '--config=opt',
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
         ]
 
         # See .bazelrc for when each config flag is supported

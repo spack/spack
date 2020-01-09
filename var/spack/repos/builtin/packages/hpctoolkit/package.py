@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Hpctoolkit(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     version('master', branch='master')
-    version('gpu', branch='master-gpu')
+    version('gpu', branch='gpu')
     version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
     version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
     version('2018.11.05', commit='d0c43e39020e67095b1f1d8bb89b75f22b12aee9')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope, ConfigError
 from spack.spec import Spec
+from spack.version import Version
 
 
 @pytest.fixture()
@@ -23,7 +24,6 @@ def concretize_scope(config, tmpdir):
     yield
 
     config.pop_scope()
-    spack.package_prefs.PackagePrefs.clear_caches()
     spack.repo.path._provider_index = None
 
 
@@ -60,7 +60,6 @@ def update_packages(pkgname, section, value):
     """Update config and reread package list"""
     conf = {pkgname: {section: value}}
     spack.config.set('packages', conf, scope='concretize')
-    spack.package_prefs.PackagePrefs.clear_caches()
 
 
 def assert_variant_values(spec, **variants):
@@ -85,7 +84,7 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_compilers(self, mutable_mock_packages):
+    def test_preferred_compilers(self, mutable_mock_repo):
         """Test preferred compilers are applied correctly
         """
         update_packages('mpileaks', 'compiler', ['clang@3.3'])
@@ -96,7 +95,7 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
-    def test_preferred_target(self, mutable_mock_packages):
+    def test_preferred_target(self, mutable_mock_repo):
         """Test preferred compilers are applied correctly
         """
         spec = concretize('mpich')
@@ -121,16 +120,16 @@ class TestConcretizePreferences(object):
         """
         update_packages('mpileaks', 'version', ['2.3'])
         spec = concretize('mpileaks')
-        assert spec.version == spack.spec.Version('2.3')
+        assert spec.version == Version('2.3')
 
         update_packages('mpileaks', 'version', ['2.2'])
         spec = concretize('mpileaks')
-        assert spec.version == spack.spec.Version('2.2')
+        assert spec.version == Version('2.2')
 
     def test_preferred_versions_mixed_version_types(self):
         update_packages('mixedversions', 'version', ['2.0'])
         spec = concretize('mixedversions')
-        assert spec.version == spack.spec.Version('2.0')
+        assert spec.version == Version('2.0')
 
     def test_preferred_providers(self):
         """Test preferred providers of virtual packages are
@@ -148,35 +147,35 @@ class TestConcretizePreferences(object):
         """"Test packages with some version marked as preferred=True"""
         spec = Spec('preferred-test')
         spec.concretize()
-        assert spec.version == spack.spec.Version('0.2.15')
+        assert spec.version == Version('0.2.15')
 
         # now add packages.yaml with versions other than preferred
         # ensure that once config is in place, non-preferred version is used
         update_packages('preferred-test', 'version', ['0.2.16'])
         spec = Spec('preferred-test')
         spec.concretize()
-        assert spec.version == spack.spec.Version('0.2.16')
+        assert spec.version == Version('0.2.16')
 
     def test_develop(self):
         """Test concretization with develop-like versions"""
         spec = Spec('develop-test')
         spec.concretize()
-        assert spec.version == spack.spec.Version('0.2.15')
+        assert spec.version == Version('0.2.15')
         spec = Spec('develop-test2')
         spec.concretize()
-        assert spec.version == spack.spec.Version('0.2.15')
+        assert spec.version == Version('0.2.15')
 
         # now add packages.yaml with develop-like versions
         # ensure that once config is in place, develop-like version is used
         update_packages('develop-test', 'version', ['develop'])
         spec = Spec('develop-test')
         spec.concretize()
-        assert spec.version == spack.spec.Version('develop')
+        assert spec.version == Version('develop')
 
         update_packages('develop-test2', 'version', ['0.2.15.develop'])
         spec = Spec('develop-test2')
         spec.concretize()
-        assert spec.version == spack.spec.Version('0.2.15.develop')
+        assert spec.version == Version('0.2.15.develop')
 
     def test_no_virtuals_in_packages_yaml(self):
         """Verify that virtuals are not allowed in packages.yaml."""
@@ -204,7 +203,6 @@ all:
         spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
-        spack.package_prefs.PackagePrefs.clear_caches()
         spack.package_prefs.get_packages_config()
 
     def test_external_mpi(self):

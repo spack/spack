@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
 import spack.cmd
 import spack.environment as ev
@@ -31,8 +32,8 @@ error_message = """You can either:
 # Arguments for display_specs when we find ambiguity
 display_args = {
     'long': True,
-    'show_flags': True,
-    'variants': True,
+    'show_flags': False,
+    'variants': False,
     'indent': 4,
 }
 
@@ -324,11 +325,7 @@ def uninstall_specs(args, specs):
         return
 
     if not args.yes_to_all:
-        tty.msg('The following packages will be uninstalled:\n')
-        spack.cmd.display_specs(anything_to_do, **display_args)
-        answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
-        if not answer:
-            tty.die('Will not uninstall any packages.')
+        confirm_removal(anything_to_do)
 
     # just force-remove things in the remove list
     for spec in remove_list:
@@ -336,6 +333,21 @@ def uninstall_specs(args, specs):
 
     # Uninstall everything on the list
     do_uninstall(env, uninstall_list, args.force)
+
+
+def confirm_removal(specs):
+    """Display the list of specs to be removed and ask for confirmation.
+
+    Args:
+        specs (list): specs to be removed
+    """
+    tty.msg('The following packages will be uninstalled:\n')
+    spack.cmd.display_specs(specs, **display_args)
+    print('')
+    answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+    if not answer:
+        tty.msg('Aborting uninstallation')
+        sys.exit(0)
 
 
 def uninstall(parser, args):

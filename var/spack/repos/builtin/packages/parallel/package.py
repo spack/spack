@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Parallel(AutotoolsPackage):
+class Parallel(AutotoolsPackage, GNUMirrorPackage):
     """GNU parallel is a shell tool for executing jobs in parallel using
     one or more computers. A job can be a single command or a small
     script that has to be run for each of the lines in the input.
     """
 
     homepage = "http://www.gnu.org/software/parallel/"
-    url      = "https://ftpmirror.gnu.org/parallel/parallel-20170122.tar.bz2"
+    gnu_mirror_path = "parallel/parallel-20170122.tar.bz2"
 
     version('20190222', sha256='86b1badc56ee2de1483107c2adf634604fd72789c91f65e40138d21425906b1c')
     version('20170322', sha256='f8f810040088bf3c52897a2ee0c0c71bd8d097e755312364b946f107ae3553f6')

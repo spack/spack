@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Nettle(AutotoolsPackage):
+class Nettle(AutotoolsPackage, GNUMirrorPackage):
     """The Nettle package contains the low-level cryptographic library
     that is designed to fit easily in many contexts."""
 
     homepage = "https://www.lysator.liu.se/~nisse/nettle/"
-    url      = "https://ftpmirror.gnu.org/nettle/nettle-3.3.tar.gz"
+    gnu_mirror_path = "nettle/nettle-3.3.tar.gz"
 
     version('3.4.1', sha256='f941cf1535cd5d1819be5ccae5babef01f6db611f9b5a777bae9c7604b8a92ad')
     version('3.4',   sha256='ae7a42df026550b85daca8389b6a60ba6313b0567f374392e54918588a411e94')

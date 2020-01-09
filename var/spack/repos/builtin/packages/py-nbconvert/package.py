@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,8 @@ class PyNbconvert(PythonPackage):
     depends_on('py-entrypoints@0.2.2:', type=('build', 'run'),    when='@5:')
     depends_on('py-tornado@4.0:', type=('build', 'run'),          when='+serve')
     depends_on('py-jupyter-client', type=('build', 'run'),        when='+execute')
-    depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@5:+execute')
+    depends_on('py-jupyter-client@4.2:', type=('build', 'run'),   when='@5.2.1:+execute')
+    depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@5.6.0:+execute')
     depends_on('py-defusedxml', type=('build', 'run'),            when='@5:')
     depends_on('py-testpath', type=('build', 'run'),              when='@5:')
     depends_on('py-bleach', type=('build', 'run'),                when='@5:')

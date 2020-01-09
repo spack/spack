@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -552,6 +552,34 @@ specify their own ``url``. Spack will use the nearest URL *before* the requested
 version. This is useful for packages that have an easy to extrapolate URL, but
 keep changing their URL format every few releases. With this method, you only
 need to specify the ``url`` when the URL changes.
+
+"""""""""""""""""""""""
+Mirrors of the main URL
+"""""""""""""""""""""""
+
+Spack supports listing mirrors of the main URL in a package by defining
+the ``urls`` attribute:
+
+.. code-block:: python
+
+  class Foo(Package):
+
+    urls = [
+        'http://example.com/foo-1.0.tar.gz',
+        'http://mirror.com/foo-1.0.tar.gz'
+    ]
+
+instead of just a single ``url``. This attribute is a list of possible URLs that
+will be tried in order when fetching packages. Notice that either one of ``url``
+or ``urls`` can be present in a package, but not both at the same time.
+
+A well-known case of packages that can be fetched from multiple mirrors is that
+of GNU. For that, Spack goes a step further and defines a mixin class that
+takes care of all of the plumbing and requires packagers to just define a proper
+``gnu_mirror_path`` attribute:
+
+.. literalinclude:: _spack_root/var/spack/repos/builtin/packages/autoconf/package.py
+   :lines: 9-18
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Skipping the expand step
@@ -1921,6 +1949,8 @@ issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
 
+
+.. _dependency-types:
 
 ^^^^^^^^^^^^^^^^
 Dependency types

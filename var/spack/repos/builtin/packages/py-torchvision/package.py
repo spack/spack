@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,9 @@ class PyTorchvision(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-torch@1.2.0:', when='@0.4.0:', type=('build', 'run'))
     depends_on('py-torch@1.1.0:', type=('build', 'run'))
-    depends_on('py-pillow@4.1.1:', type=('build', 'run'))  # or py-pillow-simd
+    # https://github.com/pytorch/vision/issues/1712
+    depends_on('py-pillow@4.1.1:6', when='@:0.4', type=('build', 'run'))  # or py-pillow-simd
+    depends_on('py-pillow@4.1.1:',  when='@0.5:', type=('build', 'run'))  # or py-pillow-simd
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.

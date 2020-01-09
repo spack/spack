@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -271,7 +271,7 @@ class Stage(object):
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -459,7 +459,7 @@ class Stage(object):
 
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
@@ -495,6 +495,16 @@ class Stage(object):
 
     def cache_mirror(self, stats):
         """Perform a fetch if the resource is not already cached"""
+        if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
+            # BundleFetchStrategy has no source to fetch. The associated
+            # fetcher does nothing but the associated stage may still exist.
+            # There is currently no method available on the fetcher to
+            # distinguish this ('cachable' refers to whether the fetcher
+            # refers to a resource with a fixed ID, which is not the same
+            # concept as whether there is anything to fetch at all) so we
+            # must examine the type of the fetcher.
+            return
+
         dst_root = spack.caches.mirror_cache.root
         absolute_storage_path = os.path.join(
             dst_root, self.mirror_paths.storage_path)
@@ -503,6 +513,7 @@ class Stage(object):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
+            self.check()
             spack.caches.mirror_cache.store(
                 self.fetcher, self.mirror_paths.storage_path)
             stats.added(absolute_storage_path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -215,11 +215,14 @@ _spack_pathadd() {
 }
 
 
-#
 # Determine which shell is being used
-#
 _spack_determine_shell() {
-    if [ -n "${BASH:-}" ]; then
+    if [ -f "/proc/$$/exe" ]; then
+        # If procfs is present this seems a more reliable
+        # way to detect the current shell
+        _sp_exe=$(readlink /proc/$$/exe)
+        basename ${_sp_exe}
+    elif [ -n "${BASH:-}" ]; then
         echo bash
     elif [ -n "${ZSH_NAME:-}" ]; then
         echo zsh

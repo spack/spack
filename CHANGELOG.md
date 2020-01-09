@@ -1,3 +1,19 @@
+# v0.13.3 (2019-12-23)
+
+This release contains more major performance improvements for Spack
+environments, as well as bugfixes for mirrors and a `python` issue with
+RHEL8.
+
+* mirror bugfixes: symlinks, duplicate patches, and exception handling (#13789)
+* don't try to fetch `BundlePackages` (#13908)
+* avoid re-fetching patches already added to a mirror (#13908)
+* avoid re-fetching alread added patches (#13908)
+* avoid re-fetching alread added patches (#13908)
+* allow repeated invocations of `spack mirror create` on the same dir (#13908)
+* bugfix for RHEL8 when `python` is unavailable (#14252)
+* improve concretization performance in environments (#14190)
+* improve installation performance in environments (#14263)
+
 # v0.13.2 (2019-12-04)
 
 This release contains major performance improvements for Spack environments, as

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ import spack.util.spack_json as sjson
 
 # everything here uses the mock_env_path
 pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_packages')
+    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
@@ -405,13 +405,11 @@ env:
     mpileaks:
       version: [2.2]
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -425,8 +423,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -437,8 +433,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -454,7 +450,6 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    spack.package_prefs.PackagePrefs.clear_caches()
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
@@ -467,8 +462,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -485,9 +480,6 @@ env:
   specs:
   - mpileaks
 """
-
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -500,8 +492,8 @@ packages:
     version: [0.8.11]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     # ensure included scope took effect
     assert any(
@@ -521,8 +513,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -542,8 +532,8 @@ packages:
     version: [0.8.12]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(
         x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
@@ -788,13 +778,13 @@ def test_indirect_build_dep():
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
-Dependency:
+    dependency::
 
-        x       y
-       /| (l)   | (b)
-  (b) | y       z2
-       \| (b)              # noqa: W605
-        z1
+              x       y
+             /| (l)   | (b)
+        (b) | y       z2
+             \| (b)
+              z1
 
     """
     default = ('build', 'link')

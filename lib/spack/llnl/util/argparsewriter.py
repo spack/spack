@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ import errno
 import sys
 
 
-class ArgparseWriter(object):
+class ArgparseWriter(argparse.HelpFormatter):
     """Analyzes an argparse ArgumentParser for easy generation of help."""
     def __init__(self, out=sys.stdout):
+        super(ArgparseWriter, self).__init__(out)
         self.level = 0
         self.out = out
 
@@ -48,7 +49,7 @@ class ArgparseWriter(object):
         def action_group(function, actions):
             for action in actions:
                 arg = fmt._format_action_invocation(action)
-                help = action.help if action.help else ''
+                help = self._expand_help(action) if action.help else ''
                 function(arg, re.sub('\n', ' ', help))
 
         if root:
