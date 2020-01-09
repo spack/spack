@@ -446,7 +446,7 @@ class Root(CMakePackage):
                 env.append_path('SPACK_INCLUDE_DIRS', include_path)
 
         # With that done, let's go fixing those deps
-        if self.spec.satisfies('@:6.08.99'):
+        if self.spec.satisfies('+x @:6.08.99'):
             add_include_path('xextproto')
         if self.spec.satisfies('@:6.12.99'):
             add_include_path('zlib')
