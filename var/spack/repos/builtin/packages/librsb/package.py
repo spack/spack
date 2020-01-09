@@ -5,8 +5,10 @@
 
 from spack import *
 
+
 class Librsb(AutotoolsPackage):
-    """librsb : A shared memory parallel sparse matrix computations library for the Recursive Sparse Blocks format"""
+    """librsb : A shared memory parallel sparse matrix computations
+    library for the Recursive Sparse Blocks format"""
 
     homepage = "http://librsb.sourceforge.net/"
     url      = "http://download.sourceforge.net/librsb/librsb-1.2.0.8.tar.gz"
