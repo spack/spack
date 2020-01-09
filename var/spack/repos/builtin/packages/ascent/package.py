@@ -80,27 +80,26 @@ class Ascent(Package, CudaPackage):
     # and we have seen errors with cuda in 3.15
     depends_on("cmake@3.14.1:3.14.99", type='build')
     depends_on("conduit~python", when="~python")
-    depends_on("conduit+python", when="+python+shared")
-    depends_on("conduit~shared~python", when="~shared")
+    depends_on("conduit~shared", when="~shared")
     depends_on("conduit~python~mpi", when="~python~mpi")
-    depends_on("conduit+python~mpi", when="+python+shared~mpi")
-    depends_on("conduit~shared~python~mpi", when="~shared~mpi")
+    depends_on("conduit+python~mpi", when="+python~mpi")
+    depends_on("conduit~shared~mpi", when="~shared~mpi")
 
     #######################
     # Python
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python+shared")
-    extends("python", when="+python+shared")
-    depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
-    depends_on("py-pip", when="+python+shared", type=('build', 'run'))
+    depends_on("python", when="+python")
+    extends("python", when="+python")
+    depends_on("py-numpy", when="+python", type=('build', 'run'))
+    depends_on("py-pip", when="+python", type=('build', 'run'))
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py", when="+mpi+python+shared")
+    depends_on("py-mpi4py", when="+mpi+python")
 
     #############################
     # TPLs for Runtime Features
@@ -334,7 +333,7 @@ class Ascent(Package, CudaPackage):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec and "+shared" in spec:
+        if "+python" in spec in spec:
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")

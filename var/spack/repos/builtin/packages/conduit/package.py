@@ -368,7 +368,7 @@ class Conduit(Package):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec and "+shared" in spec:
+        if "+python" in spec in spec:
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
