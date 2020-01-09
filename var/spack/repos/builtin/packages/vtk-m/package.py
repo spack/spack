@@ -36,7 +36,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("doubleprecision", default=True,
             description='enable double precision')
-    variant("logging", default=True, description="build logging support")
+    variant("logging", default=False, description="build logging support")
     variant("mpi", default=False, description="build mpi support")
     variant("openmp", default=(sys.platform != 'darwin'), description="build openmp support")
     variant("rendering", default=True, description="build rendering support")
@@ -58,7 +58,7 @@ class VtkM(CMakePackage, CudaPackage):
                           '30': 'kepler',  '32': 'kepler',  '35': 'kepler',
                           '50': 'maxwell', '52': 'maxwell', '53': 'maxwell',
                           '60': 'pascal',  '61': 'pascal',  '62': 'pascal',
-                          '70': 'turing',  '72': 'turing',  '75': 'turing'}
+                          '70': 'volta',   '72': 'turing',  '75': 'turing'}
         with working_dir('spack-build', create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs logic
