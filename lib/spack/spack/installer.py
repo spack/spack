@@ -1020,20 +1020,10 @@ class PackageInstaller(object):
             tty.msg(e.message)
             tty.msg('Package stage directory : {0}'
                     .format(pkg.stage.source_path))
-            self._cleanup_task(pkg, True)
 
-        except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-            tty.warn("Keeping existing install prefix in place.")
+            # TODO: How should StopIteration affect the installation of
+            # TODO:  dependent packages?
             self._cleanup_task(pkg, True)
-            # TODO: Does "best effort" installation mean raise exception here?
-            raise
-
-        except (Exception, KeyboardInterrupt, SystemExit) as exc:
-            err = 'Failed to install {0} due to {1}: {2}'
-            tty.error(err.format(pkg.name, exc.__class__.__name__,
-                      str(exc)))
-            self._cleanup_all_tasks()
-            raise
 
         finally:
             # Remove the install prefix if anything went wrong during install.
@@ -1289,8 +1279,9 @@ class PackageInstaller(object):
             if task.priority != 0:
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
-                tty.die('Cannot proceed from {0}: {1} uninstalled dependencies'
-                        .format(pkg_id, task.priority))
+                suffix = 'ies' if task.priority > 1 else 'y'
+                tty.die('Cannot proceed with {0}: {1} uninstalled dependenc{2}'
+                        .format(pkg_id, task.priority, suffix))
 
             # TODO: Add a check to ensure no attempt is made to install the pkg
             # TODO:   before any of its dependencies?
@@ -1367,15 +1358,35 @@ class PackageInstaller(object):
 
             # Proceed with the installation since this is the only process
             # that can work on the current package.
-            self._install_task(task, **kwargs)
+            try:
+                self._install_task(task, **kwargs)
+            except spack.directory_layout.InstallDirectoryAlreadyExistsError:
+                tty.warn("Keeping existing install prefix in place.")
+                self._cleanup_task(pkg, True)
+                # TODO: Does "best effort" mean raise exception here?
+                raise
+            except (Exception, KeyboardInterrupt, SystemExit) as exc:
+                # Assuming best effort installs so suppress the exception and
+                # mark as a failure UNLESS this is the explicit package.
+                # TODO: Does this interplay properly with Spack's
+                # TODO: 'fail_on_exit' option given the above goal?
+                err = 'Failed to install {0} due to {1}: {2}'
+                tty.error(err.format(pkg.name, exc.__class__.__name__,
+                          str(exc)))
+                if pkg_id == self.pkg.unique_id:
+                    raise
+                else:
+                    self._update_failed(task, True)
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
 
-        # Ensure we report that the status of the original pkg is reported
+        # Ensure we properly report if the original/explicit pkg is failed
         if self.pkg.unique_id in self.failed:
-            tty.msg('Installation of {0} failed.  Review log for details'
-                    .format(self.pkg.unique_id))
+            msg = ('Installation of {0} failed.  Review log for details'
+                   .format(self.pkg.unique_id))
+            tty.error(msg)
+            raise RuntimeError(msg)
 
     install.__doc__ += install_args_docstring
 

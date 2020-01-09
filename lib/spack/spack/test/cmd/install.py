@@ -139,8 +139,7 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
-    assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.name == 'ProcessError'
+    assert 'ProcessError' in out
     assert 'configure: error: in /path/to/some/file:' in out
     assert 'configure: error: cannot run C compiled programs.' in out
 
@@ -179,8 +178,6 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
-
-    # Note we now get an additional ChildError set reported with a traceback
     assert len(errors) == 3
 
 
@@ -375,10 +372,12 @@ def test_junit_output_with_errors(
         exc_type = getattr(builtins, exc_typename)
         raise exc_type(msg)
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
+    monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
+                        just_throw)
 
-    with tmpdir.as_cwd():
-        install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
+    with pytest.raises(Exception):
+        with tmpdir.as_cwd():
+            install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
     files = tmpdir.listdir()
     filename = tmpdir.join('test.xml')
@@ -480,9 +479,8 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
-                                  capfd):
-    # capfd interferes with Spack's capturing
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -500,7 +498,7 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -522,7 +520,7 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             cdash_track = 'some_mocked_track'

@@ -300,12 +300,13 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch):
+def test_failing_build(install_mockery, mock_fetch, capfd):
     spec = Spec('failing-build').concretized()
     pkg = spec.package
 
-    with pytest.raises(spack.build_environment.ChildError):
-        pkg.do_install()
+    pkg.do_install()
+    err = capfd.readouterr()[0]
+    assert "Installation of {0} failed".format(pkg.unique_id) in err
 
 
 class MockInstallError(spack.error.SpackError):
