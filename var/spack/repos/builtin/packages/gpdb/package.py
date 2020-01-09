@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Gpdb(AutotoolsPackage):
     Greenplum Database (GPDB) is an advanced, fully featured, open source
     data warehouse, based on PostgreSQL. It provides powerful and rapid
     analytics on petabyte scale data volumes. Uniquely geared toward big
-    data analytics, Greenplum Database is powered by the world’s most
+    data analytics, Greenplum Database is powered by the world's most
     advanced cost-based query optimizer delivering high analytical query
     performance on large data volumes.
     """
