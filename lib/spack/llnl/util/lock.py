@@ -8,6 +8,7 @@ import fcntl
 import errno
 import time
 import socket
+from datetime import datetime
 
 import llnl.util.tty as tty
 
@@ -465,57 +466,38 @@ class Lock(object):
 
     def _log_acquired(self, lock_type, wait_time, nattempts):
         attempts_part = get_attempts_str(wait_time, nattempts)
-        # TODO: Remove filtering once resolve prefix_failures issue
-        # self._debug(self._status_msg(lock_type, 'Acquired{0}'.
-        #                              format(attempts_part)))
-        if len(self.desc) > 0 and 'database' not in self.desc:
-            from datetime import datetime
-            now = datetime.now()
-            desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
-            self._debug(self._status_msg(lock_type, '{0}{1}'.
-                                         format(desc, attempts_part)))
+        now = datetime.now()
+        desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
+        self._debug(self._status_msg(lock_type, '{0}{1}'.
+                                     format(desc, attempts_part)))
 
     def _log_acquiring(self, lock_type):
-        self._verbose(self._status_msg(lock_type, 'Acquiring{0}'))
+        self._verbose(self._status_msg(lock_type, 'Acquiring'))
 
     def _log_downgraded(self, wait_time, nattempts):
         attempts_part = get_attempts_str(wait_time, nattempts)
-        # TODO: Remove filtering once resolve prefix_failures issue
-        # self._debug(self._status_msg('READ LOCK', 'Downgraded{0}'.
-        #                              format(attempts_part)))
-        if len(self.desc) > 0 and 'database' not in self.desc:
-            from datetime import datetime
-            now = datetime.now()
-            desc = 'Downgraded at %s' % now.strftime("%H:%M:%S.%f")
-            self._debug(self._status_msg('READ LOCK', '{0}{1}'
-                                         .format(desc, attempts_part)))
+        now = datetime.now()
+        desc = 'Downgraded at %s' % now.strftime("%H:%M:%S.%f")
+        self._debug(self._status_msg('READ LOCK', '{0}{1}'
+                                     .format(desc, attempts_part)))
 
     def _log_downgrading(self):
         self._verbose(self._status_msg('WRITE LOCK', 'Downgrading'))
 
     def _log_released(self, lock_type):
-        # TODO: Remove filtering once resolve prefix_failures issue
-        # self._debug(self._status_msg(lock_type, 'Released'))
-        if len(self.desc) > 0 and 'database' not in self.desc:
-            from datetime import datetime
-            now = datetime.now()
-            desc = 'Released at %s' % now.strftime("%H:%M:%S.%f")
-            self._debug(self._status_msg(lock_type, desc))
+        now = datetime.now()
+        desc = 'Released at %s' % now.strftime("%H:%M:%S.%f")
+        self._debug(self._status_msg(lock_type, desc))
 
     def _log_releasing(self, lock_type):
         self._verbose(self._status_msg(lock_type, 'Releasing'))
 
     def _log_upgraded(self, wait_time, nattempts):
         attempts_part = get_attempts_str(wait_time, nattempts)
-        # TODO: RRemove filtering once resolve prefix_failures issue
-        # self._debug(self._status_msg('WRITE LOCK', 'Upgraded{0}'.
-        #                              format(attempts_part)))
-        if len(self.desc) > 0 and 'database' not in self.desc:
-            from datetime import datetime
-            now = datetime.now()
-            desc = 'Upgraded at %s' % now.strftime("%H:%M:%S.%f")
-            self._debug(self._status_msg('WRITE LOCK', '{0}{1}'.
-                                         format(desc, attempts_part)))
+        now = datetime.now()
+        desc = 'Upgraded at %s' % now.strftime("%H:%M:%S.%f")
+        self._debug(self._status_msg('WRITE LOCK', '{0}{1}'.
+                                     format(desc, attempts_part)))
 
     def _log_upgrading(self):
         self._verbose(self._status_msg('READ LOCK', 'Upgrading'))
