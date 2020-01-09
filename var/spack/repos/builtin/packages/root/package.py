@@ -236,7 +236,7 @@ class Root(CMakePackage):
 
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
     conflicts('%gcc@5.0.0:', when='@:6.07.99')
-    
+
     # The version of Clang featured in ROOT <6.12 fails to build with
     # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
     conflicts('%gcc@9.0.0:', when='@:6.11.99')
