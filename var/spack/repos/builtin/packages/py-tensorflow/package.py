@@ -58,9 +58,7 @@ class PyTensorflow(Package, CudaPackage):
 
     variant('mkl', default=False, description='Build with MKL support')
     variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
-    # FIXME: ~gcp does not build for 2.0.0
-    # See https://github.com/tensorflow/tensorflow/issues/34878
-    variant('gcp', default=True, description='Build with Google Cloud Platform support')
+    variant('gcp', default=False, description='Build with Google Cloud Platform support')
     variant('hdfs', default=False, description='Build with Hadoop File System support')
     variant('aws', default=False, description='Build with Amazon AWS Platform support')
     variant('kafka', default=False, description='Build with Apache Kafka Platform support')
@@ -196,8 +194,8 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+gcp', when='@:0.8')
     conflicts('+hdfs', when='@:0.10')
     conflicts('+aws', when='@:1.3')
-    conflicts('+kafka', when='@:1.5')
-    conflicts('+ignite', when='@:1.11')
+    conflicts('+kafka', when='@:1.5,2.1:')
+    conflicts('+ignite', when='@:1.11,2.1:')
     conflicts('+xla', when='@:0')
     conflicts('+gdr', when='@:1.3')
     conflicts('+verbs', when='@:1.1')
@@ -652,14 +650,15 @@ class PyTensorflow(Package, CudaPackage):
             if '~hdfs' in spec:
                 args.append('--config=nohdfs')
 
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
+
+        if spec.satisfies('@1.12.1:2.0'):
             if '~ignite' in spec:
                 args.append('--config=noignite')
 
             if '~kafka' in spec:
                 args.append('--config=nokafka')
-
-            if '~nccl' in spec:
-                args.append('--config=nonccl')
 
         if spec.satisfies('@1.12.1,1.14:'):
             if '+numa' in spec:
@@ -670,10 +669,6 @@ class PyTensorflow(Package, CudaPackage):
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
-
-        if spec.satisfies('@2.1:'):
-            # TODO: is this needed?
-            args.append('--define=tensorflow_mkldnn_contraction_kernel=0')
 
         args.append('//tensorflow/tools/pip_package:build_pip_package')
 
