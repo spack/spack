@@ -1057,7 +1057,7 @@ class PackageInstaller(object):
         Source: Customization of "add_task" function at
                 docs.python.org/2/library/heapq.html
         """
-        msg = '{0} a build task for {1} with status {2}'
+        msg = "{0} a build task for {1} with status '{2}'"
         pkg_id = pkg.unique_id
 
         # Ensure do not (re-)queue installed or failed specs.
@@ -1430,7 +1430,7 @@ class BuildTask(object):
         if status != STATUS_REMOVED:
             self.status = status
         else:
-            msg = 'Cannot create a build task for {0} with status {1}'
+            msg = "Cannot create a build task for {0} with status '{1}'"
             raise RuntimeError(msg.format(self.spec.name, status))
 
         # Package is associated with a bootstrap compiler

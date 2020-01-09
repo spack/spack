@@ -521,10 +521,11 @@ class SpackCommand(object):
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
-            if tty.debug:
+            if tty.is_verbose():
+                fmt = self.command_name + ': {0}'
                 for ln in out.getvalue().split('\n'):
                     if len(ln) > 0:
-                        tty.debug(ln.replace('==> ', ''))
+                        tty.verbose(fmt.format(ln.replace('==> ', '')))
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,

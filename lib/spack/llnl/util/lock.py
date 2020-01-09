@@ -154,13 +154,11 @@ class Lock(object):
         tty.debug("{0} locking [{1}:{2}]: timeout {3} sec"
                   .format(lock_type[op], self._start, self._length, timeout))
 
-        msg = "{0} lock attempt #{1}"
         poll_intervals = iter(Lock._poll_interval_generator())
         start_time = time.time()
         num_attempts = 0
         while (not timeout) or (time.time() - start_time) < timeout:
             num_attempts += 1
-            self._verbose(msg.format(lock_type[op], num_attempts))
             if self._poll_lock(op):
                 total_wait_time = time.time() - start_time
                 return total_wait_time, num_attempts
@@ -170,7 +168,6 @@ class Lock(object):
         # TBD: Is an extra attempt after timeout needed/appropriate?
         num_attempts += 1
         if self._poll_lock(op):
-            self._verbose(msg.format(lock_type[op], num_attempts))
             total_wait_time = time.time() - start_time
             return total_wait_time, num_attempts
 
