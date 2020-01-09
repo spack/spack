@@ -25,11 +25,11 @@ class Adf(Package):
     license_vars = ['SCMLICENSE']
 
     def setup_run_environment(self, env):
-        run_env.set('ADFHOME', self.prefix)
-        run_env.set('ADFBIN', self.prefix.bin)
-        run_env.set('ADFRESOURCES', self.prefix.atomicdata)
-        run_env.set('SCMLICENSE', join_path(self.prefix, 'license.txt'))
-        run_env.set('SCM_TMPDIR', '/tmp')
+        env.set('ADFHOME', self.prefix)
+        env.set('ADFBIN', self.prefix.bin)
+        env.set('ADFRESOURCES', self.prefix.atomicdata)
+        env.set('SCMLICENSE', join_path(self.prefix, 'license.txt'))
+        env.set('SCM_TMPDIR', '/tmp')
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
