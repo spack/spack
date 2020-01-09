@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ from spack import *
 
 class Tomcat(Package):
     """
-    The Apache Tomcat® software is an open source implementation of the
+    The Apache Tomcat software is an open source implementation of the
     Java Servlet, JavaServer Pages, Java Expression Language and Java
     WebSocket technologies.
     """
