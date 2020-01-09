@@ -187,7 +187,7 @@ class TestAutotoolsPackage(object):
 class TestCMakePackage(object):
 
     def test_define(self):
-        s = Spec('cmake-client multi=up,right ~truthy single=red')
+        s = Spec('cmake-client')
         s.concretize()
         pkg = spack.repo.get(s)
 
@@ -202,6 +202,18 @@ class TestCMakePackage(object):
 
         arg = pkg.define('SINGLE', 'red')
         assert arg == '-DSINGLE:STRING=red'
+
+        arg = pkg.define('PREFIX', '/foo')
+        assert arg == '-DPREFIX:PATH=/foo'
+
+        # Given values are converted to Python bools and thence to CMake
+        arg = pkg.define('MYVAL', 'not an empty string', kind='BOOL')
+        assert arg == '-DMYVAL:BOOL=ON'
+        arg = pkg.define('MYVAL', [], kind='BOOL')
+        assert arg == '-DMYVAL:BOOL=OFF'
+
+        with pytest.raises(ValueError, match="Invalid CMake variable kind"):
+            pkg.define('FOOD', 'CARROT', kind='VEGETABLE')
 
     def test_define_from_variant(self):
         s = Spec('cmake-client multi=up,right ~truthy single=red')

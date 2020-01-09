@@ -150,7 +150,7 @@ class CMakePackage(PackageBase):
         define = CMakePackage.define
         args = [
             '-G', generator,
-            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
+            define('CMAKE_INSTALL_PREFIX', pkg.prefix, kind="PATH"),
             define('CMAKE_BUILD_TYPE', build_type),
         ]
 
@@ -178,7 +178,7 @@ class CMakePackage(PackageBase):
         return args
 
     @staticmethod
-    def define(cmake_var, value):
+    def define(cmake_var, value, kind=None):
         """Return a CMake command line argument that defines a variable.
 
         The resulting argument will correctly convert boolean values to OFF/ON
@@ -188,8 +188,9 @@ class CMakePackage(PackageBase):
 
             .. code-block:: python
 
-                [define('shared', True),
-                 define('cxxstd', 14),
+                [define('BUILD_SHARED_LIBS', True),
+                 define('CMAKE_CXX_STANDARD', 14),
+                 define('CMAKE_PREFIX_PATH', "/usr/local", kind="PATH"),
                  define('swr', ['avx', 'avx2'])]
 
             will generate the following configuration options:
@@ -198,23 +199,32 @@ class CMakePackage(PackageBase):
 
                 ["-DBUILD_SHARED_LIBS:BOOL=ON",
                  "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DCMAKE_PREFIX_PATH:PATH=/usr/local",
                  "-DSWR:STRING=avx;avx2]
         """
-        # Create a list of pairs. Each pair includes a configuration
-        # option and whether or not that option is activated
-        if isinstance(value, bool):
-            kind = 'BOOL'
-            value = "ON" if value else "OFF"
-        else:
-            kind = 'STRING'
-            if isinstance(value, (list, tuple)):
-                value = ";".join(str(v) for v in value)
+        if kind is None:
+            if isinstance(value, bool):
+                kind = "BOOL"
+            elif isinstance(value, (list, tuple)):
+                kind = "LIST"
+            elif isinstance(value, str) and value.startswith("/"):
+                kind = "PATH"
             else:
-                value = str(value)
+                kind = "STRING"
+
+        if kind == "BOOL":
+            value = "ON" if value else "OFF"
+        elif kind in ["STRING", "FILEPATH", "PATH"]:
+            value = str(value)
+        elif kind == "LIST":
+            kind = "STRING"
+            value = ";".join(str(v) for v in value)
+        else:
+            raise ValueError("Invalid CMake variable kind '{0}'".format(kind))
 
         return "".join(["-D", cmake_var, ":", kind, "=", value])
 
-    def define_from_variant(self, cmake_var, variant=None):
+    def define_from_variant(self, cmake_var, variant=None, **kwargs):
         """Return a CMake command line argument from the given variant's value.
 
         The optional ``variant`` argument defaults to the lower-case transform
@@ -261,7 +271,7 @@ class CMakePackage(PackageBase):
             raise KeyError(
                 '"{0}" is not a variant of "{1}"'.format(variant, self.name))
         value = self.spec.variants[variant].value
-        return self.define(cmake_var, value)
+        return self.define(cmake_var, value, **kwargs)
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
