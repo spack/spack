@@ -16,5 +16,8 @@ class Reporter(object):
     def build_report(self, filename, report_data):
         pass
 
+    def test_report(self, filename, report_data):
+        pass
+
     def concretization_report(self, filename, msg):
         pass
