@@ -80,7 +80,7 @@ environment variables:
 
     # Set up reporter
     setattr(args, 'package', [s.format() for s in specs_to_test])
-    reporter = spack.report.collect_info(args.log_format, args)
+    reporter = spack.report.collect_info('do_test', args.log_format, args)
     if not reporter.filename:
         if args.log_file:
             if os.path.isabs(args.log_file):
@@ -94,7 +94,7 @@ environment variables:
         reporter.filename = log_file
     reporter.specs = specs_to_test
 
-    with reporter:
+    with reporter('test'):
         if args.smoke_test:
             for spec in specs_to_test:
                 spec.package.do_test()
