@@ -9,7 +9,7 @@ import os
 
 
 class LlvmFlang(CMakePackage):
-    """LLVM-Flang is the Flang fork of LLVM needed by the Flang compiler."""
+    """LLVM-Flang is the Flang fork of LLVM needed by the Flang package."""
 
     homepage = "https://github.com/flang-compiler"
 
