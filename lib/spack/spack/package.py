@@ -52,7 +52,8 @@ from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
 from llnl.util.link_tree import LinkTree
 from spack.filesystem_view import YamlFilesystemView
-from spack.installer import install_args_docstring, PackageInstaller
+from spack.installer import \
+    install_args_docstring, PackageInstaller, InstallError
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -2172,13 +2173,7 @@ class FetchError(spack.error.SpackError):
         super(FetchError, self).__init__(message, long_msg)
 
 
-class InstallError(spack.error.SpackError):
-    """Raised when something goes wrong during install or uninstall."""
-
-    def __init__(self, message, long_msg=None):
-        super(InstallError, self).__init__(message, long_msg)
-
-
+# TODO: Where is this being used?
 class ExternalPackageError(InstallError):
     """Raised by install() when a package is only for external use."""
 

@@ -25,6 +25,7 @@ import llnl.util.lock as lk
 import llnl.util.tty as tty
 import spack.binary_distribution as binary_distribution
 import spack.compilers
+import spack.error
 import spack.hooks
 import spack.package
 import spack.repo
@@ -111,9 +112,8 @@ def _do_fake_install(pkg):
     and libraries.
 
     Args:
-        pkg (PackageBase): the package whose installation is to be faked
-
-    Return:
+        pkg (spack.package.PackageBase): the package whose installation is to
+            be faked
     """
 
     command = pkg.name
@@ -161,9 +161,10 @@ def _get_bootstrap_compilers(pkg):
         pkg (Package): the package that may need its compiler installed
 
     Return:
-        (list) list of tuples, (PackageBase, bool), for concretized
-            compiler-related packages that need to be installed and bool
-            values specify whether the package is the bootstrap compiler
+        (list) list of tuples, (spack.package.PackageBase, bool), for
+            concretized compiler-related packages that need to be installed
+            and bool values specify whether the package is the bootstrap
+            compiler
             (``True``) or one of its dependencies (``False``)
     """
     tty.debug('Bootstrapping {0} compiler for {1}'
@@ -212,7 +213,8 @@ def _installed_from_cache(pkg, cache_only, explicit):
     Install the package from binary cache
 
     Args:
-        pkg (PackageBase): the package to install from the binary cache
+        pkg (spack.package.PackageBase): the package to install from the binary
+            cache
         cache_only (bool): only install from binary cache
         explicit (bool): ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
@@ -299,7 +301,8 @@ def _try_install_from_binary_cache(pkg, explicit):
     Try to install the package from binary cache.
 
     Args:
-        pkg (PackageBase): the package to be installed from binary cache
+        pkg (spack.package.PackageBase): the package to be installed from
+            binary cache
         explicit (bool): the package was explicitly requested by the user
     """
     tty.debug('Searching for binary cache of {0}'.format(pkg.unique_id))
@@ -519,8 +522,8 @@ class PackageInstaller(object):
         Initialize and set up the build specs.
 
         Args:
-            pkg (PackageBase): the package being installed, whose spec is
-                concrete
+            pkg (spack.package.PackageBase): the package being installed, whose
+                spec is concrete
 
         Return:
             (PackageInstaller) instance
@@ -558,7 +561,8 @@ class PackageInstaller(object):
         Add bootstrap compilers and dependencies to the build queue.
 
         Args:
-            pkg (PackageBase): the package with possible compiler dependencies
+            pkg (spack.package.PackageBase): the package with possible compiler
+                dependencies
         """
         compilers = _get_bootstrap_compilers(pkg)
         for (comp, is_compiler) in compilers:
@@ -573,7 +577,7 @@ class PackageInstaller(object):
         prepare for a new install attempt.
 
         Args:
-            pkg (PackageBase): the package being installed
+            pkg (spack.package.PackageBase): the package being installed
             keep_prefix (bool): ``True`` if the prefix is to be kept on
                 failure, otherwise ``False``
             keep_stage (bool): ``True`` if the stage is to be kept even if
@@ -684,7 +688,7 @@ class PackageInstaller(object):
         Cleanup the build task for the spec
 
         Args:
-            pkg (PackageBase): the package being installed
+            pkg (spack.package.PackageBase): the package being installed
             remove_task (bool): ``True`` if the build task should be removed
         """
         if remove_task:
@@ -700,7 +704,8 @@ class PackageInstaller(object):
         already locked.
 
         Args:
-            pkg (PackageBase): the package being locally installed
+            pkg (spack.package.PackageBase): the package being locally
+                installed
         """
         pre = "{0} cannot be installed locally:".format(pkg.unique_id)
 
@@ -725,7 +730,8 @@ class PackageInstaller(object):
         needed.
 
         Args:
-            pkg (PackageBase): the package whose spec is being installed
+            pkg (spack.package.PackageBase): the package whose spec is being
+                installed
         """
         pkg_id = pkg.unique_id
         ltype, lock = self.locks[pkg_id] if pkg_id in self.locks \
@@ -786,7 +792,8 @@ class PackageInstaller(object):
         the current process proceeds as quickly as possible to the next spec.
 
         Args:
-            pkg (PackageBase): the package whose spec is being installed
+            pkg (spack.package.PackageBase): the package whose spec is being
+                installed
         """
         pkg_id = pkg.unique_id
         ltype, lock = self.locks[pkg_id] if pkg_id in self.locks else \
@@ -1265,7 +1272,7 @@ class PackageInstaller(object):
 
             pkg, spec = task.pkg, task.pkg.spec
             pkg_id = pkg.unique_id
-            action = 'Processing' if task.attempts <= 0 else 'Reprocessing'
+            action = 'Processing' if task.attempts <= 1 else 'Reprocessing'
             tty.verbose('{0} {1}: task={2}'.format(action, pkg_id, task))
 
             # Ensure that the current spec has NO uninstalled dependencies,
@@ -1280,8 +1287,9 @@ class PackageInstaller(object):
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
                 suffix = 'ies' if task.priority > 1 else 'y'
-                tty.die('Cannot proceed with {0}: {1} uninstalled dependenc{2}'
-                        .format(pkg_id, task.priority, suffix))
+                raise InstallError(
+                    'Cannot proceed with {0}: {1} uninstalled dependenc{2}'
+                    .format(pkg_id, task.priority, suffix))
 
             # TODO: Add a check to ensure no attempt is made to install the pkg
             # TODO:   before any of its dependencies?
@@ -1386,11 +1394,12 @@ class PackageInstaller(object):
             msg = ('Installation of {0} failed.  Review log for details'
                    .format(self.pkg.unique_id))
             tty.error(msg)
-            raise RuntimeError(msg)
+            raise InstallError(msg)
 
     install.__doc__ += install_args_docstring
 
-    # Helper method to "smooth" the transition from the PackageBase class
+    # Helper method to "smooth" the transition from the
+    # spack.package.PackageBase class
     @property
     def spec(self):
         """The specification associated with the package."""
@@ -1431,7 +1440,7 @@ class BuildTask(object):
             self.status = status
         else:
             msg = "Cannot create a build task for {0} with status '{1}'"
-            raise RuntimeError(msg.format(self.spec.name, status))
+            raise InstallError(msg)
 
         # Package is associated with a bootstrap compiler
         self.compiler = compiler
@@ -1511,3 +1520,10 @@ class BuildTask(object):
     def spec(self):
         """The specification associated with the package."""
         return self.pkg.spec
+
+
+class InstallError(spack.error.SpackError):
+    """Raised when something goes wrong during install or uninstall."""
+
+    def __init__(self, message, long_msg=None):
+        super(InstallError, self).__init__(message, long_msg)
