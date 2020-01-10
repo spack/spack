@@ -17,30 +17,16 @@ dictionary_of_strings_or_num = {
 }
 
 definition = {
-    'anyOf': [
-        {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings_or_num,
-                'unset': array_of_strings_or_num,
-                'prepend_path': dictionary_of_strings_or_num,
-                'append_path': dictionary_of_strings_or_num,
-                'remove_path': dictionary_of_strings_or_num
-            }
-        }, {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings_or_num,
-                'unset': array_of_strings_or_num,
-                'prepend-path': dictionary_of_strings_or_num,
-                'append-path': dictionary_of_strings_or_num
-            }
-        }
-    ]
+    'type': 'object',
+    'default': {},
+    'additionalProperties': False,
+    'properties': {
+        'set': dictionary_of_strings_or_num,
+        'unset': array_of_strings_or_num,
+        'prepend_path': dictionary_of_strings_or_num,
+        'append_path': dictionary_of_strings_or_num,
+        'remove_path': dictionary_of_strings_or_num
+    }
 }
 
 
@@ -60,9 +46,8 @@ def parse(config_obj):
 
     env = ev.EnvironmentModifications()
     for command, variable in config_obj.items():
-        # Ensures backward compatibility on both append-path
-        # and append_path (similarly for prepend-path vs. prepend_path)
-        command = command.replace('-', '_')
+        # Distinguish between commands that take only a name as argument
+        # (e.g. unset) and commands that take a name and a value.
         if isinstance(variable, Sequence):
             for name in variable:
                 getattr(env, command)(name)

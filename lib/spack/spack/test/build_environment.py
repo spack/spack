@@ -138,6 +138,9 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
     ({'SOME_VAR_STR': ''},
      {'unset': ['SOME_VAR_STR']},
      {'SOME_VAR_STR': None}),
+    ({},  # Set a variable that was not defined already
+     {'set': {'SOME_VAR_STR': 'SOME_STR'}},
+     {'SOME_VAR_STR': 'SOME_STR'}),
     # Append and prepend to the same variable
     ({'EMPTY_PATH_LIST': '/path/middle'},
      {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
@@ -148,10 +151,17 @@ def test_cc_not_changed_by_modules(monkeypatch, working_env):
      {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
       'append_path': {'SOME_VAR_STR': '/path/last'}},
      {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
+    ({},  # Same as before but on variables that were not defined
+     {'prepend_path': {'EMPTY_PATH_LIST': '/path/first'},
+      'append_path': {'SOME_VAR_STR': '/path/last'}},
+     {'EMPTY_PATH_LIST': '/path/first', 'SOME_VAR_STR': '/path/last'}),
     # Remove a path from a list
     ({'EMPTY_PATH_LIST': '/path/first:/path/middle:/path/last'},
      {'remove_path': {'EMPTY_PATH_LIST': '/path/middle'}},
      {'EMPTY_PATH_LIST': '/path/first:/path/last'}),
+    ({'EMPTY_PATH_LIST': '/only/path'},
+     {'remove_path': {'EMPTY_PATH_LIST': '/only/path'}},
+     {'EMPTY_PATH_LIST': ''}),
 ])
 def test_compiler_config_modifications(
         initial, modifications, expected, ensure_env_variables, monkeypatch
