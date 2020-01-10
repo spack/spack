@@ -1,0 +1,27 @@
+  <Test>
+    <StartTestTime>{{ test.starttime }}</StartTestTime>
+    <TestCommand>{{ install_command }}</TestCommand>
+{% for warning in test.warnings %}
+    <Warning>
+      <TestLogLine>{{ warning.line_no }}</TestLogLine>
+      <Text>{{ warning.text }}</Text>
+      <SourceFile>{{ warning.source_file }}</SourceFile>
+      <SourceLineNumber>{{ warning.source_line_no }}</SourceLineNumber>
+      <PreContext>{{ warning.pre_context }}</PreContext>
+      <PostContext>{{ warning.post_context }}</PostContext>
+    </Warning>
+{% endfor %}
+{% for error in test.errors %}
+    <Error>
+      <TestLogLine>{{ error.line_no }}</TestLogLine>
+      <Text>{{ error.text }}</Text>
+      <SourceFile>{{ error.source_file }}</SourceFile>
+      <SourceLineNumber>{{ error.source_line_no }}</SourceLineNumber>
+      <PreContext>{{ error.pre_context }}</PreContext>
+      <PostContext>{{ error.post_context }}</PostContext>
+    </Error>
+{% endfor %}
+    <EndTestTime>{{ test.endtime }}</EndTestTime>
+    <ElapsedMinutes>0</ElapsedMinutes>
+  </Test>
+</Site>
