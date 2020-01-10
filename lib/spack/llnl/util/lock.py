@@ -505,7 +505,9 @@ class Lock(object):
             lock_type, self, status_desc)
 
     def _verbose(self, *args):
-        tty.verbose(*args)
+        # TODO: Is there another level that won't pollute the output for
+        # TODO: tests (e.g., test_spec_json) that could be used?
+        tty.debug(*args)
 
 
 class LockTransaction(object):
