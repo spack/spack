@@ -73,3 +73,8 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         return config_args
+
+    # Parallel builds do not work when using the Intel compiler
+    @when('%intel')
+    def build(self, spec, prefix):
+        make(parallel=False)
