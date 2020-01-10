@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,10 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.epilog = """\
+for further documentation regarding the spec syntax, see:
+    spack help --spec
+"""
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(

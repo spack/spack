@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -88,7 +88,7 @@ def test_fetch(type_of_test,
                secure,
                mock_git_repository,
                config,
-               mutable_mock_packages,
+               mutable_mock_repo,
                git_version):
     """Tries to:
 
@@ -137,7 +137,7 @@ def test_fetch(type_of_test,
 
 
 @pytest.mark.parametrize("type_of_test", ['branch', 'commit'])
-def test_debug_fetch(type_of_test, mock_git_repository, config):
+def test_debug_fetch(mock_packages, type_of_test, mock_git_repository, config):
     """Fetch the repo with debug enabled."""
     # Retrieve the right test parameters
     t = mock_git_repository.checks[type_of_test]
@@ -176,7 +176,7 @@ def test_needs_stage():
 
 @pytest.mark.parametrize("get_full_repo", [True, False])
 def test_get_full_repo(get_full_repo, git_version, mock_git_repository,
-                       config, mutable_mock_packages):
+                       config, mutable_mock_repo):
     """Ensure that we can clone a full repository."""
 
     if git_version < ver('1.7.1'):

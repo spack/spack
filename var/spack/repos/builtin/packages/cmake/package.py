@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -168,8 +168,15 @@ class Cmake(Package):
             args.append('--sphinx-html')
             args.append('--sphinx-man')
 
+        # Now for CMake arguments to pass after the initial bootstrap
+        args.append('--')
+
+        # Make sure to create an optimized release build
+        args.append('-DCMAKE_BUILD_TYPE=Release')
+
+        # When building our own private copy of curl then we need to properly
+        # enable / disable oepnssl
         if '+ownlibs' in spec:
-            args.append('--')
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         return args

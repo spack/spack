@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1949,6 +1949,8 @@ issues with 1.64.0, 1.65.0, and 1.66.0, you can say:
 
    depends_on('boost@1.59.0:1.63,1.65.1,1.67.0:')
 
+
+.. _dependency-types:
 
 ^^^^^^^^^^^^^^^^
 Dependency types

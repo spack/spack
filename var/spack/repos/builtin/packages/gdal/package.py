@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,7 @@ class Gdal(AutotoolsPackage):
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
     depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
-    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.2')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
     depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')

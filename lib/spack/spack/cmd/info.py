@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -106,7 +106,9 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            yield '\n'
+            underline = tuple([l * "=" for l in self.column_widths])
+            yield '    ' + self.fmt % underline
+            yield ''
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
                     '{0} [{1}]'.format(k, self.default(v)),

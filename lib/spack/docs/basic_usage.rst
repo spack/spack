@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -232,6 +232,50 @@ remove dependent packages *before* removing their dependencies or use the
 
 .. _nondownloadable:
 
+^^^^^^^^^^^^^^^^^^
+Garbage collection
+^^^^^^^^^^^^^^^^^^
+
+When Spack builds software from sources, if often installs tools that are needed
+just to build or test other software. These are not necessary at runtime.
+To support cases where removing these tools can be a benefit Spack provides
+the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
+
+.. code-block:: console
+
+   $ spack find
+   ==> 24 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   autoconf@2.69    findutils@4.6.0  libiconv@1.16        libszip@2.1.1  m4@1.4.18    openjpeg@2.3.1  pkgconf@1.6.3  util-macros@1.19.1
+   automake@1.16.1  gdbm@1.18.1      libpciaccess@0.13.5  libtool@2.4.6  mpich@3.3.2  openssl@1.1.1d  readline@8.0   xz@5.2.4
+   cmake@3.16.1     hdf5@1.10.5      libsigsegv@2.12      libxml2@2.9.9  ncurses@6.1  perl@5.30.0     texinfo@6.5    zlib@1.2.11
+
+   $ spack gc
+   ==> The following packages will be uninstalled:
+
+       -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+       vn47edz autoconf@2.69    6m3f2qn findutils@4.6.0  ubl6bgk libtool@2.4.6  pksawhz openssl@1.1.1d  urdw22a readline@8.0
+       ki6nfw5 automake@1.16.1  fklde6b gdbm@1.18.1      b6pswuo m4@1.4.18      k3s2csy perl@5.30.0     lp5ya3t texinfo@6.5
+       ylvgsov cmake@3.16.1     5omotir libsigsegv@2.12  leuzbbh ncurses@6.1    5vmfbrq pkgconf@1.6.3   5bmv4tg util-macros@1.19.1
+
+   ==> Do you want to proceed? [y/N] y
+
+   [ ... ]
+
+   $ spack find
+   ==> 9 installed packages
+   -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
+   hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
+
+In the example above Spack went through all the packages in the DB
+and removed everything that is not either:
+
+1. A package installed upon explicit request of the user
+2. A ``link`` or ``run`` dependency, even transitive, of one of the packages at point 1.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
+or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -413,6 +457,8 @@ Running ``spack find`` with no arguments lists installed packages:
 Packages are divided into groups according to their architecture and
 compiler.  Within each group, Spack tries to keep the view simple, and
 only shows the version of installed packages.
+
+.. _cmd-spack-find-metadata:
 
 """"""""""""""""""""""""""""""""
 Viewing more metadata

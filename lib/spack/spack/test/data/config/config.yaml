@@ -11,4 +11,4 @@ config:
   misc_cache: ~/.spack/cache
   verify_ssl: true
   checksum: true
-  dirty: True
+  dirty: false

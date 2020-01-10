@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -179,11 +179,6 @@ class PyTorch(PythonPackage):
                     env.unset('NO_' + var)
                 else:
                     env.set('NO_' + var, 'ON')
-
-        # Build system has problems locating MKL libraries
-        # See https://github.com/pytorch/pytorch/issues/24334
-        if 'mkl' in self.spec:
-            env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
 
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)

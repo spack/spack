@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,6 @@ import sys
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
 
 
 def index_by(objects, *funcs):
