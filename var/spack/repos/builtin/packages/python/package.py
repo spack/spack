@@ -913,6 +913,11 @@ class Python(AutotoolsPackage):
         assert os.path.dirname(python.path) == os.path.dirname(self.command.path)
 
         # run hello world
-        output = self.command('-c', 'print("hello world!")', output=str)
-        sys.stdout.write(output)
+        output = self.command('-c', 'print("hello world!")',
+                              output=str.split, error=str.split)
         assert output == "hello world!\n"
+
+#        error = self.command('-c', 'print("Error: failed.")',
+#                             output=str.split, error=str.split)
+
+#        assert error.strip() == 'Error: failed.'

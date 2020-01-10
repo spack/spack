@@ -5,7 +5,7 @@
 
 from spack.main import SpackCommand
 
-spack_test = SpackCommand('test')
+spack_test = SpackCommand('unit-test')
 
 
 def test_list():
