@@ -1592,17 +1592,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     do_install.__doc__ += install_args_docstring
 
+    @property
+    def test_log_name(self):
+        return 'test-%s' % self.spec.format('{name}-{hash:7}')
+
     def do_test(self, dirty=False):
         def test_process():
-            test_log_file = os.path.join(
-                os.getcwd(), 'test-%s' % self.spec.format('{name}-{hash:7}'))
+            test_log_file = os.path.join(os.getcwd(), self.test_log_name)
             with log_output(test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
                             self.spec.format('{name}-{hash:7}'))
                 old_debug = tty.is_debug()
                 tty.set_debug(True)
-                self.test()
+                try:
+                    self.test()
+                except Exception as e:
+                    type, context, traceback = sys.exc_info()
+                    print('Error: %s: %s' % (type, e.message))
+                    raise e, None, traceback
                 tty.set_debug(old_debug)
 
         try:
