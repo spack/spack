@@ -16,7 +16,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.0.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.1.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
@@ -30,6 +30,7 @@ class PyNumpy(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('1.18.1', sha256='b6ff59cee96b454516e47e7721098e6ceebef435e3e21ac2d6c3b8b02628eb77')
     version('1.18.0', sha256='a9d72d9abaf65628f0f31bbb573b7d9304e43b1e6bbae43149c17737a42764c4')
     version('1.17.5', sha256='16507ba6617f62ae3c6ab1725ae6f550331025d4d9a369b83f6d5a470446c342')
     version('1.17.4', sha256='f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316')
@@ -78,7 +79,9 @@ class PyNumpy(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
     depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython@0.29.13:', when='@1.18:', type='build')
+    # Check pyproject.toml for updates to the required cython version
+    depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
+    depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
