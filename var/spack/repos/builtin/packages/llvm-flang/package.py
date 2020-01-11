@@ -158,6 +158,9 @@ class LlvmFlang(CMakePackage):
                   spec.target.family == 'ppc' or
                   spec.target.family == 'ppcle'):
                 target = 'PowerPC'
+            else:
+                raise InstallError(
+                    'Unsupported architecture: ' + spec.target.family)
 
             args.append(
                 '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
