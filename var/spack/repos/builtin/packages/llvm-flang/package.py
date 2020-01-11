@@ -146,7 +146,7 @@ class LlvmFlang(CMakePackage):
         spec = self.spec
         args = []
         args.append('-DPYTHON_EXECUTABLE={0}'.format(
-            os.path.join(spec['python'].prefix.bin, 'python')))
+            spec['python'].command.path))
         args.append('-DLLVM_TARGETS_TO_BUILD={0}'.format(
             spec.variants['target'].value))
 

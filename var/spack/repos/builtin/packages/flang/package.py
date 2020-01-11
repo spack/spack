@@ -53,7 +53,7 @@ class Flang(CMakePackage):
             '-DFLANG_LIBOMP=%s' % find_libraries(
                 'libomp', root=spec['llvm-flang'].prefix.lib),
             '-DPYTHON_EXECUTABLE={0}'.format(
-                os.path.join(spec['python'].prefix.bin, 'python'))
+                spec['python'].command.path)
         ]
 
         return options
