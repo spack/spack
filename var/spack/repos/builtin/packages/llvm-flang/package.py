@@ -153,9 +153,6 @@ class LlvmFlang(CMakePackage):
                 target = 'ARM'
             elif spec.target.family == 'aarch64':
                 target = 'AArch64'
-            elif (spec.target.family == 'sparc' or
-                  spec.target.family == 'sparc64'):
-                target = 'Sparc'
             elif (spec.target.family == 'ppc64' or
                   spec.target.family == 'ppc64le' or
                   spec.target.family == 'ppc' or
