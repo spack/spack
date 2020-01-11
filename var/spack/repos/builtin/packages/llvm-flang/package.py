@@ -146,24 +146,23 @@ class LlvmFlang(CMakePackage):
         args.append('-DPYTHON_EXECUTABLE={0}'.format(
             spec['python'].command.path))
 
-        if '+all_targets' not in spec:  # all is default on cmake
-            targets = []
+        if '+all_targets' not in spec:  # all is default in cmake
             if spec.target.family == 'x86' or spec.target.family == 'x86_64':
-                targets.append('X86')
+                target = 'X86'
             elif spec.target.family == 'arm':
-                targets.append('ARM')
+                target = 'ARM'
             elif spec.target.family == 'aarch64':
-                targets.append('AArch64')
+                target = 'AArch64'
             elif (spec.target.family == 'sparc' or
                   spec.target.family == 'sparc64'):
-                targets.append('Sparc')
+                target = 'Sparc'
             elif (spec.target.family == 'ppc64' or
                   spec.target.family == 'ppc64le' or
                   spec.target.family == 'ppc' or
                   spec.target.family == 'ppcle'):
-                targets.append('PowerPC')
+                target = 'PowerPC'
 
             args.append(
-                '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
+                '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
 
         return args
