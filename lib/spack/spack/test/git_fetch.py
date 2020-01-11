@@ -237,12 +237,14 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
     pkg.versions[ver('git')] = args
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
-        file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule/r0_file')
-        if submodules:
-            assert os.path.isfile(file_path)
-        else:
-            assert not os.path.isfile(file_path)
+        for submodule_count in range(5):
+            file_path = os.path.join(pkg.stage.source_path,
+                                     'third_party/submodule{0}/r0_file'
+                                     .format(submodule_count))
+            if submodules:
+                assert os.path.isfile(file_path)
+            else:
+                assert not os.path.isfile(file_path)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -259,10 +261,23 @@ def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
     pkg = spack.repo.get(spec)
     args = copy.copy(t.args)
     args['submodules'] = True
-    args['submodules_delete'] = ['third_party/submodule']
+    args['submodules_delete'] = ['third_party/submodule0',
+                                 'third_party/submodule3']
     pkg.versions[ver('git')] = args
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
         file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule')
+                                 'third_party/submodule0')
         assert not os.path.isdir(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule1/r0_file')
+        assert os.path.isfile(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule2/r0_file')
+        assert os.path.isfile(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule3')
+        assert not os.path.isdir(file_path)
+        file_path = os.path.join(pkg.stage.source_path,
+                                 'third_party/submodule4/r0_file')
+        assert os.path.isfile(file_path)
