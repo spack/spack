@@ -27,9 +27,8 @@ class LlvmFlang(CMakePackage):
     version('20180328', tag='20180308')
 
     # Variants
-    variant('target', default='X86',
-            description='Target archiecture',
-            values=('X86', 'PowerPC', 'AArch64'))
+    variant('all_targets', default=False,
+            description='Build all supported targets')
 
     # Build dependency
     depends_on('cmake@3.8:', type='build')
@@ -146,7 +145,25 @@ class LlvmFlang(CMakePackage):
         args = []
         args.append('-DPYTHON_EXECUTABLE={0}'.format(
             spec['python'].command.path))
-        args.append('-DLLVM_TARGETS_TO_BUILD={0}'.format(
-            spec.variants['target'].value))
+
+        if '+all_targets' not in spec:  # all is default on cmake
+            targets = []
+            if spec.target.family == 'x86' or spec.target.family == 'x86_64':
+                targets.append('X86')
+            elif spec.target.family == 'arm':
+                targets.append('ARM')
+            elif spec.target.family == 'aarch64':
+                targets.append('AArch64')
+            elif (spec.target.family == 'sparc' or
+                  spec.target.family == 'sparc64'):
+                targets.append('Sparc')
+            elif (spec.target.family == 'ppc64' or
+                  spec.target.family == 'ppc64le' or
+                  spec.target.family == 'ppc' or
+                  spec.target.family == 'ppcle'):
+                targets.append('PowerPC')
+
+            args.append(
+                '-DLLVM_TARGETS_TO_BUILD:STRING=' + ';'.join(targets))
 
         return args
