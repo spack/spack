@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Magma(CMakePackage):
+class Magma(CMakePackage, CudaPackage):
     """The MAGMA project aims to develop a dense linear algebra library similar to
        LAPACK but for heterogeneous/hybrid architectures, starting with current
        "Multicore+GPU" systems.
@@ -31,9 +31,6 @@ class Magma(CMakePackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda')
-
-    conflicts('%gcc@6:', when='^cuda@:8')
-    conflicts('%gcc@7:', when='^cuda@:9')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
