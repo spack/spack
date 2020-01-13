@@ -744,7 +744,7 @@ class PackageInstaller(object):
             # Wait until the other process finishes if there are no more
             # build tasks with priority 0 (i.e., with no uninstalled
             # dependencies).
-            no_p0 = len(self.build_pq) <= 0 or self.build_pq[0] != 0
+            no_p0 = len(self.build_tasks) <= 0 or not self._next_is_pri0()
             timeout = None if no_p0 else 3
 
             try:
@@ -1043,6 +1043,18 @@ class PackageInstaller(object):
             pkg.stage.created = False
 
     _install_task.__doc__ += install_args_docstring
+
+    def _next_is_pri0(self):
+        """
+        Determine if the next build task has priority 0
+
+        Return:
+            True if it does, False otherwise
+        """
+        # Leverage the fact that the first entry in the queue is the next
+        # one that will be processed
+        task = self.build_pq[0][1]
+        return task.priority == 0
 
     def _pop_task(self):
         """
