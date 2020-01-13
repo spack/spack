@@ -218,7 +218,7 @@ function _spack_cd {
 function _spack_checksum {
     if $list_options
     then
-        compgen -W "-h --help --keep-stage" -- "$cur"
+        compgen -W "-h --help --keep-stage -y --yes" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
