@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Libcircle(AutotoolsPackage):
     """libcircle provides an efficient distributed queue on a cluster,
        using self-stabilizing work stealing."""
