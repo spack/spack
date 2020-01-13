@@ -170,9 +170,9 @@ the image build under the ``container`` attribute:
          app: "gromacs"
          mpi: "mpich"
 
-The table below describes the configuration options that are currently supported:
+The tables below describe the configuration options that are currently supported:
 
-.. list-table:: Configuration options for the ``container`` section of ``spack.yaml``
+.. list-table:: General configuration options for the ``container`` section of ``spack.yaml``
    :header-rows: 1
 
    * - Option Name
@@ -210,6 +210,30 @@ The table below describes the configuration options that are currently supported
    * - ``labels``
      - Labels to tag the image
      - Pairs of key-value strings
+     - No
+
+.. list-table:: Configuration options specific to Singularity
+   :header-rows: 1
+
+   * - Option Name
+     - Description
+     - Allowed Values
+     - Required
+   * - ``singularity:runscript``
+     - Content of ``%runscript``
+     - Any valid script
+     - No
+   * - ``singularity:startscript``
+     - Content of ``%startscript``
+     - Any valid script
+     - No
+   * - ``singularity:test``
+     - Content of ``%test``
+     - Any valid script
+     - No
+   * - ``singularity:help``
+     - Description of the image
+     - Description string
      - No
 
 Once the Environment is properly configured a recipe for a container

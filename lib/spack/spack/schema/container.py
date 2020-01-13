@@ -63,6 +63,12 @@ container_schema = {
             'type': 'object',
             'additionalProperties': False,
             'default': {},
+            'properties': {
+                'runscript': {'type': 'string'},
+                'startscript': {'type': 'string'},
+                'test': {'type': 'string'},
+                'help': {'type': 'string'}
+            }
         },
         'docker': {
             'type': 'object',

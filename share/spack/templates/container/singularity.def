@@ -62,6 +62,26 @@ Stage: final
 {{ extra_instructions.final }}
 {% endif %}
 
+{% if runscript %}
+%runscript
+{{ runscript }}
+{% endif %}
+
+{% if startscript %}
+%startscript
+{{ startscript }}
+{% endif %}
+
+{% if test %}
+%test
+{{ test }}
+{% endif %}
+
+{% if help %}
+%help
+{{ help }}
+{% endif %}
+
 {% if labels %}
 %labels
 {% for label, value in labels.items() %}
