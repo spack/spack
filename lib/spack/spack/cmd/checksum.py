@@ -65,7 +65,8 @@ def checksum(parser, args):
             tty.die("Could not find any versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, keep_stage=args.keep_stage, batch=args.yes)
+        url_dict, pkg.name, keep_stage=args.keep_stage,
+        batch=(args.yes or len(url_dict) > 1))
 
     print()
     print(version_lines)
