@@ -66,8 +66,13 @@ _skip_reindex = [
     (Version('0.9.3'), Version('5')),
 ]
 
-# Timeout for spack database locks in seconds
-_db_lock_timeout = 120
+# Default timeout for spack database locks in seconds, which we want to provide
+# a fairly quick turnaround for parallel installs
+_db_lock_timeout = 3
+
+# Default timeout for spack package locks in seconds, which we want to provide
+# a very quick turnaround for parallel installs
+_pkg_lock_timeout = 1e-9
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
@@ -320,7 +325,8 @@ class Database(object):
         self.db_lock_timeout = (
             spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
         self.package_lock_timeout = (
-            spack.config.get('config:package_lock_timeout') or None)
+            spack.config.get('config:package_lock_timeout') or
+            _pkg_lock_timeout)
         tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
                   str(self.db_lock_timeout)))
         timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
