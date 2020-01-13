@@ -24,7 +24,6 @@ class Librsb(AutotoolsPackage):
             '--enable-openmp',
             '--with-zlib',
             '--enable-fortran-module-install',
-            'FC=gfortran',
             'CPPFLAGS={0}'.format(self.spec['zlib'].headers.include_flags),
             'CFLAGS=-O3',
             'LDFLAGS={0}'.format(self.spec['zlib'].libs.search_flags)
