@@ -354,13 +354,12 @@ spack:
         outfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
-            # The presence of these environment variables should influence
-            # the generation process to clone spack in a before_script
-            # section.
-            os.environ['SPACK_REPO'] = 'https://github.com/usera/spack.git'
-            os.environ['SPACK_REF'] = 'custom-branch'
+            spack_repo = 'https://github.com/usera/spack.git'
+            spack_ref = 'custom-branch'
+            expected_clone_str = 'git clone "{0}"'.format(spack_repo)
 
-            ci_cmd('generate', '--output-file', outfile)
+            ci_cmd('generate', '--output-file', outfile, '--spack-repo',
+                   spack_repo, '--spack-ref', spack_ref)
 
             with open(outfile) as f:
                 contents = f.read()
@@ -372,7 +371,7 @@ spack:
                         assert('before_script' in next_job)
                         before_script = next_job['before_script']
                         for step in before_script:
-                            if 'git clone "${SPACK_REPO}"' in step:
+                            if expected_clone_str in step:
                                 break
                         else:
                             msg = 'job "{0}" did not clone spack repo'.format(

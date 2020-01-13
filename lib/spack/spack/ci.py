@@ -431,7 +431,8 @@ def pkg_name_from_spec_label(spec_label):
     return spec_label[:spec_label.index('/')]
 
 
-def generate_gitlab_ci_yaml(env, print_summary, output_file):
+def generate_gitlab_ci_yaml(env, print_summary, output_file,
+                            custom_spack_repo=None, custom_spack_ref=None):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -466,28 +467,21 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file):
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
     # Make sure we use a custom spack if necessary
-    custom_spack_repo = os.environ.get('SPACK_REPO')
-    custom_spack_ref = os.environ.get('SPACK_REF')
     before_script = None
     after_script = None
     if custom_spack_repo:
         if not custom_spack_ref:
             custom_spack_ref = 'master'
         before_script = [
-            'export SPACK_CLONE_LOCATION=$(mktemp -d)',
-            'pushd "${SPACK_CLONE_LOCATION}"',
-            ('git clone "${SPACK_REPO}" --branch "${SPACK_REF}" --depth 1 '
-             '--single-branch'),
+            ('git clone "{0}" --branch "{1}" --depth 1 '
+             '--single-branch'.format(custom_spack_repo, custom_spack_ref)),
+            # Next line just shows spack version in pipeline output
             'pushd ./spack && git rev-parse HEAD && popd',
-            'popd',
-            '. "${SPACK_CLONE_LOCATION}/spack/share/spack/setup-env.sh"',
+            '. "./spack/share/spack/setup-env.sh"',
         ]
-        # Variables defined in 'before_script' and 'script' may not be
-        # available in 'after_script', so this has moved into the 'script'
-        # section.
-        # after_script = [
-        #     'rm -rf "${SPACK_CLONE_LOCATION}"'
-        # ]
+        after_script = [
+            'rm -rf "./spack"'
+        ]
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
@@ -595,9 +589,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file):
                     debug_flag = '-d '
 
                 job_scripts = ['spack {0}ci rebuild'.format(debug_flag)]
-
-                if custom_spack_repo:
-                    job_scripts.append('rm -rf "${SPACK_CLONE_LOCATION}"')
 
                 compiler_action = 'NONE'
                 if len(phases) > 1:

@@ -15,20 +15,19 @@ provide a spack environment describing the set of packages you care about,
 and include within that environment file a description of how those packages
 should be mapped to Gitlab runners.  Spack can then generate a ``.gitlab-ci.yml``
 file containing job descriptions for all your packages which can be run by a
-properly configured Gitlab CI instance, to build and deploy binaries, as well
-as optionally report to a CDash instance regarding the health of the builds as
-they evolve over time.
+properly configured Gitlab CI instance.  When run, the generated pipeline will
+build and deploy binaries, and it can optionally report to a CDash instance
+regarding the health of the builds as they evolve over time.
 
 ------------------------------
 Getting started with pipelines
 ------------------------------
 
 It is fairly straightforward to get started with automated build pipelines.  At
-a minimum, you'll need a `CI-enabled Gitlab <https://about.gitlab.com/product/continuous-integration/>`_
-instance with at least one `runner <https://docs.gitlab.com/runner/>`_ configured
-as a pre-requisite.  There is a project where you can see how all of the relevant
-components can be set up for spack pipeline testing using ``docker-compose``,
-located `here <https://github.com/spack/spack-infrastructure/tree/master/gitlab-docker>`_.
+a minimum, you'll need to set up a Gitlab instance (more about Gitlab CI
+`here <https://about.gitlab.com/product/continuous-integration/>`_) and configure
+at least one `runner <https://docs.gitlab.com/runner/>`_.  Then the basic steps
+for setting up a build pipeline are as follows:
 
 #. Create a repository on your gitlab instance
 #. Add a ``spack.yaml`` at the root containing your pipeline environment (see
@@ -50,13 +49,20 @@ located `here <https://github.com/spack/spack-infrastructure/tree/master/gitlab-
 #. Push a commit containing the ``spack.yaml`` and ``.gitlab-ci.yml`` mentioned above
    to the gitlab repository
 
-The ``<custom-tag>``, above, is required to pick one of your configured runners,
+The ``<custom-tag>``, above, is used to pick one of your configured runners,
 while the use of the ``spack ci start`` command implies that runner has an
 appropriate version of spack installed and configured for use.  Of course, there
 are myriad ways to customize the process.  You can configure CDash reporting
 on the progress of your builds, set up S3 buckets to mirror binaries built by
 the pipeline, clone a custom spack repository/ref for use by the pipeline, and
 more.
+
+While it is possible to set up pipelines on gitlab.com, the builds there are
+limited to 60 minutes and generic hardware.  It is also possible to
+`hook up <https://about.gitlab.com/blog/2018/04/24/getting-started-gitlab-ci-gcp>`_
+Gitlab to Google Kubernetes Engine (`GKS <https://cloud.google.com/kubernetes-engine/>`_)
+or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), though those
+topics are outside the scope of this document.
 
 -----------------------------------
 Spack commands supporting pipelines
@@ -71,6 +77,15 @@ set in order to function properly.  Examples of these are typically secrets
 needed for pipeline operation that should not be visible in a spack environment
 file.  These environment variables are described in more detail
 :ref:`ci_environment_variables`.
+
+.. _cmd_spack_ci:
+
+^^^^^^^^^^^^^^^^^^
+``spack ci``
+^^^^^^^^^^^^^^^^^^
+
+Super-command for functionality related to generating pipelines and executing
+pipeline jobs.
 
 .. _cmd_spack_ci_start:
 
@@ -348,9 +363,12 @@ Using a custom spack in your pipeline
 
 If your runners will not have a version of spack ready to invoke, or if for some
 other reason you want to use a custom version of spack to run your pipelines,
-this can be accomplished fairly simply.  First, your simple pipeline job needs
-to be augmented a bit compared to the very simple one provided at the beginning
-of this document.  Here's an example:
+this can be accomplished fairly simply.  First, create CI environment variables
+containing the url and branch/tag you want to clone (calling them, for example,
+``SPACK_REPO`` and ``SPACK_REF``), use them to clone spack in your pre-ci
+``before_script``, and finally pass those same values along to the workload
+generation process via the ``spack-repo`` and ``spack-ref`` cli args.  Here's
+an example:
 
 .. code-block:: yaml
 
@@ -358,24 +376,19 @@ of this document.  Here's an example:
      tags:
        - <some-other-tag>
    before_script:
-     - export SPACK_CLONE_LOCATION=$(mktemp -d)
-     - pushd ${SPACK_CLONE_LOCATION}
      - git clone ${SPACK_REPO} --branch ${SPACK_REF}
-     - popd
-     - . ${SPACK_CLONE_LOCATION}/spack/share/spack/setup-env.sh
+     - . ./spack/share/spack/setup-env.sh
    script:
-     - spack ci start <args>
+     - spack ci start --spack-repo ${SPACK_REPO} --spack-ref ${SPACK_REF} <...args>
    after_script:
-     - rm -rf ${SPACK_CLONE_LOCATION}
+     - rm -rf ./spack
 
-The environment variables ``SPACK_REPO`` and ``SPACK_REF`` are special, they are
-also described in the :ref:`ci_environment_variables` section.  Those environment
-variables are used to define a spack repository and branch/tag to use in running
-the pipeline.  If the ``spack ci start`` command sees those environment variables,
+If the ``spack ci start`` command receives those extra command line arguments,
 then it adds similar ``before_script`` and ``after_script`` sections for each of
-the ``spack ci rebuild`` jobs which it generates.  This ensures that both the
-generation of the ``.gitlab-ci.yml`` and the conditional rebuilding of individual
-packages is done using the same custom version of spack.
+the ``spack ci rebuild`` jobs which it generates (cloning and sourcing a custom
+spack in the ``before_script`` and removing it again in the ``after_script``).
+This gives you control over the version of spack used when the rebuild jobs
+are actually run on the gitlab runner.
 
 .. _ci_environment_variables:
 
@@ -424,17 +437,3 @@ DOWNSTREAM_CI_REPO
 
 Needed until Gitlab CI supports dynamic job generation.  Can contain connection
 credentials, and could be the same repository or a different one.
-
-^^^^^^^^^^^^^^^^^
-SPACK_REPO
-^^^^^^^^^^^^^^^^^
-
-Needed if a custom version of spack should be cloned for the pipeline, should
-be a git url.
-
-^^^^^^^^^^^^^^^^^
-SPACK_REF
-^^^^^^^^^^^^^^^^^
-
-Needed if a custom version of spack should be clone for the pipeline, should
-be a branch or tag.
