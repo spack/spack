@@ -11,10 +11,9 @@ class Libcircle(AutotoolsPackage):
 
     homepage = "https://github.com/hpc/libcircle"
     git      = "https://github.com/hpc/libcircle.git"
-    url      = "https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz'url='https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz"
+    url      = "https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz"
 
     version('master', branch='master')
-    version('develop', branch='master')
     version('0.2.1-rc.1', sha256='5747f91cf4417023304dcc92fd07e3617ac712ca1eeb698880979bbca3f54865')
 
     depends_on('mpi')
