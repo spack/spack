@@ -13,7 +13,7 @@ EOF
   . /opt/spack/share/spack/setup-env.sh
   spack install
   spack gc -y
-  spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
+  spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh
 {% if strip %}
 
   # Strip the binaries to reduce the size of the image
@@ -47,28 +47,24 @@ Stage: final
   {{ paths.environment }} /opt
   {{ paths.store }} /opt
   {{ paths.view }} /opt
-  /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+  {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
-{% if packages.list %}
 %post
+{% if packages.list %}
   # Update, install and cleanup of system packages
   {{ packages.update }}
   {{ packages.install }} {{ packages.list | join | replace('\n', ' ') }}
   {{ packages.clean }}
 {% endif %}
+  # Modify the environment without relying on sourcing shell specific files at startup
+  cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}
 
-%runscript
-  exec "$@"
-
-%environment
-  export PATH=/opt/view/bin:${PATH}
-
 {% if labels %}
 %labels
-  {% for label, value in labels.items() %}
+{% for label, value in labels.items() %}
   {{ label }} {{ value }}
-  {% endfor %}
+{% endfor %}
 {% endif %}
