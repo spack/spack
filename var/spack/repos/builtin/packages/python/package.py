@@ -395,7 +395,8 @@ class Python(AutotoolsPackage):
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
-        filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        if spack_cxx and self.compiler.cxx:
+            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
 
     @run_after('install')
     def symlink(self):
