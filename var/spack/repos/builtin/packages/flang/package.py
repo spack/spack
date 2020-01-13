@@ -24,6 +24,11 @@ class Flang(CMakePackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
+    # Variants
+    variant('nvptx',
+            default=False,
+            description='Target OpenMP offload to NVidia GPUs')
+
     # Build dependency
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
@@ -40,6 +45,12 @@ class Flang(CMakePackage):
     depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
+    depends_on('cuda', when='+nvptx', type=('run'))
+
+    # conflicts
+    conflicts('+nvptx', when='@:20181226',
+              msg='OMP offload to NVidia GPUs available March 2019 or later')
+
     def cmake_args(self):
         spec = self.spec
         options = [
@@ -55,6 +66,9 @@ class Flang(CMakePackage):
             '-DPYTHON_EXECUTABLE={0}'.format(
                 spec['python'].command.path)
         ]
+
+        if '+nvptx' in spec:
+            options.append('-DFLANG_OPENMP_GPU_NVIDIA=ON')
 
         return options
 
