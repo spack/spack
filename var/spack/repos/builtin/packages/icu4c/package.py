@@ -13,16 +13,11 @@ class Icu4c(AutotoolsPackage):
 
     homepage = "http://site.icu-project.org/"
 
-    version('65.1',
-            sha256='53e37466b3d6d6d01ead029e3567d873a43a5d1c668ed2278e253b683136d948')
-    version('64.1',
-            sha256='92f1b7b9d51b396679c17f35a2112423361b8da3c1b9de00aa94fd768ae296e6')
-    version('60.1',
-            sha256='f8f5a6c8fbf32c015a467972bdb1477dc5f5d5dfea908b6ed218715eeb5ee225')
-    version('58.2',
-            sha256='2b0a4410153a9b20de0e20c7d8b66049a72aef244b53683d0d7521371683da0c')
-    version('57.1',
-            sha256='ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581')
+    version('65.1', sha256='53e37466b3d6d6d01ead029e3567d873a43a5d1c668ed2278e253b683136d948')
+    version('64.1', sha256='92f1b7b9d51b396679c17f35a2112423361b8da3c1b9de00aa94fd768ae296e6')
+    version('60.1', sha256='f8f5a6c8fbf32c015a467972bdb1477dc5f5d5dfea908b6ed218715eeb5ee225')
+    version('58.2', sha256='2b0a4410153a9b20de0e20c7d8b66049a72aef244b53683d0d7521371683da0c')
+    version('57.1', sha256='ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581')
 
     variant('cxxstd',
             default='11',
