@@ -32,7 +32,7 @@ def module(*args):
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        module_cmd += ' > /dev/null; PYTHONHOME="{0}" "{1}" -c "{2}"'.format(
+        module_cmd += ' > /dev/null; PYTHONHOME="{0}" "{1}" -c {2}'.format(
             sys.prefix, sys.executable, py_cmd)
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
