@@ -25,10 +25,5 @@ class Rocketmq(Package):
 
     depends_on('java@8:', type='run')
 
-    def url_for_version(self, version):
-        url = "https://archive.apache.org/dist/rocketmq/{0}/rocketmq-all-{0}-bin-release.zip"
-        version = version.string.split('-')[0]
-        return url.format(version)
-
     def install(self, spec, prefix):
         install_tree('.', prefix)
