@@ -24,4 +24,8 @@ class PyAnsible(PythonPackage):
     version('2.7.14', sha256='92f0be1de4f9d1c0a3a35963fb853a6d7831360fd1e734cb36d601495a71770c')
     version('2.6.20', sha256='55962e79e24a67a5534bf08aa0482d5f7322ad3f112a3ebffc4a58ae02b82277')
 
-    depends_on('py-pip', type='build')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-jinja2', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-cryptography', type=('build', 'run'))
