@@ -25,7 +25,7 @@ class Htslib(AutotoolsPackage):
     variant('libcurl',
             default=True,
             description='Enable libcurl-based support for http/https/etc URLs,'
-            ' @1.3:. This also enables S3 and GCS support.')
+            ' for versions >= 1.3. This also enables S3 and GCS support.')
 
     depends_on('zlib')
     depends_on('bzip2', when='@1.4:')
