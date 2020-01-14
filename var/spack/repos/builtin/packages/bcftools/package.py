@@ -33,7 +33,7 @@ class Bcftools(AutotoolsPackage):
     variant('perl-filters',
             default=False,
             description='build in support for PERL scripts in -i/-e '
-            'filtering expressions, for @1.8:')
+            'filtering expressions, for versions >= 1.8.')
 
     depends_on('gsl', when='+libgsl')
     depends_on('py-matplotlib', when='@1.6:', type='run')
