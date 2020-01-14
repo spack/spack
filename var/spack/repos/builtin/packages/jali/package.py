@@ -16,7 +16,7 @@ class Jali(CMakePackage):
     maintainers = ['raovgarimella']
 
     version('master', branch='master')
-    version('1.1.1', sha256='33dd340b16bf7f82dc5a1f97b6d036868ae86d622f0a94f2bc781a44ad87eb11')
+    version('1.1.1', sha256='c96c000b3893ea7f15bbc886524476dd466ae145e77deedc27e412fcc3541207')
     version('1.1.0', sha256='783dfcd6a9284af83bb380ed257fa8b0757dc2f7f9196d935eb974fb6523c644')
     version('1.0.5', sha256='979170615d33a7bf20c96bd4d0285e05a2bbd901164e377a8bccbd9af9463801')
 
@@ -25,8 +25,7 @@ class Jali(CMakePackage):
     # dependencies
     depends_on('cmake@3.13:', type='build')
 
-    #
-    depends_on('mpi', when='+parallel')
+    depends_on('mpi')
 
     depends_on('boost')
 
@@ -35,7 +34,6 @@ class Jali(CMakePackage):
     depends_on('zoltan -fortran')
     depends_on('metis')
     depends_on('exodusii')
-
 
     # Unit testing variant
     depends_on('unittest-cpp', type='test')
