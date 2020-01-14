@@ -16,9 +16,7 @@ class TrnascanSe(AutotoolsPackage):
 
     depends_on('infernal@1.1.2', type='run', when='@2.0.0')
 
-    @run_after('install')
-    def setup_infernal(self):
-        with working_dir(self.prefix.bin):
-            filter_file('infernal_dir: {bin_dir}',
-                        'infernal_dir: %s' % self.spec['infernal'].prefix.bin,
-                        'tRNAscan-SE.conf', string=True)
+    def patch(self):
+        filter_file('infernal_dir: {bin_dir}',
+                    'infernal_dir: %s' % self.spec['infernal'].prefix.bin,
+                    'tRNAscan-SE.conf.src', string=True)
