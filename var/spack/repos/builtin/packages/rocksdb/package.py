@@ -44,6 +44,11 @@ class Rocksdb(MakefilePackage):
         cflags = []
         ldflags = []
 
+        if spec.satisfies('%gcc@9:'):
+            cflags.append('-Wno-error=deprecated-copy')
+            cflags.append('-Wno-error=pessimizing-move')
+            cflags.append('-Wno-error=redundant-move')
+
         if '+zlib' in self.spec:
             cflags.append('-I' + self.spec['zlib'].prefix.include)
             ldflags.append(self.spec['zlib'].libs.ld_flags)
