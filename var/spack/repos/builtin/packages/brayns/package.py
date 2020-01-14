@@ -64,6 +64,8 @@ class Brayns(CMakePackage):
                 'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_DTI_ENABLED={}'.format(
                 'ON' if '+brion' in self.spec else 'OFF'),
+            '-DBRAYNS_CIRCUITINFO_ENABLED={}'.format(
+                'ON' if '+brion' in self.spec else 'OFF'),
             '-DBRAYNS_NETWORKING_ENABLED={}'.format(
                 'ON' if '+net' in self.spec else 'OFF'),
             '-DBRAYNS_DEFLECT_ENABLED={}'.format(
