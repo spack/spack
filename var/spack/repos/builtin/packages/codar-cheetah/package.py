@@ -19,6 +19,5 @@ class CodarCheetah(PythonPackage):
 
     version('develop', branch='dev')
     version('0.5', sha256='f37a554741eff4bb8407a68f799dd042dfc4df525e84896cad70fccbd6aca6ee')
-    version('0.1', sha256='281564f8ae57a70ce28457616fde26247ea4efb29e55c7bf89a782a259a1a028')
 
     depends_on('python@3.5:', type=('build', 'run'))
