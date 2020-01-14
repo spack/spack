@@ -13,3 +13,12 @@ class TrnascanSe(AutotoolsPackage):
     url      = "http://trna.ucsc.edu/software/trnascan-se-2.0.0.tar.gz"
 
     version('2.0.0',    sha256='0dde1c07142e4bf77b21d53ddf3eeb1ef8c52248005a42323d13f8d7c798100c')
+
+    depends_on('infernal@1.1.2', type='run', when='@2.0.0')
+
+    @run_after('install')
+    def setup_infernal(self):
+        with working_dir(self.prefix.bin):
+            filter_file('infernal_dir: {bin_dir}',
+                        'infernal_dir: %s' % self.spec['infernal'].prefix.bin,
+                        'tRNAscan-SE.conf', string=True)
