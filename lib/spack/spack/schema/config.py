@@ -72,6 +72,7 @@ properties = {
                     {'type': 'null'}
                 ],
             },
+            'allow_sgid': {'type': 'boolean'},
         },
     },
 }
