@@ -69,6 +69,8 @@ class Flang(CMakePackage):
 
         if '+nvptx' in spec:
             options.append('-DFLANG_OPENMP_GPU_NVIDIA=ON')
+        else:
+            options.append('-DFLANG_OPENMP_GPU_NVIDIA=OFF')
 
         return options
 
