@@ -52,14 +52,21 @@ class Rocksdb(MakefilePackage):
         if '+zlib' in self.spec:
             cflags.append('-I' + self.spec['zlib'].prefix.include)
             ldflags.append(self.spec['zlib'].libs.ld_flags)
+        else:
+            env['ROCKSDB_DISABLE_ZLIB'] = 'YES'
+
         if '+bz2' in self.spec:
             cflags.append('-I' + self.spec['bz2'].prefix.include)
             ldflags.append(self.spec['bz2'].libs.ld_flags)
+        else:
+            env['ROCKSDB_DISABLE_BZIP'] = 'YES'
 
         for pkg in ['lz4', 'snappy', 'zstd']:
             if '+' + pkg in self.spec:
                 cflags.append(self.spec[pkg].headers.cpp_flags)
                 ldflags.append(self.spec[pkg].libs.ld_flags)
+            else:
+                env['ROCKSDB_DISABLE_' + pkg.upper()] = 'YES'
 
         cflags.append(self.spec['gflags'].headers.cpp_flags)
         ldflags.append(self.spec['gflags'].libs.ld_flags)
