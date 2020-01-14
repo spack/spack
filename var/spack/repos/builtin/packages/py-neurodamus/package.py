@@ -13,7 +13,8 @@ class PyNeurodamus(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/sim/neurodamus-py"
 
     version('develop', branch='master')
-    version('0.7.1',   tag='0.7.1')
+    version('0.8.0',   tag='0.8.0')
+    version('0.7.2',   tag='0.7.2')
 
     # We depend on Neurodamus but let the user decide which one
     depends_on('python@3.4:',      type=('build', 'run'))
@@ -23,3 +24,13 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-lazy-property', type='run')
     depends_on('py-docopt',        type='run')
     depends_on('py-six',           type='run')
+
+    @run_after('install')
+    def install_scripts(self):
+        mkdirp(self.prefix.share)
+        for script in ('init.py', '_debug.py'):
+            copy(script, self.prefix.share)
+
+    def setup_environment(self, spack_env, run_env):
+        PythonPackage.setup_environment(self, spack_env, run_env)
+        run_env.set('NEURODAMUS_PYTHON', self.prefix.share)

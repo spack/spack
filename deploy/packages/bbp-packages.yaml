@@ -30,7 +30,7 @@ packages:
       - brainbuilder@0.11.7
       - brion@3.1.0 +python ^boost@1.65.0
       - connectome-tools@0.3.2
-      - spatial-index@0.1.0
+      - spatial-index@0.2.1
       - spykfunc@0.15.2
       - psp-validation@0.2.0
       - psp-validation@0.1.12
@@ -74,7 +74,7 @@ packages:
     specs:
       - functionalizer@3.12.2
       - parquet-converters@0.5.2
-      - synapsetool@0.5.6
+      - synapsetool@0.5.8
       - touchdetector@4.4.2
       - touchdetector@5.1.0
       - touchdetector@5.3.3
@@ -151,8 +151,17 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.7.3
+      - neurodamus-core+common@2.9.1
       - ultraliser
+
+  intel-stable:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - model-neocortex
 
   intel-stable-parallel:
     target_matrix:
@@ -173,6 +182,7 @@ packages:
       - mpi
       - python
     specs:
+      - neurodamus-core~common@2.9.1
       - neurodamus-neocortex+coreneuron@0.3
       - neurodamus-hippocampus+coreneuron@0.4
       - neurodamus-thalamus+coreneuron@0.3

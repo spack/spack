@@ -19,15 +19,13 @@ class NeurodamusModel(SimModel):
     # NOTE: Several variants / dependencies come from SimModel
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
     variant('mvdtool',     default=True , description="Enable MVDTool reader (for nodes)")
-    variant('python',      default=False, description="Install neurodamus-python alongside")
     variant('common_mods', default='',    description="Source of common mods. '': no change,"
                                                       " other string: alternate path")
-
-    depends_on('neurodamus-core')
-    depends_on('neurodamus-core@develop', when='@develop')
-    depends_on('neurodamus-core+python', when='+python')
-
-    depends_on("mpi")
+    # Note: We dont request link to MPI so that mpicc can do what is best
+    # and dont rpath it so we stay dynamic. 'run' mode will load the same mpi module
+    depends_on("mpi", type=('build', 'run'))
+    depends_on('neurodamus-core', type='build')
+    depends_on('neurodamus-core@develop', type='build', when='@develop')
     depends_on("hdf5+mpi")
     depends_on('reportinglib')
     depends_on('reportinglib+profile', when='+profile')
@@ -45,7 +43,7 @@ class NeurodamusModel(SimModel):
         """Build and install the bare model.
         """
         SimModel.build(self, spec, prefix)
-        # Dont install intermediate src. Worse, would move mod
+        # Dont install intermediate src.
         SimModel.install(self, spec, prefix, install_src=False)
 
     def merge_hoc_mod(self, spec, prefix):
@@ -65,35 +63,26 @@ class NeurodamusModel(SimModel):
         # If we shall build mods for coreneuron, only bring from core those specified
         if spec.satisfies("+coreneuron"):
             shutil.copytree('mod', 'mod_core', True)
-            with open(core_prefix.mod.join(_CORENRN_MODLIST_FNAME)) as core_mods:
+            with open(core_prefix.lib.mod.join(_CORENRN_MODLIST_FNAME)) as core_mods:
                 for aux_mod in core_mods:
-                    shutil.copy(core_prefix.mod.join(aux_mod.strip()), 'mod_core')
+                    mod_fil = core_prefix.lib.mod.join(aux_mod.strip())
+                    if os.path.isfile(mod_fil):
+                        shutil.copy(mod_fil, 'mod_core')
 
-        copy_all(core_prefix.hoc, 'hoc', make_link)
-        copy_all(core_prefix.mod, 'mod', make_link)
+        copy_all(core_prefix.lib.hoc, 'hoc', make_link)
+        copy_all(core_prefix.lib.mod, 'mod', make_link)
 
     def build(self, spec, prefix):
         """ Build mod files from with nrnivmodl / nrnivmodl-core.
             To support shared libs, nrnivmodl is also passed RPATH flags.
         """
-        dep_libs = ['reportinglib', 'hdf5',  'zlib']
-        link_flag = '-Wl,-rpath,' + prefix.lib
-        include_flag = ' -I%s -I%s' % (spec['reportinglib'].prefix.include,
-                                       spec['hdf5'].prefix.include)
-        if '+synapsetool' in spec:
-            include_flag += ' -DENABLE_SYNTOOL -I ' + spec['synapsetool'].prefix.include
-            dep_libs.append('synapsetool')
+        # NOTE: sim-model now attempts to build all link and include flags from the dependencies
+        # link_flag += ' ' + spec['synapsetool'].package.dependency_libs(spec).joined()
 
-        for dep in dep_libs:
-            link_flag += ' ' + self._get_link_flags(dep)
+        self.mech_name += _LIB_SUFFIX  # Final lib name
+        base_include_flag = "-DENABLE_SYNTOOL" if spec.satisfies('+synapsetool') else ""
 
-        # If synapsetool is static we have to bring dependencies
-        if spec.satisfies('+synapsetool') and spec['synapsetool'].satisfies('~shared'):
-            link_flag += ' ' + spec['synapsetool'].package.dependency_libs(spec).joined()
-
-        # Override mech_name in order to generate a library with a different name
-        self.mech_name += _LIB_SUFFIX
-        self._build_mods('mod', link_flag, include_flag, 'mod_core')
+        include_flag, link_flag = self._build_mods('mod', "", base_include_flag, 'mod_core')
 
         # Create rebuild script
         with open(_BUILD_NEURODAMUS_FNAME, "w") as f:
@@ -112,50 +101,39 @@ class NeurodamusModel(SimModel):
         """
         # base dest dirs already created by model install
         # We install binaries normally, except lib has a suffix
-        self._install_binaries(lib_suffix=_LIB_SUFFIX)
-
-        if spec.satisfies('+coreneuron'):
-            install = which('nrnivmech_install.sh', path=".")
-            install(prefix)
+        self._install_binaries()
 
         # Install mods/hocs, and a builder script
         self._install_src(prefix)
         shutil.move(_BUILD_NEURODAMUS_FNAME, prefix.bin)
 
         # Create mods links in share
-        force_symlink(spec['neurodamus-core'].prefix.mod, prefix.share.mod_neurodamus)
+        force_symlink(spec['neurodamus-core'].prefix.lib.mod, prefix.share.mod_neurodamus)
         force_symlink(prefix.lib.mod, prefix.share.mod_full)
 
-        if spec.satisfies('+python'):
-            py_src = spec['neurodamus-core'].prefix.python
-            assert os.path.isdir(py_src)
-            # Link required paths, create a new lib link (to our lib)
-            py_dst = prefix.lib.python
-            mkdirp(py_dst)
-            force_symlink('../../lib', py_dst.lib)
-            for name in ('neurodamus', 'init.py', '_debug.py'):
-                force_symlink(py_src.join(name), py_dst.join(name))
-
-        filter_file(r'UNKNOWN_NEURODAMUS_MODEL', r'%s' % spec.name, prefix.lib.hoc.join('defvar.hoc'))
-        filter_file(r'UNKNOWN_NEURODAMUS_VERSION', r'%s' % spec.version, prefix.lib.hoc.join('defvar.hoc'))
+        filter_file(r'UNKNOWN_NEURODAMUS_MODEL', r'%s' % spec.name,
+                    prefix.lib.hoc.join('defvar.hoc'))
+        filter_file(r'UNKNOWN_NEURODAMUS_VERSION', r'%s' % spec.version,
+                    prefix.lib.hoc.join('defvar.hoc'))
 
         try:
             commit_hash = self.fetcher[0].get_commit()
-            filter_file(r'UNKNOWN_NEURODAMUS_HASH', r'\'%s\'' % commit_hash, prefix.lib.hoc.join('defvar.hoc'))
         except Exception as e:
             tty.warn(e)
+        else:
+            filter_file(r'UNKNOWN_NEURODAMUS_HASH', r"'%s'" % commit_hash[:8],
+                        prefix.lib.hoc.join('defvar.hoc'))
 
     def setup_environment(self, spack_env, run_env):
-        SimModel.setup_environment(self, spack_env, run_env)
-        run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
-
-        if self.spec.satisfies("+python"):
-            pylib = self.prefix.lib.python
-            for m in spack_env.env_modifications:
-                if m.name == 'PYTHONPATH':
-                    run_env.prepend_path('PYTHONPATH', m.value)
-            run_env.prepend_path('PYTHONPATH', pylib)
-            run_env.set('NEURODAMUS_PYTHON', pylib)
+        self._setup_environment_common(spack_env, run_env)
+        for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so', recursive=False):
+            # We have the two libs and must export them in different vars
+            #  - NRNMECH_LIB_PATH the combined lib (used by neurodamus-py)
+            #  - BGLIBPY_MOD_LIBRARY_PATH is the pure mechanism (used by bglib-py)
+            if '_nd.' in libnrnmech_name:
+                run_env.set('NRNMECH_LIB_PATH', libnrnmech_name)
+            else:
+                run_env.set('BGLIBPY_MOD_LIBRARY_PATH', libnrnmech_name)
 
 
 _BUILD_NEURODAMUS_TPL = """#!/bin/sh

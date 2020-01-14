@@ -42,12 +42,13 @@ class Highfive(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DUSE_EIGEN:Bool=' + ('TRUE' if '+eigen' in self.spec else 'FALSE'),
-            '-DUSE_XTENSOR:Bool=' + ('TRUE' if '+xtensor' in self.spec else 'FALSE'),
-            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
-            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DHIGHFIVE_EXAMPLES:Bool={0}'.format(self.spec.satisfies('@develop')),
-            '-DHIGHFIVE_UNIT_TESTS:Bool={0}'.format(self.spec.satisfies('@develop')),
-            '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool={0}'.format(self.spec.satisfies('@develop')),
+            '-DUSE_BOOST:Bool=' + str(self.spec.satisfies('+boost')),
+            '-DUSE_EIGEN:Bool=' + str(self.spec.satisfies('+eigen')),
+            '-DUSE_XTENSOR:Bool=' + str(self.spec.satisfies('+xtensor')),
+            '-DHIGHFIVE_PARALLEL_HDF5:Bool=' + str(self.spec.satisfies('+mpi')),
+            '-DHIGHFIVE_EXAMPLES:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_UNIT_TESTS:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool=' + str(self.spec.satisfies('@develop')),
             '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=1',  # Dont use targets
+            #'-DHIGHFIVE_USE_INSTALL_DEPS:Bool=ON',  # Newer highfive. Otherwise dynamic deps
         ]

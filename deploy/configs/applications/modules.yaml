@@ -38,9 +38,9 @@ modules:
       - emsim
       - functionalizer
       - meshball
+      - model-neocortex
       - nest
-      - 'neurodamus%intel'
-      - 'neurodamus-core+common'
+      - neurodamus-core
       - neurodamus-hippocampus
       - neurodamus-neocortex
       - neurodamus-thalamus
@@ -83,6 +83,7 @@ modules:
         '^python@3:': '/python3'
         '+mpi': '/parallel'
         '~mpi': '/serial'
+        '+common': 'commonmods'  # neurodamus-core
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'
