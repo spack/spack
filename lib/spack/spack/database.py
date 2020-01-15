@@ -371,7 +371,7 @@ class Database(object):
                             '{0}-{1}'.format(spec.name, spec.full_hash()))
 
     def clear_failure(self, spec, force=False):
-        """Remove any persistent failure tracking for the spec."""
+        """Remove any persistent and cached failure tracking for the spec."""
         if self.prefix_failure_locked(spec):
             if not force:
                 tty.log('Retaining failure marking for {0} due to lock'
@@ -380,6 +380,9 @@ class Database(object):
             else:
                 tty.warn('Removing failure marking despite lock for {0}'
                          .format(spec.name))
+
+        if spec.prefix in self._prefix_failures:
+            del self._prefix_failures[spec.prefix]
 
         if self.prefix_failure_marked(spec):
             try:
