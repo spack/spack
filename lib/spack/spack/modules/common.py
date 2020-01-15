@@ -211,7 +211,7 @@ def root_path(name):
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system t be used (e.g. 'tcl')
+        name: name of the module system to be used (e.g. 'tcl')
 
     Returns:
         root folder for module file installation
