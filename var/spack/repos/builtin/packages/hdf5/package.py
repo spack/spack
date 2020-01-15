@@ -23,6 +23,7 @@ class Hdf5(AutotoolsPackage):
 
     version('develop', branch='develop')
 
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')

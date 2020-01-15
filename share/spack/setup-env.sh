@@ -336,7 +336,7 @@ fi;
 _sp_multi_pathadd() {
     local IFS=':'
     if [ "$_sp_shell" = zsh ]; then
-        setopt sh_word_split
+        emulate -L sh
     fi
     for pth in $2; do
         for systype in ${_sp_compatible_sys_types}; do
