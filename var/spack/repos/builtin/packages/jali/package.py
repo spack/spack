@@ -7,22 +7,9 @@ from spack import *
 
 
 class Jali(CMakePackage):
-    """Jali is a parallel unstructured mesh infrastructure library
-designed for use by multi-physics simulations. It supports 2D and 3D
-arbitrary polyhedral meshes distributed over hundreds to thousands of
-nodes. Jali can read and write Exodus II meshes along with fields and
-sets on the mesh and support for other formats is partially
-implemented or is in the plans. Jali is built upon MSTK
-(https://github.com/MeshToolkit/MSTK), an open source general purpose
-unstructured mesh infrastructure library from Los Alamos National
-Laboratory. While it has been made to work with other mesh frameworks
-such as MOAB and STKmesh in the past, support for maintaining the
-interface to these frameworks has been suspended for now. Jali
-supports distributed as well as on-node parallelism. Support of
-on-node parallelism is through direct use of the mesh calls in
-multi-threaded constructs or through use of "tiles" which are
-submeshes or sub-partitions of a partition destined for a compute
-node."""
+    """Jali is a parallel, unstructured mesh infrastructure library designed
+    for use by multi-physics simulations.
+    """
 
     homepage = "https://github.com/lanl/jali"
     git      = "https://github.com/lanl/jali"
