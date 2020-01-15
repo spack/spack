@@ -5,19 +5,21 @@
 
 
 from spack import *
-import platform
 
 
-class Vecgeom(CMakePackage):
+class Vecgeom(CMakePackage, CudaPackage):
     """The vectorized geometry library for particle-detector simulation
     (toolkits)."""
 
     homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
-    url = "https://gitlab.cern.ch/api/v4/projects/VecGeom%2FVecGeom/repository/archive.tar.gz?sha=v0.3.rc"
+    url = "https://gitlab.cern.ch/VecGeom/VecGeom/-/archive/v1.1.5/VecGeom-v1.1.5.tar.gz"
+    git = "https://gitlab.cern.ch/VecGeom/VecGeom.git"
 
-    version('01.01.03', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v01.01.03', preferred=True)
-    version('01.00.00', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v01.00.00')
-    version('00.05.00', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v00.05.00')
+    version('1.1.5', sha256='da674f3bbc75c30f56c1a2d251fa8930c899f27fa64b03a36569924030d87b95')
+    version('1.1.3', tag='v01.01.03')
+    version('1.0.1', sha256='1eae7ac9014c608e8d8db5568058b8c0fea1a1dc7a8f54157a3a1c997b6fd9eb')
+    version('0.5.2', tag='v00.05.02',
+            commit='a7e0828c915ff936a79e672d1dd84b087a323b51')
     version('0.3.rc', sha256='a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d')
 
     variant('cxxstd',
@@ -25,29 +27,36 @@ class Vecgeom(CMakePackage):
             values=('11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
-    variant('vector',
-            default='native',
-            values=('sse3', 'sse4.2', 'native'),
-            multi=False,
-            description='Specify the instruction set for vectorization.')
 
     depends_on('cmake@3.5:', type='build')
 
+    # TODO: veccore is required, but VecGeom will independently download
+
     def cmake_args(self):
-        options = [
-            '-DBACKEND=Scalar',
-            '-DGEANT4=OFF',
-            '-DUSOLIDS=ON',
-            '-DUSOLIDS_VECGEOM=ON',
-            '-DROOT=OFF',
-            '-DNO_SPECIALIZATION=ON',
-            '-DCMAKE_VERBOSE_MAKEFILE=TRUE']
-        options.append('-DCMAKE_CXX_STANDARD={0}'.
-                       format(self.spec.variants['cxxstd'].value))
-        arch = platform.machine()
-        if arch == 'x86_64':
-            options.append('-DVECGEOM_VECTOR={0}'.
-                           format(self.spec.variants['vector'].value))
+        # Possible target options are from the main CMakeLists.txt, assuming
+        # "best" is last
+        target = self.spec.target
+        vecgeom_arch = "sse2 sse3 ssse3 sse4.1 sse4.2 avx avx2".split()
+        for feature in reversed(vecgeom_arch):
+            if feature.replace('.', '_') in target:
+                target_instructions = feature
+                break
         else:
-            options.append('-DVECGEOM_VECTOR=' + arch)
+            # No features available (could be 'generic' arch)
+            target_instructions = 'empty'
+
+        define = CMakePackage.define
+        options = [
+            define('BACKEND', 'Scalar'),
+            define('GEANT4', False),
+            define('NO_SPECIALIZATION', True),
+            define('ROOT', False),
+            define('USOLIDS', True),
+            define('USOLIDS_VECGEOM', True),
+            define('VECGEOM_VECTOR', target_instructions),
+            self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+            self.define_from_variant('CUDA'),
+            self.define_from_variant('CUDA_ARCH'),
+        ]
+
         return options
