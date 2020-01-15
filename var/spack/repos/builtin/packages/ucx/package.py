@@ -39,4 +39,6 @@ class Ucx(AutotoolsPackage):
         config_args = []
         if '+thread_multiple' in spec:
             config_args.append('--enable-mt')
+        else:
+            config_args.append('--disable-mt')
         return config_args
