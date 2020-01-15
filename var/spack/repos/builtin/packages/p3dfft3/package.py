@@ -29,14 +29,14 @@ class P3dfft3(AutotoolsPackage):
     variant('openmp', default=False,
             description="Enable OpenMP support.")
     variant('measure', default=False,
-            description="Define if you want to
-                        use the measure fftw planner flag")
+            description="Define if you want to use"
+                        "the measure fftw planner flag")
     variant('estimate', default=False,
-            description="Define if you want to
-                        use the estimate fftw planner flag")
+            description="Define if you want to"
+                        "use the estimate fftw planner flag")
     variant('patient', default=False,
-            description="Define if you want to
-                        use the patient fftw planner flag")
+            description="Define if you want to"
+                        "use the patient fftw planner flag")
 
     depends_on('mpi', when='+mpi')
     depends_on('fftw', when='+fftw')
@@ -44,7 +44,7 @@ class P3dfft3(AutotoolsPackage):
     depends_on('openmp', when='+openmp')
 
     def configure_args(self):
-        args=[]
+        args = []
 
         if '%gcc' in self.spec:
             args.append('--enable-gnu')
@@ -66,8 +66,10 @@ class P3dfft3(AutotoolsPackage):
             args.append('--enable-fftw')
 
             if '@:3.0.0' in self.spec:
-                args.append ('--with-fftw-lib=%s' % self.spec['fftw'].prefix.lib)
-                args.append ('--with-fftw-inc=%s' % self.spec['fftw'].prefix.include)
+                args.append('--with-fftw-lib=%s' %
+                            self.spec['fftw'].prefix.lib)
+                args.append('--with-fftw-inc=%s' %
+                            self.spec['fftw'].prefix.include)
             else:
                 args.append('--with-fftw=%s' % self.spec['fftw'].prefix)
 
@@ -80,8 +82,10 @@ class P3dfft3(AutotoolsPackage):
 
         if '+essl' in self.spec:
             args.append('--enable-essl')
-            args.append('--with-essl-lib=%s' % self.spec['essl'].prefix.lib)
-            args.append('--with-essl-inc=%s' % self.spec['essl'].prefix.include)
+            args.append('--with-essl-lib=%s' %
+                        self.spec['essl'].prefix.lib)
+            args.append('--with-essl-inc=%s' %
+                        self.spec['essl'].prefix.include)
 
         if '+mkl' in self.spec:
             args.append('--enable-mkl')
@@ -89,4 +93,3 @@ class P3dfft3(AutotoolsPackage):
             args.append('--with-mkl-inc=%s' % self.spec['mkl'].prefix.include)
 
         return args
-
