@@ -572,7 +572,6 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
             report_file = report_dir.join('a_Configure.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            import re
             install_command_regex = re.compile(
                 r'<ConfigureCommand>(.+)</ConfigureCommand>',
                 re.MULTILINE | re.DOTALL)
@@ -611,12 +610,16 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
 
 
 def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
     with capfd.disabled():
         try:
             install('--cache-only', 'libdwarf')
-            assert False
-        except spack.main.SpackCommandError:
-            pass
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    install_failed = re.compile(
+        r'Installation of libdwarf(.+) failed.  Review log for details')
+    assert install_failed.search(msg)
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
