@@ -7,7 +7,8 @@ from spack import *
 
 
 class PySpdlog(PythonPackage):
-    """The py-spdlog package provides a Python wrapper to the C++ spdlog library."""
+    """The py-spdlog package provides a Python wrapper 
+    to the C++ spdlog library."""
 
     homepage = 'https://github.com/bodgergely/spdlog-python'
     url = 'https://github.com/bodgergely/spdlog-python/archive/v2.0.0.tar.gz'
@@ -24,8 +25,10 @@ class PySpdlog(PythonPackage):
     # github repository: https://github.com/bodgergely/spdlog-python/issues/19
 
     version('develop', branch='master', submodules=True)
-    version('2.0.0', commit='41a5caa57d27dba01a2015bb90a6174309f50e0e', submodules=True)
-    version('1.0.5', commit='92ce5f621656aed4daa57902334da68e609b3d42', submodules=True)
+    version('2.0.0', commit='41a5caa57d27dba01a2015bb90a6174309f50e0e',
+            submodules=True)
+    version('1.0.5', commit='92ce5f621656aed4daa57902334da68e609b3d42',
+            submodules=True)
 
     depends_on('py-pybind11', type='build')
     depends_on('py-setuptools', type='build')
