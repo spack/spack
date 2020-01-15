@@ -64,8 +64,6 @@ class P3dfft3(AutotoolsPackage):
             args.append('CC=%s' % self.spec['mpi'].mpicc)
             args.append('CXX=%s' % self.spec['mpi'].mpicxx)
             args.append('FC=%s' % self.spec['mpi'].mpifc)
-            #args.append('CFLAGS=-L%s' % self.spec['mpi'].prefix.lib)
-            #args.append('CXXLAGS=-L%s' % self.spec['mpi'].prefix.lib)
 
         if '+openmpi' in self.spec:
             args.append('--enable-openmpi')
