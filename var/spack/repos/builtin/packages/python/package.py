@@ -31,6 +31,7 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3', preferred=True)
     version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
@@ -395,7 +396,8 @@ class Python(AutotoolsPackage):
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
-        filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        if spack_cxx and self.compiler.cxx:
+            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
 
     @run_after('install')
     def symlink(self):
