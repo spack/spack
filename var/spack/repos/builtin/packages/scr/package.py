@@ -17,7 +17,10 @@ class Scr(CMakePackage):
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 
-    version('master', branch='master')
+    version('develop', branch='develop')
+    version('legacy', branch='legacy')
+
+    version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b')
     version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847')
     version('1.2.1', sha256='23acab2dc7203e9514455a5168f2fd57bc590affb7a1876912b58201513628fe')
     version('1.2.0', sha256='e3338ab2fa6e9332d2326c59092b584949a083a876adf5a19d4d5c7a1bbae047')
