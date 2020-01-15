@@ -36,6 +36,8 @@ class P3dfft3(AutotoolsPackage):
             description="Define if you want to"
                         "use the patient fftw planner flag")
 
+    # TODO: Add more configure options!
+
     depends_on('mpi', when='+mpi')
     depends_on('fftw', when='+fftw')
     depends_on('essl', when='+essl')
@@ -49,12 +51,21 @@ class P3dfft3(AutotoolsPackage):
         if '%intel' in self.spec:
             args.append('--enable-intel')
 
+        if '%xl' in self.spec:
+            args.append('--enable-ibm')
+
+        if '%cce' in self.spec:
+            args.append('--enable-cray')
+
+        if '%pgi' in self.spec:
+            args.append('--enable-pgi')
+
         if '+mpi' in self.spec:
             args.append('CC=%s' % self.spec['mpi'].mpicc)
             args.append('CXX=%s' % self.spec['mpi'].mpicxx)
             args.append('FC=%s' % self.spec['mpi'].mpifc)
-            args.append('CFLAGS=-L%s' % self.spec['mpi'].prefix.lib)
-            args.append('CXXLAGS=-L%s' % self.spec['mpi'].prefix.lib)
+            #args.append('CFLAGS=-L%s' % self.spec['mpi'].prefix.lib)
+            #args.append('CXXLAGS=-L%s' % self.spec['mpi'].prefix.lib)
 
         if '+openmpi' in self.spec:
             args.append('--enable-openmpi')
