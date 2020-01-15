@@ -357,7 +357,9 @@ populate_build_cache() {
     log "gpg keys available"
     spack gpg list
     log "creating build caches"
+    log "...fetching existing cache"
     cached=$(spack buildcache list -l|awk '!/^--|^==/ {print $1}')
+    log "...determining new installations"
     created=$(spack find -l --start-date "${start_date}"|awk '!/^--|^==/ {print $1}')
     for checksum in ${created}; do
         spec=$(spack find /${checksum}|tail -n 1)
