@@ -617,6 +617,8 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
         except spack.installer.InstallError as e:
             msg = str(e)
 
+    # libelf from cache failed to install, which automatically removed the
+    # the libdwarf build task and flagged the package as failed to install.
     install_failed = re.compile(
         r'Installation of libdwarf(.+) failed.  Review log for details')
     assert install_failed.search(msg)
