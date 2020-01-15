@@ -70,7 +70,7 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      # - parquet-converters@0.5.2
+      - parquet-converters@0.5.2
       - synapsetool@0.5.6
       - touchdetector@4.4.2
       - touchdetector@5.1.0
