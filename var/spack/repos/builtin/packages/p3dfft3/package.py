@@ -26,8 +26,6 @@ class P3dfft3(AutotoolsPackage):
             description='Builds with ESSL library')
     variant('mpi', default=True,
             description="Enable MPI support.")
-    variant('openmp', default=False,
-            description="Enable OpenMP support.")
     variant('measure', default=False,
             description="Define if you want to use"
                         "the measure fftw planner flag")
@@ -41,7 +39,6 @@ class P3dfft3(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('fftw', when='+fftw')
     depends_on('essl', when='+essl')
-    depends_on('openmp', when='+openmp')
 
     def configure_args(self):
         args = []
@@ -89,7 +86,9 @@ class P3dfft3(AutotoolsPackage):
 
         if '+mkl' in self.spec:
             args.append('--enable-mkl')
-            args.append('--with-mkl-lib=%s' % self.spec['mkl'].prefix.lib)
-            args.append('--with-mkl-inc=%s' % self.spec['mkl'].prefix.include)
+            args.append('--with-mkl-lib=%s' %
+                        self.spec['mkl'].prefix.lib)
+            args.append('--with-mkl-inc=%s' %
+                        self.spec['mkl'].prefix.include)
 
         return args
