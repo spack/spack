@@ -24,6 +24,8 @@ class Rocksdb(MakefilePackage):
     variant('static', default=True, description='Build static library')
     variant('zlib', default=True, description='Enable zlib compression support')
     variant('zstd', default=False, description='Enable zstandard compression support')
+    variant('tbb', default=False, description='Enable Intel TBB support')
+
 
     depends_on('bzip2', when='+bzip2')
     depends_on('gflags')
@@ -31,6 +33,7 @@ class Rocksdb(MakefilePackage):
     depends_on('snappy', when='+snappy')
     depends_on('zlib', when='+zlib')
     depends_on('zstd', when='+zstd')
+    depends_on('tbb', when='+tbb')
 
     phases = ['install']
 
@@ -60,6 +63,12 @@ class Rocksdb(MakefilePackage):
             ldflags.append(self.spec['bz2'].libs.ld_flags)
         else:
             env['ROCKSDB_DISABLE_BZIP'] = 'YES'
+
+        if '+tbb' in self.spec:
+            cflags.append(spec['tbb'].headers.cpp_flags)
+            ldflags.append('-L' + spec['tbb'].prefix.lib)
+        else:
+            env['ROCKSDB_DISABLE_TBB'] = 'YES'
 
         for pkg in ['lz4', 'snappy', 'zstd']:
             if '+' + pkg in self.spec:
