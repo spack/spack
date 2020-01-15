@@ -20,4 +20,5 @@ class OverrideContextTemplates(Package):
     tcl_context = {'sentence': "sentence from package"}
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

@@ -32,9 +32,15 @@ class HashTest3(Package):
         print("install 1")
         os.listdir(os.getcwd())
 
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')
+
     @when('@1.5:')
     def install(self, spec, prefix):
         os.listdir(os.getcwd())
+
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')
 
     for _version_constraint in ['@1.5', '@1.6']:
         @when(_version_constraint)

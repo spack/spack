@@ -13,4 +13,5 @@ class Externalprereq(Package):
     version('1.4', 'f1234567890abcdef1234567890abcde')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

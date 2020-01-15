@@ -21,4 +21,5 @@ class Python(Package):
     version('2.7.8', 'd4bca0159acb0b44a781292b5231936f')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

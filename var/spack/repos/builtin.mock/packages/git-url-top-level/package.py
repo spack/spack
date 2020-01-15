@@ -40,4 +40,5 @@ class GitUrlTopLevel(Package):
     version('1.0', 'abc11', tag='abc123')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

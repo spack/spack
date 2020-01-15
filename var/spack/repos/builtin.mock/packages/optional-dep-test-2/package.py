@@ -21,4 +21,5 @@ class OptionalDepTest2(Package):
     depends_on('optional-dep-test+mpi', when='+mpi')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

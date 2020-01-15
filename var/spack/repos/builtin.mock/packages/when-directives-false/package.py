@@ -25,4 +25,5 @@ class WhenDirectivesFalse(Package):
              when=False)
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

@@ -16,4 +16,5 @@ class DtDiamondRight(Package):
     depends_on('dt-diamond-bottom', type=('build', 'link', 'run'))
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

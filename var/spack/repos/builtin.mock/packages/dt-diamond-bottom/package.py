@@ -14,4 +14,5 @@ class DtDiamondBottom(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

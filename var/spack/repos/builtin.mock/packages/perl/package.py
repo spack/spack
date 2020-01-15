@@ -15,4 +15,5 @@ class Perl(Package):
     version('0.0.0', 'hash')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

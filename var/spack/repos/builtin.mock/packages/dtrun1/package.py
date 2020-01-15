@@ -18,4 +18,5 @@ class Dtrun1(Package):
     depends_on('dtrun3', type='run')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

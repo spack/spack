@@ -27,4 +27,5 @@ class UrlListTest(Package):
     version('4.5-rc5', 'abc45rc5')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

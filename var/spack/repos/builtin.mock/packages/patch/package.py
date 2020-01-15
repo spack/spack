@@ -23,4 +23,5 @@ class Patch(Package):
     patch('biz.patch', when='@1.0.1:1.0.2')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

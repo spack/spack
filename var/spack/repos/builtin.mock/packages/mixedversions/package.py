@@ -14,4 +14,5 @@ class Mixedversions(Package):
     version('1.0.1', 'hasha')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

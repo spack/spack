@@ -29,4 +29,5 @@ X   Y
     depends_on('dep-diamond-patch-mid2')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

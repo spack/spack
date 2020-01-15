@@ -13,7 +13,8 @@ class ModulePathSeparator(Package):
     version(1.0, 'foobarbaz')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')
 
     def setup_environment(self, senv, renv):
         renv.append_path("COLON", "foo")

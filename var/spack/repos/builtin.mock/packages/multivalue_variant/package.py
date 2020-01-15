@@ -35,4 +35,5 @@ class MultivalueVariant(Package):
     depends_on('a@1.0', when='fee=barbaz')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

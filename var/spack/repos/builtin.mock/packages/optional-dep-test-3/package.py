@@ -20,4 +20,5 @@ class OptionalDepTest3(Package):
     depends_on('b', when='+var')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

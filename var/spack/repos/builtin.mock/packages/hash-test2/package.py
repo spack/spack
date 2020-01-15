@@ -31,3 +31,6 @@ class HashTest2(Package):
     def install(self, spec, prefix):
         print("install 1")
         os.listdir(os.getcwd())
+
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

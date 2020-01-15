@@ -29,4 +29,5 @@ class MultiProviderMpi(Package):
     provides('mpi@2.2', when='@1.6.5')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')

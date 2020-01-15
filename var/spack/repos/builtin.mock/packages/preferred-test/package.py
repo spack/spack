@@ -17,4 +17,5 @@ class PreferredTest(Package):
     version('0.2.14', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        touch(prefix.bin, 'install.txt')
