@@ -59,9 +59,12 @@ STATUS_INSTALLING = 'installing'
 #: Build status indicating the spec was sucessfully installed
 STATUS_INSTALLED = 'installed'
 
+#: Build status indicating the task has been popped from the queue
+STATUS_DEQUEUED = 'dequeued'
+
 #: Build status indicating task has been removed (to maintain priority
 #: queue invariants).
-STATUS_REMOVED = 'dequeued'
+STATUS_REMOVED = 'removed'
 
 
 # TODO: Should the following be static methods?  If so, of which class?
@@ -880,7 +883,6 @@ class PackageInstaller(object):
         dirty = kwargs.get('dirty', False)
         fake = kwargs.get('fake', False)
         install_source = kwargs.get('install_source', False)
-        keep_prefix = kwargs.get('keep_prefix', False)
         keep_stage = kwargs.get('keep_stage', False)
         skip_patch = kwargs.get('skip_patch', False)
         tests = kwargs.get('tests', False)
@@ -913,7 +915,6 @@ class PackageInstaller(object):
             """
             start_time = time.time()
             if not fake:
-                pass
                 if not skip_patch:
                     pkg.do_patch()
                 else:
@@ -1001,12 +1002,6 @@ class PackageInstaller(object):
             spack.package.PackageBase._verbose = spack.build_environment.fork(
                 pkg, build_process, dirty=dirty, fake=fake)
 
-            self._update_installed(task)
-
-            # If we installed then we should keep the prefix
-            last_phase = getattr(pkg, 'last_phase', None)
-            keep_prefix = last_phase is None or keep_prefix
-
             # Note: PARENT of the build process adds the new package to
             # the database, so that we don't need to re-read from file.
             spack.store.db.add(pkg.spec, spack.store.layout,
@@ -1017,10 +1012,6 @@ class PackageInstaller(object):
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
 
-            # Perform basic task cleanup for the installed spec to
-            # include downgrading the write to a read lock
-            self._cleanup_task(pkg, True)
-
         except StopIteration as e:
             # A StopIteration exception means that do_install was asked to
             # stop early from clients.
@@ -1030,17 +1021,10 @@ class PackageInstaller(object):
 
             # TODO: How should StopIteration affect the installation of
             # TODO:  dependent packages?
-            self._cleanup_task(pkg, True)
 
-        finally:
-            # Remove the install prefix if anything went wrong during install.
-            if not keep_prefix:
-                pkg.remove_prefix()
-
-            # The subprocess *may* have removed the build stage. Mark it
-            # not created so that the next time pkg.stage is invoked, we
-            # check the filesystem for it.
-            pkg.stage.created = False
+        except (Exception, KeyboardInterrupt, SystemExit) as exc:
+            tty.error(exc)
+            raise
 
     _install_task.__doc__ += install_args_docstring
 
@@ -1066,6 +1050,7 @@ class PackageInstaller(object):
             task = heapq.heappop(self.build_pq)[1]
             if task.status != STATUS_REMOVED:
                 del self.build_tasks[task.pkg_id]
+                task.status = STATUS_DEQUEUED
                 return task
         return None
 
@@ -1187,7 +1172,7 @@ class PackageInstaller(object):
             # Ensure the metadata path exists as well
             mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
 
-    def _update_failed(self, task, mark=False):
+    def _update_failed(self, task, mark=False, exc=None):
         """
         Update the task and transitive dependents as failed; optionally mark
         externally as failed; and remove associated build tasks.
@@ -1198,7 +1183,8 @@ class PackageInstaller(object):
                 be marked as "failed", otherwise, ``False``
         """
         pkg_id = task.pkg.unique_id
-        tty.debug('Flagging {0} as failed'.format(pkg_id))
+        err = '' if exc is None else ': {}'.format(str(exc))
+        tty.debug('Flagging {0} as failed{1}'.format(pkg_id, err))
         if mark:
             self.failed[pkg_id] = spack.store.db.mark_failed(task.spec)
         else:
@@ -1284,8 +1270,7 @@ class PackageInstaller(object):
 
             pkg, spec = task.pkg, task.pkg.spec
             pkg_id = pkg.unique_id
-            action = 'Processing' if task.attempts <= 1 else 'Reprocessing'
-            tty.verbose('{0} {1}: task={2}'.format(action, pkg_id, task))
+            tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
 
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
@@ -1298,10 +1283,11 @@ class PackageInstaller(object):
             if task.priority != 0:
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
-                suffix = 'ies' if task.priority > 1 else 'y'
+                dep_str = 'dependencies' if task.priority > 1 else 'dependency'
                 raise InstallError(
-                    'Cannot proceed with {0}: {1} uninstalled dependenc{2}'
-                    .format(pkg_id, task.priority, suffix))
+                    'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
+                    .format(pkg_id, task.priority, dep_str,
+                            ','.join(task.uninstalled_deps)))
 
             # TODO: Add a check to ensure no attempt is made to install the pkg
             # TODO:   before any of its dependencies?
@@ -1380,11 +1366,21 @@ class PackageInstaller(object):
             # that can work on the current package.
             try:
                 self._install_task(task, **kwargs)
+                self._update_installed(task)
+
+                # If we installed then we should keep the prefix
+                last_phase = getattr(pkg, 'last_phase', None)
+                keep_prefix = last_phase is None or keep_prefix
+
             except spack.directory_layout.InstallDirectoryAlreadyExistsError:
                 tty.warn("Keeping existing install prefix in place.")
-                self._cleanup_task(pkg, True)
+
+                # TODO: Does "best effort" mean this is considered installed?
+                self._update_installed(task)
+
                 # TODO: Does "best effort" mean raise exception here?
                 raise
+
             except (Exception, KeyboardInterrupt, SystemExit) as exc:
                 # Assuming best effort installs so suppress the exception and
                 # mark as a failure UNLESS this is the explicit package.
@@ -1393,10 +1389,31 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
+                self._update_failed(task, True, exc)
+
                 if pkg_id == self.pkg.unique_id:
+                    # TODO: Prefer the following but creates challenges for
+                    # TODO: updating some existing tests.
+                    # reason = 'due to {0}: {1}'.format(exc.__class__.__name__,
+                    #                                   str(exc))
+                    # raise InstallError('Installation of {0} failed {1}'
+                    #                    .format(pkg_id, reason))
                     raise
-                else:
-                    self._update_failed(task, True)
+
+            finally:
+                # Remove the install prefix if anything went wrong during
+                # install.
+                if not keep_prefix:
+                    pkg.remove_prefix()
+
+                # The subprocess *may* have removed the build stage. Mark it
+                # not created so that the next time pkg.stage is invoked, we
+                # check the filesystem for it.
+                pkg.stage.created = False
+
+            # Perform basic task cleanup for the installed spec to
+            # include downgrading the write to a read lock
+            self._cleanup_task(pkg, True)
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()

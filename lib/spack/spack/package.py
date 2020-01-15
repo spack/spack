@@ -697,7 +697,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if not self.spec.concrete:
             raise ValueError("Cannot provide a unique, readable id when "
                              "the spec is not concretized.")
-        return '{0}-{1}'.format(self.name, self.spec.dag_hash())
+        # TODO: Is the extra "readability" of the version worth keeping?
+        return "{0}-{1}-{2}".format(self.name, self.version,
+                                    self.spec.dag_hash())
 
     @property
     def version(self):
