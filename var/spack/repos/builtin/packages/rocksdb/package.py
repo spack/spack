@@ -10,10 +10,12 @@ class Rocksdb(MakefilePackage):
     """RocksDB: A Persistent Key-Value Store for Flash and RAM Storage"""
 
     homepage = "https://github.com/facebook/rocksdb"
-    url      = 'https://github.com/facebook/rocksdb/archive/v5.17.2.tar.gz'
+    url      = 'https://github.com/facebook/rocksdb/archive/v6.5.3.tar.gz'
     git      = 'https://github.com/facebook/rocksdb.git'
 
     version('develop', git=git, branch='master', submodules=True)
+    version('6.5.3',   sha256='6dc023a11d61d00c8391bd44f26ba7db06c44be228c10b552edc84e02d7fbde2')
+    version('5.18.3',  sha256='7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254')
     version('5.17.2',  sha256='101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28')
     version('5.16.6',  sha256='f0739edce1707568bdfb36a77638fd5bae287ca21763ce3e56cf0bfae8fff033')
     version('5.15.10', sha256='26d5d4259fa352ae1604b5b4d275f947cacc006f4f7d2ef0b815056601b807c0')
@@ -25,7 +27,6 @@ class Rocksdb(MakefilePackage):
     variant('zlib', default=True, description='Enable zlib compression support')
     variant('zstd', default=False, description='Enable zstandard compression support')
     variant('tbb', default=False, description='Enable Intel TBB support')
-
 
     depends_on('bzip2', when='+bzip2')
     depends_on('gflags')
