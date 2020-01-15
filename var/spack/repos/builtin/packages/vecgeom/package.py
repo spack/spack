@@ -15,6 +15,8 @@ class Vecgeom(CMakePackage, CudaPackage):
     url = "https://gitlab.cern.ch/VecGeom/VecGeom/-/archive/v1.1.5/VecGeom-v1.1.5.tar.gz"
     git = "https://gitlab.cern.ch/VecGeom/VecGeom.git"
 
+    maintainers = ['sethrj']
+
     version('1.1.5', sha256='da674f3bbc75c30f56c1a2d251fa8930c899f27fa64b03a36569924030d87b95')
     version('1.1.3', tag='v01.01.03')
     version('1.0.1', sha256='1eae7ac9014c608e8d8db5568058b8c0fea1a1dc7a8f54157a3a1c997b6fd9eb')
@@ -22,15 +24,24 @@ class Vecgeom(CMakePackage, CudaPackage):
             commit='a7e0828c915ff936a79e672d1dd84b087a323b51')
     version('0.3.rc', sha256='a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d')
 
-    variant('cxxstd',
-            default='17',
-            values=('11', '14', '17'),
-            multi=False,
-            description='Use the specified C++ standard when building.')
+    _cxxstd_values = ('11', '14', '17')
+    variant('cxxstd', default='14', values=_cxxstd_values, multi=False,
+            description='Use the specified C++ standard when building')
+    variant('gdml', default=True,
+            description='Support Geant XML geometry descriptions')
+    variant('shared', default=True,
+            description='Build shared libraries')
+    variant('root', default=True,
+            description='Support ROOT geometry descriptions')
 
-    depends_on('cmake@3.5:', type='build')
+    depends_on('veccore@0.5.2', type=('build', 'link'), when='@1.1.0:')
+    depends_on('veccore@0.4.2', type=('build', 'link'), when='@:1.0')
+    depends_on('veccore+cuda', type=('build', 'link'), when='+cuda')
 
-    # TODO: veccore is required, but VecGeom will independently download
+    for std in _cxxstd_values:
+        depends_on('xerces-c cxxstd=' + std, when='+gdml cxxstd=' + std)
+        depends_on('veccore cxxstd=' + std, when='cxxstd=' + std)
+        depends_on('root cxxstd=' + std, when='+root cxxstd=' + std)
 
     def cmake_args(self):
         # Possible target options are from the main CMakeLists.txt, assuming
@@ -48,15 +59,24 @@ class Vecgeom(CMakePackage, CudaPackage):
         define = CMakePackage.define
         options = [
             define('BACKEND', 'Scalar'),
+            define('BUILD_TESTING', False),
+            define('BUILTIN_VECCORE', False),
+            define('CTEST', False),
             define('GEANT4', False),
             define('NO_SPECIALIZATION', True),
-            define('ROOT', False),
-            define('USOLIDS', True),
-            define('USOLIDS_VECGEOM', True),
             define('VECGEOM_VECTOR', target_instructions),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('GDML'),
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             self.define_from_variant('CUDA'),
             self.define_from_variant('CUDA_ARCH'),
+            self.define_from_variant('ROOT'),
         ]
+
+        if self.spec.satisfies("@:0.5.2"):
+            options.extend([
+                define('USOLIDS', True),
+                define('USOLIDS_VECGEOM', True),
+            ])
 
         return options
