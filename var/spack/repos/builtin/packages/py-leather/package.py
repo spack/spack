@@ -8,7 +8,7 @@ from spack import *
 
 class PyLeather(PythonPackage):
     """Leather is the Python charting library for those who need charts now and
-    don’t care if they’re perfect."""
+    don't care if they're perfect."""
 
     homepage = "https://leather.readthedocs.io/en/stable/"
     url      = "https://pypi.io/packages/source/l/leather/leather-0.3.3.tar.gz"
