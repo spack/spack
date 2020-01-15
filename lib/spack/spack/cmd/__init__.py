@@ -376,24 +376,25 @@ def display_specs(specs, args=None, **kwargs):
         max_width = max(len(f[0]) for f in formatted)
         path_fmt = "%%-%ds%%s" % (max_width + 2)
 
-        # getting lots of prefixes requires DB lookups. Ensure
-        # all spec.prefix calls are in one transaction.
-        with spack.store.db.read_transaction():
-            for string, spec in formatted:
-                if not string:
-                    print()  # print newline from above
-                    continue
+        for string, spec in formatted:
+            if not string:
+                print()  # print newline from above
+                continue
 
-                if paths:
-                    print(path_fmt % (string, spec.prefix))
-                else:
-                    print(string)
+            if paths:
+                print(path_fmt % (string, spec.prefix))
+            else:
+                print(string)
 
-    if groups:
-        for specs in iter_groups(specs, indent, all_headers):
-            format_list(specs)
-    else:
-        format_list(sorted(specs))
+    # both branches perform sorting operations that access the prefix or
+    # get it directly. getting lots of prefixes requires DB lookups. Ensure
+    # all spec.prefix calls are in one transaction.
+    with spack.store.db.read_transaction():
+        if groups:
+            for specs in iter_groups(specs, indent, all_headers):
+                format_list(specs)
+        else:
+                format_list(sorted(specs))
 
 
 def spack_is_git_repo():
