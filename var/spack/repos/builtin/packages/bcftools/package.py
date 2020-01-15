@@ -95,7 +95,7 @@ class Bcftools(AutotoolsPackage):
     @when('@1.2:1.4')
     def install(self, spec, prefix):
         make_options = self.set_make_options()
-        make(*make_options, 'install')
+        make('install', *make_options)
 
         if spec.satisfies('@1.2'):
             mkdirp(self.prefix.libexec.bcftools)
