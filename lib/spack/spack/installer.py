@@ -248,8 +248,9 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    cwrite('@*g{[+]} ')
-    print(message)
+    if len(message) > 0:
+        cwrite('@*g{[+]} ')
+        print(message)
 
 
 def _process_external_package(pkg, explicit):
@@ -1183,7 +1184,7 @@ class PackageInstaller(object):
                 be marked as "failed", otherwise, ``False``
         """
         pkg_id = task.pkg.unique_id
-        err = '' if exc is None else ': {}'.format(str(exc))
+        err = '' if exc is None else ': {0}'.format(str(exc))
         tty.debug('Flagging {0} as failed{1}'.format(pkg_id, err))
         if mark:
             self.failed[pkg_id] = spack.store.db.mark_failed(task.spec)
