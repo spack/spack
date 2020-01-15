@@ -1023,10 +1023,6 @@ class PackageInstaller(object):
             # TODO: How should StopIteration affect the installation of
             # TODO:  dependent packages?
 
-        except (Exception, KeyboardInterrupt, SystemExit) as exc:
-            tty.error(exc)
-            raise
-
     _install_task.__doc__ += install_args_docstring
 
     def _next_is_pri0(self):
