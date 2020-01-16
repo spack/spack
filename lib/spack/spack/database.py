@@ -69,7 +69,7 @@ _skip_reindex = [
 # Default timeout for spack database locks in seconds, which we want to provide
 # a fairly quick turnaround for parallel installs
 # TODO: What is the right setting here to avoid excess delays?
-#_db_lock_timeout = 120
+# _db_lock_timeout = 120
 _db_lock_timeout = 3
 
 # Default timeout for spack package locks in seconds, which we want to provide
