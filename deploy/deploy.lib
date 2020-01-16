@@ -419,7 +419,7 @@ populate_mirror() {
 
     log "found the following specs"
     echo "${spec_list}"
-    # spack mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
+    spack mirror create -D -d ${SPACK_SOURCE_MIRROR_DIR} ${spec_list}
 }
 
 check_specs() {
