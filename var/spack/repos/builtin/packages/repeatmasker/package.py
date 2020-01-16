@@ -29,6 +29,8 @@ class Repeatmasker(Package):
     depends_on('phrap-crossmatch-swat', type=('build', 'run'),
                when='+crossmatch')
 
+    patch('utf8.patch')
+
     def url_for_version(self, version):
         url = 'http://www.repeatmasker.org/RepeatMasker-open-{0}.tar.gz'
         return url.format(version.dashed)
