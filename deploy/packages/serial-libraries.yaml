@@ -14,7 +14,6 @@ packages:
   gnu-stable-serial-python:
     target_matrix:
       - gnu-stable
-      # - gnu-stable-py2
     requires:
       - architecture
       - compiler

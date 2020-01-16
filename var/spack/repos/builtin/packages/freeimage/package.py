@@ -19,6 +19,8 @@ class Freeimage(MakefilePackage):
 
     def edit(self, spec, prefix):
         env["DESTDIR"] = prefix
+        env["INCDIR"] = prefix.join("include")
+        env["INSTALLDIR"] = prefix.join("lib")
 
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/freeimage/Source%20Distribution/{0}/FreeImage{1}.zip"

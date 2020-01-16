@@ -21,18 +21,6 @@ gnu-stable:
   python:
   - python@3.7.4
 
-# gnu-stable-py2:
-#   architecture:
-#   - x86_64
-#   compiler:
-#   - gcc@6.4.0
-#   mpi:
-#   - hpe-mpi@2.21
-#   lapack:
-#   - intel-mkl@2019.3.199
-#   python:
-#   - python@2.7.15
-
 # stable intel toolchain
 intel-stable:
   architecture:
@@ -45,19 +33,6 @@ intel-stable:
   - intel-mkl@2019.3.199
   python:
   - python@3.7.4
-
-# stable intel toolchain
-# intel-stable-py2:
-#   architecture:
-#   - x86_64
-#   compiler:
-#   - intel@18.0.3
-#   mpi:
-#   - hpe-mpi@2.21
-#   lapack:
-#   - intel-mkl@2019.3.199
-#   python:
-#   - python@2.7.15
 
 # stable intel knl toolchain
 # intel-knl-stable:

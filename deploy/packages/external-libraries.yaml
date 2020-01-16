@@ -26,7 +26,7 @@ packages:
       - cuda@9.2.88
       - cuda@10.1.243
       - cudnn@7.3.0
-      - freeimage@3.18.0
+      # - freeimage@3.18.0
       - glew
       - gmsh+metis~mpi+oce+openmp+shared@4.4.1
       - hdf5~mpi@1.10.4
@@ -42,7 +42,6 @@ packages:
       - ninja@1.8.2
       - openblas@0.3.3
       - optix
-      # - python@2.7.15
       - python@3.7.4
       - qhull@2015.2
       - qt@5.11.2 ^libjpeg-turbo
