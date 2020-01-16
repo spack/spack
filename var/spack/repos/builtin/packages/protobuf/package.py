@@ -15,7 +15,6 @@ class Protobuf(CMakePackage):
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz"
     root_cmakelists_dir = "cmake"
 
-
     version('3.11.2',  sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
     version('3.11.1',  sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
     version('3.11.0',  sha256='6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c')
