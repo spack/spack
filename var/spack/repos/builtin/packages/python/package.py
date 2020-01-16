@@ -1118,7 +1118,7 @@ class Python(AutotoolsPackage):
         # run hello world
         output = self.command('-c', 'print("hello world!")',
                               output=str.split, error=str.split)
-        assert output == "hello world!\n"
+        assert output == "hello world!"
 
 #        error = self.command('-c', 'print("Error: failed.")',
 #                             output=str.split, error=str.split)
