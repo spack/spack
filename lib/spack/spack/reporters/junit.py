@@ -27,3 +27,6 @@ class JUnit(Reporter):
             env = spack.tengine.make_environment()
             t = env.get_template(self.template_file)
             f.write(t.render(report_data))
+
+    def test_report(self, filename, report_data):
+        self.build_report(filename, report_data)

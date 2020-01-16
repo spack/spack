@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 import argparse
 import textwrap
+import datetime
 
 import llnl.util.tty as tty
 
@@ -89,8 +90,10 @@ environment variables:
                 log_dir = os.getcwd()
                 log_file = os.path.join(log_dir, args.log_file)
         else:
-            log_file = os.path.join(os.getcwd(),
-                                    'test-%s' % specs_to_test[0].dag_hash())
+            now = datetime.datetime.now()
+            log_file = os.path.join(
+                os.getcwd(),
+                'test-%s' % now.strftime('%Y-%m-%d_%H:%M:%S'))
         reporter.filename = log_file
     reporter.specs = specs_to_test
 
