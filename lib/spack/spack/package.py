@@ -1837,8 +1837,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return 'test-%s' % self.spec.format('{name}-{hash:7}')
 
     def do_test(self, dirty=False):
+        test_log_file = os.path.join(os.getcwd(), self.test_log_name)
+
         def test_process():
-            test_log_file = os.path.join(os.getcwd(), self.test_log_name)
             with log_output(test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
@@ -1848,9 +1849,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 try:
                     self.test()
                 except Exception as e:
+                    # Catch the error and print a summary to the log file
+                    # so that cdash and junit reporters know about it
                     type, context, traceback = sys.exc_info()
-                    print('Error: %s: %s' % (type, e.message))
-                    raise e, None, traceback
+                    print('Error: %s: %s' % (type.__name__,
+                                             getattr(e, 'message',
+                                                     'No error message')))
+                    if sys.version_info[0] < 3:
+                        # ugly hack to avoid the fact this is a syntax error in
+                        # python 3
+                        eval("raise e, None, traceback")
+                    else:
+                        raise type().with_traceback(traceback)
                 tty.set_debug(old_debug)
 
         try:
@@ -1858,8 +1868,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self, test_process, dirty=dirty, fake=False, context='test')
         except Exception as e:
             tty.error('Tests failed. See test log for details\n'
-                      '  %s\n' % log_file)
-
+                      '  %s\n' % test_log_file)
 
     def test(self):
         pass
