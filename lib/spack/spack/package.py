@@ -1851,16 +1851,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 except Exception as e:
                     # Catch the error and print a summary to the log file
                     # so that cdash and junit reporters know about it
-                    type, context, traceback = sys.exc_info()
-                    print('Error: %s: %s' % (type.__name__,
+                    exc_type, context, traceback = sys.exc_info()
+                    print('Error: %s: %s' % (exc_type.__name__,
                                              getattr(e, 'message',
                                                      'No error message')))
                     if sys.version_info[0] < 3:
-                        # ugly hack to avoid the fact this is a syntax error in
-                        # python 3
-                        eval("raise e, None, traceback")
+                        # ugly hack: exec to avoid the fact this is a syntax
+                        # error in python 3
+                        exec("raise exc_type, None, traceback",
+                             globals(), locals())
                     else:
-                        raise type().with_traceback(traceback)
+                        raise exc_type().with_traceback(traceback)
                 tty.set_debug(old_debug)
 
         try:
