@@ -1615,21 +1615,25 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     print('Error: %s: %s' % (exc_type.__name__,
                                              getattr(e, 'message',
                                                      'No error message')))
+
+                    # construct arguments to re-raise error from type
+                    args = []
+                    if hasattr(e, 'message'):
+                        args.append(e.message)
+                    if hasattr(e, 'long_message'):
+                        args.append(e.long_message)
+
                     if sys.version_info[0] < 3:
                         # ugly hack: exec to avoid the fact this is a syntax
                         # error in python 3
-                        exec("raise exc_type, None, traceback",
+                        exec("raise exc_type(*args), None, traceback",
                              globals(), locals())
                     else:
-                        raise exc_type().with_traceback(traceback)
+                        raise exc_type(*args).with_traceback(traceback)
                 tty.set_debug(old_debug)
 
-        try:
-            spack.build_environment.fork(
-                self, test_process, dirty=dirty, fake=False, context='test')
-        except Exception as e:
-            tty.error('Tests failed. See test log for details\n'
-                      '  %s\n' % test_log_file)
+        spack.build_environment.fork(
+            self, test_process, dirty=dirty, fake=False, context='test')
 
     def test(self):
         pass
