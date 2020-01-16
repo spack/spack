@@ -678,14 +678,20 @@ class Python(AutotoolsPackage):
 
     @property
     def headers(self):
-        config_h = self.get_config_h_filename()
+        try:
+            config_h = self.get_config_h_filename()
 
-        if not os.path.exists(config_h):
-            includepy = self.get_config_var('INCLUDEPY')
-            msg = 'Unable to locate {0} headers in {1}'
-            raise RuntimeError(msg.format(self.name, includepy))
+            if not os.path.exists(config_h):
+                includepy = self.get_config_var('INCLUDEPY')
+                msg = 'Unable to locate {0} headers in {1}'
+                raise RuntimeError(msg.format(self.name, includepy))
 
-        headers = HeaderList(config_h)
+            headers = HeaderList(config_h)
+        except ProcessError:
+            headers = find_headers(
+                'pyconfig', self.prefix.include, recursive=True)
+            config_h = headers[0]
+
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
@@ -704,6 +710,9 @@ class Python(AutotoolsPackage):
     @property
     def easy_install_file(self):
         return join_path(self.site_packages_dir, "easy-install.pth")
+
+    def setup_run_environment(self, env):
+        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the

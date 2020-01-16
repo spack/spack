@@ -114,7 +114,7 @@ class Hdf5(AutotoolsPackage):
 
     # Disable MPI C++ interface when C++ is disabled, otherwise downstream
     # libraries fail to link; see https://github.com/spack/spack/issues/12586
-    patch('h5public-skip-mpicxx.patch', when='+mpi~cxx',
+    patch('h5public-skip-mpicxx.patch', when='@:1.8.21,1.10.0:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
