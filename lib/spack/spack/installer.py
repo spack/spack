@@ -248,9 +248,8 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    if len(message) > 0:
-        cwrite('@*g{[+]} ')
-        print(message)
+    cwrite('@*g{[+]} ')
+    print(message)
 
 
 def _process_external_package(pkg, explicit):
