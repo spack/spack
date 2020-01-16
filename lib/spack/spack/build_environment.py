@@ -880,8 +880,12 @@ def fork(pkg, function, dirty, fake, context='build'):
             package_context = get_package_context(tb)
 
             build_log = None
-            if hasattr(pkg, 'log_path'):
+            if context == 'build' and hasattr(pkg, 'log_path'):
                 build_log = pkg.log_path
+
+            test_log = None
+            if context == 'test':
+                test_log = os.path.join(os.getcwd(), pkg.test_log_name)
 
             # make a pickleable exception to send to parent.
             msg = "%s: %s" % (exc_type.__name__, str(exc))
@@ -889,7 +893,8 @@ def fork(pkg, function, dirty, fake, context='build'):
             ce = ChildError(msg,
                             exc_type.__module__,
                             exc_type.__name__,
-                            tb_string, build_log, package_context)
+                            tb_string, package_context,
+                            build_log, test_log)
             child_pipe.send(ce)
 
         finally:
@@ -1050,14 +1055,15 @@ class ChildError(InstallError):
     # context instead of Python context.
     build_errors = [('spack.util.executable', 'ProcessError')]
 
-    def __init__(self, msg, module, classname, traceback_string, build_log,
-                 context):
+    def __init__(self, msg, module, classname, traceback_string, context,
+                 build_log, test_log):
         super(ChildError, self).__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
-        self.build_log = build_log
         self.context = context
+        self.build_log = build_log
+        self.test_log = test_log
 
     @property
     def long_message(self):
@@ -1066,21 +1072,28 @@ class ChildError(InstallError):
 
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors or warnings highlighted.
-            if self.build_log and os.path.exists(self.build_log):
-                errors, warnings = parse_log_events(self.build_log)
+            # the log with errors or warnings highlighted.
+            def write_log_summary(log_type, log):
+                errors, warnings = parse_log_events(log)
                 nerr = len(errors)
                 nwar = len(warnings)
                 if nerr > 0:
                     # If errors are found, only display errors
                     out.write(
-                        "\n%s found in build log:\n" % plural(nerr, 'error'))
+                        "\n%s found in %s log:\n" %
+                        (plural(nerr, 'error'), log_type))
                     out.write(make_log_context(errors))
                 elif nwar > 0:
                     # If no errors are found but warnings are, display warnings
                     out.write(
-                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
+                        "\n%s found in %s log:\n" %
+                        (plural(nwar, 'warning'), log_type))
                     out.write(make_log_context(warnings))
+
+            if self.build_log and os.path.exists(self.build_log):
+                write_log_summary('build', self.build_log)
+            if self.test_log and os.path.exists(self.test_log):
+                write_log_summary('test', self.test_log)
 
         else:
             # The error happened in in the Python code, so try to show
@@ -1096,6 +1109,10 @@ class ChildError(InstallError):
         if self.build_log and os.path.exists(self.build_log):
             out.write('See build log for details:\n')
             out.write('  %s\n' % self.build_log)
+
+        if self.test_log and os.path.exists(self.test_log):
+            out.write('See test log for details:\n')
+            out.write('  %s\n' % self.test_log)
 
         return out.getvalue()
 
@@ -1113,13 +1130,16 @@ class ChildError(InstallError):
             self.module,
             self.name,
             self.traceback,
+            self.context,
             self.build_log,
-            self.context)
+            self.test_log)
 
 
-def _make_child_error(msg, module, name, traceback, build_log, context):
+def _make_child_error(msg, module, name, traceback, context,
+                      build_log, test_log):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, module, name, traceback, build_log, context)
+    return ChildError(msg, module, name, traceback, context,
+                      build_log, test_log)
 
 
 class StopPhase(spack.error.SpackError):
