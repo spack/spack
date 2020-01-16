@@ -36,7 +36,7 @@ packages:
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
-      - py-entity-management@1.0.18
+      - py-entity-management@1.0.20
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.40
       - py-morph-tool@0.1.14
@@ -62,7 +62,7 @@ packages:
     specs:
       - py-bbp-analysis-framework@0.6.39
       - py-simwriter@0.4.3
-      - py-entity-management@1.0.18
+      - py-entity-management@1.0.20
 
   gnu-stable-parallel:
     target_matrix:
@@ -135,7 +135,7 @@ packages:
       - python
     specs:
       - nest@2.18.0
-      - py-bluepy@0.14.3
+      - py-bluepy@0.14.5
       - py-bluepymm@0.6.38
       - py-bluepyopt@1.6.56
       - py-efel@3.0.22
