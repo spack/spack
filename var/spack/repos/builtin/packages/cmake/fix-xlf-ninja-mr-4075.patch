@@ -1,0 +1,145 @@
+From 19f267c75e84b72c4de42570be0c4222bb93aaff Mon Sep 17 00:00:00 2001
+From: Brad King <brad.king@kitware.com>
+Date: Thu, 21 Nov 2019 14:38:35 -0500
+Subject: [PATCH] XL: Add support for Ninja and XL Fortran
+
+The Ninja generator's support for Fortran requires that source files
+be preprocessed explicitly first.  However, the `xlf` compiler does
+not have a simple `-E` option or equivalent to do preprocessing.
+The only documented way to get preprocessed output is to use `-d`
+to leave it behind, but only at an inflexible location.
+
+Instead, create our own `cpp` wrapper script and substitute it for the
+real preprocessor using `-tF -B ...`.  Teach the wrapper to map the
+`cpp` output to the location we need and then invoke the real `cpp`
+underneath.
+
+Fixes: #19450
+---
+ Help/release/dev/xlf-ninja.rst              |  5 ++++
+ Modules/CMakeDetermineCompilerId.cmake      | 10 +++++++
+ Modules/CMakeDetermineFortranCompiler.cmake |  5 ++++
+ Modules/CMakeFortranCompiler.cmake.in       |  1 +
+ Modules/Compiler/XL-Fortran.cmake           |  4 +++
+ Modules/Compiler/XL-Fortran/cpp             | 29 +++++++++++++++++++++
+ 6 files changed, 54 insertions(+)
+ create mode 100644 Help/release/dev/xlf-ninja.rst
+ create mode 100755 Modules/Compiler/XL-Fortran/cpp
+
+diff --git a/Help/release/dev/xlf-ninja.rst b/Help/release/dev/xlf-ninja.rst
+new file mode 100644
+index 0000000000..916e713008
+--- /dev/null
++++ b/Help/release/dev/xlf-ninja.rst
+@@ -0,0 +1,5 @@
++xlf-ninja
++---------
++
++* The IBM XL Fortran compiler is now supported by the :generator:`Ninja`
++  generator.
+diff --git a/Modules/CMakeDetermineCompilerId.cmake b/Modules/CMakeDetermineCompilerId.cmake
+index f7ef755aeb..0b3664c5de 100644
+--- a/Modules/CMakeDetermineCompilerId.cmake
++++ b/Modules/CMakeDetermineCompilerId.cmake
+@@ -182,6 +182,10 @@ function(CMAKE_DETERMINE_COMPILER_ID lang flagvar src)
+     message(STATUS "The ${lang} compiler identification is unknown")
+   endif()
+ 
++  if(lang STREQUAL "Fortran" AND CMAKE_${lang}_COMPILER_ID STREQUAL "XL")
++    set(CMAKE_${lang}_XL_CPP "${CMAKE_${lang}_COMPILER_ID_CPP}" PARENT_SCOPE)
++  endif()
++
+   set(CMAKE_${lang}_COMPILER_ID "${CMAKE_${lang}_COMPILER_ID}" PARENT_SCOPE)
+   set(CMAKE_${lang}_PLATFORM_ID "${CMAKE_${lang}_PLATFORM_ID}" PARENT_SCOPE)
+   set(CMAKE_${lang}_COMPILER_ARCHITECTURE_ID "${CMAKE_${lang}_COMPILER_ARCHITECTURE_ID}" PARENT_SCOPE)
+@@ -542,6 +546,12 @@ Id flags: ${testflags} ${CMAKE_${lang}_COMPILER_ID_FLAGS_ALWAYS}
+       ERROR_VARIABLE CMAKE_${lang}_COMPILER_ID_OUTPUT
+       RESULT_VARIABLE CMAKE_${lang}_COMPILER_ID_RESULT
+       )
++    if("${CMAKE_${lang}_COMPILER_ID_OUTPUT}" MATCHES "exec: [^\n]*\\((/[^,\n]*/cpp),CMakeFortranCompilerId.F")
++      set(_cpp "${CMAKE_MATCH_1}")
++      if(EXISTS "${_cpp}")
++        set(CMAKE_${lang}_COMPILER_ID_CPP "${_cpp}" PARENT_SCOPE)
++      endif()
++    endif()
+   endif()
+ 
+   # Check the result of compilation.
+diff --git a/Modules/CMakeDetermineFortranCompiler.cmake b/Modules/CMakeDetermineFortranCompiler.cmake
+index 5ddd64fae8..e8505417d6 100644
+--- a/Modules/CMakeDetermineFortranCompiler.cmake
++++ b/Modules/CMakeDetermineFortranCompiler.cmake
+@@ -271,6 +271,11 @@ include(CMakeFindBinUtils)
+ include(Compiler/${CMAKE_Fortran_COMPILER_ID}-FindBinUtils OPTIONAL)
+ unset(_CMAKE_PROCESSING_LANGUAGE)
+ 
++if(CMAKE_Fortran_XL_CPP)
++  set(_SET_CMAKE_Fortran_XL_CPP
++    "set(CMAKE_Fortran_XL_CPP \"${CMAKE_Fortran_XL_CPP}\")")
++endif()
++
+ if(CMAKE_Fortran_COMPILER_ARCHITECTURE_ID)
+   set(_SET_CMAKE_Fortran_COMPILER_ARCHITECTURE_ID
+     "set(CMAKE_Fortran_COMPILER_ARCHITECTURE_ID ${CMAKE_Fortran_COMPILER_ARCHITECTURE_ID})")
+diff --git a/Modules/CMakeFortranCompiler.cmake.in b/Modules/CMakeFortranCompiler.cmake.in
+index ae7b73ac4a..34f44aa542 100644
+--- a/Modules/CMakeFortranCompiler.cmake.in
++++ b/Modules/CMakeFortranCompiler.cmake.in
+@@ -6,6 +6,7 @@ set(CMAKE_Fortran_COMPILER_WRAPPER "@CMAKE_Fortran_COMPILER_WRAPPER@")
+ set(CMAKE_Fortran_PLATFORM_ID "@CMAKE_Fortran_PLATFORM_ID@")
+ set(CMAKE_Fortran_SIMULATE_ID "@CMAKE_Fortran_SIMULATE_ID@")
+ set(CMAKE_Fortran_SIMULATE_VERSION "@CMAKE_Fortran_SIMULATE_VERSION@")
++@_SET_CMAKE_Fortran_XL_CPP@
+ @_SET_CMAKE_Fortran_COMPILER_ARCHITECTURE_ID@
+ @SET_MSVC_Fortran_ARCHITECTURE_ID@
+ set(CMAKE_AR "@CMAKE_AR@")
+diff --git a/Modules/Compiler/XL-Fortran.cmake b/Modules/Compiler/XL-Fortran.cmake
+index c4fb09712a..1683dff4f0 100644
+--- a/Modules/Compiler/XL-Fortran.cmake
++++ b/Modules/Compiler/XL-Fortran.cmake
+@@ -18,3 +18,7 @@ string(APPEND CMAKE_Fortran_FLAGS_INIT " -qthreaded -qhalt=e")
+ # xlf: 1501-214 (W) command option E reserved for future use - ignored
+ set(CMAKE_Fortran_CREATE_PREPROCESSED_SOURCE)
+ set(CMAKE_Fortran_CREATE_ASSEMBLY_SOURCE)
++
++set(CMAKE_Fortran_PREPROCESS_SOURCE
++  "<CMAKE_Fortran_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -qpreprocess -qnoobject -qsuppress=1517-020 -tF -B \"${CMAKE_CURRENT_LIST_DIR}/XL-Fortran/\" -WF,--cpp,\"${CMAKE_Fortran_XL_CPP}\",--out,<PREPROCESSED_SOURCE> <SOURCE>"
++  )
+diff --git a/Modules/Compiler/XL-Fortran/cpp b/Modules/Compiler/XL-Fortran/cpp
+new file mode 100755
+index 0000000000..1fd62c26a0
+--- /dev/null
++++ b/Modules/Compiler/XL-Fortran/cpp
+@@ -0,0 +1,29 @@
++#!/usr/bin/env bash
++
++# Source file.
++src="$(printf %q "$1")"
++shift
++
++# Output file the compiler expects.
++out="$(printf %q "$1")"
++shift
++
++# Create the file the compiler expects.  It will check syntax.
++>"$out"
++
++cpp='cpp'
++opts=''
++while test "$#" != 0; do
++    case "$1" in
++    # Extract the option for the path to cpp.
++    --cpp) shift; cpp="$(printf %q "$1")" ;;
++    # Extract the option for our own output file.
++    --out) shift; out="$(printf %q "$1")" ;;
++    # Collect the rest of the command line.
++    *) opts="$opts $(printf %q "$1")" ;;
++    esac
++    shift
++done
++
++# Execute the real preprocessor tool.
++eval "exec $cpp $src $out $opts"
+-- 
+2.24.1
+
