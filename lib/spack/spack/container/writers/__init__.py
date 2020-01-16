@@ -8,6 +8,7 @@ convenience functions.
 import collections
 import copy
 
+import spack.environment
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
@@ -37,7 +38,7 @@ def create(configuration):
     Args:
         configuration: how to generate the current recipe
     """
-    name = configuration['spack']['container']['format']
+    name = spack.environment.config_dict(configuration)['container']['format']
     return _writer_factory[name](configuration)
 
 
@@ -56,8 +57,8 @@ class PathContext(tengine.Context):
     directly via PATH.
     """
     def __init__(self, config):
-        self.config = config
-        self.container_config = config['spack']['container']
+        self.config = spack.environment.config_dict(config)
+        self.container_config = self.config['container']
 
     @tengine.context_property
     def run(self):
@@ -100,7 +101,7 @@ class PathContext(tengine.Context):
         """The spack.yaml file that should be used in the image"""
         import jsonschema
         # Copy in the part of spack.yaml prescribed in the configuration file
-        manifest = copy.deepcopy(self.config['spack'])
+        manifest = copy.deepcopy(self.config)
         manifest.pop('container')
 
         # Ensure that a few paths are where they need to be

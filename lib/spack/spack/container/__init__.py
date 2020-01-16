@@ -7,6 +7,7 @@ generate container recipes from a Spack environment
 """
 import warnings
 
+import spack.environment
 import spack.schema.env as env
 import spack.util.spack_yaml as syaml
 from .writers import recipe
@@ -35,35 +36,36 @@ def validate(configuration_file):
 
     # The "container" subsection is mandatory
     msg = '"container" subsection missing in "{0}"'
-    assert 'container' in config['spack'], msg.format(configuration_file)
+    env_dict = spack.environment.config_dict(config)
+    assert 'container' in env_dict, msg.format(configuration_file)
 
     # Remove attributes that are not needed / allowed in the
     # container recipe
     for subsection in ('cdash', 'gitlab_ci', 'modules'):
-        if subsection in config['spack']:
+        if subsection in env_dict:
             msg = ('the subsection "{0}" in "{1}" is not used when generating'
                    ' container recipes and will be discarded')
             warnings.warn(msg.format(subsection, configuration_file))
-            config['spack'].pop(subsection)
+            env_dict.pop(subsection)
 
     # Set the default value of the concretization strategy to "together" and
     # warn if the user explicitly set another value
-    config['spack'].setdefault('concretization', 'together')
-    if config['spack']['concretization'] != 'together':
+    env_dict.setdefault('concretization', 'together')
+    if env_dict['concretization'] != 'together':
         msg = ('the "concretization" attribute of the environment is set '
                'to "{0}" [the advised value is instead "together"]')
-        warnings.warn(msg.format(config['spack']['concretization']))
+        warnings.warn(msg.format(env_dict['concretization']))
 
     # Check if the install tree was explicitly set to a custom value and warn
     # that it will be overridden
-    environment_config = config['spack'].get('config', {})
+    environment_config = env_dict.get('config', {})
     if environment_config.get('install_tree', None):
         msg = ('the "config:install_tree" attribute has been set explicitly '
                'and will be overridden in the container image')
         warnings.warn(msg)
 
     # Likewise for the view
-    environment_view = config['spack'].get('view', None)
+    environment_view = env_dict.get('view', None)
     if environment_view:
         msg = ('the "view" attribute has been set explicitly '
                'and will be overridden in the container image')
