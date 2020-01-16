@@ -1086,7 +1086,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         self.stage.cache_local()
 
         for patch in self.spec.patches:
-            patch.fetch(self.stage)
+            patch.fetch()
             if patch.cache():
                 patch.cache().cache_local()
 
