@@ -15,6 +15,7 @@ class Eztrace(AutotoolsPackage):
 
     version('1.1-8', sha256='d80d78a25f1eb0e6e60a3e535e3972cd178c6a8663a3d6109105dfa6a880b8ec')
 
+    depends_on('binutils')
     depends_on('mpi')
 
     # Does not work on Darwin due to MAP_POPULATE
