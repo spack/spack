@@ -22,8 +22,6 @@ class Geode(Package):
     version('1.7.0', sha256='91eec04420f46e949d32104479c4a4b5b34a4e5570dca7b98ca067a30d5a783d')
     version('1.6.0', sha256='79e8d81d058b1c4edd5fb414ff30ac530f7913b978f5abc899c353fcb06e5ef3')
 
-    provides('gemfire')
-
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
