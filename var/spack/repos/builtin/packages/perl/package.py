@@ -305,7 +305,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         Returns:
             Executable: the Perl command
         """
-        for ver in (self.spec.version, ''):
+        for ver in ('', self.spec.version):
             path = os.path.join(self.prefix.bin, '{0}{1}'.format(
                 self.spec.name, ver))
             if os.path.exists(path):
