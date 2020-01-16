@@ -174,13 +174,15 @@ class Executable(object):
             if output in (str, str.split) or error in (str, str.split):
                 result = ''
                 if output in (str, str.split):
-                    result += text_type(out.decode('utf-8'))
+                    outstr = text_type(out.decode('utf-8'))
+                    result += outstr
                     if output is str.split:
-                        sys.stdout.write(out)
+                        sys.stdout.write(outstr)
                 if error in (str, str.split):
-                    result += text_type(err.decode('utf-8'))
+                    errstr = text_type(err.decode('utf-8'))
+                    result += errstr
                     if error is str.split:
-                        sys.stderr.write(err)
+                        sys.stderr.write(errstr)
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
