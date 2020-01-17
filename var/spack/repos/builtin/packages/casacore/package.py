@@ -16,7 +16,8 @@ class Casacore(CMakePackage):
 
     variant('openmp', default=False, description='Build OpenMP support')
     variant('shared', default=True, description='Build shared libraries')
-    variant('sofa', default=False, description='Build SOFA support')
+    # see note below about the reason for disabling the "sofa" variant
+    # variant('sofa', default=False, description='Build SOFA support')
     variant('fftw', default=False, description='Build FFTW3 support')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
@@ -28,7 +29,11 @@ class Casacore(CMakePackage):
     depends_on('cfitsio@3.181:')
     depends_on('wcslib@4.20:+cfitsio')
     depends_on('fftw~mpi@3.0.0:', when='+fftw')
-    depends_on('sofa-c', when='+sofa')
+    # SOFA dependency suffers the same problem in CMakeLists.txt as readline;
+    # however, as SOFA is far less likely to be present on most systems, and as
+    # it's an unneeded dependency except for testing, for now we leave out the
+    # option for a dependency on SOFA.
+    # depends_on('sofa-c', when='+sofa')
     depends_on('hdf5', when='+hdf5')
     # Force dependency on readline. Although the presence of readline is tested
     # in CMakeLists.txt, and casacore can be built without it, there's no way
