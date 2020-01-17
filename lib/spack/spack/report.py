@@ -34,10 +34,10 @@ __all__ = [
 ]
 
 
-def fetch_package_log_by_type(pkg, do_fn):
+def fetch_log(pkg, do_fn, dir):
     log_files = {
         'do_install': pkg.build_log_path,
-        'do_test': os.path.join(os.getcwd(), pkg.test_log_name),
+        'do_test': os.path.join(dir, pkg.test_log_name),
     }
     try:
         with codecs.open(log_files[do_fn.__name__], 'r', 'utf-8') as f:
@@ -63,7 +63,7 @@ class InfoCollector(object):
         specs (list of Spec): specs whose install information will
            be recorded
     """
-    def __init__(self, wrap_class, do_fn, specs):
+    def __init__(self, wrap_class, do_fn, specs, dir):
         #: Class for which to wrap a function
         self.wrap_class = wrap_class
         #: Action to be reported on
@@ -75,6 +75,8 @@ class InfoCollector(object):
         #: This is where we record the data that will be included
         #: in our report.
         self.specs = []
+        #: Record directory for test log paths
+        self.dir = dir
 
     def __enter__(self):
         # Initialize the spec report with the data that is available upfront.
@@ -152,7 +154,7 @@ class InfoCollector(object):
                 try:
                     value = _install_task(instance, *args, **kwargs)
                     package['result'] = 'success'
-                    package['stdout'] = fetch_package_log_by_type(pkg, do_fn)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
                     if do_fn.__name__ == 'do_install' and installed_on_entry:
@@ -163,7 +165,7 @@ class InfoCollector(object):
                     # didn't work correctly)
                     package['result'] = 'failure'
                     package['message'] = e.message or 'Installation failure'
-                    package['stdout'] = fetch_package_log_by_type(pkg, do_fn)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
@@ -171,7 +173,7 @@ class InfoCollector(object):
                     # Everything else is an error (the installation
                     # failed outside of the child process)
                     package['result'] = 'error'
-                    package['stdout'] = fetch_package_log_by_type(pkg, do_fn)
+                    package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['message'] = str(e) or 'Unknown error'
                     package['exception'] = traceback.format_exc()
 
@@ -269,6 +271,7 @@ class collect_info(object):
 
     def __call__(self, type):
         self.type = type
+        self.dir = os.getcwd()
         return self
 
     def concretization_report(self, msg):
@@ -276,8 +279,8 @@ class collect_info(object):
 
     def __enter__(self):
         if self.format_name:
-            # Start the collector and patch PackageInstaller._install_task
-            self.collector = InfoCollector(self.function, self.specs)
+            # Start the collector and patch self.function on appropriate class
+            self.collector = InfoCollector(self.function, self.specs, self.dir)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
