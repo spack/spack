@@ -7,7 +7,7 @@ from spack import *
 
 
 # TODO: try switching to CMakePackage for more control over build
-class PyTorch(PythonPackage):
+class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
@@ -51,6 +51,7 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.4.0', tag='v1.4.0', submodules=True)
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
@@ -61,7 +62,6 @@ class PyTorch(PythonPackage):
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 
-    variant('cuda', default=True, description='Enables CUDA build')
     variant('cudnn', default=True, description='Enables the cuDNN build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
