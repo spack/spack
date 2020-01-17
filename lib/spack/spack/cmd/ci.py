@@ -413,20 +413,19 @@ def ci_rebuild(args):
                 # install from buildcache even though the locally computed
                 # full hash is different than the one stored in the spec.yaml
                 # file on the remote mirror.
-                if job_spec.dependencies():
-                    first_pass_args = install_args + [
-                        '--cache-only',
-                        '--only',
-                        'dependencies',
-                    ]
-                    first_pass_args.extend(spec_cli_arg)
-                    tty.debug('First pass install arguments: {0}'.format(
-                        first_pass_args))
-                    spack_cmd(*first_pass_args)
+                first_pass_args = install_args + [
+                    '--cache-only',
+                    '--only',
+                    'dependencies',
+                ]
+                first_pass_args.extend(spec_cli_arg)
+                tty.debug('First pass install arguments: {0}'.format(
+                    first_pass_args))
+                spack_cmd(*first_pass_args)
 
-                    # Overwrite the changed environment file so it doesn't
-                    # the next install invocation.
-                    shutil.copyfile(env_dst_path, env_src_path)
+                # Overwrite the changed environment file so it doesn't
+                # the next install invocation.
+                shutil.copyfile(env_dst_path, env_src_path)
 
                 second_pass_args = install_args + [
                     '--no-cache',
