@@ -734,7 +734,8 @@ def url_encode_string(input_string):
 
 def import_signing_key(base64_signing_key):
     if not base64_signing_key:
-        tty.die('No key found for signing/verifying packages')
+        tty.warn('No key found for signing/verifying packages')
+        return
 
     tty.debug('ci.import_signing_key() will attempt to import a key')
 
