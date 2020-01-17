@@ -857,6 +857,9 @@ def fork(pkg, function, dirty, fake, context='build'):
         if input_stream is not None:
             sys.stdin = input_stream
 
+        # Record starting directory
+        start_dir = os.getcwd()
+
         try:
             if not fake:
                 setup_package(pkg, dirty=dirty, context=context)
@@ -885,7 +888,7 @@ def fork(pkg, function, dirty, fake, context='build'):
 
             test_log = None
             if context == 'test':
-                test_log = os.path.join(os.getcwd(), pkg.test_log_name)
+                test_log = os.path.join(start_dir, pkg.test_log_name)
 
             # make a pickleable exception to send to parent.
             msg = "%s: %s" % (exc_type.__name__, str(exc))
