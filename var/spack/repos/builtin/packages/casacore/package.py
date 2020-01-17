@@ -12,6 +12,11 @@ class Casacore(CMakePackage):
     homepage = "https://github.com/casacore/casacore"
     url      = "https://github.com/casacore/casacore/archive/v2.4.1.tar.gz"
 
+    version('3.2.0', sha256='ae5d3786cb6dfdd7ebc5eecc0c724ff02bbf6929720bc23be43a027978e79a5f')
+    version('3.1.2', sha256='ac94f4246412eb45d503f1019cabe2bb04e3861e1f3254b832d9b1164ea5f281')
+    version('3.1.1', sha256='85d2b17d856592fb206b17e0a344a29330650a4269c80b87f8abb3eaf3dadad4')
+    version('3.1.0', sha256='a6adf2d77ad0d6f32995b1e297fd88d31ded9c3e0bb8f28966d7b35a969f7897')
+    version('3.0.0', sha256='6f0e68fd77b5c96299f7583a03a53a90980ec347bff9dfb4c0abb0e2933e6bcb')
     version('2.4.1', sha256='58eccc875053b2c6fe44fe53b6463030ef169597ec29926936f18d27b5087d63')
 
     variant('openmp', default=False, description='Build OpenMP support')
