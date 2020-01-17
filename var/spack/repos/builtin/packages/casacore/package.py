@@ -20,7 +20,6 @@ class Casacore(CMakePackage):
     variant('fftw', default=False, description='Build FFTW3 support')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
-    variant('readline', default=False, description='Build readline support')
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
@@ -31,7 +30,11 @@ class Casacore(CMakePackage):
     depends_on('fftw~mpi@3.0.0:', when='+fftw')
     depends_on('sofa-c', when='+sofa')
     depends_on('hdf5', when='+hdf5')
-    depends_on('readline', when='+readline')
+    # Force dependency on readline. Although the presence of readline is tested
+    # in CMakeLists.txt, and casacore can be built without it, there's no way
+    # to control that dependency at build time; since many systems come with
+    # readline, it's better to explicitly depend on it here always.
+    depends_on('readline')
     depends_on('python@2.6:', when='+python')
     depends_on('boost+python', when='+python')
     depends_on('py-numpy', when='+python')
