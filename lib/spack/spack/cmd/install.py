@@ -303,7 +303,7 @@ environment variables:
     if not args.log_file and not reporter.filename:
         reporter.filename = default_log_file(specs[0])
     reporter.specs = specs
-    with reporter:
+    with reporter('build'):
         if args.overwrite:
 
             installed = list(filter(lambda x: x,
