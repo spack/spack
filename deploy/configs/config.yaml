@@ -8,4 +8,4 @@ config:
     - $tempdir
     - $SPACK_INSTALL_PREFIX/.stage
   install_path_scheme: '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:10}'
-  build_jobs: 36
+  build_jobs: 12
