@@ -1596,7 +1596,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test_log_name(self):
         return 'test-%s' % self.spec.format('{name}-{hash:7}')
 
-    def do_test(self, dirty=False):
+    def do_test(self, remove_directory=False, dirty=False):
         test_log_file = os.path.join(os.getcwd(), self.test_log_name)
 
         def test_process():
@@ -1604,9 +1604,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
                             self.spec.format('{name}-{hash:7}'))
+
+                # use debug print levels for log file to record commands
                 old_debug = tty.is_debug()
                 tty.set_debug(True)
+
+                # setup test directory
+                alltestsdir = os.path.join(os.getcwd(), 'spack-tests')
+                testdir = os.path.join(alltestsdir,
+                                       self.spec.format('{name}-{hash}'))
                 try:
+                    mkdirp(testdir)
+                    os.chdir(testdir)
                     self.test()
                 except Exception as e:
                     # Catch the error and print a summary to the log file
@@ -1630,7 +1639,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                              globals(), locals())
                     else:
                         raise exc_type(*args).with_traceback(traceback)
-                tty.set_debug(old_debug)
+                finally:
+                    # reset debug level
+                    tty.set_debug(old_debug)
+
+                    # cleanup test directory
+                    if remove_directory:
+                        shutil.rmtree(testdir)
+                        if not os.listdir(alltestsdir):
+                            shutil.rmtree(alltestsdir)
 
         spack.build_environment.fork(
             self, test_process, dirty=dirty, fake=False, context='test')
