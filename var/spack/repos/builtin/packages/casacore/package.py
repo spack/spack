@@ -20,7 +20,7 @@ class Casacore(CMakePackage):
     variant('fftw', default=False, description='Build FFTW3 support')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
-    variant('ncurses', default=False, description='Build ncurses support')
+    variant('readline', default=False, description='Build readline support')
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
@@ -31,7 +31,7 @@ class Casacore(CMakePackage):
     depends_on('fftw~mpi@3.0.0:', when='+fftw')
     depends_on('sofa-c', when='+sofa')
     depends_on('hdf5', when='+hdf5')
-    depends_on('ncurses', when='+ncurses')
+    depends_on('readline', when='+readline')
     depends_on('python@2.6:', when='+python')
     depends_on('boost+python', when='+python')
     depends_on('py-numpy', when='+python')
