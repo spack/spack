@@ -1621,9 +1621,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # Catch the error and print a summary to the log file
                     # so that cdash and junit reporters know about it
                     exc_type, context, traceback = sys.exc_info()
-                    print('Error: %s: %s' % (exc_type.__name__,
-                                             getattr(e, 'message',
-                                                     'No error message')))
+                    print('Error: %s' % e)
 
                     # construct arguments to re-raise error from type
                     args = []
