@@ -22,6 +22,8 @@ level = "long"
 
 
 def setup_parser(subparser):
+    subparser.add_argument('--keep-tmpdir', action='store_true',
+                           help='Keep testing directory for debuggin')
     subparser.add_argument(
         '--log-format',
         default=None,
@@ -100,6 +102,6 @@ environment variables:
     with reporter('test'):
         if args.smoke_test:
             for spec in specs_to_test:
-                spec.package.do_test()
+                spec.package.do_test(not args.keep_tmpdir)
         else:
             raise NotImplementedError
