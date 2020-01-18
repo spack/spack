@@ -55,6 +55,8 @@ from six import with_metaclass
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
+from spack.util.executable import which
+from spack.util.prefix import Prefix
 from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
 from spack.util.package_hash import package_hash
 from spack.version import Version
@@ -1610,11 +1612,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.set_debug(True)
 
                 # setup test directory
-                alltestsdir = os.path.join(os.getcwd(), 'spack-tests')
-                testdir = os.path.join(alltestsdir,
-                                       self.spec.format('{name}-{hash}'))
+                alltestsdir = Prefix(os.getcwd()).join('spack-tests')
+                testdir = alltestsdir.join(self.spec.format('{name}-{hash}'))
+                if os.path.exists(testdir):
+                    shutil.rmtree(testdir)
+                mkdirp(testdir)
+
+                # copy test data into testdir/data
+                datadir = Prefix(self.package_dir).test
+                if os.path.isdir(datadir):
+                    shutil.copytree(datadir, testdir.data)
+
                 try:
-                    mkdirp(testdir)
                     os.chdir(testdir)
                     self.test()
                 except Exception as e:
