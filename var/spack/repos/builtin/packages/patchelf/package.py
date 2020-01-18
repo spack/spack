@@ -25,13 +25,6 @@ class Patchelf(AutotoolsPackage):
     version('0.9',  sha256='f2aa40a6148cb3b0ca807a1bf836b081793e55ec9e5540a5356d800132be7e0a')
     version('0.8',  sha256='14af06a2da688d577d64ff8dac065bb8903bbffbe01d30c62df7af9bf4ce72fe')
 
-    def _get_hello(self):
-        src = os.path.join(self.package_dir, 'test', 'hello')
-        testdir = tempfile.mkdtemp()
-        dest = os.path.join(testdir, 'hello')
-        shutil.copy(src, dest)
-        return dest
-
     def test(self):
         patchelf = which('patchelf')
         assert patchelf is not None
@@ -45,12 +38,9 @@ class Patchelf(AutotoolsPackage):
         assert output.strip() == 'patchelf {0}'.format(self.spec.version)
 
         tty.msg('test: Ensuring the rpath is changed')
-        hello = self._get_hello()
-        new_rpath = os.getcwd()
-        patchelf('--set-rpath', new_rpath, hello)
-        output = patchelf('--print-rpath', hello,
+        currdir = os.getcwd()
+        hello_fn = os.path.join(currdir, 'data', 'hello')
+        patchelf('--set-rpath', currdir, hello_fn)
+        output = patchelf('--print-rpath', hello_fn,
                           output=str.split, error=str.split)
-        assert output.strip() == new_rpath
-
-        # Now cleanup
-        shutil.rmtree(os.path.dirname(hello))
+        assert output.strip() == currdir
