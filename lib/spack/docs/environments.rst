@@ -382,11 +382,12 @@ the Environment.
 Loading
 ^^^^^^^
 
-Once an environment has been installed, the following creates a load script for it:
+Once an environment has been installed, the following creates a load
+script for it:
 
 .. code-block:: console
 
-   $ spack env myenv loads -r
+   $ spack env loads -r
 
 This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
