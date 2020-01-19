@@ -7,8 +7,9 @@ from spack import *
 
 
 class Capnproto(AutotoolsPackage):
-    """Cap’n Proto is an insanely fast data interchange
-    format and capability-based RPC system."""
+    """Cap'n Proto is an insanely fast data interchange
+    format and capability-based RPC system.
+    """
 
     homepage = "https://capnproto.org/"
     url      = "https://capnproto.org/capnproto-c++-0.7.0.tar.gz"
