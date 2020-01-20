@@ -19,3 +19,15 @@ class Kcov(CMakePackage):
     depends_on('cmake@2.8.4:', type='build')
     depends_on('zlib')
     depends_on('curl')
+
+    def cmake_args(self):
+        # Necessary at least on macOS, fixes linking error to LLDB
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/kcov.rb
+        return ['-DSPECIFY_RPATH=ON']
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test(self):
+        # The help message exits with an exit code of 1
+        kcov = Executable(self.prefix.bin.kcov)
+        kcov('-h', ignore_errors=1)
