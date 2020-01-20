@@ -11,7 +11,7 @@
 # also puts spack in your path. The script also checks that at least module
 # support exists, and provides suggestions if it doesn't. Source it like this:
 #
-#    . /path/to/spack/share/spack/setup-env.fish
+#    source /path/to/spack/share/spack/setup-env.fish
 #
 #################################################################################
 # This is a wrapper around the spack command that forwards calls to 'spack use'
