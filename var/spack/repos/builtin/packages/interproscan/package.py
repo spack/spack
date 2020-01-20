@@ -42,6 +42,7 @@ class Interproscan(Package):
 
     patch('large-gid.patch', when='@5:')
     patch('non-interactive.patch', when='@:4.8')
+    patch('ps_scan.patch', when='@:4.8')
 
     def install(self, spec, prefix):
         with working_dir('core'):
