@@ -42,8 +42,8 @@ class Opengl(Package):
     if sys.platform != 'darwin':
         provides('glx@1.4', when='~glvnd +glx')
 
-    # NOTE: This package should have a dependency on libglvnd, but because it is
-    # exclusively provided externally the dependency is never traversed.
+    # NOTE: This package should have a dependency on libglvnd, but because it
+    # is exclusively provided externally the dependency is never traversed.
     # depends_on('libglvnd', when='+glvnd')  # don't uncomment this
 
     provides('glvnd-gl', when='+glvnd')

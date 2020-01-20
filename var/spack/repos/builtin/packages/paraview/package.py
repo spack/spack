@@ -217,7 +217,8 @@ class Paraview(CMakePackage, CudaPackage):
             '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_OPENGL_HAS_EGL:BOOL=%s' % variant_bool('+egl'),
-            '-DVTK_USE_X:BOOL=%s' % variant_bool('~osmesa ~egl platform=linux'),
+            ('-DVTK_USE_X:BOOL=%s' %
+                variant_bool('~osmesa ~egl platform=linux')),
             '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
