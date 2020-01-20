@@ -17,6 +17,7 @@ class PyJinja2(PythonPackage):
     import_modules = ['jinja2']
 
     version('2.10.3', sha256='9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de')
+    version('2.10.1', sha256='065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013')
     version('2.10',   sha256='f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4')
     version('2.9.6',  sha256='ddaa01a212cd6d641401cb01b605f4a4d9f37bfc93043d7f760ec70fb99ff9ff')
     version('2.8',    sha256='bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4')

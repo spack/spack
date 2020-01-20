@@ -14,6 +14,7 @@ class PyAstroid(PythonPackage):
     url      = "https://github.com/PyCQA/astroid/archive/astroid-1.4.5.tar.gz"
 
     version('2.2.0', sha256='7e289d0aa4a537b4aa798bd609fdf745de0f3c37e6b67642ed328e1482421a6d')
+    version('1.6.6', sha256='3fbcc144457ba598fb48e0ddce5eacee62610ab11e6fe374b6eef5f7df2a3fbb')
     # version('1.5.3', sha256='6f65e4ea8290ec032320460905afb828') # has broken unit tests
     version('1.4.5', sha256='28d8f5b898087ecf86fd66ca0934e5c0e51fc0beb5972cfc4e0c11080e0cb6ab')
     version('1.4.4', sha256='a521dfdbb728ec36c4cc7a9287285e2c30233fb19faffcec8d080d1b2b2e7d1e')

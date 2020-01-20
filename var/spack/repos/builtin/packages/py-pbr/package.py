@@ -14,6 +14,7 @@ class PyPbr(PythonPackage):
     url      = "https://pypi.io/packages/source/p/pbr/pbr-5.4.3.tar.gz"
 
     version('5.4.3',  sha256='2c8e420cd4ed4cec4e7999ee47409e876af575d4c35a45840d59e8b5f3155ab8')
+    version('5.2.1',  sha256='93d2dc6ee0c9af4dbc70bc1251d0e545a9910ca8863774761f92716dece400b6')
     version('3.1.1',  sha256='05f61c71aaefc02d8e37c0a3eeb9815ff526ea28b3b76324769e6158d7f95be1')
     version('2.0.0',  sha256='0ccd2db529afd070df815b1521f01401d43de03941170f8a800e7531faba265d')
     version('1.10.0', sha256='186428c270309e6fdfe2d5ab0949ab21ae5f7dea831eab96701b86bd666af39c')

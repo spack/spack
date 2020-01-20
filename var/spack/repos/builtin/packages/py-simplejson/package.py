@@ -13,6 +13,8 @@ class PySimplejson(PythonPackage):
     homepage = "https://github.com/simplejson/simplejson"
     url      = "https://pypi.io/packages/source/s/simplejson/simplejson-3.10.0.tar.gz"
 
+    version('3.16.1', sha256='1e33abe5d578a918ba3ef0b3ca1c5b11cb4aff7b99b6225cc0b85ee6a8b5ff38',
+                      url='https://github.com/simplejson/simplejson/archive/v3.16.1.tar.gz')
     version('3.10.0', sha256='953be622e88323c6f43fad61ffd05bebe73b9fd9863a46d68b052d2aa7d71ce2')
     version('3.9.0',  sha256='e9abeee37424f4bfcd27d001d943582fb8c729ffc0b74b72bd0e9b626ed0d1b6')
     version('3.8.2',  sha256='d58439c548433adcda98e695be53e526ba940a4b9c44fb9a05d92cd495cdd47f')

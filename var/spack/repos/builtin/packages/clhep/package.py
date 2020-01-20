@@ -14,6 +14,7 @@ class Clhep(CMakePackage):
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    version('2.4.1.2', sha256='ff96e7282254164380460bc8cf2dff2b58944084eadcd872b5661eb5a33fa4b8')
     version('2.4.1.0', sha256='d14736eb5c3d21f86ce831dc1afcf03d423825b35c84deb6f8fd16773528c54d')
     version('2.4.0.4', sha256='eb013841c57990befa1e977a11a552ab8328733c1c3b6cecfde86da40dc22113')
     version('2.4.0.2', sha256='1e9891c5badb718c24933e7a5c6ee4d64fd4d5cf3a40c150ad18e864ec86b8a4')

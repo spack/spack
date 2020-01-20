@@ -13,6 +13,7 @@ class PyAutopep8(PythonPackage):
     homepage = "https://github.com/hhatto/autopep8"
     url      = "https://pypi.io/packages/source/a/autopep8/autopep8-1.2.4.tar.gz"
 
+    version('1.4.4', sha256='4d8eec30cc81bc5617dbf1218201d770dc35629363547f17577c61683ccfb3ee')
     version('1.3.3', sha256='ff787bffb812818c3071784b5ce9a35f8c481a0de7ea0ce4f8b68b8788a12f30')
     version('1.2.4', sha256='38e31e266e29808e8a65a307778ed8e402e1f0d87472009420d6d18146cdeaa2')
     version('1.2.2', sha256='ecc51614755c7f697e83478f87eb6bbd009075a397c15080f0311aaecbbdfca8')

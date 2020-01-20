@@ -13,6 +13,7 @@ class PyTornado(PythonPackage):
     url      = "https://github.com/tornadoweb/tornado/archive/v6.0.3.tar.gz"
 
     version('6.0.3',   sha256='a97ac3b8c95867e534b48cb6fbbf156f5ca5b20c423bb06894c17b240d7a18fc')
+    version('5.1.1', sha256='a1da335a2978b9a8c3544cab10076d799442d7988ed0b4f2be035fe4388ca8dd')
     version('4.4.0', sha256='ae556a0848e5d428d00597a18b38b9ca9d20f4600535e1dd33b3a576ab234194')
 
     depends_on('py-setuptools', type='build')
