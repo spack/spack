@@ -49,6 +49,10 @@ class Mesa(AutotoolsPackage):
     # Front ends
     variant('osmesa', default=True, description="Enable the OSMesa frontend.")
 
+    variant('glvnd',
+            default=False,
+            description="Expose Graphics APIs through libglvnd")
+
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
@@ -65,9 +69,13 @@ class Mesa(AutotoolsPackage):
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
-    provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
+    provides('gl@4.5',  when='+opengl ~glvnd')
+    provides('glx@1.4', when='+glx ~glvnd')
+    # provides('egl@1.5', when='+egl ~glvnd')
+
+    provides('glvnd-gl', when='+glvnd')
+    provides('glvnd-glx', when='+glvnd +glx')
+    # provides('glvnd-egl', when='+glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')
@@ -181,11 +189,58 @@ class Mesa(AutotoolsPackage):
 
         return args
 
+    # NOTE: Each of the following *libs properties return empty lists if
+    # +glvnd, because there are no mesa libraries to be linked against.  When
+    # acting as a glvnd dispatch target, libglvnd will find mesa's shared
+    # objects via environment variables, dynamically load them, and dispatch
+    # calls to them at run time.
+
     @property
     def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries(['libGL', 'libOSMesa'],
-                                  join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+        if '~glvnd' in self.spec:
+            libs_to_seek = ['libGL']
+
+            if '+osmesa' in self.spec:
+                libs_to_seek.append('libOSMesa')
+
+            if '+glx' in self.spec:
+                libs_to_seek.append('libGLX')
+
+            for dir in ['lib64', 'lib']:
+                libs = find_libraries(libs_to_seek,
+                                      join_path(self.spec.prefix, dir),
+                                      shared='+shared' in self.spec,
+                                      recursive=False)
+                if libs:
+                    return libs
+
+        return LibraryList(())
+
+    @property
+    def gl_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
+        return find_libraries('libGL',
+                              root=self.spec.prefix,
+                              shared='+shared' in self.spec,
+                              recursive=True)
+
+    @property
+    def glx_libs(self):
+        if '+glvnd' in self.spec:
+            return LibraryList(())
+
+        return find_libraries('libGLX',
+                              root=self.spec.prefix,
+                              shared='+shared' in self.spec,
+                              recursive=True)
+
+    def setup_run_environment(self, env):
+        if '+glx +glvnd' in self.spec:
+            env.set('__GLX_VENDOR_LIBRARY_NAME', 'mesa')
+
+        if '+egl +glvnd' in self.spec:
+            env.set('__EGL_VENDOR_LIBRARY_FILENAMES', ':'.join((
+                os.path.join(self.spec.prefix, 'share', 'glvnd',
+                             'egl_vendor.d', '50_mesa.json'))))
