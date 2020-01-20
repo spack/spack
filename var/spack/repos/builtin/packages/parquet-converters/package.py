@@ -35,6 +35,7 @@ class ParquetConverters(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/building/ParquetConverters"
 
     version('develop', submodules=True)
+    version('0.5.3', tag='v0.5.3', submodules=True)
     version('0.5.2', tag='v0.5.2', submodules=True)
     version('0.5.1', tag='v0.5.1', submodules=True)
     version('0.5.0', tag='v0.5.0', submodules=True)
