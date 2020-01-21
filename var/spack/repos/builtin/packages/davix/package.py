@@ -23,3 +23,6 @@ class Davix(CMakePackage):
     depends_on('libxml2')
     depends_on('libuuid')
     depends_on('openssl')
+
+    def url_for_version(self, version):
+        return 'https://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/{0}/davix-{0}.tar.gz'.format(version)

@@ -12,7 +12,7 @@ class Ccache(AutotoolsPackage):
     again."""
 
     homepage = "https://ccache.samba.org/"
-    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.4.tar.gz"
+    url      = "https://github.com/ccache/ccache/releases/download/v3.7.7/ccache-3.7.7.tar.gz"
 
     version('3.7.1', sha256='e562fcdbe766406b6fe4bf97ce5c001d2be8a17465f33bcddefc9499bbb057d8')
     version('3.3.4', sha256='1348b54e7c35dd2f8d17923389e03c546e599cfbde6459d2f31cf6f1521ec538')
