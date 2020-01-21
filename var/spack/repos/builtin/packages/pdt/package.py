@@ -43,6 +43,10 @@ class Pdt(AutotoolsPackage):
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')
+        elif self.compiler.name == 'gcc':
+            options.append('-GNU')
+        else:
+            raise InstallError('Unknown/unsupported compiler family')
 
         configure(*options)
 
