@@ -39,8 +39,8 @@ class Patchelf(AutotoolsPackage):
 
         tty.msg('test: Ensuring the rpath is changed')
         currdir = os.getcwd()
-        hello_fn = os.path.join(currdir, 'data', 'hello')
-        patchelf('--set-rpath', currdir, hello_fn)
-        output = patchelf('--print-rpath', hello_fn,
+        hello_file = os.path.join(currdir, 'data', 'hello')
+        patchelf('--set-rpath', currdir, hello_file)
+        output = patchelf('--print-rpath', hello_file,
                           output=str.split, error=str.split)
         assert output.strip() == currdir
