@@ -40,16 +40,23 @@ class Samtools(Package):
     depends_on('htslib@1.3.1', when='@1.3.1')
 
     def install(self, spec, prefix):
+        if '+termlib' in spec['ncurses']:
+            CURSES_LIB = '-lncursesw -ltinfow'
+        else:
+            CURSES_LIB = '-lncursesw'
+
         if self.spec.version >= Version('1.3.1'):
             configure('--prefix={0}'.format(prefix),
                       '--with-htslib={0}'.format(self.spec['htslib'].prefix),
                       '--with-ncurses',
-                      'CURSES_LIB=-lncursesw')
+                      'CURSES_LIB={0}'.format(CURSES_LIB))
             make()
             make('install')
         else:
-            make("prefix=%s" % prefix)
-            make("prefix=%s" % prefix, "install")
+            make('prefix={0}'.format(prefix),
+                 'LIBCURSES={0}'.format(CURSES_LIB))
+            make('prefix={0}'.format(prefix), 'install')
+
         # Install dev headers and libs for legacy apps depending on them
         mkdir(prefix.include)
         mkdir(prefix.lib)
