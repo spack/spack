@@ -70,6 +70,11 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
+    variant(
+        'debug', default=False,
+        description="debug build with extra checks (this is high overhead)"
+    )
+
     # --enable-shared is known to cause problems for some users on macOS
     # See http://bugs.python.org/issue29846
     variant('shared', default=sys.platform != 'darwin',
@@ -241,6 +246,11 @@ class Python(AutotoolsPackage):
         if spec.satisfies('%intel', strict=True) and \
                 spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
             config_args.append('--with-icc')
+
+        if '+debug' in spec:
+            config_args.append('--with-pydebug')
+        else:
+            config_args.append('--without-pydebug')
 
         if '+shared' in spec:
             config_args.append('--enable-shared')
