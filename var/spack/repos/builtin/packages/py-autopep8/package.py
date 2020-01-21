@@ -23,5 +23,6 @@ class PyAutopep8(PythonPackage):
 
     depends_on('py-pycodestyle@1.5.7:1.7.0', type=('build', 'run'), when='@:1.2.4')
     depends_on('py-pycodestyle@2.3.0:', type=('build', 'run'), when='@1.3:')
+    depends_on('py-pycodestyle@2.4.0:', type=('build', 'run'), when='@1.4:')
 
     depends_on('py-setuptools', type='build')
