@@ -55,6 +55,8 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with Matplotlib (long installation time)')
     variant('qe', default=True,
             description='Install with patched Quantum Espresso 6.4.1')
+    variant('afqmc', default=False,
+            description='Install with AFQMC support')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -84,6 +86,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^intel-mkl+ilp64',
               msg='QMCPACK does not support MKL 64-bit integer variant')
 
+
     # QMCPACK 3.6.0 or later requires support for C++14
     compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
                        'compiler with support for C++14'
@@ -91,6 +94,10 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('%intel@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
+
+    conflicts('+afqmc', when='@:3.6.0', msg='AFQMC CUDA support available with QMCPACK 3.7.0 or later')
+    conflicts('+afqmc', when='-mpi', msg='AFQMC requires building with +mpi')
+    conflicts('+afqmc', when='-complex +cuda', msg='AFQMC real build not supported with CUDA. Add +complex')
 
     # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
     # non-Intel compilers without a Spack-based hack. This hack
@@ -227,6 +234,11 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append('-DQMC_COMPLEX=1')
         else:
             args.append('-DQMC_COMPLEX=0')
+
+        if '+afqmc' in spec:
+            args.append('-DBUILD_AFQMC=1')
+        else:
+            args.append('-DBUILD_AFQMC=0')
 
         # When '-DQMC_CUDA=1', CMake automatically sets:
         # '-DQMC_MIXED_PRECISION=1'
