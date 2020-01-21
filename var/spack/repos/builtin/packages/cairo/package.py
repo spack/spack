@@ -13,7 +13,6 @@ class Cairo(AutotoolsPackage):
     homepage = "https://www.cairographics.org/"
     url      = "https://www.cairographics.org/releases/cairo-1.16.0.tar.xz"
 
-    version('1.17.2', sha256='2fcc8fbd41f04a0081c0002b484bfc4e00a033b9ecb2eb50d239d4fa2b2bf141')
     version('1.16.0', sha256='5e7b29b3f113ef870d1e3ecf8adf21f923396401604bda16d44be45e66052331')
     version('1.14.12', sha256='8c90f00c500b2299c0a323dd9beead2a00353752b2092ead558139bd67f7bf16')
     version('1.14.8', sha256='d1f2d98ae9a4111564f6de4e013d639cf77155baf2556582295a0f00a9bc5e20')
