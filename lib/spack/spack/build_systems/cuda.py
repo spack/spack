@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,16 +56,18 @@ class CudaPackage(PackageBase):
 
     # Linux x86_64 compiler conflicts from here:
     # https://gist.github.com/ax3l/9489132
-    arch_platform = ' arch=x86_64 platform=linux'
+    arch_platform = ' target=x86_64: platform=linux'
     conflicts('%gcc@5:', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%gcc@6:', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%gcc@7:', when='+cuda ^cuda@:9.1' + arch_platform)
-    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130' + arch_platform)
+    conflicts('%gcc@9:', when='+cuda ^cuda@:10.2.89' + arch_platform)
     conflicts('%pgi@:14.8', when='+cuda ^cuda@:7.0.27' + arch_platform)
     conflicts('%pgi@:15.3,15.5:', when='+cuda ^cuda@7.5' + arch_platform)
     conflicts('%pgi@:16.2,16.0:16.3', when='+cuda ^cuda@8' + arch_platform)
     conflicts('%pgi@:15,18:', when='+cuda ^cuda@9.0:9.1' + arch_platform)
     conflicts('%pgi@:16', when='+cuda ^cuda@9.2.88:10' + arch_platform)
+    conflicts('%pgi@:17', when='+cuda ^cuda@10.2.89' + arch_platform)
     conflicts('%clang@:3.4', when='+cuda ^cuda@:7.5' + arch_platform)
     conflicts('%clang@:3.7,4:',
               when='+cuda ^cuda@8.0:9.0' + arch_platform)
@@ -73,6 +75,10 @@ class CudaPackage(PackageBase):
               when='+cuda ^cuda@9.1' + arch_platform)
     conflicts('%clang@:3.7,5.1:', when='+cuda ^cuda@9.2' + arch_platform)
     conflicts('%clang@:3.7,6.1:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%clang@:3.7,7.1:', when='+cuda ^cuda@10.1.105' + arch_platform)
+    conflicts('%clang@:3.7,8.1:',
+              when='+cuda ^cuda@10.1.105:10.1.243' + arch_platform)
+    conflicts('%clang@:3.2,9.0:', when='+cuda ^cuda@10.2.89' + arch_platform)
 
     # x86_64 vs. ppc64le differ according to NVidia docs
     # Linux ppc64le compiler conflicts from Table from the docs below:
@@ -82,10 +88,11 @@ class CudaPackage(PackageBase):
     # https://docs.nvidia.com/cuda/archive/9.0/cuda-installation-guide-linux/index.html
     # https://docs.nvidia.com/cuda/archive/8.0/cuda-installation-guide-linux/index.html
 
-    arch_platform = ' arch=ppc64le platform=linux'
+    arch_platform = ' target=ppc64le: platform=linux'
     # information prior to CUDA 9 difficult to find
     conflicts('%gcc@6:', when='+cuda ^cuda@:9' + arch_platform)
-    conflicts('%gcc@8:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%gcc@8:', when='+cuda ^cuda@:10.0.130' + arch_platform)
+    conflicts('%gcc@9:', when='+cuda ^cuda@:10.1.243' + arch_platform)
     conflicts('%pgi', when='+cuda ^cuda@:8' + arch_platform)
     conflicts('%pgi@:16', when='+cuda ^cuda@:9.1.185' + arch_platform)
     conflicts('%pgi@:17', when='+cuda ^cuda@:10' + arch_platform)
@@ -93,6 +100,8 @@ class CudaPackage(PackageBase):
     conflicts('%clang@5:', when='+cuda ^cuda@:9.1' + arch_platform)
     conflicts('%clang@6:', when='+cuda ^cuda@:9.2' + arch_platform)
     conflicts('%clang@7:', when='+cuda ^cuda@10.0.130' + arch_platform)
+    conflicts('%clang@7.1:', when='+cuda ^cuda@:10.1.105' + arch_platform)
+    conflicts('%clang@8.1:', when='+cuda ^cuda@:10.2.89' + arch_platform)
 
     # Intel is mostly relevant for x86_64 Linux, even though it also
     # exists for Mac OS X. No information prior to CUDA 3.2 or Intel 11.1
@@ -105,12 +114,12 @@ class CudaPackage(PackageBase):
     conflicts('%intel@16.0:', when='+cuda ^cuda@:8.0.43')
     conflicts('%intel@17.0:', when='+cuda ^cuda@:8.0.60')
     conflicts('%intel@18.0:', when='+cuda ^cuda@:9.9')
-    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.0')
+    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.2.89')
 
     # XL is mostly relevant for ppc64le Linux
     conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
     conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
-    conflicts('%xl@17:', when='+cuda ^cuda@10.0.130')
+    conflicts('%xl@17:', when='+cuda ^cuda@10.0.130:10.2.89')
 
     # Mac OS X
     # platform = ' platform=darwin'

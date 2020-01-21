@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,6 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     """Adapter for Trilinos Seacas Ioss and Paraview Catalyst"""
 
     homepage = "https://trilinos.org/"
-    url      = "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz"
     git      = "https://github.com/trilinos/Trilinos.git"
 
     version('develop', branch='develop')
@@ -20,17 +19,17 @@ class TrilinosCatalystIossAdapter(CMakePackage):
     depends_on('flex', type='build')
     depends_on('paraview+mpi+python+osmesa')
     depends_on('py-numpy', type=('build', 'run'))
-    # Here we avoid paraview trying to use netcdf~parallel-netcdf
-    # which is netcdf's default, even though paraview depends on 'netcdf'
+    # Here we avoid paraview trying to use netcdf-c~parallel-netcdf
+    # which is netcdf-c's default, even though paraview depends on 'netcdf-c'
     # without any variants. Concretizer bug?
-    depends_on('netcdf+parallel-netcdf')
+    depends_on('netcdf-c+parallel-netcdf')
 
     root_cmakelists_dir = join_path('packages', 'seacas', 'libraries',
                                     'ioss', 'src', 'visualization',
                                     'ParaViewCatalystIossAdapter')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH', self.prefix.python)
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix.python)
 
     def cmake_args(self):
         spec = self.spec

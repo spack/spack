@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xmore(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xmore"
     url      = "https://www.x.org/archive/individual/app/xmore-1.0.2.tar.gz"
 
-    version('1.0.2', '40b1850494f8af0939a1989c399efa11')
+    version('1.0.2', sha256='7371631d05986f1111f2026a77e43e048519738cfcc493c6222b66e7b0f309c0')
 
     depends_on('libxaw')
     depends_on('libxt')

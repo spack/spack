@@ -1,0 +1,20 @@
+--- boost_1_63_0/tools/build/src/tools/clang-linux.jam.back	2019-09-04 15:51:25.052324575 +0900
++++ boost_1_63_0/tools/build/src/tools/clang-linux.jam	2019-09-04 15:52:22.278328007 +0900
+@@ -153,7 +153,7 @@
+ }
+ 
+ actions compile.c++.pch {
+-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
++  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+ }
+ 
+ rule compile.c.pch ( targets * : sources * : properties * ) {
+@@ -164,7 +164,7 @@
+ 
+ actions compile.c.pch
+ {
+-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
++  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+ }
+ 
+ ###############################################################################

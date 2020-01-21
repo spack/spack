@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Trinity(MakefilePackage):
     homepage = "http://trinityrnaseq.github.io/"
     url      = "https://github.com/trinityrnaseq/trinityrnaseq/archive/Trinity-v2.6.6.tar.gz"
 
-    version('2.6.6', 'b7472e98ab36655a6d9296d965471a56')
+    version('2.6.6', sha256='868dfadeefaf2d3c6150a88d5e86fbc09466d69bbf4a65f70b4f5a7485668984')
 
     depends_on("java@8:", type=("build", "run"))
     depends_on("bowtie2")
@@ -52,8 +52,8 @@ class Trinity(MakefilePackage):
     depends_on("samtools", type="run")
     depends_on("py-numpy", type="run")
     depends_on("express", type="run")
-    depends_on("perl-dbfile", type="run")
-    depends_on("perl-uri-escape", type="run")
+    depends_on("perl-db-file", type="run")
+    depends_on("perl-uri", type="run")
     depends_on("r-fastcluster", type="run")
     depends_on("r-ctc", type="run")
     depends_on("r-goseq", type="run")
@@ -85,7 +85,9 @@ class Trinity(MakefilePackage):
         force_remove(join_path(prefix.bin, 'trinity-plugins', 'slclust', 'bin',
                                '.hidden'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('TRINITY_HOME', self.prefix.bin)
-        run_env.prepend_path('PATH', self.prefix.bin.util)
-        spack_env.append_flags('CXXFLAGS', self.compiler.openmp_flag)
+    def setup_build_environment(self, env):
+        env.append_flags('CXXFLAGS', self.compiler.openmp_flag)
+
+    def setup_run_environment(self, env):
+        env.set('TRINITY_HOME', self.prefix.bin)
+        env.prepend_path('PATH', self.prefix.bin.util)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Star(Package):
     version('2.5.3a', sha256='2a258e77cda103aa293e528f8597f25dc760cba188d0a7bc7c9452f4698e7c04')
     version('2.5.2b', sha256='f88b992740807ab10f2ac3b83781bf56951617f210001fab523f6480d0b546d9')
     version('2.5.2a', sha256='2a372d9bcab1dac8d35cbbed3f0ab58291e4fbe99d6c1842b094ba7449d55476')
-    version('2.4.2a', '8b9345f2685a5ec30731e0868e86d506', url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
+    version('2.4.2a', sha256='ac166d190c0fd34bf3418a5640050b0e7734d279813e02daa013d0924fb579b0', url='https://github.com/alexdobin/STAR/archive/STAR_2.4.2a.tar.gz')
 
     depends_on('zlib')
 

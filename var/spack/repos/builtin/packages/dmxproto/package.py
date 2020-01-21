@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Dmxproto(AutotoolsPackage):
     homepage = "http://dmx.sourceforge.net/"
     url      = "https://www.x.org/archive/individual/proto/dmxproto-2.3.1.tar.gz"
 
-    version('2.3.1', '7c52af95aac192e8de31bd9a588ce121')
+    version('2.3.1', sha256='3262bbf5902211a3ce88f5c6ab4528145ff84f69c52fd386ae0312bc45fb8a40')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

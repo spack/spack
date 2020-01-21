@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,11 @@ class Cloverleaf3d(MakefilePackage):
     """
 
     homepage = "http://uk-mac.github.io/CloverLeaf3D/"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/CloverLeaf3D/CloverLeaf3D-1.0.tar.gz"
+    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/CloverLeaf3D-1.0.tar.gz"
 
     tags = ['proxy-app']
 
-    version('1.0', '2e86cadd7612487f9da4ddeb1a6de939')
+    version('1.0', sha256='78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef')
 
     variant('openacc', default=False, description='Enable OpenACC Support')
 

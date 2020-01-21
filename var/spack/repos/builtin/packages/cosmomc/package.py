@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,8 @@ class Cosmomc(Package):
     homepage = "http://cosmologist.info/cosmomc/"
     url      = "https://github.com/cmbant/CosmoMC/archive/Nov2016.tar.gz"
 
-    version('2016.11', '98620cb746352f68fb0c1196e9a070ac')
-    version('2016.06', '92dc651d1407cca6ea9228992165f5cb')
+    version('2016.11', sha256='b83edbf043ff83a4dde9bc14c56a09737dbc41ffe247a8e9c9a26892ed8745ba')
+    version('2016.06', sha256='23fa23eef40846c17d3740be63a7fefde13880cbb81545a44d14034277d9ffc0')
 
     def url_for_version(self, version):
         names = {'2016.11': "Nov2016",

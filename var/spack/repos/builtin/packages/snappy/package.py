@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Snappy(CMakePackage):
     homepage = "https://github.com/google/snappy"
     url      = "https://github.com/google/snappy/archive/1.1.7.tar.gz"
 
-    version('1.1.7', 'ee9086291c9ae8deb4dac5e0b85bf54a')
+    version('1.1.7', sha256='3dfa02e873ff51a11ee02b9ca391807f0c8ea0529a4924afa645fbf97163f9d4')
 
     variant('shared', default=True, description='Build shared libraries')
     variant('pic', default=True, description='Build position independent code')

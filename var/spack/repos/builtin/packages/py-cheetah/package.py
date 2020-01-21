@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PyCheetah(PythonPackage):
     homepage = "https://pypi.python.org/pypi/Cheetah/2.4.4"
     url      = "https://pypi.io/packages/source/C/Cheetah/Cheetah-2.3.0.tar.gz"
 
-    version('2.3.0', 'e28ffef7f5c1660d66196639f162d9ce')
+    version('2.3.0', sha256='2a32d7f7f70be98c2d57aa581f979bc799d4bf17d09fc0e7d77280501edf3e53')

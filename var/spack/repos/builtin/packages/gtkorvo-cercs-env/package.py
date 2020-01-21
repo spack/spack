@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class GtkorvoCercsEnv(CMakePackage):
     git      = "https://github.com/GTkorvo/cercs_env.git"
 
     version('develop', branch='master')
-    version('1.0', '08f0532d0c2f7bc9b53dfa7a1c40ea4d')
+    version('1.0', sha256='e4080a98c1af5003a038361c8bb343843665cac428101ac7d721bad8ba7d244e')
 
     def cmake_args(self):
         args = ["-DENABLE_TESTING=0", "-DENABLE_SHARED_STATIC=STATIC"]

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,7 @@ class Libnl(AutotoolsPackage):
     homepage = "https://www.infradead.org/~tgr/libnl/"
     url      = "https://github.com/thom311/libnl/releases/download/libnl3_3_0/libnl-3.3.0.tar.gz"
 
-    version('3.3.0', 'ab3ef137cad95bdda5ff0ffa5175dfa5')
-    version('3.2.25', '03f74d0cd5037cadc8cdfa313bbd195c')
+    version('3.3.0', sha256='705468b5ae4cd1eb099d2d1c476d6a3abe519bc2810becf12fb1e32de1e074e4')
 
     depends_on('bison', type='build')
     depends_on('flex', type='build')

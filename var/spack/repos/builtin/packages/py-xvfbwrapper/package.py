@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyXvfbwrapper(PythonPackage):
     homepage = "https://pypi.python.org/pypi/xvfbwrapper/0.2.9"
     url      = "https://pypi.io/packages/source/x/xvfbwrapper/xvfbwrapper-0.2.9.tar.gz"
 
-    version('0.2.9', '3f3cbed698606f4b14e76ccc7b5dd366')
+    version('0.2.9', sha256='bcf4ae571941b40254faf7a73432dfc119ad21ce688f1fdec533067037ecfc24')
 
     depends_on('py-setuptools', type='build')
     # Eventually add xvfb!

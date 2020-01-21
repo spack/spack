@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,6 @@ class PyMarkdown(PythonPackage):
 
     depends_on('python@2.7:2.8,3.2:3.4', when='@:2.6.7')
     depends_on('python@2.7:2.8,3.2:3.6', when='@2.6.8:2.6.11')
-    depends_on('python@2.7,2.8,3.3.5:', when='@3.1.1:')
+    depends_on('python@2.7:2.8,3.3.5:', when='@3.1.1:')
 
     depends_on('py-setuptools', type='build', when='@2.6.11:')

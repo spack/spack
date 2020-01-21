@@ -1,0 +1,27 @@
+--- a/Makefile.PL	2016-06-21 05:50:27.000000000 -0500
++++ b/Makefile.PL	2019-09-16 10:51:28.436352022 -0500
+@@ -15,23 +15,7 @@
+ 
+ my $opt= $ARGV[0] ? $ARGV[0] : '';
+ 
+-if(    $opt eq "-n")
+-  { @programs=(); }
+-elsif( $opt eq "-y")
+-  { @programs= map { $_->[0] } @prompts; }
+-elsif( $opt eq "-d")
+-  { @programs= map { $_->[0] if( $_->[1] eq 'y') } @prompts; }
+-elsif( $ENV{AUTOMATED_TESTING} || $ENV{NONINTERACTIVE_TESTING})
+-  { @programs=(); }
+-else
+-  { print "run 'perl Makefile.PL -y' to install all tools,\n",
+-          "    'perl Makefile.PL -n' to skip installation\n";
+-    foreach my $prompt (@prompts)
+-      { my ($program, $default, $description) = @$prompt;
+-        if( prompt("Do you want to install '$program' ($description)?", $default) =~ /^y/i)
+-          { push(@programs, $program); }
+-      }
+-  }
++@programs= map { $_->[0] } @prompts;
+ 
+ MyWriteMakefile(
+     META_MERGE => {

@@ -16,6 +16,6 @@ tcl:
       unset:
         - BAR
 
-  'platform=test target=x86_32':
+  'platform=test target=x86':
     load:
       - 'foo/bar'

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -114,7 +114,7 @@ def test_installed_deps():
         c_spec.concretize()
         assert c_spec['d'].version == spack.version.Version('2')
 
-        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict(all_deps=False))
+        c_installed = spack.spec.Spec.from_dict(c_spec.to_dict())
         for spec in c_installed.traverse():
             setattr(spec.package, 'installed', True)
 
@@ -189,7 +189,7 @@ def test_conditional_dep_with_user_constraints():
         assert ('y@3' in spec)
 
 
-@pytest.mark.usefixtures('mutable_mock_packages')
+@pytest.mark.usefixtures('mutable_mock_repo')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):

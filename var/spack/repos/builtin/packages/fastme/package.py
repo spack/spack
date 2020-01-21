@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Fastme(AutotoolsPackage):
     homepage = "http://www.atgc-montpellier.fr/fastme/"
     url      = "https://gite.lirmm.fr/atgc/FastME/repository/v2.1.5.1/archive.tar.gz"
 
-    version('2.1.5.1', '1059dcbd320bf4d6dd9328c582dd3d24283295026530fcfb26dbdbe068e3cd1d')
+    version('2.1.5.1', sha256='1059dcbd320bf4d6dd9328c582dd3d24283295026530fcfb26dbdbe068e3cd1d')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

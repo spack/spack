@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,10 @@ class Oclint(Package):
     homepage = "http://oclint.org/"
     url      = "https://github.com/oclint/oclint/archive/v0.13.tar.gz"
 
-    version('0.13', '1d0e605eb7815ac15e6a2a82327d2dd8')
+    version('0.13', sha256='a0fd188673863e6357d6585b9bb9c3affe737df134b9383a1a5ed021d09ed848')
 
     depends_on('python', type=('build'))
-    depends_on('py-argparse', type=('build'))
+    depends_on('py-argparse', type=('build'), when='^python@:2.6')
     depends_on('git', type=('build'))
     depends_on('subversion', type=('build'))
     depends_on('cmake', type=('build'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Libxtrap(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXTrap"
     url      = "https://www.x.org/archive/individual/lib/libXTrap-1.0.1.tar.gz"
 
-    version('1.0.1', 'fde266b82ee14da3e4f4f81c9584c1ea')
+    version('1.0.1', sha256='db748e299dcc9af68428795b898a4a96cf806f79b75786781136503e4fce5e17')
 
     depends_on('libx11')
     depends_on('libxt')

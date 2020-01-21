@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,13 @@ class Scotch(Package):
     url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
-    version('6.0.6', 'ef676a3118b5590c416176e402fac248')
-    version('6.0.5a', '8430dff7175a1dfd5a3258e75260cf71')
-    version('6.0.4', 'd58b825eb95e1db77efe8c6ff42d329f')
-    version('6.0.3', '10b0cc0f184de2de99859eafaca83cfc')
-    version('6.0.0', 'c50d6187462ba801f9a82133ee666e8e')
-    version('5.1.10b', 'f587201d6cf5cf63527182fbfba70753')
+    version('6.0.8', sha256='0ba3f145026174304f910c8770a3cbb034f213c91d939573751cfbb4fd46d45e')
+    version('6.0.6', sha256='686f0cad88d033fe71c8b781735ff742b73a1d82a65b8b1586526d69729ac4cf')
+    version('6.0.5a', sha256='5b21b95e33acd5409d682fa7253cefbdffa8db82875549476c006d8cbe7c556f')
+    version('6.0.4', sha256='f53f4d71a8345ba15e2dd4e102a35fd83915abf50ea73e1bf6efe1bc2b4220c7')
+    version('6.0.3', sha256='6461cc9f28319a9dbe6cc10e28c0cbe90b4b25e205723c3edcde9a3ff974d6d8')
+    version('6.0.0', sha256='8206127d038bda868dda5c5a7f60ef8224f2e368298fbb01bf13fa250e378dd4')
+    version('5.1.10b', sha256='54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add')
 
     variant('mpi', default=True,
             description='Activate the compilation of parallel libraries')

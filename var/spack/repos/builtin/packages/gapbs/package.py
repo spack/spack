@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Gapbs(MakefilePackage):
     homepage = "http://gap.cs.berkeley.edu/benchmark.html"
     url      = "https://github.com/sbeamer/gapbs/archive/v1.0.tar.gz"
 
-    version('1.0', 'ac2efa793f44e58553449f42b9779f3ff2d47634')
+    version('1.0', sha256='a7516998c4994592053c7aa0c76282760a8e009865a6b7a1c7c40968be1ca55d')
 
     variant('serial', default=False, description='Version with no parallelism')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,9 +20,4 @@ class PyExtension1(PythonPackage):
         with open(os.path.join(prefix.bin, 'py-extension1'), 'w+') as fout:
             fout.write(str(spec.version))
 
-    # Give the package a hook to set the extendee spec
-    extends_spec = 'python'
-
-    @property
-    def extendee_spec(self):
-        return self.extends_spec
+    extends('python')

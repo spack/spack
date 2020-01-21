@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -131,4 +131,8 @@ def test_url_stats(capfd):
         output = url('stats')
         npkgs = '%d packages' % len(spack.repo.all_package_names())
         assert npkgs in output
-        assert 'total versions' in output
+        assert 'url' in output
+        assert 'git' in output
+        assert 'schemes' in output
+        assert 'versions' in output
+        assert 'resources' in output

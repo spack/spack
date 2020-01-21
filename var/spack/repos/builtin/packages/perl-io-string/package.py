@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PerlIoString(PerlPackage):
     homepage = "http://search.cpan.org/~gaas/IO-String-1.08/String.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/IO-String-1.08.tar.gz"
 
-    version('1.08', '250e5424f290299fc3d6b5d1e9da3835')
+    version('1.08', sha256='2a3f4ad8442d9070780e58ef43722d19d1ee21a803bf7c8206877a10482de5a0')

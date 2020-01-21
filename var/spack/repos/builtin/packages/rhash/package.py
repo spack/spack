@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Rhash(MakefilePackage):
     homepage = "https://sourceforge.net/projects/rhash/"
     url      = "https://github.com/rhash/RHash/archive/v1.3.5.tar.gz"
 
-    version('1.3.5', 'f586644019c10c83c6b6835de4b99e74')
+    version('1.3.5', sha256='98e0688acae29e68c298ffbcdbb0f838864105f9b2bd8857980664435b1f1f2e')
 
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb

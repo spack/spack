@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,4 @@ class Iperf2(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/iperf2"
     url      = "https://downloads.sourceforge.net/project/iperf2/iperf-2.0.12.tar.gz"
 
-    version('2.0.12', 'e501e26b9289097086ce0c44a42b10bc')
+    version('2.0.12', sha256='367f651fb1264b13f6518e41b8a7e08ce3e41b2a1c80e99ff0347561eed32646')

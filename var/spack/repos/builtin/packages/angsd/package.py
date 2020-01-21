@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,14 +16,14 @@ class Angsd(MakefilePackage):
     homepage = "https://github.com/ANGSD/angsd"
     url      = "https://github.com/ANGSD/angsd/archive/0.919.tar.gz"
 
-    version('0.921', '3702db035396db602c7f74728b1a5a1f')
-    version('0.919', '79d342f49c24ac00d35934f2617048d4')
+    version('0.921', sha256='8892d279ce1804f9e17fe2fc65a47e5498e78fc1c1cb84d2ca2527fd5c198772')
+    version('0.919', sha256='c2ea718ca5a5427109f4c3415e963dcb4da9afa1b856034e25c59c003d21822a')
 
     depends_on('htslib')
     conflicts('^htslib@1.6:', when='@0.919')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
+    def setup_run_environment(self, env):
+        env.set('R_LIBS', self.prefix.R)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

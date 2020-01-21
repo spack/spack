@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyGdbgui(PythonPackage):
     homepage = "https://gdbgui.com"
     url      = "https://pypi.io/packages/source/g/gdbgui/gdbgui-0.11.2.1.tar.gz"
 
-    version('0.11.2.1', 'c15dd3f60fe372b2e93f705c7ee75f51')
+    version('0.11.2.1', sha256='280945a37414c31a798f68f70c1bffbedd12dfb0ce77418357e7d42b667491c7')
 
     depends_on('py-setuptools',             type=('build', 'run'))
     depends_on('py-flask@0.12.2:',          type=('build', 'run'))

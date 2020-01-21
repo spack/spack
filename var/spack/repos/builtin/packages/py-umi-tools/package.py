@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyUmiTools(PythonPackage):
     version('1.0.0', sha256='7f73ef29120134123351c19089e9b7b7c03a8f241a19f8cb0e43d17f0e2f9fc7')
     version('0.5.5', sha256='9834a4388dd1ea0b971071009db7ccdbd447c6019796a3c061b0bb383c9ad992')
     version('0.5.4', sha256='a03e6babf188d0618a63f083b4da18120b9e8b4d473af71b585dba7de347e962')
-    version('0.5.3', '08bdebe30f84867d352ff5e1a2fe4d94')
+    version('0.5.3', sha256='d599f15c48c96a96ba667db1f364ebfed4ba733dd30469f9656c1717282d2ecb')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools@1.1:',   type='build')

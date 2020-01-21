@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,8 +30,8 @@ class OfCatalyst(CMakePackage):
 
     variant('full', default=False, description='Build against paraview (full) or catalyst (light)')
 
-    depends_on('openfoam-com@1806', when='@1806', type=('build', 'link', 'run'))
-    depends_on('openfoam-com@develop', when='@develop', type=('build', 'link', 'run'))
+    depends_on('openfoam@1806', when='@1806', type=('build', 'link', 'run'))
+    depends_on('openfoam@develop', when='@develop', type=('build', 'link', 'run'))
     depends_on('catalyst@5.5:', when='~full')
     depends_on('paraview@5.5:+osmesa~qt', when='+full')
 

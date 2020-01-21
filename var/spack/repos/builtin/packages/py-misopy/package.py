@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyMisopy(PythonPackage):
     homepage = "http://miso.readthedocs.io/en/fastmiso/"
     url      = "https://pypi.io/packages/source/m/misopy/misopy-0.5.4.tar.gz"
 
-    version('0.5.4', 'fe0c9c2613304defbdead12ea99e4194')
+    version('0.5.4', sha256='377a28b0c254b1920ffdc2d89cf96c3a21cadf1cf148ee6d6ef7a88ada067dfc')
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.6:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,19 @@ from spack import *
 
 
 class RHypergraph(RPackage):
-    """A package that implements some simple capabilities for
-    representing and manipulating hypergraphs."""
+    """A package providing hypergraph data structures.
 
-    homepage = "https://www.bioconductor.org/packages/hypergraph/"
+       A package that implements some simple capabilities for representing and
+       manipulating hypergraphs."""
+
+    homepage = "https://bioconductor.org/packages/hypergraph"
     git      = "https://git.bioconductor.org/packages/hypergraph.git"
 
+    version('1.56.0', commit='f8b977fe068f15ecea49d30e77a871a35afcb97b')
+    version('1.54.0', commit='cf134b9221e9b5f6329a6786a366f57426c49e7c')
+    version('1.52.0', commit='3e28d8e8ab4c3facb79857b4e4cfffd65e064aca')
+    version('1.50.0', commit='fb3d523caf1d5791ef6962dd3c1a142742025ad5')
     version('1.48.0', commit='a4c19ea0b5f15204f706a7bfdea5363706382820')
 
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0')
+    depends_on('r@2.1.0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))

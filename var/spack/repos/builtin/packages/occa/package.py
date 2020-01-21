@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,7 +41,7 @@ class Occa(Package):
     conflicts('%gcc@7:', when='^cuda@:9')
 
     def install(self, spec, prefix):
-        # The build environment is set by the 'setup_environment' method.
+        # The build environment is set by the 'setup_build_environment' method.
         # Copy the source to the installation directory and build OCCA there.
         install_tree('.', prefix)
         make('-C', prefix)
@@ -65,7 +65,7 @@ class Occa(Package):
             s_env.set('OCCA_CUDA_COMPILER',
                       join_path(cuda_dir, 'bin', 'nvcc'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
         # The environment variable CXX is automatically set to the Spack
         # compiler wrapper.
@@ -79,7 +79,7 @@ class Occa(Package):
         # the verbose output, so we keep both.
         cxxflags = spec.compiler_flags['cxxflags']
         if cxxflags:
-            spack_env.set('CXXFLAGS', ' '.join(cxxflags))
+            env.set('CXXFLAGS', ' '.join(cxxflags))
 
         # For the cuda, openmp, and opencl variants, set the environment
         # variable OCCA_{CUDA,OPENMP,OPENCL}_ENABLED only if the variant is
@@ -92,21 +92,23 @@ class Occa(Package):
                                        cuda_dir,
                                        shared=True,
                                        recursive=True)
-            spack_env.set('OCCA_INCLUDE_PATH', cuda_dir.include)
-            spack_env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
+            env.set('OCCA_INCLUDE_PATH', cuda_dir.include)
+            env.set('OCCA_LIBRARY_PATH', ':'.join(cuda_libs.directories))
         else:
-            spack_env.set('OCCA_CUDA_ENABLED', '0')
+            env.set('OCCA_CUDA_ENABLED', '0')
 
         if '~opencl' in spec:
-            spack_env.set('OCCA_OPENCL_ENABLED', '0')
+            env.set('OCCA_OPENCL_ENABLED', '0')
 
         # Setup run-time environment for testing.
-        spack_env.set('OCCA_VERBOSE', '1')
-        self._setup_runtime_flags(spack_env)
-        # The 'run_env' is included in the Spack generated module files.
-        self._setup_runtime_flags(run_env)
+        env.set('OCCA_VERBOSE', '1')
+        self._setup_runtime_flags(env)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_run_environment(self, env):
+        # The 'env' is included in the Spack generated module files.
+        self._setup_runtime_flags(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
-        self._setup_runtime_flags(spack_env)
+        self._setup_runtime_flags(env)

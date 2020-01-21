@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,61 +6,57 @@
 import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError, SpecError
-from spack.spec import substitute_abstract_variants, parse_anonymous_spec
-from spack.spec import SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
+from spack.variant import substitute_abstract_variants
 
 import spack.architecture
 import spack.directives
 import spack.error
 
 
-def target_factory(spec_string, target_concrete):
-    spec = Spec(spec_string) if spec_string else Spec()
+def make_spec(spec_like, concrete):
+    if isinstance(spec_like, Spec):
+        return spec_like
 
-    if target_concrete:
+    spec = Spec(spec_like)
+    if concrete:
         spec._mark_concrete()
         substitute_abstract_variants(spec)
-
     return spec
 
 
-def argument_factory(argument_spec, left):
-    try:
-        # If it's not anonymous, allow it
-        right = target_factory(argument_spec, False)
-    except Exception:
-        right = parse_anonymous_spec(argument_spec, left.name)
-    return right
+def _specify(spec_like):
+    if isinstance(spec_like, Spec):
+        return spec_like
+
+    return Spec(spec_like)
 
 
-def check_satisfies(target_spec, argument_spec, target_concrete=False):
+def check_satisfies(target_spec, constraint_spec, target_concrete=False):
 
-    left = target_factory(target_spec, target_concrete)
-    right = argument_factory(argument_spec, left)
+    target = make_spec(target_spec, target_concrete)
+    constraint = _specify(constraint_spec)
 
     # Satisfies is one-directional.
-    assert left.satisfies(right)
-    if argument_spec:
-        assert left.satisfies(argument_spec)
+    assert target.satisfies(constraint)
 
-    # If left satisfies right, then we should be able to constrain
-    # right by left.  Reverse is not always true.
-    right.copy().constrain(left)
+    # If target satisfies constraint, then we should be able to constrain
+    # constraint by target.  Reverse is not always true.
+    constraint.copy().constrain(target)
 
 
-def check_unsatisfiable(target_spec, argument_spec, target_concrete=False):
+def check_unsatisfiable(target_spec, constraint_spec, target_concrete=False):
 
-    left = target_factory(target_spec, target_concrete)
-    right = argument_factory(argument_spec, left)
+    target = make_spec(target_spec, target_concrete)
+    constraint = _specify(constraint_spec)
 
-    assert not left.satisfies(right)
-    assert not left.satisfies(argument_spec)
+    assert not target.satisfies(constraint)
 
     with pytest.raises(UnsatisfiableSpecError):
-        right.copy().constrain(left)
+        constraint.copy().constrain(target)
 
 
 def check_constrain(expected, spec, constraint):
@@ -99,31 +95,31 @@ class TestSpecSematics(object):
 
     def test_empty_satisfies(self):
         # Basic satisfaction
-        check_satisfies('libelf', '')
-        check_satisfies('libdwarf', '')
-        check_satisfies('%intel', '')
-        check_satisfies('^mpi', '')
-        check_satisfies('+debug', '')
-        check_satisfies('@3:', '')
+        check_satisfies('libelf', Spec())
+        check_satisfies('libdwarf', Spec())
+        check_satisfies('%intel', Spec())
+        check_satisfies('^mpi', Spec())
+        check_satisfies('+debug', Spec())
+        check_satisfies('@3:', Spec())
 
         # Concrete (strict) satisfaction
-        check_satisfies('libelf', '', True)
-        check_satisfies('libdwarf', '', True)
-        check_satisfies('%intel', '', True)
-        check_satisfies('^mpi', '', True)
+        check_satisfies('libelf', Spec(), True)
+        check_satisfies('libdwarf', Spec(), True)
+        check_satisfies('%intel', Spec(), True)
+        check_satisfies('^mpi', Spec(), True)
         # TODO: Variants can't be called concrete while anonymous
-        # check_satisfies('+debug', '', True)
-        check_satisfies('@3:', '', True)
+        # check_satisfies('+debug', Spec(), True)
+        check_satisfies('@3:', Spec(), True)
 
         # Reverse (non-strict) satisfaction
-        check_satisfies('', 'libelf')
-        check_satisfies('', 'libdwarf')
-        check_satisfies('', '%intel')
-        check_satisfies('', '^mpi')
+        check_satisfies(Spec(), 'libelf')
+        check_satisfies(Spec(), 'libdwarf')
+        check_satisfies(Spec(), '%intel')
+        check_satisfies(Spec(), '^mpi')
         # TODO: Variant matching is auto-strict
         # we should rethink this
-        # check_satisfies('', '+debug')
-        check_satisfies('', '@3:')
+        # check_satisfies(Spec(), '+debug')
+        check_satisfies(Spec(), '@3:')
 
     def test_satisfies_namespace(self):
         check_satisfies('builtin.mpich', 'mpich')
@@ -187,13 +183,13 @@ class TestSpecSematics(object):
 
         check_unsatisfiable(
             'foo platform=linux',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
         check_unsatisfiable(
             'foo os=redhat6',
             'platform=test os=debian6 target=x86_64')
         check_unsatisfiable(
             'foo target=x86_64',
-            'platform=test os=redhat6 target=x86_32')
+            'platform=test os=redhat6 target=x86')
 
         check_satisfies(
             'foo arch=test-None-None',
@@ -221,8 +217,8 @@ class TestSpecSematics(object):
             'foo platform=test target=default_target os=default_os',
             'platform=test os=default_os')
         check_unsatisfiable(
-            'foo platform=test target=x86_32 os=redhat6',
-            'platform=linux target=x86_32 os=redhat6')
+            'foo platform=test target=x86 os=redhat6',
+            'platform=linux target=x86 os=redhat6')
 
     def test_satisfies_dependencies(self):
         check_satisfies('mpileaks^mpich', '^mpich')
@@ -343,8 +339,8 @@ class TestSpecSematics(object):
         # Semantics for a multi-valued variant is different
         # Depending on whether the spec is concrete or not
 
-        a = target_factory(
-            'multivalue_variant foo="bar"', target_concrete=True
+        a = make_spec(
+            'multivalue_variant foo="bar"', concrete=True
         )
         spec_str = 'multivalue_variant foo="bar,baz"'
         b = Spec(spec_str)
@@ -363,8 +359,8 @@ class TestSpecSematics(object):
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
-        a = target_factory(
-            'multivalue_variant foo="bar,baz"', target_concrete=True
+        a = make_spec(
+            'multivalue_variant foo="bar,baz"', concrete=True
         )
         spec_str = 'multivalue_variant foo="bar,baz,quux"'
         b = Spec(spec_str)
@@ -416,13 +412,13 @@ class TestSpecSematics(object):
 
         check_unsatisfiable(
             target_spec='multivalue_variant foo="bar"',
-            argument_spec='multivalue_variant +foo',
+            constraint_spec='multivalue_variant +foo',
             target_concrete=True
         )
 
         check_unsatisfiable(
             target_spec='multivalue_variant foo="bar"',
-            argument_spec='multivalue_variant ~foo',
+            constraint_spec='multivalue_variant ~foo',
             target_concrete=True
         )
 
@@ -699,6 +695,7 @@ class TestSpecSematics(object):
         check_constrain_changed('libelf^foo%gcc', 'libelf^foo%gcc@4.5')
         check_constrain_changed('libelf^foo', 'libelf^foo+debug')
         check_constrain_changed('libelf^foo', 'libelf^foo~debug')
+        check_constrain_changed('libelf', '^foo')
 
         platform = spack.architecture.platform()
         default_target = platform.target('default_target').name
@@ -825,15 +822,15 @@ class TestSpecSematics(object):
                 spec.format(fmt_str)
 
         bad_formats = [
-            '{}',
-            'name}',
-            '\{name}',  # NOQA: ignore=W605
-            '{name',
-            '{name\}',  # NOQA: ignore=W605
-            '{_concrete}',
-            '{dag_hash}',
-            '{foo}',
-            '{+variants.debug}'
+            r'{}',
+            r'name}',
+            r'\{name}',
+            r'{name',
+            r'{name\}',
+            r'{_concrete}',
+            r'{dag_hash}',
+            r'{foo}',
+            r'{+variants.debug}'
         ]
 
         for fmt_str in bad_formats:
@@ -947,3 +944,46 @@ class TestSpecSematics(object):
 
         with pytest.raises(SpecError):
             spec.prefix
+
+    def test_forwarding_of_architecture_attributes(self):
+        spec = Spec('libelf').concretized()
+
+        # Check that we can still access each member through
+        # the architecture attribute
+        assert 'test' in spec.architecture
+        assert 'debian' in spec.architecture
+        assert 'x86_64' in spec.architecture
+
+        # Check that we forward the platform and os attribute correctly
+        assert spec.platform == 'test'
+        assert spec.os == 'debian6'
+
+        # Check that the target is also forwarded correctly and supports
+        # all the operators we expect
+        assert spec.target == 'x86_64'
+        assert spec.target.family == 'x86_64'
+        assert 'avx512' not in spec.target
+        assert spec.target < 'broadwell'
+
+    @pytest.mark.parametrize('spec,constraint,expected_result', [
+        ('libelf target=haswell', 'target=broadwell', False),
+        ('libelf target=haswell', 'target=haswell', True),
+        ('libelf target=haswell', 'target=x86_64:', True),
+        ('libelf target=haswell', 'target=:haswell', True),
+        ('libelf target=haswell', 'target=icelake,:nocona', False),
+        ('libelf target=haswell', 'target=haswell,:nocona', True),
+        # Check that a single target is not treated as the start
+        # or the end of an open range
+        ('libelf target=haswell', 'target=x86_64', False),
+        ('libelf target=x86_64', 'target=haswell', False),
+    ])
+    @pytest.mark.regression('13111')
+    def test_target_constraints(self, spec, constraint, expected_result):
+        s = Spec(spec)
+        assert s.satisfies(constraint) is expected_result
+
+    @pytest.mark.regression('13124')
+    def test_error_message_unknown_variant(self):
+        s = Spec('mpileaks +unknown')
+        with pytest.raises(UnknownVariantError, match=r'package has no such'):
+            s.concretize()

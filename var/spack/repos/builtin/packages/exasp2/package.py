@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class Exasp2(MakefilePackage):
     git      = "https://github.com/ECP-copa/ExaSP2.git"
 
     version('develop', branch='master')
-    version('1.0', 'dba545995acc73f2bd1101bcb377bff5')
+    version('1.0', sha256='59986ea70391a1b382d2ed22d5cf013f46c0c15e44ed95dcd875a917adfc6211')
 
     variant('mpi', default=True, description='Build With MPI Support')
 

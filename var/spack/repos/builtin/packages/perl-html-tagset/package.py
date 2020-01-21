@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PerlHtmlTagset(PerlPackage):
     homepage = "http://search.cpan.org/~petdance/HTML-Tagset-3.20/Tagset.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/P/PE/PETDANCE/HTML-Tagset-3.20.tar.gz"
 
-    version('3.20', 'd2bfa18fe1904df7f683e96611e87437')
+    version('3.20', sha256='adb17dac9e36cd011f5243881c9739417fd102fce760f8de4e9be4c7131108e2')

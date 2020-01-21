@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,20 @@ from spack.util.pattern import Args
 
 __all__ = ['add_common_arguments']
 
+#: dictionary of argument-generating functions, keyed by name
 _arguments = {}
+
+
+def arg(fn):
+    """Decorator for a function that generates a common argument.
+
+    This ensures that argument bunches are created lazily. Decorate
+    argument-generating functions below with @arg so that
+    ``add_common_arguments()`` can find them.
+
+    """
+    _arguments[fn.__name__] = fn
+    return fn
 
 
 def add_common_arguments(parser, list_of_arguments):
@@ -32,7 +45,8 @@ def add_common_arguments(parser, list_of_arguments):
         if argument not in _arguments:
             message = 'Trying to add non existing argument "{0}" to a command'
             raise KeyError(message.format(argument))
-        x = _arguments[argument]
+
+        x = _arguments[argument]()
         parser.add_argument(*x.flags, **x.kwargs)
 
 
@@ -118,64 +132,104 @@ class DeptypeAction(argparse.Action):
         setattr(namespace, self.dest, deptype)
 
 
-_arguments['constraint'] = Args(
-    'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
-    help='constraint to select a subset of installed packages')
+@arg
+def constraint():
+    return Args(
+        'constraint', nargs=argparse.REMAINDER, action=ConstraintAction,
+        help='constraint to select a subset of installed packages')
 
-_arguments['yes_to_all'] = Args(
-    '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
-    help='assume "yes" is the answer to every confirmation request')
 
-_arguments['recurse_dependencies'] = Args(
-    '-r', '--dependencies', action='store_true', dest='recurse_dependencies',
-    help='recursively traverse spec dependencies')
+@arg
+def yes_to_all():
+    return Args(
+        '-y', '--yes-to-all', action='store_true', dest='yes_to_all',
+        help='assume "yes" is the answer to every confirmation request')
 
-_arguments['recurse_dependents'] = Args(
-    '-R', '--dependents', action='store_true', dest='dependents',
-    help='also uninstall any packages that depend on the ones given '
-    'via command line')
 
-_arguments['clean'] = Args(
-    '--clean',
-    action='store_false',
-    default=spack.config.get('config:dirty'),
-    dest='dirty',
-    help='unset harmful variables in the build environment (default)')
+@arg
+def recurse_dependencies():
+    return Args(
+        '-r', '--dependencies', action='store_true',
+        dest='recurse_dependencies',
+        help='recursively traverse spec dependencies')
 
-_arguments['deptype'] = Args(
-    '--deptype', action=DeptypeAction, default=dep.all_deptypes,
-    help="comma-separated list of deptypes to traverse\ndefault=%s"
-    % ','.join(dep.all_deptypes))
 
-_arguments['dirty'] = Args(
-    '--dirty',
-    action='store_true',
-    default=spack.config.get('config:dirty'),
-    dest='dirty',
-    help='preserve user environment in the spack build environment (danger!)')
+@arg
+def recurse_dependents():
+    return Args(
+        '-R', '--dependents', action='store_true', dest='dependents',
+        help='also uninstall any packages that depend on the ones given '
+        'via command line')
 
-_arguments['long'] = Args(
-    '-l', '--long', action='store_true',
-    help='show dependency hashes as well as versions')
 
-_arguments['very_long'] = Args(
-    '-L', '--very-long', action='store_true',
-    help='show full dependency hashes as well as versions')
+@arg
+def clean():
+    return Args(
+        '--clean',
+        action='store_false',
+        default=spack.config.get('config:dirty'),
+        dest='dirty',
+        help='unset harmful variables in the build environment (default)')
 
-_arguments['tags'] = Args(
-    '-t', '--tags', action='append',
-    help='filter a package query by tags')
 
-_arguments['jobs'] = Args(
-    '-j', '--jobs', action=SetParallelJobs, type=int, dest='jobs',
-    help='explicitly set number of parallel jobs')
+@arg
+def deptype():
+    return Args(
+        '--deptype', action=DeptypeAction, default=dep.all_deptypes,
+        help="comma-separated list of deptypes to traverse\ndefault=%s"
+        % ','.join(dep.all_deptypes))
 
-_arguments['install_status'] = Args(
-    '-I', '--install-status', action='store_true', default=False,
-    help='show install status of packages. packages can be: '
-         'installed [+], missing and needed by an installed package [-], '
-         'or not installed (no annotation)')
 
-_arguments['no_checksum'] = Args(
-    '-n', '--no-checksum', action='store_true', default=False,
-    help="do not use checksums to verify downloaded files (unsafe)")
+@arg
+def dirty():
+    return Args(
+        '--dirty',
+        action='store_true',
+        default=spack.config.get('config:dirty'),
+        dest='dirty',
+        help="preserve user environment in spack's build environment (danger!)"
+    )
+
+
+@arg
+def long():
+    return Args(
+        '-l', '--long', action='store_true',
+        help='show dependency hashes as well as versions')
+
+
+@arg
+def very_long():
+    return Args(
+        '-L', '--very-long', action='store_true',
+        help='show full dependency hashes as well as versions')
+
+
+@arg
+def tags():
+    return Args(
+        '-t', '--tags', action='append',
+        help='filter a package query by tags')
+
+
+@arg
+def jobs():
+    return Args(
+        '-j', '--jobs', action=SetParallelJobs, type=int, dest='jobs',
+        help='explicitly set number of parallel jobs')
+
+
+@arg
+def install_status():
+    return Args(
+        '-I', '--install-status', action='store_true', default=False,
+        help='show install status of packages. packages can be: '
+        'installed [+], missing and needed by an installed package [-], '
+        'or not installed (no annotation)')
+
+
+@arg
+def no_checksum():
+    return Args(
+        '-n', '--no-checksum', action='store_true', default=False,
+        help="do not use checksums to verify downloaded files (unsafe)")

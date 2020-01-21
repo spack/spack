@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Pagmo(CMakePackage):
     homepage = "https://esa.github.io/pagmo/"
     url      = "https://github.com/esa/pagmo/archive/1.1.7.tar.gz"
 
-    version('1.1.7', '57ee65a5871ae36ab97087af5199cb89')
+    version('1.1.7', sha256='6d8fab89ef9d5d5f30f148225bf9b84b2e5a38997f3d68b85547840e9fd95172')
 
     variant('examples', default=False, description='Build examples')
     variant('cxx',      default=True,  description='Build the C++ interface')

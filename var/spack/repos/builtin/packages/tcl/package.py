@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,12 @@ class Tcl(AutotoolsPackage):
     homepage = "http://www.tcl.tk"
     url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
 
-    version('8.6.8', '81656d3367af032e0ae6157eff134f89')
-    version('8.6.6', '5193aea8107839a79df8ac709552ecb7')
-    version('8.6.5', '0e6426a4ca9401825fbc6ecf3d89a326')
-    version('8.6.4', 'd7cbb91f1ded1919370a30edd1534304')
-    version('8.6.3', 'db382feca91754b7f93da16dc4cdad1f')
-    version('8.5.19', '4f4e1c919f6a6dbb37e9a12d429769a6')
+    version('8.6.8', sha256='c43cb0c1518ce42b00e7c8f6eaddd5195c53a98f94adc717234a65cbcfd3f96a')
+    version('8.6.6', sha256='a265409781e4b3edcc4ef822533071b34c3dc6790b893963809b9fe221befe07')
+    version('8.6.5', sha256='ce26d5b9c7504fc25d2f10ef0b82b14cf117315445b5afa9e673ed331830fb53')
+    version('8.6.4', sha256='9e6ed94c981c1d0c5f5fefb8112d06c6bf4d050a7327e95e71d417c416519c8d')
+    version('8.6.3', sha256='6ce0778de0d50daaa9c345d7c1fd1288fb658f674028812e7eeee992e3051005')
+    version('8.5.19', sha256='d3f04456da873d17f02efc30734b0300fb6c3b85028d445fe284b83253a6db18')
 
     extendable = True
 
@@ -97,17 +97,17 @@ class Tcl(AutotoolsPackage):
         return join_path(self.tcl_lib_dir,
                          'tcl{0}'.format(self.version.up_to(2)))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        run_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
         For further info see: https://wiki.tcl.tk/1787"""
 
-        spack_env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
@@ -116,7 +116,7 @@ class Tcl(AutotoolsPackage):
         # it boils down to the same situation we have here.
         path = os.path.dirname(self.command.path)
         if not is_system_path(path):
-            spack_env.prepend_path('PATH', path)
+            env.prepend_path('PATH', path)
 
         tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
 
@@ -130,12 +130,16 @@ class Tcl(AutotoolsPackage):
         # "TCLLIBPATH is a Tcl list, not some platform-specific
         # colon-separated or semi-colon separated format"
         tcllibpath = ' '.join(tcl_paths)
-        spack_env.set('TCLLIBPATH', tcllibpath)
+        env.set('TCLLIBPATH', tcllibpath)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set TCLLIBPATH to include the tcl-shipped directory for
+        extensions and any other tcl extension it depends on.
+        For further info see: https://wiki.tcl.tk/1787"""
 
         # For run time environment set only the path for
         # dependent_spec and prepend it to TCLLIBPATH
         if dependent_spec.package.extends(self.spec):
             dependent_tcllibpath = join_path(dependent_spec.prefix,
                                              self.tcl_lib_dir)
-            run_env.prepend_path('TCLLIBPATH', dependent_tcllibpath,
-                                 separator=' ')
+            env.prepend_path('TCLLIBPATH', dependent_tcllibpath, separator=' ')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,11 @@ import spack.tengine as tengine
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
+
 #: lmod specific part of the configuration
-configuration = spack.config.get('modules:lmod', {})
+def configuration():
+    return spack.config.get('modules:lmod', {})
+
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -98,7 +101,7 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        value = configuration.get(
+        value = configuration().get(
             'core_compilers'
         ) or guess_core_compilers(store=True)
 
@@ -112,7 +115,7 @@ class LmodConfiguration(BaseConfiguration):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
         """
-        tokens = configuration.get('hierarchy', [])
+        tokens = configuration().get('hierarchy', [])
 
         # Check if all the tokens in the hierarchy are virtual specs.
         # If not warn the user and raise an error.
@@ -198,7 +201,11 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def arch_dirname(self):
         """Returns the root folder for THIS architecture"""
-        arch_folder = str(self.spec.architecture)
+        arch_folder = '-'.join([
+            str(self.spec.platform),
+            str(self.spec.os),
+            str(self.spec.target.family)
+        ])
         return os.path.join(
             self.dirname(),  # root for lmod module files
             arch_folder,  # architecture relative path

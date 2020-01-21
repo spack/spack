@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class BlasrLibcpp(Package):
     homepage = "https://github.com/PacificBiosciences/blasr_libcpp"
     url      = "https://github.com/PacificBiosciences/blasr_libcpp/archive/5.3.1.tar.gz"
 
-    version('5.3.1', 'ca770042cbca508d5ff12dff0d645045')
+    version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156')
 
     depends_on('pbbam')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
@@ -45,10 +45,7 @@ class BlasrLibcpp(Package):
         install_tree('hdf', prefix.hdf)
         install_tree('pbdata', prefix.pbdata)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.hdf)
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.alignment)
-        spack_env.prepend_path('LD_LIBRARY_PATH',
-                               self.spec.prefix.pbdata)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.hdf)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.alignment)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.pbdata)

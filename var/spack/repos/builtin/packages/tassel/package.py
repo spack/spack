@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,5 +21,5 @@ class Tassel(Package):
     def install(self, spec, prefix):
         install_tree('.', prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('CLASSPATH', prefix.bin.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('CLASSPATH', self.prefix.bin.lib)

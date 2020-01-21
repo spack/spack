@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,12 @@ class Intel(Compiler):
 
     version_argument = '--version'
     version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
+
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
+
+    required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng']
 
     @property
     def openmp_flag(self):

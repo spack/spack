@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,10 @@ class Libxcb(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/libxcb-1.13.tar.gz"
 
-    version('1.13',   '3ba7fe0a7d60650bfb73fbf623aa57cc')
-    version('1.12',   '95eee7c28798e16ba5443f188b27a476')
-    version('1.11.1', '118623c15a96b08622603a71d8789bf3')
-    version('1.11',   '1698dd837d7e6e94d029dbe8b3a82deb')
+    version('1.13',   sha256='0bb3cfd46dbd90066bf4d7de3cad73ec1024c7325a4a0cbf5f4a0d4fa91155fb')
+    version('1.12',   sha256='092f147149d8a6410647a848378aaae749304d5b73e028ccb8306aa8a9e26f06')
+    version('1.11.1', sha256='660312d5e64d0a5800262488042c1707a0261fa01a759bad265b1b75dd4844dd')
+    version('1.11',   sha256='4b351e1dc95eb0a1c25fa63611a6f4cf033cb63e20997c4874c80bbd1876d0b4')
 
     depends_on('libpthread-stubs')
     depends_on('libxau@0.99.2:')

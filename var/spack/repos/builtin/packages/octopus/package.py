@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,12 +10,12 @@ class Octopus(Package):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
-    homepage = "http://www.tddft.org/programs/octopus/"
-    url      = "http://www.tddft.org/programs/octopus/down.php?file=6.0/octopus-6.0.tar.gz"
+    homepage = "https://octopus-code.org/"
+    url      = "http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz"
 
-    version('7.3', '87e51fa4a3a999706ea4ea5e9136996f')
-    version('6.0', '5d1168c2a8d7fd9cb9492eaebaa7182e')
-    version('5.0.1', '2b6392ab67b843f9d4ca7413fc07e822')
+    version('7.3',   sha256='ad843d49d4beeed63e8b9a2ca6bfb2f4c5a421f13a4f66dc7b02f6d6a5c4d742')
+    version('6.0',   sha256='4a802ee86c1e06846aa7fa317bd2216c6170871632c9e03d020d7970a08a8198')
+    version('5.0.1', sha256='3423049729e03f25512b1b315d9d62691cd0a6bd2722c7373a61d51bfbee14e0')
 
     variant('scalapack', default=False,
             description='Compile with Scalapack')

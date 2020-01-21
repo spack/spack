@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ from bisect import bisect_left
 from functools import wraps
 from six import string_types
 
+import spack.error
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -848,3 +849,11 @@ def ver(obj):
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
+
+
+class VersionError(spack.error.SpackError):
+    """This is raised when something is wrong with a version."""
+
+
+class VersionChecksumError(VersionError):
+    """Raised for version checksum errors."""

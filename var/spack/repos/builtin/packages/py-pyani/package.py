@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class PyPyani(PythonPackage):
     homepage = "http://widdowquinn.github.io/pyani"
     url      = "https://pypi.io/packages/source/p/pyani/pyani-0.2.7.tar.gz"
 
-    version('0.2.7', '239ba630d375a81c35b7c60fb9bec6fa')
-    version('0.2.6', 'd5524b9a3c62c36063ed474ea95785c9')
+    version('0.2.7', sha256='dbc6c71c46fbbfeced3f8237b84474221268b51170caf044bec8559987a7deb9')
+    version('0.2.6', sha256='e9d899bccfefaabe7bfa17d48eef9c713d321d2d15465f7328c8984807c3dd8d')
 
     depends_on('python@3.5:')
     depends_on('py-setuptools', type='build')

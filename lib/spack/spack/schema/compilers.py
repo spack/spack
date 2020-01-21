@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,6 +61,13 @@ properties = {
                         'modules': {'anyOf': [{'type': 'string'},
                                               {'type': 'null'},
                                               {'type': 'array'}]},
+                        'implicit_rpaths': {
+                            'anyOf': [
+                                {'type': 'array',
+                                 'items': {'type': 'string'}},
+                                {'type': 'boolean'}
+                            ]
+                        },
                         'environment': {
                             'type': 'object',
                             'default': {},

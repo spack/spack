@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Apex(CMakePackage):
     homepage = "http://github.com/khuck/xpress-apex"
     url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
 
-    version('0.1', 'e224a0b9033e23a9697ce2a3c307a0a3')
+    version('0.1', sha256='bb0be37f8f8133fe492998515bcf66a4df452c28a995d317228fbed9b18e6a92')
 
     depends_on("binutils+libiberty")
     depends_on("boost@1.54:")

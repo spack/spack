@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,11 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.7.1', sha256='a35e555a353feed6b7b814ae83d05362356f9ee33ffa75d7dfb7e2fe86c21294')
     version('0.7.0', sha256='69267a3aaacaedd9896fd90cfe17aef266cba4fb28c77f8123d95a31ce739a7b')
-    version('0.6.0', '8aad185949038c7fb6b277e6a8282947917084ebbec5c5bf0ee3a81a0dcdbe41ba18b1df837c669ae7b48ca5f1e492a5172bffa6b9feb4dda1c6a7a85abed4e8')
-    version('0.5.0', 'a9835c9c478aa41123a4e12672500052228aaf1ea770f74cb0901dbf4a049bd7d329e99d8d3484e39cfed1f911705030b2775dcfede39bc8bea59c6afe2549b1')
-    version('0.4.0', '82732641ac4594ffe9b94ca442a99e92bf5f91bc14745af92203a887a40610dd44edda3ae07f9b6c8d63799b2968d87c8da28f1488edef1310d0d12be9bd6319')
+    version('0.6.0', sha256='3301d4c10810414228e5969b84b75fe1285abb97453070eb5a77f386d8184f8d')
+    version('0.5.0', sha256='d6347f5c85c12c76364dccb39d63c007094ca9cbbbae4e8f4e98d8b1c0b07e89')
+    version('0.4.0', sha256='00768a0b062aec42aa9b31d9d7006efd3a3e9cb9c24878d50487643c8af15e8a')
 
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
@@ -26,9 +27,9 @@ class FluxSched(AutotoolsPackage):
 
     variant('cuda', default=False, description='Build dependencies with support for CUDA')
 
-    depends_on("boost+graph@1.53.0,1.59.0:", when='@0.5.0:,master')
-    depends_on("py-pyyaml", when="@0.7.0:,master")
-    depends_on("libxml2@2.9.1:", when="@0.6.0,master")
+    depends_on("boost+graph@1.53.0,1.59.0:", when='@0.5.0:')
+    depends_on("py-pyyaml", when="@0.7.0:")
+    depends_on("libxml2@2.9.1:", when="@0.6.0")
     depends_on("yaml-cpp", when="@0.7.0:")
     depends_on("libuuid")
     depends_on("pkgconfig")
@@ -39,12 +40,31 @@ class FluxSched(AutotoolsPackage):
     depends_on("flux-core@0.9.0", when='@0.5.0')
     depends_on("flux-core@0.10.0", when='@0.6.0')
     depends_on("flux-core@0.11.0", when='@0.7.0')
+    depends_on("flux-core@0.11.2:0.11.99", when='@0.7.1')
     depends_on("flux-core@master", when='@master')
 
     # Need autotools when building on master:
     depends_on("autoconf", type='build', when='@master')
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
+
+    def url_for_version(self, version):
+        '''
+        Flux uses a fork of ZeroMQ's Collective Code Construction Contract
+        (https://github.com/flux-framework/rfc/blob/master/spec_1.adoc).
+        This model requires a repository fork for every stable release that has
+        patch releases.  For example, 0.8.0 and 0.9.0 are both tags within the
+        main repository, but 0.8.1 and 0.9.5 would be releases on the v0.8 and
+        v0.9 forks, respectively.
+
+        Rather than provide an explicit URL for each patch release, make Spack
+        aware of this repo structure.
+        '''
+        if version[-1] == 0:
+            url = "https://github.com/flux-framework/flux-sched/releases/download/v{0}/flux-sched-{0}.tar.gz"
+        else:
+            url = "https://github.com/flux-framework/flux-sched-v{1}/releases/download/v{0}/flux-sched-{0}.tar.gz"
+        return url.format(version.up_to(3), version.up_to(2))
 
     def setup(self):
         pass
@@ -86,18 +106,18 @@ class FluxSched(AutotoolsPackage):
     def lua_lib_dir(self):
         return os.path.join('lib', 'lua', str(self.lua_version))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
+    def setup_run_environment(self, env):
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_CPATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
             separator=';')
 
-        run_env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
-        run_env.prepend_path('FLUX_MODULE_PATH',
-                             self.prefix.lib.flux.modules.sched)
-        run_env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
-        run_env.prepend_path('FLUX_RC_EXTRA', self.prefix.etc.flux)
+        env.prepend_path('FLUX_MODULE_PATH', self.prefix.lib.flux.modules)
+        env.prepend_path('FLUX_MODULE_PATH',
+                         self.prefix.lib.flux.modules.sched)
+        env.prepend_path('FLUX_EXEC_PATH', self.prefix.libexec.flux.cmd)
+        env.prepend_path('FLUX_RC_EXTRA', self.prefix.etc.flux)

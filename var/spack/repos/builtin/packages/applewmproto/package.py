@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Applewmproto(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/proto/applewmproto"
     url      = "https://www.x.org/archive/individual/proto/applewmproto-1.4.2.tar.gz"
 
-    version('1.4.2', 'ecc8a4424a893ce120f5652dba62e9e6')
+    version('1.4.2', sha256='ff8ac07d263a23357af2d6ff0cca3c1d56b043ddf7797a5a92ec624f4704df2e')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

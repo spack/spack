@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Er(CMakePackage):
     """Encoding and redundancy on a file set"""
 
     homepage = "https://github.com/ECP-VeloC/er"
-    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.2.zip"
+    url      = "https://github.com/ECP-VeloC/er/archive/v0.0.3.zip"
     git      = "https://github.com/ecp-veloc/er.git"
 
     tags = ['ecp']

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,16 +18,15 @@ class Hpx5(AutotoolsPackage):
     applications enabling scientists to write code that performs and
     scales better than contemporary runtimes."""
     homepage = "http://hpx.crest.iu.edu"
-    url      = "http://hpx.crest.iu.edu/release/hpx-3.1.0.tar.gz"
+    url      = "https://github.com/adk9/hpx5/archive/v3.1.0.tar.gz"
 
-    version('4.1.0', '43cb78758506f77416b95276a472f84f')
-    version('4.0.0', 'b40dc03449ae1039cbb48ee149952b22')
-    version('3.1.0', '9e90b8ac46788c009079632828c77628')
-    version('2.0.0', '3d2ff3aab6c46481f9ec65c5b2bfe7a6')
-    version('1.3.0', '2260ecc7f850e71a4d365a43017d8cee')
-    version('1.2.0', '4972005f85566af4afe8b71afbf1480f')
-    version('1.1.0', '646afb460ecb7e0eea713a634933ce4f')
-    version('1.0.0', '8020822adf6090bd59ed7fe465f6c6cb')
+    version('4.1.0',     sha256='3f01009f5e517c8dfca266dabb49894d688db5adce09608fb1c877263605a9f8')
+    version('4.0.0',     sha256='e35b1161566a65ffbd875c1413ea97a84be0c7b528a3dee99f5e250b2aecbd19')
+    version('3.1.0',     sha256='359d457a26b87abb415605911d791ce0ff6edbb064bc40b0f830960f8f612b84')
+    version('3.0.0',     sha256='10f14ba198a32787cee05962e346bafb922f74a5135fb09a1ba8c32a1e942800')
+    version('2.2.0',     sha256='e34c7513a287d517e67cce5aa3011474c48718e7860c3860ba1290c702be28a8')
+    version('2.1.0',     sha256='675826f669eeb3eab40947715af8c8495e2b3d299223372431dc01c1f7d5d616')
+    version('2.0.0',     sha256='0278728557b6684aeb86228f44d548ac809302f05a0b9c8b433cdd157629e384')
 
     # Don't second-guess what compiler we are using on Cray
     patch("configure.patch", when='@4.0.0')

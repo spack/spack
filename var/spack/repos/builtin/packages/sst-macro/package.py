@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class SstMacro(AutotoolsPackage):
 
     version('develop', branch='devel')
     version('8.0.0', sha256='8618a259e98ede9a1a2ce854edd4930628c7c5a770c3915858fa840556c1861f')
-    version('6.1.0', '98b737be6326b8bd711de832ccd94d14')
+    version('6.1.0', sha256='930b67313b594148d6356e550ca370214a9283858235321d3ef974191eb028d6')
 
     depends_on('boost@1.59:', when='@:6.1.0')
 

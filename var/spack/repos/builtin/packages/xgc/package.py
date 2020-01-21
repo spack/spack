@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xgc(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xgc"
     url      = "https://www.x.org/archive/individual/app/xgc-1.0.5.tar.gz"
 
-    version('1.0.5', '605557a9c138f6dc848c87a21bc7c7fc')
+    version('1.0.5', sha256='16645fb437699bad2360f36f54f42320e33fce5a0ab9a086f6e0965963205b02')
 
     depends_on('libxaw')
     depends_on('libxt')

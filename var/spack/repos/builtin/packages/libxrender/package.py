@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Libxrender(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXrender"
     url      = "https://www.x.org/archive/individual/lib/libXrender-0.9.10.tar.gz"
 
-    version('0.9.10', '98a14fc11aee08b4a1769426ab4b23a3')
-    version('0.9.9',  '0c797c4f2a7b782896bc223e6dac4333')
+    version('0.9.10', sha256='770527cce42500790433df84ec3521e8bf095dfe5079454a92236494ab296adf')
+    version('0.9.9',  sha256='beeac64ff8d225f775019eb7c688782dee9f4cc7b412a65538f8dde7be4e90fe')
 
     depends_on('libx11@1.6:')
 

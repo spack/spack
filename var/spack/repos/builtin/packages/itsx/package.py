@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Itsx(Package):
     homepage = "http://microbiology.se/software/itsx/"
     url      = "http://microbiology.se/sw/ITSx_1.0.11.tar.gz"
 
-    version('1.0.11', '1bff12f1d5742f19be6ca585e9bf81fa')
+    version('1.0.11', sha256='8f4f76fc9c43b61f4dd4cd8dc4e495e9687943e15515396583f7a757651d435e')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('hmmer')

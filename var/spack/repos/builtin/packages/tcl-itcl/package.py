@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class TclItcl(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/incrtcl/"
     url      = "https://sourceforge.net/projects/incrtcl/files/%5Bincr%20Tcl_Tk%5D-4-source/itcl%204.0.4/itcl4.0.4.tar.gz"
 
-    version('4.0.4', 'c9c52afdd9435490e2db17c3c6c95ab4')
+    version('4.0.4', sha256='63860438ca22f70049aecff70dc607b31bb1bea0edcc736e36ac6e36c24aecde')
 
     extends('tcl')
 

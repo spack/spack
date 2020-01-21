@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Unblur(AutotoolsPackage):
     homepage = "http://grigoriefflab.janelia.org/unblur"
     url      = "http://grigoriefflab.janelia.org/sites/default/files/unblur_1.0.2.tar.gz"
 
-    version('1.0.2', 'b6e367061cd0cef1b62a391a6289f681')
+    version('1.0.2', sha256='1aa72b1f944114987ede644e1866eaebc08e191ecc566b3461409449360931e2')
 
     variant('openmp', default=True, description='Enable OpenMP support')
     variant('shared', default=True, description='Dynamic linking')

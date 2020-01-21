@@ -1,9 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Bracken(Package):
@@ -14,10 +15,10 @@ class Bracken(Package):
     homepage = "https://ccb.jhu.edu/software/bracken"
     url      = "https://github.com/jenniferlu717/Bracken/archive/1.0.0.tar.gz"
 
-    version('1.0.0', 'bd91805655269c5f3becb8f8028bab6d')
+    version('1.0.0', sha256='8ee736535ad994588339d94d0db4c0b1ba554a619f5f96332ee09f2aabdfe176')
 
-    depends_on('perl')
-    depends_on('python@2.7:')
+    depends_on('perl', type=('build', 'link', 'run'))
+    depends_on('python@2.7:', type=('build', 'link', 'run'))
     depends_on('perl-exporter-tiny')
     depends_on('perl-list-moreutils')
     depends_on('perl-parallel-forkmanager')
@@ -34,13 +35,15 @@ class Bracken(Package):
 
         filter_file(
             r'#!/usr/bin/python',
-            '#!/usr/bin/env python',
+            '#!/usr/bin/env {0}'.format(
+                os.path.basename(self.spec['python'].command.path)),
             'est_abundance.py'
         )
 
         filter_file(
             r'#!/usr/bin/python',
-            '#!/usr/bin/env python',
+            '#!/usr/bin/env {0}'.format(
+                os.path.basename(self.spec['python'].command.path)),
             'generate_kmer_distribution.py'
         )
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,18 @@ class LmSensors(MakefilePackage):
     url = "https://github.com/groeck/lm-sensors/archive/V3-4-0.tar.gz"
     maintainers = ['G-Ragghianti']
 
-    version('3-4-0', '1e9f117cbfa11be1955adc96df71eadb')
-    version('3-3-5', '42dcbc32c61133f5dbcdfd7ef8d0ee3c')
-    version('3-3-4', 'b2bee2bc0b2dedc92b8ef60b719b87a3')
-    version('3-3-3', 'e9be751b91c619cef3fd1ccfc22d0ded')
-    version('3-3-2', 'd580e0cf872768c2670ab0721b1dedc9')
-    version('3-3-1', 'e03c761365dd89ebc04913166018281b')
-    version('3-3-0', '97f22cb084420aee88f765df084b8cd0')
-    version('3-2-0', '07cd13fecb0e0ea19ddf97ec797ee222')
-    version('3-1-2', '4031e02c566992e6a6fd87af018c457e')
-    version('3-1-1', '2a62fb3789972756ff2ad2d3ad3f016c')
+    version('3-6-0', sha256='0591f9fa0339f0d15e75326d0365871c2d4e2ed8aa1ff759b3a55d3734b7d197')
+    version('3-5-0', sha256='f671c1d63a4cd8581b3a4a775fd7864a740b15ad046fe92038bcff5c5134d7e0')
+    version('3-4-0', sha256='e334c1c2b06f7290e3e66bdae330a5d36054701ffd47a5dde7a06f9a7402cb4e')
+    version('3-3-5', sha256='e3802f80785c54822027a8c187b10066ba685ec5e997fd02c1d29761ea9c83d4')
+    version('3-3-4', sha256='1c586684b39292b5fabaf5a2701241885ea6483e5e15265e1f501e1b639fdd86')
+    version('3-3-3', sha256='f1c1078afc712693f003989446b59d817794ed7eb733b401c83ed6b1d7d45b73')
+    version('3-3-2', sha256='927f841e42afb16b35a313a02825122d3a5be59d4b6c567fd90caf23eeda30a8')
+    version('3-3-1', sha256='769b8649e4da2739c07c9a1b2975a8efe6aa9b69cd65fe350ccccbafd4821d95')
+    version('3-3-0', sha256='35ed28640cb2cd1492c4d6620a7c6b8dd2fa44fbb603d5f4d867311e8f56dd37')
+    version('3-2-0', sha256='ff54bee654f9f317224489fa64aeb659425d58ac3d031fe019c2c072ba19ee9a')
+    version('3-1-2', sha256='a587f4f37c0f32ac48575338013ee443a0152d87543e8e702db6161ec0ca1161')
+    version('3-1-1', sha256='22b5ab0bab853c34298ff617efb292c5dde7b254596b31ce4c6e90b1d1cf8ad8')
 
     depends_on('bison', type='build')
     depends_on('flex', type='build')
@@ -32,3 +34,8 @@ class LmSensors(MakefilePackage):
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix),
              'ETCDIR={0}/etc'.format(prefix))
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libsensors', root=self.prefix, shared=True, recursive=True)

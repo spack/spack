@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,11 @@ class Zlib(Package):
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://zlib.net/fossils/zlib-1.2.11.tar.gz"
 
-    version('1.2.11', '1c9f62f0778697a09d36121ead88e08e')
+    version('1.2.11', sha256='c3e5e9fdd5004dcb542feda5ee4f0ff0744628baf8ed2dd5d66f8ca1197cb1a1')
     # Due to the bug fixes, any installations of 1.2.9 or 1.2.10 should be
     # immediately replaced with 1.2.11.
-    version('1.2.8', '44d667c142d7cda120332623eab69f40')
-    version('1.2.3', 'debc62758716a169df9f62e6ab2bc634')
+    version('1.2.8', sha256='36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d')
+    version('1.2.3', sha256='1795c7d067a43174113fdf03447532f373e1c6c57c08d61d9e4e9be5e244b05e')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
@@ -38,11 +38,11 @@ class Zlib(Package):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+pic' in self.spec:
-            spack_env.append_flags('CFLAGS', self.compiler.pic_flag)
+            env.append_flags('CFLAGS', self.compiler.pic_flag)
         if '+optimize' in self.spec:
-            spack_env.append_flags('CFLAGS', '-O2')
+            env.append_flags('CFLAGS', '-O2')
 
     def install(self, spec, prefix):
         config_args = []

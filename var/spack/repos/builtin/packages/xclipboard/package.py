@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Xclipboard(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xclipboard"
     url      = "https://www.x.org/archive/individual/app/xclipboard-1.1.3.tar.gz"
 
-    version('1.1.3', 'cee91df9df1b5d63034681546fd78c0b')
+    version('1.1.3', sha256='a8c335cf166cbb27ff86569503db7e639f85741ad199bfb3ba45dd0cfda3da7f')
 
     depends_on('libxaw')
     depends_on('libxmu')

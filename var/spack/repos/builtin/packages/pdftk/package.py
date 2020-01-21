@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Pdftk(MakefilePackage):
 
     maintainers = ['citibeth']
 
-    version('2.02', '6534365fd6727724f288a556ede33faa')
+    version('2.02', sha256='118f6a25fd3acaafb58824dce6f97cdc07e56050e666b90e4c4ef426ea37b8c1')
 
     depends_on('eclipse-gcj-parser', type='build')
 

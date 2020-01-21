@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,16 +6,16 @@
 from spack import *
 
 
-class Autoconf(AutotoolsPackage):
+class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     """Autoconf -- system configuration part of autotools"""
 
     homepage = 'https://www.gnu.org/software/autoconf/'
-    url      = 'https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz'
+    gnu_mirror_path = 'autoconf/autoconf-2.69.tar.gz'
 
-    version('2.69', '82d05e03b93e45f5a39b828dc9c6c29b')
-    version('2.62', '6c1f3b3734999035d77da5024aab4fbd')
-    version('2.59', 'd4d45eaa1769d45e59dcb131a4af17a0')
-    version('2.13', '9de56d4a161a723228220b0f425dc711')
+    version('2.69', sha256='954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969')
+    version('2.62', sha256='83aa747e6443def0ebd1882509c53f5a2133f502ddefa21b3de141c433914bdd')
+    version('2.59', sha256='9cd05c73c5fcb1f5ccae53dd6cac36bb8cb9c7b3e97ffae5a7c05c72594c88d8')
+    version('2.13', sha256='f0611136bee505811e9ca11ca7ac188ef5323a8e2ef19cffd3edb3cf08fd791e')
 
     # Note: m4 is not a pure build-time dependency of autoconf. m4 is
     # needed when autoconf runs, not only when autoconf is built.

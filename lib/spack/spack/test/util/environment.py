@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -103,3 +103,34 @@ def test_dump_environment(prepare_environment_for_tests, tmpdir):
     with open(dumpfile_path, 'r') as dumpfile:
         assert('TEST_ENV_VAR={0}; export TEST_ENV_VAR\n'.format(test_paths)
                in list(dumpfile))
+
+
+def test_reverse_environment_modifications(working_env):
+    start_env = {
+        'PREPEND_PATH': '/path/to/prepend/to',
+        'APPEND_PATH': '/path/to/append/to',
+        'UNSET': 'var_to_unset',
+        'APPEND_FLAGS': 'flags to append to',
+    }
+
+    to_reverse = envutil.EnvironmentModifications()
+
+    to_reverse.prepend_path('PREPEND_PATH', '/new/path/prepended')
+    to_reverse.append_path('APPEND_PATH', '/new/path/appended')
+    to_reverse.set_path('SET_PATH', ['/one/set/path', '/two/set/path'])
+    to_reverse.set('SET', 'a var')
+    to_reverse.unset('UNSET')
+    to_reverse.append_flags('APPEND_FLAGS', 'more_flags')
+
+    reversal = to_reverse.reversed()
+
+    os.environ = start_env.copy()
+
+    print(os.environ)
+    to_reverse.apply_modifications()
+    print(os.environ)
+    reversal.apply_modifications()
+    print(os.environ)
+
+    start_env.pop('UNSET')
+    assert os.environ == start_env

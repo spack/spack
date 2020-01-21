@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,10 +42,10 @@ class ArpackNg(Package):
     version('3.7.0', sha256='972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6')
     version('3.6.3', sha256='64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453')
     version('3.6.2', sha256='673c8202de996fd3127350725eb1818e534db4e79de56d5dcee8c00768db599a')
-    version('3.6.0', 'f2607c1d5f80e922d55751fbed86a8ec')
-    version('3.5.0', '9762c9ae6d739a9e040f8201b1578874')
-    version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
-    version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
+    version('3.6.0', sha256='3c88e74cc10bba81dc2c72c4f5fff38a800beebaa0b4c64d321c28c9203b37ea')
+    version('3.5.0', sha256='50f7a3e3aec2e08e732a487919262238f8504c3ef927246ec3495617dde81239')
+    version('3.4.0', sha256='69e9fa08bacb2475e636da05a6c222b17c67f1ebeab3793762062248dd9d842f')
+    version('3.3.0', sha256='ad59811e7d79d50b8ba19fd908f92a3683d883597b2c7759fdcc38f6311fe5b3')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -58,6 +58,10 @@ class ArpackNg(Package):
 
     patch('make_install.patch', when='@3.4.0')
     patch('parpack_cmake.patch', when='@3.4.0')
+
+    # Fujitsu compiler does not support 'isnan' function.
+    # isnan: function that determines whether it is NaN.
+    patch('incompatible_isnan_fix.patch', when='%fj')
 
     depends_on('blas')
     depends_on('lapack')

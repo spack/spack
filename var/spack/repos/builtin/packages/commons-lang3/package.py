@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class CommonsLang3(Package):
     homepage = "http://commons.apache.org/proper/commons-lang/"
     url      = "https://archive.apache.org/dist/commons/lang/binaries/commons-lang3-3.7-bin.tar.gz"
 
-    version('3.7', 'c7577443639dc6efadc80f1cbc7fced5')
+    version('3.7', sha256='94dc8289ce90b77b507d9257784d9a43b402786de40c164f6e3990e221a2a4d2')
 
     extends('jdk')
     depends_on('java@7:', type='run')

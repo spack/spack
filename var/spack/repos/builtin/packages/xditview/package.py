@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xditview(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xditview"
     url      = "https://www.x.org/archive/individual/app/xditview-1.0.4.tar.gz"
 
-    version('1.0.4', '46dffbbc4de3039fdecabb73d10d6a4f')
+    version('1.0.4', sha256='73ad88cfc879edcc6ede65999c11d670da27575388126795d71f3ad60286d379')
 
     depends_on('libxaw')
     depends_on('libxmu')

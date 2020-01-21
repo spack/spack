@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Examinimd(MakefilePackage):
     git      = "https://github.com/ECP-copa/ExaMiniMD.git"
 
     version('develop', branch='master')
-    version('1.0', '5db7679a4b9296c0cc3b2ff3a7e8f38f')
+    version('1.0', sha256='d5f884ecc3a5f9723cc57a4c188da926b392605650606c1c8c34f2d1953f2534')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')

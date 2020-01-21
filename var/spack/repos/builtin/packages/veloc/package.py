@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,9 @@ class Veloc(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('1.1',    '6af8f1706c853f924c6ae2ce934de668', preferred=True)
-    version('1.0',    '98fe2d9abd2a1b53d7a52267dab91fae')
-    version('1.0rc1', 'c6db0de56b5b865183b1fa719ac74c1d')
+    version('1.1',    sha256='2bbdacf3e0ce4e7c9e360874d8d85b405525bdc7bd992bdb1f1ba49218072160', preferred=True)
+    version('1.0',    sha256='d594b73d6549a61fce8e67b8984a17cebc3e766fc520ed1636ae3683cdde77cb')
+    version('1.0rc1', sha256='81686ca0994a22475911d38d21c7c74b64ffef4ca872fd01f76d155c5124b0bc')
 
     depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
                '~filesystem~graph~icu~iostreams~locale~log~math~mpi'

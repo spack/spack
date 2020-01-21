@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Mercury(CMakePackage):
     #   Cray-MPICH if libfabric and MPI are used at the same time
     variant('udreg', default=False,
             description='Enable udreg on supported Cray platforms')
+    variant('verbose', default=True,
+            description='Enable Mercury to print errors on stderr')
 
     depends_on('cmake@2.8.12.2:', type='build')
     # depends_on('cci', when='+cci')  # TODO: add CCI package
@@ -51,6 +53,10 @@ class Mercury(CMakePackage):
 
     conflicts('+ofi', when='@:0.9')    # libfabric support was added in 1.0.0
     conflicts('~ofi', when='+udreg')   # udreg option is specific to OFI
+
+    # Fix CMake check_symbol_exists
+    # See https://github.com/mercury-hpc/mercury/issues/299
+    patch('fix-cmake-3.15-check_symbol_exists.patch', when='@:1.0.1')
 
     def cmake_args(self):
         """Populate cmake arguments for Mercury."""
@@ -73,6 +79,7 @@ class Mercury(CMakePackage):
             '-DNA_USE_CCI:BOOL=%s' % variant_bool('+cci'),
             '-DNA_USE_MPI:BOOL=%s' % variant_bool('+mpi'),
             '-DNA_USE_SM:BOOL=%s'  % variant_bool('+sm'),
+            '-DMERCURY_ENABLE_VERBOSE_ERROR=%s' % variant_bool('+verbose'),
         ]
 
         if '@1.0.0:' in spec:

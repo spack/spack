@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Xeus(CMakePackage):
     conflicts('%clang@:3.6')
     conflicts('%intel@:17')
 
-    depends_on('zeromq@4.2.5:-libsodium')
+    depends_on('libzmq@4.2.5:-libsodium')
     depends_on('cppzmq@4.3.0:')
     depends_on('cryptopp@7.0.0:')
     depends_on('xtl@0.4.0:')

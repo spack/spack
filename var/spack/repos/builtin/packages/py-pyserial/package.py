@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PyPyserial(PythonPackage):
     homepage = "https://github.com/pyserial/pyserial"
     url      = "https://pypi.io/packages/source/p/pyserial/pyserial-3.1.1.tar.gz"
 
-    version('3.1.1', '2f72100de3e410b36d575e12e82e9d27')
+    version('3.1.1', sha256='d657051249ce3cbd0446bcfb2be07a435e1029da4d63f53ed9b4cdde7373364c')
 
     depends_on('py-setuptools', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xplsprinters(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xplsprinters"
     url      = "https://www.x.org/archive/individual/app/xplsprinters-1.0.1.tar.gz"
 
-    version('1.0.1', '8e5698b5a2a2a0fc78caeb23909dd284')
+    version('1.0.1', sha256='33377e499429ce3e100fbd7b59153c87ad79bf55872561db08419f69cac4fbfd')
 
     depends_on('libxp')
     depends_on('libxprintutil')

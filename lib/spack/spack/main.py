@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,11 @@ import os
 import inspect
 import pstats
 import argparse
+import traceback
+import warnings
 from six import StringIO
 
+import llnl.util.cpu
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
@@ -27,7 +30,6 @@ import spack.architecture
 import spack.config
 import spack.cmd
 import spack.environment as ev
-import spack.hooks
 import spack.paths
 import spack.repo
 import spack.store
@@ -245,9 +247,9 @@ class SpackArgumentParser(argparse.ArgumentParser):
 {help}:
   spack help --all       list all commands and options
   spack help <command>   help on a specific command
-  spack help --spec      help on the spec syntax
-  spack docs             open http://spack.rtfd.io/ in a browser"""
-.format(help=section_descriptions['help']))
+  spack help --spec      help on the package specification syntax
+  spack docs             open http://spack.rtfd.io/ in a browser
+""".format(help=section_descriptions['help']))
 
         # determine help from format above
         return formatter.format_help()
@@ -388,8 +390,16 @@ def make_argument_parser(**kwargs):
     return parser
 
 
+def send_warning_to_tty(message, *args):
+    """Redirects messages to tty.warn."""
+    tty.warn(message)
+
+
 def setup_main_options(args):
     """Configure spack globals based on the basic options."""
+    # Assign a custom function to show warnings
+    warnings.showwarning = send_warning_to_tty
+
     # Set up environment based on args.
     tty.set_verbose(args.verbose)
     tty.set_debug(args.debug)
@@ -575,14 +585,17 @@ def print_setup_info(*info):
 
     # print sys type
     shell_set('_sp_sys_type', spack.architecture.sys_type())
-
+    shell_set('_sp_compatible_sys_types',
+              ':'.join(spack.architecture.compatible_sys_types()))
     # print roots for all module systems
-    module_roots = spack.config.get('config:module_roots')
     module_to_roots = {
         'tcl': list(),
-        'dotkit': list(),
         'lmod': list()
     }
+    module_roots = spack.config.get('config:module_roots')
+    module_roots = dict(
+        (k, v) for k, v in module_roots.items() if k in module_to_roots
+    )
     for name, path in module_roots.items():
         path = spack.util.path.canonicalize_path(path)
         module_to_roots[name].append(path)
@@ -591,6 +604,10 @@ def print_setup_info(*info):
         'upstreams') or {}
     for install_properties in other_spack_instances.values():
         upstream_module_roots = install_properties.get('modules', {})
+        upstream_module_roots = dict(
+            (k, v) for k, v in upstream_module_roots.items()
+            if k in module_to_roots
+        )
         for module_type, root in upstream_module_roots.items():
             module_to_roots[module_type].append(root)
 
@@ -604,8 +621,9 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if 'modules' in info:
-        specs = spack.store.db.query(
-            'environment-modules arch=%s' % spack.architecture.sys_type())
+        generic_arch = llnl.util.cpu.host().family
+        module_spec = 'environment-modules target={0}'.format(generic_arch)
+        specs = spack.store.db.query(module_spec)
         if specs:
             shell_set('_sp_module_prefix', specs[-1].prefix)
         else:
@@ -681,9 +699,6 @@ def main(argv=None):
         # many operations will fail without a working directory.
         set_working_dir()
 
-        # pre-run hooks happen after we know we have a valid working dir
-        spack.hooks.pre_run()
-
         # now we can actually execute the command.
         if args.spack_profile or args.sorted_profile:
             _profile_wrapper(command, parser, args, unknown)
@@ -705,10 +720,14 @@ def main(argv=None):
         tty.die(e)
 
     except KeyboardInterrupt:
+        if spack.config.get('config:debug'):
+            raise
         sys.stderr.write('\n')
         tty.die("Keyboard interrupt.")
 
     except SystemExit as e:
+        if spack.config.get('config:debug'):
+            traceback.print_exc()
         return e.code
 
 

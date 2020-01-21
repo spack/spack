@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libxkbfile(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libxkbfile"
     url      = "https://www.x.org/archive/individual/lib/libxkbfile-1.0.9.tar.gz"
 
-    version('1.0.9', '5aab87eba67f37dd910a19be5c1129ee')
+    version('1.0.9', sha256='95df50570f38e720fb79976f603761ae6eff761613eb56f258c3cb6bab4fd5e3')
 
     depends_on('libx11')
 

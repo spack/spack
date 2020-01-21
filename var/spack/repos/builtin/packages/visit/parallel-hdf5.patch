@@ -1,0 +1,19 @@
+--- a/src/CMake/FindHDF5.cmake	2019-02-15 18:31:27.000000000 -0500
++++ b/src/CMake/FindHDF5.cmake	2019-11-08 07:57:26.000000000 -0500
+@@ -46,7 +46,7 @@
+ #
+ #****************************************************************************/
+ 
+-# Use the HDF5_DIR hint from the config-site .cmake file 
++# Use the HDF5_DIR hint from the config-site .cmake file
+ 
+ INCLUDE(${VISIT_SOURCE_DIR}/CMake/SetUpThirdParty.cmake)
+ 
+@@ -73,6 +73,6 @@
+ ELSE()
+   SET_UP_THIRD_PARTY(HDF5 lib include hdf5)
+   IF(VISIT_PARALLEL)
+-      SET_UP_THIRD_PARTY(HDF5_MPI lib include hdf5_mpi)
++      SET_UP_THIRD_PARTY(HDF5_MPI lib include hdf5)
+   ENDIF(VISIT_PARALLEL)
+ ENDIF()

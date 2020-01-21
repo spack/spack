@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Slurm(AutotoolsPackage):
 
     version('18-08-0-1', sha256='62129d0f2949bc8a68ef86fe6f12e0715cbbf42f05b8da6ef7c3e7e7240b50d9')
     version('17-11-9-2', sha256='6e34328ed68262e776f524f59cca79ac75bcd18030951d45ea545a7ba4c45906')
-    version('17-02-6-1', '8edbb9ad41819464350d9de013367020')
+    version('17-02-6-1', sha256='97b3a3639106bd6d44988ed018e2657f3d640a3d5c105413d05b4721bc8ee25e')
 
     variant('gtk', default=False, description='Enable GTK+ support')
     variant('mariadb', default=False, description='Use MariaDB instead of MySQL')

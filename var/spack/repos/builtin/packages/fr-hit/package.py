@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class FrHit(Package):
     homepage = "http://weizhong-lab.ucsd.edu/frhit"
     url      = "http://weizhong-lab.ucsd.edu/frhit/fr-hit-v0.7.1-2013-02-20.tar.gz"
 
-    version('0.7.1-2013-02-20', '3e8ea41ba09ab0c13e9973fe6f493f96')
+    version('0.7.1-2013-02-20', sha256='44dcfeb73106529fcefb02c017ec7b95b04b6523a2a57683b2bc905c142e62eb')
 
     depends_on('perl')
     depends_on('python@2.7:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Tcptrace(AutotoolsPackage):
     homepage = "http://www.tcptrace.org/"
     url      = "http://www.tcptrace.org/download/tcptrace-6.6.7.tar.gz"
 
-    version('6.6.7', '68128dc1817b866475e2f048e158f5b9')
+    version('6.6.7', sha256='63380a4051933ca08979476a9dfc6f959308bc9f60d45255202e388eb56910bd')
 
     depends_on('bison', type='build')
     depends_on('flex', type='build')

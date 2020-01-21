@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,27 +14,27 @@ class Simgrid(CMakePackage):
     url      = "https://gforge.inria.fr/frs/download.php/file/37758/SimGrid-3.21.tar.gz"
     git      = 'https://scm.gforge.inria.fr/anonscm/git/simgrid/simgrid.git'
 
-    version('3.21', '6a5664f20433f64ebc988455d988bb75',
+    version('3.21', sha256='d2a6e9021016dd39a2b6f8d5d18c8223f6885746c5269550d19ba29c47c0c6a0',
             url='https://gforge.inria.fr/frs/download.php/file/37758/SimGrid-3.21.tar.gz')
-    version('3.20', 'df65463394f0f4a8e02758bf558eeb3f',
+    version('3.20', sha256='4d4757eb45d87cf18d990d589c31d223b0ea8cf6fcd8c94fca4d38162193cef6',
             url='https://gforge.inria.fr/frs/download.php/file/37602/SimGrid-3.20.tar.gz')
-    version('3.19', 'e6e1a56685505595617dacd5e617868e',
+    version('3.19', sha256='64a3b82fdf0a65bb8b7c8e9feb01694360edaf38070097bf28aa181eccb86ea7',
             url='https://gforge.inria.fr/frs/download.php/file/37452/SimGrid-3.19.tar.gz')
-    version('3.18', 'a3f457f70eb9ef095c275672b21247f4',
+    version('3.18', sha256='dc8f6223d89326b6a21c99eabc90598fa153d6b0818a63ff5c3ec8726e2257b2',
             url='https://gforge.inria.fr/frs/download.php/file/37294/SimGrid-3.18.tar.gz')
-    version('3.17', '0abf5a7265931bf0ce269399f26b6fc1',
+    version('3.17', sha256='f5e44f41983e83f65261598ab0de1909d3a8a3feb77f28e37d38f04631dbb908',
             url='https://gforge.inria.fr/frs/download.php/file/37148/SimGrid-3.17.tar.gz')
-    version('3.16', '7a2529d8769dd7ae1b088d7bcc6fcc14',
+    version('3.16', sha256='51782534fec87eed9da345319ead699b13d7dad4be7ac89984a0446cb385d3fa',
             url='https://gforge.inria.fr/frs/download.php/file/36900/SimGrid-3.16.tar.gz')
-    version('3.15', 'e196d30e80350dce8cd41b0af468c4fc',
+    version('3.15', sha256='d1e411cdbfa953c018411b842727339ede6b82efcd5d3f6adc13a24f182fa9e8',
             url='https://gforge.inria.fr/frs/download.php/file/36621/SimGrid-3.15.tar.gz')
-    version('3.14.159', 'a23be064ceb59714055199167efa0828',
+    version('3.14.159', sha256='2d93db245c6ec8039ffe332a77531b836ad093d57f18ec3f7920fe98e3719f48',
             url='http://gforge.inria.fr/frs/download.php/file/36384/SimGrid-3.14.159.tar.gz')
-    version('3.13', '8ace1684972a01429d5f1c5db8966709',
+    version('3.13', sha256='7bcedd19492f9a32cc431840ad2688d0d6e4121982d6d26e0174b5c92b086121',
             url='http://gforge.inria.fr/frs/download.php/file/35817/SimGrid-3.13.tar.gz')
-    version('3.12', 'd73faaf81d7a9eb0d309cfd72532c5f1',
+    version('3.12', sha256='d397ee0273395dc687fbcd2601515e7142559801a3db387454d77e0e18cd7878',
             url='http://gforge.inria.fr/frs/download.php/file/35215/SimGrid-3.12.tar.gz')
-    version('3.11', '358ed81042bd283348604eb1beb80224',
+    version('3.11', sha256='6efb006e028e37f74a34fc37d585a8cb296720020cabad361d65662533f1600b',
             url='http://gforge.inria.fr/frs/download.php/file/33683/SimGrid-3.11.tar.gz')
     version('git', branch='master')
 

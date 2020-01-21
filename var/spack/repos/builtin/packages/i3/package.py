@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class I3(AutotoolsPackage):
     homepage = "https://i3wm.org/"
     url      = "https://github.com/i3/i3/archive/4.14.1.tar.gz"
 
-    version('4.14.1', 'bdbb6d7bb5a647c8b7b53ed10de84cc5')
+    version('4.14.1', sha256='28d8102d656f17445a6e1523b12c1a730cc3925a520add1f75b56b9c842932f9')
 
     depends_on('autoconf',  type='build')
     depends_on('automake',  type='build')

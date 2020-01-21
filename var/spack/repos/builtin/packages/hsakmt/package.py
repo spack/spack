@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,4 +13,4 @@ class Hsakmt(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/amd/hsakmt/"
     url      = "https://www.x.org/archive/individual/lib/hsakmt-1.0.0.tar.gz"
 
-    version('1.0.0', '9beb20104e505300daf541266c4c3c3d')
+    version('1.0.0', sha256='3d46af85c27091937618f5e92f7446cff3e9e6378888645e6e238806461e5b77')

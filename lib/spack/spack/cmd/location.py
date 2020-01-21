@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ import spack.cmd
 import spack.environment
 import spack.paths
 import spack.repo
+import spack.stage
 
 description = "print out locations of packages and spack directories"
 section = "basic"
@@ -76,7 +77,7 @@ def location(parser, args):
         print(spack.repo.path.first_repo().root)
 
     elif args.stages:
-        print(spack.paths.stage_path)
+        print(spack.stage.get_stage_root())
 
     else:
         specs = spack.cmd.parse_specs(args.spec)

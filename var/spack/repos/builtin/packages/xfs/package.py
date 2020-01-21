@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xfs(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xfs"
     url      = "https://www.x.org/archive/individual/app/xfs-1.1.4.tar.gz"
 
-    version('1.1.4', '0818a2e0317e0f0a1e8a15ca811827e2')
+    version('1.1.4', sha256='28f89b854d1ff14fa1efa5b408e5e1c4f6a145420310073c4e44705feeb6d23b')
 
     depends_on('libxfont@1.4.5:')
     depends_on('font-util')

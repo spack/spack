@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Caffe(CMakePackage):
     homepage = "http://caffe.berkeleyvision.org"
     url      = "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
 
-    version('1.0', '5fbb0e32e7cd8de3de46e6fe6e4cd2b5')
-    version('rc5', '692bd3580b7576485cde6b1e03eb5a6d')
-    version('rc4', 'd86eeb38b1400097d32ffcabdec75b55')
-    version('rc3', '84e39223115753b48312a8bf48c31f59')
-    version('rc2', 'c331932e34b5e2f5022fcc34c419080f')
+    version('1.0', sha256='71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f')
+    version('rc5', sha256='06592aa8f5254335df3e244dafacc15765e2c60479b4bf2e7c887e8e023802fb')
+    version('rc4', sha256='018792411d75ee34b6107216550cca2a1d668d45cb366033ba3c647e6a3018df')
+    version('rc3', sha256='0884207bfba0fbc8b263b87d30f9304f7094eec3a48f975177d142f8c72b6e3b')
+    version('rc2', sha256='55c9c20870b30ce398e19e4f1a62ade1eff08fce51e28fa5604035b711978eec')
 
     variant('cuda', default=False,
             description='Builds with support for GPUs via CUDA and cuDNN')

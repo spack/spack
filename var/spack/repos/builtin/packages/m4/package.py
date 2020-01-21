@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,20 +6,22 @@
 from spack import *
 
 
-class M4(AutotoolsPackage):
+class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
 
     homepage = "https://www.gnu.org/software/m4/m4.html"
-    url      = "https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz"
+    gnu_mirror_path = "m4/m4-1.4.18.tar.gz"
 
-    version('1.4.18', 'a077779db287adf4e12a035029002d28')
-    version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
+    version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
+    version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
-    patch('secure_snprintf.patch', when='platform_os = highsierra')
+    patch('secure_snprintf.patch', when='os = highsierra')
+    patch('secure_snprintf.patch', when='os = mojave')
+    patch('secure_snprintf.patch', when='os = catalina')
     # https://bugzilla.redhat.com/show_bug.cgi?id=1573342
     patch('https://src.fedoraproject.org/rpms/m4/raw/5d147168d4b93f38a4833f5dd1d650ad88af5a8a/f/m4-1.4.18-glibc-change-work-around.patch', sha256='fc9b61654a3ba1a8d6cd78ce087e7c96366c290bc8d2c299f09828d793b853c8', when='@1.4.18')
 

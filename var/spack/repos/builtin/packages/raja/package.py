@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,10 +36,8 @@ class Raja(CMakePackage):
         spec = self.spec
 
         options = []
-
-        if '+openmp' in spec:
-            options.extend([
-                '-DENABLE_OPENMP=On'])
+        options.append('-DENABLE_OPENMP={0}'.format(
+            'On' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
             options.extend([

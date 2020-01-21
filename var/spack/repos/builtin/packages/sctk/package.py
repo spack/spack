@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,13 +16,13 @@ class Sctk(Package):
     homepage = "https://www.nist.gov/itl/iad/mig/tools"
     url      = "http://www.openslr.org/resources/4/sctk-2.4.10-20151007-1312Z.tar.bz2"
 
-    version('2.4.10', 'dd01ad49a33486a4754655d06177f646',
+    version('2.4.10', sha256='9cef424ce3a899f83b9527dc6fa83badf1bb14151529a78580301dd248bd2bf9',
             url='http://www.openslr.org/resources/4/sctk-2.4.10-20151007-1312Z.tar.bz2')
-    version('2.4.9', '8cdab2a1263fe103481e23776e2178a1',
+    version('2.4.9', sha256='262c92cca47755539dfa28add6120aa3ec4983b44b51f053f601e601c064617c',
             url='http://www.openslr.org/resources/4/sctk-2.4.9-20141015-1634Z.tar.bz2')
-    version('2.4.8', '2385209185b584e28dc42ea2cd324478',
+    version('2.4.8', sha256='ca9c5164cd06439ff85e681bc94a02a67139c7111591c628667151d386a02d5b',
             url='http://www.openslr.org/resources/4/sctk-2.4.8-20130429-2145.tar.bz2')
-    version('2.4.0', '77912e75304098ffcc6850ecf641d1a4',
+    version('2.4.0', sha256='73886bf3b879882a132141967ffe6b365178a2226390d2212f51a63e5df066e2',
             url='http://www.openslr.org/resources/4/sctk-2.4.0-20091110-0958.tar.bz2')
 
     def install(self, spec, prefix):

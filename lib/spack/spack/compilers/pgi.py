@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,6 @@ class Pgi(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['pgfortran', 'pgf95', 'pgf90']
 
-    # LLVM-enabled PGI compilers add a '-llvm' suffix:
-    #   pgcc-llvm, pgc++llvm, pgfortran-llvm
-    suffixes = ['-?llvm']
-
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'pgi/pgcc',
                   'cxx': 'pgi/pgc++',
@@ -34,7 +30,12 @@ class Pgi(Compiler):
     PrgEnv_compiler = 'pgi'
 
     version_argument = '-V'
+    ignore_version_errors = [2]  # `pgcc -V` on PowerPC annoyingly returns 2
     version_regex = r'pg[^ ]* ([0-9.]+)-[0-9]+ (LLVM )?[^ ]+ target on '
+
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
 
     @property
     def openmp_flag(self):
@@ -47,6 +48,8 @@ class Pgi(Compiler):
     @property
     def pic_flag(self):
         return "-fpic"
+
+    required_libs = ['libpgc', 'libpgf90']
 
     @property
     def c99_flag(self):

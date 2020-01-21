@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,4 @@ class Mcl(AutotoolsPackage):
     homepage = "https://www.micans.org/mcl/index.html"
     url      = "https://www.micans.org/mcl/src/mcl-14-137.tar.gz"
 
-    version('14-137', 'bc8740456cf51019d0a9ac5eba665bb5')
+    version('14-137', sha256='b5786897a8a8ca119eb355a5630806a4da72ea84243dba85b19a86f14757b497')

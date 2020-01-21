@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ import multiprocessing
 import pytest
 
 
+import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.config
 
@@ -62,3 +63,20 @@ def test_negative_integers_not_allowed_for_parallel_jobs(parser):
         parser.parse_args(['-j', '-2'])
 
     assert 'expected a positive integer' in str(exc_info.value)
+
+
+@pytest.mark.parametrize('specs,expected_variants,unexpected_variants', [
+    (['coreutils', 'cflags=-O3 -g'], [], ['g']),
+    (['coreutils', 'cflags=-O3', '-g'], ['g'], []),
+])
+@pytest.mark.regression('12951')
+def test_parse_spec_flags_with_spaces(
+        specs, expected_variants, unexpected_variants
+):
+    spec_list = spack.cmd.parse_specs(specs)
+    assert len(spec_list) == 1
+
+    s = spec_list.pop()
+
+    assert all(x not in s.variants for x in unexpected_variants)
+    assert all(x in s.variants for x in expected_variants)

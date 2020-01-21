@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,8 @@ class Xproto(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/proto/x11proto"
     url      = "https://www.x.org/archive/individual/proto/xproto-7.0.31.tar.gz"
 
-    version('7.0.31', '04b925bf9e472c80f9212615cd684f1e')
-    version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
+    version('7.0.31', sha256='6d755eaae27b45c5cc75529a12855fed5de5969b367ed05003944cf901ed43c7')
+    version('7.0.29', sha256='628243b3a0fa9b65eda804810ab7238cb88af92fe89efdbc858f25ee5e93a324')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

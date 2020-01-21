@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Pigz(MakefilePackage):
     homepage = "http://zlib.net/pigz/"
     url      = "https://github.com/madler/pigz/archive/v2.3.4.tar.gz"
 
-    version('2.4', '3c8a601db141d3013ef9fe5f2daaf73f')
-    version('2.3.4', 'c109057050b15edf3eb9bb4d0805235e')
+    version('2.4', sha256='e228e7d18b34c4ece8d596eb6eee97bde533c6beedbb728d07d3abe90b4b1b52')
+    version('2.3.4', sha256='763f2fdb203aa0b7b640e63385e38e5dd4e5aaa041bc8e42aa96f2ef156b06e8')
 
     depends_on('zlib')
 

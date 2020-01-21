@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Elk(MakefilePackage):
     homepage = 'http://elk.sourceforge.net/'
     url      = 'https://sourceforge.net/projects/elk/files/elk-3.3.17.tgz'
 
-    version('3.3.17', 'f57f6230d14f3b3b558e5c71f62f0592')
+    version('3.3.17', sha256='c9b87ae4ef367ed43afc2d43eb961745668e40670995e8e24c13db41b7e85d73')
 
     # Elk provides these libraries, but allows you to specify your own
     variant('blas',   default=True,
