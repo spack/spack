@@ -389,19 +389,27 @@ class Qt(Package):
         else:
             # FIXME: those could work for other versions
             png = self.spec['libpng']
+            config_args.append('-system-libpng')
+            if not png.prefix.startswith('/usr/lib'):
+                config_args.extend([
+                    '{0}'.format(png.libs.search_flags),
+                    '{0}'.format(png.headers.include_flags)
+                ])
+
             jpeg = self.spec['jpeg']
+            config_args.append('-system-libjpeg')
+            if not jpeg.prefix.startswith('/usr/lib'):
+                config_args.extend([
+                    '{0}'.format(jpeg.libs.search_flags),
+                    '{0}'.format(jpeg.headers.include_flags),
+                ])
             zlib = self.spec['zlib']
-            config_args.extend([
-                '-system-libpng',
-                '{0}'.format(png.libs.search_flags),
-                '{0}'.format(png.headers.include_flags),
-                '-system-libjpeg',
-                '{0}'.format(jpeg.libs.search_flags),
-                '{0}'.format(jpeg.headers.include_flags),
-                '-system-zlib',
-                '{0}'.format(zlib.libs.search_flags),
-                '{0}'.format(zlib.headers.include_flags)
-            ])
+            config_args.append('-system-zlib')
+            if not zlib.prefix.startswith('/usr/lib'):
+                config_args.extend([
+                    '{0}'.format(zlib.libs.search_flags),
+                    '{0}'.format(zlib.headers.include_flags)
+                ])
 
         if '@:5.7.0' in self.spec:
             config_args.extend([
