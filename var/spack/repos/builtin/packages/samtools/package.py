@@ -41,20 +41,20 @@ class Samtools(Package):
 
     def install(self, spec, prefix):
         if '+termlib' in spec['ncurses']:
-            CURSES_LIB = '-lncursesw -ltinfow'
+            curses_lib = '-lncursesw -ltinfow'
         else:
-            CURSES_LIB = '-lncursesw'
+            curses_lib = '-lncursesw'
 
         if self.spec.version >= Version('1.3.1'):
             configure('--prefix={0}'.format(prefix),
                       '--with-htslib={0}'.format(self.spec['htslib'].prefix),
                       '--with-ncurses',
-                      'CURSES_LIB={0}'.format(CURSES_LIB))
+                      'CURSES_LIB={0}'.format(curses_lib))
             make()
             make('install')
         else:
             make('prefix={0}'.format(prefix),
-                 'LIBCURSES={0}'.format(CURSES_LIB))
+                 'LIBCURSES={0}'.format(curses_lib))
             make('prefix={0}'.format(prefix), 'install')
 
         # Install dev headers and libs for legacy apps depending on them
