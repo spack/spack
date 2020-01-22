@@ -20,7 +20,7 @@ def gpg():
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(not spack.util.gpg.has_gnupg2(),
+@pytest.mark.skipif(not spack.util.gpg.Gpg.gpg(),
                     reason='These tests require gnupg2')
 def test_gpg(gpg, tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.

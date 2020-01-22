@@ -234,27 +234,31 @@ def checksum_tarball(file):
 
 def sign_tarball(key, force, specfile_path):
     # Sign the packages if keys available
-    if not spack.util.gpg.has_gnupg2():
+    if spack.util.gpg.Gpg.gpg() is None:
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
             "Use spack install gnupg and spack load gnupg.")
-    else:
-        if key is None:
-            keys = Gpg.signing_keys()
-            if len(keys) == 1:
-                key = keys[0]
-            if len(keys) > 1:
-                raise PickKeyException(str(keys))
-            if len(keys) == 0:
-                msg = "No default key available for signing.\n"
-                msg += "Use spack gpg init and spack gpg create"
-                msg += " to create a default key."
-                raise NoKeyException(msg)
+
+    if key is None:
+        keys = Gpg.signing_keys()
+        if len(keys) == 1:
+            key = keys[0]
+
+        if len(keys) > 1:
+            raise PickKeyException(str(keys))
+
+        if len(keys) == 0:
+            msg = "No default key available for signing.\n"
+            msg += "Use spack gpg init and spack gpg create"
+            msg += " to create a default key."
+            raise NoKeyException(msg)
+
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
             raise NoOverwriteException('%s.asc' % specfile_path)
+
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 

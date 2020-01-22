@@ -91,7 +91,7 @@ echo $PATH"""
     buildcache.setup_parser(parser)
 
     # Create a private key to sign package with if gpg2 available
-    if spack.util.gpg.has_gnupg2():
+    if spack.util.gpg.Gpg.gpg():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
                                   email='spack@googlegroups.com',
                                   comment='Spack test key')
