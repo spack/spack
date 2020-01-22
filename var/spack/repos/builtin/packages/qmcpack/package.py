@@ -98,6 +98,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('+afqmc', when='@:3.6.0', msg='AFQMC CUDA support available with QMCPACK 3.7.0 or later')
     conflicts('+afqmc', when='-mpi', msg='AFQMC requires building with +mpi')
     conflicts('+afqmc', when='-complex +cuda', msg='AFQMC real build not supported with CUDA. Add +complex')
+    conflicts('+afqmc', when='%gcc@:6.0', msg='AFQMC code requires gcc@6.1 or greater')
+    conflicts('+afqmc', when='%clang@:4.0', msg='AFQMC code requires clang 4.1 or greater')
+    conflicts('+afqmc', when='%intel@:18',msg='AFQMC code requires intel19 or greater')
 
     # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
     # non-Intel compilers without a Spack-based hack. This hack
