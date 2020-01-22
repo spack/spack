@@ -9,12 +9,12 @@
 Pipelines
 =========
 
-Spack provides commands which support generating and running automated build
+Spack provides commands that support generating and running automated build
 pipelines designed for Gitlab CI.  At the highest level it works like this:
 provide a spack environment describing the set of packages you care about,
 and include within that environment file a description of how those packages
 should be mapped to Gitlab runners.  Spack can then generate a ``.gitlab-ci.yml``
-file containing job descriptions for all your packages which can be run by a
+file containing job descriptions for all your packages that can be run by a
 properly configured Gitlab CI instance.  When run, the generated pipeline will
 build and deploy binaries, and it can optionally report to a CDash instance
 regarding the health of the builds as they evolve over time.
@@ -60,7 +60,7 @@ more.
 While it is possible to set up pipelines on gitlab.com, the builds there are
 limited to 60 minutes and generic hardware.  It is also possible to
 `hook up <https://about.gitlab.com/blog/2018/04/24/getting-started-gitlab-ci-gcp>`_
-Gitlab to Google Kubernetes Engine (`GKS <https://cloud.google.com/kubernetes-engine/>`_)
+Gitlab to Google Kubernetes Engine (`GKE <https://cloud.google.com/kubernetes-engine/>`_)
 or Amazon Elastic Kubernetes Service (`EKS <https://aws.amazon.com/eks>`_), though those
 topics are outside the scope of this document.
 
@@ -131,7 +131,7 @@ and as such, corresponds to a single job in the ``.gitlab-ci.yml`` file.
 A pipeline-enabled spack environment
 ------------------------------------
 
-Here's an example of a spack environment file which has been enhanced with
+Here's an example of a spack environment file that has been enhanced with
 sections desribing a build pipeline:
 
 .. code-block:: yaml
@@ -175,7 +175,7 @@ sections desribing a build pipeline:
 Hopefully, the ``definitions``, ``specs``, ``mirrors``, etc. sections are already
 familiar, as they are part of spack :ref:`environments`.  So let's take a more
 in-depth look some of the pipeline-related sections in that environment file
-which might not be as familiar.
+that might not be as familiar.
 
 The ``gitlab-ci`` section is used to configure how the pipeline workload should be
 generated, mainly how the jobs for building specs should be assigned to the
@@ -239,7 +239,7 @@ runners known to the gitlab instance.  For Docker executor type runners, the
 (and could also appear as a dictionary with a ``name`` specifying the image name,
 as well as an ``entrypoint`` to override whatever the default for that image is).
 For other types of runners the ``variables`` key will be useful to pass any
-information on to the runner which it needs to do its work (e.g. scheduler
+information on to the runner that it needs to do its work (e.g. scheduler
 parameters, etc.).
 
 .. _staging_algorithm:
@@ -276,7 +276,7 @@ it didn't already exist).
 Optional compiler bootstrapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack pipelines also have support for bootstrapping compilers on systems which
+Spack pipelines also have support for bootstrapping compilers on systems that
 may not already have the desired compilers installed. The idea here is that
 you can specify a list of things to bootstrap in your ``definitions``, and
 spack will guarantee those will be installed in a phase of the pipeline before
@@ -326,8 +326,8 @@ In the example above, we have added a list to the ``definitions`` called
 ``compiler-pkgs`` (you can add any number of these), which lists compiler packages
 we want to be staged ahead of the full matrix of release specs (which consists
 only of readline in our example).  Then within the ``gitlab-ci`` section, we
-have added a ``bootstrap`` section which can contain a list of items, each of
-which refers to a list in the ``definitions`` section.  These items can either
+have added a ``bootstrap`` section, which can contain a list of items, each
+referring to a list in the ``definitions`` section.  These items can either
 be a dictionary or a string.  If you supply a dictionary, it must have a name
 key whose value must match one of the lists in definitions and it can have a
 ``compiler-agnostic`` key whose value is a boolean.  If you supply a string,
@@ -338,8 +338,8 @@ layer of bottleneck in the pipeline (all jobs in all stages of one phase must
 complete before any jobs in the next phase can begin), it also means you are
 guaranteed your bootstrapped compilers will be available when you need them.
 
-The ``compiler-agnostic`` key which can be provided with each item in the
-bootstrap list tells the ``spack ci generate`` command that any jobs staged
+The ``compiler-agnostic`` key can be provided with each item in the
+bootstrap list. It tells the ``spack ci generate`` command that any jobs staged
 from that particular list should have the compiler removed from the spec, so
 that any compiler available on the runner where the job is run can be used to
 build the package.
@@ -385,7 +385,7 @@ an example:
 
 If the ``spack ci start`` command receives those extra command line arguments,
 then it adds similar ``before_script`` and ``after_script`` sections for each of
-the ``spack ci rebuild`` jobs which it generates (cloning and sourcing a custom
+the ``spack ci rebuild`` jobs it generates (cloning and sourcing a custom
 spack in the ``before_script`` and removing it again in the ``after_script``).
 This gives you control over the version of spack used when the rebuild jobs
 are actually run on the gitlab runner.
@@ -417,7 +417,7 @@ Needed when binary mirror is an S3 bucket.
 S3_ENDPOINT_URL
 ^^^^^^^^^^^^^^^
 
-Needed when binary mirror is an S3 bucket which is *not* on AWS.
+Needed when binary mirror is an S3 bucket that is *not* on AWS.
 
 ^^^^^^^^^^^^^^^^^
 CDASH_AUTH_TOKEN
