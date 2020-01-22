@@ -14,6 +14,7 @@
 import os
 from contextlib import contextmanager
 
+import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -290,3 +291,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
+
+    def test(self):
+        perl = which('perl')
+        assert perl is not None
+
+        tty.msg('test: Ensuring use of the installed executable')
+        assert os.path.dirname(perl.path) == self.prefix.bin
+
+        tty.msg('test: Checking version')
+        output = perl('--version', output=str.split, error=str.split)
+        assert 'perl' in output
+        assert '(v{0})'.format(self.spec.version) in output
+
+        tty.msg('test: Ensuring perl runs')
+        message = 'Hello, World!\n'
+        output = perl('-e', 'print("{0}");'.format(message),
+                      output=str.split, error=str.split)
+        assert output == message
