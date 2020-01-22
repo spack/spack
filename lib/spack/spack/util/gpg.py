@@ -112,3 +112,11 @@ class Gpg(object):
             cls.gpg()('--list-public-keys')
         if signing:
             cls.gpg()('--list-secret-keys')
+
+
+def has_gnupg2():
+    try:
+        Gpg.gpg()('--version', output=os.devnull)
+        return True
+    except Exception:
+        return False

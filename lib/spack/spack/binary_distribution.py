@@ -23,7 +23,7 @@ from llnl.util.filesystem import mkdirp, install_tree
 import spack.cmd
 import spack.config as config
 import spack.fetch_strategy as fs
-import spack.util.gpg as gpg_util
+import spack.util.gpg
 import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 import spack.mirror
@@ -33,7 +33,6 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.executable import ProcessError
 
 _build_cache_relative_path = 'build_cache'
 
@@ -108,14 +107,6 @@ class NewLayoutException(spack.error.SpackError):
     Raised if directory layout is different from buildcache.
     """
     pass
-
-
-def has_gnupg2():
-    try:
-        gpg_util.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except ProcessError:
-        return False
 
 
 def build_cache_relative_path():
@@ -243,7 +234,7 @@ def checksum_tarball(file):
 
 def sign_tarball(key, force, specfile_path):
     # Sign the packages if keys available
-    if not has_gnupg2():
+    if not spack.util.gpg.has_gnupg2():
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
             "Use spack install gnupg and spack load gnupg.")

@@ -19,24 +19,16 @@ import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.util.gpg
 from spack.spec import Spec
 from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
 from spack.relocate import get_patchelf, relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
-
-
-def has_gnupg2():
-    try:
-        spack.util.gpg.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except ProcessError:
-        return False
 
 
 def fake_fetchify(url, pkg):
@@ -99,7 +91,7 @@ echo $PATH"""
     buildcache.setup_parser(parser)
 
     # Create a private key to sign package with if gpg2 available
-    if has_gnupg2():
+    if spack.util.gpg.has_gnupg2():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
                                   email='spack@googlegroups.com',
                                   comment='Spack test key')
