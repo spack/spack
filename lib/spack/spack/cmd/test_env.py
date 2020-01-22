@@ -4,15 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import spack.cmd.common.arguments as arguments
-import spack.cmd.common.env_utility as env_utility
+import spack.cmd,common.env_utility as env_utility
 
-description = "run a command in a spec's install environment, " \
+description = "run a command in a spec's test environment, " \
               "or dump its environment to screen or file"
-section = "build"
+section = "administration"
 level = "long"
 
 setup_parser = env_utility.setup_parser
 
 
-def build_env(parser, args):
-    env_utility.emulate_env_utility('build-env', 'build', args)
+def test_env(parser, args):
+    env_utility.emulate_env_utility('test-env', 'test', args)
