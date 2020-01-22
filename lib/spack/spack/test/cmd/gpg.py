@@ -7,6 +7,9 @@ import os
 
 import pytest
 
+import llnl.util.filesystem as fs
+
+import spack.util.executable
 import spack.util.gpg
 
 from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
@@ -14,15 +17,45 @@ from spack.main import SpackCommand
 from spack.util.executable import ProcessError
 
 
-@pytest.fixture(scope='function')
-def gpg():
-    return SpackCommand('gpg')
+#: spack command used by tests below
+gpg = SpackCommand('gpg')
+
+
+# test gpg command detection
+@pytest.mark.parametrize('cmd_name,version', [
+    ('gpg',  'undetectable'),        # undetectable version
+    ('gpg',  'gpg (GnuPG) 1.3.4'),   # insufficient version
+    ('gpg',  'gpg (GnuPG) 2.2.19'),  # sufficient version
+    ('gpg2', 'gpg (GnuPG) 2.2.19'),  # gpg2 command
+])
+def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
+    with tmpdir.as_cwd():
+        with open(cmd_name, 'w') as f:
+            f.write("""\
+#!/bin/sh
+echo "{version}"
+""".format(version=version))
+        fs.set_executable(cmd_name)
+
+    monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
+    if version == 'undetectable' or version.endswith('1.3.4'):
+        with pytest.raises(spack.util.gpg.SpackGPGError):
+            exe = spack.util.gpg.Gpg.gpg()
+    else:
+        exe = spack.util.gpg.Gpg.gpg()
+        assert isinstance(exe, spack.util.executable.Executable)
+
+
+def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
+    monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
+    with pytest.raises(spack.util.gpg.SpackGPGError):
+        spack.util.gpg.Gpg.gpg()
 
 
 @pytest.mark.maybeslow
 @pytest.mark.skipif(not spack.util.gpg.Gpg.gpg(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, mock_gnupghome):
+def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
