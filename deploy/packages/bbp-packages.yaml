@@ -32,7 +32,7 @@ packages:
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
       - spykfunc@0.15.2
-      - psp-validation@0.2.0
+      - psp-validation@0.2.1
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       - py-basalt@0.2.4
