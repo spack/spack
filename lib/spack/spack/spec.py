@@ -1506,10 +1506,10 @@ class Spec(object):
             d['parameters'] = params
 
         if self.external:
-            d['external'] = {
-                'path': self.external_path,
-                'module': self.external_module
-            }
+            d['external'] = syaml.syaml_dict([
+                ('path', self.external_path),
+                ('module', self.external_module),
+            ])
 
         if not self._concrete:
             d['concrete'] = False
