@@ -14,7 +14,6 @@ import spack.ci as ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
-import spack.util.gpg as gpg_util
 from spack.main import SpackCommand
 import spack.paths as spack_paths
 import spack.repo as repo
@@ -31,14 +30,6 @@ gpg_cmd = SpackCommand('gpg')
 install_cmd = SpackCommand('install')
 buildcache_cmd = SpackCommand('buildcache')
 git = exe.which('git', required=True)
-
-
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = gpg_util.GNUPGHOME
-    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    gpg_util.GNUPGHOME = old_gpg_path
 
 
 @pytest.fixture()
@@ -393,7 +384,7 @@ spack:
 
 def test_ci_rebuild_basic(tmpdir, mutable_mock_env_path, env_deactivate,
                           install_mockery, mock_packages,
-                          testing_gpg_directory):
+                          mock_gnupghome):
     working_dir = tmpdir.join('working_dir')
 
     mirror_dir = working_dir.join('mirror')
@@ -505,7 +496,7 @@ def test_ci_pushyaml(tmpdir):
 @pytest.mark.disable_clean_stage_check
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
-                              mock_stage, testing_gpg_directory):
+                              mock_stage, mock_gnupghome):
     working_dir = tmpdir.join('working_dir')
 
     mirror_dir = working_dir.join('mirror')

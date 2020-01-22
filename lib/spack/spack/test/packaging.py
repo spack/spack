@@ -31,14 +31,6 @@ from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
 
 
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = spack.util.gpg.GNUPGHOME
-    spack.util.gpg.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    spack.util.gpg.GNUPGHOME = old_gpg_path
-
-
 def has_gnupg2():
     try:
         spack.util.gpg.Gpg.gpg()('--version', output=os.devnull)
@@ -54,7 +46,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
+@pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")

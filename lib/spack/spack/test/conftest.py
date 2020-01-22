@@ -33,6 +33,8 @@ import spack.platforms.test
 import spack.repo
 import spack.stage
 import spack.util.executable
+import spack.util.gpg
+
 from spack.util.pattern import Bunch
 from spack.dependency import Dependency
 from spack.package import PackageBase
@@ -669,6 +671,12 @@ def module_configuration(monkeypatch, request):
             {}
         )
     return _impl
+
+
+@pytest.fixture()
+def mock_gnupghome(tmpdir, monkeypatch):
+    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', str(tmpdir.join('gpg')))
+
 
 ##########
 # Fake archives and repositories

@@ -14,14 +14,6 @@ from spack.util.executable import ProcessError
 
 
 @pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = gpg_util.GNUPGHOME
-    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    gpg_util.GNUPGHOME = old_gpg_path
-
-
-@pytest.fixture(scope='function')
 def gpg():
     return SpackCommand('gpg')
 
@@ -37,7 +29,7 @@ def has_gnupg2():
 @pytest.mark.maybeslow
 @pytest.mark.skipif(not has_gnupg2(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, testing_gpg_directory):
+def test_gpg(gpg, tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
