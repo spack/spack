@@ -82,7 +82,7 @@ class PyScipy(PythonPackage):
 
         return args
 
-    def test(self):
+    def buildtest(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

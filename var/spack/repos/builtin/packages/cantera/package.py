@@ -146,7 +146,7 @@ class Cantera(SConsPackage):
 
         return args
 
-    def test(self):
+    def buildtest(self):
         if '+python' in self.spec:
             # Tests will always fail if Python dependencies aren't built
             # In addition, 3 of the tests fail when run in parallel
