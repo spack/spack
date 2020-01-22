@@ -11,6 +11,7 @@ import itertools
 import os
 import os.path
 import shutil
+import tempfile
 import xml.etree.ElementTree
 
 import ordereddict_backport
@@ -674,9 +675,19 @@ def module_configuration(monkeypatch, request):
 
 
 @pytest.fixture()
-def mock_gnupghome(tmpdir, monkeypatch):
-    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', str(tmpdir.join('gpg')))
+def mock_gnupghome(monkeypatch):
+    # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
+    # have to make our own tmpdir with a shorter name than pytest's.
+    # This comes up because tmp paths on macOS are already long-ish, and
+    # pytest makes them longer.
+    short_name_tmpdir = tempfile.mkdtemp()
+    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
+    monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
 
+    yield
+
+    # clean up, since we are doing this manually
+    shutil.rmtree(short_name_tmpdir)
 
 ##########
 # Fake archives and repositories
