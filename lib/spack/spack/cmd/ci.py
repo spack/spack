@@ -19,8 +19,8 @@ import spack.hash_types as ht
 import spack.util.executable as exe
 
 
-description = "Implement various pieces of CI pipeline for spack"
-section = "packaging"     # TODO: where does this go?  new section?
+description = "manage continuous integration pipelines"
+section = "build"
 level = "long"
 
 
