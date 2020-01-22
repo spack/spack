@@ -303,19 +303,18 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     return specs_from_cli
 
 
-def createtarball(args):
-    """create a binary package from an existing install"""
-    if args.spec_yaml:
+def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
+                   rel, unsigned, allow_root, no_rebuild_index):
+    if spec_yaml:
         packages = set()
-        tty.msg('createtarball, reading spec from {0}'.format(args.spec_yaml))
-        with open(args.spec_yaml, 'r') as fd:
+        with open(spec_yaml, 'r') as fd:
             yaml_text = fd.read()
             tty.debug('createtarball read spec yaml:')
             tty.debug(yaml_text)
             s = Spec.from_yaml(yaml_text)
             packages.add('/{0}'.format(s.dag_hash()))
-    elif args.packages:
-        packages = args.packages
+    elif packages:
+        packages = packages
     else:
         tty.die("build cache file creation requires at least one" +
                 " installed package argument or else path to a" +
@@ -324,18 +323,15 @@ def createtarball(args):
     specs = set()
 
     outdir = '.'
-    if args.directory:
-        outdir = args.directory
+    if directory:
+        outdir = directory
 
     mirror = spack.mirror.MirrorCollection().lookup(outdir)
     outdir = url_util.format(mirror.push_url)
 
     signkey = None
-    if args.key:
-        signkey = args.key
-
-    # restrict matching to current environment if one is active
-    env = ev.get_env(args, 'buildcache create')
+    if key:
+        signkey = key
 
     matches = find_matching_specs(pkgs, env=env)
 
@@ -350,7 +346,7 @@ def createtarball(args):
         else:
             tty.debug('adding matching spec %s' % match.format())
             specs.add(match)
-            if args.no_deps is True:
+            if no_deps is True:
                 continue
             tty.debug('recursing dependencies')
             for d, node in match.traverse(order='post',
@@ -368,12 +364,23 @@ def createtarball(args):
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
         try:
-            bindist.build_tarball(spec, outdir, args.force, args.rel,
-                                  args.unsigned, args.allow_root, signkey,
-                                  not args.no_rebuild_index)
+            bindist.build_tarball(spec, outdir, force, rel,
+                                  unsigned, allow_root, signkey,
+                                  not no_rebuild_index)
         except Exception as e:
             tty.warn('%s' % e)
             pass
+
+
+def createtarball(args):
+    """create a binary package from an existing install"""
+
+    # restrict matching to current environment if one is active
+    env = ev.get_env(args, 'buildcache create')
+
+    _createtarball(env, args.spec_yaml, args.packages, args.directory,
+                   args.key, args.no_deps, args.force, args.rel, args.unsigned,
+                   args.allow_root, args.no_rebuild_index)
 
 
 def installtarball(args):
@@ -477,6 +484,32 @@ def check_binaries(args):
         configured_mirrors, specs, args.output_file, args.rebuild_on_error))
 
 
+def download_buildcache_files(concrete_spec, local_dest, require_cdashid,
+                              mirror_url=None):
+    tarfile_name = bindist.tarball_name(concrete_spec, '.spack')
+    tarball_dir_name = bindist.tarball_directory_name(concrete_spec)
+    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
+    local_tarball_path = os.path.join(local_dest, tarball_dir_name)
+
+    files_to_fetch = [
+        {
+            'url': tarball_path_name,
+            'path': local_tarball_path,
+            'required': True,
+        }, {
+            'url': bindist.tarball_name(concrete_spec, '.spec.yaml'),
+            'path': local_dest,
+            'required': True,
+        }, {
+            'url': bindist.tarball_name(concrete_spec, '.cdashid'),
+            'path': local_dest,
+            'required': require_cdashid,
+        },
+    ]
+
+    return bindist.download_buildcache_entry(files_to_fetch, mirror_url)
+
+
 def get_tarball(args):
     """Download buildcache entry from a remote mirror to local folder.  This
     command uses the process exit code to indicate its result, specifically,
@@ -493,34 +526,10 @@ def get_tarball(args):
         sys.exit(0)
 
     spec = get_concrete_spec(args)
+    result = download_buildcache_files(spec, args.path, args.require_cdashid)
 
-    tarfile_name = bindist.tarball_name(spec, '.spack')
-    tarball_dir_name = bindist.tarball_directory_name(spec)
-    tarball_path_name = os.path.join(tarball_dir_name, tarfile_name)
-    local_tarball_path = os.path.join(args.path, tarball_dir_name)
-
-    files_to_fetch = [
-        {
-            'url': tarball_path_name,
-            'path': local_tarball_path,
-            'required': True,
-        }, {
-            'url': bindist.tarball_name(spec, '.spec.yaml'),
-            'path': args.path,
-            'required': True,
-        }, {
-            'url': bindist.tarball_name(spec, '.cdashid'),
-            'path': args.path,
-            'required': args.require_cdashid,
-        },
-    ]
-
-    result = bindist.download_buildcache_entry(files_to_fetch)
-
-    if result:
-        sys.exit(0)
-
-    sys.exit(1)
+    if not result:
+        sys.exit(1)
 
 
 def get_concrete_spec(args):
