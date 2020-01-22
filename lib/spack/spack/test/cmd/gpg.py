@@ -7,18 +7,11 @@ import os
 
 import pytest
 
+import spack.util.gpg
+
 from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
-import spack.util.gpg as gpg_util
 from spack.main import SpackCommand
 from spack.util.executable import ProcessError
-
-
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = gpg_util.GNUPGHOME
-    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    gpg_util.GNUPGHOME = old_gpg_path
 
 
 @pytest.fixture(scope='function')
@@ -26,18 +19,10 @@ def gpg():
     return SpackCommand('gpg')
 
 
-def has_gnupg2():
-    try:
-        gpg_util.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except Exception:
-        return False
-
-
 @pytest.mark.maybeslow
-@pytest.mark.skipif(not has_gnupg2(),
+@pytest.mark.skipif(not spack.util.gpg.Gpg.gpg(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, testing_gpg_directory):
+def test_gpg(gpg, tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
         gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
@@ -77,7 +62,7 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory):
         '--export', str(keypath),
         'Spack testing 1',
         'spack@googlegroups.com')
-    keyfp = gpg_util.Gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.Gpg.signing_keys()[0]
 
     # List the keys.
     # TODO: Test the output here.

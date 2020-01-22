@@ -12,16 +12,7 @@ import spack.main as spack_main
 import spack.config as cfg
 import spack.paths as spack_paths
 import spack.spec as spec
-import spack.util.gpg as gpg_util
 import spack.util.web as web_util
-
-
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = gpg_util.GNUPGHOME
-    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    gpg_util.GNUPGHOME = old_gpg_path
 
 
 @pytest.fixture
@@ -50,7 +41,7 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
-def test_import_signing_key(testing_gpg_directory):
+def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
     with open(signing_key_path) as fd:
