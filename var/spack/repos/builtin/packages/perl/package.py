@@ -15,6 +15,7 @@ import re
 import os
 from contextlib import contextmanager
 
+import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
 
 from spack import *
@@ -357,3 +358,21 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         else:
             msg = 'Unable to locate {0} command in {1}'
             raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
+
+    def test(self):
+        perl = which('perl')
+        assert perl is not None
+
+        tty.msg('test: Ensuring use of the installed executable')
+        assert os.path.dirname(perl.path) == self.prefix.bin
+
+        tty.msg('test: Checking version')
+        output = perl('--version', output=str.split, error=str.split)
+        assert 'perl' in output
+        assert '(v{0})'.format(self.spec.version) in output
+
+        tty.msg('test: Ensuring perl runs')
+        message = 'Hello, World!'
+        output = perl('-e', 'use warnings; use strict;\nprint("{0}");'.
+		      format(message), output=str.split, error=str.split)
+        assert output == message
