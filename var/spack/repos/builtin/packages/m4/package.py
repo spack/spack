@@ -83,7 +83,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         tty.msg('test: Ensuring m4 runs')
         currdir = os.getcwd()
         hello_file = os.path.join(currdir, 'data', 'hello.m4')
-        output = m4(hello_file, output=str.split, err=str.split)
+        output = m4(hello_file, output=str.split, error=str.split)
         expected_file = os.path.join(currdir, 'data', 'hello.out')
         with open(expected_file) as fd:
             assert output == fd.read()
