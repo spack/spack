@@ -74,7 +74,7 @@ class PyPybind11(CMakePackage):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def installtest(self):
         with working_dir('spack-test', create=True):
             # test include helper points to right location
             python = self.spec['python'].command

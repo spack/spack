@@ -19,6 +19,6 @@ class PyCloudpickle(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    def test(self):
+    def buildtest(self):
         # PyPI tarball does not come with unit tests
         pass
