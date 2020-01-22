@@ -257,7 +257,7 @@ class PyTorch(PythonPackage):
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
 
-    def test(self):
+    def buildtest(self):
         pass
 
     def install_test(self):
