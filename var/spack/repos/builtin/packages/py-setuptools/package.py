@@ -68,6 +68,6 @@ class PySetuptools(PythonPackage):
 
         return url
 
-    def test(self):
+    def buildtest(self):
         # Unit tests require pytest, creating a circular dependency
         pass

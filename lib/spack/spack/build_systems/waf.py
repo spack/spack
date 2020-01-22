@@ -47,7 +47,7 @@ class WafPackage(PackageBase):
     build_system_class = 'WafPackage'
 
     # Callback names for build-time test
-    build_time_test_callbacks = ['test']
+    build_time_test_callbacks = ['buildtest']
 
     # Callback names for install-time test
     install_time_test_callbacks = ['installtest']
@@ -106,7 +106,7 @@ class WafPackage(PackageBase):
 
     # Testing
 
-    def test(self):
+    def buildtest(self):
         """Run unit tests after build.
 
         By default, does nothing. Override this if you want to
