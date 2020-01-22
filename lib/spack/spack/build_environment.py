@@ -719,8 +719,11 @@ def setup_package(pkg, dirty, context='build'):
     if not dirty:
         clean_environment()
 
+
     # setup compilers and build tools for build contexts
-    if context == 'build':
+    need_compiler = context == 'build' or (context == 'test' and
+                                           pkg.test_requires_compiler)
+    if need_compiler:
         set_compiler_environment_variables(pkg, env)
         set_build_environment_variables(pkg, env, dirty)
 
@@ -758,7 +761,7 @@ def setup_package(pkg, dirty, context='build'):
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
-        if context == 'build':
+        if need_compiler:
             for mod in pkg.compiler.modules:
                 # Fixes issue https://github.com/spack/spack/issues/3153
                 if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":

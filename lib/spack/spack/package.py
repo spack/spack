@@ -1598,7 +1598,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test_log_name(self):
         return 'test-%s' % self.spec.format('{name}-{hash:7}')
 
+    test_requires_compiler = False
+
     def do_test(self, remove_directory=False, dirty=False):
+        if self.test_requires_compiler:
+            compilers = spack.compilers.compilers_for_spec(
+                self.spec.compiler, arch_spec=self.spec.architecture)
+            if not compilers:
+                tty.error('Skipping tests for package %s\n' %
+                          self.spec.format('{name}-{hash:7}') +
+                          'Package test requires missing compiler %s' %
+                          self.spec.compiler)
+                return
+
         test_log_file = os.path.join(os.getcwd(), self.test_log_name)
 
         def test_process():
