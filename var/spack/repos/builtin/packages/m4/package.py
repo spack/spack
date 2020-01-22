@@ -5,6 +5,11 @@
 
 import re
 
+import os
+import re
+
+import llnl.util.tty as tty
+
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
     """GNU M4 is an implementation of the traditional Unix macro processor."""
@@ -76,3 +81,24 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
             args.append('ac_cv_type_struct_sched_param=yes')
 
         return args
+
+    def test(self):
+        m4 = which('m4')
+        assert m4 is not None
+
+        tty.msg('test: Ensuring use of the installed executable')
+        m4_dir = os.path.dirname(m4.path)
+        assert m4_dir == self.prefix.bin
+
+        tty.msg('test: Checking version')
+        output = m4('--version', output=str.split, error=str.split)
+        version_regex = re.compile(r'm4(.+){0}'.format(self.spec.version))
+        assert version_regex.search(output)
+
+        tty.msg('test: Ensuring m4 runs')
+        currdir = os.getcwd()
+        hello_file = os.path.join(currdir, 'data', 'hello.m4')
+        output = m4(hello_file, output=str.split, error=str.split)
+        expected_file = os.path.join(currdir, 'data', 'hello.out')
+        with open(expected_file) as fd:
+            assert output == fd.read()
