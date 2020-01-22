@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -66,3 +70,40 @@ class Libxml2(AutotoolsPackage):
         if '+python' in self.spec:
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
+
+    def _test_exec(self, exe):
+        tty.msg('test: Ensuring use of installed {0}'.format(exe))
+        runner = which(exe)
+        assert runner is not None
+
+        version_checks = {
+            'xml2-config': [str(self.spec.version)],
+            'xmllint': [
+                 'using libxml', str(self.spec.version).replace('.', '0')],
+        }
+        if exe in version_checks:
+            tty.msg('test: Checking its version')
+            output = runner('--version', output=str.split, error=str.split)
+            for check in version_checks[exe]:
+                assert check in output
+
+        exec_checks = {
+            # TODO: 'xml2-config': (),
+            # TODO: 'xmllint': (),
+            'xmlcatalog': ('--create', ['<catalog xmlns', 'catalog"/>']),
+        }
+        if exe in exec_checks:
+            option, expected = exec_checks[exe]
+            output = runner(option, output=str.split, error=str.split)
+            for check in expected:
+                assert check in output
+
+
+    def test(self):
+        tty.msg('test: Performing simple import test')
+        self.import_module_test()
+
+        for exe in os.listdir(self.prefix.bin):
+            self._test_exec(exe)
+
+        # TODO: Add build and run tests
