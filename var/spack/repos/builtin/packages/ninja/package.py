@@ -34,7 +34,7 @@ class Ninja(Package):
 
     @run_after('configure')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def configuretest(self):
         ninja = Executable('./ninja')
         ninja('-j{0}'.format(make_jobs), 'ninja_test')
         ninja_test = Executable('./ninja_test')

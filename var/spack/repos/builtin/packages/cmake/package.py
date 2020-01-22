@@ -241,7 +241,7 @@ class Cmake(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def buildtest(self):
         # Some tests fail, takes forever
         make('test')
 
