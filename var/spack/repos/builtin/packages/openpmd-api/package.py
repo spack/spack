@@ -26,7 +26,7 @@ class OpenpmdApi(CMakePackage):
             description='Enable parallel I/O')
     variant('hdf5', default=True,
             description='Enable HDF5 support')
-    variant('adios1', default=False,
+    variant('adios1', default=True,
             description='Enable ADIOS1 support')
     variant('adios2', default=False,
             description='Enable ADIOS2 support')
