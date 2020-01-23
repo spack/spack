@@ -192,7 +192,7 @@ class Root(CMakePackage):
     depends_on('libsm',   when="+x")
 
     # OpenGL
-    depends_on('ftgl@2.1.3-rc5',  when="+x+opengl")
+    depends_on('ftgl@2.4.0:',  when="+x+opengl")
     depends_on('glew',  when="+x+opengl")
     depends_on('gl',    when="+x+opengl")
     depends_on('glu',   when="+x+opengl")
