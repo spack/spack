@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import sys
 
 import llnl.util.tty as tty
@@ -23,7 +22,7 @@ def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
     arguments.add_common_arguments(
-        subparser, ['recurse_dependencies', 'installed_spec'])
+        subparser, ['recurse_dependencies', 'installed_specs'])
 
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
@@ -42,11 +41,6 @@ def setup_parser(subparser):
 the default is to load the package and all dependencies
 alternatively one can decide to load only the package or only
 the dependencies"""
-    )
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="spec of package to load"
     )
 
 

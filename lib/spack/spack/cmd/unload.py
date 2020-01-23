@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import sys
 import os
 
@@ -11,7 +10,6 @@ import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 import spack.util.environment
 import spack.user_environment as uenv
 import spack.error
@@ -24,7 +22,7 @@ level = "short"
 def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
-    arguments.add_common_arguments(subparser, ['installed_spec'])
+    arguments.add_common_arguments(subparser, ['installed_specs'])
 
     shells = subparser.add_mutually_exclusive_group()
     shells.add_argument(
@@ -36,9 +34,6 @@ def setup_parser(subparser):
 
     subparser.add_argument('-a', '--all', action='store_true',
                            help='unload all loaded Spack packages.')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help='spec of package to unload with modules')
 
 
 def unload(parser, args):
