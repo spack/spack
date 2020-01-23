@@ -312,5 +312,5 @@ def commands(parser, args):
         return update_completion(parser, args)
 
     else:
-        # run commands nomally
+        # run commands normally
         return _commands(parser, args)
