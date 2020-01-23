@@ -27,17 +27,20 @@ packages:
       - brainbuilder@0.11.4
       - brainbuilder@0.11.5
       - brainbuilder@0.11.6
+      - brainbuilder@0.11.7
+      - brion@3.1.0 +python ^boost@1.65.0
       - connectome-tools@0.3.2
-      - spatial-index@0.1.0
+      - spatial-index@0.2.1
       - spykfunc@0.15.2
+      - psp-validation@0.2.1
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
-      # - py-basalt@0.2.8
-      - py-entity-management@1.0.16
+      - py-basalt@0.2.4
+      - py-entity-management@1.0.20
       - py-jupyter-notebook@4.2.3
-      - brion@3.0.0 +python
       - py-bbp-analysis-framework@1.6.40
       - py-morph-tool@0.1.14
+      - py-neurodamus
 
   gnu-stable-serial-ophiophob:
     target_matrix:
@@ -59,7 +62,7 @@ packages:
     specs:
       - py-bbp-analysis-framework@0.6.39
       - py-simwriter@0.4.3
-      - py-entity-management@1.0.16
+      - py-entity-management@1.0.20
 
   gnu-stable-parallel:
     target_matrix:
@@ -70,11 +73,11 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.5.2
-      - synapsetool@0.5.6
+      - parquet-converters@0.5.3
+      - synapsetool@0.5.8
       - touchdetector@4.4.2
       - touchdetector@5.1.0
-      - touchdetector@5.3.2
+      - touchdetector@5.3.3
       - brayns +opendeck +brion ^ospray@1.7.3%intel
       - brayns@1.0.1 +brion ^ospray%intel
       - brayns@immersive +opendeck +brion +optix
@@ -106,7 +109,7 @@ packages:
       - python
     specs:
       - steps@3.4.1+petsc
-      - steps@3.5.0a+petsc
+      - steps@3.5.0b+petsc
       - nest@2.18.0
 
   #gnu-stable-lapack-parallel:
@@ -131,7 +134,7 @@ packages:
       - python
     specs:
       - nest@2.18.0
-      - py-bluepy
+      - py-bluepy@0.14.5
       - py-bluepymm@0.6.38
       - py-bluepyopt@1.6.56
       - py-efel@3.0.22
@@ -147,8 +150,17 @@ packages:
       - architecture
       - compiler
     specs:
-      - neurodamus-core+common@2.7.3
+      - neurodamus-core+common@2.9.1
       - ultraliser
+
+  intel-stable:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - model-neocortex
 
   intel-stable-parallel:
     target_matrix:
@@ -169,6 +181,7 @@ packages:
       - mpi
       - python
     specs:
+      - neurodamus-core~common@2.9.1
       - neurodamus-neocortex+coreneuron@0.3
       - neurodamus-hippocampus+coreneuron@0.4
       - neurodamus-thalamus+coreneuron@0.3

@@ -92,6 +92,8 @@ packages:
         paths:
             tar@1.26: /usr
         version: [1.26]
+    timemory:
+        variants: +mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
     trilinos:
         variants: +kokkos+teuchos+openmp~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
         version: [xsdk-0.4.0-rc1]

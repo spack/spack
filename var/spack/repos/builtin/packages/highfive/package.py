@@ -25,8 +25,10 @@ class Highfive(CMakePackage):
     # This is a header-only lib so dependencies shall be specified in the
     # target project directly and never specified here since they get truncated
     # when installed as external packages (which makes sense to improve reuse)
-    variant('boost', default=True, description='Support Boost')
-    variant('mpi', default=True, description='Support MPI')
+    variant('boost',   default=True,  description='Support Boost')
+    variant('mpi',     default=True,  description='Support MPI')
+    variant('eigen',   default=False, description='Support Eigen')
+    variant('xtensor', default=False, description='Support xtensor')
 
     # Develop builds tests which require boost
     conflicts('~boost', when='@develop')
@@ -34,11 +36,19 @@ class Highfive(CMakePackage):
     depends_on('boost @1.41:', when='+boost')
     depends_on('hdf5 ~mpi', when='~mpi')
     depends_on('hdf5 +mpi', when='+mpi')
+    depends_on('eigen', when='+eigen')
+    depends_on('xtensor', when='+xtensor')
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
         return [
-            '-DUSE_BOOST:Bool={0}'.format('+boost' in self.spec),
-            '-DHIGHFIVE_PARALLEL_HDF5:Bool={0}'.format('+mpi' in self.spec),
-            '-DHIGHFIVE_EXAMPLES:Bool=false',
-            '-DHIGHFIVE_UNIT_TESTS:Bool={0}'.format(self.spec.satisfies('@develop'))
+            '-DUSE_BOOST:Bool=' + str(self.spec.satisfies('+boost')),
+            '-DUSE_EIGEN:Bool=' + str(self.spec.satisfies('+eigen')),
+            '-DUSE_XTENSOR:Bool=' + str(self.spec.satisfies('+xtensor')),
+            '-DHIGHFIVE_PARALLEL_HDF5:Bool=' + str(self.spec.satisfies('+mpi')),
+            '-DHIGHFIVE_EXAMPLES:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_UNIT_TESTS:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=1',  # Dont use targets
+            #'-DHIGHFIVE_USE_INSTALL_DEPS:Bool=ON',  # Newer highfive. Otherwise dynamic deps
         ]

@@ -14,11 +14,12 @@ class OmegaH(CMakePackage):
     """
 
     homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/SNLComputation/omega_h/archive/v9.22.1.tar.gz"
-    git      = "https://github.com/SNLComputation/omega_h.git"
+    url      = "https://github.com/BlueBrain/omega_h/archive/v9.22.1.tar.gz"
+    git      = "https://github.com/BlueBrain/omega_h.git"
 
     version('develop', branch='master')
-    version('9.31.1', sha256='4d1365baf56488e7006349dc6e6adba7ffa05858653d5bca588a83114f620141')
+    version('9.31.2.dev2', sha256='08be63b68a012ed8fcf4b7a217cbaadf46faa3f3c937ec8224ff9c542eb6ae62')
+    version('9.31.2', sha256='df859bc8ae0e4bcd9c4f6654b6951c7e34110ac3b3e7d2b0c1e413ce2645772d')
     version('9.30.0', sha256='7160045ea12718269f345c7be93a386533ebb76788504df413f22fbcb072f158')
     version('9.29.2', sha256='8eea6da0ebde44176a6d19fb858f89f872611cbad08cad65700757e096058465')
     version('9.29.0', sha256='b41964b018909ffe9cea91c23a0509b259bfbcf56874fcdf6bd9f6a179938014')
@@ -41,8 +42,10 @@ class OmegaH(CMakePackage):
     variant('optimize', default=True, description='Compile C++ with optimization')
     variant('symbols', default=True, description='Compile C++ with debug symbols')
     variant('warnings', default=False, description='Compile C++ with warnings')
+    variant('gmsh', default=False, description='Use Gmsh C++ API')
 
     depends_on('gmsh', when='+examples', type='build')
+    depends_on('gmsh', when='+gmsh@4.4.1:', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos +kokkos +teuchos', when='+trilinos')
     depends_on('zlib', when='+zlib')
@@ -73,6 +76,8 @@ class OmegaH(CMakePackage):
             args.append('-DOmega_h_USE_MPI:BOOL=OFF')
         if '+trilinos' in self.spec:
             args.append('-DOmega_h_USE_Trilinos:BOOL=ON')
+        if '+gmsh' in self.spec:
+            args.append('-DOmega_h_USE_Gmsh:BOOL=ON')
         if '+zlib' in self.spec:
             args.append('-DOmega_h_USE_ZLIB:BOOL=ON')
             args.append('-DZLIB_ROOT:PATH={0}'.format(

@@ -17,12 +17,14 @@ class Mvdtool(CMakePackage):
     url      = "https://github.com/BlueBrain/MVDTool.git"
     git      = "https://github.com/BlueBrain/MVDTool.git"
 
-    version('develop', get_full_repo=True, submodules=True)
-    version('2.3.0', tag='v2.3.0', get_full_repo=True)
-    version('2.2.1', tag='v2.2.1', get_full_repo=True)
-    version('2.2.0', tag='v2.2.0', get_full_repo=True)
-    version('2.1.0', tag='v2.1.0', get_full_repo=True)
-    version('2.0.0', tag='v2.0.0', get_full_repo=True)
+    version('develop', get_full_repo=False, submodules=True)
+    version('2.3.2', tag='v2.3.2', get_full_repo=False)
+    version('2.3.1', tag='v2.3.1', get_full_repo=False)
+    version('2.3.0', tag='v2.3.0', get_full_repo=False)
+    version('2.2.1', tag='v2.2.1', get_full_repo=False)
+    version('2.2.0', tag='v2.2.0', get_full_repo=False)
+    version('2.1.0', tag='v2.1.0', get_full_repo=False)
+    version('2.0.0', tag='v2.0.0', get_full_repo=False)
     version('1.5.1', tag='v1.5.1')
     version('1.5', tag='v1.5')
     version('1.4', tag='v1.4')

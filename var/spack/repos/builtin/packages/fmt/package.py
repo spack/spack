@@ -61,7 +61,9 @@ class Fmt(CMakePackage):
         if '+pic' in spec:
             args.extend([
                 '-DCMAKE_C_FLAGS={0}'.format(self.compiler.pic_flag),
-                '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag)
+                '-DCMAKE_CXX_FLAGS={0}'.format(self.compiler.pic_flag),
+                '-DFMT_DOC=OFF',
+                '-DFMT_TEST=OFF'
             ])
 
         args.append('-DCMAKE_CXX_STANDARD={0}'.format(

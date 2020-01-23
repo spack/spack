@@ -11,7 +11,9 @@ class NeurodamusMousify(NeurodamusModel):
     homepage = "ssh://bbpcode.epfl.ch/sim/models/mousify"
     git      = "ssh://bbpcode.epfl.ch/sim/models/mousify"
 
-    version('develop', branch='master', submodules=True, get_full_repo=True)
-    version('0.3', git=git, tag='0.3-1', submodules=True, get_full_repo=True)
-    version('0.2', git=git, tag='0.2', submodules=True, get_full_repo=True)
-    version('0.1', git=git, tag='0.1', submodules=True, get_full_repo=True)
+    mech_name = "mousify"
+
+    version('develop', branch='master', submodules=True, get_full_repo=False)
+    version('0.3', git=git, tag='0.3-1', submodules=True, get_full_repo=False)
+    version('0.2', git=git, tag='0.2', submodules=True, get_full_repo=False)
+    version('0.1', git=git, tag='0.1', submodules=True, get_full_repo=False)

@@ -34,6 +34,7 @@ class Synapsetool(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/hpc/synapse-tool"
 
     version('develop', submodules=True)
+    version('0.5.8', tag='v0.5.8', submodules=True)
     version('0.5.6', tag='v0.5.6', submodules=True)
     version('0.5.5', tag='v0.5.5', submodules=True)
     version('0.5.4', tag='v0.5.4', submodules=True)
@@ -50,12 +51,12 @@ class Synapsetool(CMakePackage):
 
     depends_on('boost@1.55:')
     depends_on('cmake@3.0:', type='build')
+    depends_on('mpi',    when='+mpi')
+    depends_on('python', when='+python', type=('build', 'run'))
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('highfive+mpi', when='+mpi')
     depends_on('highfive~mpi', when='~mpi')
-    depends_on('mpi', when='+mpi')
-    depends_on('python', when='+python')
     depends_on('libsonata+mpi', when='+mpi')
     depends_on('libsonata~mpi', when='~mpi')
 

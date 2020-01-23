@@ -16,18 +16,21 @@ class Xtensor(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
+    version('0.21.0', sha256='62c9acd6a12fbd50f1379e6c60ffdceb317838d1d79a691d441bebaf7174aa12')
     version('0.20.7', sha256='b45290d1bb0d6cef44771e7482f1553b2aa54dbf99ef9406fec3eb1e4d01d52b')
     version('0.15.1', sha256='2f4ac632f7aa8c8e9da99ebbfc949d9129b4d644f715ef16c27658bf4fddcdd3')
     version('0.13.1', sha256='f9ce4cd2110386d49e3f36bbab62da731c557b6289be19bc172bd7209b92a6bc')
+    version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
+    version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
 
     variant('xsimd', default=True,
             description='Enable SIMD intrinsics')
     variant('tbb', default=True,
             description='Enable TBB parallelization')
 
-    depends_on('xtl', when='@develop')
-    depends_on('xtl@0.6.4:0.6.99', when='@0.20.7')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1')
+    depends_on('xtl')
+    depends_on('xtl@0.6.9', when='@0.21.0:')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1:0.20.99')
     depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
     depends_on('xsimd', when='@develop')
     depends_on('xsimd@7.2.3:7.99', when='@0.20.7 +xsimd')

@@ -13,6 +13,7 @@ class Brainbuilder(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/brainbuilder"
 
     version('develop', branch='master')
+    version('0.11.7', tag='brainbuilder-v0.11.7')
     version('0.11.6', tag='brainbuilder-v0.11.6')
     version('0.11.5', tag='brainbuilder-v0.11.5')
     version('0.11.4', tag='brainbuilder-v0.11.4')
@@ -36,4 +37,4 @@ class Brainbuilder(PythonPackage):
     depends_on('py-tqdm@4.0:', type='run')
 
     depends_on('py-bluepy@0.12.5:', type='run')
-    depends_on('py-voxcell@2.6:', type='run')
+    depends_on('py-voxcell@2.6.2:', type='run')

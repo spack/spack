@@ -2,7 +2,7 @@
 
 def build_and_deploy_docker() {
     def registry = "https://index.docker.io/v1/"
-    def credentials_id = ""
+    def credentials_id = "fa515582-07c3-4af2-b4ec-468727e745ba"
 
     def pull = env.ghprbPullId
     def rev = "--build-arg revision=${sha1}"
@@ -106,9 +106,10 @@ pipeline {
         DOCKERDIR = "${DEPLOYMENT_ROOT}/spack/docker"
     }
 
-    triggers {
-        cron('H H(0-7) * * *')
-    }
+    // Configured via the UI to allow concurrent PR builds
+    // triggers {
+    //     cron('H H(0-7) * * *')
+    // }
 
     stages {
         stage('Setup') {

@@ -21,6 +21,7 @@ packages:
       - arm-forge@19.0.4-linux-rhel7-x86_64
       - binutils@2.31.1
       - bison@3.0.5
+      - blender
       - cmake@3.15.3
       - doxygen@1.8.15
       - emacs@26.1

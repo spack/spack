@@ -50,6 +50,7 @@ packages:
       - spark@2.4.0+hadoop
       - sqlite
       - symengine@0.3.0
+      - timemory+mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
       - virtualgl
       - vrpn
       - zeromq@4.2.5

@@ -31,6 +31,7 @@ packages:
       - compiler
       - python
     specs:
+      - py-aspy-yaml
       - py-argcomplete
       - py-argparse
       - py-babel
@@ -39,8 +40,12 @@ packages:
       # - py-bokeh
       - py-cached-property
       - py-cffi
+      - py-cfgv
       - py-click
+      - py-cmake-format
       - py-clustershell
+      - py-configparser
+      - py-contextlib2
       - py-coverage
       - py-cpuinfo
       - py-cycler
@@ -61,6 +66,9 @@ packages:
       - py-h5py~mpi
       - py-hdfs
       - py-humanize
+      - py-identify
+      - py-importlib-metadata
+      - py-importlib-resources
       - py-ipykernel
       - py-ipyparallel
       - py-ipywidgets
@@ -78,12 +86,15 @@ packages:
       # - py-nose
       - py-morphio
       - py-neurom
+      - py-nodeenv
       - py-pandas
+      - py-pathlib2
       - py-perf
       - py-pillow
       - py-pip
       - py-plotly
       - py-ply
+      - py-pre-commit
       - py-progress
       - py-py4j
       - py-pyarrow+parquet
@@ -103,12 +114,15 @@ packages:
       # - py-sphinx-bootstrap-theme
       - py-sphinx-rtd-theme
       - py-sympy
+      - py-toml
+      # - py-tornado
       - py-urllib3
       - py-virtualenv
       - py-virtualenv-clone
       - py-virtualenvwrapper
       - py-wheel
       # - py-yapf
+      - py-zipp
       # - py-zmq
 
   gnu-stable-serial-lapack:
