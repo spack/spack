@@ -113,8 +113,15 @@ class Lock(object):
             num_requests += 1
             yield wait_time
 
+    def __repr__(self):
+        """Formal representation of the lock."""
+        rep = '{0}('.format(self.__class__.__name__)
+        for attr, value in self.__dict__.items():
+            rep += '{0}={1}, '.format(attr, value.__repr__())
+        return '{0})'.format(rep.strip(', '))
+
     def __str__(self):
-        """String representation of the lock."""
+        """Readable string (with key fields) of the lock."""
         location = '{0}[{1}:{2}]'.format(self.path, self._start, self._length)
         timeout = 'timeout={0}'.format(self.default_timeout)
         activity = '#reads={0}, #writes={1}'.format(self._reads, self._writes)
