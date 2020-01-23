@@ -785,6 +785,14 @@ class GitFetchStrategy(VCSFetchStrategy):
             tty.msg("Already fetched {0}".format(self.stage.source_path))
             return
 
+        try:
+            self._clone_and_checkout()
+        except:
+            if os.path.exists(self.stage.source_path):
+                shutil.rmtree(self.stage.source_path)
+            raise
+
+    def _clone_and_checkout(self):
         tty.msg("Cloning git repository: {0}".format(self._repo_info()))
 
         git = self.git
