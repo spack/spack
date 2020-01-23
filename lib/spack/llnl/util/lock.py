@@ -18,15 +18,14 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
 
 
-def get_attempts_str(wait_time, nattempts):
+def _attempts_str(wait_time, nattempts):
+    # Don't print anything if we succeeded on the first try
+    if nattempts <= 1:
+        return ''
+
     attempts = 'attempt' if nattempts == 1 else 'attempts'
-    if nattempts > 1:
-        attempts_part = ' after {0:0.2f}s and {1:d} {2}'.format(
-            wait_time, nattempts, attempts)
-    else:
-        # Dont print anything if we succeeded immediately
-        attempts_part = ''
-    return attempts_part
+    return ' after {0:0.2f}s and {1:d} {2}'.format(
+        wait_time, nattempts, attempts)
 
 
 class Lock(object):
@@ -462,7 +461,7 @@ class Lock(object):
             if tty.is_verbose() else ''
 
     def _log_acquired(self, lock_type, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
+        attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
         self._debug(self._status_msg(lock_type, '{0}{1}'.
@@ -472,7 +471,7 @@ class Lock(object):
         self._verbose(self._status_msg(lock_type, 'Acquiring'))
 
     def _log_downgraded(self, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
+        attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Downgraded at %s' % now.strftime("%H:%M:%S.%f")
         self._debug(self._status_msg('READ LOCK', '{0}{1}'
@@ -490,7 +489,7 @@ class Lock(object):
         self._verbose(self._status_msg(lock_type, 'Releasing'))
 
     def _log_upgraded(self, wait_time, nattempts):
-        attempts_part = get_attempts_str(wait_time, nattempts)
+        attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Upgraded at %s' % now.strftime("%H:%M:%S.%f")
         self._debug(self._status_msg('WRITE LOCK', '{0}{1}'.
