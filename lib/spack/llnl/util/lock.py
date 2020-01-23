@@ -286,6 +286,12 @@ class Lock(object):
         self._reads = 0
         self._writes = 0
 
+    def _log_timeout_warning(self, requested):
+        """Log a warning if the requested timeout does not match the default"""
+        if requested != self.default_timeout:
+            tty.warn('Using current lock timeout {0}, not requested {1}'
+                     .format(self.default_timeout, requested))
+
     def acquire_read(self, timeout=None):
         """Acquires a recursive, shared lock for reading.
 
@@ -308,13 +314,12 @@ class Lock(object):
             self._log_acquired(locktype, wait_time, nattempts)
             return True
         else:
-            # TODO: Problem if the timeout does not get reset if different?
-            if timeout != self.default_timeout:
-                tty.warn('Using current lock timeout {0}, not requested {1}'
-                         .format(self.default_timeout, timeout))
+            # Nothing is done with the provided lock timeout so log a warning
+            # if it is different from the one being used.
+            self._log_timeout_warning(timeout)
 
-            # TODO/TBD: Still increment reads if have a write lock?
-            #  (See masquerading comment.)
+            # TODO: Should the read count really be incremented if this is a
+            # TODO: a write lock?  Or should there be some other behavior?
             self._reads += 1
             return False
 
@@ -337,9 +342,7 @@ class Lock(object):
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._writes += 1
-
             self._log_acquired(locktype, wait_time, nattempts)
-            # return True
 
             # return True only if we weren't nested in a read lock.
             # TODO: we may need to return two values: whether we got
@@ -347,13 +350,10 @@ class Lock(object):
             # write lock for the first time. Now it returns the latter.
             return self._reads == 0
         else:
-            # TODO: Problem if the timeout does not get reset if different?
-            if timeout != self.default_timeout:
-                tty.warn('Using current lock timeout {0}, not requested {1}'
-                         .format(self.default_timeout, timeout))
+            # Nothing is done with the provided lock timeout so log a warning
+            # if it is different from the one being used.
+            self._log_timeout_warning(timeout)
 
-            # TODO/TBD: Still increment writes if have a write lock?
-            #  (See masquerading comment.)
             self._writes += 1
             return False
 
