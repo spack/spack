@@ -17,6 +17,9 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
            'LockError', 'LockTimeoutError',
            'LockPermissionError', 'LockROFileError', 'CantCreateLockError']
 
+#: Mapping of supported locks to description
+lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
+
 
 def _attempts_str(wait_time, nattempts):
     # Don't print anything if we succeeded on the first try
@@ -137,8 +140,7 @@ class Lock(object):
         successfully acquired, the total wait time and the number of attempts
         is returned.
         """
-        assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
-        lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
+        assert op in lock_type
 
         timeout = timeout or self.default_timeout
 
@@ -194,8 +196,7 @@ class Lock(object):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
-        assert op in (fcntl.LOCK_SH, fcntl.LOCK_EX)
-        lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
+        assert op in lock_type
 
         try:
             # Try to get the lock (will raise if not available.)
@@ -298,13 +299,13 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        lock_type = 'READ LOCK'
+        locktype = 'READ LOCK'
         if self._reads == 0 and self._writes == 0:
-            self._log_acquiring(lock_type)
+            self._log_acquiring(locktype)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
             self._reads += 1
-            self._log_acquired(lock_type, wait_time, nattempts)
+            self._log_acquired(locktype, wait_time, nattempts)
             return True
         else:
             # TODO: Problem if the timeout does not get reset if different?
@@ -330,14 +331,14 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        lock_type = 'WRITE LOCK'
+        locktype = 'WRITE LOCK'
         if self._writes == 0:
-            self._log_acquiring(lock_type)
+            self._log_acquiring(locktype)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._writes += 1
 
-            self._log_acquired(lock_type, wait_time, nattempts)
+            self._log_acquired(locktype, wait_time, nattempts)
             # return True
 
             # return True only if we weren't nested in a read lock.
@@ -412,9 +413,9 @@ class Lock(object):
         """
         assert self._reads > 0
 
-        lock_type = 'READ LOCK'
+        locktype = 'READ LOCK'
         if self._reads == 1 and self._writes == 0:
-            self._log_releasing(lock_type)
+            self._log_releasing(locktype)
 
             result = True
             if release_fn is not None:
@@ -422,7 +423,7 @@ class Lock(object):
 
             self._unlock()      # can raise LockError.
             self._reads = 0
-            self._log_released(lock_type)
+            self._log_released(locktype)
             return result
         else:
             self._reads -= 1
@@ -447,9 +448,9 @@ class Lock(object):
         """
         assert self._writes > 0
 
-        lock_type = 'WRITE LOCK'
+        locktype = 'WRITE LOCK'
         if self._writes == 1 and self._reads == 0:
-            self._log_releasing(lock_type)
+            self._log_releasing(locktype)
 
             # we need to call release_fn before releasing the lock
             result = True
@@ -458,7 +459,7 @@ class Lock(object):
 
             self._unlock()      # can raise LockError.
             self._writes = 0
-            self._log_released(lock_type)
+            self._log_released(locktype)
             return result
         else:
             self._writes -= 1
@@ -477,15 +478,15 @@ class Lock(object):
         return '(reads {0}, writes {1})'.format(self._reads, self._writes) \
             if tty.is_verbose() else ''
 
-    def _log_acquired(self, lock_type, wait_time, nattempts):
+    def _log_acquired(self, locktype, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
         now = datetime.now()
         desc = 'Acquired at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg(lock_type, '{0}{1}'.
+        self._debug(self._status_msg(locktype, '{0}{1}'.
                                      format(desc, attempts_part)))
 
-    def _log_acquiring(self, lock_type):
-        self._verbose(self._status_msg(lock_type, 'Acquiring'))
+    def _log_acquiring(self, locktype):
+        self._verbose(self._status_msg(locktype, 'Acquiring'))
 
     def _log_downgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
@@ -497,13 +498,13 @@ class Lock(object):
     def _log_downgrading(self):
         self._verbose(self._status_msg('WRITE LOCK', 'Downgrading'))
 
-    def _log_released(self, lock_type):
+    def _log_released(self, locktype):
         now = datetime.now()
         desc = 'Released at %s' % now.strftime("%H:%M:%S.%f")
-        self._debug(self._status_msg(lock_type, desc))
+        self._debug(self._status_msg(locktype, desc))
 
-    def _log_releasing(self, lock_type):
-        self._verbose(self._status_msg(lock_type, 'Releasing'))
+    def _log_releasing(self, locktype):
+        self._verbose(self._status_msg(locktype, 'Releasing'))
 
     def _log_upgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
@@ -515,10 +516,10 @@ class Lock(object):
     def _log_upgrading(self):
         self._verbose(self._status_msg('READ LOCK', 'Upgrading'))
 
-    def _status_msg(self, lock_type, status):
+    def _status_msg(self, locktype, status):
         status_desc = '[{0}] {1}'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
-            lock_type, self, status_desc)
+            locktype, self, status_desc)
 
     def _verbose(self, *args):
         # TODO: Is there another level that won't pollute the output for
