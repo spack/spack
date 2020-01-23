@@ -507,7 +507,7 @@ _spack_clone() {
 _spack_commands() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --aliases --format --header --update"
+        SPACK_COMPREPLY="-h --help --update-completion -a --aliases --format --header --update"
     else
         SPACK_COMPREPLY=""
     fi

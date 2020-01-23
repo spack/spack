@@ -11,6 +11,7 @@ import os
 import re
 import sys
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.argparsewriter import (
     ArgparseWriter, ArgparseRstWriter, ArgparseCompletionWriter
@@ -19,6 +20,7 @@ from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.main
+import spack.paths
 from spack.main import section_descriptions
 
 
@@ -31,6 +33,20 @@ level = "long"
 formatters = {}
 
 
+#: standard arguments for updating completion scripts
+#: we iterate through these when called with --update-completion
+update_completion_args = {
+    "bash":  {
+        "aliases": True,
+        "format": "bash",
+        "header": os.path.join(
+            spack.paths.share_path, "bash", "spack-completion.in"),
+        "update": os.path.join(
+            spack.paths.share_path, "spack-completion.bash"),
+    },
+}
+
+
 def formatter(func):
     """Decorator used to register formatters"""
     formatters[func.__name__] = func
@@ -39,7 +55,12 @@ def formatter(func):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-a', '--aliases', action='store_true', help='include command aliases')
+        "--update-completion", action='store_true', default=False,
+        help="regenerate spack's tab completion scripts")
+
+    subparser.add_argument(
+        '-a', '--aliases', action='store_true', default=False,
+        help='include command aliases')
     subparser.add_argument(
         '--format', default='names', choices=formatters,
         help='format to be used to print the output (default: names)')
@@ -229,7 +250,11 @@ def prepend_header(args, out):
         out.write(header.read())
 
 
-def commands(parser, args):
+def _commands(parser, args):
+    """This is the 'regular' command, which can be called multiple times.
+
+    See ``commands()`` below for ``--update-completion`` handling.
+    """
     formatter = formatters[args.format]
 
     # check header first so we don't open out files unnecessarily
@@ -255,6 +280,37 @@ def commands(parser, args):
             prepend_header(args, f)
             formatter(args, f)
 
+        if args.update_completion:
+            fs.set_executable(args.update)
+
     else:
         prepend_header(args, sys.stdout)
         formatter(args, sys.stdout)
+
+
+def update_completion(parser, args):
+    """Iterate through the shells and update the standard completion files.
+
+    This is a convenience method to avoid calling this command many
+    times, and to simplify completion update for developers.
+
+    """
+    for shell, shell_args in update_completion_args.items():
+        for attr, value in shell_args.items():
+            setattr(args, attr, value)
+        _commands(parser, args)
+
+
+def commands(parser, args):
+    if args.update_completion:
+        if args.format != 'names' or any([
+                args.aliases, args.update, args.header
+        ]):
+            tty.die("--update-completion can only be specified alone.")
+
+        # this runs the command multiple times with different arguments
+        return update_completion(parser, args)
+
+    else:
+        # run commands normally
+        return _commands(parser, args)

@@ -5,6 +5,7 @@
 
 import filecmp
 import os
+import shutil
 import subprocess
 
 import pytest
@@ -208,12 +209,47 @@ def test_bash_completion():
     assert '_spack_compiler_add() {' in out2
 
 
+def test_update_completion_arg(tmpdir, monkeypatch):
+    mock_infile = tmpdir.join("spack-completion.in")
+    mock_bashfile = tmpdir.join("spack-completion.bash")
+
+    mock_args = {
+        "bash":  {
+            "aliases": True,
+            "format": "bash",
+            "header": str(mock_infile),
+            "update": str(mock_bashfile),
+        },
+    }
+
+    # make a mock completion file missing the --update-completion argument
+    real_args = spack.cmd.commands.update_completion_args
+    shutil.copy(real_args['bash']['header'], mock_args['bash']['header'])
+    with open(real_args['bash']['update']) as old:
+        old_file = old.read()
+        with open(mock_args['bash']['update'], 'w') as mock:
+            mock.write(old_file.replace("--update-completion", ""))
+    mock_bashfile.setmtime(0)  # ensure mtime triggers update
+
+    monkeypatch.setattr(
+        spack.cmd.commands, 'update_completion_args', mock_args)
+
+    # ensure things fail if --update-completion isn't specified alone
+    with pytest.raises(spack.main.SpackCommandError):
+        commands("--update-completion", "-a")
+
+    # ensure arg is restored
+    assert "--update-completion" not in mock_bashfile.read()
+    commands("--update-completion")
+    assert "--update-completion" in mock_bashfile.read()
+
+
 def test_updated_completion_scripts(tmpdir):
     """Make sure our shell tab completion scripts remain up-to-date."""
 
     msg = ("It looks like Spack's command-line interface has been modified. "
            "Please update Spack's shell tab completion scripts by running:\n\n"
-           "    share/spack/qa/update-completion-scripts.sh\n\n"
+           "    spack commands --update-completion\n\n"
            "and adding the changed files to your pull request.")
 
     for shell in ['bash']:  # 'zsh', 'fish']:
