@@ -1317,10 +1317,9 @@ directly when you run ``python``:
 Using Extensions
 ^^^^^^^^^^^^^^^^
 
-There are three ways to get ``numpy`` working in Python.  The first is
-to use :ref:`shell-support`.  You can simply ``load`` the
-module for the extension, and it will be added to the ``PYTHONPATH``
-in your current shell:
+There are four ways to get ``numpy`` working in Python.  The first is
+to use :ref:`shell-support`.  You can simply ``load`` the extension,
+and it will be added to the ``PYTHONPATH`` in your current shell:
 
 .. code-block:: console
 
@@ -1330,11 +1329,29 @@ in your current shell:
 Now ``import numpy`` will succeed for as long as you keep your current
 session open.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Loading Extensions via Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Instead of using Spack's environment modification capabilities through
+the ``spack load`` command, you can load numpy through your
+environment modules (using ``environment-modules`` or ``lmod``). This
+will also add the extension to the ``PYTHONPATH`` in your current
+shell.
+
+.. code-block:: console
+
+   $ module load <name of numpy module>
+
+If you do not know the name of the specific numpy module you wish to
+load, you can use the ``spack module tcl|lmod loads`` command to get
+the name of the module from the Spack spec.
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Activating Extensions in a View
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The second way to use extensions is to create a view, which merges the
+Another way to use extensions is to create a view, which merges the
 python installation along with the extensions into a single prefix.
 See :ref:`filesystem-views` for a more in-depth description of views and
 :ref:`cmd-spack-view` for usage of the ``spack view`` command.
