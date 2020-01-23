@@ -287,8 +287,9 @@ def install(parser, args, **kwargs):
     with reporter:
         if args.overwrite:
 
-            installed = list(filter(lambda x: x,
-                                    map(spack.store.db.query_one, specs)))
+            with spack.store.db.read_transaction():
+                installed = list(filter(lambda x: x,
+                                        map(spack.store.db.query_one, specs)))
             if not args.yes_to_all:
                 display_args = {
                     'long': True,

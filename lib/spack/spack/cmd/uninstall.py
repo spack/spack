@@ -130,7 +130,8 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
-    all_specs_in_db = spack.store.db.query()
+    with spack.store.db.read_transaction():
+        all_specs_in_db = spack.store.db.query()
 
     for spec in specs:
         installed = [x for x in all_specs_in_db if spec in x]
