@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import re
 import pytest
 
 import spack.fetch_strategy
+import spack.package
 import spack.paths
 import spack.repo
 import spack.util.executable as executable
@@ -186,4 +187,19 @@ def test_prs_update_old_api():
            'https://github.com/spack/spack/pull/11115')
     assert not failing, msg.format(
         len(failing), ','.join(failing)
+    )
+
+
+def test_all_dependencies_exist():
+    """Make sure no packages have nonexisting dependencies."""
+    missing = {}
+    pkgs = [pkg for pkg in spack.repo.path.all_package_names()]
+    spack.package.possible_dependencies(
+        *pkgs, transitive=True, missing=missing)
+
+    lines = [
+        "%s: [%s]" % (name, ", ".join(deps)) for name, deps in missing.items()
+    ]
+    assert not missing, "These packages have missing dependencies:\n" + (
+        "\n".join(lines)
     )

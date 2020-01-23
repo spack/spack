@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -146,8 +146,9 @@ class InfoCollector(object):
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     package['result'] = 'failure'
-                    package['stdout'] = fetch_package_log(pkg)
                     package['message'] = e.message or 'Installation failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:

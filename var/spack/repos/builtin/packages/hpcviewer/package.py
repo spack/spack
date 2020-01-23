@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,9 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2019.12', 'x86_64'):  '6ba149c8d23d9913291655602894f7a91f9c838e69ae5682fd7b605467255c2d',
+        ('2019.12', 'ppc64'):   '787257272381fac26401e1013952bea94635172503e7abf8063081fe03f08384',
+        ('2019.12', 'ppc64le'): 'fd20891fdae6dd5c2313cdd98e53c52023a0cf146a1121d0c889ebedc08a8bb9',
         ('2019.09', 'x86_64'):  '40982a43880fe646b7f9d03ac4911b55f8a4464510eb8c7304ffaf4d4205ecc6',
         ('2019.09', 'ppc64'):   '3972d604bd160c058185b6f8f3f3a63c4031046734b29cc386c24e40831e6798',
         ('2019.09', 'ppc64le'): 'c348f442b7415aadb94ead06bd35e96442a49a9768fd8c972ca707d77d61e0c3',
@@ -55,6 +58,9 @@ class Hpcviewer(Package):
     }
 
     trace_sha = {
+        ('2019.12', 'x86_64'):  '6339b36e655e2c2b07af4cb40946f325acc46da3ec590d36069661e69b046a92',
+        ('2019.12', 'ppc64'):   'fe4ee5af22a983fa0ddbfbd97fa6676f07492400536e900188455f21e489c59b',
+        ('2019.12', 'ppc64le'): '2688ea834c546b9e2c6e9d69d271a62dd00f6bc7ff4cb874563ba8d0ae5824e3',
         ('2019.09', 'x86_64'):  '8d7ce0710570bb8cd424d88cc4b5bfe821330f24fef84bbbbb370fa291b60a14',
         ('2019.09', 'ppc64'):   'dfb3fe8283cbaeaa1653e8c8bf68267a3f25886bc452309b10f88a7b1e713ec6',
         ('2019.09', 'ppc64le'): 'c1b6ab4f6c91e3a226e8629de62e718c92318ffd83d03db3c40678d578b99b20',
@@ -81,6 +87,9 @@ class Hpcviewer(Package):
                      when='@{0}'.format(key[0]))
 
     depends_on('java@8', type=('build', 'run'))
+
+    conflicts('target=aarch64:', msg='hpcviewer is not available on arm')
+    conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
 
     # Both hpcviewer and trace viewer have an install script.
     def install(self, spec, prefix):

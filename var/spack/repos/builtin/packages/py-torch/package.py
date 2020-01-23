@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 # TODO: try switching to CMakePackage for more control over build
-class PyTorch(PythonPackage):
+class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
 
@@ -51,6 +51,7 @@ class PyTorch(PythonPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.4.0', tag='v1.4.0', submodules=True)
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
@@ -61,7 +62,6 @@ class PyTorch(PythonPackage):
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 
-    variant('cuda', default=True, description='Enables CUDA build')
     variant('cudnn', default=True, description='Enables the cuDNN build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
@@ -125,12 +125,12 @@ class PyTorch(PythonPackage):
     depends_on('cudnn@7:', when='@1.1:+cudnn')
     depends_on('magma', when='+magma')
     # TODO: add dependency: https://github.com/pytorch/FBGEMM
-    depends_on('fbgemm', when='+fbgemm')
+    # depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
-    depends_on('miopen', when='+miopen')
+    # depends_on('miopen', when='+miopen')
     depends_on('intel-mkl-dnn', when='+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
-    depends_on('nnpack', when='+nnpack')
+    # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
@@ -179,11 +179,6 @@ class PyTorch(PythonPackage):
                     env.unset('NO_' + var)
                 else:
                     env.set('NO_' + var, 'ON')
-
-        # Build system has problems locating MKL libraries
-        # See https://github.com/pytorch/pytorch/issues/24334
-        if 'mkl' in self.spec:
-            env.prepend_path('CMAKE_PREFIX_PATH', self.spec['mkl'].prefix.mkl)
 
         # Build in parallel to speed up build times
         env.set('MAX_JOBS', make_jobs)

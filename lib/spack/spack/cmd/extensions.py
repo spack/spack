@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ def setup_parser(subparser):
 
     subparser.add_argument(
         'spec', nargs=argparse.REMAINDER,
-        help='spec of package to list extensions for')
+        help='spec of package to list extensions for', metavar='extendable')
 
 
 def extensions(parser, args):

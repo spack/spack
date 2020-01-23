@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Glpk(AutotoolsPackage):
+class Glpk(AutotoolsPackage, GNUMirrorPackage):
     """The GLPK (GNU Linear Programming Kit) package is intended for solving
     large-scale linear programming (LP), mixed integer programming
     (MIP), and other related problems. It is a set of routines written
@@ -14,7 +14,7 @@ class Glpk(AutotoolsPackage):
     """
 
     homepage = "https://www.gnu.org/software/glpk"
-    url      = "https://ftpmirror.gnu.org/glpk/glpk-4.65.tar.gz"
+    gnu_mirror_path = "glpk/glpk-4.65.tar.gz"
 
     version('4.65', sha256='4281e29b628864dfe48d393a7bedd781e5b475387c20d8b0158f329994721a10')
     version('4.61', sha256='9866de41777782d4ce21da11b88573b66bb7858574f89c28be6967ac22dfaba9')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,13 @@ class PyTensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v2.0.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.1.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = ['tensorflow']
 
-    version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
-    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617', preferred=True)
+    version('2.1.0',  sha256='638e541a4981f52c69da4a311815f1e7989bf1d67a41d204511966e1daed14f7')
+    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
     version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
     version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed')
     version('1.13.2', sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
@@ -58,9 +58,7 @@ class PyTensorflow(Package, CudaPackage):
 
     variant('mkl', default=False, description='Build with MKL support')
     variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
-    # FIXME: ~gcp does not build for 2.0.0
-    # See https://github.com/tensorflow/tensorflow/issues/34878
-    variant('gcp', default=True, description='Build with Google Cloud Platform support')
+    variant('gcp', default=False, description='Build with Google Cloud Platform support')
     variant('hdfs', default=False, description='Build with Hadoop File System support')
     variant('aws', default=False, description='Build with Amazon AWS Platform support')
     variant('kafka', default=False, description='Build with Apache Kafka Platform support')
@@ -163,6 +161,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
     depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
+    depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1: ^python@:2')
+    depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1: ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
@@ -194,8 +194,8 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+gcp', when='@:0.8')
     conflicts('+hdfs', when='@:0.10')
     conflicts('+aws', when='@:1.3')
-    conflicts('+kafka', when='@:1.5')
-    conflicts('+ignite', when='@:1.11')
+    conflicts('+kafka', when='@:1.5,2.1:')
+    conflicts('+ignite', when='@:1.11,2.1:')
     conflicts('+xla', when='@:0')
     conflicts('+gdr', when='@:1.3')
     conflicts('+verbs', when='@:1.1')
@@ -205,6 +205,11 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+computecpp', when='~opencl')
     conflicts('+rocm', when='@:1.11')
     conflicts('+cuda', when='platform=darwin', msg='There is no GPU support for macOS')
+    conflicts('cuda_arch=none', when='+cuda', msg='Must specify CUDA compute capabilities of your GPU, see https://developer.nvidia.com/cuda-gpus')
+    conflicts('cuda_arch=20', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=30', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=32', when='@1.12.1,1.14:', msg='TensorFlow only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=20', when='@1.4:1.12.0,1.12.2:1.12.3', msg='Only compute capabilities 3.0 or higher are supported')
     conflicts('+tensorrt', when='@:1.5')
     conflicts('+tensorrt', when='~cuda')
     conflicts('+tensorrt', when='platform=darwin', msg='Currently TensorRT is only supported on Linux platform')
@@ -423,10 +428,9 @@ class PyTensorflow(Package, CudaPackage):
             # Please note that each additional compute capability significantly
             # increases your build time and binary size, and that TensorFlow
             # only supports compute capabilities >= 3.5
-            if spec.variants['cuda_arch'].value != 'none':
-                capabilities = ','.join('{0:.1f}'.format(
-                    float(i) / 10.0) for i in spec.variants['cuda_arch'].value)
-                env.set('TF_CUDA_COMPUTE_CAPABILITIES', capabilities)
+            capabilities = ','.join('{0:.1f}'.format(
+                float(i) / 10.0) for i in spec.variants['cuda_arch'].value)
+            env.set('TF_CUDA_COMPUTE_CAPABILITIES', capabilities)
         else:
             env.set('TF_NEED_CUDA', '0')
 
@@ -487,9 +491,6 @@ class PyTensorflow(Package, CudaPackage):
         tmp_path = '/tmp/spack/tf'
         mkdirp(tmp_path)
         env.set('TEST_TMPDIR', tmp_path)
-        # TODO: Is setting this necessary? It breaks `spack build-env`
-        # because Bash can't find my .bashrc
-        env.set('HOME', tmp_path)
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
@@ -592,16 +593,29 @@ class PyTensorflow(Package, CudaPackage):
                         '.tf_configure.bazelrc')
 
     def build(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
+
         # https://docs.bazel.build/versions/master/command-line-reference.html
         args = [
             # Don't allow user or system .bazelrc to override build settings
             '--nohome_rc',
             '--nosystem_rc',
+            # Bazel does not work properly on NFS, switch to /tmp
+            '--output_user_root=' + tmp_path,
             'build',
             # Spack logs don't handle colored output well
             '--color=no',
             '--jobs={0}'.format(make_jobs),
             '--config=opt',
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
         ]
 
         # See .bazelrc for when each config flag is supported
@@ -636,14 +650,15 @@ class PyTensorflow(Package, CudaPackage):
             if '~hdfs' in spec:
                 args.append('--config=nohdfs')
 
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
+
+        if spec.satisfies('@1.12.1:2.0'):
             if '~ignite' in spec:
                 args.append('--config=noignite')
 
             if '~kafka' in spec:
                 args.append('--config=nokafka')
-
-            if '~nccl' in spec:
-                args.append('--config=nonccl')
 
         if spec.satisfies('@1.12.1,1.14:'):
             if '+numa' in spec:
@@ -655,17 +670,12 @@ class PyTensorflow(Package, CudaPackage):
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
 
-        if spec.satisfies('@2.1:'):
-            # TODO: is this needed?
-            args.append('--define=tensorflow_mkldnn_contraction_kernel=0')
-
         args.append('//tensorflow/tools/pip_package:build_pip_package')
 
         bazel(*args)
 
         build_pip_package = Executable(
             'bazel-bin/tensorflow/tools/pip_package/build_pip_package')
-        tmp_path = env['TEST_TMPDIR']
         build_pip_package(tmp_path)
 
     def install(self, spec, prefix):

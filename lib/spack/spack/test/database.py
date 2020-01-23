@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -706,3 +706,14 @@ def test_uninstall_by_spec(mutable_database):
             else:
                 mutable_database.remove(spec)
     assert len(mutable_database.query()) == 0
+
+
+def test_query_unused_specs(mutable_database):
+    # This spec installs a fake cmake as a build only dependency
+    s = spack.spec.Spec('simple-inheritance')
+    s.concretize()
+    s.package.do_install(fake=True, explicit=True)
+
+    unused = spack.store.db.unused_specs
+    assert len(unused) == 1
+    assert unused[0].name == 'cmake'

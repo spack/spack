@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,6 @@ import stat
 
 from six import string_types
 from six import iteritems
-
-from llnl.util.lang import classproperty
 
 import spack.repo
 import spack.error
@@ -75,13 +73,12 @@ class PackagePrefs(object):
        provider_spec_list.sort(key=kf)
 
     """
-    _packages_config_cache = None
-    _spec_cache = {}
-
     def __init__(self, pkgname, component, vpkg=None):
         self.pkgname = pkgname
         self.component = component
         self.vpkg = vpkg
+
+        self._spec_order = None
 
     def __call__(self, spec):
         """Return a key object (an index) that can be used to sort spec.
@@ -90,8 +87,10 @@ class PackagePrefs(object):
            this function as Python's sort functions already ensure that the
            key function is called at most once per sorted element.
         """
-        spec_order = self._specs_for_pkg(
-            self.pkgname, self.component, self.vpkg)
+        if self._spec_order is None:
+            self._spec_order = self._specs_for_pkg(
+                self.pkgname, self.component, self.vpkg)
+        spec_order = self._spec_order
 
         # integer is the index of the first spec in order that satisfies
         # spec, or it's a number larger than any position in the order.
@@ -107,13 +106,6 @@ class PackagePrefs(object):
             match_index -= 0.5
         return match_index
 
-    @classproperty
-    @classmethod
-    def _packages_config(cls):
-        if cls._packages_config_cache is None:
-            cls._packages_config_cache = get_packages_config()
-        return cls._packages_config_cache
-
     @classmethod
     def order_for_package(cls, pkgname, component, vpkg=None, all=True):
         """Given a package name, sort component (e.g, version, compiler, ...),
@@ -124,7 +116,7 @@ class PackagePrefs(object):
             pkglist.append('all')
 
         for pkg in pkglist:
-            pkg_entry = cls._packages_config.get(pkg)
+            pkg_entry = get_packages_config().get(pkg)
             if not pkg_entry:
                 continue
 
@@ -150,21 +142,9 @@ class PackagePrefs(object):
            return a list of CompilerSpecs, VersionLists, or Specs for
            that sorting list.
         """
-        key = (pkgname, component, vpkg)
-
-        specs = cls._spec_cache.get(key)
-        if specs is None:
-            pkglist = cls.order_for_package(pkgname, component, vpkg)
-            spec_type = _spec_type(component)
-            specs = [spec_type(s) for s in pkglist]
-            cls._spec_cache[key] = specs
-
-        return specs
-
-    @classmethod
-    def clear_caches(cls):
-        cls._packages_config_cache = None
-        cls._spec_cache = {}
+        pkglist = cls.order_for_package(pkgname, component, vpkg)
+        spec_type = _spec_type(component)
+        return [spec_type(s) for s in pkglist]
 
     @classmethod
     def has_preferred_providers(cls, pkgname, vpkg):
@@ -180,7 +160,7 @@ class PackagePrefs(object):
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
         for pkg in (pkg_name, 'all'):
-            variants = cls._packages_config.get(pkg, {}).get('variants', '')
+            variants = get_packages_config().get(pkg, {}).get('variants', '')
             if variants:
                 break
 

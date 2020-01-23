@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,12 +35,14 @@ class Go(Package):
 
     extendable = True
 
+    version('1.13.6', sha256='aae5be954bdc40bcf8006eb77e8d8a5dde412722bc8effcdaf9772620d06420c')
     version('1.13.5', sha256='27d356e2a0b30d9983b60a788cf225da5f914066b37a6b4f69d457ba55a626ff')
     version('1.13.4',  sha256='95dbeab442ee2746b9acf0934c8e2fc26414a0565c008631b04addb8c02e7624')
     version('1.13.3', sha256='4f7123044375d5c404280737fbd2d0b17064b66182a65919ffe20ffe8620e3df')
     version('1.13.2', sha256='1ea68e01472e4276526902b8817abd65cf84ed921977266f0c11968d5e915f44')
     version('1.13.1', sha256='81f154e69544b9fa92b1475ff5f11e64270260d46e7e36c34aafc8bc96209358')
     version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.12.15', sha256='8aba74417e527524ad5724e6e6c21016795d1017692db76d1b0851c6bdec84c3')
     version('1.12.14', sha256='39dbf05f7e2ffcb19b08f07d53dcc96feadeb1987fef9e279e7ff0c598213064')
     version('1.12.13', sha256='5383d3b8db4baa48284ffcb14606d9cad6f03e9db843fa6d835b94d63cccf5a7')
     version('1.12.12', sha256='fcb33b5290fa9bcc52be3211501540df7483d7276b031fc77528672a3c705b99')

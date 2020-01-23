@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -332,11 +332,12 @@ class Database(object):
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self.lock, self._read, self._write)
+        return WriteTransaction(
+            self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self.lock, self._read)
+        return ReadTransaction(self.lock, acquire=self._read)
 
     def prefix_lock(self, spec):
         """Get a lock on a particular spec's installation directory.
@@ -624,7 +625,7 @@ class Database(object):
                 self._data = {}
 
         transaction = WriteTransaction(
-            self.lock, _read_suppress_error, self._write
+            self.lock, acquire=_read_suppress_error, release=self._write
         )
 
         with transaction:
@@ -1293,6 +1294,30 @@ class Database(object):
         key = spec.dag_hash()
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
+
+    @property
+    def unused_specs(self):
+        """Return all the specs that are currently installed but not needed
+        at runtime to satisfy user's requests.
+
+        Specs in the return list are those which are not either:
+            1. Installed on an explicit user request
+            2. Installed as a "run" or "link" dependency (even transitive) of
+               a spec at point 1.
+        """
+        needed, visited = set(), set()
+        with self.read_transaction():
+            for key, rec in self._data.items():
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
+
+            unused = [rec.spec for key, rec in self._data.items()
+                      if key not in needed and rec.installed]
+
+        return unused
 
 
 class UpstreamDatabaseLockingError(SpackError):

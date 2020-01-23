@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ def setup_parser(subparser):
                             help="configuration section to print. "
                                  "options: %(choices)s",
                             nargs='?',
-                            metavar='SECTION',
+                            metavar='section',
                             choices=spack.config.section_schemas)
 
     blame_parser = sp.add_parser(
@@ -42,14 +42,14 @@ def setup_parser(subparser):
     blame_parser.add_argument('section',
                               help="configuration section to print. "
                               "options: %(choices)s",
-                              metavar='SECTION',
+                              metavar='section',
                               choices=spack.config.section_schemas)
 
     edit_parser = sp.add_parser('edit', help='edit configuration file')
     edit_parser.add_argument('section',
                              help="configuration section to edit. "
                                   "options: %(choices)s",
-                             metavar='SECTION',
+                             metavar='section',
                              nargs='?',
                              choices=spack.config.section_schemas)
     edit_parser.add_argument(

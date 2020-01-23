@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,7 @@ class Interproscan(Package):
 
     patch('large-gid.patch', when='@5:')
     patch('non-interactive.patch', when='@:4.8')
+    patch('ps_scan.patch', when='@:4.8')
 
     def install(self, spec, prefix):
         with working_dir('core'):

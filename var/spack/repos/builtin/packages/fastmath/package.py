@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Fastmath(BundlePackage):
     libraries for ODE's, Time Integrators, Iterative, Non-Linear, and Direct
     Solvers."""
 
-    homepage = "www.fastmath-scidac.org/"
+    homepage = "https://fastmath-scidac.org/"
+
+    version('latest')
 
     depends_on('amrex')  # default is 3 dimensions
     depends_on('chombo@3.2')

@@ -1,17 +1,16 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.repo
 import spack.store
-import spack.cmd
 
 description = "show packages that depend on another"
 section = "basic"
@@ -26,8 +25,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
         help="Show all transitive dependents.")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def inverted_dependencies():

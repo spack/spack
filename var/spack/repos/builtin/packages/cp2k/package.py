@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -437,6 +437,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
             if '%intel' in self.spec:
+                intel_bin_dir = ancestor(self.compiler.cc)
                 # CPP is a commented command in Intel arch of CP2K
                 # This is the hack through which cp2k developers avoid doing :
                 #
@@ -444,7 +445,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 #
                 # and use `-fpp` instead
                 mkf.write('CPP = # {0.compiler.cc} -P\n\n'.format(self))
-                mkf.write('AR = xiar -r\n\n')
+                mkf.write('AR = {0}/xiar -r\n\n'.format(intel_bin_dir))
             else:
                 mkf.write('CPP = # {0.compiler.cc} -E\n\n'.format(self))
                 mkf.write('AR = ar -r\n\n')

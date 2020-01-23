@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ import six
 
 import llnl.util.tty as tty
 import spack.util.executable as executable
+from spack.util.module_cmd import py_cmd
 
 from llnl.util.lang import dedupe
 
@@ -918,8 +919,8 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file.extend(x for x in file_and_args)
         source_file = ' '.join(source_file)
 
-        dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        dump_environment = 'PYTHONHOME="{0}" "{1}" -c "{2}"'.format(
+            sys.prefix, sys.executable, py_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([

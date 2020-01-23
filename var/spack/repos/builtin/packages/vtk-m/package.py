@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,7 +58,7 @@ class VtkM(CMakePackage, CudaPackage):
                           '30': 'kepler',  '32': 'kepler',  '35': 'kepler',
                           '50': 'maxwell', '52': 'maxwell', '53': 'maxwell',
                           '60': 'pascal',  '61': 'pascal',  '62': 'pascal',
-                          '70': 'turing',  '72': 'turing',  '75': 'turing'}
+                          '70': 'volta',   '72': 'turing',  '75': 'turing'}
         with working_dir('spack-build', create=True):
             options = ["-DVTKm_ENABLE_TESTING:BOOL=OFF"]
             # shared vs static libs logic
