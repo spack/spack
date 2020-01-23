@@ -251,7 +251,7 @@ def prepend_header(args, out):
 
 
 def _commands(parser, args):
-    """This is the 'regular' command, which can be multiple times.
+    """This is the 'regular' command, which can be called multiple times.
 
     See commands() below for --update-completion handling.
     """
