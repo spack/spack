@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -347,6 +347,14 @@ def test_fj_flags():
      'Thread model: posix\n', '3.1'),
     ('clang version 8.0.0-3~ubuntu18.04.1 (tags/RELEASE_800/final)\n'
      'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '8.0.0'),
+    ('clang version 9.0.1-+201911131414230800840845a1eea-1~exp1~20191113231141.78\n' # noqa
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '9.0.1'),
+    ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
+     'Target: aarch64-unknown-linux-gnu\n'
      'Thread model: posix\n'
      'InstalledDir: /usr/bin\n', '8.0.0')
 ])

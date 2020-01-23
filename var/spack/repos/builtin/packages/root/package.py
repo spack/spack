@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,6 +237,13 @@ class Root(CMakePackage):
     # ROOT <6.08 was incompatible with the GCC 5+ ABI
     conflicts('%gcc@5.0.0:', when='@:6.07.99')
 
+    # The version of Clang featured in ROOT <6.12 fails to build with
+    # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
+    conflicts('%gcc@9.0.0:', when='@:6.11.99')
+
+    # ROOT <6.14 was incompatible with Python 3.7+
+    conflicts('python@3.7:', when='@:6.13.99 +python')
+
     # See README.md
     conflicts('+http',
               msg='HTTP server currently unsupported due to dependency issues')
@@ -354,8 +361,7 @@ class Root(CMakePackage):
                 ['pgsql', 'postgres'],
                 ['pythia6'],
                 ['pythia8', False],
-                ['python', self.spec.satisfies('+python ^python@2.7:2.99.99')],
-                ['python3', self.spec.satisfies('+python ^python@3.0:')],
+                ['python', self.spec.satisfies('+python')],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],

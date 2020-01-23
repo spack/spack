@@ -1,12 +1,12 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.store
 from spack.filesystem_view import YamlFilesystemView
@@ -28,9 +28,7 @@ def setup_parser(subparser):
         '-a', '--all', action='store_true',
         help="deactivate all extensions of an extendable package, or "
         "deactivate an extension AND its dependencies")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="spec of package extension to deactivate")
+    arguments.add_common_arguments(subparser, ['installed_spec'])
 
 
 def deactivate(parser, args):

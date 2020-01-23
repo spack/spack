@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.15', when='@5:5.9')
+    depends_on('isl@0.14', when='@5.0:5.2')
+    depends_on('isl@0.15', when='@5.3:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class OpenpmdApi(CMakePackage):
             description='Enable parallel I/O')
     variant('hdf5', default=True,
             description='Enable HDF5 support')
-    variant('adios1', default=False,
+    variant('adios1', default=True,
             description='Enable ADIOS1 support')
     variant('adios2', default=False,
             description='Enable ADIOS2 support')
@@ -43,9 +43,9 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios@1.13.1:', when='+adios1')
     depends_on('adios@1.13.1: ~mpi', when='~mpi +adios1')
     depends_on('adios@1.13.1: +mpi', when='+mpi +adios1')
-    depends_on('adios2@2.4.0:', when='+adios2')
-    depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
-    depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
+    depends_on('adios2@2.5.0:', when='+adios2')
+    depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
+    depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.7.0:')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2020.0.166', sha256='6844007892ba524e828f245355cee44e8149f4c233abbbea16f7bb55a7d6ecff',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16233/l_ipp_2020.0.166.tgz')
     version('2019.3.199', sha256='02545383206c1ae4dd66bfa6a38e2e14480ba11932eeed632df8ab798aa15ccd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15276/l_ipp_2019.3.199.tgz')
     version('2019.1.144', sha256='1eb7cd0fba74615aeafa4e314c645414497eb73f1705200c524fe78f00620db3',

@@ -1,4 +1,4 @@
-name: Minimum Python Versions
+name: python version check
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
       - master
       - develop
 jobs:
-  build:
+  validate:
 
     runs-on: ubuntu-latest
 
@@ -19,7 +19,7 @@ jobs:
     - name: Setup Python
       uses: actions/setup-python@v1
       with:
-        python-version: 2.7
+        python-version: 3.7
     - name: Install Python Packages
       run: |
         pip install --upgrade pip

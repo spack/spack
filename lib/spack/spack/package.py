@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1669,7 +1669,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.hooks.post_install(self.spec)
                 return
             elif kwargs.get('cache_only', False):
-                tty.die('No binary for %s found and cache-only specified')
+                tty.die('No binary for %s found and cache-only specified'
+                        % self.name)
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)

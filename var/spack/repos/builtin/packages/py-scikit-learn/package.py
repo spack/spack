@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ class PyScikitLearn(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('0.22.1', sha256='51ee25330fc244107588545c70e2f3570cfc4017cff09eed69d6e1d82a212b7d')
     version('0.22',   sha256='314abf60c073c48a1e95feaae9f3ca47a2139bd77cebb5b877c23a45c9e03012')
     version('0.21.3', sha256='eb9b8ebf59eddd8b96366428238ab27d05a19e89c5516ce294abc35cea75d003')
     version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')

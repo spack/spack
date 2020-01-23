@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1048,11 +1048,19 @@ class IntelPackage(PackageBase):
             env_mods = {
                 'MKLROOT': self.normalize_path('mkl'),
                 'SPACK_COMPILER_EXTRA_RPATHS': self.component_lib_dir('mkl'),
+                'CMAKE_PREFIX_PATH': self.normalize_path('mkl'),
+                'CMAKE_LIBRARY_PATH': self.component_lib_dir('mkl'),
+                'CMAKE_INCLUDE_PATH': self.component_include_dir('mkl'),
             }
 
             env.set('MKLROOT', env_mods['MKLROOT'])
             env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
                             env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+            env.append_path('CMAKE_PREFIX_PATH', env_mods['CMAKE_PREFIX_PATH'])
+            env.append_path('CMAKE_LIBRARY_PATH',
+                            env_mods['CMAKE_LIBRARY_PATH'])
+            env.append_path('CMAKE_INCLUDE_PATH',
+                            env_mods['CMAKE_INCLUDE_PATH'])
 
             debug_print("adding/modifying build env:", env_mods)
 
