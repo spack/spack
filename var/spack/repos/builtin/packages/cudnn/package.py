@@ -23,6 +23,8 @@ class Cudnn(Package):
     maintainers = ['adamjstewart']
 
     # cuDNN 7.6.5
+    version('7.6.5.32-10.2-linux-x64',
+            sha256='600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20')
     version('7.6.5.32-10.1-linux-x64',
             sha256='7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3',
             preferred=True)
@@ -118,6 +120,9 @@ class Cudnn(Package):
     # cuDNN 5.1
     version('5.1-8.0-linux-x64',
             sha256='c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce')
+
+    # CUDA 10.2
+    depends_on('cuda@10.2.0:10.2.999', when='@7.6.5.32-10.2-linux-x64')
 
     # CUDA 10.1
     depends_on('cuda@10.1.0:10.1.999', when='@7.6.5.32-10.1-osx-x64')
