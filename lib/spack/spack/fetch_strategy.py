@@ -742,6 +742,8 @@ class GitFetchStrategy(VCSFetchStrategy):
             if not spack.config.get('config:verify_ssl'):
                 self._git.add_default_env('GIT_SSL_NO_VERIFY', 'true')
 
+            self._git.add_default_call_setting('disable_stdin', True)
+
         return self._git
 
     @property
