@@ -361,7 +361,8 @@ class Lock(object):
         """
         Downgrade from an exclusive write lock to a shared read.
 
-        Raises an exception if this is an attempt at a nested transaction.
+        Raises:
+            LockDowngradeError: if this is an attempt at a nested transaction
         """
         timeout = timeout or self.default_timeout
 
@@ -379,7 +380,8 @@ class Lock(object):
         """
         Attempts to upgrade from a shared read lock to an exclusive write.
 
-        Raises an exception if this is an attempt at a nested transaction.
+        Raises:
+            LockDowngradeError: if this is an attempt at a nested transaction
         """
         timeout = timeout or self.default_timeout
 
