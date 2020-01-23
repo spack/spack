@@ -60,7 +60,7 @@ class Hydrogen(CMakePackage):
     variant('omp_taskloops', default=False,
             description='Use OpenMP taskloops instead of parallel for loops.')
     variant('half', default=True,
-            description='Builds with support for Half precision FP16 data types')
+            description='Builds with support for FP16 precision data types')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas ~openmp_blas ~int64_blas')
