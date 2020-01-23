@@ -54,6 +54,16 @@ class Lock(object):
         not currently expose the ``whence`` parameter -- ``whence`` is
         always ``os.SEEK_SET`` and ``start`` is always evaluated from the
         beginning of the file.
+
+        Args:
+            path (str): path to the lock
+            start (int): optional byte offset at which the lock starts
+            length (int): optional number of bytes to lock
+            debug (bool): debug mode specific to locking
+            default_timeout (int): number of seconds to wait for lock attempts,
+                where None means to wait indefinitely
+            desc (str): optional debug message lock description, which is
+                helpful for distinguishing between different Spack locks.
         """
         self.path = path
         self._file = None
