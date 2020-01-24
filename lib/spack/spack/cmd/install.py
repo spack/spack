@@ -223,8 +223,12 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
-            env.install(abstract_spec, spec, **kwargs)
-            env.write()
+            with env.write_transaction():
+                synchronized_env = ev.Environment(env.path)
+                concrete = synchronized_env.concretize_and_add(
+                    abstract_spec, spec)
+                synchronized_env.write()
+            env._install(concrete, **kwargs)
         else:
             spec.package.do_install(**kwargs)
 

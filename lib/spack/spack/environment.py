@@ -36,6 +36,7 @@ import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
+from spack.util.lock import Lock, WriteTransaction
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -55,6 +56,9 @@ manifest_name = 'spack.yaml'
 
 #: Name of the input yaml file for an environment
 lockfile_name = 'spack.lock'
+
+
+txlock_name = 'txlock'
 
 
 #: Name of the directory where environments store repos, logs, views
@@ -557,6 +561,9 @@ class Environment(object):
                 path to the view.
         """
         self.path = os.path.abspath(path)
+
+        self.txlock = Lock(self._txlock_path)
+
         # This attribute will be set properly from configuration
         # during concretization
         self.concretization = None
@@ -601,6 +608,10 @@ class Environment(object):
             self.views = {default_view_name: ViewDescriptor(with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def write_transaction(self):
+        """Get a write lock context manager for use in a `with` block."""
+        return WriteTransaction(self.txlock)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
@@ -693,6 +704,10 @@ class Environment(object):
     def manifest_path(self):
         """Path to spack.yaml file in this environment."""
         return os.path.join(self.path, manifest_name)
+
+    @property
+    def _txlock_path(self):
+        return os.path.join(self.path, txlock_name)
 
     @property
     def lock_path(self):
@@ -992,6 +1007,11 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
+        concrete = concretize_and_add(self, user_spec, concrete_spec)
+
+        self._install(concrete, **install_args)
+
+    def concretize_and_add(self, spec, concrete_spec=None):
         if self.concretization == 'together':
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
@@ -1016,9 +1036,10 @@ class Environment(object):
                     concrete = spec.concretized()
                     self._add_concrete_spec(spec, concrete)
 
-            self._install(concrete, **install_args)
+        return concrete
 
     def _install(self, spec, **install_args):
+        # "spec" must be concrete
         spec.package.do_install(**install_args)
 
         # Make sure log directory exists
