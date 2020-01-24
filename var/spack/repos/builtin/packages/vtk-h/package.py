@@ -40,6 +40,7 @@ class VtkH(Package, CudaPackage):
     maintainers = ['cyrush']
 
     version('develop', branch='develop', submodules=True)
+    version('0.5.1', sha256="a4808623c4b6abfe0cf827c10c37b824a5cd3339")
     version('0.5.0', sha256="9014a8a61a8d7ff636866c6e3b1ebb918ff23fa67cf8d4de801c4a2981de8c96")
 
     variant("shared", default=True, description="Build vtk-h as shared libs")
