@@ -20,6 +20,10 @@ __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
 #: Mapping of supported locks to description
 lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
 
+#: A useful replacement for functions that should return True when not provided
+#: for example.
+true_fn = lambda: True
+
 
 def _attempts_str(wait_time, nattempts):
     # Don't print anything if we succeeded on the first try
@@ -419,9 +423,9 @@ class Lock(object):
         if self._reads == 1 and self._writes == 0:
             self._log_releasing(locktype)
 
-            result = True
-            if release_fn is not None:
-                result = release_fn()
+            # we need to call release_fn before releasing the lock
+            release_fn = release_fn or true_fn
+            result = release_fn()
 
             self._unlock()      # can raise LockError.
             self._reads = 0
@@ -449,15 +453,14 @@ class Lock(object):
 
         """
         assert self._writes > 0
+        release_fn = release_fn or true_fn
 
         locktype = 'WRITE LOCK'
         if self._writes == 1 and self._reads == 0:
             self._log_releasing(locktype)
 
             # we need to call release_fn before releasing the lock
-            result = True
-            if release_fn is not None:
-                result = release_fn()
+            result = release_fn()
 
             self._unlock()      # can raise LockError.
             self._writes = 0
@@ -469,7 +472,7 @@ class Lock(object):
             # when the last *write* is released, we call release_fn here
             # instead of immediately before releasing the lock.
             if self._writes == 0:
-                return release_fn() if release_fn is not None else True
+                return release_fn()
             else:
                 return False
 
