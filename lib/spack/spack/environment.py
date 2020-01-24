@@ -1021,20 +1021,19 @@ class Environment(object):
 
         spec = Spec(user_spec)
 
-        with spack.store.db.read_transaction():
-            if self.add(spec):
-                concrete = concrete_spec or spec.concretized()
+        if self.add(spec):
+            concrete = concrete_spec or spec.concretized()
+            self._add_concrete_spec(spec, concrete)
+        else:
+            # spec might be in the user_specs, but not installed.
+            # TODO: Redo name-based comparison for old style envs
+            spec = next(
+                s for s in self.user_specs if s.satisfies(user_spec)
+            )
+            concrete = self.specs_by_hash.get(spec.build_hash())
+            if not concrete:
+                concrete = spec.concretized()
                 self._add_concrete_spec(spec, concrete)
-            else:
-                # spec might be in the user_specs, but not installed.
-                # TODO: Redo name-based comparison for old style envs
-                spec = next(
-                    s for s in self.user_specs if s.satisfies(user_spec)
-                )
-                concrete = self.specs_by_hash.get(spec.build_hash())
-                if not concrete:
-                    concrete = spec.concretized()
-                    self._add_concrete_spec(spec, concrete)
 
         return concrete
 
