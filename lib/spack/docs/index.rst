@@ -74,6 +74,7 @@ or refer to the full manual below.
    package_list
    chain
    extensions
+   pipelines
 
 .. toctree::
    :maxdepth: 2

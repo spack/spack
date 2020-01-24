@@ -26,7 +26,7 @@ class OpenpmdApi(CMakePackage):
             description='Enable parallel I/O')
     variant('hdf5', default=True,
             description='Enable HDF5 support')
-    variant('adios1', default=False,
+    variant('adios1', default=True,
             description='Enable ADIOS1 support')
     variant('adios2', default=False,
             description='Enable ADIOS2 support')
@@ -104,6 +104,7 @@ class OpenpmdApi(CMakePackage):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
         if spec.satisfies("+adios1"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('PATH', spec['adios'].prefix.bin)  # adios-config
         if spec.satisfies("+adios2"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
         if spec.satisfies("+hdf5"):
