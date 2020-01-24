@@ -224,12 +224,11 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         env = ev.get_env(cli_args, 'install')
         if env:
             with env.write_transaction():
-                synchronized_env = ev.Environment(env.path)
-                concrete = synchronized_env.concretize_and_add(
+                concrete = env.concretize_and_add(
                     abstract_spec, spec)
-                synchronized_env.write()
-            synchronized_env._install(concrete, **kwargs)
-            synchronized_env.regenerate_views()
+                env.write()
+            env._install(concrete, **kwargs)
+            env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
@@ -265,14 +264,12 @@ environment variables:
         if env:
             if not args.only_concrete:
                 with env.write_transaction():
-                    synchronized_env = ev.Environment(env.path)
-                    concretized_specs = synchronized_env.concretize()
+                    concretized_specs = env.concretize()
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
                     # once, as it can be slow.
-                    synchronized_env.write(regenerate_views=False)
-                env = synchronized_env
+                    env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
