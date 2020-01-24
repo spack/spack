@@ -121,7 +121,7 @@ class Lbann(CMakePackage):
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2')
+    depends_on('catch2', type='test')
     depends_on('clara')
 
     generator = 'Ninja'
