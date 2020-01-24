@@ -68,14 +68,10 @@ _skip_reindex = [
 
 # Default timeout for spack database locks in seconds, which we want to provide
 # a fairly quick turnaround for parallel installs
-# TODO: What is the right setting here to avoid excess delays?
-# _db_lock_timeout = 120
 _db_lock_timeout = 3
 
 # Default timeout for spack package locks in seconds, which we want to provide
 # a very quick turnaround for parallel installs
-# TODO: What is the right setting here to avoid excess checks?
-# _pkg_lock_timeout = 1e-9
 _pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
@@ -375,7 +371,24 @@ class Database(object):
                             '{0}-{1}'.format(spec.name, spec.full_hash()))
 
     def clear_failure(self, spec, force=False):
-        """Remove any persistent and cached failure tracking for the spec."""
+        """
+        Remove any persistent and cached failure tracking for the spec.
+
+        Coordination between concurrent builds depends in large part on
+        prefix failure locks so the default is to not perform this operation
+        if there is a prefix failure lock.
+
+        The ability to programmatically detect and automatically retry a
+        a build would need the ability to clear the failures.
+
+        Args:
+            spec (Spec): the spec whose failure indicators are being removed
+            force (bool): True if the failure information should be cleared
+                when a prefix failure lock exists for the file or False if
+                the failure should not be cleared (e.g., it may be
+                associated with a concurrent build)
+
+        """
         if self.prefix_failure_locked(spec):
             if not force:
                 tty.log('Retaining failure marking for {0} due to lock'
