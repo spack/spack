@@ -118,10 +118,10 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('cuda_arch=30', when='@1.3.0:+cuda+caffe2',
               msg='This version of Torch only supports compute capabilities '
               '>= 5.3')
-    conflicts('cuda_arch=30', when='@1.2.0+cuda+caffe2',
+    conflicts('cuda_arch=30', when='@1.2.0:+cuda+caffe2',
               msg='This version of Torch only supports compute capabilities '
               '>= 3.2')
-    conflicts('cuda_arch=20', when='@1.2.0+cuda+caffe2',
+    conflicts('cuda_arch=20', when='@1.0.0:+cuda+caffe2',
               msg='This version of Torch only supports compute capabilities '
               '>= 3.0')
 
