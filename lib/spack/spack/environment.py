@@ -1007,11 +1007,11 @@ class Environment(object):
         This will automatically concretize the single spec, but it won't
         affect other as-yet unconcretized specs.
         """
-        concrete = concretize_and_add(self, user_spec, concrete_spec)
+        concrete = self.concretize_and_add(user_spec, concrete_spec)
 
         self._install(concrete, **install_args)
 
-    def concretize_and_add(self, spec, concrete_spec=None):
+    def concretize_and_add(self, user_spec, concrete_spec=None):
         if self.concretization == 'together':
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
