@@ -100,30 +100,27 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+redis', when='@:1.0')
     conflicts('+zstd', when='@:1.0')
     conflicts('+tbb', when='@:1.1')
+
+    cuda_arch_conflict = """This version of Torch/Caffe2 only supports compute
+    capabilities """
+
     conflicts('cuda_arch=none', when='+cuda+caffe2',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
     conflicts('cuda_arch=52', when='@1.3.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 5.3')
+              msg='{0}'.format(cuda_arch_conflict) + '>=5.3')
     conflicts('cuda_arch=50', when='@1.3.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 5.3')
+              msg='{0}'.format(cuda_arch_conflict) + '>=5.3')
     conflicts('cuda_arch=35', when='@1.3.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 5.3')
+              msg='{0}'.format(cuda_arch_conflict) + '>=5.3')
     conflicts('cuda_arch=32', when='@1.3.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 5.3')
+              msg='{0}'.format(cuda_arch_conflict) + '>=5.3')
     conflicts('cuda_arch=30', when='@1.3.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 5.3')
+              msg='{0}'.format(cuda_arch_conflict) + '>=5.3')
     conflicts('cuda_arch=30', when='@1.2.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 3.2')
+              msg='{0}'.format(cuda_arch_conflict) + '>=3.2')
     conflicts('cuda_arch=20', when='@1.0.0:+cuda+caffe2',
-              msg='This version of Torch only supports compute capabilities '
-              '>= 3.0')
+              msg='{0}'.format(cuda_arch_conflict) + '>=3.0')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
