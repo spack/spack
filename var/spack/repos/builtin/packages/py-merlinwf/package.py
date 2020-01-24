@@ -13,7 +13,7 @@ class PyMerlinwf(PythonPackage):
     url      = "https://pypi.io/packages/source/m/merlinwf/merlinwf-1.0.0.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
-    #version('1.2.0', sha256='306055a987e42a79ce348a3f9d71293ed8a9b7f5909c26b6fd233d6a176fff6d')
+    version('1.2.0', sha256='3e4d163e26b2b1ba5dc6b57560a7daa4e0eb84ec0c24a4dd215d73b340421136')
     version('1.1.1', sha256='306055a987e42a79ce348a3f9d71293ed8a9b7f5909c26b6fd233d6a176fff6d')
     version('1.1.0', sha256='df76ce07f6c00a12f46e91d706b89364882411112af5f2e6411cdf0c4ac50629')
     version('1.0.5', sha256='d66f50eac84ff9d7aa484f2d9655dc60f0352196d333284d81b6623a6f0aa180')
@@ -33,7 +33,7 @@ class PyMerlinwf(PythonPackage):
     depends_on('py-cryptography', type=('build', 'run'))
     depends_on('py-importlib-resources', when="^python@3.0:3.6.99", type=('build', 'run'))
     depends_on('py-maestrowf@1.1.7dev0:', when="@1.2.0:", type=('build', 'run'))
-    depends_on('py-maestrowf@1.1.6:', type=('build', 'run'))
+    depends_on('py-maestrowf@1.1.6:', when="@:1.1.99", type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-parse', type=('build', 'run'))
     depends_on('py-psutil@5.1.0:', type=('build', 'run'))
