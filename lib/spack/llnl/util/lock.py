@@ -529,9 +529,9 @@ class Lock(object):
     def _debug2(self, *args):
         # TODO: Easy place to make a single, temporary change to the
         # TODO:   debug level associated with the more detailed messages.
-        # TODO:   
+        # TODO:
         # TODO:   Someday it would be great if we could switch this to
-        # TODO:   another level, perhaps _between_ debug and verbose, or 
+        # TODO:   another level, perhaps _between_ debug and verbose, or
         # TODO:   some other form of filtering so the first level of
         # TODO:   debugging doesn't have to generate these messages.  Using
         # TODO:   verbose here did not work as expected because tests like
