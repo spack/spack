@@ -31,10 +31,11 @@ def setup_parser(subparser):
 def remove(parser, args):
     env = ev.get_env(args, 'remove', required=True)
 
-    if args.all:
-        env.clear()
-    else:
-        for spec in spack.cmd.parse_specs(args.specs):
-            tty.msg('Removing %s from environment %s' % (spec, env.name))
-            env.remove(spec, args.list_name, force=args.force)
-    env.write()
+    with env.write_transaction():
+        if args.all:
+            env.clear()
+        else:
+            for spec in spack.cmd.parse_specs(args.specs):
+                tty.msg('Removing %s from environment %s' % (spec, env.name))
+                env.remove(spec, args.list_name, force=args.force)
+        env.write()
