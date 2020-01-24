@@ -71,6 +71,7 @@ def setup_parser(subparser):
         dest='global_uninstall',
         help='uninstall packages installed to global upstream')
 
+
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
                         upstream=None, global_uninstall=False):
     """Returns a list of specs matching the not necessarily
