@@ -787,7 +787,7 @@ class GitFetchStrategy(VCSFetchStrategy):
 
         try:
             self._clone_and_checkout()
-        except:
+        except Exception:
             if os.path.exists(self.stage.source_path):
                 shutil.rmtree(self.stage.source_path)
             raise
