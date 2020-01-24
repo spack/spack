@@ -226,7 +226,7 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
             with env.write_transaction():
                 concrete = env.concretize_and_add(
                     abstract_spec, spec)
-                env.write()
+                env.write(regenerate_views=False)
             env._install(concrete, **kwargs)
             env.regenerate_views()
         else:
