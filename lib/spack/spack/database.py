@@ -376,7 +376,8 @@ class Database(object):
 
         Coordination between concurrent builds depends in large part on
         prefix failure locks so the default is to not perform this operation
-        if there is a prefix failure lock.
+        if there is a prefix failure lock, which indicates another process
+        may have taken out the lock.
 
         The ability to programmatically detect and automatically retry a
         a build would need the ability to clear the failures.
@@ -389,14 +390,15 @@ class Database(object):
                 associated with a concurrent build)
 
         """
-        if self.prefix_failure_locked(spec):
-            if not force:
-                tty.log('Retaining failure marking for {0} due to lock'
-                        .format(spec.name))
-                return
-            else:
-                tty.warn('Removing failure marking despite lock for {0}'
-                         .format(spec.name))
+        failure_locked = self.prefix_failure_locked(spec)
+        if failure_locked and not force:
+            tty.log('Retaining failure marking for {0} due to lock'
+                    .format(spec.name))
+            return
+
+        if failure_locked:
+            tty.warn('Removing failure marking despite lock for {0}'
+                     .format(spec.name))
 
         if spec.prefix in self._prefix_failures:
             del self._prefix_failures[spec.prefix]
@@ -404,8 +406,7 @@ class Database(object):
         if self.prefix_failure_marked(spec):
             try:
                 path = self._failed_spec_path(spec)
-                # TODO: Change to debug
-                tty.msg('Removing failure marking for {0}'.format(spec.name))
+                tty.debug('Removing failure marking for {0}'.format(spec.name))
                 os.remove(path)
             except Exception as exc:
                 tty.warn('Unable to remove failure marking for {0} ({1}): {2}'
@@ -490,7 +491,8 @@ class Database(object):
             # indicating an active installation failure for the spec.  There
             # is no reason to hang on to the read lock itself.
             check.release_read()
-            del check
+
+            return False
         except LockTimeoutError:
             # Installation of the prefix has failed in another process holding
             # a write lock.
