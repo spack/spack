@@ -287,5 +287,5 @@ def test_invalid_family():
         vendor='Imagination', features=[], compilers={}, generation=0
     )
     with pytest.raises(AssertionError,
-                       matches='target chimera does not belong'):
+                       matches='a target is expected to belong'):
         multi_parents.family

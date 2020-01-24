@@ -164,12 +164,9 @@ class Microarchitecture(object):
     def family(self):
         """Returns the architecture family a given target belongs to"""
         roots = [x for x in [self] + self.ancestors if not x.ancestors]
-        if len(roots) != 1:
-            root_str = ', '.join(str(x) for x in roots)
-            raise AssertionError(
-                "target {0} does not belong to just one architecture family"
-                "[found {1}]".format(self.name, root_str)
-            )
+        msg = "a target is expected to belong to just one architecture family"
+        msg += "[found {0}]".format(', '.join(str(x) for x in roots))
+        assert len(roots) == 1, msg
 
         return roots.pop()
 
