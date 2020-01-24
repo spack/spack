@@ -1172,17 +1172,16 @@ class Environment(object):
         that needs to be done separately with a call to write().
 
         """
-        with spack.store.db.read_transaction():
-            for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
+        for concretized_hash in self.concretized_order:
+            spec = self.specs_by_hash[concretized_hash]
 
-                # Parse cli arguments and construct a dictionary
-                # that will be passed to Package.do_install API
-                kwargs = dict()
-                if args:
-                    spack.cmd.install.update_kwargs_from_args(args, kwargs)
+            # Parse cli arguments and construct a dictionary
+            # that will be passed to Package.do_install API
+            kwargs = dict()
+            if args:
+                spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-                self._install(spec, **kwargs)
+            self._install(spec, **kwargs)
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
