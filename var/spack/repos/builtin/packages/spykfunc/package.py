@@ -73,7 +73,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-pyarrow+parquet', type=('build', 'run'))
+    depends_on('py-pyarrow+parquet@:0.12.1', type=('build', 'run'))
     depends_on('py-pyspark@2.3.2rc2:', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
 
