@@ -491,7 +491,7 @@ class Lock(object):
                                      format(desc, attempts_part)))
 
     def _log_acquiring(self, locktype):
-        self._verbose(self._status_msg(locktype, 'Acquiring'))
+        self._debug2(self._status_msg(locktype, 'Acquiring'))
 
     def _log_downgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
@@ -501,7 +501,7 @@ class Lock(object):
                                      .format(desc, attempts_part)))
 
     def _log_downgrading(self):
-        self._verbose(self._status_msg('WRITE LOCK', 'Downgrading'))
+        self._debug2(self._status_msg('WRITE LOCK', 'Downgrading'))
 
     def _log_released(self, locktype):
         now = datetime.now()
@@ -509,7 +509,7 @@ class Lock(object):
         self._debug(self._status_msg(locktype, desc))
 
     def _log_releasing(self, locktype):
-        self._verbose(self._status_msg(locktype, 'Releasing'))
+        self._debug2(self._status_msg(locktype, 'Releasing'))
 
     def _log_upgraded(self, wait_time, nattempts):
         attempts_part = _attempts_str(wait_time, nattempts)
@@ -519,16 +519,24 @@ class Lock(object):
                                      format(desc, attempts_part)))
 
     def _log_upgrading(self):
-        self._verbose(self._status_msg('READ LOCK', 'Upgrading'))
+        self._debug2(self._status_msg('READ LOCK', 'Upgrading'))
 
     def _status_msg(self, locktype, status):
         status_desc = '[{0}] {1}'.format(status, self._get_counts_desc())
         return '{0}{1.desc}: {1.path}[{1._start}:{1._length}] {2}'.format(
             locktype, self, status_desc)
 
-    def _verbose(self, *args):
-        # TODO: Is there another level that won't pollute the output for
-        # TODO: tests (e.g., test_spec_json) that could be used?
+    def _debug2(self, *args):
+        # TODO: Easy place to make a single, temporary change to the
+        # TODO:   debug level associated with the more detailed messages.
+        # TODO:   
+        # TODO:   Someday it would be great if we could switch this to
+        # TODO:   another level, perhaps _between_ debug and verbose, or 
+        # TODO:   some other form of filtering so the first level of
+        # TODO:   debugging doesn't have to generate these messages.  Using
+        # TODO:   verbose here did not work as expected because tests like
+        # TODO:   test_spec_json will write the verbose messages to the
+        # TODO:   output that is used to check test correctness.
         tty.debug(*args)
 
 
