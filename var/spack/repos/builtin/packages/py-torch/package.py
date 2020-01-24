@@ -153,7 +153,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # depends_on('fbgemm', when='+fbgemm')
     # TODO: add dependency: https://github.com/ROCmSoftwarePlatform/MIOpen
     # depends_on('miopen', when='+miopen')
-    # TODO: See if there is a way to use an externale mkldnn installation.
+    # TODO: See if there is a way to use an external mkldnn installation.
     # Currently, only older versions of py-torch use an external mkldnn
     # library.
     depends_on('intel-mkl-dnn', when='@0.4:0.4.1+mkldnn')
