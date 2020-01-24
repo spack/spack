@@ -948,9 +948,10 @@ class Database(object):
 
     @_autospec
     def get_record(self, spec, **kwargs):
-        key = self._get_matching_spec_key(spec, **kwargs)
-        upstream, record = self.query_by_spec_hash(key)
-        return record
+        with self.read_transaction():
+            key = self._get_matching_spec_key(spec, **kwargs)
+            upstream, record = self.query_by_spec_hash(key)
+            return record
 
     def _decrement_ref_count(self, spec):
         key = spec.dag_hash()
