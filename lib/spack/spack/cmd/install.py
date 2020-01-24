@@ -228,7 +228,8 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                 concrete = synchronized_env.concretize_and_add(
                     abstract_spec, spec)
                 synchronized_env.write()
-            env._install(concrete, **kwargs)
+            synchronized_env._install(concrete, **kwargs)
+            synchronized_env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
