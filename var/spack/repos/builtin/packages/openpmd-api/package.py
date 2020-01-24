@@ -104,6 +104,7 @@ class OpenpmdApi(CMakePackage):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
         if spec.satisfies("+adios1"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('PATH', spec['adios'].prefix.bin)  # adios-config
         if spec.satisfies("+adios2"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
         if spec.satisfies("+hdf5"):
