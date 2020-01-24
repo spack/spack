@@ -578,26 +578,7 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
         else:
-            default_manifest = not os.path.exists(self.manifest_path)
-            if default_manifest:
-                # No manifest, use default yaml
-                self._read_manifest(default_manifest_yaml)
-            else:
-                with open(self.manifest_path) as f:
-                    self._read_manifest(f)
-
-            if os.path.exists(self.lock_path):
-                with open(self.lock_path) as f:
-                    read_lock_version = self._read_lockfile(f)
-                if default_manifest:
-                    # No manifest, set user specs from lockfile
-                    self._set_user_specs_from_lockfile()
-
-                if read_lock_version == 1:
-                    tty.debug(
-                        "Storing backup of old lockfile {0} at {1}".format(
-                            self.lock_path, self._lock_backup_v1_path))
-                    shutil.copy(self.lock_path, self._lock_backup_v1_path)
+            self._read()
 
         if with_view is False:
             self.views = {}
@@ -609,9 +590,41 @@ class Environment(object):
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
+    def _re_read(self):
+        """Reinitialize the environment object if it has been written (this
+           may not be true if the environment was just created in this running
+           instance of Spack)."""
+        if not os.path.exists(self.manifest_path):
+            return
+
+        self.clear()
+        self._read()
+
+    def _read(self):
+        default_manifest = not os.path.exists(self.manifest_path)
+        if default_manifest:
+            # No manifest, use default yaml
+            self._read_manifest(default_manifest_yaml)
+        else:
+            with open(self.manifest_path) as f:
+                self._read_manifest(f)
+
+        if os.path.exists(self.lock_path):
+            with open(self.lock_path) as f:
+                read_lock_version = self._read_lockfile(f)
+            if default_manifest:
+                # No manifest, set user specs from lockfile
+                self._set_user_specs_from_lockfile()
+
+            if read_lock_version == 1:
+                tty.debug(
+                    "Storing backup of old lockfile {0} at {1}".format(
+                        self.lock_path, self._lock_backup_v1_path))
+                shutil.copy(self.lock_path, self._lock_backup_v1_path)
+
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self.txlock)
+        return WriteTransaction(self.txlock, acquire=self._re_read)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
@@ -1001,16 +1014,6 @@ class Environment(object):
                 concretized_specs.append((uspec, concrete))
         return concretized_specs
 
-    def install(self, user_spec, concrete_spec=None, **install_args):
-        """Install a single spec into an environment.
-
-        This will automatically concretize the single spec, but it won't
-        affect other as-yet unconcretized specs.
-        """
-        concrete = self.concretize_and_add(user_spec, concrete_spec)
-
-        self._install(concrete, **install_args)
-
     def concretize_and_add(self, user_spec, concrete_spec=None):
         if self.concretization == 'together':
             msg = 'cannot install a single spec in an environment that is ' \
@@ -1036,22 +1039,6 @@ class Environment(object):
                 self._add_concrete_spec(spec, concrete)
 
         return concrete
-
-    def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        spec.package.do_install(**install_args)
-
-        # Make sure log directory exists
-        log_path = self.log_path
-        fs.mkdirp(log_path)
-
-        with fs.working_dir(self.path):
-            # Link the resulting log file into logs dir
-            build_log_link = os.path.join(
-                log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-            if os.path.lexists(build_log_link):
-                os.remove(build_log_link)
-            os.symlink(spec.package.build_log_path, build_log_link)
 
     @property
     def default_view(self):
@@ -1151,6 +1138,33 @@ class Environment(object):
         self.concretized_order.append(h)
         self.specs_by_hash[h] = concrete
 
+    def install(self, user_spec, concrete_spec=None, **install_args):
+        """Install a single spec into an environment.
+
+        This will automatically concretize the single spec, but it won't
+        affect other as-yet unconcretized specs.
+        """
+        concrete = self.concretize_and_add(user_spec, concrete_spec)
+
+        self._install(concrete, **install_args)
+
+    def _install(self, spec, **install_args):
+        # "spec" must be concrete
+        spec.package.do_install(**install_args)
+
+        if not spec.external:
+            # Make sure log directory exists
+            log_path = self.log_path
+            fs.mkdirp(log_path)
+
+            with fs.working_dir(self.path):
+                # Link the resulting log file into logs dir
+                build_log_link = os.path.join(
+                    log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+                if os.path.lexists(build_log_link):
+                    os.remove(build_log_link)
+                os.symlink(spec.package.build_log_path, build_log_link)
+
     def install_all(self, args=None):
         """Install all concretized specs in an environment.
 
@@ -1169,14 +1183,6 @@ class Environment(object):
                     spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
                 self._install(spec, **kwargs)
-
-                if not spec.external:
-                    # Link the resulting log file into logs dir
-                    log_name = '%s-%s' % (spec.name, spec.dag_hash(7))
-                    build_log_link = os.path.join(self.log_path, log_name)
-                    if os.path.lexists(build_log_link):
-                        os.remove(build_log_link)
-                    os.symlink(spec.package.build_log_path, build_log_link)
 
     def all_specs_by_hash(self):
         """Map of hashes to spec for all specs in this environment."""
