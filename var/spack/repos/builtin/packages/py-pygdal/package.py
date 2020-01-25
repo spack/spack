@@ -29,5 +29,6 @@ class PyPygdal(PythonPackage):
     depends_on('py-numpy@1.0.0:', type=('build', 'run'))
     depends_on('gdal@3.0.1', type=('build', 'link', 'run'), when='@3.0.1.5')
     depends_on('gdal@2.4.2', type=('build', 'link', 'run'), when='@2.4.2.5')
+    depends_on('gdal@2.4.1', type=('build', 'link', 'run'), when='@2.4.0')
     depends_on('gdal@1.11.5', type=('build', 'link', 'run'), when='@1.11.5.3')
     depends_on('gdal@1.11.4', type=('build', 'link', 'run'), when='@1.11.4.3')
