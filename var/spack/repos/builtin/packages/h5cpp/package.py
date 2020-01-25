@@ -7,7 +7,7 @@ from spack import *
 
 
 class H5cpp(CMakePackage):
-    """Easy to use HDF5 C++ templates for Serial and Paralell HDF5"""
+    """Easy to use HDF5 C++ templates for Serial and Parallel HDF5"""
 
     homepage = "http://h5cpp.org"
     url      = "https://github.com/steven-varga/h5cpp/archive/v1.10.4-5.tar.gz"
