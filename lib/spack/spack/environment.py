@@ -1172,6 +1172,22 @@ class Environment(object):
         that needs to be done separately with a call to write().
 
         """
+
+        # If "spack install" is invoked repeatedly for a large environment
+        # where all specs are already installed, the operation can take
+        # a large amount of time due to repeatedly acquiring and releasing
+        # locks, this does an initial check across all specs within a single
+        # DB read transaction to reduce time spent in this case.
+        with spack.store.db.read_transaction():
+            all_installed = True
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
+                all_installed &= bool(spec.package.installed)
+                if not all_installed:
+                    break
+            if all_installed:
+                return
+
         for concretized_hash in self.concretized_order:
             spec = self.specs_by_hash[concretized_hash]
 
