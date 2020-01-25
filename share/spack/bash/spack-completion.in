@@ -218,7 +218,7 @@ _keys() {
 _config_sections() {
     if [[ -z "${SPACK_CONFIG_SECTIONS:-}" ]]
     then
-        SPACK_CONFIG_SECTIONS="compilers mirrors repos packages modules config upstreams"
+        SPACK_CONFIG_SECTIONS="$(spack config list)"
     fi
     SPACK_COMPREPLY="$SPACK_CONFIG_SECTIONS"
 }
