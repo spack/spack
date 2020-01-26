@@ -103,8 +103,11 @@ variant_not_default(P, V, X, 0)
 % suppress wranings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
 % warnings like 'info: atom does not occur in any rule head'.
+#defined variant/2.
 #defined variant_set/3.
 #defined variant_single_value/2.
+#defined variant_default_value/3.
+#defined variant_possible_value/3.
 
 %-----------------------------------------------------------------------------
 % Platform/OS semantics
@@ -194,6 +197,42 @@ compiler_weight(P, 100)
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
+
+%-----------------------------------------------------------------------------
+% Compiler flags
+%-----------------------------------------------------------------------------
+% propagate flags when compilers match
+inherit_flags(P, D)
+    :- depends_on(P, D), node_compiler(P, C), node_compiler(D, C),
+       compiler(C), flag_type(T).
+node_flag_inherited(D, T, F) :- node_flag_set(P, T, F), inherit_flags(P, D).
+node_flag_inherited(D, T, F)
+    :- node_flag_inherited(P, T, F), inherit_flags(P, D).
+
+% node with flags set to anythingg is "set"
+node_flag_set(P) :- node_flag_set(P, _, _).
+
+% remember where flags came from
+node_flag_source(P, P) :- node_flag_set(P).
+node_flag_source(D, Q) :- node_flag_source(P, Q), inherit_flags(P, D).
+
+% compiler flags from compilers.yaml are put on nodes if compiler matches
+node_flag(P, T, F),
+node_flag_compiler_default(P)
+    :- not node_flag_set(P), compiler_version_flag(C, V, T, F),
+       node_compiler(P, C), node_compiler_version(P, C, V),
+       flag_type(T), compiler(C), compiler_version(C, V).
+
+% if a flag is set to something or inherited, it's included
+node_flag(P, T, F) :- node_flag_set(P, T, F).
+node_flag(P, T, F) :- node_flag_inherited(P, T, F).
+
+% if no node flags are set for a type, there are no flags.
+no_flags(P, T) :- not node_flag(P, T, _), node(P), flag_type(T).
+
+#defined compiler_version_flag/4.
+#defined node_flag/3.
+#defined node_flag_set/3.
 
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
