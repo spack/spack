@@ -56,6 +56,9 @@ def setup_parser(subparser):
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
     subparser.add_argument(
+        '--timers', action='store_true', default=False,
+        help='print out timers for different solve phases')
+    subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
 
@@ -90,7 +93,7 @@ def solve(parser, args):
     specs = spack.cmd.parse_specs(args.specs)
 
     # dump generated ASP program
-    result = asp.solve(specs, dump=dump, models=models)
+    result = asp.solve(specs, dump=dump, models=models, timers=args.timers)
     if 'solutions' not in dump:
         return
 

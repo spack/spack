@@ -10,6 +10,7 @@ import pkgutil
 import re
 import sys
 import tempfile
+import time
 import types
 from six import string_types
 
@@ -861,10 +862,30 @@ def highlight(string):
     return string
 
 
+class Timer(object):
+    def __init__(self):
+        self.start = time.time()
+        self.last = self.start
+        self.phases = {}
+
+    def phase(self, name):
+        last = self.last
+        now = time.time()
+        self.phases[name] = now - last
+        self.last = now
+
+    def write(self, out=sys.stdout):
+        now = time.time()
+        out.write("Time:\n")
+        for phase, t in self.phases.items():
+            out.write("    %-15s%.4f\n" % (phase + ":", t))
+        out.write("Total: %.4f\n" % (now - self.start))
+
+
 #
 # These are handwritten parts for the Spack ASP model.
 #
-def solve(specs, dump=None, models=0):
+def solve(specs, dump=None, models=0, timers=False):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -878,15 +899,17 @@ def solve(specs, dump=None, models=0):
     def colorize(string):
         color.cprint(highlight(color.cescape(string)))
 
+    timer = Timer()
     with tempfile.TemporaryFile("w+") as program:
         generator = AspGenerator(program)
         generator.generate_asp_program(specs)
+        timer.phase("generate")
         program.seek(0)
 
         result = Result(program.read())
         program.seek(0)
 
-        if 'asp' in dump:
+        if dump and 'asp' in dump:
             if sys.stdout.isatty():
                 tty.msg('ASP program:')
 
@@ -895,6 +918,7 @@ def solve(specs, dump=None, models=0):
                 return
             else:
                 colorize(result.asp)
+            timer.phase("dump")
 
         with tempfile.TemporaryFile("w+") as output:
             with tempfile.TemporaryFile() as warnings:
@@ -915,6 +939,7 @@ def solve(specs, dump=None, models=0):
                     output=output,
                     error=warnings,
                     fail_on_error=False)
+                timer.phase("solve")
 
                 warnings.seek(0)
                 result.warnings = warnings.read().decode("utf-8")
@@ -927,9 +952,10 @@ def solve(specs, dump=None, models=0):
 
                 output.seek(0)
                 result.output = output.read()
+                timer.phase("read")
 
                 # dump the raw output of the solver
-                if 'output' in dump:
+                if dump and 'output' in dump:
                     if sys.stdout.isatty():
                         tty.msg('Clingo output:')
                     print(result.output)
@@ -939,5 +965,10 @@ def solve(specs, dump=None, models=0):
 
                 output.seek(0)
                 parser.parse_best(output, result)
+                timer.phase("parse")
+
+        if timers:
+            timer.write()
+            print()
 
     return result
