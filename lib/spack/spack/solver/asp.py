@@ -87,7 +87,7 @@ class AspFunction(AspObject):
 
     def __str__(self):
         return "%s(%s)" % (
-            self.name, ', '.join(_id(arg) for arg in self.args))
+            self.name, ', '.join(str(_id(arg)) for arg in self.args))
 
     def __repr__(self):
         return str(self)
@@ -136,6 +136,34 @@ class AspFunctionBuilder(object):
 
 
 fn = AspFunctionBuilder()
+
+
+def compilers_for_default_arch():
+    default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+    return spack.compilers.compilers_for_arch(default_arch)
+
+
+def extend_flag_list(flag_list, new_flags):
+    """Extend a list of flags, preserving order and precedence.
+
+    Add new_flags at the end of flag_list.  If any flags in new_flags are
+    already in flag_list, they are moved to the end so that they take
+    higher precedence on the compile line.
+
+    """
+    for flag in new_flags:
+        if flag in flag_list:
+            flag_list.remove(flag)
+        flag_list.append(flag)
+
+
+def check_same_flags(flag_dict_1, flag_dict_2):
+    """Return True if flag dicts contain the same flags regardless of order."""
+    types = set(flag_dict_1.keys()).union(set(flag_dict_2.keys()))
+    for t in types:
+        values1 = set(flag_dict_1.get(t, []))
+        values2 = set(flag_dict_2.get(t, []))
+        assert values1 == values2
 
 
 class AspGenerator(object):
@@ -282,18 +310,11 @@ class AspGenerator(object):
                     for v in sorted(compiler_versions[compiler])),
                 fn.compiler(compiler))
 
-    def compilers_for_default_arch(self):
-        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-        return [
-            compiler.spec
-            for compiler in spack.compilers.compilers_for_arch(default_arch)
-        ]
-
     def compiler_defaults(self):
         """Set compiler defaults, given a list of possible compilers."""
         self.h2("Default compiler preferences")
 
-        compiler_list = self.possible_compilers.copy()
+        compiler_list = [c.spec for c in self.possible_compilers]
         compiler_list = sorted(
             compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs("all", 'compiler', all=False)
@@ -428,6 +449,22 @@ class AspGenerator(object):
             lambda v, p, i: self.fact(fn.default_provider_preference(v, p, i))
         )
 
+    def flag_defaults(self):
+        self.h2("Compiler flag defaults")
+
+        # types of flags that can be on specs
+        for flag in spack.spec.FlagMap.valid_compiler_flags():
+            self.fact(fn.flag_type(flag))
+        self.out.write("\n")
+
+        # flags from compilers.yaml
+        compilers = compilers_for_default_arch()
+        for compiler in compilers:
+            for name, flags in compiler.flags.items():
+                for flag in flags:
+                    self.fact(fn.compiler_version_flag(
+                        compiler.name, compiler.version, name, flag))
+
     def spec_clauses(self, spec, body=False):
         """Return a list of clauses for a spec mandates are true.
 
@@ -509,10 +546,14 @@ class AspGenerator(object):
                         fn.node_compiler_version_hard(
                             spec.name, spec.compiler.name, version))
 
+        # compiler flags
+        for flag_type, flags in spec.compiler_flags.items():
+            for flag in flags:
+                self.fact(fn.node_flag_set(spec.name, flag_type, flag))
+
         # TODO
         # external_path
         # external_module
-        # compiler_flags
         # namespace
 
         return clauses
@@ -573,7 +614,7 @@ class AspGenerator(object):
         # consider the *best* target that each compiler supports, along
         # with the family.
         compatible_targets = [uarch] + uarch.ancestors
-        compilers = self.compilers_for_default_arch()
+        compilers = compilers_for_default_arch()
 
         # this loop can be used to limit the number of targets
         # considered. Right now we consider them all, but it seems that
@@ -638,7 +679,7 @@ class AspGenerator(object):
         pkgs = set(possible)
 
         # get possible compilers
-        self.possible_compilers = self.compilers_for_default_arch()
+        self.possible_compilers = compilers_for_default_arch()
 
         # read the main ASP program from concrtize.lp
         concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
@@ -653,6 +694,7 @@ class AspGenerator(object):
         self.arch_defaults()
         self.virtual_providers()
         self.provider_defaults()
+        self.flag_defaults()
 
         self.h1('Package Constraints')
         for pkg in sorted(pkgs):
@@ -675,8 +717,12 @@ class AspGenerator(object):
 
 class ResultParser(object):
     """Class with actions that can re-parse a spec from ASP."""
-    def __init__(self):
+    def __init__(self, specs):
         self._result = None
+
+        self._command_line_specs = specs
+        self._flag_sources = collections.defaultdict(lambda: set())
+        self._flag_compiler_defaults = set()
 
     def node(self, pkg):
         if pkg not in self._specs:
@@ -719,6 +765,18 @@ class ResultParser(object):
         self._specs[pkg].compiler.versions = spack.version.VersionList(
             [version])
 
+    def node_flag_compiler_default(self, pkg):
+        self._flag_compiler_defaults.add(pkg)
+
+    def node_flag(self, pkg, flag_type, flag):
+        self._specs[pkg].compiler_flags.setdefault(flag_type, []).append(flag)
+
+    def node_flag_source(self, pkg, source):
+        self._flag_sources[pkg].add(source)
+
+    def no_flags(self, pkg, flag_type):
+        self._specs[pkg].compiler_flags[flag_type] = []
+
     def depends_on(self, pkg, dep, type):
         dependency = self._specs[pkg]._dependencies.get(dep)
         if not dependency:
@@ -726,6 +784,55 @@ class ResultParser(object):
                 self._specs[dep], (type,))
         else:
             dependency.add_type(type)
+
+    def reorder_flags(self):
+        """Order compiler flags on specsaccord in predefined order.
+
+        We order flags so that any node's flags will take priority over
+        those of its dependents.  That is, the deepest node in the DAG's
+        flags will appear last on the compile line, in the order they
+        were specified.
+
+        The solver determines wihch flags are on nodes; this routine
+        imposes order afterwards.
+        """
+        # nodes with no flags get flag order from compiler
+        compilers = dict((c.spec, c) for c in compilers_for_default_arch())
+        for pkg in self._flag_compiler_defaults:
+            spec = self._specs[pkg]
+            compiler_flags = compilers[spec.compiler].flags
+            check_same_flags(spec.compiler_flags, compiler_flags)
+            spec.compiler_flags.update(compiler_flags)
+
+        # index of all specs (and deps) from the command line by name
+        cmd_specs = dict(
+            (s.name, s)
+            for spec in self._command_line_specs
+            for s in spec.traverse())
+
+        # iterate through specs with specified flaggs
+        for pkg, sources in self._flag_sources.items():
+            spec = self._specs[pkg]
+
+            # order is determined by the DAG.  A spec's flags come after
+            # any from its ancestors on the compile line.
+            order = [
+                s.name
+                for s in spec.traverse(order='post', direction='parents')]
+
+            # sort the sources in our DAG order
+            sorted_sources = sorted(
+                sources, key=lambda s: order.index(s))
+
+            # add flags from each source, lowest to highest precedence
+            flags = collections.defaultdict(lambda: [])
+            for source_name in sorted_sources:
+                source = cmd_specs[source_name]
+                for name, flag_list in source.compiler_flags.items():
+                    extend_flag_list(flags[name], flag_list)
+
+            check_same_flags(spec.compiler_flags, flags)
+            spec.compiler_flags.update(flags)
 
     def call_actions_for_functions(self, function_strings):
         function_re = re.compile(r'(\w+)\(([^)]*)\)')
@@ -780,6 +887,7 @@ class ResultParser(object):
         functions = best_model["Value"]
 
         self.call_actions_for_functions(functions)
+        self.reorder_flags()
         result.answers.append((opt, best_model_number, self._specs))
 
     def parse_best(self, output, result):
@@ -815,6 +923,7 @@ class ResultParser(object):
                     # once this is done, everything is concrete
                     spec._mark_concrete()
 
+                self.reorder_flags()
                 result.answers.append((opt, best_model_number, self._specs))
 
 
@@ -894,7 +1003,7 @@ def solve(specs, dump=None, models=0, timers=False):
         models (int): number of models to search (default: 0)
     """
     clingo = which('clingo', required=True)
-    parser = ResultParser()
+    parser = ResultParser(specs)
 
     def colorize(string):
         color.cprint(highlight(color.cescape(string)))
