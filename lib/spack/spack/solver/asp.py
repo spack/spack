@@ -360,7 +360,7 @@ class AspGenerator(object):
                 self.fact(
                     fn.variant_default_value(pkg.name, name, variant.default))
             else:
-                self.rule(self._not(single), fn.node(pkg.name))
+                self.fact(self._not(single))
                 defaults = variant.default.split(',')
                 for val in sorted(defaults):
                     self.fact(fn.variant_default_value(pkg.name, name, val))
@@ -706,9 +706,12 @@ class AspGenerator(object):
             self.fact(fn.root(spec.name))
             for dep in spec.traverse():
                 self.h2('Spec: %s' % str(dep))
-                self.fact(fn.node(dep.name))
-                for clause in self.spec_clauses(dep):
-                    self.rule(clause, fn.node(dep.name))
+
+                if dep.virtual:
+                    self.fact(fn.virtual_node(dep.name))
+                else:
+                    for clause in self.spec_clauses(dep):
+                        self.fact(clause)
 
         self.out.write('\n')
         display_lp = pkgutil.get_data('spack.solver', 'display.lp')
