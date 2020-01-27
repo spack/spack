@@ -491,28 +491,28 @@ class Database(object):
             # indicating an active installation failure for the spec.  There
             # is no reason to hang on to the read lock itself.
             check.release_read()
-
-            return False
         except LockTimeoutError:
             # Installation of the prefix has failed in another process holding
             # a write lock.
             tty.debug('{0} is failure locked'.format(spec.name))
             return True
 
+        return False
+
     def prefix_failure_marked(self, spec):
         """Determine if the spec has a persistent failure marking."""
         try:
             path = self._failed_spec_path(spec)
             with open(path) as f:
-                spec2 = spack.spec.Spec.from_json(f)
+                spec_from_json = spack.spec.Spec.from_json(f)
 
             # Specs read from a file are always concrete
-            spec2._mark_concrete()
-            marked = spec == spec2
+            spec_from_json._mark_concrete()
+            return spec == spec_from_json
         except Exception:
-            marked = False
+            pass
 
-        return marked
+        return False
 
     def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
