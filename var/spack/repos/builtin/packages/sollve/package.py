@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,6 +70,7 @@ class Sollve(CMakePackage):
     # gold support
     depends_on('binutils+gold', when='+gold')
 
+    # develop version.
     version("develop")
     resource(name='compiler-rt',
              svn='http://llvm.org/svn/llvm-project/compiler-rt/trunk',
@@ -95,6 +96,40 @@ class Sollve(CMakePackage):
              svn='http://llvm.org/svn/llvm-project/libunwind/trunk',
              destination='projects', when='@develop+internal_unwind',
              placement='libunwind')
+
+    # 1.0a2 based on LLVM 9.0+
+    version("1.0a2", commit="cb4343bda9e57076a74dee23236ac9737e07594f")
+    resource(name='compiler-rt',
+             svn='https://llvm.org/svn/llvm-project/compiler-rt/trunk',
+             revision=373130, destination='projects',
+             when='@1.0a2+compiler-rt', placement='compiler-rt')
+    resource(name='openmp', git='https://github.com/pmodels/bolt.git',
+             commit="0a0033b09cfb672c119cf41eeb54eda7664681bc",
+             destination='projects', when='@1.0a2+clang', placement='openmp')
+    resource(name='polly', git='https://github.com/SOLLVE/polly.git',
+             commit="96168ae6fb436e95cd756950855a57b895070047",
+             destination='tools', when='@1.0a2+polly', placement='polly')
+    resource(name='libcxx', git='https://github.com/SOLLVE/libcxx.git',
+             commit="9637883af0357acf02c87fae5efb71661d21f516",
+             destination='projects', when='@1.0a2+libcxx', placement='libcxx')
+    resource(name='libcxxabi', git='https://github.com/SOLLVE/libcxxabi.git',
+             commit="3ed912b3b014a3af862c3b2cd0795ad43afadf31",
+             destination='projects', when='@1.0a2+libcxx',
+             placement='libcxxabi')
+    resource(name='cfe', git='https://github.com/SOLLVE/clang.git',
+             commit="774bc67094a1baa2dbdab705b0cac061048a062e",
+             destination='tools', when='@1.0a2+clang', placement='clang')
+    resource(name='lldb',
+             svn='http://llvm.org/svn/llvm-project/lldb/trunk',
+             revision=373127, destination='tools', when='@1.0a2+lldb',
+             placement='lldb')
+    resource(name='lld', svn='http://llvm.org/svn/llvm-project/lld/trunk/',
+             revision=373077, destination='tools', when='@1.0a2+lld',
+             placement='lld')
+    resource(name='libunwind',
+             svn='http://llvm.org/svn/llvm-project/libunwind/trunk',
+             revision=372427, destination='projects',
+             when='@1.0a2+internal_unwind', placement='libunwind')
 
     conflicts('+clang_extra', when='~clang')
     conflicts('+lldb',        when='~clang')

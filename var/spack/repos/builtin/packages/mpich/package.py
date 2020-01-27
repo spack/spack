@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -175,7 +175,7 @@ spack package at this time.''',
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError(
-                'Mpich requires both C and Fortran compilers!'
+                'MPICH requires both C and Fortran compilers!'
             )
 
     def configure_args(self):

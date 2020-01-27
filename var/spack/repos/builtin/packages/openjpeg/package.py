@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,3 +50,8 @@ class Openjpeg(CMakePackage):
             'https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz'
 
         return url_fmt.format(version)
+
+    @property
+    def libs(self):
+        return find_libraries('libopenjp{0}'.format(self.version.up_to(1)),
+                              root=self.prefix, recursive=True)

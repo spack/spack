@@ -1,0 +1,12 @@
+diff -ru a/bin/ps_scan.pl b/bin/ps_scan.pl
+--- a/bin/ps_scan.pl	2020-01-01 14:07:54.243869822 -0600
++++ b/bin/ps_scan.pl	2020-01-01 14:08:03.786850313 -0600
+@@ -8,7 +8,7 @@
+ # Authors: 
+ #   Alexandre Gattiker
+ #   Edouard de Castro; E-mail: ecastro@isb-sib.ch
+-#   Béatrice Cuche (evaluated_by post-processing)
++#   BÃ©atrice Cuche (evaluated_by post-processing)
+ #
+ # Contributions:
+ #   Lorenza Bordoli (repeat method)

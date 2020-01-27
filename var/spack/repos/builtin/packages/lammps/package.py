@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,10 +48,10 @@ class Lammps(CMakePackage, CudaPackage):
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace', 'latte',
                           'manybody', 'mc', 'meam', 'misc', 'molecule',
-                          'mpiio', 'peri', 'poems', 'python', 'qeq', 'reax',
+                          'mpiio', 'peri', 'poems', 'python', 'qeq',
                           'replica', 'rigid', 'shock', 'snap', 'spin', 'srd',
                           'user-atc', 'user-h5md', 'user-lb', 'user-misc',
-                          'user-netcdf', 'user-omp', 'voronoi']
+                          'user-netcdf', 'user-omp', 'user-reaxc', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,

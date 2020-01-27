@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class IntelTbb(Package):
     # patches and filters below as needed.
 
     # See url_for_version() below.
+    version('2020', sha256='db80f4f7abb95c2d08fe64abdc0a9250903e4c725f1c667ac517450de426023a')
     version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
     version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
     version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
@@ -81,26 +82,21 @@ class IntelTbb(Package):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
-    # Build and install CMake config files if we're new enough.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+    # Testing version ranges inside when clauses was fixed in e9ee9eaf.
+    # See: #8957 and #13989.
 
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
-    # specified one at a time.  In a nutshell, it is currently impossible
-    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
-    # can be simplified.
+    # Build and install CMake config files if we're new enough.
+    # CMake support started in 2017.7.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
 
     # Patch for pedantic warnings (#10836).  This was fixed in the TBB
-    # source tree in 2019.6.  One patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1,
-          when='@2019.1,2019.2,2019.3,2019.4,2019.5')
-    # ...another patch file for 2019 and before
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
+    # source tree in 2019.6.
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1:2019.5')
+    patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    # Can't use '@2019.5:' because 2019.5 <= 2019 <= 2019.99.  wtf!?
-    patch("tbb_cmakeConfig-2019.5.patch", level=0,
-          when='@2019.5,2019.6,2019.7,2019.8')
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:2019.4')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -197,7 +193,7 @@ class IntelTbb(Package):
             for f in fs:
                 install(f, prefix.lib)
 
-        if self.spec.satisfies('@2017.0:'):
+        if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
             cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
                           '-DTBB_OS={0}'.format(platform.system()),

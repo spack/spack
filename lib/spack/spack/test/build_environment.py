@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ from spack.util.executable import Executable
 from spack.util.spack_yaml import syaml_dict, syaml_str
 from spack.util.environment import EnvironmentModifications
 
-from llnl.util.filesystem import LibraryList
+from llnl.util.filesystem import LibraryList, HeaderList
 
 
 @pytest.fixture
@@ -242,6 +242,18 @@ def test_set_build_environment_variables(
     directories via the SPACK_LINK_DIRS and SPACK_INCLUDE_DIRS environment
     variables.
     """
+
+    # https://github.com/spack/spack/issues/13969
+    cuda_headers = HeaderList([
+        'prefix/include/cuda_runtime.h',
+        'prefix/include/cuda/atomic',
+        'prefix/include/cuda/std/detail/libcxx/include/ctype.h'])
+    cuda_include_dirs = cuda_headers.directories
+    assert(os.path.join('prefix', 'include')
+           in cuda_include_dirs)
+    assert(os.path.join('prefix', 'include', 'cuda', 'std', 'detail',
+                        'libcxx', 'include')
+           not in cuda_include_dirs)
 
     root = spack.spec.Spec('dt-diamond')
     root.concretize()

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,6 +237,14 @@ class Charmpp(Package):
                     except (IOError, OSError):
                         pass
         shutil.rmtree(join_path(prefix, "tmp"))
+
+        # A broken 'doc' link in the prefix can break the build.
+        # Remove it and replace it if it is broken.
+        try:
+            os.stat(prefix.doc)
+        except OSError:
+            os.remove(prefix.doc)
+            mkdirp(prefix.doc)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

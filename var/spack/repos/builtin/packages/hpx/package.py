@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Hpx(CMakePackage, CudaPackage):
     maintainers = ['msimberg', 'albestro']
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
+    version('1.4.0', sha256='241a1c47fafba751848fac12446e7bf4ad3d342d5eb2fa1ef94dd904acc329ed')
     version('1.3.0', sha256='cd34da674064c4cc4a331402edbd65c5a1f8058fb46003314ca18fa08423c5ad')
     version('1.2.1', sha256='8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a')
     version('1.2.0', sha256='20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170')
@@ -76,10 +77,13 @@ class Hpx(CMakePackage, CudaPackage):
     depends_on('mpi', when='networking=mpi')
 
     # Instrumentation
-    depends_on('apex', when='instrumentation=apex')
+    depends_on('otf2', when='instrumentation=apex')
     depends_on('gperftools', when='instrumentation=google_perftools')
     depends_on('papi', when='instrumentation=papi')
     depends_on('valgrind', when='instrumentation=valgrind')
+
+    # Patches APEX
+    patch('git_external.patch', when='@1.3.0 instrumentation=apex')
 
     def cxx_standard(self):
         value = self.spec.variants['cxxstd'].value
@@ -107,6 +111,10 @@ class Hpx(CMakePackage, CudaPackage):
 
         # Instrumentation
         args.extend(self.instrumentation_args())
+
+        if 'instrumentation=apex' in spec:
+            args += ['-DAPEX_WITH_OTF2=ON'
+                     '-DOTF2_ROOT={0}'.format(spec['otf2'].prefix)]
 
         # Networking
         args.append('-DHPX_WITH_NETWORKING={0}'.format(

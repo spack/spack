@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -197,11 +197,15 @@ class Llvm(CMakePackage):
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.
     patch('constexpr_longdouble.patch', when='@6:8+libcxx')
+    patch('constexpr_longdouble_9.0.patch', when='@9+libcxx')
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
     # for a bug report about this problem in llvm master.
     patch('llvm_py37.patch', when='@4:6 ^python@3.7:')
+
+    # https://bugs.llvm.org/show_bug.cgi?id=39696
+    patch('thread-p9.patch', when='@develop+libcxx')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):
@@ -331,8 +335,10 @@ class Llvm(CMakePackage):
             gcc_prefix = ancestor(self.compiler.cc, 2)
             cmake_args.append('-DGCC_INSTALL_PREFIX=' + gcc_prefix)
 
-        if spec.satisfies('@4.0.0:') and spec.satisfies('platform=linux'):
-            cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if spec.satisfies('@4.0.0:'):
+            if spec.satisfies('platform=cray') or \
+               spec.satisfies('platform=linux'):
+                cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
         if '+flang' not in spec:
             # Semicolon seperated list of projects to enable
