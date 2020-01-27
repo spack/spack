@@ -166,6 +166,15 @@ def check_same_flags(flag_dict_1, flag_dict_2):
         assert values1 == values2
 
 
+def check_packages_exist(specs):
+    """Ensure all packages mentioned in specs exist."""
+    repo = spack.repo.path
+    for spec in specs:
+        for s in spec.traverse():
+            if not (repo.exists(s.name) or repo.is_virtual(s)):
+                raise spack.repo.UnknownPackageError(s.name)
+
+
 class AspGenerator(object):
     def __init__(self, out):
         self.out = out
@@ -669,6 +678,9 @@ class AspGenerator(object):
         Arguments:
             specs (list): list of Specs to solve
         """
+        # preliminary checks
+        check_packages_exist(specs)
+
         # get list of all possible dependencies
         self.possible_virtuals = set()
         possible = spack.package.possible_dependencies(
