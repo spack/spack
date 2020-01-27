@@ -31,6 +31,6 @@ class PyNeurodamus(PythonPackage):
         for script in ('init.py', '_debug.py'):
             copy(script, self.prefix.share)
 
-    def setup_environment(self, spack_env, run_env):
-        PythonPackage.setup_environment(self, spack_env, run_env)
-        run_env.set('NEURODAMUS_PYTHON', self.prefix.share)
+    def setup_run_environment(self, env):
+        PythonPackage.setup_run_environment(self, env)
+        env.set('NEURODAMUS_PYTHON', self.prefix.share)
