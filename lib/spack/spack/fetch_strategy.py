@@ -868,8 +868,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
     def archive(self, destination):
         kwargs = dict()
-        if not self.get_full_repo:
-            kwargs['exclude'] = '.git'
         super(GitFetchStrategy, self).archive(destination, **kwargs)
 
     def get_commit(self):
