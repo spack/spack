@@ -305,7 +305,7 @@ class AspGenerator(object):
         """Facts about available compilers."""
 
         self.h2("Available compilers")
-        compilers = spack.compilers.all_compiler_specs()
+        compilers = self.possible_compilers
 
         compiler_versions = collections.defaultdict(lambda: set())
         for compiler in compilers:
@@ -323,7 +323,7 @@ class AspGenerator(object):
         """Set compiler defaults, given a list of possible compilers."""
         self.h2("Default compiler preferences")
 
-        compiler_list = [c.spec for c in self.possible_compilers]
+        compiler_list = self.possible_compilers.copy()
         compiler_list = sorted(
             compiler_list, key=lambda x: (x.name, x.version), reverse=True)
         ppk = spack.package_prefs.PackagePrefs("all", 'compiler', all=False)
@@ -623,7 +623,7 @@ class AspGenerator(object):
         # consider the *best* target that each compiler supports, along
         # with the family.
         compatible_targets = [uarch] + uarch.ancestors
-        compilers = compilers_for_default_arch()
+        compilers = self.possible_compilers
 
         # this loop can be used to limit the number of targets
         # considered. Right now we consider them all, but it seems that
@@ -670,6 +670,29 @@ class AspGenerator(object):
                 # TODO: handle versioned and conditional virtuals
                 self.fact(fn.provides_virtual(provider.name, vspec))
 
+    def generate_possible_compilers(self, specs):
+        default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
+        compilers = spack.compilers.compilers_for_arch(default_arch)
+        cspecs = set([c.spec for c in compilers])
+
+        # add compiler specs from the input line to possibilities if we
+        # don't require compilers to exist.
+        strict = spack.concretize.Concretizer.check_for_compiler_existence
+        for spec in specs:
+            for s in spec.traverse():
+                if (not s.compiler
+                    or s.compiler in cspecs
+                    or not s.compiler.concrete):
+                    continue
+
+                if strict:
+                    raise spack.concretize.UnavailableCompilerVersionError(
+                        s.compiler)
+                else:
+                    cspecs.add(s.compiler)
+
+        return cspecs
+
     def generate_asp_program(self, specs):
         """Write an ASP program for specs.
 
@@ -691,7 +714,7 @@ class AspGenerator(object):
         pkgs = set(possible)
 
         # get possible compilers
-        self.possible_compilers = compilers_for_default_arch()
+        self.possible_compilers = self.generate_possible_compilers(specs)
 
         # read the main ASP program from concrtize.lp
         concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
