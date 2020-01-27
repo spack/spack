@@ -23,4 +23,4 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     def setup_build_environment(self, env):
         if self.spec.satisfies('%fj'):
             env.append_flags('CFLAGS',
-                             '-Werror=implicit-function-declaration')
+                             '-Qunused-arguments')
