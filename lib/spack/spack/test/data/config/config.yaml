@@ -14,4 +14,3 @@ config:
   dirty: false
   module_roots:
     tcl:    $spack/share/spack/modules
-    lmod:   $spack/share/spack/lmod
