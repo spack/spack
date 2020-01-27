@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# Forces `spack` to be run with Python 3, even if both Python 2 and 3
+# are installed. Useful for debugging Python 3 compatibility bugs.
+
+python3 $(which spack) "$@"

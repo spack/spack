@@ -64,6 +64,10 @@ _bash_completion_spack() {
     # compatibility mode. See https://github.com/spack/spack/pull/4079
     subfunction=${subfunction//-/_}
 
+    # spack2 and spack3 are wrappers around spack
+    subfunction=${subfunction/#_spack2/_spack}
+    subfunction=${subfunction/#_spack3/_spack}
+
     # However, the word containing the current cursor position needs to be
     # added regardless of whether or not it is a flag. This allows us to
     # complete something like `spack install --keep-st[]`
@@ -302,7 +306,7 @@ _pretty_print() {
     done
 }
 
-complete -o bashdefault -o default -F _bash_completion_spack spack
+complete -o bashdefault -o default -F _bash_completion_spack spack spack2 spack3
 
 # Spack commands
 #

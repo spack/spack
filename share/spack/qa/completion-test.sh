@@ -58,6 +58,10 @@ contains 'hdf5' _spack_completions spack install -v ''
 # XFAIL: Fails for Python 2.6 because pkg_resources not found?
 #contains 'compilers.py' _spack_completions spack test ''
 
+title 'Testing spack2 and spack3 wrappers'
+contains 'compiler' _spack_completions spack2 ''
+contains 'compiler' _spack_completions spack3 ''
+
 title 'Testing debugging functions'
 
 # This is a particularly tricky case that involves the following situation:
