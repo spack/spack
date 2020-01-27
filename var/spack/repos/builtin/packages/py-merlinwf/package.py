@@ -41,4 +41,4 @@ class PyMerlinwf(PythonPackage):
 
     # Optional packages
     depends_on('py-mysql-connector-python-rf', when='+mysql', type=('build', 'run'))
-    depends_on('pymysql', when='+mysql', type=('build', 'run'))
+    depends_on('py-pymysql', when='+mysql', type=('build', 'run'))
