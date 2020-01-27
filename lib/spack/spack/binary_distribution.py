@@ -690,8 +690,10 @@ def get_specs(force=False, use_arch=False):
                 for file in files:
                     if re.search('spec.yaml', file):
                         link = url_util.join(fetch_url_build_cache, file)
-                        if use_arch and re.search('%s' %
-                                                  spack.architecture, file):
+                        if use_arch and re.search('%s-%s' %
+                                                  (spack.architecture.platform,
+                                                   spack.architecture.os),
+                                                  file):
                             urls.add(link)
                         else:
                             urls.add(link)
@@ -702,7 +704,10 @@ def get_specs(force=False, use_arch=False):
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
                 if re.search("spec.yaml", link):
-                    if use_arch and re.search('%s' % spack.architecture, link):
+                    if use_arch and re.search('%s-%s' %
+                                              (spack.architecture.platform,
+                                               spack.architecture.os),
+                                              link):
                         urls.add(link)
                     else:
                         urls.add(link)
