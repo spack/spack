@@ -29,7 +29,7 @@ packages:
       # - freeimage@3.18.0
       - glew
       - gmsh+metis~mpi+oce+openmp+shared@4.4.1
-      - hdf5~mpi@1.10.4
+      - hdf5~mpi@1.10.5
       - intel-mkl@2019.3.199
       - jdk@1.8.0_131-b11
       - julia

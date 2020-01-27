@@ -19,7 +19,7 @@ packages:
       - compiler
       - mpi
     specs:
-      - hdf5+mpi@1.10.4
+      - hdf5+mpi@1.10.5
       - highfive+mpi
       - ospray@1.7.3
       - ospray@1.8.5
@@ -72,7 +72,7 @@ packages:
       - compiler
       - mpi
     specs:
-      - hdf5+mpi@1.10.4
+      - hdf5+mpi@1.10.5
       - highfive+mpi@2.1.1
       - ospray@1.7.3
       - ospray@1.8.5
