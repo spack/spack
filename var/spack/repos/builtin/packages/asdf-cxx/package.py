@@ -12,6 +12,8 @@ class AsdfCxx(CMakePackage):
     homepage = "https://github.com/eschnett/asdf-cxx"
     url      = "https://github.com/eschnett/asdf-cxx/archive/version/1.0.0.tar.gz"
 
+    maintainers = ['eschnett']
+
     version('7.2.1', sha256='40864f4f27d3ce8acb5169b57211ce6ac3805f0a6de9c1dfd5f994f4a5beccda')
     version('7.2.0', sha256='faded85d44288afb83f13634d2139adee07e06f7ea60960c6f2ef8d898c0aa09')
     version('7.1.0', sha256='81fd8c7f91f8daf0f85a1486480ae9e736b9712e82ccb858271f7ee2c2b425f7')
@@ -43,7 +45,3 @@ class AsdfCxx(CMakePackage):
     depends_on('swig', type='build', when='+python')
     depends_on('yaml-cpp')
     depends_on('zlib')
-
-    def cmake_args(self):
-        args = []
-        return args
