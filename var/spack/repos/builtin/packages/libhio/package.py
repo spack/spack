@@ -49,10 +49,6 @@ class Libhio(AutotoolsPackage):
     patch('0001-hdf5-make-docs-optional.patch', when="@1.4.1.0")
     patch('0001-spack-fix-for-spack-to-work-on-non-cray-systems.patch', when="@1.4.1.2")
 
-    def autoreconf(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-ifv')
-
     def configure_args(self):
         spec = self.spec
         args = []

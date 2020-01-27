@@ -663,7 +663,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 _cached_specs = None
 
 
-def get_specs(force=False):
+def get_specs(force=False, use_arch=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -690,7 +690,13 @@ def get_specs(force=False):
                 for file in files:
                     if re.search('spec.yaml', file):
                         link = url_util.join(fetch_url_build_cache, file)
-                        urls.add(link)
+                        if use_arch and re.search('%s-%s' %
+                                                  (spack.architecture.platform,
+                                                   spack.architecture.os),
+                                                  file):
+                            urls.add(link)
+                        else:
+                            urls.add(link)
         else:
             tty.msg("Finding buildcaches at %s" %
                     url_util.format(fetch_url_build_cache))
@@ -698,7 +704,13 @@ def get_specs(force=False):
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
                 if re.search("spec.yaml", link):
-                    urls.add(link)
+                    if use_arch and re.search('%s-%s' %
+                                              (spack.architecture.platform,
+                                               spack.architecture.os),
+                                              link):
+                        urls.add(link)
+                    else:
+                        urls.add(link)
 
     _cached_specs = []
     for link in urls:

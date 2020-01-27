@@ -56,6 +56,8 @@ def setup_parser(subparser):
         '--print-file', action='store_true',
         help="print the file name that would be edited")
 
+    sp.add_parser('list', help='list configuration sections')
+
 
 def _get_scope_and_section(args):
     """Extract config scope and section from arguments."""
@@ -83,7 +85,6 @@ def config_get(args):
 
     With no arguments and an active environment, print the contents of
     the environment's manifest file (spack.yaml).
-
     """
     scope, section = _get_scope_and_section(args)
 
@@ -113,7 +114,6 @@ def config_edit(args):
 
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
-
     """
     scope, section = _get_scope_and_section(args)
     if not scope and not section:
@@ -127,8 +127,19 @@ def config_edit(args):
         editor(config_file)
 
 
+def config_list(args):
+    """List the possible configuration sections.
+
+    Used primarily for shell tab completion scripts.
+    """
+    print(' '.join(list(spack.config.section_schemas)))
+
+
 def config(parser, args):
-    action = {'get': config_get,
-              'blame': config_blame,
-              'edit': config_edit}
+    action = {
+        'get': config_get,
+        'blame': config_blame,
+        'edit': config_edit,
+        'list': config_list,
+    }
     action[args.config_command](args)

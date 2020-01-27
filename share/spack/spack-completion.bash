@@ -218,7 +218,7 @@ _keys() {
 _config_sections() {
     if [[ -z "${SPACK_CONFIG_SECTIONS:-}" ]]
     then
-        SPACK_CONFIG_SECTIONS="compilers mirrors repos packages modules config upstreams"
+        SPACK_CONFIG_SECTIONS="$(spack config list)"
     fi
     SPACK_COMPREPLY="$SPACK_CONFIG_SECTIONS"
 }
@@ -584,7 +584,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit"
+        SPACK_COMPREPLY="get blame edit list"
     fi
 }
 
@@ -613,6 +613,10 @@ _spack_config_edit() {
     else
         _config_sections
     fi
+}
+
+_spack_config_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_configure() {

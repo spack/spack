@@ -103,10 +103,10 @@ interpreter_f="${interpreter_v[0]}"
 
 # Invoke any interpreter found, or raise an error if none was found.
 if [[ -n "$interpreter_f" ]]; then
-    if [[ "${interpreter_f##*/}" = "perl" ]]; then
-        exec $interpreter_v -x "$@"
+    if [[ "${interpreter_f##*/}" = "perl"* ]]; then
+        exec $interpreter -x "$@"
     else
-        exec $interpreter_v "$@"
+        exec $interpreter "$@"
     fi
 else
     echo "error: sbang found no interpreter in $script"
