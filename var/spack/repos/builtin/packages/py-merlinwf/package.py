@@ -10,7 +10,7 @@ class PyMerlinwf(PythonPackage):
     """Merlin Workflow for HPC."""
 
     homepage = "https://github.com/LLNL/merlin"
-    url      = "https://pypi.io/packages/source/m/merlinwf/merlinwf-1.0.0.tar.gz"
+    url      = "https://pypi.io/packages/source/m/merlinwf/merlinwf-1.2.2.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
     version('1.2.2', sha256='37b92b1781e6409ba27a24ca04a41e10c9e6fdb1e8e40a6951ca0d214fbb42e3')
