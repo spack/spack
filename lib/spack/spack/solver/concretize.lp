@@ -33,6 +33,9 @@ depends_on(P, D, T) :- declared_dependency(P, D, T), not virtual(D), node(P).
 1 { depends_on(P, Q, T) : provides_virtual(Q, V) } 1
     :- declared_dependency(P, V, T), virtual(V), node(P).
 
+% if a virtual was required by some root spec, one provider is in the DAG
+1 { node(P) : provides_virtual(P, V) } 1 :- virtual_node(V).
+
 % for any virtual, there can be at most one provider in the DAG
 provider(P, V) :- node(P), provides_virtual(P, V).
 0 { provider(P, V) : node(P) } 1 :- virtual(V).
@@ -66,6 +69,7 @@ node(D) :- node(P), depends_on(P, D).
 #defined depends_on/3.
 #defined declared_dependency/3.
 #defined virtual/1.
+#defined virtual_node/1.
 #defined provides_virtual/2.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
