@@ -214,19 +214,20 @@ def _install_from_cache(pkg, cache_only, explicit):
         (bool) ``True`` if the package was installed from binary cache,
             ``False`` otherwise
     """
-    if _try_install_from_binary_cache(pkg, explicit):
-        tty.debug('Successfully installed {0} from binary cache'
-                  .format(pkg.unique_id))
-        _print_installed_pkg(pkg.spec.prefix)
-        spack.hooks.post_install(pkg.spec)
-        return True
-    elif cache_only:
-        tty.die('No binary for {0} found when cache-only specified'
-                .format(pkg.unique_id))
+    installed_from_cache = _try_install_from_binary_cache(pkg, explicit)
+    if not installed_from_cache:
+        pre = 'No binary for {0} found'.format(pkg.unique_id)
+        if cache_only:
+            tty.die('{0} when cache-only specified'.format(pre))
 
-    tty.debug('No binary for {0} found: installing from source'
+        tty.debug('{0}: installing from source'.format(pre))
+        return False
+
+    tty.debug('Successfully installed {0} from binary cache'
               .format(pkg.unique_id))
-    return False
+    _print_installed_pkg(pkg.spec.prefix)
+    spack.hooks.post_install(pkg.spec)
+    return True
 
 
 def _print_installed_pkg(message):
