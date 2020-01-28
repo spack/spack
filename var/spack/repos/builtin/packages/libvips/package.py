@@ -19,9 +19,12 @@ class Libvips(AutotoolsPackage):
     version('8.9.0', sha256="97334a5e70aff343d2587f23cb8068fc846a58cd937c89a446142ccf00ea0349")
     version('8.7.4', sha256="ce7518a8f31b1d29a09b3d7c88e9852a5a2dcb3ee1501524ab477e433383f205")
 
+    # Necessary dependencies
     depends_on('glib')
-    depends_on('gobject-introspection')
     depends_on('expat')
+
+    # Optional, split into variants!
+    depends_on('gobject-introspection')
     depends_on('swig',when='@develop')
     depends_on('libjpeg')
     depends_on('libtiff')
@@ -31,7 +34,6 @@ class Libvips(AutotoolsPackage):
     depends_on('lcms')
     depends_on('libpng')
 
-    # TODO : Add more dependencies/config options!
 
     def configure_args(self):
         args = []
