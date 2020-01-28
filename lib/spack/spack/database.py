@@ -400,8 +400,9 @@ class Database(object):
             tty.warn('Removing failure marking despite lock for {0}'
                      .format(spec.name))
 
-        if spec.prefix in self._prefix_failures:
-            del self._prefix_failures[spec.prefix]
+        lock = self._prefix_failures.pop(spec.prefix, None)
+        if lock:
+            lock.release_write()
 
         if self.prefix_failure_marked(spec):
             try:
