@@ -698,18 +698,16 @@ class PackageInstaller(object):
 
         # External packages cannot be installed locally.
         if pkg.spec.external:
-            # TODO: If keep, use a custom exception
-            raise spack.error.SpackError('{0} {1}'.format(pre, 'is external'))
+            msg = '{0} {1}'.format(pre, 'is external')
+            raise ExternalPackageError(msg)
 
         # Upstream packages cannot be installed locally.
         if pkg.installed_upstream:
-            # TODO: If keep, use a custom exception
-            raise spack.error.SpackError('{0} {1}'.format(pre, 'is upstream'))
+            raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
         if pkg.unique_id not in self.locks:
-            # TODO: If keep, use a custom exception
-            raise spack.error.SpackError('{0} {1}'.format(pre, 'not locked'))
+            raise InstallLockError('{0} {1}'.format(pre, 'not locked'))
 
     def _ensure_read_locked(self, pkg):
         """
@@ -1400,7 +1398,6 @@ class PackageInstaller(object):
         if self.pkg.unique_id in self.failed:
             msg = ('Installation of {0} failed.  Review log for details'
                    .format(self.pkg.unique_id))
-            tty.error(msg)
             raise InstallError(msg)
 
     install.__doc__ += install_args_docstring
@@ -1534,3 +1531,16 @@ class InstallError(spack.error.SpackError):
 
     def __init__(self, message, long_msg=None):
         super(InstallError, self).__init__(message, long_msg)
+
+
+class ExternalPackageError(InstallError):
+    """Raised by install() when a package is only for external use."""
+
+
+class InstallLockError(InstallError):
+    """Raised during install when something goes wrong with package locking."""
+
+
+class UpstreamPackageError(InstallError):
+    """Raised during install when something goes wrong with an upstream
+       package."""

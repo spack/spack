@@ -2182,11 +2182,6 @@ class FetchError(spack.error.SpackError):
         super(FetchError, self).__init__(message, long_msg)
 
 
-# TODO: Where is this being used?
-class ExternalPackageError(InstallError):
-    """Raised by install() when a package is only for external use."""
-
-
 class PackageStillNeededError(InstallError):
     """Raised when package is still needed by another on uninstall."""
     def __init__(self, spec, dependents):

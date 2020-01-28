@@ -476,3 +476,14 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()
+
+
+def test_install_error():
+    try:
+        msg = 'test install error'
+        long_msg = 'this is the long version of test install error'
+        raise InstallError(msg, long_msg=long_msg)
+    except Exception as exc:
+        assert exc.__class__.__name__ == 'InstallError'
+        assert exc.message == msg
+        assert exc.long_message == long_msg
