@@ -397,7 +397,7 @@ def dump_packages(spec, path):
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
 
 
-def get_install_msg(name):
+def install_msg(name):
     """
     Colorize the name/id of the package being installed
 
@@ -883,7 +883,7 @@ class PackageInstaller(object):
         pkg = task.pkg
         explicit = pkg.unique_id == self.pkg.unique_id
 
-        tty.msg(get_install_msg(pkg.unique_id))
+        tty.msg(install_msg(pkg.unique_id))
         task.start = task.start if task.start else time.time()
         task.status = STATUS_INSTALLING
 
@@ -1124,7 +1124,7 @@ class PackageInstaller(object):
             task (BuildTask): the installation build task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
-            tty.msg('{0} {1}'.format(get_install_msg(task.pkg.unique_id),
+            tty.msg('{0} {1}'.format(install_msg(task.pkg.unique_id),
                                      'in progress by another process'))
 
         start = task.start if task.start else time.time()
