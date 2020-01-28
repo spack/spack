@@ -26,6 +26,9 @@ class Powerapi(AutotoolsPackage):
     depends_on('hwloc', when='+hwloc')
     depends_on('mpi', when='+mpi')
 
+    # C++11 requires a space between literal and identifier.
+    patch('add_space.patch')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
