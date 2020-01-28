@@ -9,6 +9,7 @@ import inspect
 import platform
 import sys
 
+
 class IntelTbb(Package):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
@@ -201,7 +202,7 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
-    
+
     @run_after('install')
     def darwin_fix(self):
         # Replace @rpath in ids with full path
