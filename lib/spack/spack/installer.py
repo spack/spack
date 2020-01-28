@@ -257,9 +257,8 @@ def _process_external_package(pkg, explicit):
             ``False`` if it was pulled in as a dependency of an explicit
             package.
     """
-    # TODO: Should this error out?
-    if not pkg.spec.external:
-        return
+    assert pkg.spec.external, \
+        'Expected to post-install/register an external package.'
 
     pre = '{s.name}@{s.version} :'.format(s=pkg.spec)
     spec = pkg.spec
