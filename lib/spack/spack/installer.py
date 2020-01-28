@@ -684,7 +684,7 @@ class PackageInstaller(object):
 
         # Ensure we have a read lock to prevent others from uninstalling the
         # spec during our installation.
-        self._ensure_read_locked(pkg)
+        self._ensure_locked('read', pkg)
 
     def _ensure_install_ready(self, pkg):
         """
@@ -698,8 +698,7 @@ class PackageInstaller(object):
 
         # External packages cannot be installed locally.
         if pkg.spec.external:
-            msg = '{0} {1}'.format(pre, 'is external')
-            raise ExternalPackageError(msg)
+            raise ExternalPackageError('{0} {1}'.format(pre, 'is external'))
 
         # Upstream packages cannot be installed locally.
         if pkg.installed_upstream:
@@ -709,108 +708,93 @@ class PackageInstaller(object):
         if pkg.unique_id not in self.locks:
             raise InstallLockError('{0} {1}'.format(pre, 'not locked'))
 
-    def _ensure_read_locked(self, pkg):
+    def _ensure_locked(self, lock_type, pkg):
         """
-        Add a prefix read lock for the package spec, downgrading from write if
-        needed.
+        Add a prefix lock of the specified type for the package spec
+
+        If the lock exists, then adjust accordingly.  That is, read locks
+        will be upgraded to write locks if a write lock is requested and
+        write locks will be downgraded to read locks if a read lock is
+        requested.
+
+        The lock timeout for write locks is deliberately near zero seconds in
+        order to ensure the current process proceeds as quickly as possible to
+        the next spec.
 
         Args:
+            lock_type (str): 'read' for a read lock, 'write' for a write lock
             pkg (PackageBase): the package whose spec is being installed
-        """
-        pkg_id = pkg.unique_id
-        ltype, lock = self.locks[pkg_id] if pkg_id in self.locks \
-            else ('read', None)
-        nolock = lock is None
-        if nolock or ltype == 'write':
-            msg = '{0} a read lock on {1} with timeout {2}'
-            err = 'Failed to {0} a read lock for {1} due to {2}: {3}'
 
+        Return:
+            (lock_type, lock) tuple where lock will be None if it could not
+                be obtained
+        """
+        assert lock_type in ['read', 'write'], \
+            '"{0}" is not a supported package management lock type' \
+            .format(lock_type)
+
+        pkg_id = pkg.unique_id
+        ltype, lock = self.locks.get(pkg_id, (lock_type, None))
+        if lock and ltype == lock_type:
+            return ltype, lock
+
+        desc = '{0} lock'.format(lock_type)
+        msg = '{0} a {1} on {2} with timeout {3}'
+        err = 'Failed to {0} a {1} for {2} due to {3}: {4}'
+
+        if lock_type == 'read':
             # Wait until the other process finishes if there are no more
             # build tasks with priority 0 (i.e., with no uninstalled
             # dependencies).
-            no_p0 = len(self.build_tasks) <= 0 or not self._next_is_pri0()
+            no_p0 = len(self.build_tasks) == 0 or not self._next_is_pri0()
             timeout = None if no_p0 else 3
-
-            try:
-                if nolock:
-                    tty.debug(msg.format('Acquiring', pkg_id, timeout))
-                    op = 'acquire'
-                    lock = spack.store.db.prefix_lock(pkg.spec, timeout)
-                    if timeout != lock.default_timeout:
-                        tty.warn('Expected prefix lock timeout {0}, not {1}'
-                                 .format(timeout, lock.default_timeout))
-                    lock.acquire_read()
-                else:
-                    tty.debug(msg.format('Downgrading to', pkg_id,
-                                         lock.default_timeout))
-                    op = 'downgrade to'
-                    # The timeout here defaults to that used to acquire the
-                    # lock.  Since it is most likely a write lock, the timeout
-                    # is near zero.
-
-                    #  TODO: Does providing this resolve console install
-                    #  TODO:   concurrency issues?
-                    # lock.downgrade_write(timeout)
-                    lock.downgrade_write()
-                tty.verbose('{0} is now read locked'.format(pkg_id))
-            except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
-                tty.debug(err.format(op, pkg_id, exc.__class__.__name__,
-                                     str(exc)))
-                lock = None
-            except (Exception, KeyboardInterrupt, SystemExit) as exc:
-                tty.error(err.format(op, pkg_id, exc.__class__.__name__,
-                          str(exc)))
-                self._cleanup_all_tasks()
-                raise
-
-            self.locks[pkg_id] = ('read', lock)
-
-        return 'read', lock
-
-    def _ensure_write_locked(self, pkg):
-        """
-        Add a prefix write lock for the package's spec, upgrading to write if
-        needed.
-
-        The lock timeout is deliberately near zero seconds in order to ensure
-        the current process proceeds as quickly as possible to the next spec.
-
-        Args:
-            pkg (PackageBase): the package whose spec is being installed
-        """
-        pkg_id = pkg.unique_id
-        ltype, lock = self.locks[pkg_id] if pkg_id in self.locks else \
-            ('write', None)
-        nolock = lock is None
-        if nolock or ltype == 'read':
-            msg = '{0} a write lock for {1} with timeout {2}'
-            err = 'Failed to {0} a write lock for {1} due to {2}: {3}'
+        else:
             timeout = 1e-9  # Near 0 to iterate through install specs quickly
 
-            try:
-                if nolock:
-                    tty.debug(msg.format('Acquiring', pkg_id, timeout))
-                    res = 'acquire'
-                    lock = spack.store.db.prefix_lock(pkg.spec, timeout)
-                    lock.acquire_write()
+        try:
+            if lock is None:
+                tty.debug(msg.format('Acquiring', desc, pkg_id, timeout))
+                op = 'acquire'
+                lock = spack.store.db.prefix_lock(pkg.spec, timeout)
+                if timeout != lock.default_timeout:
+                    tty.warn('Expected prefix lock timeout {0}, not {1}'
+                             .format(timeout, lock.default_timeout))
+                if lock_type == 'read':
+                    lock.acquire_read()
                 else:
-                    tty.debug(msg.format('Upgrading to', pkg_id, timeout))
-                    res = 'upgrade to'
-                    lock.upgrade_read(timeout)
-                tty.verbose('{0} is now write locked'.format(pkg_id))
-            except (lk.LockTimeoutError, lk.LockUpgradeError) as exc:
-                tty.debug(err.format(res, pkg_id, exc.__class__.__name__,
-                                     str(exc)))
-                lock = None
-            except (Exception, KeyboardInterrupt, SystemExit) as exc:
-                tty.error(err.format(res, pkg_id, exc.__class__.__name__,
-                          str(exc)))
-                self._cleanup_all_tasks()
-                raise
+                    lock.acquire_write()
 
-            self.locks[pkg_id] = ('write', lock)
+            elif lock_type == 'read':  # write -> read
+                # Only get here if the current lock is a write lock, which
+                # must be downgraded to be a read lock
+                # Retain the original lock timeout, which is in the lock's
+                # default_timeout setting.
+                tty.debug(msg.format('Downgrading to', desc, pkg_id,
+                                     lock.default_timeout))
+                op = 'downgrade to'
+                lock.downgrade_write()
 
-        return 'write', lock
+            else:  # read -> write
+                # Only get here if the current lock is a read lock, which
+                # must be upgraded to be a write lock
+                tty.debug(msg.format('Upgrading to', desc, pkg_id, timeout))
+                op = 'upgrade to'
+                lock.upgrade_read(timeout)
+            tty.verbose('{0} is now {1} locked'.format(pkg_id, lock_type))
+
+        except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
+            tty.debug(err.format(op, desc, pkg_id, exc.__class__.__name__,
+                                 str(exc)))
+            lock = None
+
+        except (Exception, KeyboardInterrupt, SystemExit) as exc:
+            tty.error(err.format(op, desc, pkg_id, exc.__class__.__name__,
+                      str(exc)))
+            self._cleanup_all_tasks()
+            raise
+
+        self.locks[pkg_id] = (lock_type, lock)
+        return self.locks[pkg_id]
 
     def _init_queue(self, install_deps, install_self):
         """
@@ -1288,12 +1272,12 @@ class PackageInstaller(object):
             # another process is likely (un)installing the spec or has
             # determined the spec has already been installed (though the
             # other process may be hung).
-            ltype, lock = self._ensure_write_locked(pkg)
+            ltype, lock = self._ensure_locked('write', pkg)
             if lock is None:
                 # Attempt to get a read lock instead.  If this fails then
                 # another process has a write lock so must be (un)installing
                 # the spec (or that process is hung).
-                ltype, lock = self._ensure_read_locked(pkg)
+                ltype, lock = self._ensure_locked('read', pkg)
 
             # Requeue the spec if we cannot get at least a read lock so we
             # can check the status presumably established by another process
@@ -1314,7 +1298,7 @@ class PackageInstaller(object):
                 # In the off chance we cannot get a read lock, then another
                 # process has probably taken a write lock between our releasing
                 # the write and acquiring the read.
-                ltype, lock = self._ensure_read_locked(pkg)
+                ltype, lock = self._ensure_locked('read', pkg)
                 if lock is not None:
                     self._update_installed(task)
                     _print_installed_pkg(pkg.prefix)
