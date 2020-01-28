@@ -149,14 +149,12 @@ def _do_fake_install(pkg):
     dump_packages(pkg.spec, packages_dir)
 
 
-def _get_bootstrap_compilers(pkg):
+def _packages_needed_to_bootstrap_compiler(pkg):
     """
-    Retrieve uninstalled compilers
+    Return a list of packages required to bootstrap `pkg`s compiler
 
     Checks Spack's compiler configuration for a compiler that
-    matches the package spec. If none are configured, installs and
-    adds to the compiler configuration the compiler matching the
-    CompilerSpec object.
+    matches the package spec.
 
     Args:
         pkg (Package): the package that may need its compiler installed
@@ -172,18 +170,18 @@ def _get_bootstrap_compilers(pkg):
               .format(pkg.spec.compiler, pkg.unique_id))
     compilers = spack.compilers.compilers_for_spec(
         pkg.spec.compiler, arch_spec=pkg.spec.architecture)
-    if not compilers:
-        dep = spack.compilers.pkg_spec_for_compiler(pkg.spec.compiler)
-        dep.architecture = pkg.spec.architecture
-        # concrete CompilerSpec has less info than concrete Spec
-        # concretize as Spec to add that information
-        dep.concretize()
-        packages = [(s.package, False) for
-                    s in dep.traverse(order='post', root=False)]
-        packages.append((dep.package, True))
-        return packages
+    if compilers:
+        return []
 
-    return []
+    dep = spack.compilers.pkg_spec_for_compiler(pkg.spec.compiler)
+    dep.architecture = pkg.spec.architecture
+    # concrete CompilerSpec has less info than concrete Spec
+    # concretize as Spec to add that information
+    dep.concretize()
+    packages = [(s.package, False) for
+                s in dep.traverse(order='post', root=False)]
+    packages.append((dep.package, True))
+    return packages
 
 
 def _hms(seconds):
@@ -562,9 +560,9 @@ class PackageInstaller(object):
         Args:
             pkg (PackageBase): the package with possible compiler dependencies
         """
-        compilers = _get_bootstrap_compilers(pkg)
-        for (comp, is_compiler) in compilers:
-            comp_pkg = comp.package
+        packages = _packages_needed_to_bootstrap_compiler(pkg)
+        for (packg, is_compiler) in packages:
+            comp_pkg = packg.package
             if comp_pkg.unique_id not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 
