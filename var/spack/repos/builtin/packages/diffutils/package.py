@@ -19,3 +19,8 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     depends_on('libiconv')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%fj'):
+            env.append_flags('CFLAGS',
+                             '-Qunused-arguments')
