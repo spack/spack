@@ -94,18 +94,3 @@ def test_installer_ensure_ready_errors(install_mockery):
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
-
-
-def test_build_task_init_errors(install_mockery):
-    with pytest.raises(ValueError, match='must be a package'):
-        inst.BuildTask('abc', False, 0, 0, 0, [])
-
-    pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='must have a concrete spec'):
-        inst.BuildTask(pkg, False, 0, 0, 0, [])
-
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    with pytest.raises(inst.InstallError, match='Cannot create a build task'):
-        inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_REMOVED, [])
