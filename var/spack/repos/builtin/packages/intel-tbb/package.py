@@ -7,7 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
-
+import sys
 
 class IntelTbb(Package):
     """Widely used C++ template library for task parallelism.
@@ -201,3 +201,9 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+    
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
