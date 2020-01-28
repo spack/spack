@@ -511,8 +511,6 @@ class PackageInstaller(object):
     processing.
     '''
 
-    # TODO: Eventually change to support a list of packages
-    # TODO: Should the install kwargs dictionary be passed in here?
     def __init__(self, pkg):
         """
         Initialize and set up the build specs.
@@ -524,12 +522,12 @@ class PackageInstaller(object):
         Return:
             (PackageInstaller) instance
         """
-        if isinstance(pkg, spack.package.PackageBase):
-            if not pkg.spec.concrete:
-                raise ValueError("{0}: Can only install concrete packages."
-                                 .format(pkg.spec.name))
-        else:
+        if not isinstance(pkg, spack.package.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
+
+        if not pkg.spec.concrete:
+            raise ValueError("{0}: Can only install concrete packages."
+                             .format(pkg.spec.name))
 
         # Spec of the package to be built
         self.pkg = pkg
