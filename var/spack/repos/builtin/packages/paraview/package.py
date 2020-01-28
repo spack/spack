@@ -169,11 +169,17 @@ class Paraview(CMakePackage, CudaPackage):
                 pv_pydir = join_path(lib_dir,
                                      'python{0}'.format(python_version),
                                      'site-packages')
-                env.prepend_path('PYTHONPATH', pv_pydir)
-                # The Trilinos Catalyst adapter requires
-                # the vtkmodules directory in PYTHONPATH
-                env.prepend_path('PYTHONPATH', join_path(pv_pydir,
-                                                         'vtkmodules'))
+                if '+shared' in self.spec:
+                    env.prepend_path('PYTHONPATH', pv_pydir)
+                    # The Trilinos Catalyst adapter requires
+                    # the vtkmodules directory in PYTHONPATH
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             'vtkmodules'))
+                else:
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             '_paraview.zip'))
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             '_vtk.zip'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
