@@ -36,7 +36,7 @@ import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
-from spack.util.lock import Lock, WriteTransaction
+import spack.util.lock as slock
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -56,9 +56,6 @@ manifest_name = 'spack.yaml'
 
 #: Name of the input yaml file for an environment
 lockfile_name = 'spack.lock'
-
-
-txlock_name = 'txlock'
 
 
 #: Name of the directory where environments store repos, logs, views
@@ -562,7 +559,7 @@ class Environment(object):
         """
         self.path = os.path.abspath(path)
 
-        self.txlock = Lock(self._txlock_path)
+        self.txlock = slock.Lock(self._transaction_lock_path)
 
         # This attribute will be set properly from configuration
         # during concretization
@@ -624,7 +621,7 @@ class Environment(object):
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self.txlock, acquire=self._re_read)
+        return slock.WriteTransaction(self.txlock, acquire=self._re_read)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
@@ -719,8 +716,11 @@ class Environment(object):
         return os.path.join(self.path, manifest_name)
 
     @property
-    def _txlock_path(self):
-        return os.path.join(self.path, txlock_name)
+    def _transaction_lock_path(self):
+        """The location of the lock file used to synchronize multiple
+        processes updating the same environment.
+        """
+        return os.path.join(self.path, 'transaction_lock')
 
     @property
     def lock_path(self):
@@ -1015,6 +1015,18 @@ class Environment(object):
         return concretized_specs
 
     def concretize_and_add(self, user_spec, concrete_spec=None):
+        """Concretize and add a single spec to the environment.
+
+        Concretize the provided ``user_spec`` and add it along with the
+        concretized result to the environment. If the given ``user_spec`` was
+        already present in the environment, this does not add a duplicate.
+        The concretized spec will be added unless the ``user_spec`` was
+        already present and an associated concrete spec was already present.
+
+        Args:
+            concrete_spec: if provided, then it is assumed that it is the
+                result of concretizing the provided ``user_spec``
+        """
         if self.concretization == 'together':
             msg = 'cannot install a single spec in an environment that is ' \
                   'configured to be concretized together. Run instead:\n\n' \
