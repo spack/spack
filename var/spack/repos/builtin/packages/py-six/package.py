@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class PySix(PythonPackage):
 
     import_modules = ['six']
 
-    version('1.12.0', '9ae5d1feed8c0215f4ae4adcd9207fcb')
-    version('1.11.0', 'd12789f9baf7e9fb2524c0c64f1773f8')
-    version('1.10.0', '34eed507548117b2ab523ab14b2f8b55')
-    version('1.9.0',  '476881ef4012262dfc8adc645ee786c4')
-    version('1.8.0',  '1626eb24cc889110c38f7e786ec69885')
+    version('1.12.0', sha256='d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73')
+    version('1.11.0', sha256='70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9')
+    version('1.10.0', sha256='105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a')
+    version('1.9.0',  sha256='e24052411fc4fbd1f672635537c3fc2330d9481b18c0317695b46259512c91d5')
+    version('1.8.0',  sha256='047bbbba41bac37c444c75ddfdf0573dd6e2f1fbd824e6247bb26fa7d8fa3830')
 
     extends('python', ignore=r'bin/pytest')
 

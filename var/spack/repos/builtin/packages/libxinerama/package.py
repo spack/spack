@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libxinerama(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXinerama"
     url      = "https://www.x.org/archive/individual/lib/libXinerama-1.1.3.tar.gz"
 
-    version('1.1.3', '7224a1baa9733a54053550a3fb4be118')
+    version('1.1.3', sha256='0ba243222ae5aba4c6a3d7a394c32c8b69220a6872dbb00b7abae8753aca9a44')
 
     depends_on('libx11')
     depends_on('libxext')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Cleaveland4(Package):
     homepage = "https://github.com/MikeAxtell/CleaveLand4"
     url      = "https://github.com/MikeAxtell/CleaveLand4/archive/v4.4.tar.gz"
 
-    version('4.4', 'cf62a1de715a612fc8bd5a62364e69db')
+    version('4.4', sha256='bf7fe6ad730ea2bfb2e0c0f863734f189073a69b1754532012f1261b368b24e7')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-math-cdf', type=('build', 'run'))

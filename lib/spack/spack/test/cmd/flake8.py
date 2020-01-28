@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ def flake8_package():
 
 
 def test_changed_files(parser, flake8_package):
-    args = parser.parse_args()
+    args = parser.parse_args([])
 
     # changed_files returns file paths relative to the root
     # directory of Spack. Convert to absolute file paths.

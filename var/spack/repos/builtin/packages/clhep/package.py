@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,8 +51,7 @@ class Clhep(CMakePackage):
     def patch(self):
         filter_file('SET CMP0042 OLD',
                     'SET CMP0042 NEW',
-                    '%s/%s/CLHEP/CMakeLists.txt'
-                    % (self.stage.path, self.spec.version))
+                    '%s/CLHEP/CMakeLists.txt' % self.stage.source_path)
 
     def cmake_args(self):
         cmake_args = ['-DCLHEP_BUILD_CXXSTD=-std=c++{0}'.format(

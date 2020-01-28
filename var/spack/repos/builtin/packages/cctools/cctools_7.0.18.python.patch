@@ -1,0 +1,116 @@
+--- spack-src.org/configure	2019-11-25 14:33:33.991883993 +0900
++++ spack-src/configure	2019-11-25 14:47:11.591066274 +0900
+@@ -973,18 +973,46 @@
+ 	fi
+ fi
+ 
++PYDOC=""
+ python=0    #to be set to the python path
+ if [ $config_python_path != no ]
+ then
+ 	if [ -n "$PYTHON" ] && check_file ${PYTHON}
+ then
+ 	python=${PYTHON}
++	python_dir=`dirname ${PYTHON}`
++	python_cmd=`basename ${PYTHON}`
++	pydoc_cmd=`echo $python_cmd | sed s/python/pydoc/`
++	pydoc2_cmd=`echo $python_cmd | sed s/python/pydoc2/`
++	pydoc=${python_dir}/${pydoc_cmd}
++	pydoc2=${python_dir}/${pydoc2_cmd}
++	if check_file $pydoc
++	then
++	    PYDOC=$pydoc
++    elif check_file $pydoc2
++	then
++	    PYDOC=$pydoc2
++    fi
+ elif check_file ${python_path}/bin/python2
+ then
+ 	python=${python_path}/bin/python2
++	if check_file ${python_path}/bin/pydoc
++	then
++			PYDOC=${python_path}/bin/pydoc
++	elif check_file ${python_path}/bin/pydoc2
++	then
++			PYDOC=${python_path}/bin/pydoc2
++	fi
+ elif check_file ${python_path}/bin/python
+ then
+ 	python=${python_path}/bin/python
++	if check_file ${python_path}/bin/pydoc
++	then
++			PYDOC=${python_path}/bin/pydoc
++	elif check_file ${python_path}/bin/pydoc2
++	then
++			PYDOC=${python_path}/bin/pydoc2
++	fi
+ else
+ 	python=0
+ fi
+@@ -1056,7 +1084,7 @@
+ fi
+ fi
+ 
+-if [ $python_dev = no ]
++if [ "$python_dev" = no ]
+ then
+ 	if [ $config_python_path = yes ]
+ 	then
+@@ -1073,12 +1101,48 @@
+ 	if [ -n "$PYTHON3" ] && check_file ${PYTHON3}
+ 	then
+ 		python3=${PYTHON3}
++		if [ "$PYDOC" = "" ]
++		then
++		    python_dir=`dirname ${PYTHON3}`
++			python_cmd=`basename ${PYTHON3}`
++			pydoc_cmd=`echo $python_cmd | sed s/python/pydoc/`
++			pydoc3_cmd=`echo $python_cmd | sed s/python/pydoc3/`
++			pydoc=${python_dir}/${pydoc_cmd}
++			pydoc3=${python_dir}/${pydoc3_cmd}
++			if check_file $pydoc
++			then
++			    PYDOC=$pydoc
++		    elif heck_file $pydoc3
++			then
++			    PYDOC=$pydoc3
++			fi
++        fi
+ 	elif check_file ${python3_path}/bin/python3
+ 	then
+ 		python3=${python3_path}/bin/python3
++		if [ "$PYDOC" = "" ]
++		then
++		    if check_file ${python3_path}/bin/pydoc
++			then
++			    PYDOC=${python3_path}/bin/pydoc
++		    elif check_file ${python3_path}/bin/pydoc3
++			then
++			    PYDOC=${python3_path}/bin/pydoc3
++			fi
++		fi
+ 	elif check_file ${python3_path}/bin/python
+ 	then
+ 		python3=${python3_path}/bin/python
++		if [ "$PYDOC" = "" ]
++		then
++		    if check_file ${python3_path}/bin/pydoc
++			then
++			    PYDOC=${python3_path}/bin/pydoc
++		    elif check_file ${python3_path}/bin/pydoc3
++			then
++			    PYDOC=${python3_path}/bin/pydoc3
++			fi
++		fi
+ 	else
+ 		python3=0
+ 	fi
+@@ -1630,7 +1694,7 @@
+ CCTOOLS_PYTHON3_2TO3=${python3_2to3}
+ CCTOOLS_PYTHON3_PATH=\$(CCTOOLS_INSTALL_DIR)/lib/python\$(CCTOOLS_PYTHON3_VERSION)/site-packages
+ 
+-CCTOOLS_PYDOC=$(which pydoc 2> /dev/null || which pydoc2 2> /dev/null || which pydoc3 > /dev/null)
++CCTOOLS_PYDOC=${PYDOC}
+ 
+ CCTOOLS_SGE_PARAMETERS=$(echo ${sge_parameters} | sed -e 's/\$/\\\$\$/g')
+ 

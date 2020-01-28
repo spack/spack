@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,8 @@ class A(AutotoolsPackage):
     variant('bvv', default=True, description='The good old BV variant')
 
     depends_on('b', when='foobar=bar')
+
+    parallel = False
 
     def with_or_without_fee(self, activated):
         if not activated:

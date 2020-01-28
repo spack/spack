@@ -1,11 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
-import platform
 import os
 import glob
 
@@ -19,8 +17,9 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
-    version('10.04', 'b84beeb756821d0c61f7c6c93a2b83de')
-    version('10.03.p03', 'ccae9fd18e3908be78784dc207f2d73b')
+    version('10.05.p01', sha256='f4a292220500fad17e0167ce3153e96e3410ecbe96284e572dc707f63523bdff')
+    version('10.04', sha256='f6d883132f110eb036c69da2b21df51f13c585dc7b99d4211ddd32f4ccee1670')
+    version('10.03.p03', sha256='a164f49c038859ab675eec474d08c9d02be8c4be9c0c2d3aa8e69adf89e1e138')
 
     variant('qt', default=False, description='Enable Qt support')
     variant('vecgeom', default=False, description='Enable vecgeom support')
@@ -40,31 +39,30 @@ class Geant4(CMakePackage):
 
     # C++11 support
     depends_on("xerces-c cxxstd=11", when="cxxstd=11")
-    depends_on("clhep@2.4.0.0 cxxstd=11", when="@10.04 cxxstd=11")
-    depends_on("clhep@2.3.4.6 cxxstd=11", when="@10.03.p03 cxxstd=11")
+    depends_on("clhep@2.3.3.0: cxxstd=11", when="@10.03.p03: cxxstd=11")
     depends_on("vecgeom cxxstd=11", when="+vecgeom cxxstd=11")
 
     # C++14 support
     depends_on("xerces-c cxxstd=14", when="cxxstd=14")
-    depends_on("clhep@2.4.0.0 cxxstd=14", when="@10.04 cxxstd=14")
-    depends_on("clhep@2.3.4.6 cxxstd=14", when="@10.03.p03 cxxstd=14")
+    depends_on("clhep@2.3.3.0: cxxstd=14", when="@10.03.p03: cxxstd=14")
     depends_on("vecgeom cxxstd=14", when="+vecgeom cxxstd=14")
 
     # C++17 support
     depends_on("xerces-c cxxstd=17", when="cxxstd=17")
+    depends_on("clhep@2.3.3.0: cxxstd=17", when="@10.03.p03: cxxstd=17")
     patch('cxx17.patch', when='@:10.03.p99 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.04.00: cxxstd=17')
-    depends_on("clhep@2.4.0.0 cxxstd=17", when="@10.04 cxxstd=17")
-    depends_on("clhep@2.3.4.6 cxxstd=17", when="@10.03.p03 cxxstd=17")
     depends_on("vecgeom cxxstd=17", when="+vecgeom cxxstd=17")
 
     depends_on("expat")
     depends_on("zlib")
-    depends_on("mesa", when='+opengl')
+    depends_on("xerces-c")
+    depends_on("gl", when='+opengl')
+    depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
-    depends_on("qt@4.8:4.999", when="+qt")
+    depends_on("qt@4.8:", when="+qt")
 
     # if G4 data not installed with geant4
     # depend on G4 data packages
@@ -74,12 +72,17 @@ class Geant4(CMakePackage):
     depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
     depends_on('geant4-data@10.04', when='@10.04 ~data')
 
+    # As released, 10.03.03 has issues with respect to using external
+    # CLHEP.
+    patch('CLHEP-10.03.03.patch', level=1, when='@10.03.p03')
+
     def cmake_args(self):
         spec = self.spec
 
         options = [
             '-DGEANT4_USE_GDML=ON',
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
+            '-DGEANT4_USE_SYSTEM_CLHEP_GRANULAR=ON',
             '-DGEANT4_USE_G3TOG4=ON',
             '-DGEANT4_INSTALL_DATA=ON',
             '-DGEANT4_BUILD_TLS_MODEL=global-dynamic',
@@ -88,8 +91,7 @@ class Geant4(CMakePackage):
             '-DXERCESC_ROOT_DIR:STRING=%s' %
             spec['xerces-c'].prefix, ]
 
-        arch = platform.system().lower()
-        if arch != 'darwin':
+        if 'platform=darwin' not in spec:
             if "+x11" in spec and "+opengl" in spec:
                 options.append('-DGEANT4_USE_OPENGL_X11=ON')
             if "+motif" in spec and "+opengl" in spec:
@@ -143,3 +145,15 @@ class Geant4(CMakePackage):
             for d in dirs:
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        version = self.version
+        major = version[0]
+        minor = version[1]
+        if len(version) > 2:
+            patch = version[-1]
+        else:
+            patch = 0
+        datadir = 'Geant4-%s.%s.%s' % (major, minor, patch)
+        env.append_path('CMAKE_MODULE_PATH', join_path(
+            self.prefix.lib64, datadir, 'Modules'))

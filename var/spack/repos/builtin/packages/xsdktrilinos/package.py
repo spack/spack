@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,15 +18,12 @@ class Xsdktrilinos(CMakePackage):
 
     version('develop', tag='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
-    version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
-    version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
+    version('12.8.1', sha256='f545c0821743f23af3b48f242c66bbc4593e3804436336db4eb3bb08622ad794')
+    version('12.6.4', sha256='a7664afeab37ccfcbb5aae0bb03cb73ca8e511e0fecc365b9ccd32ba208318e3')
 
-    variant('hypre',        default=True,
-            description='Compile with Hypre preconditioner')
-    variant('petsc',        default=True,
-            description='Compile with PETSc solvers')
-    variant('shared',       default=True,
-            description='Enables the build of shared libraries')
+    variant('hypre',  default=True, description='Compile with Hypre preconditioner')
+    variant('petsc',  default=True, description='Compile with PETSc solvers')
+    variant('shared', default=True, description='Enables the build of shared libraries')
 
     # MPI related dependencies
     depends_on('mpi')

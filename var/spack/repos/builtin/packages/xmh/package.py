@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xmh(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xmh"
     url      = "https://www.x.org/archive/individual/app/xmh-1.0.3.tar.gz"
 
-    version('1.0.3', '7547c5a5ab7309a1b10e8ecf48e60105')
+    version('1.0.3', sha256='f90baf2615a4e1e01232c50cfd36ee4d50ad2fb2f76b8b5831fb796661f194d2')
 
     depends_on('libxaw')
     depends_on('libxmu')

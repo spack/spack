@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPythonSocketio(PythonPackage):
     homepage = "https://github.com/miguelgrinberg/python-socketio"
     url      = "https://pypi.io/packages/source/p/python-socketio/python-socketio-1.8.4.tar.gz"
 
-    version('1.8.4', '9de73990f6c32c701278c01b0fa1a0c3')
+    version('1.8.4', sha256='13807ce17e85371d15b31295a43b1fac1c0dba1eb5fc233353a3efd53aa122cc')
 
     variant('eventlet', default=True,
             description="Pulls in optional eventlet dependency, required"

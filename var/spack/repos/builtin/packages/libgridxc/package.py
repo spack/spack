@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Libgridxc(Package):
     homepage = "https://launchpad.net/libgridxc"
     url      = "https://launchpad.net/libgridxc/trunk/0.7/+download/libgridxc-0.7.6.tgz"
 
-    version('0.7.6', 'a593f845d7565a168f1cf515a0a89879')
+    version('0.7.6', sha256='ecf88ea68b9dbbdae3e86c8d598aee63b134f2f2d0e879fdedc06544b8267b91')
 
     phases = ['configure', 'install']
 

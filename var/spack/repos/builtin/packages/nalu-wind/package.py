@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class NaluWind(CMakePackage):
 
     # Options
     variant('shared', default=(sys.platform != 'darwin'),
-             description='Build dependencies as shared libraries')
+            description='Build dependencies as shared libraries')
     variant('pic', default=True,
             description='Position independent code')
     # Third party libraries
@@ -50,8 +50,8 @@ class NaluWind(CMakePackage):
     depends_on('openfast+cxx~shared', when='+openfast~shared')
     depends_on('tioga', when='+tioga+shared')
     depends_on('tioga~shared', when='+tioga~shared')
-    depends_on('hypre+mpi+int64', when='+hypre+shared')
-    depends_on('hypre+mpi+int64~shared', when='+hypre~shared')
+    depends_on('hypre+mpi+int64~superlu-dist', when='+hypre+shared')
+    depends_on('hypre+mpi+int64~superlu-dist~shared', when='+hypre~shared')
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     # FFTW doesn't have a 'shared' variant at this moment
     depends_on('fftw+mpi', when='+fftw')

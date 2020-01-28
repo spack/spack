@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,12 @@ class Mpip(AutotoolsPackage):
     """mpiP: Lightweight, Scalable MPI Profiling"""
     homepage = "http://mpip.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/mpip/mpiP/mpiP-3.4.1/mpiP-3.4.1.tar.gz"
+    git      = "https://github.com/llnl/mpip.git"
 
-    version("3.4.1", "1168adc83777ac31d6ebd385823aabbd")
+    version('master', branch='master')
+    version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
-    depends_on("libelf")
+    depends_on("elf")
     depends_on("libdwarf")
     depends_on('libunwind', when=os.uname()[4] == "x86_64")
     depends_on("mpi")

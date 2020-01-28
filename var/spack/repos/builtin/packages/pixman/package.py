@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Pixman(AutotoolsPackage):
     # __builtin_shuffle was removed in clang 5.0.
     # From version 9.1 apple-clang is based on clang 5.0.
     # Patch is obtained from above link.
-    patch('clang.patch', when='%clang@9.1.0-apple:')
+    patch('clang.patch', when='@0.34%clang@9.1.0-apple:')
 
     @run_before('build')
     def patch_config_h_for_intel(self):

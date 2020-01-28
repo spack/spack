@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,8 @@ class Superlu(Package):
     homepage = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/#superlu"
     url      = "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_5.2.1.tar.gz"
 
-    version('5.2.1', '3a1a9bff20cb06b7d97c46d337504447')
-    version('4.3', 'b72c6309f25e9660133007b82621ba7c')
+    version('5.2.1', sha256='28fb66d6107ee66248d5cf508c79de03d0621852a0ddeba7301801d3d859f463')
+    version('4.3', sha256='169920322eb9b9c6a334674231479d04df72440257c17870aaa0139d74416781')
 
     variant('pic',    default=True,
             description='Build with position independent code')

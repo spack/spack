@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class PyMako(PythonPackage):
     homepage = "https://pypi.python.org/pypi/mako"
     url = "https://pypi.io/packages/source/M/Mako/Mako-1.0.1.tar.gz"
 
-    version('1.0.4', 'c5fc31a323dd4990683d2f2da02d4e20')
-    version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
+    version('1.0.4', sha256='fed99dbe4d0ddb27a33ee4910d8708aca9ef1fe854e668387a9ab9a90cbf9059')
+    version('1.0.1', sha256='45f0869febea59dab7efd256fb451c377cbb7947bef386ff0bb44627c31a8d1c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-mock',   type='test')

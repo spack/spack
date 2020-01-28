@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Smproxy(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/smproxy"
     url      = "https://www.x.org/archive/individual/app/smproxy-1.0.6.tar.gz"
 
-    version('1.0.6', '012c259f5a89e5c636037446d44eb354')
+    version('1.0.6', sha256='a01374763426a5fdcbc7a65edc54e2070cdbca4df41dddd3051c7586e4c814c9')
 
     depends_on('libsm')
     depends_on('libice')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class Gccmakedep(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/util/gccmakedep/"
     url      = "https://www.x.org/archive/individual/util/gccmakedep-1.0.3.tar.gz"
 
-    version('1.0.3', '127ddb6131eb4a56fdf6644a63ade788')
+    version('1.0.3', sha256='f9e2e7a590e27f84b6708ab7a81e546399b949bf652fb9b95193e0e543e6a548')
 
     depends_on('pkgconfig', type='build')

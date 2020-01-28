@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,5 +15,6 @@ class Gpgme(AutotoolsPackage):
 
     version('1.12.0', sha256='b4dc951c3743a60e2e120a77892e9e864fb936b2e58e7c77e8581f4d050e8cd8')
 
+    depends_on('gnupg', type='build')
     depends_on('libgpg-error', type='build')
     depends_on('libassuan', type='build')

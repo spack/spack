@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xhost(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xhost"
     url      = "https://www.x.org/archive/individual/app/xhost-1.0.7.tar.gz"
 
-    version('1.0.7', 'de34b4ba5194634dbeb29a1f008f495a')
+    version('1.0.7', sha256='8dd1b6245dfbdef45a64a18ea618f233f77432c2f30881b1db9dc40d510d9490')
 
     depends_on('libx11')
     depends_on('libxmu')

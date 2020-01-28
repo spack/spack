@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,8 @@ class MofemCephas(CMakePackage):
 
     # This option can be only used for development of core lib
     variant('copy_user_modules', default=True,
-        description='Copy user modules directory instead linking to source')
+            description='Copy user modules directory '
+            'instead of linking to source')
     variant('adol-c', default=True, description='Compile with ADOL-C')
     variant('tetgen', default=True, description='Compile with Tetgen')
     variant('med', default=True, description='Compile with Med')

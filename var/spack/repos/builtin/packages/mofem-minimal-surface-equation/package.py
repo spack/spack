@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class MofemMinimalSurfaceEquation(CMakePackage):
     version('0.3.9', tag='v0.3.9')
 
     variant('copy_user_modules', default=True,
-        description='Copy user modules directory instead linking')
+            description='Copy user modules directory instead linking')
 
     extends('mofem-cephas')
     depends_on("mofem-users-modules", type=('build', 'link', 'run'))

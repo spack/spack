@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Intltool(AutotoolsPackage):
     url      = 'https://launchpad.net/intltool/trunk/0.51.0/+download/intltool-0.51.0.tar.gz'
     list_url = 'https://launchpad.net/intltool/+download'
 
-    version('0.51.0', '12e517cac2b57a0121cda351570f1e63')
+    version('0.51.0', sha256='67c74d94196b153b774ab9f89b2fa6c6ba79352407037c8c14d5aeb334e959cd')
 
     # requires XML::Parser perl module
     depends_on('perl-xml-parser', type=('build', 'run'))

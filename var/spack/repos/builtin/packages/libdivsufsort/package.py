@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,4 +13,4 @@ class Libdivsufsort(CMakePackage):
     homepage = "https://github.com/y-256/libdivsufsort"
     url      = "https://github.com/y-256/libdivsufsort/archive/2.0.1.tar.gz"
 
-    version('2.0.1', 'a75c6be4715d3d659936f3a1ab8cb5c0')
+    version('2.0.1', sha256='9164cb6044dcb6e430555721e3318d5a8f38871c2da9fd9256665746a69351e0')

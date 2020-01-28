@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Gflags(CMakePackage):
     homepage = "https://gflags.github.io/gflags"
     url      = "https://github.com/gflags/gflags/archive/v2.1.2.tar.gz"
 
-    version('2.1.2', 'ac432de923f9de1e9780b5254884599f')
+    version('2.1.2', sha256='d8331bd0f7367c8afd5fcb5f5e85e96868a00fd24b7276fa5fcee1e5575c2662')
 
     depends_on('cmake@2.8.12:', type='build')
 

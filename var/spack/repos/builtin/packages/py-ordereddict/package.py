@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,4 +15,4 @@ class PyOrdereddict(PythonPackage):
 
     import_modules = ['ordereddict']
 
-    version('1.1', 'a0ed854ee442051b249bfad0f638bbec')
+    version('1.1', sha256='1c35b4ac206cef2d24816c89f89cf289dd3d38cf7c449bb3fab7bf6d43f01b1f')

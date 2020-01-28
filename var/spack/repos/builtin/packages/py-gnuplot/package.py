@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PyGnuplot(PythonPackage):
     homepage = "http://gnuplot-py.sourceforge.net/"
     url      = "http://downloads.sourceforge.net/project/gnuplot-py/Gnuplot-py/1.8/gnuplot-py-1.8.tar.gz"
 
-    version('1.8', 'abd6f571e7aec68ae7db90a5217cd5b1')
+    version('1.8', sha256='ab339be7847d30a8acfd616f27b5021bfde0999b7bf2d68400fbe62c53106e21')
 
     depends_on('py-numpy', type=('build', 'run'))

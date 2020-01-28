@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Ldc(CMakePackage):
     homepage = "https://dlang.org/"
     url      = "https://github.com/ldc-developers/ldc/releases/download/v1.3.0/ldc-1.3.0-src.tar.gz"
 
-    version('1.3.0', '537d992a361b0fd0440b24a5145c9107')
+    version('1.3.0', sha256='efe31a639bcb44e1f5b752da21713376d9410a01279fecc8aab8572065a3050b')
 
     variant(
         'shared',

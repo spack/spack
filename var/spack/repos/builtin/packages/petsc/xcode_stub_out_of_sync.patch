@@ -1,0 +1,61 @@
+From 6982d0159d8c95d8c403e81563a610a34c8cd8ec Mon Sep 17 00:00:00 2001
+From: Satish Balay <balay@mcs.anl.gov>
+Date: Fri, 22 Mar 2019 13:51:07 -0500
+Subject: [PATCH] configure: work-around xcode warnings of type:
+
+ld: warning: text-based stub file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGFXShared.tbd and library file
+/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGFXShared.dylib are out of sync. Falling back to library file for linking.
+ld: warning: text-based stub file /System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLImage.tbd and library file
+/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGLImage.dylib are out of sync. Falling back to library file for linking.
+
+Reported-by: Denis Davydov <davydden@gmail.com>
+Reported-by: Amneet Pal Bhalla <asbhalla@sdsu.edu>
+Reported-by: DAFNAKIS PANAGIOTIS <panagiotis.dafnakis@polito.it>
+---
+ config/BuildSystem/config/compilers.py | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/config/BuildSystem/config/compilers.py b/config/BuildSystem/config/compilers.py
+index 7bd8093..eedf456 100644
+--- a/config/BuildSystem/config/compilers.py
++++ b/config/BuildSystem/config/compilers.py
+@@ -4,6 +4,12 @@ import re
+ import os
+ import shutil
+ 
++def remove_xcode_verbose(buf):
++  retbuf =[]
++  for line in buf.splitlines():
++    if not line.startswith('ld: warning: text-based stub file'): retbuf.append(line)
++  return ('\n').join(retbuf)
++
+ class MissingProcessor(RuntimeError):
+   pass
+ 
+@@ -242,6 +248,7 @@ class Configure(config.base.Configure):
+     self.setCompilers.LDFLAGS = oldFlags
+     self.popLanguage()
+ 
++    output = remove_xcode_verbose(output)
+     # PGI: kill anything enclosed in single quotes
+     if output.find('\'') >= 0:
+       # Cray has crazy non-matching single quotes so skip the removal
+@@ -552,6 +559,7 @@ class Configure(config.base.Configure):
+     self.setCompilers.LDFLAGS = oldFlags
+     self.popLanguage()
+ 
++    output = remove_xcode_verbose(output)
+     # PGI: kill anything enclosed in single quotes
+     if output.find('\'') >= 0:
+       if output.count('\'')%2: raise RuntimeError('Mismatched single quotes in C library string')
+@@ -939,6 +947,7 @@ class Configure(config.base.Configure):
+     self.setCompilers.LDFLAGS = oldFlags
+     self.popLanguage()
+ 
++    output = remove_xcode_verbose(output)
+     # replace \CR that ifc puts in each line of output
+     output = output.replace('\\\n', '')
+ 
+-- 
+2.10.5
+

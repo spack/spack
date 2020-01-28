@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xprop(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xprop"
     url      = "https://www.x.org/archive/individual/app/xprop-1.2.2.tar.gz"
 
-    version('1.2.2', 'db03a6bcf7b0d0c2e691ea3083277cbc')
+    version('1.2.2', sha256='3db78771ce8fb8954fb242ed9d4030372523649c5e9c1a9420340020dd0afbc2')
 
     depends_on('libx11')
 

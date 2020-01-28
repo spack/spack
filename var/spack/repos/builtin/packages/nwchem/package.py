@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,10 @@ class Nwchem(Package):
 
     tags = ['ecp', 'ecp-apps']
 
-    version('6.8.1', '6eccddc6db11886aa6f152626efc600c',
+    version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
             url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
-    version('6.8', '50b18116319f4c15d1cb7eaa1b433006',
+    version('6.8', sha256='8401d9f4cce2f653a38639df61260b06be580ff0e1b8d77ed3262da159b372a6',
             url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
-    version('6.6', 'c581001c004ea5e5dfacb783385825e3',
-            url='http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz')
 
     depends_on('blas')
     depends_on('lapack')

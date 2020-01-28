@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Pplacer(Package):
     homepage = "http://matsen.fhcrc.org/pplacer/"
     url      = "https://github.com/matsen/pplacer/releases/download/v1.1.alpha19/pplacer-linux-v1.1.alpha19.zip"
 
-    version('1.1.alpha19', 'e6b78604882d41d4bf13592c7edebfa2')
+    version('1.1.alpha19', sha256='9131b45c35ddb927f866385f149cf64af5dffe724234cd4548c22303a992347d')
 
     def install(self, spec, prefix):
         install_tree('scripts', prefix.bin)

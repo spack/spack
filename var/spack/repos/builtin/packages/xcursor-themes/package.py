@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class XcursorThemes(Package):
     homepage = "http://cgit.freedesktop.org/xorg/data/cursors"
     url      = "https://www.x.org/archive/individual/data/xcursor-themes-1.0.4.tar.gz"
 
-    version('1.0.4', 'c82628f35e9950ba225050ad5803b92a')
+    version('1.0.4', sha256='8ed23bab13a4010fe4e95b37eefb634e31ac7cb8240b8b3b7d919c3a2db09503')
 
     depends_on('libxcursor')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Fyba(AutotoolsPackage):
     homepage = "https://github.com/kartverket/fyba"
     url      = "https://github.com/kartverket/fyba/archive/4.1.1.tar.gz"
 
-    version('4.1.1', 'ab687582efdef26593796271529a10cb')
+    version('4.1.1', sha256='99f658d52e8fd8997118bb6207b9c121500700996d9481a736683474e2534179')
 
     # configure: error: cannot find install-sh or install.sh
     force_autoreconf = True

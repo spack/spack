@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -120,7 +120,7 @@ version numbers seen with most other Spack packages. For example, we have:
    ...
    Preferred version:
        professional.2018.3    http:...
-  
+
    Safe versions:
        professional.2018.3    http:...
        ...
@@ -728,7 +728,7 @@ For packages that contain a compiler, follow `the previous section
 
    .. code-block:: console
 
-      $ spack install intel-mpi@2018.3.199 
+      $ spack install intel-mpi@2018.3.199
       $ spack install intel-mpi@2018.3.199  %intel@18
 
 4. To prepare the new packages for use with client packages,
@@ -802,7 +802,7 @@ by one of the following means:
   Configure the order of compilers in the appropriate ``packages.yaml`` file,
   under either an ``all:`` or client-package-specific entry, in a
   ``compiler:`` list. Consult the Spack documentation for
-  :ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
+  `Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
   and
   :ref:`Concretization Preferences <concretization-preferences>`.
 
@@ -851,7 +851,7 @@ client packages, edit the ``packages.yaml`` file.  Customize, either in the
 the virtual packages and whose values are the Spack specs that satisfy the
 virtual package, in order of decreasing preference.  To learn more about the
 ``providers:`` settings, see the Spack tutorial for
-:ref:`Configuring Package Preferences <configs-tutorial-package-prefs>`
+`Configuring Package Preferences <https://spack-tutorial.readthedocs.io/en/latest/tutorial_configuration.html#configuring-package-preferences>`_
 and the section
 :ref:`Concretization Preferences <concretization-preferences>`.
 
@@ -972,7 +972,7 @@ a *virtual* ``mkl`` package is declared in Spack.
   .. code-block:: python
 
     self.spec['blas'].headers.include_flags
-    
+
   and to generate linker options (``-L<dir> -llibname ...``), use the same as above,
 
   .. code-block:: python

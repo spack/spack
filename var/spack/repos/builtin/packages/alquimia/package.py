@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,10 @@ class Alquimia(CMakePackage):
     homepage = "https://github.com/LBL-EESA/alquimia-dev"
     git      = "https://github.com/LBL-EESA/alquimia-dev.git"
 
+    maintainers = ['smolins', 'balay']
+
     version('develop')
+    version('xsdk-0.5.0', commit='8397c3b00a09534c5473ff3ab21f0e32bb159380')
     version('xsdk-0.4.0', commit='2edad6733106142d014bb6e6a73c2b21d5e3cf2d')
     version('xsdk-0.3.0', tag='xsdk-0.3.0')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -23,6 +26,7 @@ class Alquimia(CMakePackage):
 
     depends_on('mpi')
     depends_on('hdf5')
+    depends_on('pflotran@xsdk-0.5.0', when='@xsdk-0.5.0')
     depends_on('pflotran@xsdk-0.4.0', when='@xsdk-0.4.0')
     depends_on('pflotran@xsdk-0.3.0', when='@xsdk-0.3.0')
     depends_on('pflotran@xsdk-0.2.0', when='@xsdk-0.2.0')

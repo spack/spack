@@ -1,0 +1,74 @@
+From af1dc841609c980cd76f8e3c5db486d69073214b Mon Sep 17 00:00:00 2001
+From: Peter Dimov <pdimov@gmail.com>
+Date: Mon, 4 Mar 2019 16:35:35 +0200
+Subject: [PATCH] Disable -Wnon-virtual-dtor
+
+---
+ include/boost/system/error_code.hpp | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/include/boost/system/error_code.hpp b/include/boost/system/error_code.hpp
+index 93899df..b9c590d 100644
+--- a/include/boost/system/error_code.hpp
++++ b/include/boost/system/error_code.hpp
+@@ -155,6 +155,10 @@ template<> struct is_error_condition_enum<errc::errc_t>
+ };
+ 
+ // class error_category
++#if defined( BOOST_GCC ) || defined( BOOST_CLANG )
++#pragma GCC diagnostic push
++#pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
++#endif
+ 
+ #ifdef BOOST_MSVC
+ #pragma warning( push )
+@@ -314,6 +318,10 @@ public:
+ 
+ } // namespace detail
+ 
++#if defined( BOOST_GCC ) || defined( BOOST_CLANG )
++#pragma GCC diagnostic pop
++#endif
++
+ // generic_category(), system_category()
+ 
+ #if defined(BOOST_SYSTEM_HAS_CONSTEXPR)
+-- 
+2.20.1
+
+
+From c705bab504dafdc8925b30709e1ef8f83c62b9af Mon Sep 17 00:00:00 2001
+From: Peter Dimov <pdimov@gmail.com>
+Date: Mon, 4 Mar 2019 17:38:52 +0200
+Subject: [PATCH] #pragma GCC diagnostic push/pop requires gcc 4.6
+
+---
+ include/boost/system/error_code.hpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/include/boost/system/error_code.hpp b/include/boost/system/error_code.hpp
+index b9c590d..f1d7ddb 100644
+--- a/include/boost/system/error_code.hpp
++++ b/include/boost/system/error_code.hpp
+@@ -155,7 +155,7 @@ template<> struct is_error_condition_enum<errc::errc_t>
+ };
+ 
+ // class error_category
+-#if defined( BOOST_GCC ) || defined( BOOST_CLANG )
++#if ( defined( BOOST_GCC ) && BOOST_GCC >= 40600 ) || defined( BOOST_CLANG )
+ #pragma GCC diagnostic push
+ #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+ #endif
+@@ -318,7 +318,7 @@ public:
+ 
+ } // namespace detail
+ 
+-#if defined( BOOST_GCC ) || defined( BOOST_CLANG )
++#if ( defined( BOOST_GCC ) && BOOST_GCC >= 40600 ) || defined( BOOST_CLANG )
+ #pragma GCC diagnostic pop
+ #endif
+ 
+-- 
+2.20.1
+
+

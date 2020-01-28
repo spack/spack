@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Dtcmp(AutotoolsPackage):
     homepage = "https://github.com/hpc/dtcmp"
     url      = "https://github.com/hpc/dtcmp/releases/download/v1.0.3/dtcmp-1.0.3.tar.gz"
 
-    version('1.1.0', 'af5c73f7d3a9afd90a22d0df85471d2f')
-    version('1.0.3', 'cdd8ccf71e8ff67de2558594a7fcd317')
+    version('1.1.0', sha256='fd2c4485eee560a029f62c8f227df4acdb1edc9340907f4ae2dbee59f05f057d')
+    version('1.0.3', sha256='1327368e2808043ad5f245cd16f0da19543de50eae02a4e22b8a1c2e0eff8f35')
 
     depends_on('mpi')
     depends_on('lwgrp')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Fslsfonts(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/fslsfonts"
     url      = "https://www.x.org/archive/individual/app/fslsfonts-1.0.5.tar.gz"
 
-    version('1.0.5', 'ef781bd6a7b529d3ed7a256055715730')
+    version('1.0.5', sha256='27e58d2313835ce0f08cf47c59a43798b122f605a55f54b170db27b57a492007')
 
     depends_on('libfs')
 

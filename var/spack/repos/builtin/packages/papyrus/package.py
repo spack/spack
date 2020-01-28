@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class Papyrus(CMakePackage):
     git      = "https://code.ornl.gov/eck/papyrus.git"
 
     version('develop', branch='master')
-    version('1.0.0', 'fe0fca073c3604110f0507f375d71e64')
+    version('1.0.0', sha256='5d57c0bcc80de48951e42460785783b882087a5714195599d773a6eabde5c4c4')
 
     depends_on('mpi')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Multitail(MakefilePackage):
     homepage = "https://www.vanheusden.com/multitail/index.php"
     url      = "https://www.vanheusden.com/multitail/multitail-6.4.2.tgz"
 
-    version('6.4.2', 'a0959f7b2385061080712afd8ae6e33d')
+    version('6.4.2', sha256='af1d5458a78ad3b747c5eeb135b19bdca281ce414cefdc6ea0cff6d913caa1fd')
 
     depends_on('ncurses')
 

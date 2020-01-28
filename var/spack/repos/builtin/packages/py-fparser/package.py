@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class PyFparser(PythonPackage):
     git      = "https://github.com/stfc/fparser.git"
 
     version('develop', branch='master')
-    version('0.0.6', '15553fde76b4685fa8edb0a5472b1b53d308c3b8')
-    version('0.0.5', '14630afdb8c8bd025e5504c5ab19d133aa8cf8c7')
+    version('0.0.6', sha256='6ced61573257d11037d25c02d5f0ea92ca9bf1783018bf5f0de30d245ae631ac')
+    version('0.0.5', sha256='7668b331b9423d15353d502ab26d1d561acd5247882dab672f1e45565dabaf08')
 
     depends_on('py-setuptools', type='build')
 

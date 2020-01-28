@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Fstobdf(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/fstobdf"
     url      = "https://www.x.org/archive/individual/app/fstobdf-1.0.6.tar.gz"
 
-    version('1.0.6', '6d3f24673fcb9ce266f49dc140bbf250')
+    version('1.0.6', sha256='bb903ae76cbcb0a08a71f06762b64db7d5c2064f6e88e8dc3a604e76d0bcb93d')
 
     depends_on('libx11')
     depends_on('libfs')

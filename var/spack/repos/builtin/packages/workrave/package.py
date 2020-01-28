@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,16 +16,16 @@ class Workrave(AutotoolsPackage):
     homepage = "http://www.workrave.org/"
     url      = "https://github.com/rcaelers/workrave/archive/v1_10_20.tar.gz"
 
-    version('1_10_20', '095567c10311bd2c1a52f98035cc8590')
-    version('1_10_19', 'a87ed53d5b321133e8b6b98fd715507b')
-    version('1_10_18', 'd36c2aba0485116b831d5b36a862f343')
-    version('1_10_17', 'ba829bb2c0ec999b3194b4d845549c39')
-    version('1_10_16', 'b9bf77bfe0c909fff56759e7dda40f9d')
-    version('1_10_15', '4a70c2e325503249d1a40fcc236d6802')
-    version('1_10_14', '67108d993719d9438a1b69f0cb8fc9b8')
-    version('1_10_13', 'd5e7110dfb0b0a31c909405913ac2a75')
-    version('1_10_12', '0bfbaa1dc35901ffa8f1a3676421a992')
-    version('1_10_10', 'cf827672c8a1ece074f8ddfcf73d0fe2')
+    version('1_10_20', sha256='a89c6e82d5bbbaae5e171100b87c4efd8316ab8a18d82b83714035e1116983ec')
+    version('1_10_19', sha256='3a24d87e22fc9f463b6a9319843751038cbf6acfab9cd67893221a0071cf5405')
+    version('1_10_18', sha256='f0de5abd2c3a29106b915f1c051808f6083e1052b46c5143ff96e2334757e91b')
+    version('1_10_17', sha256='d911fd4738b6b4737cc2fc54c1683eb5d290f2764398c432fcc3b61bb326e71a')
+    version('1_10_16', sha256='4368306db0d06e76a3a90fc8e81b3648c1218259833b01cdc6899b1e98e5895c')
+    version('1_10_15', sha256='fa05bedbb32baae9d22ef2b1ac25e90bc9f1363ce588b396190b0240559f471c')
+    version('1_10_14', sha256='de342be4ff131645ff29fe003b476816965a65a44f4ddc85109960502d9e7310')
+    version('1_10_13', sha256='cbb5dab1073d2715e5b9cb8ccf8b3362ab6fa8ab05aa44629ecc78d6b93769e3')
+    version('1_10_12', sha256='eb7a4b7ba137e6997d7b44ed38b705daf391e9c646a5a068c9b002830f35be47')
+    version('1_10_10', sha256='84f9dca7634e291631017053a63ac20cd23c4da8c8f09ca4beef6f1419d904e3')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -67,13 +67,13 @@ class Workrave(AutotoolsPackage):
              destination='',
              placement=m4files[1])
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         # unset PYTHONHOME to let system python script with explict
         # system python sbangs like glib-mkenums work, see #6968
         # Without this, we will get
         # ImportError: No module named site
         # during build phase when make runs glib-mkenums
-        build_env.unset('PYTHONHOME')
+        env.unset('PYTHONHOME')
 
     @run_before('autoreconf')
     def extra_m4(self):

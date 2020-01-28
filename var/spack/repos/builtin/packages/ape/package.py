@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Ape(Package):
     homepage = "http://www.tddft.org/programs/APE/"
     url      = "http://www.tddft.org/programs/APE/sites/default/files/ape-2.2.1.tar.gz"
 
-    version('2.2.1', 'ab81da85bd749c0c136af088c7f9ad58')
+    version('2.2.1', sha256='1bdb7f987fde81f8a5f335da6b59fa884e6d185d4a0995c90fde7c04376ce9e3')
 
     depends_on('gsl')
     depends_on('libxc@:2.2.2')

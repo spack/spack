@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class Rsbench(MakefilePackage):
     homepage = "https://github.com/ANL-CESAR/RSBench"
     url = "https://github.com/ANL-CESAR/RSBench/archive/v2.tar.gz"
 
-    version('2', '15a3ac5ea72529ac1ed9ed016ee68b4f')
-    version('0', '3427634dc5e7cd904d88f9955b371757')
+    version('2', sha256='1e97a38a863836e98cedc5cc669f8fdcaed905fafdc921d2bce32319b3e157ff')
+    version('0', sha256='95c06cf4cb6f396f9964d5e4b58a477bf9d7131cd39804480f1cb74e9310b271')
 
     tags = ['proxy-app']
 

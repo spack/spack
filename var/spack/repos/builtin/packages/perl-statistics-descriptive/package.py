@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PerlStatisticsDescriptive(PerlPackage):
     homepage = "http://search.cpan.org/~shlomif/Statistics-Descriptive-3.0612/lib/Statistics/Descriptive.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/S/SH/SHLOMIF/Statistics-Descriptive-3.0612.tar.gz"
 
-    version('3.0612', 'e38cfbc1e3962d099b62a14a57a175f1')
+    version('3.0612', sha256='772413148e5e00efb32f277c4254aa78b9112490a896208dcd0025813afdbf7a')

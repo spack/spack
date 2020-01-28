@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class PkgConfig(AutotoolsPackage):
     homepage = "http://www.freedesktop.org/wiki/Software/pkg-config/"
     url = "http://pkgconfig.freedesktop.org/releases/pkg-config-0.29.2.tar.gz"
 
-    version('0.29.2', 'f6e931e319531b736fadc017f470e68a')
-    version('0.29.1', 'f739a28cae4e0ca291f82d1d41ef107d')
-    version('0.28',   'aa3c86e67551adc3ac865160e34a2a0d')
+    version('0.29.2', sha256='6fc69c01688c9458a57eb9a1664c9aba372ccda420a02bf4429fe610e7e7d591')
+    version('0.29.1', sha256='beb43c9e064555469bd4390dcfd8030b1536e0aa103f08d7abf7ae8cac0cb001')
+    version('0.28',   sha256='6b6eb31c6ec4421174578652c7e141fdaae2dabad1021f420d8713206ac1f845')
 
     provides('pkgconfig')
 
@@ -27,10 +27,9 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Adds the ACLOCAL path for autotools."""
-        spack_env.append_path('ACLOCAL_PATH',
-                              join_path(self.prefix.share, 'aclocal'))
+        env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
 
     def configure_args(self):
         config_args = ['--enable-shared']

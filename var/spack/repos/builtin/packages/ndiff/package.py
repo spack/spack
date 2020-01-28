@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,8 @@ class Ndiff(Package):
     homepage = "http://ftp.math.utah.edu/pub/ndiff/"
     url      = "http://ftp.math.utah.edu/pub/ndiff/ndiff-2.00.tar.gz"
 
-    version('2.00', '885548b4dc26e72c5455bebb5ba6c16d')
-    version('1.00', 'f41ffe5d12f36cd36b6311acf46eccdc')
+    version('2.00', sha256='f2bbd9a2c8ada7f4161b5e76ac5ebf9a2862cab099933167fe604b88f000ec2c')
+    version('1.00', sha256='d4be3ab38e4b87da8d689fe47413e01a7bfdf8c8627bfb673aac37953a463a92')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

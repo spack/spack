@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import argparse
 import copy
 import os
-import string
 import sys
 
 import llnl.util.tty as tty
@@ -31,13 +30,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="do not try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'spec'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -85,7 +81,7 @@ env = dict(os.environ)
         env_vars = sorted(list(env.keys()))
         for name in env_vars:
             val = env[name]
-            if string.find(name, 'PATH') < 0:
+            if name.find('PATH') < 0:
                 fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
             else:
                 if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
@@ -95,7 +91,7 @@ env = dict(os.environ)
 
                 fout.write(
                     'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                for part in string.split(val, sep):
+                for part in val.split(sep):
                     fout.write('    %s\n' % part)
                 fout.write('"""))\n')
 

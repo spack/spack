@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Showfont(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/showfont"
     url      = "https://www.x.org/archive/individual/app/showfont-1.0.5.tar.gz"
 
-    version('1.0.5', 'cea973363df01fb27a87e939600137fd')
+    version('1.0.5', sha256='566e34a145ea73397724d46e84f6a9b3691cf55d0fcb96ec7f917b2b39265ebb')
 
     depends_on('libfs')
 

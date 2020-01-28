@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Gmt(Package):
     depends_on('ghostscript')
     depends_on('subversion')
     depends_on('cmake@2.8.5:', type='build', when='@5:')
-    depends_on('netcdf@4:')
+    depends_on('netcdf-c@4:')
     depends_on('curl', when='@5.4:')
 
     # Optional dependencies
@@ -58,7 +58,7 @@ class Gmt(Package):
     def install(self, spec, prefix):
         args = [
             '--prefix={0}'.format(prefix),
-            '--enable-netcdf={0}'.format(spec['netcdf'].prefix),
+            '--enable-netcdf={0}'.format(spec['netcdf-c'].prefix),
             '--enable-shared',
             '--without-x'
         ]

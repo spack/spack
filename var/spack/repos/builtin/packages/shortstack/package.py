@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Shortstack(Package):
     homepage = "http://sites.psu.edu/axtell/software/shortstack/"
     url      = "https://github.com/MikeAxtell/ShortStack/archive/v3.8.3.tar.gz"
 
-    version('3.8.3', '3f21f494f799039f3fa88ea343f2d20d')
+    version('3.8.3', sha256='7c76f51ed949ca95ec5df7cb54803ae2350658fd64c75909351d5a856abb0dbe')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('samtools')

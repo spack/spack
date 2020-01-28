@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Kdiff3(Package):
     homepage = "http://kdiff3.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/kdiff3/kdiff3/0.9.98/kdiff3-0.9.98.tar.gz"
 
-    version('0.9.98', 'b52f99f2cf2ea75ed5719315cbf77446')
+    version('0.9.98', sha256='802c1ababa02b403a5dca15955c01592997116a24909745016931537210fd668')
 
     depends_on("qt@:4.99,5.2.0:")
 

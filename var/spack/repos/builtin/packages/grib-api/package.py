@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,10 @@ class GribApi(CMakePackage):
 
     maintainers = ['skosukhin']
 
-    version('1.24.0', 'dcc549069cdeeaa1959732c36ab3136f')
-    version('1.21.0', 'eb64c5eb72e6e90841237cba9d644016')
-    version('1.17.0', 'bca7114d2c3100501a08190a146818d2')
-    version('1.16.0', '8c7fdee03344e4379d400ae20976a460')
+    version('1.24.0', sha256='6b0d443cb0802c5de652e5816c5b88734cb3ead454eb932c5ec12ef8d4f77bcd')
+    version('1.21.0', sha256='50c2b58303ab578c55735e6c21c72ffc24f82a5bf52565550f54d49cb60e8a90')
+    version('1.17.0', sha256='55cbb4fdcb4ee1be6a27cece9ae7e26070beb8ab6cb7e77773db3fb0d4272462')
+    version('1.16.0', sha256='0068ca4149a9f991d4c86a813ac73b4e2299c6a3fd53aba9e6ab276ef6f0ff9a')
 
     variant('netcdf', default=False,
             description='Enable netcdf encoding/decoding using netcdf library')
@@ -50,7 +50,7 @@ class GribApi(CMakePackage):
     # tests are enabled but the testing scripts don't use it.
     # depends_on('valgrind', type='test', when='+test')
 
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('openjpeg@1.5.0:1.5.999', when='jp2k=openjpeg')
     depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
@@ -100,7 +100,7 @@ class GribApi(CMakePackage):
                          '-DHDF5_ROOT=' + self.spec['hdf5'].prefix,
                          # Prevent possible overriding by environment variables
                          # NETCDF_ROOT, NETCDF_DIR, and NETCDF_PATH.
-                         '-DNETCDF_PATH=' + self.spec['netcdf'].prefix])
+                         '-DNETCDF_PATH=' + self.spec['netcdf-c'].prefix])
         else:
             args.append('-DENABLE_NETCDF=OFF')
 

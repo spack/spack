@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ class Damaris(CMakePackage):
     targeting large-scale, MPI-based HPC simulations."""
 
     homepage = "https://project.inria.fr/damaris/"
-    url = "https://gitlab.inria.fr/Damaris/damaris"
+    git      = "https://gitlab.inria.fr/Damaris/damaris.git"
 
-    version('master', git='https://gitlab.inria.fr/Damaris/damaris.git')
-    version('1.3.1',  git='https://gitlab.inria.fr/Damaris/damaris.git', tag='v1.3.1', preferred=True)
+    version('master', branch='master')
+    version('1.3.1',  tag='v1.3.1')
 
     variant('fortran',  default=True,  description='Enables Fortran support')
     variant('hdf5',     default=False, description='Enables the HDF5 storage plugin')

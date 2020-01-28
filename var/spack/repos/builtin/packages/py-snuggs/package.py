@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PySnuggs(PythonPackage):
     homepage = "https://github.com/mapbox/snuggs"""
     url      = "https://github.com/mapbox/snuggs/archive/1.4.1.zip"
 
-    version('1.4.1', 'bfc4058c32faa4ef76ab7946755557cc')
+    version('1.4.1', sha256='b37ed4e11c5f372695dc6fe66fce6cede124c90a920fe4726c970c9293b71233')
 
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-click', type=('build', 'run'))

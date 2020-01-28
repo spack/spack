@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,11 @@ class Git(AutotoolsPackage):
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
 
     releases = [
+        {
+            'version': '2.21.0',
+            'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
+            'sha256_manpages': '14c76ebb4e31f9e55cf5338a04fd3a13bced0323cd51794ccf45fc74bd0c1080'
+        },
         {
             'version': '2.20.1',
             'sha256': 'edc3bc1495b69179ba4e272e97eff93334a20decb1d8db6ec3c19c16417738fd',
@@ -180,13 +185,13 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
-    # See the comment in setup_environment re EXTLIBS.
+    # See the comment in setup_build_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
                     '#EXTLIBS =',
                     'Makefile')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # We use EXTLIBS rather than LDFLAGS so that git's Makefile
         # inserts the information into the proper place in the link commands
         # (alongside the # other libraries/paths that configure discovers).
@@ -199,9 +204,9 @@ class Git(AutotoolsPackage):
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            spack_env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+            env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))
-            spack_env.append_flags('CFLAGS', '-I{0}'.format(
+            env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
     def configure_args(self):

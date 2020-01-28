@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import os
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
+from llnl.util.filesystem import filter_file
 
 
 class PerlPackage(PackageBase):
@@ -79,6 +80,17 @@ class PerlPackage(PackageBase):
         options += self.configure_args()
 
         inspect.getmodule(self).perl(*options)
+
+    # It is possible that the shebang in the Build script that is created from
+    # Build.PL may be too long causing the build to fail. Patching the shebang
+    # does not happen until after install so set '/usr/bin/env perl' here in
+    # the Build script.
+    @run_after('configure')
+    def fix_shebang(self):
+        if self.build_method == 'Build.PL':
+            pattern = '#!{0}'.format(self.spec['perl'].command.path)
+            repl = '#!/usr/bin/env perl'
+            filter_file(pattern, repl, 'Build', backup=False)
 
     def build(self, spec, prefix):
         """Builds a Perl package."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Mosh(AutotoolsPackage):
     homepage = "https://mosh.org/"
     url      = "https://mosh.org/mosh-1.2.6.tar.gz"
 
-    version('1.3.2', '5122f4d2b973ab7c38dcdac8c35cb61e')
-    version('1.3.0', 'd961276995936953bf2d5a794068b076')
-    version('1.2.6', 'bb4e24795bb135a754558176a981ee9e')
+    version('1.3.2', sha256='da600573dfa827d88ce114e0fed30210689381bbdcff543c931e4d6a2e851216')
+    version('1.3.0', sha256='320e12f461e55d71566597976bd9440ba6c5265fa68fbf614c6f1c8401f93376')
+    version('1.2.6', sha256='7e82b7fbfcc698c70f5843bb960dadb8e7bd7ac1d4d2151c9d979372ea850e85')
 
     depends_on('protobuf')
     depends_on('ncurses')

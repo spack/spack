@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xvinfo(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xvinfo"
     url      = "https://www.x.org/archive/individual/app/xvinfo-1.1.3.tar.gz"
 
-    version('1.1.3', '6890a19226c07344ae12e7a2ef12f2c6')
+    version('1.1.3', sha256='1c1c2f97abfe114389e94399cc7bf3dfd802ed30ad41ba23921d005bd8a6c39f')
 
     depends_on('libxv')
     depends_on('libx11')

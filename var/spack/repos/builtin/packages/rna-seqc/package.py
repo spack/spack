@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class RnaSeqc(Package):
     homepage = "http://archive.broadinstitute.org/cancer/cga/rna-seqc"
     url      = "http://www.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar"
 
-    version('1.1.8', '71d7b5d3b3dcc1893cdc7f6819185d41', expand=False)
-    version('1.1.7', '2d0b8ecac955af2f9bc1b185fdfb6b45', expand=False)
-    version('1.1.6', 'fa9c9885081ae2e47f285c7c0f596a14', expand=False)
-    version('1.1.5', '4b875671e906f708cbb8fd9bcf0e958d', expand=False)
-    version('1.1.4', 'b04d06947c48cb2dc1b0ba29c8232db5', expand=False)
+    version('1.1.8', sha256='0a6a8cc885e77c7e7b75dafcfd2152e0d1031fa7aba2565250a46fbd98979793', expand=False)
+    version('1.1.7', sha256='78e043a2973fed8d567e16bd1f68b1bd78dafe536a41cee07c32e3148e1f1ff3', expand=False)
+    version('1.1.6', sha256='76f1497b275c801d18a1b403336569552853dd248d94aa625862ea08c6ba25f6', expand=False)
+    version('1.1.5', sha256='1da100182037f46c61f93a063083e3be579da2678b0441fbc3fc8b58120e52c9', expand=False)
+    version('1.1.4', sha256='eac437061157036dddf496be8e05fe62b011fb95d34e9079c93ee4001710f1c6', expand=False)
 
     depends_on('jdk@8:', type='run')
 

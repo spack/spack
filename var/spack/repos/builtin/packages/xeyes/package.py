@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xeyes(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xeyes"
     url      = "https://www.x.org/archive/individual/app/xeyes-1.1.1.tar.gz"
 
-    version('1.1.1', '2c0522bce5c61bbe784d2b3491998d31')
+    version('1.1.1', sha256='3a1871a560ab87c72a2e2ecb7fd582474448faec3e254c9bd8bead428ab1bca3')
 
     depends_on('libx11')
     depends_on('libxt')

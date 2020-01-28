@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Gmime(AutotoolsPackage):
     homepage = "http://spruce.sourceforge.net/gmime/"
     url      = "https://download.gnome.org/sources/gmime/2.6/gmime-2.6.23.tar.xz"
 
-    version('2.6.23', '247072236d84bd0fbbff299d69bdf333')
+    version('2.6.23', sha256='7149686a71ca42a1390869b6074815106b061aaeaaa8f2ef8c12c191d9a79f6a')
 
     depends_on('glib@2.18.0:')
     depends_on('libgpg-error')

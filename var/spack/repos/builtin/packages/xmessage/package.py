@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xmessage(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xmessage"
     url      = "https://www.x.org/archive/individual/app/xmessage-1.0.4.tar.gz"
 
-    version('1.0.4', '69df5761fbec14c782948065a6f36028')
+    version('1.0.4', sha256='883099c3952c8cace5bd11d3df2e9ca143fc07375997435d5ff4f2d50353acca')
 
     depends_on('libxaw')
     depends_on('libxt')

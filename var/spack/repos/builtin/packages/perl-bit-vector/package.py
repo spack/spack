@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PerlBitVector(PerlPackage):
     homepage = "http://search.cpan.org/~stbey/Bit-Vector-7.4/Vector.pod"
     url      = "http://search.cpan.org/CPAN/authors/id/S/ST/STBEY/Bit-Vector-7.4.tar.gz"
 
-    version('7.4', 'bf67f144e5be5327ed79d4c69e6e0086')
+    version('7.4', sha256='3c6daa671fecfbc35f92a9385b563d65f50dfc6bdc8b4805f9ef46c0d035a926')
 
     depends_on('perl-carp-clan', type=('build', 'run'))

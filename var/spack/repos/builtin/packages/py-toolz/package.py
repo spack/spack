@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class PyToolz(PythonPackage):
 
     import_modules = ['toolz', 'tlz', 'toolz.curried', 'toolz.sandbox']
 
-    version('0.9.0', '6fd07249389dd0b3bfe71d4282314328')
+    version('0.9.0', sha256='929f0a7ea7f61c178bd951bdae93920515d3fbdbafc8e6caf82d752b9b3b31c9')
 
     depends_on('py-setuptools', type='build')

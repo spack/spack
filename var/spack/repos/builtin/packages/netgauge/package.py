@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,6 @@ class Netgauge(AutotoolsPackage):
     homepage = "http://unixer.de/research/netgauge/"
     url      = "http://unixer.de/research/netgauge/netgauge-2.4.6.tar.gz"
 
-    version('2.4.6', 'e0e040ec6452e93ca21ccc54deac1d7f')
+    version('2.4.6', sha256='dc9398e4e042efec70881f2c7074ff18cc5b74bc5ffc4b8a4aaf813b39f83444')
 
     depends_on("mpi")

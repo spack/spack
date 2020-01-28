@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyNumexpr3(PythonPackage):
     homepage = "https://github.com/pydata/numexpr/tree/numexpr-3.0"
     url = "https://pypi.io/packages/source/n/numexpr3/numexpr3-3.0.1a1.tar.gz"
 
-    version('3.0.1.a1', '9fa8dc59b149aa1956fc755f982a78ad')
+    version('3.0.1a1', sha256='de06f1b4206704b5bc19ea09b5c94350b97c211c26bc866f275252a8461b87e6')
     # TODO: Add CMake build system for better control of passing flags related
     # to CPU ISA.
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class SomaticSniper(CMakePackage):
     homepage = "http://gmt.genome.wustl.edu/packages/somatic-sniper"
     url      = "https://github.com/genome/somatic-sniper/archive/v1.0.5.0.tar.gz"
 
-    version('1.0.5.0', '64bc2b001c9a8089f2a05900f8a0abfe')
+    version('1.0.5.0', sha256='fc41e90237b059fcc591e404830c4b1be678642dd5afd76ce545b97b4b7b3de1')
 
     depends_on('ncurses')
 

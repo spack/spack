@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -714,7 +714,7 @@ def test_disjoint_set_initialization():
     # Test that no error is thrown when the sets are disjoint
     d = disjoint_sets(('a',), ('b', 'c'), ('e', 'f'))
 
-    assert d.default is 'none'
+    assert d.default == 'none'
     assert d.multi is True
     assert set(x for x in d) == set(['none', 'a', 'b', 'c', 'e', 'f'])
 

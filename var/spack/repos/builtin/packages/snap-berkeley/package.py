@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class SnapBerkeley(MakefilePackage):
     homepage = "http://snap.cs.berkeley.edu/"
     url      = "https://github.com/amplab/snap/archive/v1.0beta.18.tar.gz"
 
-    version('1.0beta.18', '41e595fffa482e9eda1c3f69fb5dedeb')
-    version('0.15',       'a7d87cc822f052665a347ab0aa84d4de', preferred=True)
+    version('1.0beta.18', sha256='9e8a8dc3f17e3f533d34011afe98316c19cbd70cc8b4830375611e003697daee')
+    version('0.15',       sha256='bea0174c8d01907023494d7ffd2a6dab9c38d248cfe4d3c26feedf9d5becce9a', preferred=True)
 
     depends_on('zlib')
 

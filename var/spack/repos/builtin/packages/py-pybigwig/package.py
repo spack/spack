@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyPybigwig(PythonPackage):
 
     patch('python3_curl.patch', when='@:0.3.12 ^python@3:')
 
-    depends_on('curl', type=('build', 'run'))
+    depends_on('curl', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-numpy', type=('build', 'run'), when='+numpy')

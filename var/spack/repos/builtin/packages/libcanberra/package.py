@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libcanberra(AutotoolsPackage):
     homepage = "http://0pointer.de/lennart/projects/libcanberra/"
     url      = "http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
 
-    version('0.30', '34cb7e4430afaf6f447c4ebdb9b42072')
+    version('0.30', sha256='c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72')
 
     # TODO: Add variants and dependencies for the following audio support:
     # ALSA, OSS, PulseAudio, udev, GStreamer, null, GTK3+ , tdb
