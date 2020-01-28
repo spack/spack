@@ -1194,7 +1194,6 @@ class Environment(object):
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
-                all_installed &= bool(spec.package.installed)
                 if not spec.package.installed:
                     uninstalled_specs.append(spec)
 
