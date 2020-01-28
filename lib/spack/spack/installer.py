@@ -114,8 +114,7 @@ def _do_fake_install(pkg):
     and libraries.
 
     Args:
-        pkg (spack.package.PackageBase): the package whose installation is to
-            be faked
+        pkg (PackageBase): the package whose installation is to be faked
     """
 
     command = pkg.name
@@ -163,11 +162,11 @@ def _get_bootstrap_compilers(pkg):
         pkg (Package): the package that may need its compiler installed
 
     Return:
-        (list) list of tuples, (spack.package.PackageBase, bool), for
-            concretized compiler-related packages that need to be installed
-            and bool values specify whether the package is the bootstrap
-            compiler
-            (``True``) or one of its dependencies (``False``)
+        (list) list of tuples, (PackageBase, bool), for concretized compiler-
+            -related packages that need to be installed and bool values
+            specify whether the package is the bootstrap compiler
+            (``True``) or one of its dependencies (``False``).  The list
+            will be empty if there are no compilers.
     """
     tty.debug('Bootstrapping {0} compiler for {1}'
               .format(pkg.spec.compiler, pkg.unique_id))
@@ -215,8 +214,7 @@ def _installed_from_cache(pkg, cache_only, explicit):
     Install the package from binary cache
 
     Args:
-        pkg (spack.package.PackageBase): the package to install from the binary
-            cache
+        pkg (PackageBase): the package to install from the binary cache
         cache_only (bool): only install from binary cache
         explicit (bool): ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
@@ -303,8 +301,7 @@ def _try_install_from_binary_cache(pkg, explicit):
     Try to install the package from binary cache.
 
     Args:
-        pkg (spack.package.PackageBase): the package to be installed from
-            binary cache
+        pkg (PackageBase): the package to be installed from binary cache
         explicit (bool): the package was explicitly requested by the user
     """
     tty.debug('Searching for binary cache of {0}'.format(pkg.unique_id))
@@ -524,8 +521,8 @@ class PackageInstaller(object):
         Initialize and set up the build specs.
 
         Args:
-            pkg (spack.package.PackageBase): the package being installed, whose
-                spec is concrete
+            pkg (PackageBase): the package being installed, whose spec is
+                concrete
 
         Return:
             (PackageInstaller) instance
@@ -563,8 +560,7 @@ class PackageInstaller(object):
         Add bootstrap compilers and dependencies to the build queue.
 
         Args:
-            pkg (spack.package.PackageBase): the package with possible compiler
-                dependencies
+            pkg (PackageBase): the package with possible compiler dependencies
         """
         compilers = _get_bootstrap_compilers(pkg)
         for (comp, is_compiler) in compilers:
@@ -579,7 +575,8 @@ class PackageInstaller(object):
         prepare for a new install attempt.
 
         Args:
-            pkg (spack.package.PackageBase): the package being installed
+            task (BuildTask): the build task whose associated package is
+                being checked
             keep_prefix (bool): ``True`` if the prefix is to be kept on
                 failure, otherwise ``False``
             keep_stage (bool): ``True`` if the stage is to be kept even if
@@ -690,7 +687,7 @@ class PackageInstaller(object):
         Cleanup the build task for the spec
 
         Args:
-            pkg (spack.package.PackageBase): the package being installed
+            pkg (PackageBase): the package being installed
             remove_task (bool): ``True`` if the build task should be removed
         """
         if remove_task:
@@ -706,8 +703,7 @@ class PackageInstaller(object):
         already locked.
 
         Args:
-            pkg (spack.package.PackageBase): the package being locally
-                installed
+            pkg (PackageBase): the package being locally installed
         """
         pre = "{0} cannot be installed locally:".format(pkg.unique_id)
 
@@ -732,8 +728,7 @@ class PackageInstaller(object):
         needed.
 
         Args:
-            pkg (spack.package.PackageBase): the package whose spec is being
-                installed
+            pkg (PackageBase): the package whose spec is being installed
         """
         pkg_id = pkg.unique_id
         ltype, lock = self.locks[pkg_id] if pkg_id in self.locks \
@@ -794,8 +789,7 @@ class PackageInstaller(object):
         the current process proceeds as quickly as possible to the next spec.
 
         Args:
-            pkg (spack.package.PackageBase): the package whose spec is being
-                installed
+            pkg (PackageBase): the package whose spec is being installed
         """
         pkg_id = pkg.unique_id
         ltype, lock = self.locks[pkg_id] if pkg_id in self.locks else \
