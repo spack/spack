@@ -3,12 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# TODO: Debug erroneous/failing (install) tests: 16 failed, 1 error
-# TODO: Add unit tests
-
-# TODO: Change Installer to process multiple (explicit) package installs
-# TODO:    at once (instead of one)
-
 """ This module encapsulates package installer functionality. """
 
 import glob
@@ -66,7 +60,7 @@ STATUS_DEQUEUED = 'dequeued'
 STATUS_REMOVED = 'removed'
 
 
-# TODO: Should the following be static methods?  If so, of which class?
+# TODO: Should the following be static methods?
 # TODO: If static, which class: package or installer?
 # TODO: Or keep as module functions as described in:
 # TODO:   https://www.webucator.com/blog/2016/05/\
@@ -192,7 +186,7 @@ def _hms(seconds):
         seconds (int): time to be converted in seconds
 
     Return:
-        (str) String representation of the time as #h #m #.##fs
+        (str) String representation of the time as #h #m #.##s
     """
     m, s = divmod(seconds, 60)
     h, m = divmod(m, 60)
