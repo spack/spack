@@ -1190,19 +1190,15 @@ class Environment(object):
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
+        uninstalled_specs = []
         with spack.store.db.read_transaction():
-            all_installed = True
             for concretized_hash in self.concretized_order:
                 spec = self.specs_by_hash[concretized_hash]
                 all_installed &= bool(spec.package.installed)
-                if not all_installed:
-                    break
-            if all_installed:
-                return
+                if not spec.package.installed:
+                    uninstalled_specs.append(spec)
 
-        for concretized_hash in self.concretized_order:
-            spec = self.specs_by_hash[concretized_hash]
-
+        for spec in uninstalled_specs:
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()
