@@ -33,6 +33,7 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
+import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -669,6 +670,9 @@ def get_specs(force=False, use_arch=False):
     """
     global _cached_specs
 
+    arch = architecture.Arch(architecture.platform(),
+                             'default_os', 'default_target')
+
     if _cached_specs:
         tty.debug("Using previously-retrieved specs")
         return _cached_specs
@@ -691,8 +695,8 @@ def get_specs(force=False, use_arch=False):
                     if re.search('spec.yaml', file):
                         link = url_util.join(fetch_url_build_cache, file)
                         if use_arch and re.search('%s-%s' %
-                                                  (spack.architecture.platform,
-                                                   spack.architecture.os),
+                                                  (arch.platform,
+                                                   arch.os),
                                                   file):
                             urls.add(link)
                         else:
@@ -705,8 +709,8 @@ def get_specs(force=False, use_arch=False):
             for link in links:
                 if re.search("spec.yaml", link):
                     if use_arch and re.search('%s-%s' %
-                                              (spack.architecture.platform,
-                                               spack.architecture.os),
+                                              (arch.platform,
+                                               arch.os),
                                               link):
                         urls.add(link)
                     else:
