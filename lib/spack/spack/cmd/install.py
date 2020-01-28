@@ -228,7 +228,8 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
                     abstract_spec, spec)
                 env.write(regenerate_views=False)
             env._install(concrete, **kwargs)
-            env.regenerate_views()
+            with env.write_transaction():
+                env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
@@ -273,7 +274,10 @@ environment variables:
 
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
-            env.regenerate_views()
+            with env.write_transaction():
+                # It is not strictly required to synchronize view regeneration
+                # but doing so can prevent redundant work in the filesystem.
+                env.regenerate_views()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")
