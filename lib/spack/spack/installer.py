@@ -645,7 +645,7 @@ class PackageInstaller(object):
         for pkg_id in self.failed:
             self._cleanup_failed(pkg_id)
 
-        ids = list(self.build_tasks.keys())
+        ids = list(self.build_tasks)
         for pkg_id in ids:
             try:
                 self._remove_task(pkg_id)
@@ -659,19 +659,17 @@ class PackageInstaller(object):
         Args:
             pkg_id (str): identifier for the failed package
         """
-        if pkg_id in self.failed:
-            lock = self.failed[pkg_id]
-            if lock is not None:
-                err = "{0} exception when removing failure mark for {1}: {2}"
-                msg = 'Removing failure mark on {0}'
-                try:
-                    tty.verbose(msg.format(pkg_id))
-                    lock.release_write()
-                except AssertionError:
-                    pass
-                except Exception as exc:
-                    tty.warn(err.format(exc.__class__.__name__, pkg_id,
-                                        str(exc)))
+        lock = self.failed.get(pkg_id, None)
+        if lock is not None:
+            err = "{0} exception when removing failure mark for {1}: {2}"
+            msg = 'Removing failure mark on {0}'
+            try:
+                tty.verbose(msg.format(pkg_id))
+                lock.release_write()
+            except AssertionError:
+                pass
+            except Exception as exc:
+                tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
     def _cleanup_task(self, pkg, remove_task):
         """
