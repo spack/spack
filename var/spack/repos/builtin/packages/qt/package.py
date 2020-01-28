@@ -392,7 +392,7 @@ class Qt(Package):
             config_args.append('-system-libpng')
             if not png.external:
                 config_args.extend([
-                    '{0}'.format(png.libs.search_flags),
+                    png.libs.search_flags,
                     '{0}'.format(png.headers.include_flags)
                 ])
 
