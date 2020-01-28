@@ -36,7 +36,7 @@ import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
-import spack.util.lock as slock
+import spack.util.lock as lk
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -559,7 +559,7 @@ class Environment(object):
         """
         self.path = os.path.abspath(path)
 
-        self.txlock = slock.Lock(self._transaction_lock_path)
+        self.txlock = lk.Lock(self._transaction_lock_path)
 
         # This attribute will be set properly from configuration
         # during concretization
@@ -621,7 +621,7 @@ class Environment(object):
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return slock.WriteTransaction(self.txlock, acquire=self._re_read)
+        return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
