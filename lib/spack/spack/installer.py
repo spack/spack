@@ -207,7 +207,7 @@ def _hms(seconds):
     return ' '.join(parts)
 
 
-def _installed_from_cache(pkg, cache_only, explicit):
+def _install_from_cache(pkg, cache_only, explicit):
     """
     Install the package from binary cache
 
@@ -889,7 +889,7 @@ class PackageInstaller(object):
 
         # Use the binary cache if requested
         if use_cache:
-            if _installed_from_cache(pkg, cache_only, explicit):
+            if _install_from_cache(pkg, cache_only, explicit):
                 self._update_installed(task)
                 return
 
