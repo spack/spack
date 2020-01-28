@@ -860,10 +860,9 @@ class PackageInstaller(object):
         task.status = STATUS_INSTALLING
 
         # Use the binary cache if requested
-        if use_cache:
-            if _install_from_cache(pkg, cache_only, explicit):
-                self._update_installed(task)
-                return
+        if use_cache and _install_from_cache(pkg, cache_only, explicit):
+            self._update_installed(task)
+            return
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
 
@@ -1096,7 +1095,7 @@ class PackageInstaller(object):
             tty.msg('{0} {1}'.format(install_msg(task.pkg.unique_id),
                                      'in progress by another process'))
 
-        start = task.start if task.start else time.time()
+        start = task.start or time.time()
         self._push_task(task.pkg, task.compiler, start, task.attempts,
                         STATUS_INSTALLING)
 
@@ -1392,22 +1391,22 @@ class BuildTask(object):
         """
 
         # Ensure dealing with a package that has a concretized spec
-        if isinstance(pkg, spack.package.PackageBase):
-            self.pkg = pkg
-            if not self.pkg.spec.concrete:
-                raise ValueError("{0} must have a concrete spec"
-                                 .format(self.pkg.unique_id))
-        else:
+        if not isinstance(pkg, spack.package.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
+
+        self.pkg = pkg
+        if not self.pkg.spec.concrete:
+            raise ValueError("{0} must have a concrete spec"
+                             .format(self.pkg.name))
 
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
-        if status != STATUS_REMOVED:
-            self.status = status
-        else:
+        if status == STATUS_REMOVED:
             msg = "Cannot create a build task for {0} with status '{1}'"
-            raise InstallError(msg)
+            raise InstallError(msg.format(self.pkg.unique_id, status))
+
+        self.status = status
 
         # Package is associated with a bootstrap compiler
         self.compiler = compiler
@@ -1460,12 +1459,11 @@ class BuildTask(object):
             installed (list of str): the identifiers of packages that have
                 been installed so far
         """
-        uninstalled = list(self.uninstalled_deps)
-        for pkg_id in uninstalled:
-            if pkg_id in installed:
-                self.uninstalled_deps.remove(pkg_id)
-                tty.debug('{0}: Removed {1} from uninstalled deps list: {2}'
-                          .format(self.pkg_id, pkg_id, self.uninstalled_deps))
+        now_installed = self.uninstalled_deps & set(installed)
+        for pkg_id in now_installed:
+            self.uninstalled_deps.remove(pkg_id)
+            tty.debug('{0}: Removed {1} from uninstalled deps list: {2}'
+                      .format(self.pkg_id, pkg_id, self.uninstalled_deps))
 
     @property
     def key(self):
