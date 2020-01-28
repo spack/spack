@@ -593,6 +593,8 @@ class PackageInstaller(object):
             rec = spack.store.db.get_record(task.pkg.spec)
             installed_in_db = rec.installed if rec else False
         except KeyError:
+            # KeyError is raised if there is no matching spec in the database
+            # (versus no matching specs that are installed).
             rec = None
             installed_in_db = False
 
