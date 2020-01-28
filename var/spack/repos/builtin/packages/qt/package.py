@@ -323,8 +323,8 @@ class Qt(Package):
             '-release',
             '-confirm-license',
             '-openssl-linked',
-            '{0}'.format(openssl.libs.search_flags),
-            '{0}'.format(openssl.headers.include_flags),
+            openssl.libs.search_flags,
+            openssl.headers.include_flags,
             '-optimized-qmake',
             '-no-pch',
         ]
@@ -351,7 +351,7 @@ class Qt(Package):
             sqlite = self.spec['sqlite']
             config_args.extend([
                 '-system-sqlite',
-                '-R', '{0}'.format(sqlite.prefix.lib),
+                '-R', sqlite.prefix.lib,
             ])
         else:
             comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
@@ -369,19 +369,19 @@ class Qt(Package):
             harfbuzz = self.spec['harfbuzz']
             config_args.extend([
                 '-system-harfbuzz',
-                '{0}'.format(harfbuzz.libs.search_flags),
-                '{0}'.format(harfbuzz.headers.include_flags),
+                harfbuzz.libs.search_flags,
+                harfbuzz.headers.include_flags,
                 '-system-pcre',
-                '{0}'.format(pcre.libs.search_flags),
-                '{0}'.format(pcre.headers.include_flags)
+                pcre.libs.search_flags,
+                pcre.headers.include_flags
             ])
 
         if self.spec.satisfies('@5.7:'):
             dc = self.spec['double-conversion']
             config_args.extend([
                 '-system-doubleconversion',
-                '{0}'.format(dc.libs.search_flags),
-                '{0}'.format(dc.headers.include_flags)
+                dc.libs.search_flags,
+                dc.headers.include_flags
             ])
 
         if '@:5.7.1' in self.spec:
@@ -392,23 +392,23 @@ class Qt(Package):
             config_args.append('-system-libpng')
             if not png.external:
                 config_args.extend([
-                    '{0}'.format(png.libs.search_flags),
-                    '{0}'.format(png.headers.include_flags)
+                    png.libs.search_flags,
+                    png.headers.include_flags
                 ])
 
             jpeg = self.spec['jpeg']
             config_args.append('-system-libjpeg')
             if not jpeg.external:
                 config_args.extend([
-                    '{0}'.format(jpeg.libs.search_flags),
-                    '{0}'.format(jpeg.headers.include_flags),
+                    jpeg.libs.search_flags,
+                    jpeg.headers.include_flags,
                 ])
             zlib = self.spec['zlib']
             config_args.append('-system-zlib')
             if not zlib.external:
                 config_args.extend([
-                    '{0}'.format(zlib.libs.search_flags),
-                    '{0}'.format(zlib.headers.include_flags)
+                    zlib.libs.search_flags,
+                    zlib.headers.include_flags
                 ])
 
         if '@:5.7.0' in self.spec:
