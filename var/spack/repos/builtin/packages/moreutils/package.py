@@ -21,7 +21,6 @@ class Moreutils(MakefilePackage):
     depends_on('perl', type='build')
     depends_on('docbook-xsl', type='build')
     depends_on('libxml2', type='build')
-    
 
     def edit(self, spec, prefix):
         isutf8_makefile = FileFilter('is_utf8/Makefile')
