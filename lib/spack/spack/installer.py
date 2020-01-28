@@ -13,13 +13,12 @@
 
 import glob
 import heapq
+import itertools
 import os
 import shutil
+import six
 import sys
 import time
-
-from itertools import count
-from six import StringIO
 
 import llnl.util.lock as lk
 import llnl.util.tty as tty
@@ -43,7 +42,7 @@ from spack.util.executable import which
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
 #: were added (see https://docs.python.org/2/library/heapq.html).
-_counter = count(0)
+_counter = itertools.count(0)
 
 #: Build status indicating task has been added.
 #: (TODO: Consider using an enumeration.)
@@ -442,7 +441,7 @@ def log(pkg):
 
     # Finally, archive files that are specific to each package
     with working_dir(pkg.stage.path):
-        errors = StringIO()
+        errors = six.StringIO()
         target_dir = os.path.join(
             spack.store.layout.metadata_path(pkg.spec), 'archived-files')
 
