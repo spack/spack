@@ -544,6 +544,22 @@ class PackageInstaller(object):
         # Locks on specs being built, keyed on the package's unique id
         self.locks = {}
 
+    def __repr__(self):
+        """Returns a formal representation of the package installer."""
+        rep = '{0}('.format(self.__class__.__name__)
+        for attr, value in self.__dict__.items():
+            rep += '{0}={1}, '.format(attr, value.__repr__())
+        return '{0})'.format(rep.strip(', '))
+
+    def __str__(self):
+        """Returns a printable version of the package installer."""
+        tasks = '#tasks={0}'.format(len(self.build_tasks))
+        failed = 'failed ({0}) = {1}'.format(len(self.failed), self.failed)
+        installed = 'installed ({0}) = {1}'.format(
+            len(self.installed), self.installed)
+        return '{0}: {1}; {2}; {3}'.format(
+            self.pkg.unique_id, tasks, installed, failed)
+
     def _add_bootstrap_compilers(self, pkg):
         """
         Add bootstrap compilers and dependencies to the build queue.
@@ -1441,16 +1457,18 @@ class BuildTask(object):
         # order in which it was added.
         self.sequence = next(_counter)
 
+    def __repr__(self):
+        """Returns a formal representation of the build task."""
+        rep = '{0}('.format(self.__class__.__name__)
+        for attr, value in self.__dict__.items():
+            rep += '{0}={1}, '.format(attr, value.__repr__())
+        return '{0})'.format(rep.strip(', '))
+
     def __str__(self):
         """Returns a printable version of the build task."""
-        attempts = '#attempts={0}'.format(self.attempts)
-        dependents = '#dependents={0}'.format(len(self.dependents))
         dependencies = '#dependencies={0}'.format(len(self.dependencies))
-        start = 'start={0}s'.format(self.start)
-        status = 'status={0}'.format(self.status)
-        return ('(pri={0}, seq={1}, id={2}, {3}, {4}, {5}, {6}, {7})'
-                .format(self.priority, self.sequence, self.pkg_id, dependents,
-                        dependencies, start, attempts, status))
+        return ('priority={0}, status={1}, start={2}, {3}'
+                .format(self.priority, self.status, self.start, dependencies))
 
     def flag_installed(self, installed):
         """
