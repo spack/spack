@@ -39,7 +39,6 @@ from spack.util.executable import which
 _counter = itertools.count(0)
 
 #: Build status indicating task has been added.
-#: (TODO: Consider using an enumeration.)
 STATUS_ADDED = 'queued'
 
 #: Build status indicating the spec failed to install
@@ -983,9 +982,6 @@ class PackageInstaller(object):
             tty.msg('Package stage directory : {0}'
                     .format(pkg.stage.source_path))
 
-            # TODO: How should StopIteration affect the installation of
-            # TODO:  dependent packages?
-
     _install_task.__doc__ += install_args_docstring
 
     def _next_is_pri0(self):
@@ -1141,6 +1137,7 @@ class PackageInstaller(object):
             task (BuildTask): the build task for the failed package
             mark (bool): ``True`` if the package and its dependencies are to
                 be marked as "failed", otherwise, ``False``
+            exc (Exception): optional exception if associated with the failure
         """
         pkg_id = task.pkg.unique_id
         err = '' if exc is None else ': {0}'.format(str(exc))
@@ -1207,11 +1204,8 @@ class PackageInstaller(object):
         # always installed regardless of whether the root was installed
         install_self = kwargs.pop('install_package', True)
 
-        # TODO: Should this be first or after package updates?
-        # TODO: It was being done AFTER external, upstream, and already
-        # TODO:   installed checks in _do_install_pop_kwargs() (i.e., just
-        # TODO:   before recursively installing dependencies and or bootstrap
-        # TODO:   compiler.
+        # Ensure not attempting to perform an installation when user didn't
+        # want to go that far.
         self._check_last_phase(**kwargs)
 
         # Skip out early if the spec is not being installed locally (i.e., if
@@ -1248,9 +1242,6 @@ class PackageInstaller(object):
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
                     .format(pkg_id, task.priority, dep_str,
                             ','.join(task.uninstalled_deps)))
-
-            # TODO: Add a check to ensure no attempt is made to install the pkg
-            # TODO:   before any of its dependencies?
 
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
@@ -1334,30 +1325,18 @@ class PackageInstaller(object):
 
             except spack.directory_layout.InstallDirectoryAlreadyExistsError:
                 tty.warn("Keeping existing install prefix in place.")
-
-                # TODO: Does "best effort" mean this is considered installed?
                 self._update_installed(task)
-
-                # TODO: Does "best effort" mean raise exception here?
                 raise
 
             except (Exception, KeyboardInterrupt, SystemExit) as exc:
                 # Assuming best effort installs so suppress the exception and
                 # mark as a failure UNLESS this is the explicit package.
-                # TODO: Does this interplay properly with Spack's
-                # TODO: 'fail_on_exit' option given the above goal?
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
                 self._update_failed(task, True, exc)
 
                 if pkg_id == self.pkg.unique_id:
-                    # TODO: Prefer the following but creates challenges for
-                    # TODO: updating some existing tests.
-                    # reason = 'due to {0}: {1}'.format(exc.__class__.__name__,
-                    #                                   str(exc))
-                    # raise InstallError('Installation of {0} failed {1}'
-                    #                    .format(pkg_id, reason))
                     raise
 
             finally:
@@ -1407,7 +1386,7 @@ class BuildTask(object):
                 otherwise, ``False``
             start (int): the initial start time for the package, in seconds
             attempts (int): the number of attempts to install the package
-            status (int): the installation status
+            status (str): the installation status
             installed (list of str): the identifiers of packages that have
                 been installed so far
         """
@@ -1434,7 +1413,6 @@ class BuildTask(object):
         self.compiler = compiler
 
         # The initial start time for processing the spec.
-        # TODO: Should this be tied to the status?
         self.start = start
 
         # Number of times the task has been queued
