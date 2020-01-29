@@ -575,7 +575,8 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
         else:
-            self._read()
+            with self.read_transaction():
+                self._read()
 
         if with_view is False:
             self.views = {}
@@ -622,6 +623,9 @@ class Environment(object):
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
+
+    def read_transaction(self):
+        return lk.ReadTransaction(self.txlock)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
