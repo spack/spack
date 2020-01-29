@@ -169,7 +169,8 @@ class Paraview(CMakePackage, CudaPackage):
                 pv_pydir = join_path(lib_dir,
                                      'python{0}'.format(python_version),
                                      'site-packages')
-                if '+shared' in self.spec:
+                if '+shared' in self.spec or \
+                   self.spec.version <= Version('5.7.0'):
                     env.prepend_path('PYTHONPATH', pv_pydir)
                     # The Trilinos Catalyst adapter requires
                     # the vtkmodules directory in PYTHONPATH
