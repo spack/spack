@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import textwrap
+import logging, logging.config
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -225,6 +226,18 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
     try:
+
+        # Logs spec to install to syslog for metrics collection
+        config_path = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(config_path, '../metrics_logger.conf')
+        logging.config.fileConfig(fname=config_path)
+        if sys.platform == 'darwin':
+            logger = logging.getLogger('metrics_darwin')
+        else:
+            logger = logging.getLogger('metrics_linux')
+
+        logger.info(spec)
+
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
