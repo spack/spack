@@ -253,14 +253,14 @@ However, other more powerful methods are generally preferred for user
 environments.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Spack-Generated Modules
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``spack load`` to Manage the User Environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Suppose that Spack has been used to install a set of command-line
 programs, which users now wish to use.  One can in principle put a
 number of ``spack load`` commands into ``.bashrc``, for example, to
-load a set of Spack-generated modules:
+load a set of Spack packages:
 
 .. code-block:: sh
 
@@ -273,7 +273,7 @@ load a set of Spack-generated modules:
 Although simple load scripts like this are useful in many cases, they
 have some drawbacks:
 
-1. The set of modules loaded by them will in general not be
+1. The set of packages loaded by them will in general not be
    consistent.  They are a decent way to load commands to be called
    from command shells.  See below for better ways to assemble a
    consistent set of packages for building application programs.
@@ -285,19 +285,24 @@ have some drawbacks:
    other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module tcl loads`` will
    fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack module tcl loads`` lines that fail.
+   be more specific on any ``spack load`` commands that fail.
 
 
 """"""""""""""""""""""
 Generated Load Scripts
 """"""""""""""""""""""
 
-Another problem with using `spack load` is, it is slow; a typical user
-environment could take several seconds to load, and would not be
-appropriate to put into ``.bashrc`` directly.  It is preferable to use
-a series of ``spack module tcl loads`` commands to pre-compute which
-modules to load.  These can be put in a script that is run whenever
-installed Spack packages change.  For example:
+Another problem with using `spack load` is, it can be slow; a typical
+user environment could take several seconds to load, and would not be
+appropriate to put into ``.bashrc`` directly.  This is because it
+requires the full start-up overhead of python/Spack for each command.
+In some circumstances it is preferable to use a series of ``spack
+module tcl loads`` (or ``spack module lmod loads``) commands to
+pre-compute which modules to load.  This will generate the modulenames
+to load the packages using environment modules, rather than Spack's
+built-in support for environment modifications. These can be put in a
+script that is run whenever installed Spack packages change.  For
+example:
 
 .. code-block:: sh
 
@@ -634,7 +639,7 @@ Global Activations
 Python (and similar systems) packages directly or creating a view.
 If extensions are globally activated, then ``spack load python`` will
 also load all the extensions activated for the given ``python``.
-This reduces the need for users to load a large number of modules.
+This reduces the need for users to load a large number of packages.
 
 However, Spack global activations have two potential drawbacks:
 
@@ -1254,7 +1259,7 @@ In order to build and run the image, execute:
    RUN        spack install tar \
               && spack clean -a
 
-   # need the modules already during image build?
+   # need the executables from a package already during image build?
    #RUN        /bin/bash -l -c ' \
    #                spack load tar \
    #                && which tar'

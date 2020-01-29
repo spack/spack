@@ -8,6 +8,8 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import spack.schema.environment
+
 
 #: Matches a spec or a multi-valued variant but not another
 #: valid keyword.
@@ -66,17 +68,7 @@ module_file_configuration = {
                 }
             }
         },
-        'environment': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings,
-                'unset': array_of_strings,
-                'prepend_path': dictionary_of_strings,
-                'append_path': dictionary_of_strings
-            }
-        }
+        'environment': spack.schema.environment.definition
     }
 }
 

@@ -27,6 +27,9 @@ class Harfbuzz(AutotoolsPackage):
     depends_on("zlib")
     depends_on("graphite2", when='+graphite2')
 
+    conflicts('%intel', when='@2.3.1:',
+              msg='harfbuzz-2.3.1 does not build with the Intel compiler')
+
     def configure_args(self):
         args = []
         # disable building of gtk-doc files following #9771

@@ -9,6 +9,7 @@ omit =
      lib/spack/spack/test/*
      lib/spack/docs/*
      lib/spack/external/*
+     share/spack/qa/*
 
 [report]
 # Regexes for lines to exclude from consideration

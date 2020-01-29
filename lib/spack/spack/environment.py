@@ -29,9 +29,7 @@ import spack.store
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
-import spack.build_environment as build_env
-
-from spack.util.prefix import Prefix
+import spack.user_environment as uenv
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
 import spack.architecture as architecture
@@ -1070,62 +1068,6 @@ class Environment(object):
         for view in self.views.values():
             view.regenerate(specs, self.roots())
 
-    prefix_inspections = {
-        'bin': ['PATH'],
-        'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH', 'DYLD_LIBRARY_PATH'],
-        'lib64': ['LD_LIBRARY_PATH', 'LIBRARY_PATH', 'DYLD_LIBRARY_PATH'],
-        'man': ['MANPATH'],
-        'share/man': ['MANPATH'],
-        'share/aclocal': ['ACLOCAL_PATH'],
-        'include': ['CPATH'],
-        'lib/pkgconfig': ['PKG_CONFIG_PATH'],
-        'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
-        '': ['CMAKE_PREFIX_PATH']
-    }
-
-    def unconditional_environment_modifications(self, view):
-        """List of environment (shell) modifications to be processed for view.
-
-        This list does not depend on the specs in this environment"""
-        env = spack.util.environment.EnvironmentModifications()
-
-        for subdir, vars in self.prefix_inspections.items():
-            full_subdir = os.path.join(view.root, subdir)
-            for var in vars:
-                env.prepend_path(var, full_subdir)
-
-        return env
-
-    def environment_modifications_for_spec(self, spec, view=None):
-        """List of environment (shell) modifications to be processed for spec.
-
-        This list is specific to the location of the spec or its projection in
-        the view."""
-        spec = spec.copy()
-        if view:
-            spec.prefix = Prefix(view.view().get_projection_for_spec(spec))
-
-        # generic environment modifications determined by inspecting the spec
-        # prefix
-        env = spack.util.environment.inspect_path(
-            spec.prefix,
-            self.prefix_inspections,
-            exclude=spack.util.environment.is_system_path
-        )
-
-        # Let the extendee/dependency modify their extensions/dependents
-        # before asking for package-specific modifications
-        env.extend(
-            build_env.modifications_from_dependencies(
-                spec, context='run'
-            )
-        )
-        # Package specific modifications
-        build_env.set_module_variables_for_package(spec.package)
-        spec.package.setup_run_environment(env)
-
-        return env
-
     def add_default_view_to_shell(self, shell):
         env_mod = spack.util.environment.EnvironmentModifications()
 
@@ -1133,12 +1075,12 @@ class Environment(object):
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
 
-        env_mod.extend(self.unconditional_environment_modifications(
+        env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view and spec.package.installed:
-                env_mod.extend(self.environment_modifications_for_spec(
+                env_mod.extend(uenv.environment_modifications_for_spec(
                     spec, self.default_view))
 
         # deduplicate paths from specs mapped to the same location
@@ -1154,13 +1096,13 @@ class Environment(object):
             # No default view to add to shell
             return env_mod.shell_modifications(shell)
 
-        env_mod.extend(self.unconditional_environment_modifications(
+        env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
 
         for _, spec in self.concretized_specs():
             if spec in self.default_view and spec.package.installed:
                 env_mod.extend(
-                    self.environment_modifications_for_spec(
+                    uenv.environment_modifications_for_spec(
                         spec, self.default_view).reversed())
         return env_mod.shell_modifications(shell)
 
