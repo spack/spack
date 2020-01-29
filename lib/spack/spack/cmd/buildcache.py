@@ -419,8 +419,8 @@ def listspecs(args):
     """list binary packages available from mirrors"""
     specs = list()
     if args.specs:
-        for s in bindist.get_specs(force=args.force, use_arch=args.arch,
-                                   names=args.specs):
+        for s in bindist.get_specs(args.force, args.arch,
+                                   args.specs):
             if s not in set(specs):
                 specs.append(s)
     else:
