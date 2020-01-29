@@ -41,3 +41,26 @@ def test_build_task_basics(install_mockery):
     task.flag_installed(task.dependencies)
     assert len(task.uninstalled_deps) == 0
     assert task.priority == 0
+
+
+def test_build_task_strings(install_mockery):
+    """Tests of build_task repr and str for coverage purposes."""
+    # Using a package with one dependency
+    spec = spack.spec.Spec('dependent-install')
+    spec.concretize()
+    assert spec.concrete
+
+    # Ensure key properties match expectations
+    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+
+    # Cover __repr__
+    irep = task.__repr__()
+    assert irep.startswith(task.__class__.__name__)
+    assert "status='queued'" in irep  # == STATUS_ADDED
+    assert "sequence=1" in irep  # == number of uninstalled dependencies
+
+    # Cover __str__
+    istr = str(task)
+    assert "status=queued" in istr  # == STATUS_ADDED
+    assert "#dependencies=1" in istr
+    assert "priority=1" in istr  # == number of uninstalled dependencies

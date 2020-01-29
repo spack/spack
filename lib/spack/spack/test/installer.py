@@ -27,7 +27,7 @@ def test_install_msg():
     assert inst.install_msg(name, pid) == expected
 
 
-def test_install_from_cache_errors(install_mockery, capsys):
+def dest_install_from_cache_errors(install_mockery, capsys):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -53,6 +53,26 @@ def test_installer_init_errors(install_mockery):
     pkg = spack.repo.get('trivial-install-test-package')
     with pytest.raises(ValueError, match='Can only install concrete'):
         inst.PackageInstaller(pkg)
+
+
+def test_installer_strings(install_mockery):
+    """Tests of installer repr and str for coverage purposes."""
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    # Cover __repr__
+    irep = installer.__repr__()
+    assert irep.startswith(installer.__class__.__name__)
+    assert "installed=" in irep
+    assert "failed=" in irep
+
+    # Cover __str__
+    istr = str(installer)
+    assert "#tasks=0" in istr
+    assert "installed (0)" in istr
+    assert "failed (0)" in istr
 
 
 def test_installer_last_phase_error(install_mockery, capsys):
