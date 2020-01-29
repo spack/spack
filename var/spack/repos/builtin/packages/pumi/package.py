@@ -40,7 +40,7 @@ class Pumi(CMakePackage):
             "the minimum set of functionality, 'kernels' adds CAD kernel "
             "support to 'base', and 'full' enables all functionality.")
     variant('simmodsuite_version_check', default=True,
-            description="Enable check of Simmetrix SimModSuite version."
+            description="Enable check of Simmetrix SimModSuite version. "
             "Disable the check for testing new versions.")
 
     depends_on('mpi')
