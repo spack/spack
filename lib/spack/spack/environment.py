@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import shutil
+import tempfile
 import copy
 import socket
 
@@ -1476,13 +1477,18 @@ class Environment(object):
 
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
-        bare_env = Environment(os.path.join(self.manifest_path, 'garbage'),
-                               with_view=self.view_path_default)
-        keys_present = list(yaml_dict.keys())
-        for key in keys_present:
-            if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
-                if key not in raw_yaml_dict:
-                    del yaml_dict[key]
+        env_dir = None
+        try:
+            env_dir = tempfile.mkdtemp()
+            bare_env = Environment(env_dir, with_view=self.view_path_default)
+            keys_present = list(yaml_dict.keys())
+            for key in keys_present:
+                if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
+                    if key not in raw_yaml_dict:
+                        del yaml_dict[key]
+        finally:
+            if env_dir:
+                shutil.rmtree(env_dir)
 
         # if all that worked, write out the manifest file at the top level
         # Only actually write if it has changed or was never written
