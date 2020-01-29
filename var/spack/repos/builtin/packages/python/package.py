@@ -67,7 +67,7 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
-    # Variants to control dependency variants to avoid cyclical dependencies
+    # Variants to avoid cyclical dependencies for concretizer
     variant('libxml2', default=False,
             description='Use a gettext library build with libxml2')
 

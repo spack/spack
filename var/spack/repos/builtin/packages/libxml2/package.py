@@ -27,6 +27,7 @@ class Libxml2(AutotoolsPackage):
     depends_on('zlib')
     depends_on('xz')
 
+    # avoid cycle dependency for concretizer
     depends_on('python+shared~libxml2', when='+python')
     extends('python', when='+python',
             ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
