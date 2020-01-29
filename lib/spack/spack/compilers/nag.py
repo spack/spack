@@ -60,7 +60,8 @@ class Nag(spack.compiler.Compiler):
         return '-Wl,-Wl,,'
 
     # The NAG compiler is more strict than other compilers, and most packages
-    # will fail to build without these flags set
+    # will fail to build without these flags set. See:
+    # https://www.nag.co.uk/nagware/np/r70_doc/manual/compiler_2_4.html#OPTIONS
     def setup_custom_environment(self, pkg, env):
         env.append_flags('FFLAGS', '-mismatch -dusty')
         env.append_flags('FCFLAGS', '-mismatch -dusty')
