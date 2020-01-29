@@ -661,7 +661,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
 
 #: Internal cache for get_specs
-_cached_specs = []
+_cached_specs = None
 
 
 def get_specs(force=False, use_arch=False, names=[]):
@@ -682,9 +682,9 @@ def get_specs(force=False, use_arch=False, names=[]):
                                                     names_pattern)
     name_re = re.compile(regex_pattern)
 
-#    if _cached_specs:
-#        tty.debug("Using previously-retrieved specs")
-#        return _cached_specs
+    if _cached_specs:
+        tty.debug("Using previously-retrieved specs")
+        return _cached_specs
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
@@ -714,6 +714,7 @@ def get_specs(force=False, use_arch=False, names=[]):
                 m = name_re.search(link)
                 if m:
                     urls.add(link)
+    _cached_specs = []
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -729,8 +730,7 @@ def get_specs(force=False, use_arch=False, names=[]):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                if spec not in set(_cached_specs):
-                    _cached_specs.append(spec)
+                _cached_specs.append(spec)
 
     return _cached_specs
 

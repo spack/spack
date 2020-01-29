@@ -417,13 +417,14 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = set()
+    specs = list()
     if args.specs:
         for s in bindist.get_specs(force=args.force, use_arch=args.arch,
                                    names=args.specs):
-            specs.add(s)
+            if s not in set(specs):
+                specs.append(s)
     else:
-        specs = set(bindist.get_specs(force=args.force, use_arch=args.arch))
+        specs = bindist.get_specs(force=args.force, use_arch=args.arch)
     display_specs(specs, args, all_headers=True)
 
 
