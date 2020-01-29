@@ -210,7 +210,7 @@ def do_uninstall(env, specs, force):
         else:
             logger = logging.getLogger('metrics_linux')
 
-        logger.info("SPACK_UNINSTALL: " + str(item))
+        logger.debug("SPACK_UNINSTALL: " + str(item))
 
 
         try:
