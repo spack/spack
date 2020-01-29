@@ -87,6 +87,8 @@ def setup_parser(subparser):
                            help='show variants in output (can be long)')
     listcache.add_argument('-f', '--force', action='store_true',
                            help="force new download of specs")
+    listcache.add_argument('-a', '--arch', action='store_true',
+                           help="only list spec for the default architecture")
     arguments.add_common_arguments(listcache, ['specs'])
     listcache.set_defaults(func=listspecs)
 
@@ -263,10 +265,10 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    specs = bindist.get_specs(force)
     for pkg in pkgs:
         matches = []
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
+        specs = bindist.get_specs(names=[pkg])
         for spec in sorted(specs):
             if pkg.startswith('/'):
                 pkghash = pkg.replace('/', '')
@@ -415,10 +417,13 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.get_specs(args.force)
+    specs = set()
     if args.specs:
-        constraints = set(args.specs)
-        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
+        for s in bindist.get_specs(force=args.force, use_arch=args.arch,
+                                   names=args.specs):
+            specs.add(s)
+    else:
+        specs = set(bindist.get_specs(force=args.force, use_arch=args.arch))
     display_specs(specs, args, all_headers=True)
 
 
