@@ -185,7 +185,9 @@ module_index:
     finally:
         spack.modules.common.upstream_module_index = old_index
 
-def test_load_installed_package_not_in_repo(install_mockery, mock_fetch, monkeypatch):
+
+def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
+                                            monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()
