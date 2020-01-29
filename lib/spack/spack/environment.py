@@ -568,6 +568,9 @@ class Environment(object):
         self.clear()
 
         if init_file:
+            # If we are creating the environment from an init file, we don't
+            # need to lock, because there are no Spack operations which alter
+            # the init file.
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
                     self._read_manifest(default_manifest_yaml)
