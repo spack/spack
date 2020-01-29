@@ -180,7 +180,7 @@ class Git(AutotoolsPackage):
     depends_on('libiconv')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
-    depends_on('pcre+jit', when='@2.14:')
+    depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
 
