@@ -22,7 +22,9 @@ def test_hms(sec, result):
 
 def test_install_msg():
     name = 'some-package'
-    assert inst.install_msg(name) == "Installing {0}".format(name)
+    pid = 123456
+    expected = "{0}: Installing {1}".format(pid, name)
+    assert inst.install_msg(name, pid) == expected
 
 
 def test_install_from_cache_errors(install_mockery, capsys):

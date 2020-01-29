@@ -390,17 +390,18 @@ def dump_packages(spec, path):
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
 
 
-def install_msg(name):
+def install_msg(name, pid):
     """
     Colorize the name/id of the package being installed
 
     Args:
         name (str): Name/id of the package being installed
+        pid (id): id of the installer process
 
     Return:
         (str) Colorized installing message
     """
-    return colorize('@*{Installing} @*g{%s}' % name)
+    return '{0}: '.format(pid) + colorize('@*{Installing} @*g{%s}' % name)
 
 
 def log(pkg):
@@ -535,6 +536,9 @@ class PackageInstaller(object):
         # Cache of package locks for failed packages, keyed on package's ids
         self.failed = {}
 
+        # Cache the PID for distributed build messaging
+        self.pid = os.getpid()
+
         # Cache of installed packages' unique ids
         self.installed = set()
 
@@ -557,8 +561,8 @@ class PackageInstaller(object):
         failed = 'failed ({0}) = {1}'.format(len(self.failed), self.failed)
         installed = 'installed ({0}) = {1}'.format(
             len(self.installed), self.installed)
-        return '{0}: {1}; {2}; {3}'.format(
-            self.pkg.unique_id, tasks, installed, failed)
+        return '{0} ({1}): {2}; {3}; {4}'.format(
+            self.pkg.unique_id, self.pid, tasks, installed, failed)
 
     def _add_bootstrap_compilers(self, pkg):
         """
@@ -872,7 +876,7 @@ class PackageInstaller(object):
         pkg = task.pkg
         explicit = pkg.unique_id == self.pkg.unique_id
 
-        tty.msg(install_msg(pkg.unique_id))
+        tty.msg(install_msg(pkg.unique_id, self.pid))
         task.start = task.start if task.start else time.time()
         task.status = STATUS_INSTALLING
 
@@ -882,6 +886,8 @@ class PackageInstaller(object):
             return
 
         pkg.run_tests = (tests is True or tests and pkg.name in tests)
+
+        pre = '{0}: {1}:'.format(self.pid, pkg.name)
 
         def build_process():
             """
@@ -899,8 +905,8 @@ class PackageInstaller(object):
                 else:
                     pkg.do_stage()
 
-            tty.msg('Building {0} [{1}]'
-                    .format(pkg.name, pkg.build_system_class))
+            tty.msg('{0} Building {1} [{2}]'
+                    .format(pre, pkg.unique_id, pkg.build_system_class))
 
             # get verbosity from do_install() parameter or saved value
             echo = verbose
@@ -921,7 +927,8 @@ class PackageInstaller(object):
                     if install_source and os.path.isdir(source_path):
                         src_target = os.path.join(pkg.spec.prefix, 'share',
                                                   pkg.name, 'src')
-                        tty.msg('Copying source to {0}'.format(src_target))
+                        tty.msg('{0} Copying source to {1}'
+                                .format(pre, src_target))
                         install_tree(pkg.stage.source_path, src_target)
 
                     # Do the real install in the source directory.
@@ -941,8 +948,8 @@ class PackageInstaller(object):
                                 with logger.force_echo():
                                     inner_debug = tty.is_debug()
                                     tty.set_debug(debug_enabled)
-                                    tty.msg("Executing phase: '{0}'"
-                                            .format(phase_name))
+                                    tty.msg("{0} Executing phase: '{1}'"
+                                            .format(pre, phase_name))
                                     tty.set_debug(inner_debug)
 
                                 # Redirect stdout and stderr to daemon pipe
@@ -959,7 +966,8 @@ class PackageInstaller(object):
             pkg._total_time = time.time() - start_time
             build_time = pkg._total_time - pkg._fetch_time
 
-            tty.msg('Successfully installed {0}'.format(pkg.unique_id),
+            tty.msg('{0} Successfully installed {1}'
+                    .format(pre, pkg.unique_id),
                     'Fetch: {0}.  Build: {1}.  Total: {2}.'
                     .format(_hms(pkg._fetch_time), _hms(build_time),
                             _hms(pkg._total_time)))
@@ -994,7 +1002,7 @@ class PackageInstaller(object):
         except StopIteration as e:
             # A StopIteration exception means that do_install was asked to
             # stop early from clients.
-            tty.msg(e.message)
+            tty.msg('{0} {1}'.format(self.pid, e.message))
             tty.msg('Package stage directory : {0}'
                     .format(pkg.stage.source_path))
 
@@ -1109,7 +1117,7 @@ class PackageInstaller(object):
             task (BuildTask): the installation build task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
-            tty.msg('{0} {1}'.format(install_msg(task.pkg.unique_id),
+            tty.msg('{0} {1}'.format(install_msg(task.pkg.unique_id, self.pid),
                                      'in progress by another process'))
 
         start = task.start or time.time()
