@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -147,5 +147,5 @@ class Nest(CMakePackage):
                                   self.stage.source_path, recursive=True):
                 install(f, path_headers)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set("NEST_INSTALL_DIR", self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.set("NEST_INSTALL_DIR", self.spec.prefix)

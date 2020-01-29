@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,12 +39,12 @@ class Mercurial(PythonPackage):
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Python 3 support is still experimental, explicitly allow
-        spack_env.set('HGALLOWPYTHON3', True)
-        spack_env.set('HGPYTHON3', True)
+        env.set('HGALLOWPYTHON3', True)
+        env.set('HGPYTHON3', True)
         # Setuptools is still opt-in, explicitly enable
-        spack_env.set('FORCE_SETUPTOOLS', True)
+        env.set('FORCE_SETUPTOOLS', True)
 
     @run_after('install')
     def post_install(self):

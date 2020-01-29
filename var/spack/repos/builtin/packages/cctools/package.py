@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,15 @@ class Cctools(AutotoolsPackage):
 
     depends_on('openssl')
     depends_on('perl+shared', type=('build', 'run'))
-    depends_on('python@:3', type=('build', 'run'))
+    depends_on('python@:2.9', when='@6.1.1', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
     depends_on('readline')
     depends_on('swig')
     # depends_on('xrootd')
     depends_on('zlib')
     patch('arm.patch', when='target=aarch64:')
+    patch('cctools_7.0.18.python.patch', when='@7.0.18')
+    patch('cctools_6.1.1.python.patch', when='@6.1.1')
 
     # Generally SYS_foo is defined to __NR_foo (sys/syscall.h) which
     # is then defined to a syscall number (asm/unistd_64.h).  Certain
@@ -41,10 +44,21 @@ class Cctools(AutotoolsPackage):
 
     def configure_args(self):
         args = []
+        # For python
+        if self.spec.satisfies('^python@3:'):
+            args.append('--with-python-path=no')
+            args.append(
+                '--with-python3-path={0}'.format(self.spec['python'].prefix)
+            )
+        else:
+            args.append('--with-python3-path=no')
+            args.append(
+                '--with-python-path={0}'.format(self.spec['python'].prefix)
+            )
         # disable these bits
-        for p in ['mysql', 'python3', 'xrootd']:
+        for p in ['mysql', 'xrootd']:
             args.append('--with-{0}-path=no'.format(p))
         # point these bits at the Spack installations
-        for p in ['openssl', 'perl', 'python', 'readline', 'swig', 'zlib']:
+        for p in ['openssl', 'perl', 'readline', 'swig', 'zlib']:
             args.append('--with-{0}-path={1}'.format(p, self.spec[p].prefix))
         return args

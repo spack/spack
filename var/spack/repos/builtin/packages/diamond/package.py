@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,3 +24,7 @@ class Diamond(CMakePackage):
     version('0.8.26', sha256='00d2be32dad76511a767ab8e917962c0ecc572bc808080be60dec028df45439f')
 
     depends_on('zlib')
+
+    # fix error [-Wc++11-narrowing]
+    # Ref: https://github.com/bbuchfink/diamond/commit/155e076d662b0e9268e2b00bef6d33d90aede7ff
+    patch('fix_narrowing_error.patch')

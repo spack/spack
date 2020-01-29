@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -367,6 +367,12 @@ class Boost(Package):
                 cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
                                 'linkflags="-stdlib=libc++"'])
+        elif spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            # see also: https://lists.boost.org/boost-users/2019/09/89953.php
+            # the cxxstd setting via spack is not sufficient to drive the
+            # change into boost compilation
+            if spec.variants['cxxstd'].value == '11':
+                cxxflags.append('-std=c++11')
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))

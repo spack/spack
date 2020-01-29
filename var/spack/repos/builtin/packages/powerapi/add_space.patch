@@ -1,0 +1,186 @@
+diff -ur spack-src.org/src/pwr/deviceStat.cc spack-src/src/pwr/deviceStat.cc
+--- spack-src.org/src/pwr/deviceStat.cc	2020-01-28 11:00:47.690108007 +0900
++++ spack-src/src/pwr/deviceStat.cc	2020-01-28 11:04:02.630472034 +0900
+@@ -47,7 +47,7 @@
+ 
+ int DeviceStat::startObj( ) {
+ 	int retval = m_obj->attrStartLog( m_attrName );
+-	DBGX("%s time=%"PRIu64" sec\n",objTypeToString(m_obj->type()),m_startTime);
++	DBGX("%s time=%" PRIu64 " sec\n",objTypeToString(m_obj->type()),m_startTime);
+ 	return retval;
+ }
+ 
+@@ -64,7 +64,7 @@
+ 	return PWR_RET_SUCCESS;
+ }
+ int DeviceStat::stopObj( ) {
+-	DBGX("%s time=%"PRIu64" sec\n",objTypeToString(m_obj->type()),m_startTime);
++	DBGX("%s time=%" PRIu64 " sec\n",objTypeToString(m_obj->type()),m_startTime);
+ 	int retval = m_obj->attrStopLog( m_attrName );
+ 	return retval;
+ }
+@@ -85,7 +85,7 @@
+ int DeviceStat::stop( ) {
+ 	m_isLogging = false;
+ 	m_stopTime = getTime();
+-	DBGX("time=%"PRIu64" sec\n",m_stopTime);
++	DBGX("time=%" PRIu64 " sec\n",m_stopTime);
+ 	if ( m_obj ) {
+ 		return stopObj();
+ 	} else {
+@@ -135,7 +135,7 @@
+ 
+ 	statTimes->start = timeStamp;
+ 	statTimes->stop = timeStamp + nSamples * m_period * 1000000000 ;
+-	DBGX("actual: start=%lf stop=%lf count=%"PRIu32"\n", 
++	DBGX("actual: start=%lf stop=%lf count=%" PRIu32 "\n", 
+ 			(double) timeStamp/1000000000, 
+ 			(double) statTimes->stop/1000000000, nSamples);	
+ 
+@@ -146,7 +146,7 @@
+         statTimes->instant = statTimes->start + pos * m_period * 1000000000; 
+     }
+ 
+-	DBGX("actual: start=%lf stop=%lf instant=%lf count=%"PRIu32"\n", 
++	DBGX("actual: start=%lf stop=%lf instant=%lf count=%" PRIu32 "\n", 
+ 			(double) timeStamp/1000000000, 
+ 			(double) statTimes->stop/1000000000, 
+             (double) statTimes->instant/1000000000,nSamples);	
+diff -ur spack-src.org/src/pwr/distRequest.cc spack-src/src/pwr/distRequest.cc
+--- spack-src.org/src/pwr/distRequest.cc	2020-01-28 11:00:47.690108007 +0900
++++ spack-src/src/pwr/distRequest.cc	2020-01-28 11:05:11.687685948 +0900
+@@ -56,7 +56,7 @@
+ // can we use "this"
+ void DistRequest::getSamples( DistCommReq* req, CommGetSamplesRespEvent* ev  )
+ {
+-	DBGX("count %"PRIu32"\n",ev->count);
++	DBGX("count %" PRIu32 "\n",ev->count);
+ 
+ #if 0
+     // FIX ME 
+@@ -67,7 +67,7 @@
+ 	for ( unsigned i = 0; i< ev->count; i++ ) {
+ 		((uint64_t*)value[0])[i] = ev->data[i];
+ 	}
+-	DBGX("start time %"PRIu64", samples %"PRIu32"n",*timeStamp[0], ev->count);
++	DBGX("start time %" PRIu64 ", samples %" PRIu32 "n",*timeStamp[0], ev->count);
+ 	*timeStamp[0] = ev->startTime;
+ 	m_commReqs.erase( req ); 
+ }
+diff -ur spack-src.org/tools/pwrdaemon/router/commCreateEvent.cc spack-src/tools/pwrdaemon/router/commCreateEvent.cc
+--- spack-src.org/tools/pwrdaemon/router/commCreateEvent.cc	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/commCreateEvent.cc	2020-01-28 11:12:35.644062899 +0900
+@@ -21,7 +21,7 @@
+ bool RtrCommCreateEvent::process( EventGenerator* _rtr, EventChannel* ec ) {
+ 	Router& rtr = *static_cast<Router*>(_rtr);
+ 	Router::Client* client = rtr.getClient( ec );
+-	DBGX("id=%"PRIx64"\n",commID);
++	DBGX("id=%" PRIx64 "\n",commID);
+ 
+ 	client->addComm( commID, this );
+ 
+diff -ur spack-src.org/tools/pwrdaemon/router/commGetSamplesEvent.h spack-src/tools/pwrdaemon/router/commGetSamplesEvent.h
+--- spack-src.org/tools/pwrdaemon/router/commGetSamplesEvent.h	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/commGetSamplesEvent.h	2020-01-28 11:07:20.211111872 +0900
+@@ -45,7 +45,7 @@
+         info->resp->id = id;
+         id = (EventId) info;
+ 
+-    	DBGX("commID=%" PRIx64 " eventId=%"PRIx64" new eventId=%p\n",
++    	DBGX("commID=%" PRIx64 " eventId=%" PRIx64 " new eventId=%p\n",
+                                 commID, id, info );
+ 
+         for ( unsigned int i=0; i <  commList.size(); i++ ) {
+diff -ur spack-src.org/tools/pwrdaemon/router/commLogEvents.h spack-src/tools/pwrdaemon/router/commLogEvents.h
+--- spack-src.org/tools/pwrdaemon/router/commLogEvents.h	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/commLogEvents.h	2020-01-28 11:09:28.254487649 +0900
+@@ -46,7 +46,7 @@
+         info->resp->id = id;
+         id = (EventId) info;
+ 
+-        DBGX("commID=%"PRIu64" eventId=%" PRIx64 " new eventId=%p\n",
++        DBGX("commID=%" PRIu64 " eventId=%" PRIx64 " new eventId=%p\n",
+                                 commID, id, info );
+ 
+         for ( unsigned int i=0; i <  commList.size(); i++ ) {
+diff -ur spack-src.org/tools/pwrdaemon/router/commReqEvent.h spack-src/tools/pwrdaemon/router/commReqEvent.h
+--- spack-src.org/tools/pwrdaemon/router/commReqEvent.h	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/commReqEvent.h	2020-01-28 11:09:59.347735739 +0900
+@@ -35,7 +35,7 @@
+ 
+     	CommReqInfo* info = new CommReqInfo;
+ 
+-    	DBGX("commID=%"PRIx64" eventId=%"PRIx64" new eventId=%p\n", 
++    	DBGX("commID=%" PRIx64 " eventId=%" PRIx64 " new eventId=%p\n", 
+ 													commID, id, info );
+ 
+     	info->src = ec;
+diff -ur spack-src.org/tools/pwrdaemon/router/commRespEvent.h spack-src/tools/pwrdaemon/router/commRespEvent.h
+--- spack-src.org/tools/pwrdaemon/router/commRespEvent.h	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/commRespEvent.h	2020-01-28 11:10:43.862385866 +0900
+@@ -33,7 +33,7 @@
+ 
+ 	bool process( EventGenerator* _rtr, EventChannel* ) {
+ 
+-		DBGX("id=%p status=%"PRIi32" grpIndex=%" PRIu64 "\n",
++		DBGX("id=%p status=%" PRIi32 " grpIndex=%" PRIu64 "\n",
+ 								(void*)id, status, grpIndex );
+ 
+         CommReqInfo* info = (CommReqInfo*) id;
+@@ -44,7 +44,7 @@
+ 
+             CommRespEvent* resp = static_cast<CommRespEvent*>(info->resp);
+ 			if ( Get == info->ev->op ) {
+-				DBGX("index %"PRIu64" is ready, num attrs %zu\n",
++				DBGX("index %" PRIu64 " is ready, num attrs %zu\n",
+ 										grpIndex, info->valueOp.size() );
+ 				resp->timeStamp[grpIndex].resize( info->valueOp.size() );
+ 				resp->value[grpIndex].resize( info->valueOp.size() );
+diff -ur spack-src.org/tools/pwrdaemon/router/rtrRouterEvent.h spack-src/tools/pwrdaemon/router/rtrRouterEvent.h
+--- spack-src.org/tools/pwrdaemon/router/rtrRouterEvent.h	2020-01-28 11:00:47.730112186 +0900
++++ spack-src/tools/pwrdaemon/router/rtrRouterEvent.h	2020-01-28 11:11:05.824680110 +0900
+@@ -25,7 +25,7 @@
+ 
+     bool process( EventGenerator* _rtr, EventChannel* ec ) {
+         Router& rtr = *static_cast<Router*>(_rtr);
+-		DBGX("dest=%"PRIx64"\n",dest);
++		DBGX("dest=%" PRIx64 "\n",dest);
+ 		rtr.sendEvent( dest, this );
+ 
+         return true;
+diff -ur spack-src.org/tools/pwrdaemon/server/commCreateEvent.h spack-src/tools/pwrdaemon/server/commCreateEvent.h
+--- spack-src.org/tools/pwrdaemon/server/commCreateEvent.h	2020-01-28 11:00:47.740113231 +0900
++++ spack-src/tools/pwrdaemon/server/commCreateEvent.h	2020-01-28 11:13:00.426651760 +0900
+@@ -21,7 +21,7 @@
+ 	bool process( EventGenerator* gen, EventChannel* ) {
+ 		Server& info = *static_cast<Server*>(gen);
+ 
+-       	DBGX("commID=%"PRIx64"\n", commID);
++       	DBGX("commID=%" PRIx64 "\n", commID);
+ 
+     	CommInfo& cInfo = info.m_commMap[commID];
+     	cInfo.objects.resize( members.size() );
+diff -ur spack-src.org/tools/pwrdaemon/server/commDestroyEvent.h spack-src/tools/pwrdaemon/server/commDestroyEvent.h
+--- spack-src.org/tools/pwrdaemon/server/commDestroyEvent.h	2020-01-28 11:00:47.740113231 +0900
++++ spack-src/tools/pwrdaemon/server/commDestroyEvent.h	2020-01-28 11:11:42.438504895 +0900
+@@ -24,7 +24,7 @@
+ 	bool process( EventGenerator* gen, EventChannel* ) {
+ 		Server& info = *static_cast<Server*>(gen);
+ 
+-       	DBGX("commID=%"PRIx64"\n", commID);
++       	DBGX("commID=%" PRIx64 "\n", commID);
+ 
+ 		// We have a bunch of PWR_Obj hanging off of the comm.
+ 		// How/should we clean them up?	
+diff -ur spack-src.org/tools/pwrdaemon/server/commReqEvent.h spack-src/tools/pwrdaemon/server/commReqEvent.h
+--- spack-src.org/tools/pwrdaemon/server/commReqEvent.h	2020-01-28 11:00:47.740113231 +0900
++++ spack-src/tools/pwrdaemon/server/commReqEvent.h	2020-01-28 11:12:06.881058234 +0900
+@@ -31,7 +31,7 @@
+ 
+     	PWR_Obj obj = m_info->m_commMap[commID].objects[0];
+ 
+-		DBGX("commID=%"PRIx64" grpIndex=%"PRIu64"\n",commID, grpIndex);
++		DBGX("commID=%" PRIx64 " grpIndex=%" PRIu64 "\n",commID, grpIndex);
+ 		char name[100];
+ 		PWR_ObjGetName(obj,name,100);
+ 

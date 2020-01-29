@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,10 +28,15 @@ class Mesquite(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            'CC=%s' % self.spec['mpi'].mpicc,
-            'CXX=%s' % self.spec['mpi'].mpicxx,
-            '--with-mpi=%s' % self.spec['mpi'].prefix,
             '--enable-release',
             '--enable-shared',
         ]
+
+        if '+mpi' in self.spec:
+            args.append('CC=%s' % self.spec['mpi'].mpicc)
+            args.append('CXX=%s' % self.spec['mpi'].mpicxx)
+            args.append('--with-mpi=%s' % self.spec['mpi'].prefix)
+        else:
+            args.append('--without-mpi')
+
         return args

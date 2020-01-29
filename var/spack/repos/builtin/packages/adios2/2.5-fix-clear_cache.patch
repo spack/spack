@@ -1,0 +1,213 @@
+From 2f05a0b1def194001d1f6e0f9a07725c10b48301 Mon Sep 17 00:00:00 2001
+From: Greg Eisenhauer <eisen@cc.gatech.edu>
+Date: Fri, 13 Dec 2019 10:00:15 -0500
+Subject: [PATCH] Merge branch 'upstream-dill' into DillUpstream
+
+* upstream-dill:
+  dill 2019-12-12 (dac6dfcc)
+---
+ thirdparty/dill/dill/CMakeLists.txt |  5 ++++-
+ thirdparty/dill/dill/LICENSE        | 24 ++++++++++++++++++++++++
+ thirdparty/dill/dill/arm6.c         | 19 +++----------------
+ thirdparty/dill/dill/arm6_rt.c      | 19 +++----------------
+ thirdparty/dill/dill/arm8.c         | 19 +++----------------
+ thirdparty/dill/dill/arm8_rt.c      | 19 +++----------------
+ thirdparty/dill/dill/config.h.cmake |  7 +++++--
+ 7 files changed, 45 insertions(+), 67 deletions(-)
+ create mode 100644 thirdparty/dill/dill/LICENSE
+
+diff --git a/thirdparty/dill/dill/CMakeLists.txt b/thirdparty/dill/dill/CMakeLists.txt
+index 0461556a..695db8c6 100644
+--- a/thirdparty/dill/dill/CMakeLists.txt
++++ b/thirdparty/dill/dill/CMakeLists.txt
+@@ -1,6 +1,6 @@
+ cmake_minimum_required(VERSION 3.0)
+ 
+-project(DILL VERSION 2.4.0 LANGUAGES C CXX)
++project(DILL VERSION 2.4.1 LANGUAGES C CXX)
+ 
+ # Some boilerplate to setup nice output directories
+ include(GNUInstallDirs)
+@@ -265,6 +265,9 @@ check_include_files(unistd.h HAVE_UNISTD_H)
+ check_include_files(stdarg.h STDC_HEADERS)
+ check_include_files(malloc.h HAVE_MALLOC_H)
+ check_include_files(memory.h HAVE_MEMORY_H)
++include(CheckSymbolExists)
++check_symbol_exists(__clear_cache "" CLEAR_CACHE_DEFINED)
++message(STATUS "Clear cache defined is ${CLEAR_CACHE_DEFINED}")
+ 
+ set(NO_DISASSEMBLER TRUE)
+ if(DILL_ENABLE_DISASSEMBLY)
+diff --git a/thirdparty/dill/dill/LICENSE b/thirdparty/dill/dill/LICENSE
+new file mode 100644
+index 00000000..81b08341
+--- /dev/null
++++ b/thirdparty/dill/dill/LICENSE
+@@ -0,0 +1,24 @@
++Copyright (c) 2010, Georgia Tech Research Corporation
++All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are met:
++    * Redistributions of source code must retain the above copyright
++      notice, this list of conditions and the following disclaimer.
++    * Redistributions in binary form must reproduce the above copyright
++      notice, this list of conditions and the following disclaimer in the
++      documentation and/or other materials provided with the distribution.
++    * Neither the name of the Georgia Tech Research Corporation nor the
++      names of its contributors may be used to endorse or promote products
++      derived from this software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY GEORGIA TECH RESEARCH CORPORATION ''AS IS'' AND
++ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
++WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++DISCLAIMED. IN NO EVENT SHALL GEORGIA TECH BE LIABLE FOR ANY DIRECT, INDIRECT,
++INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
++OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
++LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
++OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
++ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+diff --git a/thirdparty/dill/dill/arm6.c b/thirdparty/dill/dill/arm6.c
+index f2be1725..da90507c 100644
+--- a/thirdparty/dill/dill/arm6.c
++++ b/thirdparty/dill/dill/arm6.c
+@@ -1526,22 +1526,9 @@ arm6_call_link(dill_stream s)
+ }
+ 
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm6_flush(void *base, void *limit)
+diff --git a/thirdparty/dill/dill/arm6_rt.c b/thirdparty/dill/dill/arm6_rt.c
+index 1f64b477..6b7e908e 100644
+--- a/thirdparty/dill/dill/arm6_rt.c
++++ b/thirdparty/dill/dill/arm6_rt.c
+@@ -109,22 +109,9 @@ arm6_rt_call_link(char *code, call_t *t)
+     }
+ }
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm6_flush(void *base, void *limit)
+diff --git a/thirdparty/dill/dill/arm8.c b/thirdparty/dill/dill/arm8.c
+index fd5ed79f..d1894635 100644
+--- a/thirdparty/dill/dill/arm8.c
++++ b/thirdparty/dill/dill/arm8.c
+@@ -1524,22 +1524,9 @@ arm8_call_link(dill_stream s)
+ }
+ 
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm8_flush(void *base, void *limit)
+diff --git a/thirdparty/dill/dill/arm8_rt.c b/thirdparty/dill/dill/arm8_rt.c
+index bd0209cd..5cb107ed 100644
+--- a/thirdparty/dill/dill/arm8_rt.c
++++ b/thirdparty/dill/dill/arm8_rt.c
+@@ -109,22 +109,9 @@ arm8_rt_call_link(char *code, call_t *t)
+     }
+ }
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm8_flush(void *base, void *limit)
+diff --git a/thirdparty/dill/dill/config.h.cmake b/thirdparty/dill/dill/config.h.cmake
+index a8519064..a9622f56 100644
+--- a/thirdparty/dill/dill/config.h.cmake
++++ b/thirdparty/dill/dill/config.h.cmake
+@@ -16,10 +16,13 @@
+ #cmakedefine HAVE_DIS_ASM_H
+ 
+ /* Define to 1 if you have the <dlfcn.h> header file. */
+-#undef HAVE_DLFCN_H
++#cmakedefine HAVE_DLFCN_H
+ 
+ /* Define to 1 if you have the <inttypes.h> header file. */
+-#undef HAVE_INTTYPES_H
++#cmakedefine HAVE_INTTYPES_H
++
++/* Define to 1 if you have __clear_cache is defined  */
++#cmakedefine CLEAR_CACHE_DEFINED
+ 
+ /* Define to 1 if you have the <malloc.h> header file. */
+ #cmakedefine HAVE_MALLOC_H
+-- 
+2.18.1
+

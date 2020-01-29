@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@
 # - Combining +mgridgen with +int64 or +float32 probably won't work.
 #
 # The spack 'develop' version of openfoam retains the upstream
-# WM_PROJECT_VERSION=plus naming internally.
+# WM_PROJECT_VERSION=com naming internally.
 #
 ##############################################################################
 import glob
@@ -259,12 +259,13 @@ class Openfoam(Package):
     maintainers = ['olesenm']
     homepage = "http://www.openfoam.com/"
     url      = "https://sourceforge.net/projects/openfoam/files/v1906/OpenFOAM-v1906.tgz"
-    git      = "https://develop.openfoam.com/Development/OpenFOAM-plus.git"
+    git      = "https://develop.openfoam.com/Development/openfoam.git"
     list_url = "https://sourceforge.net/projects/openfoam/files/"
     list_depth = 2
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
     version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
     version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
     version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')
@@ -341,7 +342,7 @@ class Openfoam(Package):
     # Version-specific patches
     patch('1612-spack-patches.patch', when='@1612')
     # kahip patch (wmake)
-    patch('https://develop.openfoam.com/Development/OpenFOAM-plus/commit/4068c03c616a4964472e06d5fb5b9bc2dd0bf1b7.patch',
+    patch('https://develop.openfoam.com/Development/openfoam/commit/8831dfc58b0295d0d301a78341dd6f4599073d45.patch',
           when='@1806',
           sha256='21f1ab68c82dfa41ed1a4439427c94c43ddda02c84175c30da623d905d3e5d61'
     )

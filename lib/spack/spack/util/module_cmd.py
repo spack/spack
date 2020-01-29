@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,7 @@ parsing environment modules.
 """
 import subprocess
 import os
+import sys
 import json
 import re
 
@@ -17,7 +18,7 @@ import llnl.util.tty as tty
 # This list is not exhaustive. Currently we only use load and unload
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
-py_cmd = "'import os\nimport json\nprint(json.dumps(dict(os.environ)))'"
+py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
 
 # This is just to enable testing. I hate it but we can't find a better way
 _test_mode = False
@@ -31,7 +32,7 @@ def module(*args):
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
-        module_cmd += ' >/dev/null; python -c %s' % py_cmd
+        module_cmd += ' >/dev/null;' + sys.executable + ' -c %s' % py_cmd
         module_p  = subprocess.Popen(module_cmd,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.STDOUT,

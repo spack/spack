@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,6 @@ class SspaceStandard(Package):
         install_tree('tools', prefix.tools)
         install(rootscript, prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('SSPACE_HOME', prefix)
-        run_env.prepend_path('PATH', prefix)
+    def setup_run_environment(self, env):
+        env.set('SSPACE_HOME', self.prefix)
+        env.prepend_path('PATH', self.prefix)

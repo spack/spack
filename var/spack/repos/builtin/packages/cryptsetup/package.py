@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,7 +47,10 @@ class Cryptsetup(AutotoolsPackage):
         ]
         return args
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Prepend the sbin directory to PATH."""
-        spack_env.prepend_path('PATH', self.prefix.sbin)
-        run_env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path('PATH', self.prefix.sbin)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Prepend the sbin directory to PATH."""
+        env.prepend_path('PATH', self.prefix.sbin)

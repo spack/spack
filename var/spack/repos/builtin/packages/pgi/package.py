@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,16 +87,10 @@ class Pgi(Package):
         # Run install script
         os.system("./install")
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix, 'linux86-64', self.version))
 
-        run_env.set('CC',  join_path(prefix.bin, 'pgcc'))
-        run_env.set('CXX', join_path(prefix.bin, 'pgc++'))
-        run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
-        run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
-
-        run_env.prepend_path('PATH',            prefix.bin)
-        run_env.prepend_path('CPATH',           prefix.include)
-        run_env.prepend_path('LIBRARY_PATH',    prefix.lib)
-        run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
-        run_env.prepend_path('MANPATH',         prefix.man)
+        env.set('CC',  join_path(prefix.bin, 'pgcc'))
+        env.set('CXX', join_path(prefix.bin, 'pgc++'))
+        env.set('F77', join_path(prefix.bin, 'pgfortran'))
+        env.set('FC',  join_path(prefix.bin, 'pgfortran'))

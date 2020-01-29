@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,27 +31,27 @@ class Cbench(MakefilePackage):
     conflicts('%xl')
     conflicts('%xl_r')
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         # The location of the Cbench source tree
-        build_env.set('CBENCHOME', self.stage.source_path)
+        env.set('CBENCHOME', self.stage.source_path)
 
         # The location that will contain all of your tests and their results
-        build_env.set('CBENCHTEST', self.prefix)
+        env.set('CBENCHTEST', self.prefix)
 
         # The location of the system MPI tree
-        build_env.set('MPIHOME', self.spec['mpi'].prefix)
+        env.set('MPIHOME', self.spec['mpi'].prefix)
 
         # Pick the compiler collection/chain you want to compile with.
         # Examples include: intel, gcc, pgi.
-        build_env.set('COMPILERCOLLECTION', self.compiler.name)
+        env.set('COMPILERCOLLECTION', self.compiler.name)
 
         # Linking flags for BLAS/LAPACK and FFTW
-        build_env.set('BLASLIB', self.spec['blas'].libs.ld_flags)
-        build_env.set('LAPACKLIB', self.spec['lapack'].libs.ld_flags)
-        build_env.set('FFTWLIB', self.spec['fftw'].libs.ld_flags)
+        env.set('BLASLIB', self.spec['blas'].libs.ld_flags)
+        env.set('LAPACKLIB', self.spec['lapack'].libs.ld_flags)
+        env.set('FFTWLIB', self.spec['fftw'].libs.ld_flags)
 
         # The number of make jobs (commands) to run simultaneously
-        build_env.set('JOBS', str(make_jobs))
+        env.set('JOBS', str(make_jobs))
 
     @run_before('build')
     @on_package_attributes(run_tests=True)

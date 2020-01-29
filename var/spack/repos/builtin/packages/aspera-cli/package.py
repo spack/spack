@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class AsperaCli(Package):
             url='https://download.asperasoft.com/download/sw/cli/3.7.7/aspera-cli-3.7.7.608.927cce8-linux-64-release.sh',
             expand=False)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.cli.bin)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.cli.bin)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.source_path, 'aspera-cli*.sh'))[0]

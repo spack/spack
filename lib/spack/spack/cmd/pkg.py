@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import os
-import argparse
 import re
 
 import llnl.util.tty as tty
@@ -14,6 +13,7 @@ from llnl.util.tty.colify import colify
 from llnl.util.filesystem import working_dir
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.paths
 import spack.repo
 from spack.util.executable import which
@@ -28,8 +28,7 @@ def setup_parser(subparser):
         metavar='SUBCOMMAND', dest='pkg_command')
 
     add_parser = sp.add_parser('add', help=pkg_add.__doc__)
-    add_parser.add_argument('packages', nargs=argparse.REMAINDER,
-                            help="names of packages to add to git repo")
+    arguments.add_common_arguments(add_parser, ['packages'])
 
     list_parser = sp.add_parser('list', help=pkg_list.__doc__)
     list_parser.add_argument('rev', default='HEAD', nargs='?',

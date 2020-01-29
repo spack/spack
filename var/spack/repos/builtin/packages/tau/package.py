@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -262,7 +262,7 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
         files = glob.glob(pattern)
 
@@ -272,4 +272,4 @@ class Tau(Package):
         # directory to inspect. The conditional below will set `TAU_MAKEFILE`
         # in the latter case.
         if files:
-            run_env.set('TAU_MAKEFILE', files[0])
+            env.set('TAU_MAKEFILE', files[0])

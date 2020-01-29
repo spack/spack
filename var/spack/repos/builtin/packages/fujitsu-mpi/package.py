@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,8 +33,8 @@ class FujitsuMpi(Package):
         self.spec.mpif77 = self.prefix.bin.mpifrt
         self.spec.mpifc = self.prefix.bin.mpifrt
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC', self.prefix.bin.mpifcc)
-        spack_env.set('MPICXX', self.prefix.bin.mpiFCC)
-        spack_env.set('MPIF77', self.prefix.bin.mpifrt)
-        spack_env.set('MPIF90', self.prefix.bin.mpifrt)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC', self.prefix.bin.mpifcc)
+        env.set('MPICXX', self.prefix.bin.mpiFCC)
+        env.set('MPIF77', self.prefix.bin.mpifrt)
+        env.set('MPIF90', self.prefix.bin.mpifrt)

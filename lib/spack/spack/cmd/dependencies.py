@@ -1,9 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -31,8 +29,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-V', '--no-expand-virtuals', action='store_false', default=True,
         dest="expand_virtuals", help="do not expand virtual dependencies")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def dependencies(parser, args):

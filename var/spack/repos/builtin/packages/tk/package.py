@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,14 +60,14 @@ class Tk(AutotoolsPackage):
         return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
                               root=self.prefix, recursive=True)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
     def configure_args(self):

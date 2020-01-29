@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ class PyFlye(PythonPackage):
     conflicts('%clang@:3.2', msg=msg)
     # Requires Apple Clang 5.0+ but no way to specify that right now
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.spec.target.family == 'aarch64':
-            spack_env.set('arm_neon', '1')
-            spack_env.set('aarch64', '1')
+            env.set('arm_neon', '1')
+            env.set('aarch64', '1')

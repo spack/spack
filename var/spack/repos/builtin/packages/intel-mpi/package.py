@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class IntelMpi(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
+    version('2019.6.154', sha256='f5bad7bcc50ea3a09a6a0615ae8fce42ba8a652bc61e32e12ff7b54952e8f8c9',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16120/l_mpi_2019.6.154.tgz')
     version('2019.4.243', sha256='233a8660b92ecffd89fedd09f408da6ee140f97338c293146c9c080a154c5fcd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15553/l_mpi_2019.4.243.tgz')
     version('2019.3.199', sha256='5304346c863f64de797250eeb14f51c5cfc8212ff20813b124f20e7666286990',
@@ -43,7 +45,7 @@ class IntelMpi(IntelPackage):
 
     provides('mpi')
 
-    def setup_dependent_environment(self, *args):
+    def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py

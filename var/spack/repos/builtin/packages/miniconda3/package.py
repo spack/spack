@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Miniconda3(Package):
     homepage = "https://conda.io/miniconda.html"
     url      = "https://repo.continuum.io/miniconda/Miniconda3-4.6.14-Linux-x86_64.sh"
 
+    version('4.7.12.1', sha256='bfe34e1fa28d6d75a7ad05fd02fa5472275673d5f5621b77380898dee1be15d2', expand=False)
     version('4.6.14', sha256='0d6b23895a91294a4924bd685a3a1f48e35a17970a073cd2f684ffe2c31fc4be', expand=False)
     version('4.5.11', sha256='ea4594241e13a2671c5b158b3b813f0794fe58d514795fbf72a1aad24db918cf', expand=False)
     version('4.5.4', sha256='80ecc86f8c2f131c5170e43df489514f80e3971dd105c075935470bbf2476dea', expand=False)

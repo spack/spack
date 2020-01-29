@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -157,7 +157,7 @@ def env_deactivate(args):
 def env_create_setup_parser(subparser):
     """create a new environment"""
     subparser.add_argument(
-        'create_env', metavar='ENV', help='name of environment to create')
+        'create_env', metavar='env', help='name of environment to create')
     subparser.add_argument(
         '-d', '--dir', action='store_true',
         help='create an environment in a specific directory')
@@ -221,7 +221,7 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None):
 def env_remove_setup_parser(subparser):
     """remove an existing environment"""
     subparser.add_argument(
-        'rm_env', metavar='ENV', nargs='+',
+        'rm_env', metavar='env', nargs='+',
         help='environment(s) to remove')
     arguments.add_common_arguments(subparser, ['yes_to_all'])
 

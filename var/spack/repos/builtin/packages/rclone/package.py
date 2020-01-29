@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,9 @@ class Rclone(Package):
 
     depends_on("go", type='build')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Point GOPATH at the top of the staging dir for the build step.
-        spack_env.prepend_path('GOPATH', self.stage.path)
+        env.prepend_path('GOPATH', self.stage.path)
 
     def install(self, spec, prefix):
         go('build')

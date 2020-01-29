@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -189,14 +189,12 @@ class Neuron(Package):
             make('VERBOSE=1')
             make('install')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         neuron_archdir = self.get_neuron_archdir()
-        run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        run_env.prepend_path(
-            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
-        spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        spack_env.prepend_path(
-            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))

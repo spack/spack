@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Libfabric(AutotoolsPackage):
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('develop', branch='master')
+    version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c',
+       url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/libfabric-1.9.0.tar.bz2')
     version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88',
        url='https://github.com/ofiwg/libfabric/releases/download/v1.8.1/libfabric-1.8.1.tar.bz2')
     version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37',
@@ -40,7 +42,9 @@ class Libfabric(AutotoolsPackage):
                'rxd',
                'mlx',
                'tcp',
-               'efa')
+               'efa',
+               'mrail',
+               'shm')
 
     variant('fabrics',
             default='sockets',
@@ -66,6 +70,10 @@ class Libfabric(AutotoolsPackage):
     depends_on('libtool', when='@develop', type='build')
 
     resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/fabtests-1.9.0.tar.bz2',
+             sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
+             placement='fabtests', when='@1.9.0')
+    resource(name='fabtests',
              url='https://github.com/ofiwg/libfabric/releases/download/v1.7.0/fabtests-1.7.0.tar.gz',
              sha256='ebb4129dc69dc0e1f48310ce1abb96673d8ddb18166bc595312ebcb96e803de9',
              placement='fabtests', when='@1.7.0')
@@ -90,9 +98,9 @@ class Libfabric(AutotoolsPackage):
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
              placement='fabtests', when='@1.5.0')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.run_tests:
-            spack_env.prepend_path('PATH', self.prefix.bin)
+            env.prepend_path('PATH', self.prefix.bin)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):

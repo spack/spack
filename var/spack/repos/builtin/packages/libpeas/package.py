@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Libpeas(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool', type='build')
     depends_on('gettext', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('atk')
     depends_on('intltool@0.40.0:')
     depends_on('xmlto', type='build')
@@ -44,11 +44,13 @@ class Libpeas(AutotoolsPackage):
         url += '{0}/libpeas-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_build_environment(self, env):
         # Let
         #
         # python = self.spec['python']
@@ -76,10 +78,11 @@ class Libpeas(AutotoolsPackage):
         python_pc_file = os.path.join(python_prefix, 'python3.pc')
         python_ldflags = pkg_config('--libs', python_pc_file, output=str)
 
-        spack_env.append_path('LDFLAGS',
-                              python_ldflags)
-        spack_env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
-        run_env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+        env.append_path('LDFLAGS', python_ldflags)
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_run_environment(self, env):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
 
     def autoreconf(self, spec, prefix):
         autoreconf_args = ['-ivf']

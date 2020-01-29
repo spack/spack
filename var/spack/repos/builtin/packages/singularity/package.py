@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Singularity(MakefilePackage):
     maintainers = ['ArangoGutierrez', 'alalazo']
     version('master', branch='master')
 
+    version('3.5.2', sha256='f9c21e289377a4c40ed7a78a0c95e1ff416dec202ed49a6c616dd2c37700eab8')
     version('3.4.1', sha256='638fd7cc5ab2a20e779b8768f73baf21909148339d6c4edf6ff61349c53a70c2')
     version('3.4.0', sha256='eafb27f1ffbed427922ebe2b5b95d1c9c09bfeb897518867444fe230e3e35e41')
     version('3.3.0', sha256='070530a472e7e78492f1f142c8d4b77c64de4626c4973b0589f0d18e1fcf5b4f')
@@ -87,10 +88,9 @@ class Singularity(MakefilePackage):
     build_targets = ['-C', 'builddir', 'parallel=False']
     install_targets = ['install', '-C', 'builddir', 'parallel=False']
 
-    def setup_environment(self, spack_env, run_env):
-        # Point GOPATH at the top of the staging dir for the build
-        # step.
-        spack_env.prepend_path('GOPATH', self.gopath)
+    def setup_build_environment(self, env):
+        # Point GOPATH at the top of the staging dir for the build step.
+        env.prepend_path('GOPATH', self.gopath)
 
     # `singularity` has a fixed path where it will look for
     # mksquashfs.  If it lives somewhere else you need to specify the

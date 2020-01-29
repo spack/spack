@@ -1,0 +1,11 @@
+--- a/src/inc/Machine.h	2018-12-20 00:28:50.000000000 -0600
++++ b/src/inc/Machine.h	2020-01-26 19:15:29.965965418 -0600
+@@ -46,7 +46,7 @@
+ #endif
+ #else
+ #define     HOT             __attribute__((hot))
+-#if defined(__x86_64)
++#if defined(__x86_64) && !defined(__INTEL_COMPILER)
+ #define     REGPARM(n)      __attribute__((hot, regparm(n)))
+ #else
+ #define     REGPARM(n)

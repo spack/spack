@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,25 +12,15 @@ class Openjdk(Package):
 
     homepage = "https://jdk.java.net"
 
-    version(
-        "11.0.2",
-        sha256="99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57",
-        url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz",
-    )
+    version("11.0.2", sha256="99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57",
+            url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz")
+    version("11.0.1", sha256="7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd",
+            url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz")
+    version("1.8.0_202-b08", sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
+            url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u202-b08/OpenJDK8U-jdk_x64_linux_openj9_8u202b08_openj9-0.12.0.tar.gz")
+    version('1.8.0_40-b25', sha256='79e96dce03a14271040023231a7d0ae374b755d48adf68bbdaec30294e4e2b88',
+            url='https://download.java.net/openjdk/jdk8u40/ri/jdk_ri-8u40-b25-linux-x64-10_feb_2015.tar.gz')
 
-    version(
-        "11.0.1",
-        sha256="7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd",
-        url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz",
-    )
-
-    version(
-        "1.8.0_202-b08",
-        sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
-        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u202-b08/OpenJDK8U-jdk_x64_linux_openj9_8u202b08_openj9-0.12.0.tar.gz",
-    )
-
-    provides('java')
     provides('java@11', when='@11.0:11.99')
     provides('java@8', when='@1.8.0:1.8.999')
 
@@ -83,18 +73,18 @@ class Openjdk(Package):
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set JAVA_HOME."""
 
-        run_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
         other Java extensions it depends on."""
 
-        spack_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
         class_paths = []
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
@@ -102,14 +92,19 @@ class Openjdk(Package):
                 class_paths.extend(find(d.prefix, '*.jar'))
 
         classpath = os.pathsep.join(class_paths)
-        spack_env.set('CLASSPATH', classpath)
+        env.set('CLASSPATH', classpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set CLASSPATH.
+
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
         # For runtime environment set only the path for
         # dependent_spec and prepend it to CLASSPATH
         if dependent_spec.package.extends(self.spec):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
-            run_env.prepend_path('CLASSPATH', classpath)
+            env.prepend_path('CLASSPATH', classpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""

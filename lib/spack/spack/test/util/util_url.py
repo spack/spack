@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 """Test Spack's URL handling utility functions."""
 import os
 import os.path
+import spack.paths
 import spack.util.url as url_util
 
 
@@ -41,7 +42,7 @@ def test_url_parse():
     assert(parsed.netloc == 'path')
     assert(parsed.path == '/to/resource')
 
-    spack_root = os.path.abspath(os.environ['SPACK_ROOT'])
+    spack_root = spack.paths.spack_root
     parsed = url_util.parse('$spack')
     assert(parsed.scheme == 'file')
     assert(parsed.netloc == '')
@@ -56,7 +57,7 @@ def test_url_parse():
 
 
 def test_url_local_file_path():
-    spack_root = os.path.abspath(os.environ['SPACK_ROOT'])
+    spack_root = spack.paths.spack_root
 
     lfp = url_util.local_file_path('/a/b/c.txt')
     assert(lfp == '/a/b/c.txt')
@@ -171,7 +172,7 @@ def test_url_join_local_paths():
         'https://mirror.spack.io/build_cache/my-package')
 
     # file:// URL path components are *NOT* canonicalized
-    spack_root = os.path.abspath(os.environ['SPACK_ROOT'])
+    spack_root = spack.paths.spack_root
 
     join_result = url_util.join('/a/b/c', '$spack')
     assert(join_result == 'file:///a/b/c/$spack')  # not canonicalized

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -94,6 +94,8 @@ spack package at this time.''',
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
+    depends_on('ucx', when='netmod=ucx')
+
     depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
 
@@ -101,6 +103,12 @@ spack package at this time.''',
     depends_on('slurm', when='+slurm')
 
     depends_on('pmix', when='pmi=pmix')
+
+    # building from git requires regenerating autotools files
+    depends_on('automake@1.15:', when='@develop', type=("build"))
+    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
+    depends_on("m4", when="@develop", type=("build")),
+    depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -167,7 +175,7 @@ spack package at this time.''',
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError(
-                'Mpich requires both C and Fortran compilers!'
+                'MPICH requires both C and Fortran compilers!'
             )
 
     def configure_args(self):
@@ -217,10 +225,13 @@ spack package at this time.''',
 
         config_args.append(device_config)
 
-        # Specify libfabric's path explicitly, otherwise configure might fall
-        # back to an embedded version of libfabric.
+        # Specify libfabric or ucx path explicitly, otherwise
+        # configure might fall back to an embedded version.
         if 'netmod=ofi' in spec:
             config_args.append('--with-libfabric={0}'.format(
                 spec['libfabric'].prefix))
+        if 'netmod=ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(
+                spec['ucx'].prefix))
 
         return config_args

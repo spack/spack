@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -266,6 +266,8 @@ def test_contains():
     assert_in('1.3.5-7', '1.2:1.4')
     assert_not_in('1.1', '1.2:1.4')
     assert_not_in('1.5', '1.2:1.4')
+    assert_not_in('1.5', '1.5.1:1.6')
+    assert_not_in('1.5', '1.5.1:')
 
     assert_in('1.4.2', '1.2:1.4')
     assert_not_in('1.4.2', '1.2:1.4.0')

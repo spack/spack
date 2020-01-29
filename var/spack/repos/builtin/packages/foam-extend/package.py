@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,7 @@ class FoamExtend(Package):
     # - End of definitions / setup -
     #
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Add environment variables to the generated module file.
         These environment variables come from running:
 
@@ -126,13 +126,6 @@ class FoamExtend(Package):
 
            $ . $WM_PROJECT_DIR/etc/bashrc
         """
-
-        # NOTE: Spack runs setup_environment twice.
-        # 1) pre-build to set up the build environment
-        # 2) post-install to determine runtime environment variables
-        # The etc/bashrc is only available (with corrrect content)
-        # post-installation.
-
         bashrc = join_path(self.projectdir, 'etc', 'bashrc')
         minimal = True
         if os.path.isfile(bashrc):
@@ -173,7 +166,7 @@ class FoamExtend(Package):
                         'PYTHON_BIN_DIR',
                     ])
 
-                run_env.extend(mods)
+                env.extend(mods)
                 minimal = False
                 tty.info('foam-extend env: {0}'.format(bashrc))
             except Exception:
@@ -182,19 +175,19 @@ class FoamExtend(Package):
         if minimal:
             # pre-build or minimal environment
             tty.info('foam-extend minimal env {0}'.format(self.prefix))
-            run_env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
-            run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-            run_env.set('WM_PROJECT_DIR', self.projectdir)
+            env.set('FOAM_INST_DIR', os.path.dirname(self.projectdir)),
+            env.set('FOAM_PROJECT_DIR', self.projectdir)
+            env.set('WM_PROJECT_DIR', self.projectdir)
             for d in ['wmake', self.archbin]:  # bin added automatically
-                run_env.prepend_path('PATH', join_path(self.projectdir, d))
+                env.prepend_path('PATH', join_path(self.projectdir, d))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
         """
-        spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):

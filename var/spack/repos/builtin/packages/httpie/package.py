@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,4 +26,4 @@ class Httpie(PythonPackage):
     # https://github.com/spack/spack/issues/3628
     # depends_on('py-argparse@1.2.1:', type=('build', 'run'),
     #            when='^python@:2.6,3.0:3.1')
-    depends_on('py-argparse@1.2.1:', type=('build', 'run'))
+    depends_on('py-argparse@1.2.1:', type=('build', 'run'), when='^python@:2.6')

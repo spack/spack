@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,10 +48,10 @@ class Lmod(AutotoolsPackage):
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         stage_lua_path = join_path(
             self.stage.source_path, 'src', '?.lua')
-        spack_env.append_path('LUA_PATH', stage_lua_path.format(
+        env.append_path('LUA_PATH', stage_lua_path.format(
             version=self.version), separator=';')
 
     def patch(self):

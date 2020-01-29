@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class PyNumba(PythonPackage):
     depends_on('py-llvmlite@0.25:', type=('build', 'run'), when='@0.40.1:')
     depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
 
-    depends_on('py-argparse', type=('build', 'run'))
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-funcsigs', type=('build', 'run'), when='^python@:3.3.99')
     depends_on('py-singledispatch', type=('build', 'run'), when='^python@:3.3.99')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -122,7 +122,7 @@ class Mysql(CMakePackage):
             options.append('-DWITHOUT_SERVER:BOOL=ON')
         return options
 
-    def _fix_dtrace_shebang(self, build_env):
+    def _fix_dtrace_shebang(self, env):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
@@ -141,13 +141,7 @@ class Mysql(CMakePackage):
         )
         # To have our own copy of dtrace in PATH, we need to
         # prepend to PATH the temporary folder where it resides.
-        build_env.prepend_path('PATH', dtrace_copy_path)
-
-    @run_before('cmake')
-    def _maybe_fix_dtrace_shebang(self):
-        if 'python' in self.spec.flat_dependencies() and \
-           self.spec.satisfies('@:7.99.99'):
-            self._fix_dtrace_shebang(build_env)
+        env.prepend_path('PATH', dtrace_copy_path)
 
     def setup_build_environment(self, env):
         cxxstd = self.spec.variants['cxxstd'].value
@@ -160,3 +154,7 @@ class Mysql(CMakePackage):
                                  '-Wno-deprecated-declarations')
             if int(cxxstd) > 14:
                 env.append_flags('CXXFLAGS', '-Wno-error=register')
+
+        if 'python' in self.spec.flat_dependencies() and \
+           self.spec.satisfies('@:7.99.99'):
+            self._fix_dtrace_shebang(env)

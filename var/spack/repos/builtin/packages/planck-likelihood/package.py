@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,17 +107,15 @@ class PlanckLikelihood(Package):
         for dir in dirs:
             install_tree(dir, join_path(prefix, 'share', 'clik', dir))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        prefix = self.prefix
-        spack_env.set('CLIK_PATH', prefix)
-        spack_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
-        spack_env.set('CLIK_PLUGIN', 'rel2015')
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('CLIK_PATH', self.prefix)
+        env.set('CLIK_DATA', self.prefix.share.clik)
+        env.set('CLIK_PLUGIN', 'rel2015')
 
-    def setup_environment(self, spack_env, run_env):
-        prefix = self.prefix
-        run_env.set('CLIK_PATH', prefix)
-        run_env.set('CLIK_DATA', join_path(prefix, 'share', 'clik'))
-        run_env.set('CLIK_PLUGIN', 'rel2015')
+    def setup_run_environment(self, env):
+        env.set('CLIK_PATH', self.prefix)
+        env.set('CLIK_DATA', self.prefix.share.clik)
+        env.set('CLIK_PLUGIN', 'rel2015')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -95,11 +95,15 @@ def test_create_template(parser, mock_test_repo, args, name, expected):
     (' ', 'name must be provided'),
     ('bad#name', 'name can only contain'),
 ])
-def test_create_template_bad_name(parser, mock_test_repo, name, expected):
+def test_create_template_bad_name(
+        parser, mock_test_repo, name, expected, capsys):
     """Test template creation with bad name options."""
     constr_args = parser.parse_args(['--skip-editor', '-n', name])
-    with pytest.raises(SystemExit, matches=expected):
+    with pytest.raises(SystemExit):
         spack.cmd.create.create(parser, constr_args)
+
+    captured = capsys.readouterr()
+    assert expected in str(captured)
 
 
 def test_build_system_guesser_no_stage(parser):
@@ -108,7 +112,7 @@ def test_build_system_guesser_no_stage(parser):
 
     # Ensure get the expected build system
     with pytest.raises(AttributeError,
-                       matches="'NoneType' object has no attribute"):
+                       match="'NoneType' object has no attribute"):
         guesser(None, '/the/url/does/not/matter')
 
 
@@ -142,7 +146,7 @@ def test_get_name_urls(parser, url, expected):
     assert name == expected
 
 
-def test_get_name_error(parser, monkeypatch):
+def test_get_name_error(parser, monkeypatch, capsys):
     """Test get_name UndetectableNameError exception path."""
     def _parse_name_offset(path, v):
         raise UndetectableNameError(path)
@@ -152,5 +156,7 @@ def test_get_name_error(parser, monkeypatch):
     url = 'downloads.sourceforge.net/noapp/'
     args = parser.parse_args([url])
 
-    with pytest.raises(SystemExit, matches="Couldn't guess a name"):
+    with pytest.raises(SystemExit):
         spack.cmd.create.get_name(args)
+    captured = capsys.readouterr()
+    assert "Couldn't guess a name" in str(captured)

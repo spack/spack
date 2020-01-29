@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,8 @@ class G4ensdfstate(Package):
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        run_env.set('G4ENSDFSTATEDATA', join_path(prefix.share, 'data'))
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.set('G4ENSDFSTATEDATA', self.prefix.share.data)
 
     def url_for_version(self, version):
         """Handle version string."""

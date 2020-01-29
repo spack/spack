@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
@@ -90,6 +91,9 @@ class Vtk(CMakePackage):
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('zlib')
+    depends_on('eigen', when='@8.2.0:')
+    depends_on('double-conversion', when='@8.2.0:')
+    depends_on('sqlite', when='@8.2.0:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
@@ -116,8 +120,6 @@ class Vtk(CMakePackage):
             # However, in a few cases we can't do without them yet
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
             '-DVTK_USE_SYSTEM_LIBHARU=OFF',
-            '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
-            '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
             '-DNETCDF_DIR={0}'.format(spec['netcdf-c'].prefix),
             '-DNETCDF_C_ROOT={0}'.format(spec['netcdf-c'].prefix),
@@ -130,6 +132,20 @@ class Vtk(CMakePackage):
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
         ]
+
+        # Some variable names have changed
+        if spec.satisfies('@8.2.0:'):
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_OGG:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_THEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF',
+            ])
+        else:
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
+            ])
 
         if '+mpi' in spec:
             cmake_args.extend([

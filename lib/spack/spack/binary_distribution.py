@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ from llnl.util.filesystem import mkdirp, install_tree
 import spack.cmd
 import spack.config as config
 import spack.fetch_strategy as fs
-import spack.util.gpg as gpg_util
+import spack.util.gpg
 import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 import spack.mirror
@@ -33,7 +33,7 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.executable import ProcessError
+import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -108,14 +108,6 @@ class NewLayoutException(spack.error.SpackError):
     Raised if directory layout is different from buildcache.
     """
     pass
-
-
-def has_gnupg2():
-    try:
-        gpg_util.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except ProcessError:
-        return False
 
 
 def build_cache_relative_path():
@@ -243,27 +235,31 @@ def checksum_tarball(file):
 
 def sign_tarball(key, force, specfile_path):
     # Sign the packages if keys available
-    if not has_gnupg2():
+    if spack.util.gpg.Gpg.gpg() is None:
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
             "Use spack install gnupg and spack load gnupg.")
-    else:
-        if key is None:
-            keys = Gpg.signing_keys()
-            if len(keys) == 1:
-                key = keys[0]
-            if len(keys) > 1:
-                raise PickKeyException(str(keys))
-            if len(keys) == 0:
-                msg = "No default key available for signing.\n"
-                msg += "Use spack gpg init and spack gpg create"
-                msg += " to create a default key."
-                raise NoKeyException(msg)
+
+    if key is None:
+        keys = Gpg.signing_keys()
+        if len(keys) == 1:
+            key = keys[0]
+
+        if len(keys) > 1:
+            raise PickKeyException(str(keys))
+
+        if len(keys) == 0:
+            msg = "No default key available for signing.\n"
+            msg += "Use spack gpg init and spack gpg create"
+            msg += " to create a default key."
+            raise NoKeyException(msg)
+
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
             raise NoOverwriteException('%s.asc' % specfile_path)
+
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
@@ -272,7 +268,7 @@ def generate_package_index(cache_prefix):
 
     Creates (or replaces) the "index.html" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and signing key (*.key) under cache_prefix.
+    and public key (*.key) under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
     try:
@@ -668,18 +664,21 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 _cached_specs = None
 
 
-def get_specs(force=False):
+def get_specs(force=False, use_arch=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
     global _cached_specs
+
+    arch = architecture.Arch(architecture.platform(),
+                             'default_os', 'default_target')
 
     if _cached_specs:
         tty.debug("Using previously-retrieved specs")
         return _cached_specs
 
     if not spack.mirror.MirrorCollection():
-        tty.warn("No Spack mirrors are currently configured")
+        tty.debug("No Spack mirrors are currently configured")
         return {}
 
     urls = set()
@@ -695,7 +694,13 @@ def get_specs(force=False):
                 for file in files:
                     if re.search('spec.yaml', file):
                         link = url_util.join(fetch_url_build_cache, file)
-                        urls.add(link)
+                        if use_arch and re.search('%s-%s' %
+                                                  (arch.platform,
+                                                   arch.os),
+                                                  file):
+                            urls.add(link)
+                        else:
+                            urls.add(link)
         else:
             tty.msg("Finding buildcaches at %s" %
                     url_util.format(fetch_url_build_cache))
@@ -703,7 +708,13 @@ def get_specs(force=False):
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
                 if re.search("spec.yaml", link):
-                    urls.add(link)
+                    if use_arch and re.search('%s-%s' %
+                                              (arch.platform,
+                                               arch.os),
+                                              link):
+                        urls.add(link)
+                    else:
+                        urls.add(link)
 
     _cached_specs = []
     for link in urls:
@@ -803,10 +814,10 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     try:
         _, _, yaml_file = web_util.read_from_url(file_path)
         yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
-    except URLError as url_err:
+    except (URLError, web_util.SpackWebError) as url_err:
         err_msg = [
             'Unable to determine whether {0} needs rebuilding,',
-            ' caught URLError attempting to read from {1}.',
+            ' caught exception attempting to read from {1}.',
         ]
         tty.error(''.join(err_msg).format(spec.short_spec, file_path))
         tty.debug(url_err)
@@ -908,10 +919,15 @@ def _download_buildcache_entry(mirror_root, descriptions):
     return True
 
 
-def download_buildcache_entry(file_descriptions):
-    if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " +
+def download_buildcache_entry(file_descriptions, mirror_url=None):
+    if not mirror_url and not spack.mirror.MirrorCollection():
+        tty.die("Please provide or add a spack mirror to allow " +
                 "download of buildcache entries.")
+
+    if mirror_url:
+        mirror_root = os.path.join(
+            mirror_url, _build_cache_relative_path)
+        return _download_buildcache_entry(mirror_root, file_descriptions)
 
     for mirror in spack.mirror.MirrorCollection().values():
         mirror_root = os.path.join(

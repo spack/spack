@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,15 +57,15 @@ class PyPipits(PythonPackage):
         install_tree(join_path(self.stage.source_path, 'refdb'),
                      self.prefix.refdb)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('PIPITS_UNITE_REFERENCE_DATA_CHIMERA', join_path(
-                    self.prefix, 'refdb',
-                    'uchime_reference_dataset_01.01.2016',
-                    'uchime_reference_dataset_01.01.2016.fasta'))
-        run_env.set('PIPITS_UNITE_RETRAINED_DIR',
-                    self.prefix.refdb.UNITE_retrained)
-        run_env.set('PIPITS_WARCUP_RETRAINED_DIR',
-                    self.prefix.refdb.warcup_retrained_V2)
-        run_env.set('PIPITS_RDP_CLASSIFIER_JAR', join_path(
-                    self.spec['rdp-classifier'].prefix.bin,
-                    'classifier.jar'))
+    def setup_run_environment(self, env):
+        env.set('PIPITS_UNITE_REFERENCE_DATA_CHIMERA', join_path(
+                self.prefix, 'refdb',
+                'uchime_reference_dataset_01.01.2016',
+                'uchime_reference_dataset_01.01.2016.fasta'))
+        env.set('PIPITS_UNITE_RETRAINED_DIR',
+                self.prefix.refdb.UNITE_retrained)
+        env.set('PIPITS_WARCUP_RETRAINED_DIR',
+                self.prefix.refdb.warcup_retrained_V2)
+        env.set('PIPITS_RDP_CLASSIFIER_JAR', join_path(
+                self.spec['rdp-classifier'].prefix.bin,
+                'classifier.jar'))

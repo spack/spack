@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,24 @@
    :lines: 13-
 """
 
+image_schema = {
+    'oneOf': [
+        {
+            'type': 'string'
+        }, {
+            'type': 'object',
+            'properties': {
+                'name': {'type': 'string'},
+                'entrypoint': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
+                    },
+                },
+            },
+        },
+    ],
+}
 
 #: Properties for inclusion in other schemas
 properties = {
@@ -58,24 +76,7 @@ properties = {
                             'additionalProperties': True,
                             'required': ['tags'],
                             'properties': {
-                                'image': {
-                                    'oneOf': [
-                                        {
-                                            'type': 'string'
-                                        }, {
-                                            'type': 'object',
-                                            'properties': {
-                                                'name': {'type': 'string'},
-                                                'entrypoint': {
-                                                    'type': 'array',
-                                                    'items': {
-                                                        'type': 'string',
-                                                    },
-                                                },
-                                            },
-                                        },
-                                    ],
-                                },
+                                'image': image_schema,
                                 'tags': {
                                     'type': 'array',
                                     'default': [],
@@ -92,6 +93,27 @@ properties = {
                                 },
                             },
                         },
+                    },
+                },
+            },
+            'enable-artifacts-buildcache': {
+                'type': 'boolean',
+                'default': False,
+            },
+            'enable-debug-messages': {
+                'type': 'boolean',
+                'default': False,
+            },
+            'final-stage-rebuild-index': {
+                'type': 'object',
+                'additionalProperties': False,
+                'required': ['tags'],
+                'properties': {
+                    'image': image_schema,
+                    'tags': {
+                        'type': 'array',
+                        'default': [],
+                        'items': {'type': 'string'}
                     },
                 },
             },

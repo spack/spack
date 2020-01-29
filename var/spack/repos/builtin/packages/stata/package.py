@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,9 +37,9 @@ class Stata(Package):
         return "file://{0}/Stata{1}Linux64.tar.gz".format(os.getcwd(), version)
 
     # STATA is simple and needs really just the PATH set.
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', prefix)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.prepend_path('LD_LIBRARY_PATH', self.spec['libpng'].prefix.lib)
 
     # Extracting the file provides the following:
     # ./unix/

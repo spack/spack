@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,5 +44,5 @@ class Astral(Package):
         filter_file('astral.jar', join_path(prefix.tools, jar_file),
                     script, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ASTRAL_HOME', self.prefix.tools)
+    def setup_run_environment(self, env):
+        env.set('ASTRAL_HOME', self.prefix.tools)

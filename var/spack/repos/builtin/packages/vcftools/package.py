@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Vcftools(AutotoolsPackage):
     depends_on('perl', type=('build', 'run'))
     depends_on('zlib')
 
-    # this needs to be in sync with what setup_environment adds to
+    # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
     def configure_args(self):
         return ['--with-pmdir={0}'.format(self.prefix.lib)]
@@ -51,5 +51,5 @@ class Vcftools(AutotoolsPackage):
             kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
             filter_file(match, substitute, *files, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix.lib)

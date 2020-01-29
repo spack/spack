@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,6 @@ import sys
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
-
-
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
 
 
 def index_by(objects, *funcs):
@@ -612,12 +606,14 @@ def load_module_from_file(module_name, module_path):
     """
     if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
         import importlib.util
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
+        spec = importlib.util.spec_from_file_location(  # novm
+            module_name, module_path)
+        module = importlib.util.module_from_spec(spec)  # novm
         spec.loader.exec_module(module)
     elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
         import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        loader = importlib.machinery.SourceFileLoader(  # novm
+            module_name, module_path)
         module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp

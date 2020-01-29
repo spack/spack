@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,7 +62,6 @@ class Icedtea(AutotoolsPackage):
     depends_on('zlib')
     depends_on('alsa-lib')
 
-    provides('java')
     provides('java@8', when='@3.4.0:3.99.99')
 
     force_autoreconf = True
@@ -153,18 +152,18 @@ class Icedtea(AutotoolsPackage):
         ]
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set JAVA_HOME."""
 
-        run_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
         other Java extensions it depends on."""
 
-        spack_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
         class_paths = []
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
@@ -172,14 +171,19 @@ class Icedtea(AutotoolsPackage):
                 class_paths.extend(find(d.prefix, '*.jar'))
 
         classpath = os.pathsep.join(class_paths)
-        spack_env.set('CLASSPATH', classpath)
+        env.set('CLASSPATH', classpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set CLASSPATH.
+
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
         # For runtime environment set only the path for
         # dependent_spec and prepend it to CLASSPATH
         if dependent_spec.package.extends(self.spec):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
-            run_env.prepend_path('CLASSPATH', classpath)
+            env.prepend_path('CLASSPATH', classpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
+import sys
 
 
 class IntelTbb(Package):
@@ -17,7 +18,15 @@ class IntelTbb(Package):
     """
     homepage = "http://www.threadingbuildingblocks.org/"
 
+    # Note: when adding new versions, please check and update the
+    # patches and filters below as needed.
+
     # See url_for_version() below.
+    version('2020', sha256='db80f4f7abb95c2d08fe64abdc0a9250903e4c725f1c667ac517450de426023a')
+    version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
+    version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
+    version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
+    version('2019.5', sha256='2ea82d74dec50e18075b4982b8d360f8bd2bf2950f38e2db483aef82e0047444')
     version('2019.4', sha256='342a0a2cd583879850658284b86e9351ea019b4f3fcd731f4c18456f0ce9f900')
     version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
     version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
@@ -49,6 +58,16 @@ class IntelTbb(Package):
 
     provides('tbb')
 
+    # Clang builds incorrectly determine GCC version which in turn incorrectly
+    # causes a mismatch in C++ features resulting in a link error. This also
+    # means that clang builds require a gcc compiler to work correctly (this
+    # has always been the case).
+    #
+    #    See https://github.com/intel/tbb/pull/147 for details.
+    #
+    conflicts('%clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
+
     conflicts('%gcc@6.1:', when='@:4.4.3',
               msg='4.4.4 or later required for GCC >= 6.1.')
 
@@ -64,44 +83,21 @@ class IntelTbb(Package):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
+    # Testing version ranges inside when clauses was fixed in e9ee9eaf.
+    # See: #8957 and #13989.
+
     # Build and install CMake config files if we're new enough.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+    # CMake support started in 2017.7.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
 
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
-    # specified one at a time.  In a nutshell, it is currently impossible
-    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
-    # can be simplified.
-
-    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    # one patch format for 2019.1 and after...
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
-    # ...another patch file for 2019 and before
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
-
-    # patch for pedantic warnings (#10836)
-    # one patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
-    # ...another patch file for 2019 and before
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
+    # Patch for pedantic warnings (#10836).  This was fixed in the TBB
+    # source tree in 2019.6.
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1:2019.5')
+    patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -131,6 +127,14 @@ class IntelTbb(Package):
                         of.write(l)
 
     def install(self, spec, prefix):
+        # Deactivate use of RTM with GCC when on an OS with a very old
+        # assembler.
+        if (spec.satisfies('%gcc@4.8.0: os=rhel6')
+            or spec.satisfies('%gcc@4.8.0: os=centos6')
+            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+            filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
+                        join_path('build', 'linux.gcc.inc'))
+
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
@@ -190,7 +194,7 @@ class IntelTbb(Package):
             for f in fs:
                 install(f, prefix.lib)
 
-        if self.spec.satisfies('@2017.0:'):
+        if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
             cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
                           '-DTBB_OS={0}'.format(platform.system()),
@@ -198,3 +202,9 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)

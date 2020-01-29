@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,6 @@ import shutil
 import sys
 import traceback
 import types
-from six import iteritems
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -52,6 +51,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
+import spack.schema.environment
 import spack.store
 from spack.util.string import plural
 from spack.util.environment import (
@@ -342,21 +342,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # Set environment variables if specified for
     # the given compiler
     compiler = pkg.compiler
-    environment = compiler.environment
-
-    for command, variable in iteritems(environment):
-        if command == 'set':
-            for name, value in iteritems(variable):
-                env.set(name, value)
-        elif command == 'unset':
-            for name, _ in iteritems(variable):
-                env.unset(name)
-        elif command == 'prepend-path':
-            for name, value in iteritems(variable):
-                env.prepend_path(name, value)
-        elif command == 'append-path':
-            for name, value in iteritems(variable):
-                env.append_path(name, value)
+    env.extend(spack.schema.environment.parse(compiler.environment))
 
     if compiler.extra_rpaths:
         extra_rpaths = ':'.join(compiler.extra_rpaths)
@@ -422,6 +408,11 @@ def set_build_environment_variables(pkg, env, dirty):
 
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    marker = '_set_run_already_called'
+    if getattr(module, marker, False):
+        return
 
     jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
@@ -488,6 +479,10 @@ def _set_variables_for_single_module(pkg, module):
                                          static_lib, shared_lib, **kwargs)
 
     m.static_to_shared_library = static_to_shared_library
+
+    # Put a marker on this module so that it won't execute the body of this
+    # function again, since it is not needed
+    setattr(m, marker, True)
 
 
 def set_module_variables_for_package(pkg):

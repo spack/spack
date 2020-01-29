@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,11 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.5.2.tar.gz"
+    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.6.0.tar.gz"
     git      = "https://github.com/Libensemble/libensemble.git"
 
     version('develop', branch='develop')
+    version('0.6.0', sha256='3f6a926d3868da53835ed93fc2e2a047b368dacb648c7608ee3a66debcee4d38')
     version('0.5.2', sha256='3e36c29a4a2adc0984ecfcc998cb5bb8a2cdfbe7a1ae92f7b35b06e41d21b889')
     version('0.5.1', sha256='522e0cc086a3ed75a101b704c0fe01eae07f2684bd8d6da7bdfe9371d3187362')
     version('0.5.0', sha256='c4623171dee049bfaa38a9c433609299a56b1afb774db8b71321247bc7556b8f')    

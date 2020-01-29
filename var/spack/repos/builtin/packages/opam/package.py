@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,10 +23,10 @@ class Opam(AutotoolsPackage):
 
     parallel = False
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Environment variable setting taken from
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/opam.rb
-        spack_env.set('OCAMLPARAM', 'safe-string=0,_')  # OCaml 4.06.0 compat
+        env.set('OCAMLPARAM', 'safe-string=0,_')  # OCaml 4.06.0 compat
 
     def build(self, spec, prefix):
         make('lib-ext')
