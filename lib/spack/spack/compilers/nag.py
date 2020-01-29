@@ -58,3 +58,9 @@ class Nag(spack.compiler.Compiler):
     @property
     def linker_arg(self):
         return '-Wl,-Wl,,'
+
+    # The NAG compiler is more strict than other compilers, and most packages
+    # will fail to build without these flags set
+    def setup_custom_environment(self, pkg, env):
+        env.append_flags('FFLAGS', '-mismatch -dusty')
+        env.append_flags('FCFLAGS', '-mismatch -dusty')
