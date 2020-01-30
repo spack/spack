@@ -629,7 +629,7 @@ _spack_configure() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help --config-dir"
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_create() {

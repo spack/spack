@@ -12,16 +12,13 @@ section = "container"
 level = "long"
 
 
-def setup_parser(subparser):
-    subparser.add_argument(
-        '--config-dir', default=None, metavar='DIR',
-        help='directory containing the spack.yaml used to generate the recipe'
-    )
-
-
 def containerize(parser, args):
-    config_dir = args.config_dir or os.getcwd()
+    config_dir = args.env_dir or os.getcwd()
     config_file = os.path.abspath(os.path.join(config_dir, 'spack.yaml'))
+    if not os.path.exists(config_file):
+        msg = 'file not found: {0}'
+        raise ValueError(msg.format(config_file))
+
     config = spack.container.validate(config_file)
 
     recipe = spack.container.recipe(config)
