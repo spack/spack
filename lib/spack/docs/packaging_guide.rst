@@ -2004,7 +2004,8 @@ package. In that case, you could say something like:
    depends_on('mpi', when='+mpi')
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
-the syntax is the same as for Specs written on the command line.
+the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
+line.
 
 .. _dependency_dependency_patching:
 
