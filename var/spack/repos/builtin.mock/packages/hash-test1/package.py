@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 import os
+
+from spack import *
 
 
 class HashTest1(Package):
@@ -38,14 +38,14 @@ class HashTest1(Package):
         os.listdir(os.getcwd())
 
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)
 
     @when('@1.5:')
     def install(self, spec, prefix):
         os.listdir(os.getcwd())
 
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)
 
     @when('@1.5,1.6')
     def extra_phase(self, spec, prefix):

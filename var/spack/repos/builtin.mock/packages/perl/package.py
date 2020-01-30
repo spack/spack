@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -16,4 +17,4 @@ class Perl(Package):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)

@@ -59,10 +59,10 @@ class Flake8(Package):
             pass
 
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)
 
     # '@when' decorated functions are exempt from redefinition errors
     @when('@2.0')
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)

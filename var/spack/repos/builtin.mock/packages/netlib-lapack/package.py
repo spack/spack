@@ -17,4 +17,4 @@ class NetlibLapack(Package):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.lib)

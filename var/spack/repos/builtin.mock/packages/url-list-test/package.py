@@ -5,7 +5,6 @@
 
 from spack import *
 
-import os
 import spack.paths
 
 
@@ -13,7 +12,7 @@ class UrlListTest(Package):
     """Mock package with url_list."""
     homepage = "http://www.url-list-example.com"
 
-    web_data_path = os.path.join(spack.paths.test_path, 'data', 'web')
+    web_data_path = join_path(spack.paths.test_path, 'data', 'web')
     url = 'file://' + web_data_path + '/foo-0.0.0.tar.gz'
     list_url = 'file://' + web_data_path + '/index.html'
     list_depth = 3
@@ -28,4 +27,4 @@ class UrlListTest(Package):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
-        touch(prefix.bin, 'install.txt')
+        mkdirp(prefix.bin)
