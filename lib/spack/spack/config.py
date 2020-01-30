@@ -772,7 +772,7 @@ def _mark_internal(data, name):
     return d
 
 
-def _merge_yaml(dest, source, override=False):
+def _merge_yaml(dest, source):
     """Merges source into dest; entries in source take precedence over dest.
 
     This routine may modify dest and should be assigned to dest, in
@@ -792,45 +792,45 @@ def _merge_yaml(dest, source, override=False):
     if source is None:
         return None
 
-    if not override:
-        # Source list is prepended (for precedence)
-        if they_are(list):
-            dest[:] = source + [x for x in dest if x not in source]
-            return dest
+    # Source list is prepended (for precedence)
+    if they_are(list):
+        dest[:] = source + [x for x in dest if x not in source]
+        return dest
 
-        # Source dict is merged into dest.
-        elif they_are(dict):
-            # track keys for marking
-            key_marks = {}
+    # Source dict is merged into dest.
+    elif they_are(dict):
+        # track keys for marking
+        key_marks = {}
 
-            for sk, sv in iteritems(source):
-                if _override(sk) or sk not in dest:
-                    # if sk ended with ::, or if it's new, completely override
-                    dest[sk] = copy.copy(sv)
-                else:
-                    # otherwise, merge the YAML
-                    dest[sk] = _merge_yaml(dest[sk], source[sk], _override(sk))
+        for sk, sv in iteritems(source):
+            if _override(sk) or sk not in dest:
+                # if sk ended with ::, or if it's new, completely override
+                dest[sk] = copy.copy(sv)
+            else:
+                # otherwise, merge the YAML
+                dest[sk] = _merge_yaml(dest[sk], source[sk])
 
-                # this seems unintuitive, but see below. We need this because
-                # Python dicts do not overwrite keys on insert, and we want
-                # to copy mark information on source keys to dest.
-                key_marks[sk] = sk
+            # this seems unintuitive, but see below. We need this because
+            # Python dicts do not overwrite keys on insert, and we want
+            # to copy mark information on source keys to dest.
+            key_marks[sk] = sk
 
-            # ensure that keys are marked in the destination. The
-            # key_marks dict ensures we can get the actual source key
-            # objects from dest keys
-            for dk in list(dest.keys()):
-                if dk in key_marks and syaml.markable(dk):
-                    syaml.mark(dk, key_marks[dk])
-                elif dk in key_marks:
-                    # The destination key may not be markable if it was derived
-                    # from a schema default. In this case replace the key.
-                    val = dest.pop(dk)
-                    dest[key_marks[dk]] = val
+        # ensure that keys are marked in the destination. The
+        # key_marks dict ensures we can get the actual source key
+        # objects from dest keys
+        for dk in list(dest.keys()):
+            if dk in key_marks and syaml.markable(dk):
+                syaml.mark(dk, key_marks[dk])
+            elif dk in key_marks:
+                # The destination key may not be markable if it was derived
+                # from a schema default. In this case replace the key.
+                val = dest.pop(dk)
+                dest[key_marks[dk]] = val
 
-            return dest
+        return dest
 
-    # If we reach here, overwrite with a copy of the source value.
+    # If we reach here source and dest are either different types or are
+    # not both lists or dicts: replace with source.
     return copy.copy(source)
 
 
