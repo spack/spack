@@ -37,6 +37,7 @@ from llnl.util.filesystem import mkdirp
 import spack.store
 import spack.repo
 import spack.spec
+import spack.util.lock as lk
 import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
 from spack.filesystem_view import YamlFilesystemView
@@ -44,8 +45,9 @@ from spack.util.crypto import bit_length
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.version import Version
-from spack.util.lock import \
-    Lock, LockError, LockTimeoutError, WriteTransaction, ReadTransaction
+
+# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: clearing a failure.
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
@@ -66,12 +68,18 @@ _skip_reindex = [
     (Version('0.9.3'), Version('5')),
 ]
 
-# Default timeout for spack database locks in seconds, which we want to provide
-# a fairly quick turnaround for parallel installs
+# Default timeout for spack database locks in seconds or None (no timeout).
+# A balance needs to be struck between quick turnaround for parallel installs
+# (to avoid excess delays) and waiting long enough when the system is busy
+# (to ensure the database is updated).
 _db_lock_timeout = 3
 
-# Default timeout for spack package locks in seconds, which we want to provide
-# a very quick turnaround for parallel installs
+# Default timeout for spack package locks in seconds or None (no timeout).
+# A balance needs to be struck between quick turnaround for parallel installs
+# (to avoid excess delays when performing a parallel installation) and waiting
+# long enough for the next possible spec to install (to avoid excessive
+# checking of the last high priority package) or holding on to a lock (to
+# ensure a failed install is properly tracked).
 _pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
@@ -337,9 +345,9 @@ class Database(object):
         if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
-            self.lock = Lock(self._lock_path,
-                             default_timeout=self.db_lock_timeout,
-                             desc='database')
+            self.lock = lk.Lock(self._lock_path,
+                                default_timeout=self.db_lock_timeout,
+                                desc='database')
         self._data = {}
 
         self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
@@ -354,12 +362,12 @@ class Database(object):
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(
+        return lk.WriteTransaction(
             self.lock, acquire=self._read, release=self._write)
 
     def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self.lock, acquire=self._read)
+        return lk.ReadTransaction(self.lock, acquire=self._read)
 
     def _failed_spec_path(self, spec):
         """Return the path to the spec's failure file, which may not exist."""
@@ -374,13 +382,7 @@ class Database(object):
         """
         Remove any persistent and cached failure tracking for the spec.
 
-        Coordination between concurrent builds depends in large part on
-        prefix failure locks so the default is to not perform this operation
-        if there is a prefix failure lock, which indicates another process
-        may have taken out the lock.
-
-        The ability to programmatically detect and automatically retry a
-        a build would need the ability to clear the failures.
+        see `mark_failed()`.
 
         Args:
             spec (Spec): the spec whose failure indicators are being removed
@@ -439,7 +441,7 @@ class Database(object):
 
         prefix = spec.prefix
         if prefix not in self._prefix_failures:
-            mark = Lock(
+            mark = lk.Lock(
                 self.prefix_fail_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
@@ -449,7 +451,7 @@ class Database(object):
                 mark.acquire_write()
                 tty.debug('PID {0} succeeded in marking failure for {1}'
                           .format(os.getpid(), spec.name))
-            except LockTimeoutError:
+            except lk.LockTimeoutError:
                 # Unlikely that another process failed to install at the same
                 # time but log it anyway.
                 tty.debug('PID {0} failed to mark install failure for {1}'
@@ -480,7 +482,7 @@ class Database(object):
     def prefix_failure_locked(self, spec):
         """Return True if a process has a failure lock on the spec."""
         try:
-            check = Lock(
+            check = lk.Lock(
                 self.prefix_fail_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
@@ -492,7 +494,7 @@ class Database(object):
             # indicating an active installation failure for the spec.  There
             # is no reason to hang on to the read lock itself.
             check.release_read()
-        except LockTimeoutError:
+        except lk.LockTimeoutError:
             # Installation of the prefix has failed in another process holding
             # a write lock.
             tty.debug('{0} is failure locked'.format(spec.name))
@@ -533,7 +535,7 @@ class Database(object):
         timeout = timeout or self.package_lock_timeout
         prefix = spec.prefix
         if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = Lock(
+            self._prefix_locks[prefix] = lk.Lock(
                 self.prefix_lock_path,
                 start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
                 length=1,
@@ -550,7 +552,7 @@ class Database(object):
 
         try:
             yield self
-        except LockError:
+        except lk.LockError:
             # This addresses the case where a nested lock attempt fails inside
             # of this context manager
             raise
@@ -567,7 +569,7 @@ class Database(object):
 
         try:
             yield self
-        except LockError:
+        except lk.LockError:
             # This addresses the case where a nested lock attempt fails inside
             # of this context manager
             raise
@@ -803,7 +805,7 @@ class Database(object):
                 self._error = e
                 self._data = {}
 
-        transaction = WriteTransaction(
+        transaction = lk.WriteTransaction(
             self.lock, acquire=_read_suppress_error, release=self._write
         )
 
@@ -989,7 +991,7 @@ class Database(object):
                     self._db_dir, os.R_OK | os.W_OK):
                 # if we can write, then read AND write a JSON file.
                 self._read_from_file(self._old_yaml_index_path, format='yaml')
-                with WriteTransaction(self.lock):
+                with lk.WriteTransaction(self.lock):
                     self._write(None, None, None)
             else:
                 # Read chck for a YAML file if we can't find JSON.
@@ -1002,7 +1004,7 @@ class Database(object):
                     " databases cannot generate an index file")
             # The file doesn't exist, try to traverse the directory.
             # reindex() takes its own write lock, so no lock here.
-            with WriteTransaction(self.lock):
+            with lk.WriteTransaction(self.lock):
                 self._write(None, None, None)
             self.reindex(spack.store.layout)
 
