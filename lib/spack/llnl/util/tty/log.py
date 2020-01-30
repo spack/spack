@@ -13,6 +13,7 @@ import re
 import select
 import sys
 import traceback
+import signal
 from contextlib import contextmanager
 from six import string_types
 from six import StringIO
@@ -29,6 +30,19 @@ _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 # one per line the following newline is ignored in output.
 xon, xoff = '\x11\n', '\x13\n'
 control = re.compile('(\x11\n|\x13\n)')
+
+
+@contextmanager
+def background_safe():
+    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+    yield
+    signal.signal(signal.SIGTTOU, signal.SIG_DFL)
+
+
+def is_background():
+    if sys.stdout.isatty():
+        return os.getpgrp() != os.tcgetpgrp(sys.stdout.fileno())
+    return False  # not writing to tty, not background
 
 
 def _strip(line):
@@ -83,20 +97,20 @@ class keyboard_input(object):
 
         try:
             # If this fails, self.old_cfg will remain None
-            import termios
+            if not is_background():
+                import termios
 
-            # save old termios settings
-            fd = self.stream.fileno()
-            self.old_cfg = termios.tcgetattr(fd)
+                # save old termios settings
+                self.old_cfg = termios.tcgetattr(self.stream)
 
-            # create new settings with canonical input and echo
-            # disabled, so keypresses are immediate & don't echo.
-            self.new_cfg = termios.tcgetattr(fd)
-            self.new_cfg[3] &= ~termios.ICANON
-            self.new_cfg[3] &= ~termios.ECHO
+                # create new settings with canonical input and echo
+                # disabled, so keypresses are immediate & don't echo.
+                self.new_cfg = termios.tcgetattr(self.stream)
+                self.new_cfg[3] &= ~termios.ICANON
+                self.new_cfg[3] &= ~termios.ECHO
 
-            # Apply new settings for terminal
-            termios.tcsetattr(fd, termios.TCSADRAIN, self.new_cfg)
+                # Apply new settings for terminal
+                termios.tcsetattr(self.stream, termios.TCSADRAIN, self.new_cfg)
 
         except Exception:
             pass  # some OS's do not support termios, so ignore
@@ -105,8 +119,8 @@ class keyboard_input(object):
         """If termios was avaialble, restore old settings."""
         if self.old_cfg:
             import termios
-            termios.tcsetattr(
-                self.stream.fileno(), termios.TCSADRAIN, self.old_cfg)
+            with background_safe():  # change it back even if backgrounded now
+                termios.tcsetattr(self.stream, termios.TCSADRAIN, self.old_cfg)
 
 
 class Unbuffered(object):
@@ -426,45 +440,71 @@ class log_output(object):
         istreams = [in_pipe, stdin] if stdin else [in_pipe]
 
         log_file = self.log_file
+
+        def handle_write(force_echo):
+            # Handle output from the with block process.
+            # If we arrive here it means that in_pipe was
+            # ready for reading : it should never happen that
+            # line is false-ish
+            line = in_pipe.readline()
+            if not line:
+                return (True, force_echo)  # break while loop
+
+            # find control characters and strip them.
+            controls = control.findall(line)
+            line = re.sub(control, '', line)
+
+            # Echo to stdout if requested or forced
+            if echo or force_echo:
+                try:
+                    import termios
+                    conf = termios.tcgetattr(sys.stdout)
+                    tostop = conf[3] & termios.TOSTOP
+                except Exception:
+                    tostop = True
+                if not (tostop and is_background()):
+                    sys.stdout.write(line)
+                    sys.stdout.flush()
+
+            # Stripped output to log file.
+            log_file.write(_strip(line))
+            log_file.flush()
+
+            if xon in controls:
+                force_echo = True
+            if xoff in controls:
+                force_echo = False
+            return (False, force_echo)
+
         try:
-            with keyboard_input(stdin):
-                while True:
-                    # No need to set any timeout for select.select
-                    # Wait until a key press or an event on in_pipe.
-                    rlist, _, _ = select.select(istreams, [], [])
+            while True:
+                if not is_background():
+                    with keyboard_input(stdin):
+                        # No need to set any timeout for select.select
+                        # Wait until a key press or an event on in_pipe.
+                        rlist, _, _ = select.select(istreams, [], [])
+                        # Allow user to toggle echo with 'v' key.
+                        # Currently ignores other chars.
+                        if stdin in rlist:
+                            # Double check we're still in the foreground
+                            if not is_background():
+                                if stdin.read(1) == 'v':
+                                    echo = not echo
 
-                    # Allow user to toggle echo with 'v' key.
-                    # Currently ignores other chars.
-                    if stdin in rlist:
-                        if stdin.read(1) == 'v':
-                            echo = not echo
-
-                    # Handle output from the with block process.
+                        if in_pipe in rlist:
+                            br, fe = handle_write(force_echo)
+                            force_echo = fe
+                            if br:
+                                break
+                else:
+                    # don't read stdin as a background process
+                    rlist, _, _ = select.select([in_pipe], [], [])
                     if in_pipe in rlist:
-                        # If we arrive here it means that in_pipe was
-                        # ready for reading : it should never happen that
-                        # line is false-ish
-                        line = in_pipe.readline()
-                        if not line:
-                            break  # EOF
+                        br, fe = handle_write(force_echo)
+                        force_echo = fe
+                        if br:
+                            break
 
-                        # find control characters and strip them.
-                        controls = control.findall(line)
-                        line = re.sub(control, '', line)
-
-                        # Echo to stdout if requested or forced
-                        if echo or force_echo:
-                            sys.stdout.write(line)
-                            sys.stdout.flush()
-
-                        # Stripped output to log file.
-                        log_file.write(_strip(line))
-                        log_file.flush()
-
-                        if xon in controls:
-                            force_echo = True
-                        if xoff in controls:
-                            force_echo = False
         except BaseException:
             tty.error("Exception occurred in writer daemon!")
             traceback.print_exc()
