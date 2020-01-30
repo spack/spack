@@ -569,7 +569,7 @@ class Environment(object):
 
         if init_file:
             # If we are creating the environment from an init file, we don't
-            # need to lock, because there are no Spack operations which alter
+            # need to lock, because there are no Spack operations that alter
             # the init file.
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
@@ -579,7 +579,7 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
         else:
-            with self.read_transaction():
+            with lk.ReadTransaction(self.txlock):
                 self._read()
 
         if with_view is False:
@@ -627,9 +627,6 @@ class Environment(object):
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
-
-    def read_transaction(self):
-        return lk.ReadTransaction(self.txlock)
 
     def _read_manifest(self, f, raw_yaml=None):
         """Read manifest file and set up user specs."""
