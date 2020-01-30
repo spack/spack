@@ -248,6 +248,8 @@ class PyTensorflow(Package, CudaPackage):
     def setup_build_environment(self, env):
         spec = self.spec
 
+        env.set('SPACK_INCLUDE_DIRS', '', force=True)
+
         # Please specify the location of python
         env.set('PYTHON_BIN_PATH', spec['python'].command.path)
 
