@@ -1989,6 +1989,23 @@ inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
 
+^^^^^^^^^^^^^^^^^^^^^^^^
+Conditional dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You may have a package that only requires a dependency under certain
+conditions. For example, you may have a package that has optional MPI support,
+- MPI is only a dependency when you want to enable MPI support for the
+package. In that case, you could say something like:
+
+.. code-block:: python
+
+   variant('mpi', default=False)
+   depends_on('mpi', when='+mpi')
+
+``when`` can include constraints on the variant, version, compiler, etc. and
+the syntax is the same as for Specs written on the command line.
+
 .. _dependency_dependency_patching:
 
 ^^^^^^^^^^^^^^^^^^^
