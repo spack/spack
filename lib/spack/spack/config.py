@@ -825,8 +825,8 @@ def _process_config_path(path):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".
                                    format(path), '')
     while path:
-        front, _, path = path.partition(':')
-        if (_ and not path) or path.startswith(':'):
+        front, sep, path = path.partition(':')
+        if (sep and not path) or path.startswith(':'):
             path = path.lstrip(':')
             front = syaml.syaml_str(front)
             front.override = True
