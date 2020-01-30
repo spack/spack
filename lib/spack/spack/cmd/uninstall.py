@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import sys
+import itertools
 
 import spack.cmd
 import spack.environment as ev
@@ -314,9 +315,7 @@ def uninstall_specs(args, specs):
         # Remove all the specs that are supposed to be uninstalled or just
         # removed.
         with env.write_transaction():
-            for spec in remove_list:
-                _remove_from_env(spec, env)
-            for spec in uninstall_list:
+            for spec in itertools.chain(remove_list, uninstall_list):
                 _remove_from_env(spec, env)
             env.write()
 
