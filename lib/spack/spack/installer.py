@@ -792,14 +792,14 @@ class PackageInstaller(object):
                 tty.debug(msg.format('Downgrading to', desc, pkg_id,
                                      lock.default_timeout))
                 op = 'downgrade to'
-                lock.downgrade_write()
+                lock.downgrade_write_to_read()
 
             else:  # read -> write
                 # Only get here if the current lock is a read lock, which
                 # must be upgraded to be a write lock
                 tty.debug(msg.format('Upgrading to', desc, pkg_id, timeout))
                 op = 'upgrade to'
-                lock.upgrade_read(timeout)
+                lock.upgrade_read_to_write(timeout)
             tty.verbose('{0} is now {1} locked'.format(pkg_id, lock_type))
 
         except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:

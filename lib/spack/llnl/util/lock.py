@@ -11,6 +11,7 @@ import socket
 from datetime import datetime
 
 import llnl.util.tty as tty
+import spack.util.string
 
 
 __all__ = ['Lock', 'LockTransaction', 'WriteTransaction', 'ReadTransaction',
@@ -30,7 +31,7 @@ def _attempts_str(wait_time, nattempts):
     if nattempts <= 1:
         return ''
 
-    attempts = 'attempt' if nattempts == 1 else 'attempts'
+    attempts = spack.util.string.plural(nattempts, 'attempt')
     return ' after {0:0.2f}s and {1:d} {2}'.format(
         wait_time, nattempts, attempts)
 
@@ -49,8 +50,8 @@ class Lock(object):
     maintain multiple locks on the same file.
     """
 
-    def __init__(self, path, start=0, length=0, debug=False,
-                 default_timeout=None, desc=''):
+    def __init__(self, path, start=0, length=0, default_timeout=None,
+                 debug=False, desc=''):
         """Construct a new lock on the file at ``path``.
 
         By default, the lock applies to the whole file.  Optionally,
@@ -66,9 +67,9 @@ class Lock(object):
             path (str): path to the lock
             start (int): optional byte offset at which the lock starts
             length (int): optional number of bytes to lock
-            debug (bool): debug mode specific to locking
             default_timeout (int): number of seconds to wait for lock attempts,
                 where None means to wait indefinitely
+            debug (bool): debug mode specific to locking
             desc (str): optional debug message lock description, which is
                 helpful for distinguishing between different Spack locks.
         """
@@ -146,6 +147,7 @@ class Lock(object):
         """
         assert op in lock_type
 
+        self._log_acquiring('{0} LOCK'.format(lock_type[op].upper()))
         timeout = timeout or self.default_timeout
 
         # Create file and parent directories if they don't exist.
@@ -293,8 +295,8 @@ class Lock(object):
     def _log_timeout_warning(self, requested):
         """Log a warning if the requested timeout does not match the default"""
         if requested != self.default_timeout:
-            tty.warn('Using current lock timeout {0}, not requested {1}'
-                     .format(self.default_timeout, requested))
+            tty.debug('Using current lock timeout {0}, not requested {1}'
+                      .format(self.default_timeout, requested))
 
     def acquire_read(self, timeout=None):
         """Acquires a recursive, shared lock for reading.
@@ -309,21 +311,19 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        locktype = 'READ LOCK'
         if self._reads == 0 and self._writes == 0:
-            self._log_acquiring(locktype)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
             self._reads += 1
-            self._log_acquired(locktype, wait_time, nattempts)
+            # Log if acquired, which includes counts when verbose
+            self._log_acquired('READ LOCK', wait_time, nattempts)
             return True
         else:
             # Nothing is done with the provided lock timeout so log a warning
-            # if it is different from the one being used.
+            # debug message if it is different from the one being used.
             self._log_timeout_warning(timeout)
 
-            # TODO: Should the read count really be incremented if this is a
-            # TODO: a write lock?  Or should there be some other behavior?
+            # Increment the read count for nested lock tracking
             self._reads += 1
             return False
 
@@ -340,13 +340,12 @@ class Lock(object):
         """
         timeout = timeout or self.default_timeout
 
-        locktype = 'WRITE LOCK'
         if self._writes == 0:
-            self._log_acquiring(locktype)
             # can raise LockError.
             wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._writes += 1
-            self._log_acquired(locktype, wait_time, nattempts)
+            # Log if acquired, which includes counts when verbose
+            self._log_acquired('WRITE LOCK', wait_time, nattempts)
 
             # return True only if we weren't nested in a read lock.
             # TODO: we may need to return two values: whether we got
@@ -355,13 +354,14 @@ class Lock(object):
             return self._reads == 0
         else:
             # Nothing is done with the provided lock timeout so log a warning
-            # if it is different from the one being used.
+            # debug message if it is different from the one being used.
             self._log_timeout_warning(timeout)
 
+            # Increment the write count for nested lock tracking
             self._writes += 1
             return False
 
-    def downgrade_write(self, timeout=None):
+    def downgrade_write_to_read(self, timeout=None):
         """
         Downgrade from an exclusive write lock to a shared read.
 
@@ -380,7 +380,7 @@ class Lock(object):
         else:
             raise LockDowngradeError(self.path)
 
-    def upgrade_read(self, timeout=None):
+    def upgrade_read_to_write(self, timeout=None):
         """
         Attempts to upgrade from a shared read lock to an exclusive write.
 
@@ -392,7 +392,7 @@ class Lock(object):
         if self._reads == 1 and self._writes == 0:
             self._log_upgrading()
             # can raise LockError.
-            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
             self._reads = 0
             self._writes = 1
             self._log_upgraded(wait_time, nattempts)
