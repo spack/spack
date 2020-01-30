@@ -676,8 +676,8 @@ def get_specs(force=False, use_arch=False, names=None):
     if use_arch:
         arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
 
-    if not names:
-	    names=['']
+    if names is None:
+        names = ['']
     names_or_hashes = [name.replace('/', '') for name in names]
     names_pattern = '|'.join(names_or_hashes)
     regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
