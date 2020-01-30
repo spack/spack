@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pytest
 import spack.spec
-from spack.main import SpackCommand
+from spack.main import SpackCommand, SpackCommandError
 
 dev_build = SpackCommand('dev-build')
 
@@ -23,6 +24,22 @@ def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
         assert f.read() == spec.package.replacement_string
 
 
+def test_dev_build_before(tmpdir, mock_packages, install_mockery):
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+
+    with tmpdir.as_cwd():
+        with open(spec.package.filename, 'w') as f:
+            f.write(spec.package.original_string)
+
+        dev_build('-b', 'edit', 'dev-build-test-install@0.0.0')
+
+        assert spec.package.filename in os.listdir(os.getcwd())
+        with open(spec.package.filename, 'r') as f:
+            assert f.read() == spec.package.original_string
+
+    assert not os.path.exists(spec.prefix)
+
+
 def test_dev_build_until(tmpdir, mock_packages, install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
 
@@ -37,6 +54,26 @@ def test_dev_build_until(tmpdir, mock_packages, install_mockery):
             assert f.read() == spec.package.replacement_string
 
     assert not os.path.exists(spec.prefix)
+
+
+def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+
+    with tmpdir.as_cwd():
+        with open(spec.package.filename, 'w') as f:
+            f.write(spec.package.original_string)
+
+        with pytest.raises(SystemExit):
+            dev_build('-u', 'edit', '-b', 'edit',
+                      'dev-build-test-install@0.0.0')
+
+        with pytest.raises(SpackCommandError):
+            dev_build('-u', 'phase_that_does_not_exist',
+                      'dev-build-test-install@0.0.0')
+
+        with pytest.raises(SpackCommandError):
+            dev_build('-b', 'phase_that_does_not_exist',
+                      'dev-build-test-install@0.0.0')
 
 
 def test_dev_build_fails_already_installed(tmpdir, mock_packages,
