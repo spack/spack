@@ -1373,7 +1373,7 @@ _spack_module_tcl() {
     then
         SPACK_COMPREPLY="-h --help -n --name"
     else
-        SPACK_COMPREPLY="refresh find rm loads"
+        SPACK_COMPREPLY="refresh find rm loads setdefault"
     fi
 }
 
@@ -1408,6 +1408,15 @@ _spack_module_tcl_loads() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude -r --dependencies"
+    else
+        _installed_packages
+    fi
+}
+
+_spack_module_tcl_setdefault() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         _installed_packages
     fi
