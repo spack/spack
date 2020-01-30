@@ -664,7 +664,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 _cached_specs = None
 
 
-def get_specs(force=False, use_arch=False, names=[]):
+def get_specs(force=False, use_arch=False, names=None):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -676,6 +676,8 @@ def get_specs(force=False, use_arch=False, names=[]):
     if use_arch:
         arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
 
+    if names is None:
+        names = ['']
     names_or_hashes = [name.replace('/', '') for name in names]
     names_pattern = '|'.join(names_or_hashes)
     regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
