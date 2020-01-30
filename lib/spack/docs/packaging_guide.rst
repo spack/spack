@@ -2007,6 +2007,10 @@ package. In that case, you could say something like:
 the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
 line.
 
+If a dependency/feature of a package isn't typically used, you can save time
+by making it conditional (since Spack will not build the dependency unless it
+is required for the Spec).
+
 .. _dependency_dependency_patching:
 
 ^^^^^^^^^^^^^^^^^^^
