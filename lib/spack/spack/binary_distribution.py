@@ -660,7 +660,6 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
 
-
 def get_spec(spec=None, force=False):
     """
     Check if spec.yaml exists on mirrors and return it if it does
@@ -684,7 +683,6 @@ def get_spec(spec=None, force=False):
         mirror_dir = url_util.local_file_path(fetch_url_build_cache)
         if mirror_dir:
             tty.msg("Finding buildcaches in %s" % mirror_dir)
-            mirror_spec_path=os.path.join(mirror_dir, specfile_name)
             link = url_util.join(fetch_url_build_cache, specfile_name)
             urls.add(link)
 
@@ -696,7 +694,8 @@ def get_spec(spec=None, force=False):
 
     return try_download_specs(urls=urls, force=force)
 
-def get_specs(force=False, use_arch=False, names=[]):
+
+def get_specs(force=False, use_arch=False, names=None):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -707,6 +706,8 @@ def get_specs(force=False, use_arch=False, names=[]):
     if use_arch:
         arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
 
+    if names is None:
+        names = ['']
     names_or_hashes = [name.replace('/', '') for name in names]
     names_pattern = '|'.join(names_or_hashes)
     regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
@@ -748,8 +749,10 @@ def get_specs(force=False, use_arch=False, names=[]):
 
     return try_download_specs(urls=urls, force=force)
 
-#: Internal cache for try_download_specs
+
+# Internal cache for try_download_specs
 _cached_specs = None
+
 
 def try_download_specs(urls=None, force=False):
     '''
