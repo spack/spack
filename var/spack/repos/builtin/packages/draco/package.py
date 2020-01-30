@@ -58,7 +58,7 @@ class Draco(CMakePackage):
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
     patch('d710-python2.patch', when='@7.1.0^python@2.7:2.99')
-    patch('d730.patch', when='@7.3.0:7.3.99') 
+    patch('d730.patch', when='@7.3.0:7.3.99')
     patch('d740.patch', when='@7.4.0:7.4.99')
 
     def url_for_version(self, version):
