@@ -16,6 +16,9 @@ BASE_ARCHITECTURE=${DEFAULT_BASE_ARCHITECTURE:-linux-rhel7-x86_64}
 # A list of stages in the order they will be built
 stages="compilers tools external-libraries libraries applications"
 
+# A list of all stage names ever used, to be used for module creation
+historic_stages="compilers tools external-libraries serial-libraries parallel-libraries libraries applications"
+
 # Definitions for the installation spec generation. For every stage
 # mentioned above, this should be a list of filenames *without* extension
 # found in `packages`.
@@ -508,12 +511,80 @@ copy_configuration() {
     chmod 600 "${DEPLOYMENT_ROOT}/spack/opt/spack/gpg/"*
 }
 
+# Outputs the contents of a module file to set the module path
+# corresponding to a software deployment "release".
+generate_archive_module() {
+    time="${1}"
+
+    modulepaths=""
+    for stage in ${historic_stages}; do
+        expansion="${DEPLOYMENT_ROOT}/modules/${stage}/${time}/tcl/*"
+        paths="$(echo ${expansion})"
+        if [ "${paths}" != "${expansion}" ]; then
+            modulepaths="${modulepaths}${modulepaths:+ }${paths}"
+        fi
+    done
+
+    # Did not find any paths, return
+    if [ -z "${modulepaths}" ]; then
+        return
+    fi
+
+    cat <<-EOF
+	#%Module1.0
+
+	conflict archive
+	conflict unstable
+
+EOF
+
+    for path in ${modulepaths}; do
+        [ -d "${path}" ] && echo "append-path MODULEPATH \"${path}\""
+    done
+}
+
+generate_archive_modules() {
+    local root="${1}"
+
+    mkdir -p "${root}/archive"
+
+    for year in $(seq 2019 $(date +%Y)); do
+        for month in $(seq 1 12); do
+            time="${year}-$(printf '%02d' ${month})"
+
+            if [ "${time}" = "$(date +%Y-%m)" ]; then
+                module="unstable"
+            else
+                module="archive/${time}"
+                if [ -f "${root}/${module}" ]; then
+                    log "...skipping ${module}"
+                    continue
+                fi
+            fi
+
+            contents=$(generate_archive_module ${time})
+
+            if [ -n "${contents}" ]; then
+                echo "${contents}" > "${root}/${module}"
+            fi
+
+            if [ "${module}" = "unstable" ]; then
+                break
+            fi
+        done
+    done
+}
+
 copy_user_configuration() {
     what="$1"
 
     local source="$(install_dir ${what})/data"
     local target="${DEPLOYMENT_ROOT}/config"
-    local modpaths=$(list_module_archive_paths ${what})
+
+    local root="${DEPLOYMENT_ROOT}/modules/all"
+
+    log "regenerating archive modules"
+    generate_archive_modules "${root}"
 
     log "copying configuration"
     log "...from ${source}"
@@ -523,10 +594,8 @@ copy_user_configuration() {
     cp ${source}/{compilers,.spack/upstreams,packages}.yaml ${target}
 
     rm -f ${target}/modules.{,c}sh
-    for modpath in ${modpaths}; do
-        echo "module use \"${modpath}\"" >> ${target}/modules.sh
-        echo "module use \"${modpath}\"" >> ${target}/modules.csh
-    done
+    echo "module use \"${root}\"" > ${target}/modules.sh
+    echo "module use \"${root}\"" > ${target}/modules.csh
 
     ./modules.rb > "${target}/modules.yaml"
 
