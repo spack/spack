@@ -39,7 +39,7 @@ container_schema = {
             'default': True
         },
         # Additional system packages that are needed at runtime
-        'packages': {
+        'os_packages': {
             'type': 'array',
             'items': {
                 'type': 'string'

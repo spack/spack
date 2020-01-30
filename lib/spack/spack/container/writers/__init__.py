@@ -116,9 +116,9 @@ class PathContext(tengine.Context):
         return syaml.dump(manifest, default_flow_style=False).strip()
 
     @tengine.context_property
-    def packages(self):
+    def os_packages(self):
         """Additional system packages that are needed at run-time."""
-        package_list = self.container_config.get('packages', None)
+        package_list = self.container_config.get('os_packages', None)
         if not package_list:
             return package_list
 

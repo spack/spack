@@ -157,7 +157,7 @@ the image build under the ``container`` attribute:
        strip: true
 
        # Additional system packages that are needed at runtime
-       packages:
+       os_packages:
        - libgomp
 
        # Extra instructions
@@ -195,7 +195,7 @@ The tables below describe the configuration options that are currently supported
      - Whether to strip binaries
      - ``true`` (default) or ``false``
      - No
-   * - ``packages``
+   * - ``os_packages``
      - System packages to be installed
      - Valid packages for the ``final`` OS
      - No
@@ -302,4 +302,4 @@ following ``Dockerfile``:
 .. note::
    Spack can also produce Singularity definition files to build the image. The
    minimum version of Singularity required to build a SIF (Singularity Image Format)
-   from them is ``3.6.0``.
+   from them is ``3.5.3``.
