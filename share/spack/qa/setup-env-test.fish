@@ -200,7 +200,7 @@ end
 
 # Make sure no environment is active
 set -e SPACK_ENV
-true # ingnore failing `set -e`
+true # ignore failing `set -e`
 
 # Source setup-env.sh before tests
 source share/spack/setup-env.fish
