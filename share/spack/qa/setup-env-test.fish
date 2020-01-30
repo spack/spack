@@ -251,7 +251,7 @@ set a_module (spack -m module tcl find a)
 set b_install (spack location -i b)
 set b_module (spack -m module tcl find b)
 
-# create a test environment for tesitng environment commands
+# create a test environment for testing environment commands
 echo "Creating a mock environment"
 spack env create spack_test_env
 set test_env_location (spack location -e spack_test_env)
