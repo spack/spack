@@ -12,6 +12,7 @@ import logging
 import logging.config
 
 import spack.cmd
+import spack.config
 import spack.environment as ev
 import spack.error
 import spack.package
@@ -202,17 +203,18 @@ def do_uninstall(env, specs, force):
     """
     packages = []
     for item in specs:
-        # Logs spec to install to syslog for metrics collection
-        config_path = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(config_path, '../metrics_logger.yaml')
-        with open(config_path, 'r') as f:
-            yaml_content = syaml.load(f)
-        logging.config.dictConfig(yaml_content)
-        if sys.platform == 'darwin':
-            logger = logging.getLogger('metrics_darwin')
-        else:
-            logger = logging.getLogger('metrics_linux')
-        logger.info("SPACK_UNINSTALL: " + str(item))
+        if spack.config.get('config:metrics'):
+            # Logs spec to install to syslog for metrics collection
+            config_path = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(config_path, '../metrics_logger.yaml')
+            with open(config_path, 'r') as f:
+                yaml_content = syaml.load(f)
+            logging.config.dictConfig(yaml_content)
+            if sys.platform == 'darwin':
+                logger = logging.getLogger('metrics_darwin')
+            else:
+                logger = logging.getLogger('metrics_linux')
+            logger.info("SPACK_UNINSTALL: " + str(item))
 
         try:
             # should work if package is known to spack
