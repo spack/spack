@@ -1510,7 +1510,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def try_install_from_binary_cache(self, explicit):
         tty.msg('Searching for binary cache of %s' % self.name)
-        specs = binary_distribution.get_specs(use_arch=True)
+        specs = binary_distribution.get_specs(use_arch=True, names=[self.name])
         binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
         binary_spec._mark_concrete()
         if binary_spec not in specs:

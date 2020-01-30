@@ -664,7 +664,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 _cached_specs = None
 
 
-def get_specs(force=False, use_arch=False):
+def get_specs(force=False, use_arch=False, names=[]):
     """
     Get spec.yaml's for build caches available on mirror
     """
@@ -672,6 +672,15 @@ def get_specs(force=False, use_arch=False):
 
     arch = architecture.Arch(architecture.platform(),
                              'default_os', 'default_target')
+    arch_pattern = ('([^-]*-[^-]*-[^-]*)')
+    if use_arch:
+        arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
+
+    names_or_hashes = [name.replace('/', '') for name in names]
+    names_pattern = '|'.join(names_or_hashes)
+    regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
+                                                    names_pattern)
+    name_re = re.compile(regex_pattern)
 
     if _cached_specs:
         tty.debug("Using previously-retrieved specs")
@@ -692,30 +701,19 @@ def get_specs(force=False, use_arch=False):
             if os.path.exists(mirror_dir):
                 files = os.listdir(mirror_dir)
                 for file in files:
-                    if re.search('spec.yaml', file):
+                    m = name_re.search(file)
+                    if m:
                         link = url_util.join(fetch_url_build_cache, file)
-                        if use_arch and re.search('%s-%s' %
-                                                  (arch.platform,
-                                                   arch.os),
-                                                  file):
-                            urls.add(link)
-                        else:
-                            urls.add(link)
+                        urls.add(link)
         else:
             tty.msg("Finding buildcaches at %s" %
                     url_util.format(fetch_url_build_cache))
             p, links = web_util.spider(
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
-                if re.search("spec.yaml", link):
-                    if use_arch and re.search('%s-%s' %
-                                              (arch.platform,
-                                               arch.os),
-                                              link):
-                        urls.add(link)
-                    else:
-                        urls.add(link)
-
+                m = name_re.search(link)
+                if m:
+                    urls.add(link)
     _cached_specs = []
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
