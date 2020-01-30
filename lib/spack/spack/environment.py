@@ -8,7 +8,6 @@ import os
 import re
 import sys
 import shutil
-import tempfile
 import copy
 import socket
 
@@ -1478,7 +1477,6 @@ class Environment(object):
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
         with fs.temp_cwd() as env_dir:
-            env_dir = tempfile.mkdtemp()
             bare_env = Environment(env_dir, with_view=self.view_path_default)
             keys_present = list(yaml_dict.keys())
             for key in keys_present:
