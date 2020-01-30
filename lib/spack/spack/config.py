@@ -506,7 +506,7 @@ class Configuration(object):
 
         Accepts the path syntax described in ``get()``.
         """
-        parts = _process_path(path)
+        parts = _process_config_path(path)
         section = parts.pop(0)
 
         if not parts:
@@ -819,7 +819,7 @@ def _merge_yaml(dest, source, override=False):
 # Process a path argument to config.set() that may contain overrides ('::' or
 # trailing ':')
 #
-def _process_path(path):
+def _process_config_path(path):
     result = []
     if path.startswith(':'):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".
