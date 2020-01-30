@@ -274,6 +274,14 @@ configure_compilers() {
     update_module_path "compilers" "yes"
     while read -r line; do
         set +o nounset
+        # When a compiler is compiled with *anything but the base
+        # compiler*, it's module will not be generated in the initial
+        # module refresh
+        #
+        # As the input should be sorted by compilers, the module generation
+        # will now find the compilers that were used when bootstrapping.
+        log "...regenerating module for ${line}"
+        spack module tcl refresh -y --latest --upstream-modules ${line}
         log "...processing ${line}"
         cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
         echo "${cmd}"
@@ -703,8 +711,13 @@ EOF
     fi
 
     if [[ "${what}" = "compilers" ]]; then
+        # When adding the compilers, first add everything compiled with the
+        # system compiler, then other compilers bootstrapped with new
+        # compilers (LLVM, I'm looking at you)
+        #
+        # Sort by the compiler spec part to achieve this.
         log "adding compilers"
-        configure_compilers < "${HOME}/specs.txt"
+        configure_compilers < <(sort -t% -k2 "${HOME}/specs.txt")
     fi
 
     cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true
