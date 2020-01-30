@@ -280,7 +280,7 @@ class InternalConfigScope(ConfigScope):
         self.sections = syaml.syaml_dict()
 
         if data:
-            data = _process_dict(data)
+            data = InternalConfigScope._process_dict_keyname_overrides(data)
             for section in data:
                 dsec = data[section]
                 validate({section: dsec}, section_schemas[section])
@@ -306,6 +306,25 @@ class InternalConfigScope(ConfigScope):
 
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
+
+    @staticmethod
+    def _process_dict_keyname_overrides(data):
+        """Turn a trailing `:' in a key name into an override attribute."""
+        result = {}
+        for sk, sv in iteritems(data):
+            if sk.endswith(':'):
+                key = syaml.syaml_str(sk[:-1])
+                key.override = True
+            else:
+                key = sk
+
+            if isinstance(sv, dict):
+                result[key]\
+                    = InternalConfigScope._process_dict_keyname_overrides(sv)
+            else:
+                result[key] = copy.copy(sv)
+
+        return result
 
 
 class Configuration(object):
@@ -831,26 +850,6 @@ def _process_config_path(path):
             front = syaml.syaml_str(front)
             front.override = True
         result.append(front)
-    return result
-
-
-#
-# Process a dict whose keys may describe overrides (trailing ':')
-#
-def _process_dict(data):
-    result = {}
-    for sk, sv in iteritems(data):
-        if sk.endswith(':'):
-            key = syaml.syaml_str(sk[:-1])
-            key.override = True
-        else:
-            key = sk
-
-        if isinstance(sv, dict):
-            result[key] = _process_dict(sv)
-        else:
-            result[key] = copy.copy(sv)
-
     return result
 
 
