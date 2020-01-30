@@ -8,7 +8,8 @@ import os
 import shutil
 import sys
 import textwrap
-import logging, logging.config
+import logging
+import logging.config
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -21,6 +22,7 @@ import spack.fetch_strategy
 import spack.paths
 import spack.report
 from spack.error import SpackError
+import spack.util.spack_yaml as syaml
 
 
 description = "build and install packages"
@@ -229,14 +231,15 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
 
         # Logs spec to install to syslog for metrics collection
         config_path = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(config_path, '../metrics_logger.conf')
-        logging.config.fileConfig(fname=config_path)
+        config_path = os.path.join(config_path, '../metrics_logger.yaml')
+        with open(config_path, 'r') as f:
+            yaml_content = syaml.load(f)
+        logging.config.dictConfig(yaml_content)
         if sys.platform == 'darwin':
             logger = logging.getLogger('metrics_darwin')
         else:
             logger = logging.getLogger('metrics_linux')
-
-        logger.debug("SPACK_INSTALL: " + str(spec))
+        logger.info("SPACK_INSTALL: " + str(spec))
 
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
