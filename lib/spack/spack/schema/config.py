@@ -72,6 +72,7 @@ properties = {
                     {'type': 'null'}
                 ],
             },
+            'metrics': {'type': 'boolean'},
         },
     },
 }

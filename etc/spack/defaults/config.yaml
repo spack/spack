@@ -151,3 +151,8 @@ config:
   # Has no effect on macOS. DO NOT MIX these within the same install tree.
   # See the Spack documentation for details.
   shared_linking: 'rpath'
+
+  # Toggle Spack's install/uninstall metrics to a syslog server. When enabled
+  # SPACK_INSTALL/SPACK_UNINSTALL [spec] is logged to syslog to determine how
+  # which packages are being commonly installed by users. Disabled by default. 
+  metrics: false
