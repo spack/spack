@@ -132,9 +132,11 @@ automatically by Spack use them as base images for their ``build`` stage.
 Environment Configuration
 -------------------------
 
-A Spack Environment can be configured to be used for the automatic
-generation of container recipes by adding the metadata necessary for
-the image build under the ``container`` attribute:
+Any Spack Environment can be used for the automatic generation of container
+recipes. Sensible defaults are provided for things like the base image or the
+version of Spack used in the image. If a finer tuning is needed it can be
+obtained by adding the relevant metadata under the ``container`` attribute
+of environments:
 
 .. code-block:: yaml
 

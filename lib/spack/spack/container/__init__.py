@@ -34,10 +34,16 @@ def validate(configuration_file):
     with open(configuration_file) as f:
         config = syaml.load(f)
 
-    # The "container" subsection is mandatory
-    msg = '"container" subsection missing in "{0}"'
+    # Ensure we have a "container" attribute with sensible defaults set
     env_dict = spack.environment.config_dict(config)
-    assert 'container' in env_dict, msg.format(configuration_file)
+    env_dict.setdefault('container', {
+        'format': 'docker',
+        'base': {'image': 'ubuntu:18.04', 'spack': 'develop'}
+    })
+    env_dict['container'].setdefault('format', 'docker')
+    env_dict['container'].setdefault(
+        'base', {'image': 'ubuntu:18.04', 'spack': 'develop'}
+    )
 
     # Remove attributes that are not needed / allowed in the
     # container recipe

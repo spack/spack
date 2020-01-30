@@ -31,7 +31,8 @@ container_schema = {
                     'type': 'string',
                     'enum': ['develop', '0.14', '0.14.0']
                 }
-            }
+            },
+            'required': ['image', 'spack']
         },
         # Whether or not to strip installed binaries
         'strip': {
@@ -75,8 +76,7 @@ container_schema = {
             'additionalProperties': False,
             'default': {},
         }
-    },
-    'required': ['format', 'base']
+    }
 }
 
 properties = {'container': container_schema}
