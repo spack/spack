@@ -35,7 +35,7 @@ class Draco(CMakePackage):
     variant('libquo',   default=True, description='Enable Quo wrapper')
     variant('parmetis', default=True, description='Enable Parmetis support')
     variant('qt',       default=False, description='Enable Qt support')
-    variant('superlu-dist', default=True, description='Enable SuperLU-DIST support')
+    variant('superlu_dist', default=True, description='Enable SuperLU-DIST support')
 
     depends_on('gsl')
     depends_on('mpi@3:',      type=('build', 'link', 'run'))
@@ -53,7 +53,7 @@ class Draco(CMakePackage):
     depends_on('parmetis',    when='+parmetis')
     depends_on('qt',          when='+qt',
                type=('build', 'link', 'run'))
-    depends_on('superlu-dist@:5.99', when='+superlu-dist')
+    depends_on('superlu-dist@:5.99', when='+superlu_dist')
 
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
