@@ -26,6 +26,7 @@ import os
 import socket
 import sys
 import time
+import uuid
 
 import llnl.util.tty as tty
 import six
@@ -294,6 +295,7 @@ class Database(object):
 
         # Set up layout of database files within the db dir
         self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
         self._lock_path = os.path.join(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
@@ -315,6 +317,7 @@ class Database(object):
             mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
+        self.last_seen_verifier = ''
 
         # initialize rest of state.
         self.db_lock_timeout = (
@@ -913,6 +916,8 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
+            with open(self._verifier_path, 'w') as f:
+                f.write(str(uuid.uuid4()))
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
@@ -928,8 +933,17 @@ class Database(object):
         write lock.
         """
         if os.path.isfile(self._index_path):
-            # Read from file if a database exists
-            self._read_from_file(self._index_path)
+            current_verifier = ''
+            try:
+                with open(self._verifier_path, 'r') as f:
+                    current_verifier = f.read()
+            except BaseException:
+                pass
+            if ((current_verifier != self.last_seen_verifier) or
+                (current_verifier == '')):
+                self.last_seen_verifier = current_verifier
+                # Read from file if a database exists
+                self._read_from_file(self._index_path)
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(

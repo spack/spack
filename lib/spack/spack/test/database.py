@@ -13,6 +13,7 @@ import multiprocessing
 import os
 import pytest
 import json
+import uuid
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -517,7 +518,8 @@ def test_041_ref_counts_deprecate(mutable_database):
     zmpi = mutable_database.query_one('zmpi')
 
     mutable_database.deprecate(mpich, zmpi)
-    mutable_database._check_ref_counts()
+    with mutable_database.read_transaction():
+        mutable_database._check_ref_counts()
 
 
 def test_050_basic_query(database):
@@ -703,6 +705,8 @@ def test_old_external_entries_prefix(mutable_database):
 
     with open(spack.store.db._index_path, 'w') as f:
         f.write(json.dumps(db_obj))
+    with open(spack.store.db._verifier_path, 'w') as f:
+        f.write(str(uuid.uuid4()))
 
     record = spack.store.db.get_record(s)
 
