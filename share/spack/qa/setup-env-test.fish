@@ -237,7 +237,7 @@ allocate_testing_global
 
 title "Testing setup-env.fish with $_sp_shell"
 
-# spack command is now avaialble
+# spack command is now available
 spt_succeeds which spack
 
 
