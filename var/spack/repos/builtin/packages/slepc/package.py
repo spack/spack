@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Slepc(Package):
 
     homepage = "http://slepc.upv.es"
     url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
-    git      = "https://bitbucket.org/slepc/slepc.git"
+    git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
     version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
     version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
     version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')

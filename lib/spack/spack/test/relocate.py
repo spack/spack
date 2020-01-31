@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ def test_file_is_relocatable(source_file, is_relocatable):
 )
 def test_patchelf_is_relocatable():
     patchelf = spack.relocate.get_patchelf()
-    assert spack.relocate.is_binary(patchelf)
+    assert llnl.util.filesystem.is_exe(patchelf)
     assert spack.relocate.file_is_relocatable(patchelf)
 
 

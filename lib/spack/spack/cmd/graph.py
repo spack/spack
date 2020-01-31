@@ -1,11 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
-import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
@@ -38,11 +37,7 @@ def setup_parser(subparser):
         '-i', '--installed', action='store_true',
         help="graph all installed specs in dot format (implies --dot)")
 
-    arguments.add_common_arguments(subparser, ['deptype'])
-
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to graph")
+    arguments.add_common_arguments(subparser, ['deptype', 'specs'])
 
 
 def graph(parser, args):

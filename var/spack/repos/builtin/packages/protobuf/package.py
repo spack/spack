@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,13 @@ class Protobuf(CMakePackage):
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz"
     root_cmakelists_dir = "cmake"
 
+    version('3.11.2',  sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
+    version('3.11.1',  sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
+    version('3.11.0',  sha256='6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c')
     version('3.10.1',  sha256='6adf73fd7f90409e479d6ac86529ade2d45f50494c5c10f539226693cb8fe4f7')
+    version('3.10.0',  sha256='758249b537abba2f21ebc2d02555bf080917f0f2f88f4cbe2903e0e28c4187ed')
+    version('3.9.2',   sha256='1fbf1c2962af287607232b2eddeaec9b4f4a7a6f5934e1a9276e9af76952f7e0')
+    version('3.9.1',   sha256='98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357')
     version('3.7.1',   sha256='f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f')
     version('3.7.0',   sha256='a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320')
     version('3.6.1',   sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')

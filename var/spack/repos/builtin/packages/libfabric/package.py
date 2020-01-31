@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,9 @@ class Libfabric(AutotoolsPackage):
                'rxd',
                'mlx',
                'tcp',
-               'efa')
+               'efa',
+               'mrail',
+               'shm')
 
     variant('fabrics',
             default='sockets',
@@ -56,6 +58,12 @@ class Libfabric(AutotoolsPackage):
     #   frequently conflicts with MPI.
     variant('kdreg', default=False,
             description='Enable kdreg on supported Cray platforms')
+
+    # For version 1.9.0:
+    # headers: fix forward-declaration of enum fi_collective_op with C++
+    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch',
+          sha256='71f06e8bf0adeccd425b194ac524e4d596469e9dab9e7a4f8bb209e6b9a454f4',
+          when='@1.9.0')
 
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ import traceback
 from six import string_types, add_metaclass
 
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 
@@ -932,7 +932,7 @@ class Repo(object):
                     tty.warn("Patch file did not exist: %s" % patch.path)
 
         # Install the package.py file itself.
-        install(self.filename_for_package_name(spec), path)
+        install(self.filename_for_package_name(spec.name), path)
 
     def purge(self):
         """Clear entire package instance cache."""
@@ -974,20 +974,12 @@ class Repo(object):
     def extensions_for(self, extendee_spec):
         return [p for p in self.all_packages() if p.extends(extendee_spec)]
 
-    def _check_namespace(self, spec):
-        """Check that the spec's namespace is the same as this repository's."""
-        if spec.namespace and spec.namespace != self.namespace:
-            raise UnknownNamespaceError(spec.namespace)
-
-    @autospec
-    def dirname_for_package_name(self, spec):
+    def dirname_for_package_name(self, pkg_name):
         """Get the directory name for a particular package.  This is the
            directory that contains its package.py file."""
-        self._check_namespace(spec)
-        return os.path.join(self.packages_path, spec.name)
+        return os.path.join(self.packages_path, pkg_name)
 
-    @autospec
-    def filename_for_package_name(self, spec):
+    def filename_for_package_name(self, pkg_name):
         """Get the filename for the module we should load for a particular
            package.  Packages for a Repo live in
            ``$root/<package_name>/package.py``
@@ -996,8 +988,7 @@ class Repo(object):
            package doesn't exist yet, so callers will need to ensure
            the package exists before importing.
         """
-        self._check_namespace(spec)
-        pkg_dir = self.dirname_for_package_name(spec.name)
+        pkg_dir = self.dirname_for_package_name(pkg_name)
         return os.path.join(pkg_dir, package_file_name)
 
     @property

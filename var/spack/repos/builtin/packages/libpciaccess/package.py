@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,3 +18,12 @@ class Libpciaccess(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+
+    # A known issue exists when building with PGI as documented here:
+    # https://bugs.freedesktop.org/show_bug.cgi?id=94398
+    # https://www.pgroup.com/userforum/viewtopic.php?f=4&t=5126
+    # https://gitlab.freedesktop.org/xorg/lib/libpciaccess/issues/7
+    #
+    # When the ability to use dependencies built by another compiler, using a
+    # libpciaccess built by gcc should be usable by PGI builds.
+    conflicts('%pgi')

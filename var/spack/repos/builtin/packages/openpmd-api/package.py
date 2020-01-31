@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='dev')
+    version('0.10.3',  tag='0.10.3-alpha')
     version('0.10.2',  tag='0.10.2-alpha')
     version('0.10.1',  tag='0.10.1-alpha')
     version('0.10.0',  tag='0.10.0-alpha')
@@ -27,7 +28,7 @@ class OpenpmdApi(CMakePackage):
             description='Enable HDF5 support')
     variant('adios1', default=False,
             description='Enable ADIOS1 support')
-    variant('adios2', default=False,
+    variant('adios2', default=True,
             description='Enable ADIOS2 support')
     variant('python', default=False,
             description='Enable Python bindings')
@@ -39,12 +40,12 @@ class OpenpmdApi(CMakePackage):
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
     depends_on('hdf5@1.8.13: +mpi', when='+mpi +hdf5')
-    depends_on('adios@1.13.1:', when='+adios1')
-    depends_on('adios@1.13.1: ~mpi', when='~mpi +adios1')
-    depends_on('adios@1.13.1: +mpi', when='+mpi +adios1')
-    depends_on('adios2@2.4.0:', when='+adios2')
-    depends_on('adios2@2.4.0: ~mpi', when='~mpi +adios2')
-    depends_on('adios2@2.4.0: +mpi', when='+mpi +adios2')
+    depends_on('adios@1.13.1: ~sz', when='+adios1')
+    depends_on('adios@1.13.1: ~mpi ~sz', when='~mpi +adios1')
+    depends_on('adios@1.13.1: +mpi ~sz', when='+mpi +adios1')
+    depends_on('adios2@2.5.0:', when='+adios2')
+    depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
+    depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
     depends_on('nlohmann-json@3.7.0:')
     depends_on('py-pybind11@2.3.0:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
@@ -103,6 +104,7 @@ class OpenpmdApi(CMakePackage):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['mpi'].prefix)
         if spec.satisfies("+adios1"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios'].prefix)
+            env.prepend_path('PATH', spec['adios'].prefix.bin)  # adios-config
         if spec.satisfies("+adios2"):
             env.prepend_path('CMAKE_PREFIX_PATH', spec['adios2'].prefix)
         if spec.satisfies("+hdf5"):

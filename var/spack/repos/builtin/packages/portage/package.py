@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,9 @@ class Portage(CMakePackage):
     # don't enable debug prints in RelWithDebInfo build
     # fixed in version above 1.2.2
     patch('rel-with-deb-info.patch', when='@1.2.2')
+
+    # intel/19.0.4 got an ICE (internal compiler error) compiling pairs.cc
+    patch('p_intel_ice.patch', when='@1.2.2')
 
     variant('mpi', default=True, description='Support MPI')
 

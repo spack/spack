@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -510,8 +510,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     maintainers = []
 
     #: List of attributes to be excluded from a package's hash.
-    metadata_attrs = ['homepage', 'url', 'list_url', 'extendable', 'parallel',
-                      'make_jobs']
+    metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
+                      'parallel', 'make_jobs']
 
     def __init__(self, spec):
         # this determines how the package should be built.
@@ -523,6 +523,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Keep track of whether or not this package was installed from
         # a binary cache.
         self.installed_from_binary_cache = False
+
+        # Ensure that only one of these two attributes are present
+        if getattr(self, 'url', None) and getattr(self, 'urls', None):
+            msg = "a package can have either a 'url' or a 'urls' attribute"
+            msg += " [package '{0.name}' defines both]"
+            raise ValueError(msg.format(self))
 
         # Set a default list URL (place to find available versions)
         if not hasattr(self, 'list_url'):
@@ -750,7 +756,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return version_urls[version]
 
         # If no specific URL, use the default, class-level URL
-        default_url = getattr(self, 'url', None)
+        url = getattr(self, 'url', None)
+        urls = getattr(self, 'urls', [None])
+        default_url = url or urls.pop(0)
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
@@ -1254,7 +1262,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise spack.error.SpackError(err_msg)
 
         hash_content = list()
-        source_id = fs.for_package_version(self, self.version).source_id()
+        try:
+            source_id = fs.for_package_version(self, self.version).source_id()
+        except fs.ExtrapolationError:
+            source_id = None
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
             # should this attempt to download the source and set one? This
@@ -1499,7 +1510,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def try_install_from_binary_cache(self, explicit):
         tty.msg('Searching for binary cache of %s' % self.name)
-        specs = binary_distribution.get_specs()
+        specs = binary_distribution.get_spec(spec=self.spec,
+                                             force=False)
         binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
         binary_spec._mark_concrete()
         if binary_spec not in specs:
@@ -1661,7 +1673,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.hooks.post_install(self.spec)
                 return
             elif kwargs.get('cache_only', False):
-                tty.die('No binary for %s found and cache-only specified')
+                tty.die('No binary for %s found and cache-only specified'
+                        % self.name)
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)

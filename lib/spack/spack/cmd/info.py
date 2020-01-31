@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ from six.moves import zip_longest
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.spec
 import spack.fetch_strategy as fs
@@ -36,8 +37,7 @@ def padder(str_list, extra=0):
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        'name', metavar='PACKAGE', help='name of package to get info for')
+    arguments.add_common_arguments(subparser, ['package'])
 
 
 def section_title(s):
@@ -106,7 +106,9 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            yield '\n'
+            underline = tuple([l * "=" for l in self.column_widths])
+            yield '    ' + self.fmt % underline
+            yield ''
             for k, v in sorted(self.variants.items()):
                 name = textwrap.wrap(
                     '{0} [{1}]'.format(k, self.default(v)),
@@ -235,5 +237,5 @@ def print_text_info(pkg):
 
 
 def info(parser, args):
-    pkg = spack.repo.get(args.name)
+    pkg = spack.repo.get(args.package)
     print_text_info(pkg)

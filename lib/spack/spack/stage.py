@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -271,7 +271,7 @@ class Stage(object):
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -458,7 +458,7 @@ class Stage(object):
 
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,16 @@ class PyTensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v2.0.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.1.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = ['tensorflow']
 
-    version('2.1.0-rc0', sha256='674cc90223f1d6b7fa2969e82636a630ce453e48a9dec39d73d6dba2fd3fd243')
-    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617', preferred=True)
+    version('2.1.0',  sha256='638e541a4981f52c69da4a311815f1e7989bf1d67a41d204511966e1daed14f7')
+    version('2.0.1',  sha256='29197d30923b9670992ee4b9c6161f50c7452e9a4158c720746e846080ac245a')
+    version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.2', sha256='d95d75d26a298211b5e802842e87fda5b8b14f6ad83719377b391e5fb71b8746')
+    version('1.15.1', sha256='19b6e72bc8675937f618cede364d7228a71c2eeaffc42801bcefd98dda7ca056')
     version('1.15.0', sha256='a5d49c00a175a61da7431a9b289747d62339be9cf37600330ad63b611f7f5dc9')
     version('1.14.0', sha256='aa2a6a1daafa3af66807cfe0bc77bfe1144a9a53df9a96bab52e3e575b3047ed')
     version('1.13.2', sha256='abe3bf0c47845a628b7df4c57646f41a10ee70f914f1b018a5c761be75e1f1a9')
@@ -58,9 +61,7 @@ class PyTensorflow(Package, CudaPackage):
 
     variant('mkl', default=False, description='Build with MKL support')
     variant('jemalloc', default=False, description='Build with jemalloc as malloc support')
-    # FIXME: ~gcp does not build for 2.0.0
-    # See https://github.com/tensorflow/tensorflow/issues/34878
-    variant('gcp', default=True, description='Build with Google Cloud Platform support')
+    variant('gcp', default=False, description='Build with Google Cloud Platform support')
     variant('hdfs', default=False, description='Build with Hadoop File System support')
     variant('aws', default=False, description='Build with Amazon AWS Platform support')
     variant('kafka', default=False, description='Build with Apache Kafka Platform support')
@@ -163,6 +164,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
     depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
+    depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1: ^python@:2')
+    depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1: ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
@@ -194,8 +197,8 @@ class PyTensorflow(Package, CudaPackage):
     conflicts('+gcp', when='@:0.8')
     conflicts('+hdfs', when='@:0.10')
     conflicts('+aws', when='@:1.3')
-    conflicts('+kafka', when='@:1.5')
-    conflicts('+ignite', when='@:1.11')
+    conflicts('+kafka', when='@:1.5,2.1:')
+    conflicts('+ignite', when='@:1.11,2.1:')
     conflicts('+xla', when='@:0')
     conflicts('+gdr', when='@:1.3')
     conflicts('+verbs', when='@:1.1')
@@ -235,7 +238,7 @@ class PyTensorflow(Package, CudaPackage):
     # TODO: why is this needed?
     patch('crosstool.patch', when='@0.10.0+cuda')
     # Avoid build error: "no such package '@io_bazel_rules_docker..."
-    patch('io_bazel_rules_docker2.patch', when='@1.15.0,2.0.0')
+    patch('io_bazel_rules_docker2.patch', when='@1.15:2.0')
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
 
@@ -650,14 +653,15 @@ class PyTensorflow(Package, CudaPackage):
             if '~hdfs' in spec:
                 args.append('--config=nohdfs')
 
+            if '~nccl' in spec:
+                args.append('--config=nonccl')
+
+        if spec.satisfies('@1.12.1:2.0'):
             if '~ignite' in spec:
                 args.append('--config=noignite')
 
             if '~kafka' in spec:
                 args.append('--config=nokafka')
-
-            if '~nccl' in spec:
-                args.append('--config=nonccl')
 
         if spec.satisfies('@1.12.1,1.14:'):
             if '+numa' in spec:
@@ -668,10 +672,6 @@ class PyTensorflow(Package, CudaPackage):
 
         if spec.satisfies('%gcc@5:'):
             args.append('--cxxopt=-D_GLIBCXX_USE_CXX11_ABI=0')
-
-        if spec.satisfies('@2.1:'):
-            # TODO: is this needed?
-            args.append('--define=tensorflow_mkldnn_contraction_kernel=0')
 
         args.append('//tensorflow/tools/pip_package:build_pip_package')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,35 +28,30 @@ and is divided among four classes:
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
+import collections
 import copy
 import datetime
 import inspect
 import os.path
 import re
-import collections
 
-import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-
-import spack.paths
 import spack.build_environment as build_environment
-import spack.util.environment
-import spack.tengine as tengine
-import spack.util.path
-import spack.util.environment
 import spack.error
-import spack.util.spack_yaml as syaml
+import spack.paths
+import spack.schema.environment
+import spack.tengine as tengine
+import spack.util.environment
 import spack.util.file_permissions as fp
+import spack.util.path
+import spack.util.spack_yaml as syaml
+
 
 #: config section for this file
-configuration = spack.config.get('modules')
+def configuration():
+    return spack.config.get('modules', {})
 
-#: Root folders where the various module files should be written
-roots = spack.config.get('config:module_roots', {})
-
-#: Inspections that needs to be done on spec prefixes
-prefix_inspections = spack.config.get('modules:prefix_inspections', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -214,11 +209,13 @@ def root_path(name):
     """Returns the root folder for module file installation.
 
     Args:
-        name: name of the module system t be used (e.g. 'tcl')
+        name: name of the module system to be used (e.g. 'tcl')
 
     Returns:
         root folder for module file installation
     """
+    # Root folders where the various module files should be written
+    roots = spack.config.get('config:module_roots', {})
     path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
@@ -387,12 +384,12 @@ class BaseConfiguration(object):
         self.spec = spec
         # Dictionary of configuration options that should be applied
         # to the spec
-        self.conf = merge_config_rules(self.module.configuration, self.spec)
+        self.conf = merge_config_rules(self.module.configuration(), self.spec)
 
     @property
     def naming_scheme(self):
         """Naming scheme suitable for non-hierarchical layouts"""
-        scheme = self.module.configuration.get(
+        scheme = self.module.configuration().get(
             'naming_scheme',
             '{name}-{version}-{compiler.name}-{compiler.version}'
         )
@@ -416,22 +413,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.util.environment.EnvironmentModifications()
-        actions = self.conf.get('environment', {})
-
-        def process_arglist(arglist):
-            if method == 'unset':
-                for x in arglist:
-                    yield (x,)
-            else:
-                for x in six.iteritems(arglist):
-                    yield x
-
-        for method, arglist in actions.items():
-            for args in process_arglist(arglist):
-                getattr(env_mods, method)(*args)
-
-        return env_mods
+        return spack.schema.environment.parse(self.conf.get('environment', {}))
 
     @property
     def suffixes(self):
@@ -461,7 +443,7 @@ class BaseConfiguration(object):
         """
         # A few variables for convenience of writing the method
         spec = self.spec
-        conf = self.module.configuration
+        conf = self.module.configuration()
 
         # Compute the list of whitelist rules that match
         wlrules = conf.get('whitelist', [])
@@ -662,7 +644,7 @@ class BaseContext(tengine.Context):
         # Modifications guessed inspecting the spec prefix
         env = spack.util.environment.inspect_path(
             self.spec.prefix,
-            prefix_inspections,
+            spack.config.get('modules:prefix_inspections', {}),
             exclude=spack.util.environment.is_system_path
         )
 
@@ -804,10 +786,11 @@ class BaseModuleFileWriter(object):
 
         # Get the template for the module
         template_name = self._get_template()
+        import jinja2
         try:
             env = tengine.make_environment()
             template = env.get_template(template_name)
-        except tengine.TemplateNotFound:
+        except jinja2.TemplateNotFound:
             # If the template was not found raise an exception with a little
             # more information
             msg = 'template \'{0}\' was not found for \'{1}\''

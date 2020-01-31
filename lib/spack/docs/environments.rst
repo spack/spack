@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,8 @@ Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
 file is named ``spack.lock``
+
+.. _environments-using:
 
 ------------------
 Using Environments
@@ -382,11 +384,12 @@ the Environment.
 Loading
 ^^^^^^^
 
-Once an environment has been installed, the following creates a load script for it:
+Once an environment has been installed, the following creates a load
+script for it:
 
 .. code-block:: console
 
-   $ spack env myenv loads -r
+   $ spack env loads -r
 
 This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the

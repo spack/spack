@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -426,6 +426,33 @@ files. This means that tilde (``~``) will expand to the current user's
 home directory, and ``~user`` will expand to a specified user's home
 directory. The ``~`` must appear at the beginning of the path, or Spack
 will not expand it.
+
+.. _configuration_environment_variables:
+
+-------------------------
+Environment Modifications
+-------------------------
+
+Spack allows to prescribe custom environment modifications in a few places
+within its configuration files. Every time these modifications are allowed
+they are specified as a dictionary, like in the following example:
+
+.. code-block:: yaml
+
+   environment:
+     set:
+       LICENSE_FILE: '/path/to/license'
+     unset:
+     - CPATH
+     - LIBRARY_PATH
+     append_path:
+       PATH: '/new/bin/dir'
+
+The possible actions that are permitted are ``set``, ``unset``, ``append_path``,
+``prepend_path`` and finally ``remove_path``. They all require a dictionary
+of variable names mapped to the values used for the modification.
+The only exception is ``unset`` that requires just a list of variable names.
+No particular order is ensured on the execution of each of these modifications.
 
 ----------------------------
 Seeing Spack's Configuration

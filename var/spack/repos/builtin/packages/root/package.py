@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+from spack.util.environment import is_system_path
 import sys
 
 
@@ -13,6 +14,8 @@ class Root(CMakePackage):
 
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
+
+    maintainers = ['chissg', 'HadrienG2']
 
     # ###################### Versions ##########################
 
@@ -55,7 +58,7 @@ class Root(CMakePackage):
     # Some ROOT versions did not honor the option to avoid building an
     # internal version of unuran, _cf_
     # https://github.com/root-project/ROOT/commit/3e60764f133218b6938e5aa4986de760e8f058d9.
-    patch('honor-unuran-switch.patch', level=1, when='@:6.13.99')
+    patch('honor-unuran-switch.patch', level=1, when='@6.08.06:6.13.99')
     # 6.16.00 fails to handle particular build option combinations, _cf_
     # https://github.com/root-project/ROOT/commit/e0ae0483985d90a71a6cabd10d3622dfd1c15611.
     patch('root7-webgui.patch', level=1, when='@6.16.00')
@@ -189,7 +192,7 @@ class Root(CMakePackage):
     depends_on('libsm',   when="+x")
 
     # OpenGL
-    depends_on('ftgl@2.1.3-rc5',  when="+x+opengl")
+    depends_on('ftgl@2.4.0:',  when="+x+opengl")
     depends_on('glew',  when="+x+opengl")
     depends_on('gl',    when="+x+opengl")
     depends_on('glu',   when="+x+opengl")
@@ -231,6 +234,16 @@ class Root(CMakePackage):
     # I was unable to build root with any Intel compiler
     # See https://sft.its.cern.ch/jira/browse/ROOT-7517
     conflicts('%intel')
+
+    # ROOT <6.08 was incompatible with the GCC 5+ ABI
+    conflicts('%gcc@5.0.0:', when='@:6.07.99')
+
+    # The version of Clang featured in ROOT <6.12 fails to build with
+    # GCC 9.2.1, which we can safely extrapolate to the GCC 9 series.
+    conflicts('%gcc@9.0.0:', when='@:6.11.99')
+
+    # ROOT <6.14 was incompatible with Python 3.7+
+    conflicts('python@3.7:', when='@:6.13.99 +python')
 
     # See README.md
     conflicts('+http',
@@ -349,8 +362,7 @@ class Root(CMakePackage):
                 ['pgsql', 'postgres'],
                 ['pythia6'],
                 ['pythia8', False],
-                ['python', self.spec.satisfies('+python ^python@2.7:2.99.99')],
-                ['python3', self.spec.satisfies('+python ^python@3.0:')],
+                ['python', self.spec.satisfies('+python')],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],
@@ -416,7 +428,35 @@ class Root(CMakePackage):
         if 'lz4' in self.spec:
             env.append_path('CMAKE_PREFIX_PATH',
                             self.spec['lz4'].prefix)
+
+        # This hack is made necessary by a header name collision between
+        # asimage's "import.h" and Python's "import.h" headers...
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+
+        # ...but it breaks header search for any ROOT dependency which does not
+        # use CMake. To resolve this, we must bring back those dependencies's
+        # include paths into SPACK_INCLUDE_DIRS.
+        #
+        # But in doing so, we must be careful not to inject system header paths
+        # into SPACK_INCLUDE_DIRS, even in a deprioritized form, because some
+        # system/compiler combinations don't like having -I/usr/include around.
+        def add_include_path(dep_name):
+            include_path = self.spec[dep_name].prefix.include
+            if not is_system_path(include_path):
+                env.append_path('SPACK_INCLUDE_DIRS', include_path)
+
+        # With that done, let's go fixing those deps
+        if self.spec.satisfies('+x @:6.08.99'):
+            add_include_path('xextproto')
+        if self.spec.satisfies('@:6.12.99'):
+            add_include_path('zlib')
+        if '+x' in self.spec:
+            add_include_path('fontconfig')
+            add_include_path('libx11')
+            add_include_path('xproto')
+        if '+opengl' in self.spec:
+            add_include_path('glew')
+            add_include_path('mesa-glu')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)

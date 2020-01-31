@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,14 +81,6 @@ py
 * Usage: Needed by pytest. Library with cross-python path,
   ini-parsing, io, code, and log facilities.
 * Version: 1.4.34 (last version supporting Python 2.6)
-
-pyqver
-------
-
-* Homepage: https://github.com/ghewgill/pyqver
-* Usage: External script to query required python version of
-  python source code. Used for ensuring 2.6 compatibility.
-* Version: Unversioned
 
 pytest
 ------

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,10 @@ class NetcdfFortran(AutotoolsPackage):
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
     patch('nag.patch', when='@:4.4.4%nag')
+
+    # Parallel builds do not work in the fortran directory. This patch is
+    # derived from https://github.com/Unidata/netcdf-fortran/pull/211
+    patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
         if name in ['cflags', 'fflags'] and '+pic' in self.spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -356,10 +356,10 @@ class OperatingSystem(object):
         return (self.name, self.version)
 
     def to_dict(self):
-        return {
-            'name': self.name,
-            'version': self.version
-        }
+        return syaml_dict([
+            ('name', self.name),
+            ('version', self.version)
+        ])
 
 
 @key_ordering

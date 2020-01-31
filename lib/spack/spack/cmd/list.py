@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
 
 if sys.version_info > (3, 1):
-    from html import escape
+    from html import escape  # novm
 else:
     from cgi import escape
 

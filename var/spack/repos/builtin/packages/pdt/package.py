@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,10 @@ class Pdt(AutotoolsPackage):
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')
+        elif self.compiler.name == 'gcc':
+            options.append('-GNU')
+        else:
+            raise InstallError('Unknown/unsupported compiler family')
 
         configure(*options)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,12 +17,18 @@ class Harfbuzz(AutotoolsPackage):
     version('1.4.6', sha256='21a78b81cd20cbffdb04b59ac7edfb410e42141869f637ae1d6778e74928d293')
     version('0.9.37', sha256='255f3b3842dead16863d1d0c216643d97b80bfa087aaa8fc5926da24ac120207')
 
+    variant('graphite2', default=False, description='enable support for graphite2 font engine')
+
     depends_on("pkgconfig", type="build")
     depends_on("glib")
     depends_on("icu4c")
     depends_on("freetype")
     depends_on("cairo")
     depends_on("zlib")
+    depends_on("graphite2", when='+graphite2')
+
+    conflicts('%intel', when='@2.3.1:',
+              msg='harfbuzz-2.3.1 does not build with the Intel compiler')
 
     def configure_args(self):
         args = []
@@ -34,6 +40,8 @@ class Harfbuzz(AutotoolsPackage):
         args.append('GTKDOC_CHECK_PATH={0}'.format(true))
         args.append('GTKDOC_MKPDF={0}'.format(true))
         args.append('GTKDOC_REBASE={0}'.format(true))
+        args.extend(self.with_or_without('graphite2'))
+
         return args
 
     def patch(self):

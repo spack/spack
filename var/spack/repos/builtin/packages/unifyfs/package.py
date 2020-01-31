@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,11 @@ class Unifyfs(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/UnifyFS"
     git      = "https://github.com/LLNL/UnifyFS.git"
-    url      = "https://github.com/LLNL/UnifyFS/releases/download/v0.2.0/unifycr-0.2.0.tar.gz"
+    url      = "https://github.com/LLNL/UnifyFS/releases/download/v0.9.0/unifyfs-0.9.0.tar.gz"
     maintainers = ['CamStan']
 
     version('develop', branch='dev', preferred=True)
-    version('0.2.0', sha256='7439b0e885234bc64e8cbb449d8abfadd386692766b6f00647a7b6435efb2066')
+    version('0.9.0', sha256='e6c73e22ef1c23f3141646aa17058b69c1c4e526886771f8fe982da924265b0f')
 
     variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
     variant('fortran', default='False', description='Build with gfortran support')

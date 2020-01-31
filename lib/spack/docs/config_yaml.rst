@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,11 +30,21 @@ Default is ``$spack/opt/spack``.
 ``install_hash_length`` and ``install_path_scheme``
 ---------------------------------------------------
 
-The default Spack installation path can be very long and can create
-problems for scripts with hardcoded shebangs. There are two parameters
-to help with that. Firstly, the ``install_hash_length`` parameter can
-set the length of the hash in the installation path from 1 to 32. The
-default path uses the full 32 characters.
+The default Spack installation path can be very long and can create problems
+for scripts with hardcoded shebangs. Additionally, when using the Intel
+compiler, and if there is also a long list of dependencies, the compiler may
+segfault. If you see the following:
+
+     .. code-block:: console
+
+       : internal error: ** The compiler has encountered an unexpected problem.
+       ** Segmentation violation signal raised. **
+       Access violation or stack overflow. Please contact Intel Support for assistance.
+
+it may be because variables containing dependency specs may be too long. There
+are two parameters to help with long path names. Firstly, the
+``install_hash_length`` parameter can set the length of the hash in the
+installation path from 1 to 32. The default path uses the full 32 characters.
 
 Secondly, it is also possible to modify the entire installation
 scheme. By default Spack uses

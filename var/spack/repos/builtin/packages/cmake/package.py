@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Cmake(Package):
     url      = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
     maintainers = ['chuckatkins']
 
+    version('3.16.2',   sha256='8c09786ec60ca2be354c29829072c38113de9184f29928eb9da8446a5f2ce6a9')
     version('3.16.1',   sha256='a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd')
     version('3.16.0',   sha256='6da56556c63cab6e9a3e1656e8763ed4a841ac9859fefb63cbe79472e67e8c5f')
     version('3.15.5',   sha256='fbdd7cef15c0ced06bb13024bfda0ecc0dedbcaaaa6b8a5d368c75255243beb4')
@@ -76,7 +77,7 @@ class Cmake(Package):
 
     # Fix builds with XLF + Ninja generator
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
-    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="001736d791957225aadfc416b0cef915e8c8dcc04765b8e0fcbebf6058a05560", when="@3.15.5")
+    patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -167,8 +168,15 @@ class Cmake(Package):
             args.append('--sphinx-html')
             args.append('--sphinx-man')
 
+        # Now for CMake arguments to pass after the initial bootstrap
+        args.append('--')
+
+        # Make sure to create an optimized release build
+        args.append('-DCMAKE_BUILD_TYPE=Release')
+
+        # When building our own private copy of curl then we need to properly
+        # enable / disable oepnssl
         if '+ownlibs' in spec:
-            args.append('--')
             args.append('-DCMAKE_USE_OPENSSL=%s' % str('+openssl' in spec))
 
         return args

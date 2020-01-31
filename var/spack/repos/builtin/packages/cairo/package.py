@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,12 +35,25 @@ class Cairo(AutotoolsPackage):
     depends_on('librsvg', when='+svg')
     depends_on('glib')
     depends_on('pixman')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('freetype', when='+ft')
     depends_on('pkgconfig', type='build')
     depends_on('fontconfig@2.10.91:', when='+fc')  # Require newer version of fontconfig.
 
     conflicts('+png', when='platform=darwin')
     conflicts('+svg', when='platform=darwin')
+
+    # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
+    patch('fontconfig.patch', when='@1.16.0')
+
+    def setup_build_environment(self, env):
+        env.set('NOCONFIGURE', "1")
+
+    def autoreconf(self, spec, prefix):
+        which('sh')('./autogen.sh')
 
     def configure_args(self):
         args = [
