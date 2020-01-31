@@ -132,6 +132,14 @@ def get_path_from_module_contents(text, module_name):
                 return path[:-(len(ending) + 1)]
         return path
 
+    # horrible hack for Cray modulefiles: sometimes when the module is called 
+    # eg "cray-hdf5" is defines "CRAY_HDF5_DIR" and also "HDF5_DIR". In those
+    # cases "HDF5_DIR" is the one we want, despite not matching the modulefile
+    # name. But HDF5_DIR might not be defined, in which case we want 
+    # CRAY_HDF5_DIR. Since this method chooses by most-frequently-defined
+    # we'll rig the election by checking for HDF5_DIR twice:
+    pkg_var_alt_prefix = pkg_var_prefix.lstrip('CRAY_').rstrip('_PARALLEL') if pkg_var_prefix.startswith('CRAY_') else pkg_var_prefix
+
     def match_pattern_and_strip(line, pattern, strip=[]):
         if re.search(pattern, line):
             paths = get_path_args_from_module_line(line)
@@ -165,6 +173,13 @@ def get_path_from_module_contents(text, module_name):
 
         # Check {name}_ROOT entries
         pattern = r'\W{0}_ROOT'.format(pkg_var_prefix)
+        match_pattern_and_strip(line, pattern)
+
+        # rest of ugly Cray modulefile hack:
+        pattern = r'\W{0}_DIR'.format(pkg_var_alt_prefix)
+        match_pattern_and_strip(line, pattern)
+        # this is to stop the hack from disadvantaging _ROOT in the election:
+        pattern = r'\W{0}_ROOT'.format(pkg_var_alt_prefix)
         match_pattern_and_strip(line, pattern)
 
         # Check entries that update the PATH variable
