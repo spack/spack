@@ -1240,3 +1240,9 @@ def test_lock_in_current_directory(tmpdir):
                 pass
             with lk.WriteTransaction(lock):
                 pass
+
+
+def test_attempts_str():
+    assert lk._attempts_str(0, 0) == ''
+    assert lk._attempts_str(0.12, 1) == ''
+    assert lk._attempts_str(12.345, 2) == ' after 12.35s and 2 attempts'

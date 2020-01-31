@@ -32,8 +32,7 @@ def _attempts_str(wait_time, nattempts):
         return ''
 
     attempts = spack.util.string.plural(nattempts, 'attempt')
-    return ' after {0:0.2f}s and {1:d} {2}'.format(
-        wait_time, nattempts, attempts)
+    return ' after {0:0.2f}s and {1}'.format(wait_time, attempts)
 
 
 class Lock(object):
