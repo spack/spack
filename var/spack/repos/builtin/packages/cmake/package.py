@@ -101,7 +101,7 @@ class Cmake(Package):
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive',     when='~ownlibs')
+    depends_on('libarchive@3.1.0:', when='~ownlibs')
     depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
     depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
     depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
