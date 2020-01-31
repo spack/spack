@@ -502,18 +502,7 @@ class Database(object):
 
     def prefix_failure_marked(self, spec):
         """Determine if the spec has a persistent failure marking."""
-        try:
-            path = self._failed_spec_path(spec)
-            with open(path) as f:
-                spec_from_json = spack.spec.Spec.from_json(f)
-
-            # Specs read from a file are always concrete
-            spec_from_json._mark_concrete()
-            return spec == spec_from_json
-        except Exception:
-            pass
-
-        return False
+        return os.path.exists(self._failed_spec_path(spec))
 
     def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
