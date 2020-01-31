@@ -286,12 +286,6 @@ class Lock(object):
         self._reads = 0
         self._writes = 0
 
-    def _log_timeout_warning(self, requested):
-        """Log a warning if the requested timeout does not match the default"""
-        if requested != self.default_timeout:
-            tty.debug('Using current lock timeout {0}, not requested {1}'
-                      .format(self.default_timeout, requested))
-
     def acquire_read(self, timeout=None):
         """Acquires a recursive, shared lock for reading.
 
@@ -313,10 +307,6 @@ class Lock(object):
             self._log_acquired('READ LOCK', wait_time, nattempts)
             return True
         else:
-            # Nothing is done with the provided lock timeout so log a warning
-            # debug message if it is different from the one being used.
-            self._log_timeout_warning(timeout)
-
             # Increment the read count for nested lock tracking
             self._reads += 1
             return False
@@ -347,10 +337,6 @@ class Lock(object):
             # write lock for the first time. Now it returns the latter.
             return self._reads == 0
         else:
-            # Nothing is done with the provided lock timeout so log a warning
-            # debug message if it is different from the one being used.
-            self._log_timeout_warning(timeout)
-
             # Increment the write count for nested lock tracking
             self._writes += 1
             return False
