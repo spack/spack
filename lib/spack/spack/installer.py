@@ -931,7 +931,7 @@ class PackageInstaller(object):
         explicit = pkg_id == self.pkg_id
 
         tty.msg(install_msg(pkg_id, self.pid))
-        task.start = task.start if task.start else time.time()
+        task.start = task.start or time.time()
         task.status = STATUS_INSTALLING
 
         # Use the binary cache if requested
