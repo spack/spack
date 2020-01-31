@@ -1401,9 +1401,7 @@ class Spec(object):
         return self._cached_hash(ht.build_hash, length)
 
     def full_hash(self, length=None):
-        """
-        Hash to determine when to rebuild packages in the build pipeline and
-        to track build failures.
+        """Hash  to determine when to rebuild packages in the build pipeline.
 
         This hash includes the package hash, so that we know when package
         files has changed between builds. It does not currently include
