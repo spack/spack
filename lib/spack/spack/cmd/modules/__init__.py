@@ -227,7 +227,7 @@ def find(module_type, specs, args):
 
     if args.recurse_dependencies:
         dependency_specs_to_retrieve = list(
-            single_spec.traverse(root=False, order='post', cover='nodes',
+            spec.traverse(root=False, order='post', cover='nodes',
                                  deptype=('link', 'run')))
     else:
         dependency_specs_to_retrieve = []
@@ -240,7 +240,7 @@ def find(module_type, specs, args):
 
         modules.append(
             spack.modules.common.get_module(
-                module_type, single_spec, args.full_path, required=True))
+                module_type, spec, args.full_path, required=True))
     except spack.modules.common.ModuleNotFoundError as e:
         tty.die(e.message)
 
