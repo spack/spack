@@ -284,7 +284,7 @@ configure_compilers() {
         # As the input should be sorted by compilers, the module generation
         # will now find the compilers that were used when bootstrapping.
         log "...regenerating module for ${line}"
-        spack module tcl refresh -y --latest --upstream-modules ${line}
+        spack module tcl refresh -y --latest ${line}
         log "...processing ${line}"
         cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
         echo "${cmd}"
