@@ -27,7 +27,7 @@ class CrayLibsci(Package):
     # NOTE: Cray compiler wrappers already include linking for the following
     @property
     def blas_libs(self):
-        return LibraryList([self.prefix.lib])
+        return LibraryList(os.path.join(self.prefix.lib, 'libsci.so'))
 
     @property
     def lapack_libs(self):
