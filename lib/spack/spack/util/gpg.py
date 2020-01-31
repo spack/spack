@@ -7,7 +7,7 @@ import os
 import platform
 
 import spack.paths
-from spack.util.executable import Executable
+from spack.util.executable import which
 
 
 GNUPGHOME = spack.paths.gpg_path
@@ -32,7 +32,7 @@ class Gpg(object):
     @staticmethod
     def gpg():
         # TODO: Support loading up a GPG environment from a built gpg.
-        gpg = Executable('gpg2')
+        gpg = which('gpg2', 'gpg')
         # The gnupg2 Homebrew package install /usr/local/bin/gpg
         # Requires the use of
         # spack test --basetemp /tmp/spack
