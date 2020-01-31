@@ -22,6 +22,7 @@ class Boost(Package):
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
+    maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
     version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
