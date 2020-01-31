@@ -660,18 +660,92 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
 
-#: Internal cache for get_specs
+# Internal cache for downloaded specs
 _cached_specs = None
 
 
-def get_specs(force=False, use_arch=False):
+def try_download_specs(urls=None, force=False):
+    '''
+    Try to download the urls and cache them
+    '''
+    global _cached_specs
+    _cached_specs = []
+    if urls is None:
+        return {}
+    for link in urls:
+        with Stage(link, name="build_cache", keep=True) as stage:
+            if force and os.path.exists(stage.save_filename):
+                os.remove(stage.save_filename)
+            if not os.path.exists(stage.save_filename):
+                try:
+                    stage.fetch()
+                except fs.FetchError:
+                    continue
+            with open(stage.save_filename, 'r') as f:
+                # read the spec from the build cache file. All specs
+                # in build caches are concrete (as they are built) so
+                # we need to mark this spec concrete on read-in.
+                spec = Spec.from_yaml(f)
+                spec._mark_concrete()
+                _cached_specs.append(spec)
+
+    return _cached_specs
+
+
+def get_spec(spec=None, force=False):
+    """
+    Check if spec.yaml exists on mirrors and return it if it does
+    """
+    global _cached_specs
+    urls = set()
+    if spec is None:
+        return {}
+    specfile_name = tarball_name(spec, '.spec.yaml')
+    if _cached_specs:
+        tty.debug("Using previously-retrieved specs")
+        return _cached_specs
+
+    if not spack.mirror.MirrorCollection():
+        tty.debug("No Spack mirrors are currently configured")
+        return {}
+
+    for mirror in spack.mirror.MirrorCollection().values():
+        fetch_url_build_cache = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path)
+
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
+        if mirror_dir:
+            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            link = url_util.join(fetch_url_build_cache, specfile_name)
+            urls.add(link)
+
+        else:
+            tty.msg("Finding buildcaches at %s" %
+                    url_util.format(fetch_url_build_cache))
+            link = url_util.join(fetch_url_build_cache, specfile_name)
+            urls.add(link)
+
+    return try_download_specs(urls=urls, force=force)
+
+
+def get_specs(force=False, use_arch=False, names=None):
     """
     Get spec.yaml's for build caches available on mirror
     """
     global _cached_specs
-
     arch = architecture.Arch(architecture.platform(),
                              'default_os', 'default_target')
+    arch_pattern = ('([^-]*-[^-]*-[^-]*)')
+    if use_arch:
+        arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
+
+    if names is None:
+        names = ['']
+    names_or_hashes = [name.replace('/', '') for name in names]
+    names_pattern = '|'.join(names_or_hashes)
+    regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
+                                                    names_pattern)
+    name_re = re.compile(regex_pattern)
 
     if _cached_specs:
         tty.debug("Using previously-retrieved specs")
@@ -692,49 +766,21 @@ def get_specs(force=False, use_arch=False):
             if os.path.exists(mirror_dir):
                 files = os.listdir(mirror_dir)
                 for file in files:
-                    if re.search('spec.yaml', file):
+                    m = name_re.search(file)
+                    if m:
                         link = url_util.join(fetch_url_build_cache, file)
-                        if use_arch and re.search('%s-%s' %
-                                                  (arch.platform,
-                                                   arch.os),
-                                                  file):
-                            urls.add(link)
-                        else:
-                            urls.add(link)
+                        urls.add(link)
         else:
             tty.msg("Finding buildcaches at %s" %
                     url_util.format(fetch_url_build_cache))
             p, links = web_util.spider(
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
-                if re.search("spec.yaml", link):
-                    if use_arch and re.search('%s-%s' %
-                                              (arch.platform,
-                                               arch.os),
-                                              link):
-                        urls.add(link)
-                    else:
-                        urls.add(link)
+                m = name_re.search(link)
+                if m:
+                    urls.add(link)
 
-    _cached_specs = []
-    for link in urls:
-        with Stage(link, name="build_cache", keep=True) as stage:
-            if force and os.path.exists(stage.save_filename):
-                os.remove(stage.save_filename)
-            if not os.path.exists(stage.save_filename):
-                try:
-                    stage.fetch()
-                except fs.FetchError:
-                    continue
-            with open(stage.save_filename, 'r') as f:
-                # read the spec from the build cache file. All specs
-                # in build caches are concrete (as they are built) so
-                # we need to mark this spec concrete on read-in.
-                spec = Spec.from_yaml(f)
-                spec._mark_concrete()
-                _cached_specs.append(spec)
-
-    return _cached_specs
+    return try_download_specs(urls=urls, force=force)
 
 
 def get_keys(install=False, trust=False, force=False):

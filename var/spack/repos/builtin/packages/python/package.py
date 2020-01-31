@@ -70,6 +70,10 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
+    # Variants to avoid cyclical dependencies for concretizer
+    variant('libxml2', default=False,
+            description='Use a gettext library build with libxml2')
+
     variant(
         'debug', default=False,
         description="debug build with extra checks (this is high overhead)"
@@ -116,7 +120,8 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext')
+    depends_on('gettext +libxml2', when='+libxml2')
+    depends_on('gettext ~libxml2', when='~libxml2')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details

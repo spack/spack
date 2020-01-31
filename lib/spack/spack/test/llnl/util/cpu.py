@@ -245,7 +245,7 @@ def test_unsupported_optimization_flags(target_name, compiler, version):
     target = llnl.util.cpu.targets[target_name]
     with pytest.raises(
             llnl.util.cpu.UnsupportedMicroarchitecture,
-            matches='cannot produce optimized binary'
+            match='cannot produce optimized binary'
     ):
         target.optimization_flags(compiler, version)
 
@@ -287,5 +287,5 @@ def test_invalid_family():
         vendor='Imagination', features=[], compilers={}, generation=0
     )
     with pytest.raises(AssertionError,
-                       matches='a target is expected to belong'):
+                       match='a target is expected to belong'):
         multi_parents.family

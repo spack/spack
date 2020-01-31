@@ -567,6 +567,9 @@ class Environment(object):
         self.clear()
 
         if init_file:
+            # If we are creating the environment from an init file, we don't
+            # need to lock, because there are no Spack operations that alter
+            # the init file.
             with fs.open_if_filename(init_file) as f:
                 if hasattr(f, 'name') and f.name.endswith('.lock'):
                     self._read_manifest(default_manifest_yaml)
@@ -575,7 +578,8 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
         else:
-            self._read()
+            with lk.ReadTransaction(self.txlock):
+                self._read()
 
         if with_view is False:
             self.views = {}
@@ -720,7 +724,7 @@ class Environment(object):
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(self.path, 'transaction_lock')
+        return os.path.join(self.env_subdir_path, 'transaction_lock')
 
     @property
     def lock_path(self):
@@ -1472,13 +1476,13 @@ class Environment(object):
 
         # Remove yaml sections that are shadowing defaults
         # construct garbage path to ensure we don't find a manifest by accident
-        bare_env = Environment(os.path.join(self.manifest_path, 'garbage'),
-                               with_view=self.view_path_default)
-        keys_present = list(yaml_dict.keys())
-        for key in keys_present:
-            if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
-                if key not in raw_yaml_dict:
-                    del yaml_dict[key]
+        with fs.temp_cwd() as env_dir:
+            bare_env = Environment(env_dir, with_view=self.view_path_default)
+            keys_present = list(yaml_dict.keys())
+            for key in keys_present:
+                if yaml_dict[key] == config_dict(bare_env.yaml).get(key, None):
+                    if key not in raw_yaml_dict:
+                        del yaml_dict[key]
 
         # if all that worked, write out the manifest file at the top level
         # Only actually write if it has changed or was never written

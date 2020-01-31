@@ -169,7 +169,7 @@ def test_git_extra_fetch(tmpdir):
 def test_needs_stage():
     """Trigger a NoStageError when attempt a fetch without a stage."""
     with pytest.raises(spack.fetch_strategy.NoStageError,
-                       matches=_mock_transport_error):
+                       match=r"set_stage.*before calling fetch"):
         fetcher = GitFetchStrategy(git='file:///not-a-real-git-repo')
         fetcher.fetch()
 
