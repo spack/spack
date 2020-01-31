@@ -599,11 +599,14 @@ class PackageInstaller(object):
             if comp_pkg.unique_id not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 
-    def _check_install_artifacts(self, task, keep_prefix, keep_stage,
-                                 restage=False):
+    def _prepare_for_install(self, task, keep_prefix, keep_stage,
+                             restage=False):
         """
         Check the database and leftover installation directories/files and
-        prepare for a new install attempt.
+        prepare for a new install attempt for an uninstalled package.
+
+        Preparation includes cleaning up installation and stage directories
+        and ensuring the database is up-to-date.
 
         Args:
             task (BuildTask): the build task whose associated package is
@@ -1326,8 +1329,8 @@ class PackageInstaller(object):
                 continue
 
             # Determine state of installation artifacts and adjust accordingly.
-            self._check_install_artifacts(task, keep_prefix, keep_stage,
-                                          restage)
+            self._prepare_for_install(task, keep_prefix, keep_stage,
+                                      restage)
 
             # Flag an already installed pkg
             if pkg_id in self.installed:
