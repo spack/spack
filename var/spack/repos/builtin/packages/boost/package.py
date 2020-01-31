@@ -207,7 +207,7 @@ class Boost(Package):
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
-    patch('clang-linux_add_option2.patch', when='@:1.55.0')
+    patch('clang-linux_add_option2.patch', when='@1.47.0:1.55.0')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -218,9 +218,6 @@ class Boost(Package):
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("platform=darwin"):
-            return 'darwin'
-
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
