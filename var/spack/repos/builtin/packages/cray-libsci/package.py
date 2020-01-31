@@ -59,4 +59,3 @@ class CrayLibsci(Package):
 
     def install(self, spec, prefix):
         raise NoBuildError(spec)
-
