@@ -116,3 +116,16 @@ def test_installer_ensure_ready_errors(install_mockery):
     assert len(installer.locks) == 0
     with pytest.raises(inst.InstallLockError, match=fmt.format('not locked')):
         installer._ensure_install_ready(spec.package)
+
+
+def test_package_id(install_mockery):
+    pkg = spack.repo.get('trivial-install-test-package')
+    with pytest.raises(ValueError, matches='spec is not concretized'):
+        inst.package_id(pkg)
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    pkg = spec.package
+    expected = "{0}-{1}".format(pkg.name, pkg.version)
+    assert expected in inst.package_id(pkg)

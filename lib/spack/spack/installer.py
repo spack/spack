@@ -112,7 +112,7 @@ def _handle_external_and_upstream(pkg, explicit):
 
     if pkg.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
-                    .format(pkg.unique_id, pkg.spec.prefix))
+                    .format(package_id(pkg), pkg.spec.prefix))
         _print_installed_pkg(pkg.prefix)
 
         # This will result in skipping all post-install hooks. In the case
@@ -182,7 +182,7 @@ def _packages_needed_to_bootstrap_compiler(pkg):
             will be empty if there are no compilers.
     """
     tty.debug('Bootstrapping {0} compiler for {1}'
-              .format(pkg.spec.compiler, pkg.unique_id))
+              .format(pkg.spec.compiler, package_id(pkg)))
     compilers = spack.compilers.compilers_for_spec(
         pkg.spec.compiler, arch_spec=pkg.spec.architecture)
     if compilers:
@@ -237,16 +237,16 @@ def _install_from_cache(pkg, cache_only, explicit):
             ``False`` otherwise
     """
     installed_from_cache = _try_install_from_binary_cache(pkg, explicit)
+    pkg_id = package_id(pkg)
     if not installed_from_cache:
-        pre = 'No binary for {0} found'.format(pkg.unique_id)
+        pre = 'No binary for {0} found'.format(pkg_id)
         if cache_only:
             tty.die('{0} when cache-only specified'.format(pre))
 
         tty.debug('{0}: installing from source'.format(pre))
         return False
 
-    tty.debug('Successfully installed {0} from binary cache'
-              .format(pkg.unique_id))
+    tty.debug('Successfully installed {0} from binary cache'.format(pkg_id))
     _print_installed_pkg(pkg.spec.prefix)
     spack.hooks.post_install(pkg.spec)
     return True
@@ -317,7 +317,8 @@ def _try_install_from_binary_cache(pkg, explicit):
         pkg (PackageBase): the package to be installed from binary cache
         explicit (bool): the package was explicitly requested by the user
     """
-    tty.debug('Searching for binary cache of {0}'.format(pkg.unique_id))
+    pkg_id = package_id(pkg)
+    tty.debug('Searching for binary cache of {0}'.format(pkg_id))
     specs = binary_distribution.get_specs()
     binary_spec = spack.spec.Spec.from_dict(pkg.spec.to_dict())
     binary_spec._mark_concrete()
@@ -331,7 +332,7 @@ def _try_install_from_binary_cache(pkg, explicit):
                 .format(pkg.name))
         return False
 
-    tty.msg('Installing {0} from binary cache'.format(pkg.unique_id))
+    tty.msg('Installing {0} from binary cache'.format(pkg_id))
     binary_distribution.extract_tarball(
         binary_spec, tarball, allow_root=False,
         unsigned=False, force=False)
@@ -494,6 +495,29 @@ def log(pkg):
     dump_packages(pkg.spec, packages_dir)
 
 
+def package_id(pkg):
+    """A "unique" package identifier for installation purposes
+
+    The identifier is used to track build tasks, locks, install, and
+    failure statuses.
+
+    Args:
+        pkg (PackageBase): the package from which the identifier is derived
+    """
+    if not pkg.spec.concrete:
+        raise ValueError("Cannot provide a unique, readable id when "
+                         "the spec is not concretized.")
+    # TODO: Restore use of the dag hash once resolve issues with different
+    # TODO: hashes being associated with dependents of different packages
+    # TODO: within the same install, such as the hash for callpath being
+    # TODO: different for mpich and dyninst in the
+    # TODO: test_force_uninstall_and_reinstall_by_hash` test.
+
+    # TODO: Is the extra "readability" of the version worth keeping?
+    # return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
+    return "{0}-{1}".format(pkg.name, pkg.version)
+
+
 install_args_docstring = """
             cache_only (bool): Fail if binary package unavailable.
             dirty (bool): Don't clean the build environment before installing.
@@ -553,6 +577,9 @@ class PackageInstaller(object):
         # Spec of the package to be built
         self.pkg = pkg
 
+        # The identifier used for the explicit package being built
+        self.pkg_id = package_id(pkg)
+
         # Priority queue of build tasks
         self.build_pq = []
 
@@ -588,7 +615,7 @@ class PackageInstaller(object):
         installed = 'installed ({0}) = {1}'.format(
             len(self.installed), self.installed)
         return '{0} ({1}): {2}; {3}; {4}'.format(
-            self.pkg.unique_id, self.pid, tasks, installed, failed)
+            self.pkg_id, self.pid, tasks, installed, failed)
 
     def _add_bootstrap_compilers(self, pkg):
         """
@@ -600,7 +627,7 @@ class PackageInstaller(object):
         packages = _packages_needed_to_bootstrap_compiler(pkg)
         for (packg, is_compiler) in packages:
             comp_pkg = packg.package
-            if comp_pkg.unique_id not in self.build_tasks:
+            if package_id(comp_pkg) not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 
     def _prepare_for_install(self, task, keep_prefix, keep_stage,
@@ -627,7 +654,7 @@ class PackageInstaller(object):
 
         # Skip file system operations if we've already gone through them for
         # this spec.
-        if task.pkg.unique_id in self.installed:
+        if task.pkg_id in self.installed:
             # Already determined the spec has been installed
             return
 
@@ -649,7 +676,7 @@ class PackageInstaller(object):
                 task.pkg.remove_prefix()
             else:
                 tty.debug('{0} is partially installed'
-                          .format(task.pkg.unique_id))
+                          .format(task.pkg_id))
                 partial = True
 
         # Destroy the stage for a locally installed, non-DIYStage, package
@@ -660,7 +687,7 @@ class PackageInstaller(object):
             self._update_installed(task)
 
             # Only update the explicit entry once for the explicit package
-            if task.pkg.unique_id == self.pkg.unique_id:
+            if task.pkg_id == self.pkg_id:
                 _update_explicit_entry_in_db(task.pkg, rec, True)
 
             # In case the stage directory has already been created, this
@@ -725,7 +752,7 @@ class PackageInstaller(object):
         Args:
             pkg (PackageBase): the package being installed
         """
-        self._remove_task(pkg.unique_id)
+        self._remove_task(package_id(pkg))
 
         # Ensure we have a read lock to prevent others from uninstalling the
         # spec during our installation.
@@ -739,7 +766,8 @@ class PackageInstaller(object):
         Args:
             pkg (PackageBase): the package being locally installed
         """
-        pre = "{0} cannot be installed locally:".format(pkg.unique_id)
+        pkg_id = package_id(pkg)
+        pre = "{0} cannot be installed locally:".format(pkg_id)
 
         # External packages cannot be installed locally.
         if pkg.spec.external:
@@ -750,7 +778,7 @@ class PackageInstaller(object):
             raise UpstreamPackageError('{0} {1}'.format(pre, 'is upstream'))
 
         # The package must have a prefix lock at this stage.
-        if pkg.unique_id not in self.locks:
+        if pkg_id not in self.locks:
             raise InstallLockError('{0} {1}'.format(pre, 'not locked'))
 
     def _ensure_locked(self, lock_type, pkg):
@@ -778,7 +806,7 @@ class PackageInstaller(object):
             '"{0}" is not a supported package management lock type' \
             .format(lock_type)
 
-        pkg_id = pkg.unique_id
+        pkg_id = package_id(pkg)
         ltype, lock = self.locks.get(pkg_id, (lock_type, None))
         if lock and ltype == lock_type:
             return ltype, lock
@@ -863,7 +891,7 @@ class PackageInstaller(object):
                 if install_compilers:
                     self._add_bootstrap_compilers(self, dep_pkg)
 
-                if dep_pkg.unique_id not in self.build_tasks:
+                if package_id(dep_pkg) not in self.build_tasks:
                     self._push_task(dep_pkg, False, 0, 0, STATUS_ADDED)
 
                 # Clear any persistent failure markings _unless_ they are
@@ -876,7 +904,7 @@ class PackageInstaller(object):
             if install_compilers:
                 self._add_bootstrap_compilers(self, self.pkg)
 
-        if install_package and self.pkg.unique_id not in self.build_tasks:
+        if install_package and self.pkg_id not in self.build_tasks:
             # Now add the package itself, if appropriate
             self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
 
@@ -899,9 +927,10 @@ class PackageInstaller(object):
         verbose = kwargs.get('verbose', False)
 
         pkg = task.pkg
-        explicit = pkg.unique_id == self.pkg.unique_id
+        pkg_id = package_id(pkg)
+        explicit = pkg_id == self.pkg_id
 
-        tty.msg(install_msg(pkg.unique_id, self.pid))
+        tty.msg(install_msg(pkg_id, self.pid))
         task.start = task.start if task.start else time.time()
         task.status = STATUS_INSTALLING
 
@@ -930,8 +959,9 @@ class PackageInstaller(object):
                 else:
                     pkg.do_stage()
 
+            pkg_id = package_id(pkg)
             tty.msg('{0} Building {1} [{2}]'
-                    .format(pre, pkg.unique_id, pkg.build_system_class))
+                    .format(pre, pkg_id, pkg.build_system_class))
 
             # get verbosity from do_install() parameter or saved value
             echo = verbose
@@ -992,7 +1022,7 @@ class PackageInstaller(object):
             build_time = pkg._total_time - pkg._fetch_time
 
             tty.msg('{0} Successfully installed {1}'
-                    .format(pre, pkg.unique_id),
+                    .format(pre, pkg_id),
                     'Fetch: {0}.  Build: {1}.  Total: {2}.'
                     .format(_hms(pkg._fetch_time), _hms(build_time),
                             _hms(pkg._total_time)))
@@ -1067,7 +1097,7 @@ class PackageInstaller(object):
                 docs.python.org/2/library/heapq.html
         """
         msg = "{0} a build task for {1} with status '{2}'"
-        pkg_id = pkg.unique_id
+        pkg_id = package_id(pkg)
 
         # Ensure do not (re-)queue installed or failed specs.
         if pkg_id in self.installed:
@@ -1142,7 +1172,7 @@ class PackageInstaller(object):
             task (BuildTask): the installation build task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
-            tty.msg('{0} {1}'.format(install_msg(task.pkg.unique_id, self.pid),
+            tty.msg('{0} {1}'.format(install_msg(task.pkg_id, self.pid),
                                      'in progress by another process'))
 
         start = task.start or time.time()
@@ -1188,7 +1218,7 @@ class PackageInstaller(object):
                 be marked as "failed", otherwise, ``False``
             exc (Exception): optional exception if associated with the failure
         """
-        pkg_id = task.pkg.unique_id
+        pkg_id = task.pkg_id
         err = '' if exc is None else ': {0}'.format(str(exc))
         tty.debug('Flagging {0} as failed{1}'.format(pkg_id, err))
         if mark:
@@ -1218,7 +1248,7 @@ class PackageInstaller(object):
         Args:
             task (BuildTask): the build task for the installed package
         """
-        pkg_id = task.pkg.unique_id
+        pkg_id = task.pkg_id
         tty.debug('Flagging {0} as installed'.format(pkg_id))
 
         self.installed.add(pkg_id)
@@ -1273,7 +1303,7 @@ class PackageInstaller(object):
                 continue
 
             pkg, spec = task.pkg, task.pkg.spec
-            pkg_id = pkg.unique_id
+            pkg_id = package_id(pkg)
             tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
 
             # Ensure that the current spec has NO uninstalled dependencies,
@@ -1296,7 +1326,7 @@ class PackageInstaller(object):
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
-            if pkg_id != self.pkg.unique_id:
+            if pkg_id != self.pkg_id:
                 not_local = _handle_external_and_upstream(pkg, False)
                 if not_local:
                     self._update_installed(task)
@@ -1388,7 +1418,7 @@ class PackageInstaller(object):
                           str(exc)))
                 self._update_failed(task, True, exc)
 
-                if pkg_id == self.pkg.unique_id:
+                if pkg_id == self.pkg_id:
                     raise
 
             finally:
@@ -1410,9 +1440,9 @@ class PackageInstaller(object):
         self._cleanup_all_tasks()
 
         # Ensure we properly report if the original/explicit pkg is failed
-        if self.pkg.unique_id in self.failed:
+        if self.pkg_id in self.failed:
             msg = ('Installation of {0} failed.  Review log for details'
-                   .format(self.pkg.unique_id))
+                   .format(self.pkg_id))
             raise InstallError(msg)
 
     install.__doc__ += install_args_docstring
@@ -1457,21 +1487,24 @@ class BuildTask(object):
         # queue.
         if status == STATUS_REMOVED:
             msg = "Cannot create a build task for {0} with status '{1}'"
-            raise InstallError(msg.format(self.pkg.unique_id, status))
+            raise InstallError(msg.format(self.pkg_id, status))
 
         self.status = status
+
+        # The "unique" identifier for the task's package
+        self.pkg_id = package_id(self.pkg)
 
         # Package is associated with a bootstrap compiler
         self.compiler = compiler
 
-        # The initial start time for processing the spec.
+        # The initial start time for processing the spec
         self.start = start
 
         # Number of times the task has been queued
         self.attempts = attempts + 1
 
         # Set of dependents
-        self.dependents = set(d.package.unique_id for d
+        self.dependents = set(package_id(d.package) for d
                               in self.spec.dependents())
 
         # Set of dependencies
@@ -1479,9 +1512,9 @@ class BuildTask(object):
         # Be consistent wrt use of dependents and dependencies.  That is,
         # if use traverse for transitive dependencies, then must remove
         # transitive dependents on failure.
-        self.dependencies = set(d.package.unique_id for d in
+        self.dependencies = set(package_id(d.package) for d in
                                 self.spec.dependencies() if
-                                d.package.unique_id != self.pkg.unique_id)
+                                package_id(d.package) != self.pkg_id)
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
@@ -1524,11 +1557,6 @@ class BuildTask(object):
     def key(self):
         """The key is the tuple (# uninstalled dependencies, sequence)."""
         return (self.priority, self.sequence)
-
-    @property
-    def pkg_id(self):
-        """The unique, somewhat readable id of the package being built."""
-        return self.pkg.unique_id
 
     @property
     def priority(self):
