@@ -1371,7 +1371,7 @@ class PackageInstaller(object):
                 keep_prefix = last_phase is None or keep_prefix
 
             except spack.directory_layout.InstallDirectoryAlreadyExistsError:
-                tty.warn("Keeping existing install prefix in place.")
+                tty.debug("Keeping existing install prefix in place.")
                 self._update_installed(task)
                 raise
 
