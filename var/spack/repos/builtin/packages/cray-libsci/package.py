@@ -1,5 +1,5 @@
 ##############################################################################
-# Copyright (c) 2013-2022, Triad National Security, LLC.
+# Copyright (c) 2013-2020, Triad National Security, LLC.
 # Produced at the Los Alamos National Laboratory.
 #
 # This file is part of Spack.
