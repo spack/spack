@@ -699,7 +699,7 @@ class PackageInstaller(object):
 
     def _cleanup_failed(self, pkg_id):
         """
-        Cleanup any failed mark for the package
+        Cleanup any failed markers for the package
 
         Args:
             pkg_id (str): identifier for the failed package
@@ -711,8 +711,6 @@ class PackageInstaller(object):
             try:
                 tty.verbose(msg.format(pkg_id))
                 lock.release_write()
-            except AssertionError:
-                pass
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
