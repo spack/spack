@@ -449,8 +449,6 @@ class Database(object):
 
             try:
                 mark.acquire_write()
-                tty.debug('PID {0} succeeded in marking failure for {1}'
-                          .format(os.getpid(), spec.name))
             except lk.LockTimeoutError:
                 # Unlikely that another process failed to install at the same
                 # time but log it anyway.
