@@ -3,7 +3,29 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-""" This module encapsulates package installer functionality. """
+"""
+This module encapsulates package installation functionality.
+
+The PackageInstaller coordinates concurrent builds of packages for the same
+Spack instance by leveraging the dependency DAG and file system locks.  It
+also proceeds with the installation of non-dependent packages of failed
+dependencies in order to install as many dependencies of a package as possible.
+
+Bottom-up traversal of the dependency DAG while prioritizing packages with no
+uninstalled dependencies allows multiple processes to perform concurrent builds
+of separate packages associated with a spec.
+
+File system locks enable coordination such that no two processes attempt to
+build the same or a failed dependency package.
+
+Failures to install dependency packages result in removal of their dependents'
+build tasks from the current process.  A failure file is also written (and
+locked) so that other processes can detect the failure and adjust their build
+tasks accordingly.
+
+This module supports the coordination of local and distributed concurrent
+installations of packages in a Spack instance.
+"""
 
 import glob
 import heapq
