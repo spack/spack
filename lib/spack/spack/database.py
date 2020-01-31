@@ -479,13 +479,13 @@ class Database(object):
 
     def prefix_failure_locked(self, spec):
         """Return True if a process has a failure lock on the spec."""
-        try:
-            check = lk.Lock(
-                self.prefix_fail_path,
-                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
-                length=1,
-                default_timeout=self.package_lock_timeout, desc=spec.name)
+        check = lk.Lock(
+            self.prefix_fail_path,
+            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            length=1,
+            default_timeout=self.package_lock_timeout, desc=spec.name)
 
+        try:
             check.acquire_read()
 
             # If we have a read lock then no other process has a failure lock
@@ -493,8 +493,8 @@ class Database(object):
             # is no reason to hang on to the read lock itself.
             check.release_read()
         except lk.LockTimeoutError:
-            # Installation of the prefix has failed in another process holding
-            # a write lock.
+            # Another process is holding a write lock, which indicates 
+            # installation of the spec has failed.
             tty.debug('{0} is failure locked'.format(spec.name))
             return True
 
