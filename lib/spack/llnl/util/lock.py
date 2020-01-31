@@ -223,13 +223,8 @@ class Lock(object):
             return True
 
         except IOError as e:
-            if e.errno == errno.EAGAIN:
-                # locked by another process, try again
-                pass
-            elif e.errno == errno.EACCES:
-                # permission denied
-                tty.warn("Unable to acquire the lock: {0}".format(str(e)))
-            else:
+            # EAGAIN and EACCES == locked by another process (so try again)
+            if e.errno not in (errno.EAGAIN, errno.EACCES):
                 raise
 
         return False
