@@ -411,9 +411,9 @@ class Database(object):
                 path = self._failed_spec_path(spec)
                 tty.debug('Removing failure marking for {0}'.format(spec.name))
                 os.remove(path)
-            except Exception as exc:
+            except OSError as err:
                 tty.warn('Unable to remove failure marking for {0} ({1}): {2}'
-                         .format(spec.name, path, str(exc)))
+                         .format(spec.name, path, str(err)))
 
     def mark_failed(self, spec):
         """
