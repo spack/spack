@@ -33,13 +33,6 @@ class Gpg(object):
     def gpg():
         # TODO: Support loading up a GPG environment from a built gpg.
         gpg = which('gpg2', 'gpg')
-        # The gnupg2 Homebrew package install /usr/local/bin/gpg
-        # Requires the use of
-        # spack test --basetemp /tmp/spack
-        # on macOS when creating keys
-        # because $TMPDIR path is too long.
-        if platform.system().lower() == 'darwin':
-            gpg = Executable('gpg')
         if not os.path.exists(GNUPGHOME):
             os.makedirs(GNUPGHOME)
             os.chmod(GNUPGHOME, 0o700)
