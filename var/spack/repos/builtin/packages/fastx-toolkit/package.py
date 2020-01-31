@@ -19,3 +19,5 @@ class FastxToolkit(AutotoolsPackage):
 
     # patch implicit fallthrough
     patch("pr-22.patch")
+    # fix error [-Werror,-Wpragma-pack]
+    patch('fix_pragma_pack.patch', when='%fj')

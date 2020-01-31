@@ -927,8 +927,11 @@ def test_stage_create_replace_path(tmp_build_stage_dir):
     assert os.path.isdir(stage.path)
 
 
-def test_cannot_access():
+def test_cannot_access(capsys):
     """Ensure can_access dies with the expected error."""
-    with pytest.raises(SystemExit, matches='Insufficient permissions'):
+    with pytest.raises(SystemExit):
         # It's far more portable to use a non-existent filename.
         spack.stage.ensure_access('/no/such/file')
+
+    captured = capsys.readouterr()
+    assert 'Insufficient permissions' in str(captured)

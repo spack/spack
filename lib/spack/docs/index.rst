@@ -66,6 +66,7 @@ or refer to the full manual below.
    config_yaml
    build_settings
    environments
+   containers
    mirrors
    module_file_support
    repositories
@@ -74,6 +75,7 @@ or refer to the full manual below.
    package_list
    chain
    extensions
+   pipelines
 
 .. toctree::
    :maxdepth: 2

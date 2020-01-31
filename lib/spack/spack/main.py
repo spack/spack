@@ -645,6 +645,17 @@ def main(argv=None):
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
+    # Recover stored LD_LIBRARY_PATH variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # (DY?)LD_LIBRARY_PATH variables on process start.
+    # Spack clears these variables before building and installing packages,
+    # but needs to know the prior state for commands like `spack load` and
+    # `spack env activate that modify the user environment.
+    for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
+        stored_var_name = 'SPACK_%s' % var
+        if stored_var_name in os.environ:
+            os.environ[var] = os.environ[stored_var_name]
+
     # activate an environment if one was specified on the command line
     if not args.no_env:
         env = ev.find_environment(args)

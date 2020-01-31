@@ -91,3 +91,9 @@ def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
 def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config('get', fail_on_error=False)
     assert "requires a section argument or an active environment" in output
+
+
+def test_config_list():
+    output = config('list')
+    assert 'compilers' in output
+    assert 'packages' in output

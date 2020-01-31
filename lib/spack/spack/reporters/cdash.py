@@ -72,8 +72,8 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
-        if args.package:
-            packages = args.package
+        if args.spec:
+            packages = args.spec
         else:
             packages = []
             for file in args.specfiles:

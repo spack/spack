@@ -122,11 +122,6 @@ the dependencies"""
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    subparser.add_argument(
-        'package',
-        nargs=argparse.REMAINDER,
-        help="spec of the package to install"
-    )
     testing = subparser.add_mutually_exclusive_group()
     testing.add_argument(
         '--test', default=None,
@@ -157,7 +152,7 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="Show usage instructions for CDash reporting"
     )
     add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all'])
+    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
 
 
 def add_cdash_args(subparser, add_help):
@@ -228,8 +223,13 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
-            env.install(abstract_spec, spec, **kwargs)
-            env.write()
+            with env.write_transaction():
+                concrete = env.concretize_and_add(
+                    abstract_spec, spec)
+                env.write(regenerate_views=False)
+            env._install(concrete, **kwargs)
+            with env.write_transaction():
+                env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
@@ -258,22 +258,26 @@ environment variables:
         parser.print_help()
         return
 
-    if not args.package and not args.specfiles:
+    if not args.spec and not args.specfiles:
         # if there are no args but an active environment or spack.yaml file
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
-                concretized_specs = env.concretize()
-                ev.display_specs(concretized_specs)
+                with env.write_transaction():
+                    concretized_specs = env.concretize()
+                    ev.display_specs(concretized_specs)
 
-                # save view regeneration for later, so that we only do it
-                # once, as it can be slow.
-                env.write(regenerate_views=False)
+                    # save view regeneration for later, so that we only do it
+                    # once, as it can be slow.
+                    env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
-            env.regenerate_views()
+            with env.write_transaction():
+                # It is not strictly required to synchronize view regeneration
+                # but doing so can prevent redundant work in the filesystem.
+                env.regenerate_views()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")
@@ -293,7 +297,7 @@ environment variables:
     if args.log_file:
         reporter.filename = args.log_file
 
-    abstract_specs = spack.cmd.parse_specs(args.package)
+    abstract_specs = spack.cmd.parse_specs(args.spec)
     tests = False
     if args.test == 'all' or args.run_tests:
         tests = True
@@ -303,7 +307,7 @@ environment variables:
 
     try:
         specs = spack.cmd.parse_specs(
-            args.package, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

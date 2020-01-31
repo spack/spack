@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
-
+import spack.util.url
 import spack.package
 
 
@@ -15,8 +14,8 @@ class GNUMirrorPackage(spack.package.PackageBase):
 
     #: List of GNU mirrors used by Spack
     base_mirrors = [
-        'https://ftp.gnu.org/gnu',
         'https://ftpmirror.gnu.org/',
+        'https://ftp.gnu.org/gnu/',
         # Fall back to http if https didn't work (for instance because
         # Spack is bootstrapping curl)
         'http://ftpmirror.gnu.org/'
@@ -26,7 +25,8 @@ class GNUMirrorPackage(spack.package.PackageBase):
     def urls(self):
         self._ensure_gnu_mirror_path_is_set_or_raise()
         return [
-            os.path.join(m, self.gnu_mirror_path) for m in self.base_mirrors
+            spack.util.url.join(m, self.gnu_mirror_path, resolve_href=True)
+            for m in self.base_mirrors
         ]
 
     def _ensure_gnu_mirror_path_is_set_or_raise(self):

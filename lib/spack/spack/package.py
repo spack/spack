@@ -1262,7 +1262,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise spack.error.SpackError(err_msg)
 
         hash_content = list()
-        source_id = fs.for_package_version(self, self.version).source_id()
+        try:
+            source_id = fs.for_package_version(self, self.version).source_id()
+        except fs.ExtrapolationError:
+            source_id = None
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
             # should this attempt to download the source and set one? This
@@ -1507,7 +1510,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def try_install_from_binary_cache(self, explicit):
         tty.msg('Searching for binary cache of %s' % self.name)
-        specs = binary_distribution.get_specs()
+        specs = binary_distribution.get_spec(spec=self.spec,
+                                             force=False)
         binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
         binary_spec._mark_concrete()
         if binary_spec not in specs:
@@ -1669,7 +1673,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 spack.hooks.post_install(self.spec)
                 return
             elif kwargs.get('cache_only', False):
-                tty.die('No binary for %s found and cache-only specified')
+                tty.die('No binary for %s found and cache-only specified'
+                        % self.name)
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)
