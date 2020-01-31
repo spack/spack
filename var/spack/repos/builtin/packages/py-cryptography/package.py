@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class PyCryptography(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cryptography"
     url      = "https://pypi.io/packages/source/c/cryptography/cryptography-1.8.1.tar.gz"
 
-    version('2.3.1', '8d10113ca826a4c29d5b85b2c4e045ffa8bad74fb525ee0eceb1d38d4c70dfd6')
-    version('1.8.1', '9f28a9c141995cd2300d0976b4fac3fb')
+    version('2.3.1', sha256='8d10113ca826a4c29d5b85b2c4e045ffa8bad74fb525ee0eceb1d38d4c70dfd6')
+    version('1.8.1', sha256='323524312bb467565ebca7e50c8ae5e9674e544951d28a2904a50012a8828190')
 
     # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
     depends_on('py-setuptools@20.5:',   type='build')

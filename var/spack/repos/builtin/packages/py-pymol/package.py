@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class PyPymol(PythonPackage):
     homepage = "https://pymol.org"
     url      = "https://sourceforge.net/projects/pymol/files/pymol/2/pymol-v2.1.0.tar.bz2"
 
-    version('2.1.0', 'ef2ab2ce11d65785ca3258b4e6982dfb')
+    version('2.1.0', sha256='7ae8ebb899533d691a67c1ec731b00518dea456ab3e258aa052a65c24b63eae2')
 
-    depends_on('python+tk', type=('build', 'run'))
+    depends_on('python+tkinter', type=('build', 'run'))
     depends_on('tcl')
     depends_on('tk')
     depends_on('py-pmw')
@@ -28,5 +28,5 @@ class PyPymol(PythonPackage):
     depends_on('freetype')
     depends_on('libxml2')
     depends_on('msgpack-c')
-    depends_on('py-pyqt', type=('build', 'run'))
+    depends_on('py-pyqt4', type=('build', 'run'))
     depends_on('freeglut')

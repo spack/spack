@@ -26,7 +26,7 @@ class PlacementAlgorithm(PythonPackage):
 
     depends_on('py-morphio@2.0.5:', type='run')
     depends_on('py-morph-tool@0.1.3:', type='run')
-    depends_on('py-mpi4py@2.0:2.99', type='run')
+    depends_on('py-mpi4py@2.0:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
     depends_on('py-voxcell@2.5:', type='run')
 

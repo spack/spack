@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,26 +31,38 @@ from spack import *
 class Go(Package):
     """The golang compiler and build environment"""
     homepage = "https://golang.org"
-    url = 'https://dl.google.com/go/go1.10.1.src.tar.gz'
+    url = 'https://dl.google.com/go/go1.12.6.src.tar.gz'
 
     extendable = True
 
-    version('1.11.2', '042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550')
-    version('1.11.1', '558f8c169ae215e25b81421596e8de7572bd3ba824b79add22fba6e284db1117')
-    version('1.11',   'afc1e12f5fe49a471e3aae7d906c73e9d5b1fdd36d52d72652dde8f6250152fb')
-    version('1.10.3', '567b1cc66c9704d1c019c50bef946272e911ec6baf244310f87f4e678be155f2')
-    version('1.10.2', '6264609c6b9cd8ed8e02ca84605d727ce1898d74efa79841660b2e3e985a98bd')
-    version('1.10.1', '589449ff6c3ccbff1d391d4e7ab5bb5d5643a5a41a04c99315e55c16bbf73ddc')
-    version('1.9.5',  'f1c2bb7f32bbd8fa7a19cc1608e0d06582df32ff5f0340967d83fb0017c49fbc')
-    version('1.9.2',  '44105c865a1a810464df79233a05a568')
-    version('1.9.1',  '27bce1ffb05f4f6bd90d90081e5d4169')
-    version('1.9',    'da2d44ea384076efec43ee1f8b7d45d2')
-    version('1.8.3',  '64e9380e07bba907e26a00cf5fcbe77e')
-    version('1.8.1',  '409dd21e7347dd1ea9efe64a700073cc')
-    version('1.8',    '7743960c968760437b6e39093cfe6f67')
-    version('1.7.5',  '506de2d870409e9003e1440bcfeb3a65')
-    version('1.7.4',  '49c1076428a5d3b5ad7ac65233fcca2f')
-    version('1.6.4',  'b023240be707b34059d2c114d3465c92')
+    version('1.13.1', sha256='81f154e69544b9fa92b1475ff5f11e64270260d46e7e36c34aafc8bc96209358')
+    version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.12.10', sha256='f56e48fce80646d3c94dcf36d3e3f490f6d541a92070ad409b87b6bbb9da3954')
+    version('1.12.9', sha256='ab0e56ed9c4732a653ed22e232652709afbf573e710f56a07f7fdeca578d62fc')
+    version('1.12.8', sha256='11ad2e2e31ff63fcf8a2bdffbe9bfa2e1845653358daed593c8c2d03453c9898')
+    version('1.12.6', sha256='c96c5ccc7455638ae1a8b7498a030fe653731c8391c5f8e79590bce72f92b4ca')
+    version('1.12.5', sha256='2aa5f088cbb332e73fc3def546800616b38d3bfe6b8713b8a6404060f22503e8')
+    version('1.11.13', sha256='5032095fd3f641cafcce164f551e5ae873785ce7b07ca7c143aecd18f7ba4076')
+    version('1.11.11', sha256='1fff7c33ef2522e6dfaf6ab96ec4c2a8b76d018aae6fc88ce2bd40f2202d0f8c')
+    version('1.11.10', sha256='df27e96a9d1d362c46ecd975f1faa56b8c300f5c529074e9ea79bdd885493c1b')
+    version('1.11.5', sha256='bc1ef02bb1668835db1390a2e478dcbccb5dd16911691af9d75184bbe5aa943e')
+    version('1.11.4', sha256='4cfd42720a6b1e79a8024895fa6607b69972e8e32446df76d6ce79801bbadb15')
+    version('1.11.2', sha256='042fba357210816160341f1002440550e952eb12678f7c9e7e9d389437942550')
+    version('1.11.1', sha256='558f8c169ae215e25b81421596e8de7572bd3ba824b79add22fba6e284db1117')
+    version('1.11',   sha256='afc1e12f5fe49a471e3aae7d906c73e9d5b1fdd36d52d72652dde8f6250152fb')
+    version('1.10.3', sha256='567b1cc66c9704d1c019c50bef946272e911ec6baf244310f87f4e678be155f2')
+    version('1.10.2', sha256='6264609c6b9cd8ed8e02ca84605d727ce1898d74efa79841660b2e3e985a98bd')
+    version('1.10.1', sha256='589449ff6c3ccbff1d391d4e7ab5bb5d5643a5a41a04c99315e55c16bbf73ddc')
+    version('1.9.5',  sha256='f1c2bb7f32bbd8fa7a19cc1608e0d06582df32ff5f0340967d83fb0017c49fbc')
+    version('1.9.2',  sha256='665f184bf8ac89986cfd5a4460736976f60b57df6b320ad71ad4cef53bb143dc')
+    version('1.9.1',  sha256='a84afc9dc7d64fe0fa84d4d735e2ece23831a22117b50dafc75c1484f1cb550e')
+    version('1.9',    sha256='a4ab229028ed167ba1986825751463605264e44868362ca8e7accc8be057e993')
+    version('1.8.3',  sha256='5f5dea2447e7dcfdc50fa6b94c512e58bfba5673c039259fd843f68829d99fa6')
+    version('1.8.1',  sha256='33daf4c03f86120fdfdc66bddf6bfff4661c7ca11c5da473e537f4d69b470e57')
+    version('1.8',    sha256='406865f587b44be7092f206d73fc1de252600b79b3cacc587b74b5ef5c623596')
+    version('1.7.5',  sha256='4e834513a2079f8cbbd357502cccaac9507fd00a1efe672375798858ff291815')
+    version('1.7.4',  sha256='4c189111e9ba651a2bb3ee868aa881fab36b2f2da3409e80885ca758a6b614cc')
+    version('1.6.4',  sha256='8796cc48217b59595832aa9de6db45f58706dae68c9c7fbbd78c9fdbe3cd9032')
 
     provides('golang')
 
@@ -80,10 +92,17 @@ class Go(Package):
 
     def install(self, spec, prefix):
         bash = which('bash')
-        with working_dir('src'):
+
+        wd = '.'
+
+        # 1.11.5 directory structure is slightly different
+        if self.version == Version('1.11.5'):
+            wd = 'go'
+
+        with working_dir(join_path(wd, 'src')):
             bash('{0}.bash'.format('all' if self.run_tests else 'make'))
 
-        install_tree('.', prefix)
+        install_tree(wd, prefix)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.set('GOROOT_FINAL', self.spec.prefix)
@@ -117,6 +136,6 @@ class Go(Package):
         # This *MUST* be first, this is where new code is installed
         spack_env.set('GOPATH', ':'.join(path_components))
 
-        # Allow packages to find this when using module or dotkit
+        # Allow packages to find this when using module files
         run_env.prepend_path('GOPATH', ':'.join(
             [dependent_spec.prefix] + path_components))

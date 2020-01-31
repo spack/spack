@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,7 @@ class Cub(Package):
     homepage = "https://nvlabs.github.com/cub"
     url      = "https://github.com/NVlabs/cub/archive/1.6.4.zip"
 
-    version('1.7.1', '028ac43922a4538596338ad5aef0f0c4')
-    version('1.6.4', '924fc12c0efb17264c3ad2d611ed1c51')
-    version('1.4.1', '74a36eb84e5b5f0bf54aa3df39f660b2')
+    version('1.7.1', sha256='50b8777b83093fdfdab429a61fccdbfbbb991b3bbc08385118e5ad58e8f62e1d')
 
     def install(self, spec, prefix):
         mkdirp(prefix.include)

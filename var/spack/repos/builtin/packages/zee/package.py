@@ -17,7 +17,7 @@ class Zee(CMakePackage):
 
     version('develop', git=url, submodules=True)
 
-    variant('build_type', default='', description='CMake build type',
+    variant('build_type', default=' ', description='CMake build type',
             values=' ')
     variant('optimize', default=True,
             description='Compile C++ with optimization')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,10 +19,9 @@ class Thrift(Package):
     homepage = "http://thrift.apache.org"
     url      = "http://apache.mirrors.ionfish.org/thrift/0.9.2/thrift-0.9.2.tar.gz"
 
-    version('0.11.0', '0be59730ebce071eceaf6bfdb8d3a20e')
-    version('0.10.0', '795c5dd192e310ffff38cfd9430d6b29')
-    version('0.9.3', '88d667a8ae870d5adeca8cb7d6795442')
-    version('0.9.2', '89f63cc4d0100912f4a1f8a9dee63678')
+    version('0.11.0', sha256='c4ad38b6cb4a3498310d405a91fef37b9a8e79a50cd0968148ee2524d2fa60c2')
+    version('0.10.0', sha256='2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b')
+    version('0.9.3', sha256='b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e')
 
     # Currently only support for c-family and python
     variant('c', default=True,

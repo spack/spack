@@ -1,0 +1,12 @@
+config:
+  install_tree: $SPACK_INSTALL_PREFIX
+  source_cache: $SPACK_INSTALL_PREFIX/.cache
+  module_roots:
+    tcl: $SPACK_INSTALL_PREFIX/modules/tcl
+    lmod: $SPACK_INSTALL_PREFIX/modules/lmod
+  build_stage:
+    - $tempdir
+    - $SPACK_INSTALL_PREFIX/.stage
+  install_missing_compilers: true
+  install_path_scheme: '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:10}'
+  build_jobs: 36

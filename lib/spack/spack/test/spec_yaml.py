@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,12 +8,25 @@
 YAML format preserves DAG information in the spec.
 
 """
+import ast
+import inspect
+import os
+
 from collections import Iterable, Mapping
 
+import pytest
+
+import spack.architecture
+import spack.hash_types as ht
+import spack.spec
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
-from spack.spec import Spec
+import spack.version
+
+from spack import repo
+from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
+from spack.test.conftest import MockPackage, MockPackageMultiRepo
 
 
 def check_yaml_round_trip(spec):
@@ -92,14 +105,24 @@ def test_using_ordered_dict(mock_packages):
     for spec in specs:
         dag = Spec(spec)
         dag.normalize()
-        from pprint import pprint
-        pprint(dag.to_node_dict())
-        break
-
         level = descend_and_check(dag.to_node_dict())
 
         # level just makes sure we are doing something here
         assert level >= 5
+
+
+def test_to_record_dict(mock_packages, config):
+    specs = ['mpileaks', 'zmpi', 'dttop']
+    for name in specs:
+        spec = Spec(name).concretized()
+        record = spec.to_record_dict()
+        assert record["name"] == name
+        assert "hash" in record
+
+        node = spec.to_node_dict()
+        for key, value in node[name].items():
+            assert key in record
+            assert record[key] == value
 
 
 def test_ordered_read_not_required_for_consistent_dag_hash(
@@ -188,6 +211,72 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
 
 
+@pytest.mark.parametrize("module", [
+    spack.spec,
+    spack.architecture,
+    spack.version,
+])
+def test_hashes_use_no_python_dicts(module):
+    """Coarse check to make sure we don't use dicts in Spec.to_node_dict().
+
+    Pyton dicts are not guaranteed to iterate in a deterministic order
+    (at least not in all python versions) so we need to uses lists and
+    syaml_dicts.  syaml_dicts are ordered and ensure that hashes in Spack
+    are deterministic.
+
+    This test is intended to handle cases that are not covered by the
+    consistency checks above, or that would be missed by a dynamic check.
+    This test traverses the ASTs of functions that are used in our hash
+    algorithms, finds instances of dictionaries being constructed, and
+    prints out the line numbers where they occur.
+
+    """
+    class FindFunctions(ast.NodeVisitor):
+        """Find a function definition called to_node_dict."""
+        def __init__(self):
+            self.nodes = []
+
+        def visit_FunctionDef(self, node):  # noqa
+            if node.name in ("to_node_dict", "to_dict", "to_dict_or_value"):
+                self.nodes.append(node)
+
+    class FindDicts(ast.NodeVisitor):
+        """Find source locations of dicts in an AST."""
+        def __init__(self, filename):
+            self.nodes = []
+            self.filename = filename
+
+        def add_error(self, node):
+            self.nodes.append(
+                "Use syaml_dict instead of dict at %s:%s:%s"
+                % (self.filename, node.lineno, node.col_offset)
+            )
+
+        def visit_Dict(self, node):  # noqa
+            self.add_error(node)
+
+        def visit_Call(self, node):  # noqa
+            name = None
+            if isinstance(node.func, ast.Name):
+                name = node.func.id
+            elif isinstance(node.func, ast.Attribute):
+                name = node.func.attr
+
+            if name == 'dict':
+                self.add_error(node)
+
+    find_functions = FindFunctions()
+    module_ast = ast.parse(inspect.getsource(module))
+    find_functions.visit(module_ast)
+
+    find_dicts = FindDicts(module.__file__)
+    for node in find_functions.nodes:
+        find_dicts.visit(node)
+
+    # fail with offending lines if we found some dicts.
+    assert [] == find_dicts.nodes
+
+
 def reverse_all_dicts(data):
     """Descend into data and reverse all the dictionaries"""
     if isinstance(data, dict):
@@ -198,3 +287,38 @@ def reverse_all_dicts(data):
         return type(data)(reverse_all_dicts(elt) for elt in data)
     else:
         return data
+
+
+def check_specs_equal(original_spec, spec_yaml_path):
+    with open(spec_yaml_path, 'r') as fd:
+        spec_yaml = fd.read()
+        spec_from_yaml = Spec.from_yaml(spec_yaml)
+        return original_spec.eq_dag(spec_from_yaml)
+
+
+def test_save_dependency_spec_yamls_subset(tmpdir, config):
+    output_path = str(tmpdir.mkdir('spec_yamls'))
+
+    default = ('build', 'link')
+
+    g = MockPackage('g', [], [])
+    f = MockPackage('f', [], [])
+    e = MockPackage('e', [], [])
+    d = MockPackage('d', [f, g], [default, default])
+    c = MockPackage('c', [], [])
+    b = MockPackage('b', [d, e], [default, default])
+    a = MockPackage('a', [b, c], [default, default])
+
+    mock_repo = MockPackageMultiRepo([a, b, c, d, e, f, g])
+
+    with repo.swap(mock_repo):
+        spec_a = Spec('a')
+        spec_a.concretize()
+        b_spec = spec_a['b']
+        c_spec = spec_a['c']
+        spec_a_yaml = spec_a.to_yaml(hash=ht.build_hash)
+
+        save_dependency_spec_yamls(spec_a_yaml, output_path, ['b', 'c'])
+
+        assert check_specs_equal(b_spec, os.path.join(output_path, 'b.yaml'))
+        assert check_specs_equal(c_spec, os.path.join(output_path, 'c.yaml'))

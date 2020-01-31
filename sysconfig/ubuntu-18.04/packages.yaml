@@ -109,8 +109,7 @@ packages:
     python:
         paths:
             python@2.7.15: /usr
-            python@3.6.7: /usr
-        version: [3.6.7, 2.7.15]
+        version: [2.7.15]
     readline:
         paths:
             readline@7.0: /usr

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,14 @@ class Fsl(Package):
 
     homepage = "https://fsl.fmrib.ox.ac.uk"
     url      = "file://{0}/fsl-5.0.10-sources.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('5.0.10', '64823172a08aad679833240ba64c8e30')
 
     depends_on('python', type=('build', 'run'))
     depends_on('expat')
     depends_on('libx11')
-    depends_on('mesa-glu')
+    depends_on('glu')
     depends_on('zlib')
     depends_on('libpng')
     depends_on('boost')

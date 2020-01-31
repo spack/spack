@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,14 +10,15 @@ class PyAttrs(PythonPackage):
     """Classes Without Boilerplate"""
 
     homepage = "http://attrs.org/"
-    url      = "https://pypi.io/packages/source/a/attrs/attrs-18.1.0.tar.gz"
+    url      = "https://pypi.io/packages/source/a/attrs/attrs-19.2.0.tar.gz"
 
     import_modules = ['attr']
 
-    version('19.1.0', '2be7bce157988928f5ff2bb50a0b510d')
-    version('18.1.0', '3f3f3e0750dab74cfa1dc8b0fd7a5f86')
-    version('16.3.0', '4ec003c49360853cf935113d1ae56151')
+    version('19.2.0', sha256='f913492e1663d3c36f502e5e9ba6cd13cf19d7fab50aa13239e420fef95e1396')
+    version('18.1.0', sha256='e0d0eb91441a3b53dab4d9b743eafc1ac44476296a2053b6ca3af0b139faf87b')
+    version('16.3.0', sha256='80203177723e36f3bbe15aa8553da6e80d47bfe53647220ccaa9ad7a5e473ccc')
 
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-coverage', type='test')

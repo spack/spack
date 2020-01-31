@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,12 @@ class PyNumba(PythonPackage):
     url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
 
     version('0.40.1', sha256='52d046c13bcf0de79dbfb936874b7228f141b9b8e3447cc35855e9ad3e12aa33')
-    version('0.35.0', '4f447383406f54aaf18ffaba3a0e79e8')
+    version('0.35.0', sha256='11564937757605bee590c5758c73cfe9fd6d569726b56d970316a6228971ecc3')
 
     depends_on('python@3.3:3.7.9999', type=('build', 'run'), when='@0.40.1:')
     depends_on('python@3.3:3.6.9999', type=('build', 'run'), when='@:0.35.0')
     depends_on('py-numpy@1.10:1.99', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
 
     # Note: As of 1 Nov 2018, 0.25 was the latest version of py-llvmlite.
     # That's why it was chosen as an upper bound in the following depends_on

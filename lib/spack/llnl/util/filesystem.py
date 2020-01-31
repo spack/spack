@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,9 +6,9 @@
 import collections
 import errno
 import hashlib
-import fileinput
 import glob
 import grp
+import itertools
 import numbers
 import os
 import pwd
@@ -21,7 +21,7 @@ from contextlib import contextmanager
 
 import six
 from llnl.util import tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
 
 __all__ = [
@@ -36,6 +36,7 @@ __all__ = [
     'filter_file',
     'find',
     'find_headers',
+    'find_all_headers',
     'find_libraries',
     'find_system_libraries',
     'fix_darwin_install_name',
@@ -50,6 +51,8 @@ __all__ = [
     'mkdirp',
     'copy_all',
     'make_link',
+    'partition_path',
+    'prefixes',
     'remove_dead_links',
     'remove_if_dead_link',
     'remove_linked_tree',
@@ -67,6 +70,32 @@ def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
+
+
+def possible_library_filenames(library_names):
+    """Given a collection of library names like 'libfoo', generate the set of
+    library filenames that may be found on the system (e.g. libfoo.so). This
+    generates the library filenames that may appear on any OS.
+    """
+    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    return set(
+        '.'.join((lib, extension)) for lib, extension in
+        itertools.product(library_names, lib_extensions))
+
+
+def paths_containing_libs(paths, library_names):
+    """Given a collection of filesystem paths, return the list of paths that
+    which include one or more of the specified libraries.
+    """
+    required_lib_fnames = possible_library_filenames(library_names)
+
+    rpaths_to_include = []
+    for path in paths:
+        fnames = set(os.listdir(path))
+        if fnames & required_lib_fnames:
+            rpaths_to_include.append(path)
+
+    return rpaths_to_include
 
 
 def same_path(path1, path2):
@@ -97,10 +126,15 @@ def filter_file(regex, repl, *filenames, **kwargs):
         backup (bool): Make backup file(s) suffixed with ``~``. Default is True
         ignore_absent (bool): Ignore any files that don't exist.
             Default is False
+        stop_at (str): Marker used to stop scanning the file further. If a text
+            line matches this marker filtering is stopped and the rest of the
+            file is copied verbatim. Default is to filter until the end of the
+            file.
     """
     string = kwargs.get('string', False)
     backup = kwargs.get('backup', True)
     ignore_absent = kwargs.get('ignore_absent', False)
+    stop_at = kwargs.get('stop_at', None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
@@ -121,6 +155,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         tty.debug(msg.format(filename, regex))
 
         backup_filename = filename + "~"
+        tmp_filename = filename + ".spack~"
 
         if ignore_absent and not os.path.exists(filename):
             msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
@@ -132,15 +167,48 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if not os.path.exists(backup_filename):
             shutil.copy(filename, backup_filename)
 
+        # Create a temporary file to read from. We cannot use backup_filename
+        # in case filter_file is invoked multiple times on the same file.
+        shutil.copy(filename, tmp_filename)
+
         try:
-            for line in fileinput.input(filename, inplace=True):
-                print(re.sub(regex, repl, line.rstrip('\n')))
+            extra_kwargs = {}
+            if sys.version_info > (3, 0):
+                extra_kwargs = {'errors': 'surrogateescape'}
+
+            # Open as a text file and filter until the end of the file is
+            # reached or we found a marker in the line if it was specified
+            with open(tmp_filename, mode='r', **extra_kwargs) as input_file:
+                with open(filename, mode='w', **extra_kwargs) as output_file:
+                    # Using iter and readline is a workaround needed not to
+                    # disable input_file.tell(), which will happen if we call
+                    # input_file.next() implicitly via the for loop
+                    for line in iter(input_file.readline, ''):
+                        if stop_at is not None:
+                            current_position = input_file.tell()
+                            if stop_at == line.strip():
+                                output_file.write(line)
+                                break
+                        filtered_line = re.sub(regex, repl, line)
+                        output_file.write(filtered_line)
+                    else:
+                        current_position = None
+
+            # If we stopped filtering at some point, reopen the file in
+            # binary mode and copy verbatim the remaining part
+            if current_position and stop_at:
+                with open(tmp_filename, mode='rb') as input_file:
+                    input_file.seek(current_position)
+                    with open(filename, mode='ab') as output_file:
+                        output_file.writelines(input_file.readlines())
+
         except BaseException:
+            os.remove(tmp_filename)
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
-
         finally:
+            os.remove(tmp_filename)
             if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
@@ -227,7 +295,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    gid = grp.getgrnam(group).gr_gid
+    if isinstance(group, six.string_types):
+        gid = grp.getgrnam(group).gr_gid
+    else:
+        gid = group
     os.chown(path, -1, gid)
 
 
@@ -348,12 +419,22 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
+    abs_src = os.path.abspath(src)
+    if not abs_src.endswith(os.path.sep):
+        abs_src += os.path.sep
+    abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
+
+    # Stop early to avoid unnecessary recursion if being asked to copy from a
+    # parent directory.
+    if abs_dest.startswith(abs_src):
+        raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                         format(abs_src, abs_dest))
+
     mkdirp(dest)
 
-    src = os.path.abspath(src)
-    dest = os.path.abspath(dest)
-
-    for s, d in traverse_tree(src, dest, order='pre',
+    for s, d in traverse_tree(abs_src, abs_dest, order='pre',
                               follow_symlinks=not symlinks,
                               ignore=ignore,
                               follow_nonexisting=True):
@@ -362,7 +443,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if symlinks:
                 target = os.readlink(s)
                 if os.path.isabs(target):
-                    new_target = re.sub(src, dest, target)
+                    new_target = re.sub(abs_src, abs_dest, target)
                     if new_target != target:
                         tty.debug("Redirecting link {0} to {1}"
                                   .format(target, new_target))
@@ -415,6 +496,13 @@ def get_filetype(path_name):
     return output.strip()
 
 
+def chgrp_if_not_world_writable(path, group):
+    """chgrp path to group if path is not world writable"""
+    mode = os.stat(path).st_mode
+    if not mode & stat.S_IWOTH:
+        chgrp(path, group)
+
+
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -422,16 +510,75 @@ def mkdirp(*paths, **kwargs):
         paths (str): paths to create with mkdirp
 
     Keyword Aguments:
-        mode (permission bits or None, optional): optional permissions to
-            set on the created directory -- use OS default if not provided
+        mode (permission bits or None, optional): optional permissions to set
+            on the created directory -- use OS default if not provided
+        group (group name or None, optional): optional group for permissions of
+            final created directory -- use OS default if not provided. Only
+            used if world write permissions are not set
+        default_perms ('parents' or 'args', optional): The default permissions
+            that are set for directories that are not themselves an argument
+            for mkdirp. 'parents' means intermediate directories get the
+            permissions of their direct parent directory, 'args' means
+            intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is 'args'
     """
     mode = kwargs.get('mode', None)
+    group = kwargs.get('group', None)
+    default_perms = kwargs.get('default_perms', 'args')
+
     for path in paths:
         if not os.path.exists(path):
             try:
+                # detect missing intermediate folders
+                intermediate_folders = []
+                last_parent = ''
+
+                intermediate_path = os.path.dirname(path)
+
+                while intermediate_path:
+                    if os.path.exists(intermediate_path):
+                        last_parent = intermediate_path
+                        break
+
+                    intermediate_folders.append(intermediate_path)
+                    intermediate_path = os.path.dirname(intermediate_path)
+
+                # create folders
                 os.makedirs(path)
+
+                # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+                if group:
+                    chgrp_if_not_world_writable(path, group)
+                    if mode is not None:
+                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
+
+                # for intermediate folders, change mode just for newly created
+                # ones and if mode_intermediate has been specified, otherwise
+                # intermediate folders list is not populated at all and default
+                # OS mode will be used
+                if default_perms == 'args':
+                    intermediate_mode = mode
+                    intermediate_group = group
+                elif default_perms == 'parents':
+                    stat_info = os.stat(last_parent)
+                    intermediate_mode = stat_info.st_mode
+                    intermediate_group = stat_info.st_gid
+                else:
+                    msg = "Invalid value: '%s'. " % default_perms
+                    msg += "Choose from 'args' or 'parents'."
+                    raise ValueError(msg)
+
+                for intermediate_path in reversed(intermediate_folders):
+                    if intermediate_mode is not None:
+                        os.chmod(intermediate_path, intermediate_mode)
+                    if intermediate_group is not None:
+                        chgrp_if_not_world_writable(intermediate_path,
+                                                    intermediate_group)
+                        os.chmod(intermediate_path,
+                                 intermediate_mode)  # reset sticky bit after
+
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -491,8 +638,10 @@ def working_dir(dirname, **kwargs):
 
     orig_dir = os.getcwd()
     os.chdir(dirname)
-    yield
-    os.chdir(orig_dir)
+    try:
+        yield
+    finally:
+        os.chdir(orig_dir)
 
 
 @contextmanager
@@ -549,7 +698,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
 
 
-def hash_directory(directory):
+def hash_directory(directory, ignore=[]):
     """Hashes recursively the content of a directory.
 
     Args:
@@ -566,11 +715,12 @@ def hash_directory(directory):
     for root, dirs, files in os.walk(directory):
         for name in sorted(files):
             filename = os.path.join(root, name)
-            # TODO: if caching big files becomes an issue, convert this to
-            # TODO: read in chunks. Currently it's used only for testing
-            # TODO: purposes.
-            with open(filename, 'rb') as f:
-                md5_hash.update(f.read())
+            if filename not in ignore:
+                # TODO: if caching big files becomes an issue, convert this to
+                # TODO: read in chunks. Currently it's used only for testing
+                # TODO: purposes.
+                with open(filename, 'rb') as f:
+                    md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
 
@@ -639,6 +789,36 @@ def ancestor(dir, n=1):
     for i in range(n):
         parent = os.path.dirname(parent)
     return parent
+
+
+def get_single_file(directory):
+    fnames = os.listdir(directory)
+    if len(fnames) != 1:
+        raise ValueError("Expected exactly 1 file, got {0}"
+                         .format(str(len(fnames))))
+    return fnames[0]
+
+
+@contextmanager
+def temp_cwd():
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        with working_dir(tmp_dir):
+            yield tmp_dir
+    finally:
+        shutil.rmtree(tmp_dir)
+
+
+@contextmanager
+def temp_rename(orig_path, temp_path):
+    same_path = os.path.realpath(orig_path) == os.path.realpath(temp_path)
+    if not same_path:
+        shutil.move(orig_path, temp_path)
+    try:
+        yield
+    finally:
+        if not same_path:
+            shutil.move(temp_path, orig_path)
 
 
 def can_access(file_name):
@@ -739,15 +919,32 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def remove_empty_directories(root):
+    """Ascend up from the leaves accessible from `root` and remove empty
+    directories.
+
+    Parameters:
+        root (str): path where to search for empty directories
+    """
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for sd in subdirs:
+            sdp = os.path.join(dirpath, sd)
+            try:
+                os.rmdir(sdp)
+            except OSError:
+                pass
+
+
 def remove_dead_links(root):
-    """Removes any dead link that is present in root.
+    """Recursively removes any dead link that is present in root.
 
     Parameters:
         root (str): path where to search for dead links
     """
-    for file in os.listdir(root):
-        path = join_path(root, file)
-        remove_if_dead_link(path)
+    for dirpath, subdirs, files in os.walk(root, topdown=False):
+        for f in files:
+            path = join_path(dirpath, f)
+            remove_if_dead_link(path)
 
 
 def remove_if_dead_link(path):
@@ -756,10 +953,8 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path):
-        real_path = os.path.realpath(path)
-        if not os.path.exists(real_path):
-            os.unlink(path)
+    if os.path.islink(path) and not os.path.exists(path):
+        os.unlink(path)
 
 
 def remove_linked_tree(path):
@@ -993,10 +1188,46 @@ class HeaderList(FileList):
     commonly used compiler flags or names.
     """
 
+    # Make sure to only match complete words, otherwise path components such
+    # as "xinclude" will cause false matches.
+    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
 
         self._macro_definitions = []
+        self._directories = None
+
+    @property
+    def directories(self):
+        """Directories to be searched for header files."""
+        values = self._directories
+        if values is None:
+            values = self._default_directories()
+        return list(dedupe(values))
+
+    @directories.setter
+    def directories(self, value):
+        value = value or []
+        # Accept a single directory as input
+        if isinstance(value, six.string_types):
+            value = [value]
+
+        self._directories = [os.path.normpath(x) for x in value]
+
+    def _default_directories(self):
+        """Default computation of directories based on the list of
+        header files.
+        """
+        dir_list = super(HeaderList, self).directories
+        values = []
+        for d in dir_list:
+            # If the path contains a subdirectory named 'include' then stop
+            # there and don't add anything else to the path.
+            m = self.include_regex.match(d)
+            value = os.path.join(*m.group(1, 2)) if m else d
+            values.append(value)
+        return values
 
     @property
     def headers(self):
@@ -1124,12 +1355,33 @@ def find_headers(headers, root, recursive=False):
         raise TypeError(message)
 
     # Construct the right suffix for the headers
-    suffix = 'h'
+    suffixes = [
+        # C
+        'h',
+        # C++
+        'hpp', 'hxx', 'hh', 'H', 'txx', 'tcc', 'icc',
+        # Fortran
+        'mod', 'inc',
+    ]
 
     # List of headers we are searching with suffixes
-    headers = ['{0}.{1}'.format(header, suffix) for header in headers]
+    headers = ['{0}.{1}'.format(header, suffix) for header in headers
+               for suffix in suffixes]
 
     return HeaderList(find(root, headers, recursive))
+
+
+def find_all_headers(root):
+    """Convenience function that returns the list of all headers found
+    in the directory passed as argument.
+
+    Args:
+        root (path): directory where to look recursively for header files
+
+    Returns:
+        List of all headers found in ``root`` and subdirectories.
+    """
+    return find_headers('*', root=root, recursive=True)
 
 
 class LibraryList(FileList):
@@ -1332,4 +1584,150 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     # List of libraries we are searching with suffixes
     libraries = ['{0}.{1}'.format(lib, suffix) for lib in libraries]
 
-    return LibraryList(find(root, libraries, recursive))
+    if not recursive:
+        # If not recursive, look for the libraries directly in root
+        return LibraryList(find(root, libraries, False))
+
+    # To speedup the search for external packages configured e.g. in /usr,
+    # perform first non-recursive search in root/lib then in root/lib64 and
+    # finally search all of root recursively. The search stops when the first
+    # match is found.
+    for subdir in ('lib', 'lib64'):
+        dirname = join_path(root, subdir)
+        if not os.path.isdir(dirname):
+            continue
+        found_libs = find(dirname, libraries, False)
+        if found_libs:
+            break
+    else:
+        found_libs = find(root, libraries, True)
+
+    return LibraryList(found_libs)
+
+
+@memoized
+def can_access_dir(path):
+    """Returns True if the argument is an accessible directory.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an accessible directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK)
+
+
+@memoized
+def files_in(*search_paths):
+    """Returns all the files in paths passed as arguments.
+
+    Caller must ensure that each path in ``search_paths`` is a directory.
+
+    Args:
+        *search_paths: directories to be searched
+
+    Returns:
+        List of (file, full_path) tuples with all the files found.
+    """
+    files = []
+    for d in filter(can_access_dir, search_paths):
+        files.extend(filter(
+            lambda x: os.path.isfile(x[1]),
+            [(f, os.path.join(d, f)) for f in os.listdir(d)]
+        ))
+    return files
+
+
+def search_paths_for_executables(*path_hints):
+    """Given a list of path hints returns a list of paths where
+    to search for an executable.
+
+    Args:
+        *path_hints (list of paths): list of paths taken into
+            consideration for a search
+
+    Returns:
+        A list containing the real path of every existing directory
+        in `path_hints` and its `bin` subdirectory if it exists.
+    """
+    executable_paths = []
+    for path in path_hints:
+        if not os.path.isdir(path):
+            continue
+
+        path = os.path.abspath(path)
+        executable_paths.append(path)
+
+        bin_dir = os.path.join(path, 'bin')
+        if os.path.isdir(bin_dir):
+            executable_paths.append(bin_dir)
+
+    return executable_paths
+
+
+def partition_path(path, entry=None):
+    """
+    Split the prefixes of the path at the first occurrence of entry and
+    return a 3-tuple containing a list of the prefixes before the entry, a
+    string of the prefix ending with the entry, and a list of the prefixes
+    after the entry.
+
+    If the entry is not a node in the path, the result will be the prefix list
+    followed by an empty string and an empty list.
+    """
+    paths = prefixes(path)
+
+    if entry is not None:
+        # Derive the index of entry within paths, which will correspond to
+        # the location of the entry in within the path.
+        try:
+            entries = path.split(os.sep)
+            i = entries.index(entry)
+            if '' in entries:
+                i -= 1
+            return paths[:i], paths[i], paths[i + 1:]
+        except ValueError:
+            pass
+
+    return paths, '', []
+
+
+def prefixes(path):
+    """
+    Returns a list containing the path and its ancestors, top-to-bottom.
+
+    The list for an absolute path will not include an ``os.sep`` entry.
+    For example, assuming ``os.sep`` is ``/``, given path ``/ab/cd/efg``
+    the resulting paths will be, in order: ``/ab``, ``/ab/cd``, and
+    ``/ab/cd/efg``
+
+    The list for a relative path starting ``./`` will not include ``.``.
+    For example, path ``./hi/jkl/mn`` results in a list with the following
+    paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
+
+    Parameters:
+        path (str): the string used to derive ancestor paths
+
+    Returns:
+        A list containing ancestor paths in order and ending with the path
+    """
+    if not path:
+        return []
+
+    parts = path.strip(os.sep).split(os.sep)
+    if path.startswith(os.sep):
+        parts.insert(0, os.sep)
+    paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
+
+    try:
+        paths.remove(os.sep)
+    except ValueError:
+        pass
+
+    try:
+        paths.remove('.')
+    except ValueError:
+        pass
+
+    return paths

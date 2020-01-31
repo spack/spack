@@ -1,7 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import inspect
 
 from spack import *
 from multiprocessing import cpu_count
@@ -16,28 +18,26 @@ class Bazel(Package):
     url = "https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-dist.zip"
 
     version('0.19.2', '2f2d14a1f879a9ca17abdf9d9e5eee78')
-    version('0.17.2', '9805c0593e781295126af6b8be8cc7a9')
-    version('0.16.1', 'c333d903c5275286e79316eb19dd742d')
-    version('0.15.0', 'fb6b928b62f068697bd66ad6d13aad53')
-    version('0.14.1', '841900316b3ec9b996babe1c5b0b92e1')
-    version('0.13.0', '64a5124025c1618b550faec64a9b6fa3')
-    version('0.12.0', 'b5d67564ceecfe2005a885fe2ffe0da3')
-    version('0.11.1', '80daac6b100b7f8e2b17d133150eba44')
-    version('0.11.0', 'e6caf93a805b45c33367028e575b91dd')
-    version('0.10.1', 'a7e5b9576993b752e31bd2d3259a14c5')
-    version('0.10.0', 'c2f15b34255099d25e94fce7283e5cd2')
-    version('0.9.0', '7fda74c163108f7c180bbc513bc8123b')
-    version('0.4.5', '2b737be42678900470ae9e48c975ac5b2296d9ae23c007bf118350dbe7c0552b')
-    version('0.4.4', '5e7c52b89071efc41277e2f0057d258f')
-    version('0.3.1', '5c959467484a7fc7dd2e5e4a1e8e866b')
-    version('0.3.0', '33a2cb457d28e1bee9282134769b9283')
-    version('0.2.3', '393a491d690e43caaba88005efe6da91')
-    version('0.2.2b', '75081804f073cbd194da1a07b16cba5f')
-    version('0.2.2', '644bc4ea7f429d835e74f255dc1054e6')
+    version('0.17.2', sha256='b6e87acfa0a405bb8b3417c58477b66d5bc27dc0d31ba6fa12bc255b9278d33b')
+    version('0.16.1', sha256='09c66b94356c82c52f212af52a81ac28eb06de1313755a2f23eeef84d167b36c')
+    version('0.15.0', sha256='c3b716e6625e6b8c323350c95cd3ae0f56aeb00458dddd10544d5bead8a7b602')
+    version('0.14.1', sha256='d49cdcd82618ae7a7a190e6f0a80d9bf85c1a66b732f994f37732dc14ffb0025')
+    version('0.13.0', sha256='82e9035084660b9c683187618a29aa896f8b05b5f16ae4be42a80b5e5b6a7690')
+    version('0.12.0', sha256='3b3e7dc76d145046fdc78db7cac9a82bc8939d3b291e53a7ce85315feb827754')
+    version('0.11.1', sha256='e8d762bcc01566fa50952c8028e95cfbe7545a39b8ceb3a0d0d6df33b25b333f')
+    version('0.11.0', sha256='abfeccc94728cb46be8dbb3507a23ccffbacef9fbda96a977ef4ea8d6ab0d384')
+    version('0.10.1', sha256='708248f6d92f2f4d6342006c520f22dffa2f8adb0a9dc06a058e3effe7fee667')
+    version('0.10.0', sha256='47e0798caaac4df499bce5fe554a914abd884a855a27085a4473de1d737d9548')
+    version('0.9.0', sha256='efb28fed4ffcfaee653e0657f6500fc4cbac61e32104f4208da385676e76312a')
+    version('0.4.5', sha256='2b737be42678900470ae9e48c975ac5b2296d9ae23c007bf118350dbe7c0552b')
+    version('0.4.4', sha256='d52a21dda271ae645711ce99c70cf44c5d3a809138e656bbff00998827548ebb')
 
     depends_on('java@8:', type=('build', 'link', 'run'))
     depends_on('zip')
 
+    # TODO : note that the patches need to be updated to account
+    # SPACK_TARGET_ARGS env variable. Only patch 0.17.2.patch has
+    # been updated.
     patch('fix_env_handling.patch', when='@:0.4.5')
     patch('fix_env_handling-0.9.0.patch', when='@0.9.0:0.12.0')
     patch('fix_env_handling-0.13.0.patch', when='@0.13.0:0.13.999')
@@ -91,8 +91,9 @@ class Bazel(Package):
                 return super(BazelExecutable, self).__call__(*args, **kwargs)
 
         jobs = cpu_count()
+        dependent_module = inspect.getmodule(dependent_spec.package)
         if not dependent_spec.package.parallel:
             jobs = 1
-        elif dependent_spec.package.make_jobs:
-            jobs = dependent_spec.package.make_jobs
+        elif dependent_module.make_jobs:
+            jobs = dependent_module.make_jobs
         module.bazel = BazelExecutable('bazel', 'build', jobs)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Targetp(Package):
 
     homepage = "http://www.cbs.dtu.dk/services/TargetP/"
     url      = "file://{0}/targetp-1.1b.Linux.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('1.1b', '80233d0056e11abfd22a4ce73d1808c6')
 

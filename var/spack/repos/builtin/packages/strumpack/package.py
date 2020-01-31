@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Strumpack(CMakePackage):
     homepage = "http://portal.nersc.gov/project/sparse/strumpack"
     url      = "https://github.com/pghysels/STRUMPACK/archive/v3.0.3.tar.gz"
     git      = "https://github.com/pghysels/STRUMPACK.git"
+
+    maintainers = ['pghysels']
 
     version('master', branch='master')
     version('3.1.1', sha256='c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778')
@@ -59,6 +61,8 @@ class Strumpack(CMakePackage):
     depends_on('scotch~metis+mpi', when='+scotch+mpi')
 
     conflicts('+parmetis', when='~mpi')
+
+    patch('intel-19-compile.patch', when='@3.1.1')
 
     def cmake_args(self):
         spec = self.spec

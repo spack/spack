@@ -28,14 +28,14 @@ packages:
       - brainbuilder@0.11.5
       - brainbuilder@0.11.6
       - brainbuilder@0.11.7
-      - brion@3.1.0 +python ^boost@1.65.0
+      - brion@3.1.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
       - spykfunc@0.15.2
       - psp-validation@0.2.1
       - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
-      - py-basalt@0.2.4
+      # - py-basalt@0.2.4
       - py-entity-management@1.0.20
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.40
@@ -127,7 +127,6 @@ packages:
   gnu-stable-lapack-python:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
     requires:
       - architecture
       - compiler

@@ -26,7 +26,6 @@ packages:
   gnu-stable-serial:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
     requires:
       - architecture
       - compiler
@@ -64,7 +63,6 @@ packages:
       - py-funcsigs
       - py-future
       - py-futures
-      # - py-gcovr
       - py-h5py~mpi
       - py-hdfs
       - py-humanize
@@ -73,16 +71,9 @@ packages:
       - py-importlib-resources
       - py-ipykernel
       - py-ipyparallel
-      - py-ipython
-      - py-ipython-genutils
       - py-ipywidgets
-      - py-ipython
       - py-jinja2
       - py-jprops
-      # - py-jupyter-client
-      # - py-jupyter-console
-      # - py-jupyter-core
-      # - py-jupyter-notebook
       - py-lazy-property
       - py-line-profiler
       - py-lxml
@@ -107,7 +98,6 @@ packages:
       - py-progress
       - py-py4j
       - py-pyarrow+parquet
-      # - py-pynn
       - py-pylru
       - py-pyspark
       - py-pytest
@@ -117,17 +107,12 @@ packages:
       - py-seaborn
       - py-setuptools
       - py-setuptools-scm
-      # - py-sh
-      # - py-shapely
       - py-simplejson
       - py-six
-      # - py-slurm-pipeline
       - py-sparkmanager
       - py-sphinx
       # - py-sphinx-bootstrap-theme
       - py-sphinx-rtd-theme
-      # - py-sqlalchemy
-      # - py-symengine
       - py-sympy
       - py-toml
       # - py-tornado
@@ -143,7 +128,6 @@ packages:
   gnu-stable-serial-lapack:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
     requires:
       - architecture
       - compiler
@@ -158,7 +142,7 @@ packages:
     # - py-scikit-learn@0.19.1 ^py-numpy@1.15.1 ^py-scipy@1.1.0
     # - py-theano@1.0.2 ^py-numpy@1.15.1 ^py-scipy@1.1.0
     # - py-pytorch@0.4.0 ^py-numpy@1.15.1
-    #
+
   intel-stable-serial-lapack:
     target_matrix:
       - intel-stable

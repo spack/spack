@@ -27,7 +27,7 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
-      - allinea-forge@19.0.5
+      - arm-forge
       - blender
       - cmake
       - cuda
@@ -47,7 +47,7 @@ modules:
       - openmpi
       - osu-micro-benchmarks
       - stat
-      - 'valgrind@3.13.0'
+      - valgrind
     blacklist:
       - '%gcc'
       - '%intel'

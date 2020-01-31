@@ -171,7 +171,7 @@ def compilers(ctx, target, output):
     for items in combinations.values():
         for combination in filter(lambda x: x['architecture'] == target, items):
             compiler = combination['compiler'] + '%' + core_compiler
-            valid_compilers.add(compiler + ' target=' + target)
+            valid_compilers.add(compiler + ' arch=' + target)
 
     for item in sorted(valid_compilers):
         output.write(item + '\n')
@@ -200,7 +200,7 @@ def stack(ctx, target, output):
             combination.pop('architecture')
             compiler = combination.pop('compiler')
             for service, provider in combination.items():
-                valid_providers.add(provider + ' %' + compiler + ' target=' + target)
+                valid_providers.add(provider + ' %' + compiler + ' arch=' + target)
 
     for item in sorted(valid_providers):
         output.write(item + '\n')
@@ -225,9 +225,10 @@ def packages(ctx, target, output, only):
     penv = ProductionEnvironment(ctx.parent.configuration, only=only)
 
     for item in filter(lambda x: x.architecture == target, penv.items()):
-        # compiler spec should come before all dependencies
+        # compiler and architecture spec should come before all dependencies
+        inject = " arch={1} %{0}".format(item.compiler, item.architecture) 
         if '^' in item.spec:
-            spec = item.spec.replace(' ^', ' %%%s ^' % item.compiler, 1)
+            spec = item.spec.replace(' ^', ' {0} ^'.format(inject), 1)
         else:
-            spec = item.spec + ' %' + item.compiler
-        output.write(spec + ' target=' + item.architecture + '\n')
+            spec = item.spec + ' ' + inject
+        output.write(spec + '\n')

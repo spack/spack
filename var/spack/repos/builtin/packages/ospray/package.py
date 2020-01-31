@@ -24,6 +24,8 @@ class Ospray(CMakePackage):
     depends_on('mpi')
     depends_on('tbb')
 
+    conflicts('^gcc')
+
     def cmake_args(self):
         return [
             '-DOSPRAY_ENABLE_TUTORIALS=OFF',

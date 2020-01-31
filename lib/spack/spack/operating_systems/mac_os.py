@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,21 @@ import platform as py_platform
 
 from spack.architecture import OperatingSystem
 from spack.version import Version
+from spack.util.executable import Executable
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
 def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
-    return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
+    return Version(py_platform.mac_ver()[0])
+
+
+def macos_sdk_path():
+    """Return SDK path
+    """
+    xcrun = Executable('xcrun')
+    return xcrun('--show-sdk-path', output=str, error=str).rstrip()
 
 class MacOs(OperatingSystem):
     """This class represents the macOS operating system. This will be
@@ -23,21 +31,31 @@ class MacOs(OperatingSystem):
     """
 
     def __init__(self):
-        """ Autodetects the mac version from a dictionary. Goes back as
-            far as 10.6 snowleopard. If the user has an older mac then
-            the version will just be a generic mac_os.
-        """
-        mac_releases = {'10.6': "snowleopard",
-                        "10.7": "lion",
-                        "10.8": "mountainlion",
-                        "10.9": "mavericks",
-                        "10.10": "yosemite",
-                        "10.11": "elcapitan",
-                        "10.12": "sierra",
-                        "10.13": "highsierra",
-                        "10.14": "mojave"}
+        """Autodetects the mac version from a dictionary.
 
-        mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
+        If the mac version is too old or too new for Spack to recognize,
+        will use a generic "macos" version string until Spack is updated.
+        """
+        mac_releases = {
+            '10.0':  'cheetah',
+            '10.1':  'puma',
+            '10.2':  'jaguar',
+            '10.3':  'panther',
+            '10.4':  'tiger',
+            '10.5':  'leopard',
+            '10.6':  'snowleopard',
+            '10.7':  'lion',
+            '10.8':  'mountainlion',
+            '10.9':  'mavericks',
+            '10.10': 'yosemite',
+            '10.11': 'elcapitan',
+            '10.12': 'sierra',
+            '10.13': 'highsierra',
+            '10.14': 'mojave',
+            '10.15': 'catalina',
+        }
+
+        mac_ver = str(macos_version().up_to(2))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

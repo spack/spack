@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,18 @@ class XercesC(AutotoolsPackage):
     homepage = "https://xerces.apache.org/xerces-c"
     url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
 
-    version('3.2.2', '4c395216ecbef3c88a756ff4090e6f7e')
-    version('3.2.1', '8f98a81a3589bbc2dad9837452f7d319')
-    version('3.1.4', 'd04ae9d8b2dee2157c6db95fa908abfd')
+    version('3.2.2', sha256='1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0')
+    version('3.2.1', sha256='a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da')
+    version('3.1.4', sha256='9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891')
+
+    # Whilst still using Autotools, can use full cxxstd with 'default'
+    # If build is moved to CMake, then will also need a patch to Xerces-C's
+    # CMakeLists.txt as a specific standard cannot be forced
+    variant('cxxstd',
+            default='default',
+            values=('default', '98', '11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building')
 
     # It's best to be explicit about the transcoder or else xerces may
     # choose another value.
@@ -42,6 +51,12 @@ class XercesC(AutotoolsPackage):
     # the xerces default will override the spack wrapper.
     def flag_handler(self, name, flags):
         spec = self.spec
+
+        # Need to pass -std flag explicitly
+        if name == 'cxxflags' and spec.variants['cxxstd'].value != 'default':
+            flags.append(getattr(self.compiler,
+                         'cxx{0}_flag'.format(
+                             spec.variants['cxxstd'].value)))
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:

@@ -1,15 +1,12 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import re
-
-from spack.compiler import Compiler, _version_cache
-from spack.util.executable import Executable
+import spack.compiler
 
 
-class Arm(Compiler):
+class Arm(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['armclang']
 
@@ -23,10 +20,26 @@ class Arm(Compiler):
     fc_names = ['armflang']
 
     # Named wrapper links within lib/spack/env
-    link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++',
-                  'f77': 'clang/flang',
-                  'fc': 'clang/flang'}
+    link_paths = {'cc': 'arm/armclang',
+                  'cxx': 'arm/armclang++',
+                  'f77': 'arm/armflang',
+                  'fc': 'arm/armflang'}
+
+    # The ``--version`` option seems to be the most consistent one for
+    # arm compilers. Output looks like this:
+    #
+    # $ arm<c/f>lang --version
+    # Arm C/C++/Fortran Compiler version 19.0 (build number 73) (based on LLVM 7.0.2) # NOQA
+    # Target: aarch64--linux-gnu
+    # Thread model: posix
+    # InstalledDir:
+    # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
+    version_argument = '--version'
+    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)'
+
+    @classmethod
+    def verbose_flag(cls):
+        return "-v"
 
     @property
     def openmp_flag(self):
@@ -45,24 +58,18 @@ class Arm(Compiler):
         return "-std=c++1z"
 
     @property
+    def c99_flag(self):
+        return "-std=c99"
+
+    @property
+    def c11_flag(self):
+        return "-std=c11"
+
+    @property
     def pic_flag(self):
         return "-fPIC"
 
-    @classmethod
-    def default_version(cls, comp):
-        if comp not in _version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
-
-            ver = 'unknown'
-            match = re.search(r'Arm C/C++/Fortran Compiler version ([^ )]+)',
-                              output)
-            if match:
-                ver = match.group(1)
-
-            _version_cache[comp] = ver
-
-        return _version_cache[comp]
+    required_libs = ['libclang', 'libflang']
 
     @classmethod
     def fc_version(cls, fc):

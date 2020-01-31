@@ -1,11 +1,11 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 """Schema for config.yaml configuration file.
 
-.. literalinclude:: ../spack/schema/config.py
+.. literalinclude:: _spack_root/lib/spack/spack/schema/config.py
    :lines: 13-
 """
 
@@ -16,6 +16,10 @@ properties = {
         'type': 'object',
         'default': {},
         'properties': {
+            'shared_linking': {
+                'type': 'string',
+                'enum': ['rpath', 'runpath']
+            },
             'install_tree': {'type': 'string'},
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},
@@ -24,6 +28,10 @@ properties = {
                     {'type': 'string'},
                     {'type': 'array',
                      'items': {'type': 'string'}}],
+            },
+            'extensions': {
+                'type': 'array',
+                'items': {'type': 'string'}
             },
             'template_dirs': {
                 'type': 'array',
@@ -37,10 +45,19 @@ properties = {
                     'lmod': {'type': 'string'},
                     'dotkit': {'type': 'string'},
                 },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'specifying a "{property}" module root has no '
+                               'effect [support for {property} module files'
+                               ' has been dropped]',
+                    'error': False
+                },
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'verify_ssl': {'type': 'boolean'},
+            'suppress_gpg_warnings': {'type': 'boolean'},
+            'install_missing_compilers': {'type': 'boolean'},
             'debug': {'type': 'boolean'},
             'checksum': {'type': 'boolean'},
             'locks': {'type': 'boolean'},

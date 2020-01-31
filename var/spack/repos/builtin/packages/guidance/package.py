@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Guidance(MakefilePackage):
     homepage = "http://guidance.tau.ac.il/ver2/"
     url      = "http://guidance.tau.ac.il/ver2/guidance.v2.02.tar.gz"
 
-    version('2.02', 'aa6ae2168e8e0237ee56bc2ac81202cf')
+    version('2.02', sha256='825e105dde526759fb5bda1cd539b24db0b90b8b586f26b1df74d9c5abaa7844')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-bio-perl', type=('build', 'run'))

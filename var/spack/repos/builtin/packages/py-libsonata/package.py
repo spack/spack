@@ -12,7 +12,7 @@ class PyLibsonata(PythonPackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
-    version('0.1.0', tag='v0.1.0', submodules=True, clean=False)
+    version('0.1.0', tag='v0.1.0', submodules=True, get_full_repo=True)
     version('0.0.3', tag='v0.0.3', submodules=True)
 
     depends_on('cmake@3.3:', type='build')

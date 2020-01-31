@@ -13,7 +13,7 @@ class NeurodamusMousify(NeurodamusModel):
 
     mech_name = "mousify"
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('0.3', git=git, tag='0.3-1', submodules=True, clean=False)
-    version('0.2', git=git, tag='0.2', submodules=True, clean=False)
-    version('0.1', git=git, tag='0.1', submodules=True, clean=False)
+    version('develop', branch='master', submodules=True, get_full_repo=False)
+    version('0.3', git=git, tag='0.3-1', submodules=True, get_full_repo=False)
+    version('0.2', git=git, tag='0.2', submodules=True, get_full_repo=False)
+    version('0.1', git=git, tag='0.1', submodules=True, get_full_repo=False)

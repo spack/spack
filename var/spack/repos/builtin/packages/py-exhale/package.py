@@ -15,7 +15,7 @@ class PyExhale(PythonPackage):
     homepage = "https://github.com/svenevs/exhale"
     url      = "https://pypi.org/packages/source/e/exhale/exhale-0.2.2.tar.gz"
 
-    version('develop', git=url, branch='master', clean=False)
+    version('develop', git=url, branch='master', get_full_repo=True)
     version('0.2.2', sha256='16f8ca9c63fd35eb1c7d4b52e182b04f3275ec6cc3176d89e5b5d0a37bb0fe63')
 
     depends_on('py-setuptools', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,12 +21,12 @@ class Gmsh(CMakePackage):
 
     version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
     version('4.2.2', sha256='e9ee9f5c606bbec5f2adbb8c3d6023c4e2577f487fa4e4ecfcfc94a241cc8dcc')
-    version('4.0.0',  'fb0c8afa37425c6f4315ab3b3124e9e102fcf270a35198423a4002796f04155f')
-    version('3.0.6',  '9700bcc440d7a6b16a49cbfcdcdc31db33efe60e1f5113774316b6fa4186987b')
-    version('3.0.1',  '830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
-    version('2.16.0', 'e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
-    version('2.15.0', '992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
-    version('2.12.0', '7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
+    version('4.0.0',  sha256='fb0c8afa37425c6f4315ab3b3124e9e102fcf270a35198423a4002796f04155f')
+    version('3.0.6',  sha256='9700bcc440d7a6b16a49cbfcdcdc31db33efe60e1f5113774316b6fa4186987b')
+    version('3.0.1',  sha256='830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
+    version('2.16.0', sha256='e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
+    version('2.15.0', sha256='992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
+    version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
 
     variant('shared',      default=True,  description='Enables the build of shared libraries')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class ManDb(AutotoolsPackage):
     homepage = "http://www.nongnu.org/man-db/"
     url      = "http://git.savannah.nongnu.org/cgit/man-db.git/snapshot/man-db-2.7.6.1.tar.gz"
 
-    version('2.7.6.1', '312761baade811db2b956af3432c285e')
+    version('2.7.6.1', sha256='dd913662e341fc01e6721878b6cbe1001886cc3bfa6632b095937bba3238c779')
 
     depends_on('autoconf')
     depends_on('automake')
@@ -29,7 +29,6 @@ class ManDb(AutotoolsPackage):
     # man pages are typically compressed, include all available
     # compression libraries
     depends_on('bzip2', type=('build', 'link', 'run'))
-    depends_on('lzma',  type=('build', 'link', 'run'))
     depends_on('xz',    type=('build', 'link', 'run'))
 
     def configure_args(self):

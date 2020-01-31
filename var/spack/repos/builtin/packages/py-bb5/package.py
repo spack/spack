@@ -32,7 +32,7 @@ class PyBb5(PythonPackage):
     url      = "git@github.com:BlueBrain/pybb5.git"
 
     version('develop', git=url)
-    version('0.2', git=url, tag='v0.2', preferred=True, clean=False)
+    version('0.2', git=url, tag='v0.2', preferred=True, get_full_repo=True)
 
     patch('purge-scaffold.patch')
 

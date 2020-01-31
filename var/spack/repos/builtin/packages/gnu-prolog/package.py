@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,9 +9,9 @@ from spack import *
 class GnuProlog(Package):
     """A free Prolog compiler with constraint solving over finite domains."""
     homepage = "http://www.gprolog.org/"
-    url      = "http://www.gprolog.org/gprolog-1.4.4.tar.gz"
+    url      = "http://www.gprolog.org/gprolog-1.4.5.tar.gz"
 
-    version('1.4.4', '37009da471e5217ff637ad1c516448c8')
+    version('1.4.5', sha256='bfdcf00e051e0628b4f9af9d6638d4fde6ad793401e58a5619d1cc6105618c7c')
 
     parallel = False
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hisat2(MakefilePackage):
     homepage = "http://ccb.jhu.edu/software/hisat2"
     url      = "ftp://ftp.ccb.jhu.edu/pub/infphilo/hisat2/downloads/hisat2-2.1.0-source.zip"
 
-    version('2.1.0', '8b566d1b7e6c5801c8ae9824ed2da3d0')
+    version('2.1.0', sha256='89a276eed1fc07414b1601947bc9466bdeb50e8f148ad42074186fe39a1ee781')
 
     def install(self, spec, prefix):
         install_tree('doc', prefix.doc)

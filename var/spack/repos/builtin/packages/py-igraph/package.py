@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyIgraph(PythonPackage):
     homepage = "http://igraph.org/"
     url      = "http://igraph.org/nightly/get/python/python-igraph-0.7.0.tar.gz"
 
-    version('0.7.0', '32a3238cb9041b1686d7d0ba152235bf')
+    version('0.7.0', sha256='64ac270e80a92066d489407be1900a329df8e26844430f941ecc88771188c471')
 
     depends_on('py-setuptools', type='build')
     depends_on('igraph')

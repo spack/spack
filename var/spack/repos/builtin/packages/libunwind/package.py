@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Libunwind(AutotoolsPackage):
 
     version('develop', branch='master')
     version('2018.10.12', commit='f551e16213c52169af8bda554e4051b756a169cc')
-    version('1.3-rc1', 'f09b670de5db6430a3de666e6aed60e3')
-    version('1.2.1', '06ba9e60d92fd6f55cd9dadb084df19e', preferred=True)
-    version('1.1', 'fb4ea2f6fbbe45bf032cd36e586883ce')
+    version('1.3-rc1', sha256='e40f49dcbfdea3f4d15fa555fe68958e69a3f410aacf1ec46fd86aeced699773')
+    version('1.2.1', sha256='3f3ecb90e28cbe53fba7a4a27ccce7aad188d3210bb1964a923a731a27a75acb', preferred=True)
+    version('1.1', sha256='9dfe0fcae2a866de9d3942c66995e4b460230446887dbdab302d41a8aee8d09a')
 
     variant('xz', default=False,
             description='Support xz (lzma) compressed symbol tables.')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Bzip2(Package):
     homepage = "https://sourceware.org/bzip2/"
     url      = "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
 
-    version('1.0.8', 'ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
-    version('1.0.7', 'e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
-    version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b', preferred=True)
+    version('1.0.8', sha256='ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
+    version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
+    version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
 

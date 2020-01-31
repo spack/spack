@@ -13,7 +13,7 @@ class NeurodamusThalamus(NeurodamusModel):
 
     mech_name = "thalamus"
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('0.3', tag='0.3-1', submodules=True, clean=False)
-    version('0.2', tag='0.2', submodules=True, clean=False)
-    version('0.1', tag='0.1', submodules=True, clean=False)
+    version('develop', branch='master', submodules=True, get_full_repo=False)
+    version('0.3', tag='0.3-1', submodules=True, get_full_repo=False)
+    version('0.2', tag='0.2', submodules=True, get_full_repo=False)
+    version('0.1', tag='0.1', submodules=True, get_full_repo=False)

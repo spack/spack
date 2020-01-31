@@ -12,7 +12,7 @@ class Nmodl(CMakePackage):
     homepage = "https://github.com/BlueBrain/nmodl.git"
     url      = "https://github.com/BlueBrain/nmodl.git"
 
-    version('develop', branch='master', git=url, submodules=True, clean=False)
+    version('develop', branch='master', git=url, submodules=True, get_full_repo=True)
 
     depends_on('bison@3.0:', type='build')
     depends_on('cmake@3.3.0:', type='build')

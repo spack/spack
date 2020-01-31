@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ def concretize_scope(config, tmpdir):
 
 @pytest.fixture()
 def configure_permissions():
-    conf = syaml.load("""\
+    conf = syaml.load_config("""\
 all:
   permissions:
     read: group
@@ -96,6 +96,26 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
 
+    def test_preferred_target(self, mutable_mock_packages):
+        """Test preferred compilers are applied correctly
+        """
+        spec = concretize('mpich')
+        default = str(spec.target)
+        preferred = str(spec.target.family)
+
+        update_packages('mpich', 'target', [preferred])
+        spec = concretize('mpich')
+        assert str(spec.target) == preferred
+
+        spec = concretize('mpileaks')
+        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpich'].target) == preferred
+
+        update_packages('mpileaks', 'target', [preferred])
+        spec = concretize('mpileaks')
+        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == preferred
+
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
         """
@@ -124,19 +144,47 @@ class TestConcretizePreferences(object):
         spec = concretize('mpileaks')
         assert 'zmpi' in spec
 
-    def test_develop(self):
-        """Test concretization with develop version"""
-        spec = Spec('builtin.mock.develop-test')
+    def test_preferred(self):
+        """"Test packages with some version marked as preferred=True"""
+        spec = Spec('preferred-test')
         spec.concretize()
         assert spec.version == spack.spec.Version('0.2.15')
+
+        # now add packages.yaml with versions other than preferred
+        # ensure that once config is in place, non-preferred version is used
+        update_packages('preferred-test', 'version', ['0.2.16'])
+        spec = Spec('preferred-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.16')
+
+    def test_develop(self):
+        """Test concretization with develop-like versions"""
+        spec = Spec('develop-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15')
+        spec = Spec('develop-test2')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15')
+
+        # now add packages.yaml with develop-like versions
+        # ensure that once config is in place, develop-like version is used
+        update_packages('develop-test', 'version', ['develop'])
+        spec = Spec('develop-test')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('develop')
+
+        update_packages('develop-test2', 'version', ['0.2.15.develop'])
+        spec = Spec('develop-test2')
+        spec.concretize()
+        assert spec.version == spack.spec.Version('0.2.15.develop')
 
     def test_no_virtuals_in_packages_yaml(self):
         """Verify that virtuals are not allowed in packages.yaml."""
 
         # set up a packages.yaml file with a vdep as a key.  We use
-        # syaml.load here to make sure source lines in the config are
+        # syaml.load_config here to make sure source lines in the config are
         # attached to parsed strings, as the error message uses them.
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 mpi:
     paths:
       mpi-with-lapack@2.1: /path/to/lapack
@@ -149,7 +197,7 @@ mpi:
 
     def test_all_is_not_a_virtual(self):
         """Verify that `all` is allowed in packages.yaml."""
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
         variants: [+mpi]
 """)
@@ -166,7 +214,7 @@ all:
         assert not spec['mpi'].external
 
         # load config
-        conf = syaml.load("""\
+        conf = syaml.load_config("""\
 all:
     providers:
         mpi: [mpich]

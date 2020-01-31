@@ -11,10 +11,10 @@ class NeurodamusNeocortex(NeurodamusModel):
     homepage = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
     git      = "ssh://bbpcode.epfl.ch/sim/models/neocortex"
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('0.3', tag='0.3-1', submodules=True, clean=False)
-    version('0.2', tag='0.2', submodules=True, clean=False)
-    version('0.1', tag='0.1', submodules=True, clean=False)
+    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('0.3', tag='0.3-1', submodules=True, get_full_repo=True)
+    version('0.2', tag='0.2', submodules=True, get_full_repo=True)
+    version('0.1', tag='0.1', submodules=True, get_full_repo=True)
 
     variant('v5', default=True, description='Enable support for previous v5 circuits')
     variant('plasticity', default=False, description="Use optimized ProbAMPANMDA_EMS and ProbGABAAB_EMS")

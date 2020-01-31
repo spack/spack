@@ -1,0 +1,79 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f1f55b9..6062167 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,8 +1,8 @@
+ cmake_minimum_required(VERSION 3.5)
+ 
+ project(SpatialIndex VERSION 0.0.0
+-					 DESCRIPTION "Spatial indexing tools for all the family"
+-					 LANGUAGES CXX)
++                     DESCRIPTION "Spatial indexing tools for all the family"
++                     LANGUAGES CXX)
+ 
+ set(CMAKE_BUILD_TYPE Release)
+ set(CMAKE_CXX_FLAGS_DEBUG "-g")
+@@ -13,18 +13,16 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
+ 
+ option(PYTHON_BINDINGS "Build the python bindings" ON)
+ 
+-include_directories(/usr/local/include/)
+-
+ find_package(Boost 1.65.0 REQUIRED)
+ 
+ set(si_include_directory ${PROJECT_SOURCE_DIR}/include)
+ 
+ add_library(SpatialIndex INTERFACE)
+ target_include_directories(SpatialIndex INTERFACE ${si_include_directory})
+-
++target_link_libraries(SpatialIndex INTERFACE Boost::boost)
+ 
+ if(PYTHON_BINDINGS)
+-	add_subdirectory(3rdparty/pybind11)
+-	add_subdirectory(python)
++    add_subdirectory(3rdparty/pybind11)
++    add_subdirectory(python)
+ endif()
+ 
+diff --git a/python/CMakeLists.txt b/python/CMakeLists.txt
+index 9436855..b93837d 100644
+--- a/python/CMakeLists.txt
++++ b/python/CMakeLists.txt
+@@ -1,22 +1,20 @@
+-
+ set(SI_HEADERS
+-	${si_include_directory}/spatial_index/bounding_box.hpp
+-        ${si_include_directory}/spatial_index/entries.hpp
+-	${si_include_directory}/spatial_index/rtree_points.hpp
+-	${si_include_directory}/spatial_index/rtree_spheres.hpp
++    ${si_include_directory}/spatial_index/bounding_box.hpp
++    ${si_include_directory}/spatial_index/entries.hpp
++    ${si_include_directory}/spatial_index/rtree_points.hpp
++    ${si_include_directory}/spatial_index/rtree_spheres.hpp
+ 
+ )
+ 
+ set(PYBIND11_SOURCES
+-	bindings.cpp
++    bindings.cpp
+ )
+ 
+ set(PYBIND11_CPP_STANDARD -std=c++11)
+ 
+ pybind11_add_module(_spatial_index
+-					${PYBIND11_SOURCES}
+-					${SI_HEADERS}
+-					${Boost_INCLUDE_DIRS})
++                    ${PYBIND11_SOURCES}
++                    ${SI_HEADERS})
+ 
+ target_link_libraries(_spatial_index PUBLIC SpatialIndex)
+ 
+diff --git a/spatial_index/version.py b/spatial_index/version.py
+index 2bb98dc..881ec8c 100644
+--- a/spatial_index/version.py
++++ b/spatial_index/version.py
+@@ -1,2 +1,2 @@
+ """ spatial_index version """
+-VERSION = "0.0.1"
++VERSION = "0.0.2.dev0"

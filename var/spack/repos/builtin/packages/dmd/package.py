@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,15 +21,15 @@ class Dmd(MakefilePackage):
     # https://wiki.dlang.org/Building_under_Posix
     resource(name='druntime',
              url='https://github.com/dlang/druntime/archive/v2.081.1.tar.gz',
-             md5='49c8ba48fcb1e53d553a52d8ed7f9164',
+             sha256='8313af32dce71f767fb0072cae699cbfe7196cf01b0ce1c5dd416a71d94f5fee',
              placement='druntime')
     resource(name='phobos',
              url='https://github.com/dlang/phobos/archive/v2.081.1.tar.gz',
-             md5='ccf4787275b490eb2ddfc6713f9e9882',
+             sha256='d945c6fd1be14dff5fcbf45c1e11302e12bebac56d55e4e97e48e150f2899e04',
              placement='phobos')
     resource(name='tools',
              url='https://github.com/dlang/tools/archive/v2.081.1.tar.gz',
-             md5='a3bc7ed3d60b39712ef011bf19b3d427',
+             sha256='71fa249dbfd278eec2b95ce577af32e623e44caf0d993905ddc189e3beec21d0',
              placement='tools')
 
     def setup_environment(self, spack_env, run_env):

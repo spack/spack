@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,10 +34,10 @@ class Neuron(Package):
     version('7.6.6',   tag='7.6.6')
     version('2018-10', commit='b3097b7')
     # versions from url, with checksum
-    version('7.5', 'fb72c841374dfacbb6c2168ff57bfae9')
-    version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
-    version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
-    version('7.2', '5486709b6366add932e3a6d141c4f7ad')
+    version('7.5', sha256='67642216a969fdc844da1bd56643edeed5e9f9ab8c2a3049dcbcbcccba29c336')
+    version('7.4', sha256='1403ba16b2b329d2376f4bf007d96e6bf2992fa850f137f1068ad5b22b432de6')
+    version('7.3', sha256='71cff5962966c5cd5d685d90569598a17b4b579d342126b31e2d431128cc8832')
+    version('7.2', sha256='c777d73a58ff17a073e8ea25f140cb603b8b5f0df3c361388af7175e44d85b0e')
 
     variant('binary',        default=False, description="Create special as a binary instead of shell script")
     variant('coreneuron',    default=True,  description="Patch hh.mod for CoreNEURON compatibility")
@@ -63,6 +63,9 @@ class Neuron(Package):
     # Readline became incompatible with Mac so we use neuron internal readline.
     # HOWEVER, with the internal version there is a bug which makes Vector.as_numpy() not work!
     depends_on('readline', when=sys.platform != 'darwin')
+
+    # Transient dependency
+    depends_on('gettext')
 
     depends_on('mpi',         when='+mpi')
     depends_on('ncurses',     when='~cross-compile')
@@ -293,25 +296,27 @@ class Neuron(Package):
         filter_file(env['CXX'], cxx_compiler, nrniv_makefile, **kwargs)
 
     @when('+python')
-    def set_python_path(self, run_env):
+    def set_python_path(self, env):
         for pydir in (self.spec.prefix.lib64.python, self.spec.prefix.lib.python):
             if os.path.isdir(pydir):
-                run_env.prepend_path('PYTHONPATH', pydir)
+                env.prepend_path('PYTHONPATH', pydir)
                 break
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         neuron_archdir = self.get_neuron_archdir()
-        run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
-        self.set_python_path(run_env)
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        self.set_python_path(env)
         if self.spec.satisfies('+mpi'):
-            run_env.set('MPICC_CC', self.compiler.cc)
+            env.set('MPICC_CC', self.compiler.cc)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
-        spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        spack_env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
-        self.set_python_path(run_env)
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.set_python_path(env)
 
     def setup_dependent_package(self, module, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()

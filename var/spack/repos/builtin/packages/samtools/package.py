@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,14 @@ class Samtools(Package):
     homepage = "www.htslib.org"
     url = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
-    version('1.9', 'cca9a40d9b91b007af2ff905cb8b5924')
-    version('1.8', 'c6e981c92ca00a44656a708c4b52aba3')
-    version('1.7', '2240175242b5183bfa6baf1483f68023')
-    version('1.6', 'b756f05fd5d1a7042074417edb8c9aea')
-    version('1.4', '8cbd7d2a0ec16d834babcd6c6d85d691')
-    version('1.3.1', 'a7471aa5a1eb7fc9cc4c6491d73c2d88')
-    version('1.2', '988ec4c3058a6ceda36503eebecd4122')
+    version('1.9', sha256='083f688d7070082411c72c27372104ed472ed7a620591d06f928e653ebc23482')
+    version('1.8', sha256='c942bc1d9b85fd1b05ea79c5afd2805d489cd36b2c2d8517462682a4d779be16')
+    version('1.7', sha256='e7b09673176aa32937abd80f95f432809e722f141b5342186dfef6a53df64ca1')
+    version('1.6', sha256='ee5cd2c8d158a5969a6db59195ff90923c662000816cc0c41a190b2964dbe49e')
+    version('1.5', sha256='8542da26832ee08c1978713f5f6188ff750635b50d8ab126a0c7bb2ac1ae2df6')
+    version('1.4', sha256='9aae5bf835274981ae22d385a390b875aef34db91e6355337ca8b4dd2960e3f4')
+    version('1.3.1', sha256='6c3d74355e9cf2d9b2e1460273285d154107659efa36a155704b1e4358b7d67e')
+    version('1.2', sha256='420e7a4a107fe37619b9d300b6379452eb8eb04a4a9b65c3ec69de82ccc26daa')
 
     depends_on('ncurses')
     # htslib became standalone @1.3.1, must use corresponding version
@@ -28,6 +29,7 @@ class Samtools(Package):
     depends_on('htslib@1.8',   when='@1.8')
     depends_on('htslib@1.7',   when='@1.7')
     depends_on('htslib@1.6',   when='@1.6')
+    depends_on('htslib@1.5',   when='@1.5')
     depends_on('htslib@1.4',   when='@1.4')
     depends_on('htslib@1.3.1', when='@1.3.1')
     depends_on('zlib')

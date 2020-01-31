@@ -30,7 +30,7 @@ class Asciitoh5(Package):
             special = join_path(bindir, 'special')
             shutil.copy(special, prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
-        run_env.set('NEURON_INIT_MPI', "0")
-        run_env.unset('PMI_RANK')
+    def setup_run_environment(self, env):
+        env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
+        env.set('NEURON_INIT_MPI', "0")
+        env.unset('PMI_RANK')

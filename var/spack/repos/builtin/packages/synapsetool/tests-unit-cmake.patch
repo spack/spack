@@ -1,0 +1,39 @@
+diff --git a/tests/unit/CMakeLists.txt b/tests/unit/CMakeLists.txt
+index 29f1550..e8876fe 100644
+--- a/tests/unit/CMakeLists.txt
++++ b/tests/unit/CMakeLists.txt
+@@ -1,17 +1,13 @@
+ # Targets
+-find_package(Boost 1.41.0 REQUIRED system unit_test_framework)
+-include_directories(SYSTEM ${Boost_INCLUDE_DIRS} )
+-
+-if(NOT Boost_USE_STATIC_LIBS)
+-    add_definitions(-DBOOST_TEST_DYN_LINK=TRUE)
+-endif()
+-
+-
++find_package(Boost 1.41.0 REQUIRED COMPONENTS system unit_test_framework)
+ 
+ set(_test_syn2_src "test_synapses.cpp")
+ 
+ add_executable(test_syn2_bin ${_test_syn2_src})
+-target_link_libraries(test_syn2_bin syn2  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} ${HDF5_hdf5_LIBRARY} )
++target_link_libraries(test_syn2_bin
++		      syn2
++		      Boost::unit_test_framework
++		      ${HDF5_hdf5_LIBRARY})
+ add_test(test_unit test_syn2_bin)
+ 
+ 
+@@ -25,7 +21,10 @@ if(SYNTOOL_WITH_MPI)
+     set(_test_syn2mpi_src "test_synapses_mpi.cpp")
+ 
+     add_executable(test_syn2mpi_bin ${_test_syn2mpi_src})
+-    target_link_libraries(test_syn2mpi_bin syn2  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} ${HDF5_hdf5_LIBRARY} )
++    target_link_libraries(test_syn2mpi_bin
++	    		  syn2 
++			  Boost::unit_test_framework
++			  ${HDF5_hdf5_LIBRARY})
+ 
+     add_test(test_unit_mpi ${mpi_launcher} -n 2 test_syn2mpi_bin)
+ endif()

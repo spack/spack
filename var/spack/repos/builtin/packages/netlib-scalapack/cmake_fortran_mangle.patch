@@ -1,0 +1,43 @@
+--- old/CMAKE/FortranMangling.cmake	2019-01-25 21:50:50.619858036 -0500
++++ new/CMAKE/FortranMangling.cmake	2019-01-25 22:01:47.716985334 -0500
+@@ -19,25 +19,27 @@
+          "-DCMAKE_Fortran_COMPILER=${CMAKE_Fortran_COMPILER}"
+-         "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
++         "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}" "${PROJECT_SOURCE_DIR}//BLACS/INSTALL"
+         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/BLACS/INSTALL/        
+-        RESULT_VARIABLE RESVAR OUTPUT_VARIABLE LOG1 ERROR_VARIABLE LOG1
++        RESULT_VARIABLE RESVAR OUTPUT_VARIABLE LOG1_OUT ERROR_VARIABLE LOG1_ERR
+     )
+     if(RESVAR EQUAL 0)
+     MESSAGE(STATUS "Configure in the INSTALL directory successful")
+     else()
++    MESSAGE(STATUS " Build Output:\n ${LOG1_OUT}")
++    MESSAGE(STATUS " Error Output:\n ${LOG1_ERR}")
+     MESSAGE(FATAL_ERROR " Configure in the BLACS INSTALL directory FAILED")
+-    MESSAGE(FATAL_ERROR " Output Build:\n ${LOG1}")
+     endif()
+ 
+     # Build:
+     EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} --build
+         ${PROJECT_SOURCE_DIR}/BLACS/INSTALL/ 
+-        RESULT_VARIABLE RESVAR OUTPUT_VARIABLE LOG2 ERROR_VARIABLE LOG2
++        RESULT_VARIABLE RESVAR OUTPUT_VARIABLE LOG2_OUT ERROR_VARIABLE LOG2_ERR
+     )
+     if(RESVAR  EQUAL 0)
+     MESSAGE(STATUS "Build in the BLACS INSTALL directory successful")
+     else()
++    MESSAGE(STATUS " Build Output:\n ${LOG2_OUT}")
++    MESSAGE(STATUS " Error Output:\n ${LOG2_ERR}")
+     MESSAGE(FATAL_ERROR " Build in the BLACS INSTALL directory FAILED")
+-    MESSAGE(FATAL_ERROR " Output Build:\n ${LOG2}")
+     endif()
+     # Clean up:
+     FILE(REMOVE_RECURSE ${PROJECT_SOURCE_DIR}/BLACS/INSTALL/CMakeCache.txt)
+@@ -62,6 +64,7 @@
+           MESSAGE(STATUS "CDEFS set to ${xintface_OUT}")
+           SET(CDEFS ${xintface_OUT} CACHE STRING "Fortran Mangling" FORCE)
+       else()
++          MESSAGE(STATUS " xintface Output:\n ${xintface_OUT}")
+           MESSAGE(FATAL_ERROR "FORTRAN_MANGLING:ERROR ${xintface_ERR}")
+       endif() 
+ endmacro(FORTRAN_MANGLING)

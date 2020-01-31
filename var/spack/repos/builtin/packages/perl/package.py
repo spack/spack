@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,22 +31,23 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
-    version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
+    version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
-    version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523', preferred=True)
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2', preferred=True)
 
     # End of life releases
-    version('5.22.4', '31a71821682e02378fcdadeed85688b8')
-    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
-    version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
-    version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
-    version('5.22.0', 'e32cb6a8dda0084f2a43dac76318d68d')
-    version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
-    version('5.18.4', '1f9334ff730adc05acd3dd7130d295db')
-    version('5.16.3', 'eb5c40f2575df6c155bc99e3fe0a9d82')
+    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
+    version('5.26.2', sha256='572f9cea625d6062f8a63b5cee9d3ee840800a001d2bb201a41b9a177ab7f70d')
+    version('5.24.1', sha256='e6c185c9b09bdb3f1b13f678999050c639859a7ef39c8cad418448075f5918af')
+    version('5.22.4', sha256='ba9ef57c2b709f2dad9c5f6acf3111d9dfac309c484801e0152edbca89ed61fa')
+    version('5.22.3', sha256='1b351fb4df7e62ec3c8b2a9f516103595b2601291f659fef1bbe3917e8410083')
+    version('5.22.2', sha256='81ad196385aa168cb8bd785031850e808c583ed18a7901d33e02d4f70ada83c2')
+    version('5.22.1', sha256='2b475d0849d54c4250e9cba4241b7b7291cffb45dfd083b677ca7b5d38118f27')
+    version('5.22.0', sha256='0c690807f5426bbd1db038e833a917ff00b988bf03cbf2447fa9ffdb34a2ab3c')
+    version('5.20.3', sha256='3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a')
+    version('5.18.4', sha256='01a4e11a9a34616396c4a77b3cef51f76a297e1a2c2c490ae6138bf0351eb29f')
+    version('5.16.3', sha256='69cf08dca0565cec2c5c6c2f24b87f986220462556376275e5431cc2204dedb6')
 
     extendable = True
 
@@ -77,7 +78,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
-        md5="e87f55fbcb3c13a4754500c18e89219f",
+        sha256="9da50e155df72bce55cb69f51f1dbb4b62d23740fb99f6178bb27f22ebdf8a46",
         destination="cpanm",
         placement="cpanm"
     )
@@ -164,12 +165,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
-        perl_lib_dirs = []
-        perl_bin_dirs = []
+        perl_lib_dirs = [join_path(self.spec.prefix.lib,
+                                   str(self.spec.version))]
+        perl_bin_dirs = [self.spec.prefix.bin]
         for d in dependent_spec.traverse(
                 deptype=('build', 'run'), deptype_query='run'):
             if d.package.extends(self.spec):
@@ -177,12 +179,29 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 perl_bin_dirs.append(d.prefix.bin)
         if perl_bin_dirs:
             perl_bin_path = ':'.join(perl_bin_dirs)
-            spack_env.prepend_path('PATH', perl_bin_path)
-            run_env.prepend_path('PATH', perl_bin_path)
+            env.prepend_path('PATH', perl_bin_path)
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
-            spack_env.prepend_path('PERL5LIB', perl_lib_path)
-            run_env.prepend_path('PERL5LIB', perl_lib_path)
+            env.prepend_path('PERL5LIB', perl_lib_path)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set PATH and PERL5LIB to include the extension and
+           any other perl extensions it depends on,
+           assuming they were installed with INSTALL_BASE defined."""
+        perl_lib_dirs = [join_path(self.spec.prefix.lib,
+                                   str(self.spec.version))]
+        perl_bin_dirs = [self.spec.prefix.bin]
+        for d in dependent_spec.traverse(
+                deptype=('run',), deptype_query='run'):
+            if d.package.extends(self.spec):
+                perl_lib_dirs.append(d.prefix.lib.perl5)
+                perl_bin_dirs.append(d.prefix.bin)
+        if perl_bin_dirs:
+            perl_bin_path = ':'.join(perl_bin_dirs)
+            env.prepend_path('PATH', perl_bin_path)
+        if perl_lib_dirs:
+            perl_lib_path = ':'.join(perl_lib_dirs)
+            env.prepend_path('PERL5LIB', perl_lib_path)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -190,15 +209,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
            perl('Makefile.PL','INSTALL_BASE=%s' % self.prefix)
         """
 
-        # perl extension builds can have a global perl executable function
-        module.perl = self.spec['perl'].command
-
-        # Add variables for library directory
-        module.perl_lib_dir = dependent_spec.prefix.lib.perl5
-
-        # Make the site packages directory for extensions,
-        # if it does not exist already.
+        # If system perl is used through packages.yaml
+        # there cannot be extensions.
         if dependent_spec.package.is_extension:
+
+            # perl extension builds can have a global perl
+            # executable function
+            module.perl = self.spec['perl'].command
+
+            # Add variables for library directory
+            module.perl_lib_dir = dependent_spec.prefix.lib.perl5
+
+            # Make the site packages directory for extensions,
+            # if it does not exist already.
             mkdirp(module.perl_lib_dir)
 
     @run_after('install')
@@ -233,6 +256,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
             match = '^ld=.*'
             substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            filter_file(match, substitute, config_heavy, **kwargs)
+
+            match = "^ccflags='"
+            substitute = "ccflags='%s " % ' '\
+                         .join(self.spec.compiler_flags['cflags'])
             filter_file(match, substitute, config_heavy, **kwargs)
 
     @contextmanager

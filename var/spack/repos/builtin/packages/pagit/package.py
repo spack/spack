@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Pagit(Package):
     homepage = "http://www.sanger.ac.uk/science/tools/pagit"
     url      = "ftp://ftp.sanger.ac.uk/pub/resources/software/pagit/PAGIT.V1.01.64bit.tgz"
 
-    version('1.01', '2c4e8512c8c02073146b50b328962e9d')
+    version('1.01', sha256='8069c1d236804cf4ea782495adcc50d18561ef466af06b21946b980b3c37ad55')
 
     depends_on('java', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))

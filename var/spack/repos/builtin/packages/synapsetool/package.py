@@ -60,6 +60,9 @@ class Synapsetool(CMakePackage):
     depends_on('libsonata+mpi', when='+mpi')
     depends_on('libsonata~mpi', when='~mpi')
 
+    patch("tests-unit-cmake.patch", when='@:0.5.6')
+    patch("tests-unit-cmake-057.patch", when='@0.5.7:')
+
     @property
     def libs(self):
         """Export the synapse library

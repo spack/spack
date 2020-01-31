@@ -1,9 +1,12 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from spack.spec import ConflictsInSpecError
+
+
+yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'
 
 
 class YamlCpp(CMakePackage):
@@ -14,13 +17,15 @@ class YamlCpp(CMakePackage):
     git      = "https://github.com/jbeder/yaml-cpp.git"
 
     version('develop', branch='master')
-    version('0.6.2', '5b943e9af0060d0811148b037449ef82')
-    version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
+    version('0.6.2', sha256='e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05')
+    version('0.5.3', sha256='decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2')
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
     variant('pic',   default=True,
             description='Build with position independent code')
+    variant('tests', default=False,
+            description='Build yaml-cpp tests using internal gtest')
 
     depends_on('boost@:1.66.99', when='@:0.5.3')
 
@@ -32,6 +37,25 @@ class YamlCpp(CMakePackage):
     conflicts('%intel@:11.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%xl@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%xl_r@:13.1', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
+    conflicts('%clang cxxflags="-stdlib=libc++"', when='+tests',
+              msg=yaml_cpp_tests_libcxx_error_msg)
+
+    def flag_handler(self, name, flags):
+        # We cannot catch all conflicts with the conflicts directive because
+        # the user can add arbitrary strings to the flags. Here we can at least
+        # fail early.
+        # We'll include cppflags in case users mistakenly put c++ flags there.
+        spec = self.spec
+        if name in ('cxxflags', 'cppflags') and spec.satisfies('+tests'):
+            if '-stdlib=libc++' in flags:
+                raise ConflictsInSpecError(
+                    spec,
+                    [(spec,
+                      spec.compiler_flags[name],
+                      spec.variants['tests'],
+                      yaml_cpp_tests_libcxx_error_msg)]
+                )
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
@@ -42,6 +66,8 @@ class YamlCpp(CMakePackage):
                 'ON' if '+shared' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
+            '-DYAML_CPP_BUILD_TESTS:BOOL=%s' % (
+                'ON' if '+tests' in spec else 'OFF'),
         ])
 
         return options

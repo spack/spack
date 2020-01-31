@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,20 +14,23 @@ class Cantera(SConsPackage):
     homepage = "http://www.cantera.org/docs/sphinx/html/index.html"
     url      = "https://github.com/Cantera/cantera/archive/v2.3.0.tar.gz"
 
-    version('2.3.0', 'aebbd8d891cb1623604245398502b72e')
-    version('2.2.1', '9d1919bdef39ddec54485fc8a741a3aa')
+    version('2.4.0', sha256='0dc771693b657d8f4ba835dd229939e5b9cfd8348d2f5ba82775451a524365a5')
+    version('2.3.0', sha256='06624f0f06bdd2acc9c0dba13443d945323ba40f68a9d422d95247c02e539b57')
+    version('2.2.1', sha256='c7bca241848f541466f56e479402521c618410168e8983e2b54ae48888480e1e')
 
     variant('python',     default=False,
             description='Build the Cantera Python module')
     variant('matlab',     default=False,
             description='Build the Cantera Matlab toolbox')
+    variant('sundials',   default=True,
+            description='Build with Sundials')
 
     # Required dependencies
     depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
     depends_on('googletest',      when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials')  # must be compiled with -fPIC
+    depends_on('sundials', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
@@ -42,6 +45,8 @@ class Cantera(SConsPackage):
 
     # Matlab toolbox dependencies
     extends('matlab', when='+matlab')
+
+    conflicts('~sundials', when='@2.3.0:')
 
     def build_args(self, spec, prefix):
         # Valid args can be found by running `scons help`
@@ -98,19 +103,20 @@ class Cantera(SConsPackage):
             ])
 
         # Sundials support
-        if spec.satisfies('@2.3.0:'):
-            args.append('system_sundials=y')
-        else:
-            args.extend([
-                'use_sundials=y',
-                'sundials_license={0}'.format(
-                    spec['sundials'].prefix.LICENSE)
-            ])
+        if '+sundials' in spec:
+            if spec.satisfies('@2.3.0:'):
+                args.append('system_sundials=y')
+            else:
+                args.extend([
+                    'use_sundials=y',
+                    'sundials_license={0}'.format(
+                        spec['sundials'].prefix.LICENSE)
+                ])
 
-        args.extend([
-            'sundials_include={0}'.format(spec['sundials'].prefix.include),
-            'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
-        ])
+            args.extend([
+                'sundials_include={0}'.format(spec['sundials'].prefix.include),
+                'sundials_libdir={0}'.format(spec['sundials'].prefix.lib),
+            ])
 
         # Python module
         if '+python' in spec:

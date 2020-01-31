@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,12 +16,12 @@ class Lcals(MakefilePackage):
         by Frank H. McMahon, UCRL-53745.). The suite contains facilities to
         generate timing statistics and reports."""
 
-    homepage = "https://computation.llnl.gov/projects/co-design/lcals"
-    url      = "https://computation.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
+    homepage = "https://computing.llnl.gov/projects/co-design/lcals"
+    url      = "https://computing.llnl.gov/projects/co-design/download/lcals-v1.0.2.tgz"
 
     tags = ['proxy-app']
 
-    version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
+    version('1.0.2', sha256='a146590f7c1e9a9311ccf74dc0bef1fb19d77429db35a33c6725529fb1b0327e')
 
     variant(
         'microarch',

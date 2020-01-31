@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,19 @@ from spack import *
 
 
 class PyImportlibMetadata(PythonPackage):
-    """Read metadata from Python packages"""
+    """Read metadata from Python packages."""
 
-    homepage = "https://importlib-metadata.readthedocs.io/en/latest/"
-    url      = "https://files.pythonhosted.org/packages/af/6a/ef5cac9b429b974df7189bc35c974251b91c38bc9c7b74a0ed56cf0baf9a/importlib_metadata-0.8.tar.gz"
+    homepage = "http://importlib-metadata.readthedocs.io/"
+    url      = "https://pypi.io/packages/source/i/importlib_metadata/importlib_metadata-0.23.tar.gz"
 
-    version('0.8', sha256='b50191ead8c70adfa12495fba19ce6d75f2e0275c14c5a7beb653d6799b512bd')
+    version('0.23', sha256='aa18d7378b00b40847790e7c27e11673d7fed219354109d0e7b9e5b25dc3ad26')
+    version('0.19', sha256='23d3d873e008a513952355379d93cbcab874c58f4f034ff657c7a87422fa64e8')
 
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-configparser', type=('build', 'run'), when="^python@:3")
-    depends_on('py-contextlib2', type=('build', 'run'), when="^python@:3")
-    depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3")
-    depends_on('py-typing', type=('build', 'run'), when="^python@:3.5")
-    depends_on('py-zipp@0.3.2:', type=('build', 'run'))
+    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-zipp@0.5:', type=('build', 'run'))
+    depends_on('py-pathlib2', when='^python@:3.4', type=('build', 'run'))
+    depends_on('py-contextlib2', when='^python@:2.8', type=('build', 'run'))
+    depends_on('py-configparser@3.5:', when='^python@:2.8', type=('build', 'run'))
+    depends_on('py-packaging', type='test')

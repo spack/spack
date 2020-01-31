@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,15 +22,15 @@ class Charmpp(Package):
     git      = "https://github.com/UIUC-PPL/charm.git"
 
     version("develop", branch="charm")
-    version("6.9.0", "85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
-    version("6.8.2", "a887a34b638a5b2f7fcf7ff3c262496d")
-    version("6.8.1", "3e95ffa760909154ef16b643c9bb8193")
-    version("6.8.0", "54df066a5aefb0bbc1a263c2383c2bba")
-    version("6.7.1", "a8e20cf85e9c8721158f5bbd0ade48d9")
-    version("6.7.0", "35a39a7975f1954a7db2d76736158231")
-    version("6.6.1", "9554230f741e2599deaaac4d9d93d7ab")
-    version("6.6.0", "31e95901b3f7324d52107e6ad000fcc8")
-    version("6.5.1", "034d99458474a3ab96d8bede8a691a5d")
+    version("6.9.0", sha256="85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
+    version("6.8.2", sha256="08e6001b0e9cd00ebde179f76098767149bf7e454f29028fb9a8bfb55778698e")
+    version("6.8.1", sha256="bf39666bb9f8bad1cd17dafa3cdf35c7ef64dfaeda835cf66ae530b7baab7583")
+    version("6.8.0", sha256="deca68622932ea0c677aa764d6d24cd169a2fd99c06e7d7b6947c0f18ec2f8f3")
+    version("6.7.1", sha256="744a093874fbac03b6ae8be3ce434eff46b2ee778561e860802ed578e0810fdf")
+    version("6.7.0", sha256="6b0d8215a180c90cf6ee33ff39f66726934df34aaeeed59650dd3a0cc54d0c87")
+    version("6.6.1", sha256="2aa16fd3015dce0a0932ab5253578a72ddbcb889bc0d23584c42b28446915467")
+    version("6.6.0", sha256="c916010f2d4cc2c6bd30ea19764839d0298fb56d1696d8ff08d9fa9a61dfb1c9")
+    version("6.5.1", sha256="68aa43e2a6e476e116a7e80e385c25c6ac6497807348025505ba8bfa256ed34a")
 
     # Support OpenMPI; see
     # <https://charm.cs.illinois.edu/redmine/issues/1206>
@@ -241,5 +241,5 @@ class Charmpp(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('-C', join_path(self.stage.path, 'charm/tests'),
+        make('-C', join_path(self.stage.source_path, 'charm/tests'),
              'test', parallel=False)

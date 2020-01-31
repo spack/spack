@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Parquet(CMakePackage):
     homepage = "https://github.com/apache/parquet-cpp"
     url = "https://github.com/apache/parquet-cpp/archive/apache-parquet-cpp-1.4.0.tar.gz"
 
-    version('1.4.0', '3a3659e65052ef5a76fb88e4922283b9')
+    version('1.4.0', sha256='52899be6c9dc49a14976d4ad84597243696c3fa2882e5c802b56e912bfbcc7ce')
 
     depends_on('arrow')
     depends_on('boost')

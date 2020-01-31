@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ class Gettext(AutotoolsPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    url      = "https://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.1.tar.gz"
 
-    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
-    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
+    version('0.20.1', sha256='66415634c6e8c3fa8b71362879ec7575e27da43da562c798a8a2f223e6e47f5c')
+    version('0.19.8.1', sha256='ff942af0e438ced4a8b0ea4b0b6e0d6d657157c5e2364de57baa279c1c125c43')
+    version('0.19.7',   sha256='378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934')
 
     # Recommended variants
     variant('curses',   default=True, description='Use libncurses')
@@ -34,7 +35,7 @@ class Gettext(AutotoolsPackage):
     depends_on('tar',      when='+tar')
     # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
-    depends_on('xz',       when='+xz')
+    depends_on('xz',       when='+xz', type=('build', 'link', 'run'))
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?
@@ -85,3 +86,11 @@ class Gettext(AutotoolsPackage):
             config_args.append('--with-included-libunistring')
 
         return config_args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc",
+                "libintl"],
+            root=self.prefix, recursive=True
+        )

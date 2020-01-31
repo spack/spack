@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,13 @@ class Libmongoc(AutotoolsPackage):
     version('1.9.5', sha256='4a4bd0b0375450250a3da50c050b84b9ba8950ce32e16555714e75ebae0b8019')
     version('1.9.4', sha256='910c2f1b2e3df4d0ea39c2f242160028f90fcb8201f05339a730ec4ba70811fb')
     version('1.9.3', sha256='c2c94ef63aaa09efabcbadc4ac3c8740faa102266bdd2559d550f1955b824398')
-    version('1.9.1', '86f98ace1a5f073eea6875a96761b198')
-    version('1.8.1', '52d54a4107a2da20c1a1b28bc1ff9d44')
-    version('1.8.0', '8c271a16ff30f6d4f5e134f699f7360f')
-    version('1.7.0', '21acf3584e92631422bc91e9e3cf4f76')
-    version('1.6.3', '0193610cf1d98aae7008f272a1000972')
-    version('1.6.2', 'aac86df153282cda1e4905cca181631a')
-    version('1.6.1', '826946de9a15f7f453aefecdc76b1c0d')
+    version('1.9.1', sha256='91951444d34581deeaff46cc2985c68805754f618a20ac369b761ce9b621c4cd')
+    version('1.8.1', sha256='87d87b7581018cde7edff85f522d43d9c0a226df26fa53b77ca1613a3aca8233')
+    version('1.8.0', sha256='1b53883b4cbf08e7d77ad7ab7a02deca90b1719c67f9ad132b47e60d0206ea4e')
+    version('1.7.0', sha256='48a0dbd44fef2124b51cf501f06be269b1a39452303b880b37473a6030c6e023')
+    version('1.6.3', sha256='82df03de117a3ccf563b9eccfd2e5365df8f215a36dea7446d439969033ced7b')
+    version('1.6.2', sha256='7ec27e9be4da2bf9e4b316374f8c29f816f0a0f019b984411777e9681e17f70e')
+    version('1.6.1', sha256='1bdfb27944c6da8e56da209a5d56efac70df1f8c4ca4498b46f75bf3f9360898')
 
     variant('ssl', default=True, description='Enable SSL support.')
     variant('snappy', default=True, description='Enable Snappy support.')

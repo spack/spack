@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,11 @@ class PyPylint(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pylint"
     url      = "https://pypi.io/packages/source/p/pylint/pylint-1.6.5.tar.gz"
 
-    # version('1.7.2', '27ee752cdcfacb05bf4940947e6b35c6') # see dependencies
-    version('1.6.5', '31da2185bf59142479e4fa16d8a9e347')
-    version('1.4.3', '5924c1c7ca5ca23647812f5971d0ea44')
-    version('1.4.1', 'df7c679bdcce5019389038847e4de622')
+    version('2.3.0', sha256='ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182')
+    # version('1.7.2', sha256='ea6afb93a9ed810cf52ff3838eb3a15e2bf6a81b80de0eaede1ce442caa5ca69') # see dependencies
+    version('1.6.5', sha256='a673984a8dd78e4a8b8cfdee5359a1309d833cf38405008f4a249994a8456719')
+    version('1.4.3', sha256='1dce8c143a5aa15e0638887c2b395e2e823223c63ebaf8d5f432a99e44b29f60')
+    version('1.4.1', sha256='3e383060edd432cbbd0e8bd686f5facfe918047ffe1bb401ab5897cb6ee0f030')
 
     extends('python', ignore=r'bin/pytest')
     depends_on('py-astroid', type=('build', 'run'))

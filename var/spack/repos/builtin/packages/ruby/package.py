@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,9 @@ class Ruby(AutotoolsPackage):
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
-    version('2.5.3', '9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
-    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+    version('2.6.2', sha256='a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
+    version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
+    version('2.2.0', sha256='7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc')
 
     variant('openssl', default=True, description="Enable OpenSSL support")
     variant('readline', default=False, description="Enable Readline support")
@@ -95,13 +96,14 @@ class Ruby(AutotoolsPackage):
         http://guides.rubygems.org/ssl-certificate-update/
         for details.
         """
-        rubygems_updated_cert_path = join_path(self.stage.source_path,
-                                               'rubygems-updated-ssl-cert',
-                                               'GlobalSignRootCA.pem')
-        rubygems_certs_path = join_path(self.spec.prefix.lib,
-                                        'ruby',
-                                        '{0}.0'.format(self.spec.version.
-                                                       up_to(2)),
-                                        'rubygems',
-                                        'ssl_certs')
-        install(rubygems_updated_cert_path, rubygems_certs_path)
+        if self.spec.satisfies("+openssl"):
+            rubygems_updated_cert_path = join_path(self.stage.source_path,
+                                                   'rubygems-updated-ssl-cert',
+                                                   'GlobalSignRootCA.pem')
+            rubygems_certs_path = join_path(self.spec.prefix.lib,
+                                            'ruby',
+                                            '{0}.0'.format(self.spec.version.
+                                                           up_to(2)),
+                                            'rubygems',
+                                            'ssl_certs')
+            install(rubygems_updated_cert_path, rubygems_certs_path)

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,10 +28,15 @@ class Mono(AutotoolsPackage):
     depends_on('libiconv')
     depends_on('perl', type=('build'))
 
-    version('5.4.1.7', '28a82df5d0b7854b387d4f21d852ac70')
-    version('5.4.0.167', '103c7a737632046a9e9a0b039d752ee1')
-    version('5.0.1.1', '17692c7a797f95ee6f9a0987fda3d486')
-    version('4.8.0.524', 'baeed5b8139a85ad7e291d402a4bcccb')
+    version('5.18.0.240', sha256='143e80eb00519ff496742e78ee07403a3c3629437f3a498eee539de8108da895')
+    version('5.16.0.220', sha256='f420867232b426c062fa182256a66b29efa92992c119847359cdd1ab75af8de3')
+    version('5.14.0.177', sha256='d4f5fa2e8188d66fbc8054f4145711e45c1faa6d070e63600efab93d1d189498')
+    version('5.12.0.309', sha256='7c4738c91187bfcea7b40f9e7a4bf3a0e4f54fdc0f4472612f84803e8bed368f')
+    version('5.10.1.57',  sha256='76cbd8545db6adc5a1738c343d957a7015c95e1439c461ea4f2bd56bd6337ab4')
+    version('5.4.1.7', sha256='543d9ec2ccebad9bb8425b22e10271f13d9512487c0e1578eeccdb1b8dc6a055')
+    version('5.4.0.167', sha256='c2afe51b0fb074936a8e7eaee805c352f37cbf1093bb41c5345078f77d913ce0')
+    version('5.0.1.1', sha256='48d6ae71d593cd01bf0f499de569359d45856cda325575e1bacb5fabaa7e9718')
+    version('4.8.0.524', sha256='ca02614cfc9fe65e310631cd611d7b07d1ff205ce193006d4be0f9919c26bdcf')
 
     def patch(self):
         if '+patch-folder-path' in self.spec:

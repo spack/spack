@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,12 +15,12 @@ class NodeJs(Package):
     homepage = "https://nodejs.org/"
     url      = "https://nodejs.org/download/release/v6.3.0/node-v6.3.0.tar.gz"
 
-    version('11.1.0',  '3f53b5ac25b2d36ad538267083c0e603d9236867a936c22a9116d95fa10c60d5')
-    version('10.13.0', 'aa06825fff375ece7c0d881ae0de5d402a857e8cabff9b4a50f2f0b7b44906be')
-    version('8.9.1',   '7482b2523f72000d1b6060c38945026b')
-    version('7.1.0',   '1db5df2cb025f9c70e83d9cf21c4266a')
-    version('6.3.0',   '8c14e5c89d66d4d060c91b3ba15dfd31')
-    version('6.2.2',   '1120e8bf191fdaee42206d031935210d')
+    version('11.1.0',  sha256='3f53b5ac25b2d36ad538267083c0e603d9236867a936c22a9116d95fa10c60d5')
+    version('10.13.0', sha256='aa06825fff375ece7c0d881ae0de5d402a857e8cabff9b4a50f2f0b7b44906be')
+    version('8.9.1',   sha256='32491b7fcc4696b2cdead45c47e52ad16bbed8f78885d32e873952fee0f971e1')
+    version('7.1.0',   sha256='595e7e2a37d1e0573044a90077bb12c0f750e5d8851899ffa74038238da9a983')
+    version('6.3.0',   sha256='4ed7a99985f8afee337cc22d5fef61b495ab4238dfff3750ac9019e87fc6aae6')
+    version('6.2.2',   sha256='b6baee57a0ede496c7c7765001f7495ad74c8dfe8c34f1a6fb2cd5d8d526ffce')
 
     # variant('bash-completion', default=False, description='Build with bash-completion support for npm')  # NOQA: ignore=E501
     variant('debug', default=False, description='Include debugger support')
@@ -38,6 +38,7 @@ class NodeJs(Package):
     depends_on('icu4c', when='+icu4c')
     depends_on('openssl@1.0.2d:1.0.99', when='@:9+openssl')
     depends_on('openssl@1.1:', when='@10:+openssl')
+    depends_on('zlib', when='+zlib')
 
     def install(self, spec, prefix):
         options = []

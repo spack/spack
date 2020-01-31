@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xts(AutotoolsPackage):
     homepage = "https://www.x.org/wiki/XorgTesting/"
     url      = "https://www.x.org/archive/individual/test/xts-0.99.1.tar.gz"
 
-    version('0.99.1', '1e5443fede389be606f3745a71483bac')
+    version('0.99.1', sha256='d04d987b9a9f8b3921dfe8de8577d0c2a0f21d2c4c3196948fc9805838a352e6')
 
     depends_on('libx11')
     depends_on('libxext')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,13 @@ class Libtool(AutotoolsPackage):
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)
-    version('2.4.6', 'addf44b646ddb4e3919805aa88fa7c5e')
-    version('2.4.2', 'd2f3b7d4627e69e13514a40e72a24d50')
+    version('2.4.6', sha256='e3bd4d5d3d025a36c21dd6af7ea818a2afcd4dfc1ea5a17b39d7854bcd0c06e3')
+    version('2.4.2', sha256='b38de44862a987293cd3d8dfae1c409d514b6c4e794ebc93648febf9afc38918')
 
     depends_on('m4@1.4.6:', type='build')
-    depends_on('autoconf', type='build', when='@develop')
-    depends_on('automake', type='build', when='@develop')
-    depends_on('help2man', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@2.4.2,develop')
+    depends_on('automake', type='build', when='@2.4.2,develop')
+    depends_on('help2man', type='build', when='@2.4.2,develop')
     depends_on('xz', type='build', when='@develop')
     depends_on('texinfo', type='build', when='@develop')
 
@@ -30,7 +30,7 @@ class Libtool(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
-    @when('@develop')
+    @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 

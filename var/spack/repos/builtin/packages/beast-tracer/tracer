@@ -1,0 +1,4 @@
+#!/bin/env sh
+# tracer launch script
+
+java -Xms64m -Xmx10000m -jar $(dirname $0)/tracer.jar $*

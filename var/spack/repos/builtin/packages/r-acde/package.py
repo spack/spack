@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,8 @@ class RAcde(RPackage):
     (2015, pending publication)."""
 
     homepage = "https://www.bioconductor.org/packages/acde/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/acde_1.6.0.tar.gz"
+    url      = "https://bioconductor.org/packages/release/bioc/src/contrib/acde_1.14.0.tar.gz"
 
-    version('1.6.0', 'e92ce91f75bab3bb1d79995bec1b42cc')
+    version('1.14.0', sha256='e8d9ad688610d4b72cab729141dc46fce580c97128d929885336bb138345b788')
 
     depends_on('r-boot', type=('build', 'run'))

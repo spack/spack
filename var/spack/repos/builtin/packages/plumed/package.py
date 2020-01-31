@@ -1,11 +1,10 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-
-from spack import *
+import os.path
 
 
 class Plumed(AutotoolsPackage):
@@ -22,15 +21,17 @@ class Plumed(AutotoolsPackage):
     and C/C++ codes.
     """
     homepage = 'http://www.plumed.org/'
-    url = 'https://github.com/plumed/plumed2/archive/v2.2.3.tar.gz'
+    url = 'https://github.com/plumed/plumed2/archive/v2.5.0.tar.gz'
 
-    version('2.4.2', '0f66f24b4c763ae8b2f39574113e9935')
-    version('2.4.1', '6558e1fd02fc46e847ab6a3fb5ed5411')
-    version('2.3.5', '3cc5f025cb6f5d963f3c778f15c77d44')
-    version('2.3.3', '9f5729e406e79a06a16976fcb020e024')
-    version('2.3.0', 'a9b5728f115dca8f0519111f1f5a6fa5')
-    version('2.2.4', 'afb00da25a3fbd47acf377e53342059d')
-    version('2.2.3', 'a6e3863e40aac07eb8cf739cbd14ecf8')
+    version('2.5.0', sha256='53e08187ec9f8af2326fa84407e34644a7c51d2af93034309fb70675eee5e4f7')
+    version('2.4.4', sha256='1e5c24109314481fad404da97d61c7339b219e27e120c9c80bacc79c9f6a51a8')
+    version('2.4.2', sha256='528ce57f1f5330480bcd403140166a4580efd2acaea39c85dfeca5e2cd649321')
+    version('2.4.1', sha256='f00410ebdd739c2ddf55fcd714ff4bd88a1029e02d2fc9cea0b5fca34e0fc4eb')
+    version('2.3.5', sha256='a6a66ca4582c1aecc6138c96be015e13cd06a718e8446b2f13e610fe34602e4f')
+    version('2.3.3', sha256='ac058ff529f207d5b4169fb5a87bdb3c77307dfef1ac543ad8b6c74c5de7fc91')
+    version('2.3.0', sha256='b1c8a54a313a0569e27e36420770074f35406453f73de70e55c424652abeddf1')
+    version('2.2.4', sha256='d7a1dba34a7fe03f23e8d39ab6e15b230c4851373fdceb3602e2de26ea53ce37')
+    version('2.2.3', sha256='2db19c5f6a2918833941d0bf47b5431d0865529d786df797ccc966d763ed7b0c')
 
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
@@ -78,7 +79,7 @@ class Plumed(AutotoolsPackage):
 
         # Get available patches
         plumed_patch = Executable(
-            join_path(self.spec.prefix.bin, 'plumed-patch')
+            os.path.join(self.spec.prefix.bin, 'plumed-patch')
         )
 
         out = plumed_patch('-q', '-l', output=str)
@@ -100,6 +101,12 @@ class Plumed(AutotoolsPackage):
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
         module.plumed = dependent_spec['plumed'].command
+
+    @property
+    def plumed_inc(self):
+        return os.path.join(
+            self.prefix.lib, 'plumed', 'src', 'lib', 'Plumed.inc'
+        )
 
     @run_before('autoreconf')
     def filter_gslcblas(self):

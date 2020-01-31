@@ -1,7 +1,9 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import pytest
 
 import os
 import os.path
@@ -12,6 +14,7 @@ from spack.util.executable import which
 debug = SpackCommand('debug')
 
 
+@pytest.mark.db
 def test_create_db_tarball(tmpdir, database):
     with tmpdir.as_cwd():
         debug('create-db-tarball')

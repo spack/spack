@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,11 @@ class Silo(AutotoolsPackage):
     homepage = "http://wci.llnl.gov/simulation/computer-codes/silo"
     url      = "https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2.tar.gz"
 
-    version('4.10.2', '9ceac777a2f2469ac8cef40f4fab49c8', preferred=True)
-    version('4.10.2-bsd', '60fef9ce373daf1e9cc8320cfa509bc5',
+    version('4.10.2', sha256='3af87e5f0608a69849c00eb7c73b11f8422fa36903dd14610584506e7f68e638', preferred=True)
+    version('4.10.2-bsd', sha256='4b901dfc1eb4656e83419a6fde15a2f6c6a31df84edfad7f1dc296e01b20140e',
             url="https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-4.10.2/silo-4.10.2-bsd.tar.gz")
-    version('4.9', 'a83eda4f06761a86726e918fc55e782a')
-    version('4.8', 'b1cbc0e7ec435eb656dc4b53a23663c9')
+    version('4.9', sha256='90f3d069963d859c142809cfcb034bc83eb951f61ac02ccb967fc8e8d0409854')
+    version('4.8', sha256='c430c1d33fcb9bc136a99ad473d535d6763bd1357b704a915ba7b1081d58fb21')
 
     variant('fortran', default=True, description='Enable Fortran support')
     variant('shared', default=True, description='Build shared libraries')

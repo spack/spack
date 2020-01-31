@@ -14,13 +14,12 @@ packages:
   gnu-stable-serial-python:
     target_matrix:
       - gnu-stable
-      - gnu-stable-py2
     requires:
       - architecture
       - compiler
       - python
     specs:
-      - arrow+parquet+python@0.11.0
+      - arrow+parquet+python@0.15.0
       - neuron~mpi@7.6.8
 
   gnu-stable-serial-python3:
@@ -32,7 +31,7 @@ packages:
       - python
     specs:
       - boost+python
-      - tensorflow@1.12.0+cuda
+      # - tensorflow@1.12.0+cuda
 
   gnu-intel-stable-serial:
     target_matrix:
@@ -42,8 +41,7 @@ packages:
       - architecture
       - compiler
     specs:
-      - python@2.7.15
-      - python@3.6.5
+      - python@3.7.4
 
   gnu-stable-serial:
     target_matrix:
@@ -62,16 +60,18 @@ packages:
       - highfive~mpi
       - libarchive
       - morphio
+      - morpho-kit
       - pugixml
       - range-v3
       - rockets
       - rocksdb~static
 
-  intel-stable-serial:
-    target_matrix:
-      - intel-stable
-    requires:
-      - architecture
-      - compiler
-    specs:
-      - embree
+  # gnu-stable-serial-python3:
+  #   target_matrix:
+  #     - gnu-stable
+  #   requires:
+  #     - architecture
+  #     - compiler
+  #     - python
+  #   specs:
+  #     - tensorflow@1.12.0+cuda

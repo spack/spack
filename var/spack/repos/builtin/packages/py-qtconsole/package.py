@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyQtconsole(PythonPackage):
     homepage = "http://ipython.org"
     url      = "https://pypi.io/packages/source/q/qtconsole/qtconsole-4.2.1.tar.gz"
 
-    version('4.2.1', 'c08ebebc7a60629ebadf685361ca0798')
+    version('4.2.1', sha256='25ec7d345528b3e8f3c91be349dd3c699755f206dc4b6ec668e2e5dd60ea18ef')
 
     variant('doc', default=False, description='Build documentation')
 

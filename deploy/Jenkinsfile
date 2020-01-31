@@ -9,9 +9,9 @@ def build_and_deploy_docker() {
 
     if (pull == null) {
         def image = docker.build("bluebrain/spack", "-f docker/Dockerfile ${rev} .")
-        docker.withRegistry(registry, credentials_id) {
-            image.push("latest")
-        }
+        // docker.withRegistry(registry, credentials_id) {
+        //     image.push("latest")
+        // }
     } else {
         def pr = "--build-arg pr=${env.ghprbPullId}"
         def image = docker.build("bluebrain/spack", "-f docker/Dockerfile ${rev} ${pr} .")
@@ -24,7 +24,7 @@ def build_and_deploy_docker() {
 def deployment_directory(parent) {
     def pull = env.ghprbPullId
     if (parent || pull == null) {
-        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins"
+        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/threelled"
     } else {
         return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/pulls/${pull}"
     }
@@ -49,8 +49,7 @@ def deployment_stages() {
     return ['compilers',
             'tools',
             'external-libraries',
-            'serial-libraries',
-            'parallel-libraries',
+            'libraries',
             'applications']
 }
 
@@ -101,7 +100,7 @@ pipeline {
     }
 
     environment {
-        DEPLOYMENT_UPSTREAM = deployment_directory(true)
+        DEPLOYMENT_UPSTREAM = deployment_directory(false)
         DEPLOYMENT_ROOT = deployment_directory(false)
         BASEDIR = "${DEPLOYMENT_ROOT}/spack/deploy"
         DOCKERDIR = "${DEPLOYMENT_ROOT}/spack/docker"
@@ -128,7 +127,7 @@ pipeline {
                     // license files are available to Spack
                     steps {
                         dir("${DEPLOYMENT_ROOT}/spack") {
-                            git(url: "https://github.com/BlueBrain/spack.git", branch: "develop")
+                            git(url: "https://github.com/BlueBrain/spack.git", branch: "merge/2019/10")
                         }
                         dir("${DEPLOYMENT_ROOT}/spack/etc/spack/licenses") {
                             git(url: "ssh://bbpcode.epfl.ch/user/kumbhar/spack-licenses")
@@ -241,44 +240,23 @@ pipeline {
 
 
 
-        stage('Serial Libraries') {
+        stage('Libraries') {
             when {
                 expression {
-                    return 'serial-libraries' in run_stages()
+                    return 'libraries' in run_stages()
                 }
             }
 
             steps {
                 dir("${BASEDIR}") {
-                    sh "./deploy.sh serial-libraries"
+                    sh "./deploy.sh libraries"
                 }
             }
 
             post {
                 always {
-                    archiveArtifacts artifacts: "stacks/serial-libraries.xml"
-                    junit testResults: "stacks/serial-libraries.xml", allowEmptyResults: true
-                }
-            }
-        }
-
-        stage('Parallel Libraries') {
-            when {
-                expression {
-                    return 'parallel-libraries' in run_stages()
-                }
-            }
-
-            steps {
-                dir("${BASEDIR}") {
-                    sh "./deploy.sh parallel-libraries"
-                }
-            }
-
-            post {
-                always {
-                    archiveArtifacts artifacts: "stacks/parallel-libraries.xml"
-                    junit testResults: "stacks/parallel-libraries.xml", allowEmptyResults: true
+                    archiveArtifacts artifacts: "stacks/libraries.xml"
+                    junit testResults: "stacks/libraries.xml", allowEmptyResults: true
                 }
             }
         }
@@ -342,7 +320,7 @@ pipeline {
                 stage("Test Modules") {
                     steps {
                         build job: "hpc.module-testing", parameters: [
-                            string(name: "MODULE_SCRIPT_PATH", value: "${DEPLOYMENT_ROOT}/config/modules.sh")
+                            string(name: "MODULE_SCRIPT_PATH", value: "${DEPLOYMENT_ROOT}/config/2020/modules.sh")
                         ]
                     }
                 }

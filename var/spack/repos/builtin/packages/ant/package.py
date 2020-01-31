@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,11 @@ class Ant(Package):
     homepage = "http://ant.apache.org/"
     url = "https://archive.apache.org/dist/ant/source/apache-ant-1.9.7-src.tar.gz"
 
-    version('1.10.0', '2260301bb7734e34d8b96f1a5fd7979c')
-    version('1.9.9',  '22c9d40dabafbec348aaada226581239')
-    version('1.9.8',  '16253d516d5c33c4af9ef8fafcf1004b')
-    version('1.9.7',  'a2fd9458c76700b7be51ef12f07d4bb1')
-    version('1.9.6',  '29b7507c9053e301d2b85091f2aec6f0')
+    version('1.10.0', sha256='1f78036c38753880e16fb755516c8070187a78fe4b2e99b59eda5b81b58eccaf')
+    version('1.9.9',  sha256='d6a0c93777ab27db36212d77c5733ac80d17fe24e83f947df23a8e0ad4ac48cc')
+    version('1.9.8',  sha256='5f4daf56e66fc7a71de772920ca27c15eac80cf1fcf41f3b4f2d535724942681')
+    version('1.9.7',  sha256='648b3f3787bb0cb6226978b6d4898eb7e21ae391385357a5f824972dd910a1c8')
+    version('1.9.6',  sha256='550d2aaf828785e30870c227056942c2a552da961db6010cedb2fbcfa8e3268d')
 
     depends_on('java')
 

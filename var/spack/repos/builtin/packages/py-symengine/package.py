@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,9 @@ class PySymengine(PythonPackage):
     url      = "https://github.com/symengine/symengine.py/archive/v0.2.0.tar.gz"
     git      = "https://github.com/symengine/symengine.py.git"
 
-    version('develop',   branch='master')
-    version('0.3.0',     sha256='0ecccfe5a09b25b6640afca12de62062bdb60ed2712d6c16cc47fc1ba1e851ac')
+    version('develop', branch='master')
+    version('0.3.0', sha256='0ecccfe5a09b25b6640afca12de62062bdb60ed2712d6c16cc47fc1ba1e851ac')
+    version('0.2.0', sha256='8f6468137baa7f799e047dd0b9149c4017d8d32e755f1e0329209680879c1f8f')
 
     # Build dependencies
     depends_on('python@2.7:2.8,3.3:')

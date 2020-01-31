@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ from llnl.util import filesystem, lang, tty
 import spack.cmd
 import spack.modules
 import spack.repo
+import spack.modules.common
 
 import spack.cmd.common.arguments as arguments
 
@@ -132,6 +133,14 @@ def one_spec_or_raise(specs):
     return specs[0]
 
 
+_missing_modules_warning = (
+    "Modules have been omitted for one or more specs, either"
+    " because they were blacklisted or because the spec is"
+    " associated with a package that is installed upstream and"
+    " that installation has not generated a module file. Rerun"
+    " this command with debug output enabled for more details.")
+
+
 def loads(module_type, specs, args, out=sys.stdout):
     """Prompt the list of modules associated with a list of specs"""
 
@@ -157,20 +166,15 @@ def loads(module_type, specs, args, out=sys.stdout):
                  if not (item in seen or seen_add(item))]
             )
 
-    module_cls = spack.modules.module_types[module_type]
-    modules = list()
-    for spec in specs:
-        if os.path.exists(module_cls(spec).layout.filename):
-            modules.append((spec, module_cls(spec).layout.use_name))
-        elif spec.package.installed_upstream:
-            tty.debug("Using upstream module for {0}".format(spec))
-            module = spack.modules.common.upstream_module(spec, module_type)
-            modules.append((spec, module.use_name))
+    modules = list(
+        (spec,
+         spack.modules.common.get_module(
+             module_type, spec, get_full_path=False, required=False))
+        for spec in specs)
 
     module_commands = {
         'tcl': 'module load ',
         'lmod': 'module load ',
-        'dotkit': 'use '
     }
 
     d = {
@@ -179,14 +183,23 @@ def loads(module_type, specs, args, out=sys.stdout):
     }
 
     exclude_set = set(args.exclude)
-    prompt_template = '{comment}{exclude}{command}{prefix}{name}'
+    load_template = '{comment}{exclude}{command}{prefix}{name}'
     for spec, mod in modules:
-        d['exclude'] = '## ' if spec.name in exclude_set else ''
-        d['comment'] = '' if not args.shell else '# {0}\n'.format(
-            spec.format())
-        d['name'] = mod
-        out.write(prompt_template.format(**d))
+        if not mod:
+            module_output_for_spec = (
+                '## blacklisted or missing from upstream: {0}'.format(
+                    spec.format()))
+        else:
+            d['exclude'] = '## ' if spec.name in exclude_set else ''
+            d['comment'] = '' if not args.shell else '# {0}\n'.format(
+                spec.format())
+            d['name'] = mod
+            module_output_for_spec = load_template.format(**d)
+        out.write(module_output_for_spec)
         out.write('\n')
+
+    if not all(mod for _, mod in modules):
+        tty.warn(_missing_modules_warning)
 
 
 def find(module_type, specs, args):
@@ -212,32 +225,29 @@ def find(module_type, specs, args):
         writer = spack.modules.module_types[module_type](spec)
         return os.path.isfile(writer.layout.filename)
 
-    if not module_exists(spec):
-        msg = 'Even though {1} is installed, '
-        msg += 'no {0} module has been generated for it.'
-        tty.die(msg.format(module_type, spec))
-
-    # Check if we want to recurse and load all dependencies. In that case
-    # modify the list of specs adding all the dependencies in post order
     if args.recurse_dependencies:
-        specs = [
-            item for item in spec.traverse(order='post', cover='nodes')
-            if module_exists(item)
-        ]
+        dependency_specs_to_retrieve = list(
+            single_spec.traverse(root=False, order='post', cover='nodes',
+                                 deptype=('link', 'run')))
+    else:
+        dependency_specs_to_retrieve = []
 
-    # ... and if it is print its use name or full-path if requested
-    def module_str(specs):
-        modules = []
-        for x in specs:
-            writer = spack.modules.module_types[module_type](x)
-            if args.full_path:
-                modules.append(writer.layout.filename)
-            else:
-                modules.append(writer.layout.use_name)
+    try:
+        modules = [
+            spack.modules.common.get_module(
+                module_type, spec, args.full_path, required=False)
+            for spec in dependency_specs_to_retrieve]
 
-        return ' '.join(modules)
+        modules.append(
+            spack.modules.common.get_module(
+                module_type, single_spec, args.full_path, required=True))
+    except spack.modules.common.ModuleNotFoundError as e:
+        tty.die(e.message)
 
-    print(module_str(specs))
+    if not all(modules):
+        tty.warn(_missing_modules_warning)
+    modules = list(x for x in modules if x)
+    print(' '.join(modules))
 
 
 def rm(module_type, specs, args):
@@ -410,7 +420,9 @@ def modules_cmd(parser, args, module_type, callbacks=callbacks):
     except MultipleSpecsMatch:
         msg = "the constraint '{query}' matches multiple packages:\n"
         for s in specs:
-            msg += '\t' + s.cformat(format_string='$/ $_$@$+$%@+$+$=') + '\n'
+            spec_fmt = '{hash:7} {name}{@version}{%compiler}'
+            spec_fmt += '{compiler_flags}{variants}{arch=architecture}'
+            msg += '\t' + s.cformat(spec_fmt) + '\n'
         tty.error(msg.format(query=args.constraint))
         tty.die('In this context exactly **one** match is needed: please specify your constraints better.')  # NOQA: ignore=E501
 

@@ -22,8 +22,8 @@ class Deflect(CMakePackage):
     depends_on('ninja', type='build')
 
     depends_on('boost')
-    depends_on('qt +opengl ^libjpeg-turbo', when='+deflect-qt')
-    depends_on('qt ~opengl ^libjpeg-turbo', when='~deflect-qt')
+    depends_on('qt +opengl', when='+deflect-qt')
+    depends_on('qt ~opengl', when='~deflect-qt')
 
     def check(self):
         with working_dir(self.build_directory):

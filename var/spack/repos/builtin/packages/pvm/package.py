@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Pvm(MakefilePackage):
     homepage = "http://www.csm.ornl.gov/pvm/pvm_home.html"
     url      = "http://www.netlib.org/pvm3/pvm3.4.6.tgz"
 
-    version('3.4.6', '7b5f0c80ea50b6b4b10b6128e197747b')
+    version('3.4.6', sha256='482665e9bc975d826bcdacf1df1d42e43deda9585a2c430fd3b7b7ed08eada44')
 
     parallel = False
 

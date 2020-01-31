@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,8 +6,7 @@
 
 import os
 import sys
-
-from spack import *
+import llnl.util.tty as tty
 
 
 def _verbs_dir():
@@ -46,6 +45,18 @@ def _mxm_dir():
         return None
 
 
+def _tm_dir():
+    """Look for default directory where the PBS/TM package is
+    installed. Return None if not found.
+    """
+    # /opt/pbs from PBS 18+; make this more flexible in the future
+    paths_list = ("/opt/pbs", )
+    for path in paths_list:
+        if os.path.isdir(path) and os.path.isfile(path + "/include/tm.h"):
+            return path
+    return None
+
+
 class Openmpi(AutotoolsPackage):
     """An open source Message Passing Interface implementation.
 
@@ -62,23 +73,30 @@ class Openmpi(AutotoolsPackage):
     homepage = "http://www.open-mpi.org"
     url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
     list_url = "http://www.open-mpi.org/software/ompi/"
+    git = "https://github.com/open-mpi/ompi.git"
+
+    version('develop', branch='master')
 
     # Current
-    version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
 
     # hpe-ddn specific external versions for ime
     version('ime', 'nonexistenthash')
 
     # Still supported
-    version('3.1.3', preferred=True, sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
+    version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
+    version('3.1.4', preferred=True, sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
+    version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
     version('3.1.2', sha256='c654ed847f34a278c52a15c98add40402b4a90f0c540779f1ae6c489af8a76c5')  # libmpi.so.40.10.2
     version('3.1.1', sha256='3f11b648dd18a8b878d057e9777f2c43bf78297751ad77ae2cef6db0fe80c77c')  # libmpi.so.40.10.1
     version('3.1.0', sha256='b25c044124cc859c0b4e6e825574f9439a51683af1950f6acda1951f5ccdf06c')  # libmpi.so.40.10.0
+    version('3.0.4', sha256='2ff4db1d3e1860785295ab95b03a2c0f23420cda7c1ae845c419401508a3c7b5')  # libmpi.so.40.00.5
     version('3.0.3', sha256='fb228e42893fe6a912841a94cd8a0c06c517701ae505b73072409218a12cf066')  # libmpi.so.40.00.4
     version('3.0.2', sha256='d2eea2af48c1076c53cabac0a1f12272d7470729c4e1cb8b9c2ccd1985b2fb06')  # libmpi.so.40.00.2
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
+    version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.so.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
     version('2.1.3', sha256='285b3e2a69ed670415524474496043ecc61498f2c63feb48575f8469354d79e8')  # libmpi.so.20.10.2
@@ -93,81 +111,81 @@ class Openmpi(AutotoolsPackage):
     version('2.0.1', sha256='fed74f4ae619b7ebcc18150bb5bdb65e273e14a8c094e78a3fea0df59b9ff8ff')  # libmpi.so.20.0.1
     version('2.0.0', sha256='08b64cf8e3e5f50a50b4e5655f2b83b54653787bd549b72607d9312be44c18e0')  # libmpi.so.20.0.0
 
-    version('1.10.7', 'c87c613f9acb1a4eee21fa1ac8042579')  # libmpi.so.12.0.7
-    version('1.10.6', '2e65008c1867b1f47c32f9f814d41706')  # libmpi.so.12.0.6
-    version('1.10.5', 'd32ba9530a869d9c1eae930882ea1834')  # libmpi.so.12.0.5
-    version('1.10.4', '9d2375835c5bc5c184ecdeb76c7c78ac')  # libmpi.so.12.0.4
-    version('1.10.3', 'e2fe4513200e2aaa1500b762342c674b')  # libmpi.so.12.0.3
-    version('1.10.2', 'b2f43d9635d2d52826e5ef9feb97fd4c')  # libmpi.so.12.0.2
-    version('1.10.1', 'f0fcd77ed345b7eafb431968124ba16e')  # libmpi.so.12.0.1
-    version('1.10.0', '280cf952de68369cebaca886c5ce0304')  # libmpi.so.12.0.0
+    version('1.10.7', sha256='a089ece151fec974905caa35b0a59039b227bdea4e7933069e94bee4ed0e5a90')  # libmpi.so.12.0.7
+    version('1.10.6', sha256='65606184a084a0eda6102b01e5a36a8f02d3195d15e91eabbb63e898bd110354')  # libmpi.so.12.0.6
+    version('1.10.5', sha256='a95fa355ed3a905c7c187bc452529a9578e2d6bae2559d8197544ab4227b759e')  # libmpi.so.12.0.5
+    version('1.10.4', sha256='fb3c0c4c77896185013b6091b306d29ba592eb40d8395533da5c8bc300d922db')  # libmpi.so.12.0.4
+    version('1.10.3', sha256='7484bb664312082fd12edc2445b42362089b53b17fb5fce12efd4fe452cc254d')  # libmpi.so.12.0.3
+    version('1.10.2', sha256='8846e7e69a203db8f50af90fa037f0ba47e3f32e4c9ccdae2db22898fd4d1f59')  # libmpi.so.12.0.2
+    version('1.10.1', sha256='7919ecde15962bab2e26d01d5f5f4ead6696bbcacb504b8560f2e3a152bfe492')  # libmpi.so.12.0.1
+    version('1.10.0', sha256='26b432ce8dcbad250a9787402f2c999ecb6c25695b00c9c6ee05a306c78b6490')  # libmpi.so.12.0.0
 
-    version('1.8.8', '0dab8e602372da1425e9242ae37faf8c')  # libmpi.so.1.6.3
-    version('1.8.7', '2485ed6fa0fab9bb5b4e7a9f63718630')  # libmpi.so.1.6.2
-    version('1.8.6', 'eb569e7dc97eeaa5b1876cccf114f377')  # libmpi.so.1.6.1
-    version('1.8.5', '93e958914ff0e4d9634d668d2d48c793')  # libmpi.so.1.6.0
-    version('1.8.4', '93b7ea2c4ebae76947f942579608ae4a')  # libmpi.so.1.6.0
-    version('1.8.3', '2067d00853e0c33d498153fc7d268d2b')  # libmpi.so.1.6.0
-    version('1.8.2', '339a9fc199563bacbb359875ce8c9e20')  # libmpi.so.1.5.2
-    version('1.8.1', '0e12c24a28a605f681ff9a19a1aca2f1')  # libmpi.so.1.5.0
-    version('1.8',   '5999cfb177a50c480b5d0bced379aff1')  # libmpi.so.1.5.0
+    version('1.8.8', sha256='a28382d1e6a36f4073412dc00836ff2524e42b674da9caf6ca7377baad790b94')  # libmpi.so.1.6.3
+    version('1.8.7', sha256='da629e9bd820a379cfafe15f842ee9b628d7451856085ccc23ee75ab3e1b48c7')  # libmpi.so.1.6.2
+    version('1.8.6', sha256='b9fe3bdfb86bd42cc53448e17f11278531b989b05ff9513bc88ba1a523f14e87')  # libmpi.so.1.6.1
+    version('1.8.5', sha256='4cea06a9eddfa718b09b8240d934b14ca71670c2dc6e6251a585ce948a93fbc4')  # libmpi.so.1.6.0
+    version('1.8.4', sha256='23158d916e92c80e2924016b746a93913ba7fae9fff51bf68d5c2a0ae39a2f8a')  # libmpi.so.1.6.0
+    version('1.8.3', sha256='2ef02dab61febeb74714ff80d508c00b05defc635b391ed2c8dcc1791fbc88b3')  # libmpi.so.1.6.0
+    version('1.8.2', sha256='ab70770faf1bac15ef44301fe2186b02f857646545492dd7331404e364a7d131')  # libmpi.so.1.5.2
+    version('1.8.1', sha256='171427ebc007943265f33265ec32e15e786763952e2bfa2eac95e3e192c1e18f')  # libmpi.so.1.5.0
+    version('1.8',   sha256='35d5db86f49c0c64573b2eaf6d51c94ed8a06a9bb23dda475e602288f05e4ecf')  # libmpi.so.1.5.0
 
-    version('1.7.5', '321ab81147ac69a5bbca72652fb3b468')  # libmpi.so.1.4.0
-    version('1.7.4', '4aea4fb00f8956dd56ccf50e5784e03f')  # libmpi.so.1.3.0
-    version('1.7.3', '7d0779f73c43eb1d098ad037d60649bc')  # libmpi.so.1.2.0
-    version('1.7.2', 'b897b92100bd13b367e651df483421d5')  # libmpi.so.1.1.2
-    version('1.7.1', 'f25b446a9dcbbd6a105a99d926d34441')  # libmpi.so.1.1.1
-    version('1.7',   'c0e3c4b3bfcd8b8bbd027f6f4c164acb')  # libmpi.so.1.1.0
+    version('1.7.5', sha256='cb3eef6880537d341d5d098511d390ec853716a6ec94007c03a0d1491b2ac8f2')  # libmpi.so.1.4.0
+    version('1.7.4', sha256='ff8e31046c5bacfc6202d67f2479731ccd8542cdd628583ae75874000975f45c')  # libmpi.so.1.3.0
+    version('1.7.3', sha256='438d96c178dbf5a1bc92fa1d238a8225d87b64af26ce2a07789faaf312117e45')  # libmpi.so.1.2.0
+    version('1.7.2', sha256='82a1c477dcadad2032ab24d9be9e39c1042865965841911f072c49aa3544fd85')  # libmpi.so.1.1.2
+    version('1.7.1', sha256='554583008fa34ecdfaca22e46917cc3457a69cba08c29ebbf53eef4f4b8be171')  # libmpi.so.1.1.1
+    version('1.7',   sha256='542e44aaef6546798c0d39c0fd849e9fbcd04a762f0ab100638499643253a513')  # libmpi.so.1.1.0
 
-    version('1.6.5', '03aed2a4aa4d0b27196962a2a65fc475')  # libmpi.so.1.0.8
-    version('1.6.4', '62119579ab92b2592cd96b6a9d2a8cc3')  # libmpi.so.1.0.7
-    version('1.6.3', 'eedb73155a7a40b0b07718494298fb25')  # libmpi.so.1.0.6
-    version('1.6.2', '219754715a8e40beb468bbc8f0b3251a')  # libmpi.so.1.0.3
-    version('1.6.1', '33d2782c20ff6be79130a703b85da8f0')  # libmpi.so.1.0.3
-    version('1.6',   'dd6f5bd4b3cb14d93bbf530e50e46e60')  # libmpi.so.1.0.3
+    version('1.6.5', sha256='fe37bab89b5ef234e0ac82dc798282c2ab08900bf564a1ec27239d3f1ad1fc85')  # libmpi.so.1.0.8
+    version('1.6.4', sha256='40cb113a27d76e1e915897661579f413564c032dc6e703073e6a03faba8093fa')  # libmpi.so.1.0.7
+    version('1.6.3', sha256='0c30cfec0e420870630fdc101ffd82f7eccc90276bc4e182f8282a2448668798')  # libmpi.so.1.0.6
+    version('1.6.2', sha256='5cc7744c6cc4ec2c04bc76c8b12717c4011822a2bd7236f2ea511f09579a714a')  # libmpi.so.1.0.3
+    version('1.6.1', sha256='077240dd1ab10f0caf26931e585db73848e9815c7119b993f91d269da5901e3a')  # libmpi.so.1.0.3
+    version('1.6',   sha256='6e0d8b336543fb9ab78c97d364484923167857d30b266dfde1ccf60f356b9e0e')  # libmpi.so.1.0.3
 
     # Ancient
-    version('1.5.5', 'f882fd61ff89db856bfd8f0dfa42e1bd')  # libmpi.so.1.0.3
-    version('1.5.4', '51153d794c49ce6d275dba2793ab0c68')  # libmpi.so.1.0.2
-    version('1.5.3', '0eb8ec2aa05c74a4bc7602b01847131e')  # libmpi.so.1.0.1
-    version('1.5.2', 'faaee6a2777bf607d7fa1297c0b3a9ed')  # libmpi.so.1.0.1
-    version('1.5.1', '3f9409f5d3b617c04dea48ba8fbd703a')  # libmpi.so.1.0.0
-    version('1.5',   '86bf5f9ef7337231abbca3350b31f112')  # libmpi.so.1.0.0
+    version('1.5.5', sha256='660e6e49315185f88a87b6eae3d292b81774eab7b29a9b058b10eb35d892ff23')  # libmpi.so.1.0.3
+    version('1.5.4', sha256='81126a95a51b8af4bb0ad28790f852c30d22d989713ec30ad22e9e0a79587ef6')  # libmpi.so.1.0.2
+    version('1.5.3', sha256='70745806cdbe9b945d47d9fa058f99e072328e41e40c0ced6dd75220885c5263')  # libmpi.so.1.0.1
+    version('1.5.2', sha256='7123b781a9fd21cc79870e7fe01e9c0d3f36935c444922661e24af523b116ab1')  # libmpi.so.1.0.1
+    version('1.5.1', sha256='c28bb0bd367ceeec08f739d815988fca54fc4818762e6abcaa6cfedd6fd52274')  # libmpi.so.1.0.0
+    version('1.5',   sha256='1882b1414a94917ec26b3733bf59da6b6db82bf65b5affd7f0fcbd96efaca506')  # libmpi.so.1.0.0
 
-    version('1.4.5', '84ddd2772f46d35da79e1db8a274c99d')  # libmpi.so.0.0.4
-    version('1.4.4', 'e58a1ea7b8af62453aaa0ddaee5f26a0')  # libmpi.so.0.0.3
-    version('1.4.3', 'd2ead141c43b915343f5c5a18f3b5016')  # libmpi.so.0.0.2
-    version('1.4.2', '53b26fa2586aedaf73cf40effbfcc2f3')  # libmpi.so.0.0.2
-    version('1.4.1', '28a820c85e02973809df881fdeddd15e')  # libmpi.so.0.0.1
-    version('1.4',   '9786ec0698afed9498ce43dc3978a435')  # libmpi.so.0.0.1
+    version('1.4.5', sha256='a3857bc69b7d5258cf7fc1ed1581d9ac69110f5c17976b949cb7ec789aae462d')  # libmpi.so.0.0.4
+    version('1.4.4', sha256='9ad125304a89232d5b04da251f463fdbd8dcd997450084ba4227e7f7a095c3ed')  # libmpi.so.0.0.3
+    version('1.4.3', sha256='220b72b1c7ee35469ff74b4cfdbec457158ac6894635143a33e9178aa3981015')  # libmpi.so.0.0.2
+    version('1.4.2', sha256='19129e3d51860ad0a7497ede11563908ba99c76b3a51a4d0b8801f7e2db6cd80')  # libmpi.so.0.0.2
+    version('1.4.1', sha256='d4d71d7c670d710d2d283ea60af50d6c315318a4c35ec576bedfd0f3b7b8c218')  # libmpi.so.0.0.1
+    version('1.4',   sha256='fa55edef1bd8af256e459d4d9782516c6998b9d4698eda097d5df33ae499858e')  # libmpi.so.0.0.1
 
-    version('1.3.4', '978c29f3b671856daa0fc67459b73e01')  # libmpi.so.0.0.1
-    version('1.3.3', 'f6cdc9c195daa8571b2e509e952d6755')  # libmpi.so.0.0.0
-    version('1.3.2', '75781dc31255cd841701c065e239d994')  # libmpi.so.0.0.0
-    version('1.3.1', 'd759523b0752139872c534714d641d64')  # libmpi.so.0.0.0
-    version('1.3',   'efbba7d652d1e430d456f65d7a2e339b')  # libmpi.so.0.0.0
+    version('1.3.4', sha256='fbfe4b99b0c98f81a4d871d02f874f84ea66efcbb098f6ad84ebd19353b681fc')  # libmpi.so.0.0.1
+    version('1.3.3', sha256='e1425853282da9237f5b41330207e54da1dc803a2e19a93dacc3eca1d083e422')  # libmpi.so.0.0.0
+    version('1.3.2', sha256='c93ed90962d879a2923bed17171ed9217036ee1279ffab0925ea7eead26105d8')  # libmpi.so.0.0.0
+    version('1.3.1', sha256='22d18919ddc5f49d55d7d63e2abfcdac34aa0234427e861e296a630c6c11632c')  # libmpi.so.0.0.0
+    version('1.3',   sha256='864706d88d28b586a045461a828962c108f5912671071bc3ef0ca187f115e47b')  # libmpi.so.0.0.0
 
-    version('1.2.9', '78c2aebbb746610ed12bdedcc2b6ec0e')  # libmpi.so.0.0.0
-    version('1.2.8', '7f2d5af02101c5f01173f4f6de296549')  # libmpi.so.0.0.0
-    version('1.2.7', 'b5ae3059fba71eba4a89a2923da8223f')  # libmpi.so.0.0.0
-    version('1.2.6', 'f126793b68e71f5ec4a192c40675af2d')  # libmpi.so.0.0.0
-    version('1.2.5', 'c6e82aab6cdcd425bf29217e8317d7dc')  # libmpi.so.0.0.0
-    version('1.2.4', '311b38c597f54d8d6b277225ef458666')  # libmpi.so.0.0.0
-    version('1.2.3', 'ae980bb00f9686934a1143701cc041e4')  # libmpi.so.0.0.0
-    version('1.2.2', '7f553317e388c4efe479e908b66f910d')  # libmpi.so.0.0.0
-    version('1.2.1', 'ceaa42891edba2324a94fdd0b87e46ca')  # libmpi.so.0.0.0
-    version('1.2',   '37e8d4edad54a8d8c3127fbef87ebda1')  # libmpi.so.0.0.0
+    version('1.2.9', sha256='0eb36abe09ba7bf6f7a70255974e5d0a273f7f32d0e23419862c6dcc986f1dff')  # libmpi.so.0.0.0
+    version('1.2.8', sha256='75b286cb3b1bf6528a7e64ee019369e0601b8acb5c3c167a987f755d1e41c95c')  # libmpi.so.0.0.0
+    version('1.2.7', sha256='d66c7f0bb11494023451651d0e61afaef9d2199ed9a91ed08f0dedeb51541c36')  # libmpi.so.0.0.0
+    version('1.2.6', sha256='e5b27af5a153a257b1562a97bbf7164629161033934558cefd8e1e644a9f73d3')  # libmpi.so.0.0.0
+    version('1.2.5', sha256='3c3aed872c17165131c77bd7a12fe8aec776cb23da946b7d12840db93ab79322')  # libmpi.so.0.0.0
+    version('1.2.4', sha256='594a3a0af69cc7895e0d8f9add776a44bf9ed389794323d0b1b45e181a97e538')  # libmpi.so.0.0.0
+    version('1.2.3', sha256='f936ca3a197e5b2d1a233b7d546adf07898127683b03c4b37cf31ae22a6f69bb')  # libmpi.so.0.0.0
+    version('1.2.2', sha256='aa763e0e6a6f5fdff8f9d3fc988a4ba0ed902132d292c85aef392cc65bb524e6')  # libmpi.so.0.0.0
+    version('1.2.1', sha256='a94731d84fb998df33960e0b57ea5661d35e7c7cd9d03d900f0b6a5a72e4546c')  # libmpi.so.0.0.0
+    version('1.2',   sha256='ba0bfa3dec2ead38a3ed682ca36a0448617b8e29191ab3f48c9d0d24d87d14c0')  # libmpi.so.0.0.0
 
-    version('1.1.5', '6aada92896a1830ece6d3ba1e66a17fa')  # libmpi.so.0.0.0
-    version('1.1.4', '28940b182156478fa442397b0c9660e1')  # libmpi.so.0.0.0
-    version('1.1.3', 'bbaa7fe9d556212d877d872544a31569')  # libmpi.so.0.0.0
-    version('1.1.2', '53877ec8bca5f6e505496b6b94b1d850')  # libmpi.so.0.0.0
-    version('1.1.1', '498b9322ae0ad512026a008a30c7e0b5')  # libmpi.so.0.0.0
-    version('1.1',   '821af8bbb7a8e85ec707cb4c3b6bcbf6')  # libmpi.so.0.0.0
+    version('1.1.5', sha256='913deaedf3498bd5d06299238ec4d048eb7af9c3afd8e32c12f4257c8b698a91')  # libmpi.so.0.0.0
+    version('1.1.4', sha256='21c37f85df7e959f17cc7cb5571d8db2a94ed2763e3e96e5d052aff2725c1d18')  # libmpi.so.0.0.0
+    version('1.1.3', sha256='c33f8f5e65cfe872173616cca27ae8dc6d93ea66e0708118b9229128aecc174f')  # libmpi.so.0.0.0
+    version('1.1.2', sha256='3bd8d9fe40b356be7f9c3d336013d3865f8ca6a79b3c6e7ef28784f6c3a2b8e6')  # libmpi.so.0.0.0
+    version('1.1.1', sha256='dc31aaec986c4ce436dbf31e73275ed1a9391432dcad7609de8d0d3a78d2c700')  # libmpi.so.0.0.0
+    version('1.1',   sha256='ebe14801d2caeeaf47b0e437b43f73668b711f4d3fcff50a0d665d4bd4ea9531')  # libmpi.so.0.0.0
 
-    version('1.0.2', 'fd32861d643f9fe539a01d0d5b836f41')  # libmpi.so.0.0.0
-    version('1.0.1', '8abccca5cdddc81a6d9d9e22b3bb6db9')  # libmpi.so.0.0.0
-    version('1.0',   'f5dcb5d3a98f2e5a9c2a0caaef54d806')  # libmpi.so.0.0.0
+    version('1.0.2', sha256='ccd1074d7dd9566b73812d9882c84e446a8f4c77b6f471d386d3e3b9467767b8')  # libmpi.so.0.0.0
+    version('1.0.1', sha256='f801b7c8ea6c485ac0709a628a479aeafa718a205ed6bc0cf2c684bc0cc73253')  # libmpi.so.0.0.0
+    version('1.0',   sha256='cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564')  # libmpi.so.0.0.0
 
     patch('ad_lustre_rwcontig_open_source.patch', when="@1.6.5")
     patch('llnl-platforms.patch', when="@1.6.5")
@@ -182,21 +200,22 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
-    fabrics = ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
-
     variant(
         'fabrics',
-        default=None if _verbs_dir() is None else 'verbs',
-        description="List of fabrics that are enabled",
-        values=fabrics,
-        multi=True
+        values=disjoint_sets(
+            ('auto',), ('psm', 'psm2', 'verbs', 'mxm', 'ucx', 'libfabric')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of fabrics that are enabled; "
+        "'auto' lets openmpi determine",
     )
 
     variant(
         'schedulers',
-        description='List of schedulers for which support is enabled',
-        values=('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler'),
-        multi=True
+        values=disjoint_sets(
+            ('auto',), ('alps', 'lsf', 'tm', 'slurm', 'sge', 'loadleveler')
+        ).with_non_feature_values('auto', 'none'),
+        description="List of schedulers for which support is enabled; "
+        "'auto' lets openmpi determine",
     )
 
     # Additional support options
@@ -234,6 +253,12 @@ class Openmpi(AutotoolsPackage):
     if sys.platform != 'darwin':
         depends_on('numactl')
 
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
+    depends_on('perl',     type='build', when='@develop')
+
     depends_on('hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
@@ -249,6 +274,7 @@ class Openmpi(AutotoolsPackage):
     depends_on('ucx', when='fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
+    depends_on('lsf', when='schedulers=lsf')
     depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
@@ -257,6 +283,9 @@ class Openmpi(AutotoolsPackage):
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
     conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
+    conflicts('schedulers=loadleveler', when='@3.0.0:',
+              msg='The loadleveler scheduler is not supported with '
+              'openmpi(>=3.0.0).')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -338,7 +367,18 @@ class Openmpi(AutotoolsPackage):
             return '--without-{0}'.format(opt)
         line = '--with-{0}'.format(opt)
         path = _mxm_dir()
-        if (path is not None):
+        if path is not None:
+            line += '={0}'.format(path)
+        return line
+
+    def with_or_without_tm(self, activated):
+        opt = 'tm'
+        # If the option has not been activated return --without-tm
+        if not activated:
+            return '--without-{0}'.format(opt)
+        line = '--with-{0}'.format(opt)
+        path = _tm_dir()
+        if path is not None:
             line += '={0}'.format(path)
         return line
 
@@ -351,6 +391,11 @@ class Openmpi(AutotoolsPackage):
             raise InstallError(
                 'OpenMPI requires both C and Fortran compilers!'
             )
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        perl = which('perl')
+        perl('autogen.pl')
 
     def configure_args(self):
         spec = self.spec
@@ -370,8 +415,12 @@ class Openmpi(AutotoolsPackage):
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
         #
         # adding --enable-static silently disables slurm support via pmi/pmi2
+        # for versions older than 3.0.3,3.1.3,4.0.0
+        # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
+                config_args.append('--enable-static')
         else:
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))
@@ -383,10 +432,18 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
+        # some scientific packages ignore deprecated/remove symbols. Re-enable
+        # them for now, for discussion see
+        # https://github.com/open-mpi/ompi/issues/6114#issuecomment-446279495
+        if spec.satisfies('@4.0.1:'):
+            config_args.append('--enable-mpi1-compatibility')
+
         # Fabrics
-        config_args.extend(self.with_or_without('fabrics'))
+        if 'fabrics=auto' not in spec:
+            config_args.extend(self.with_or_without('fabrics'))
         # Schedulers
-        config_args.extend(self.with_or_without('schedulers'))
+        if 'schedulers=auto' not in spec:
+            config_args.extend(self.with_or_without('schedulers'))
 
         config_args.extend(self.enable_or_disable('memchecker'))
         if spec.satisfies('+memchecker', strict=True):
@@ -475,7 +532,17 @@ class Openmpi(AutotoolsPackage):
         # only sensible choice (orterun is still present, but normal
         # users don't know about that).
         if '@1.6: ~legacylaunchers schedulers=slurm' in self.spec:
-            os.remove(self.prefix.bin.mpirun)
-            os.remove(self.prefix.bin.mpiexec)
-            os.remove(self.prefix.bin.shmemrun)
-            os.remove(self.prefix.bin.oshrun)
+            exe_list = [self.prefix.bin.mpirun,
+                        self.prefix.bin.mpiexec,
+                        self.prefix.bin.shmemrun,
+                        self.prefix.bin.oshrun
+                        ]
+            script_stub = join_path(os.path.dirname(__file__),
+                                    "nolegacylaunchers.sh")
+            for exe in exe_list:
+                try:
+                    os.remove(exe)
+                except OSError:
+                    tty.debug("File not present: " + exe)
+                else:
+                    copy(script_stub, exe)

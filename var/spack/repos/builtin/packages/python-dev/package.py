@@ -7,13 +7,13 @@ from spack import *
 import os
 import platform
 
-class PythonDev(Package):
+class PythonDev(BundlePackage):
     """Meta package to bundle python packages for development"""
 
     homepage = "http://www.dummy.org/"
     url      = "https://www.dummy.org/source/dummy-0.2.zip"
 
-    version('0.2')
+    version('0.3')
 
     depends_on('python', type=('build', 'run'))
     depends_on('py-beautifulsoup4', type=('build', 'run'))
@@ -21,9 +21,6 @@ class PythonDev(Package):
     depends_on('py-clustershell', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
     depends_on('py-h5py~mpi', type=('build', 'run'))
-    depends_on('py-ipykernel', type=('build', 'run'))
-    depends_on('py-ipyparallel', type=('build', 'run'))
-    depends_on('py-ipython', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2-cli', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
@@ -45,15 +42,7 @@ class PythonDev(Package):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
-    def do_stage(self, mirror_only=False):
-        build_dir = os.path.join(self.stage.path, 'build')
-        os.makedirs(build_dir)
-
-    def install(self, spec, prefix):
-        open(os.path.join(prefix, 'success.txt'), 'w').close()
-
     def setup_environment(self, spack_env, run_env):
-        deps = ['py-ipython', 'py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark',
-                'py-ipyparallel']
+        deps = ['py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark']
         for dep in deps:
             run_env.prepend_path('PATH', self.spec[dep].prefix.bin)

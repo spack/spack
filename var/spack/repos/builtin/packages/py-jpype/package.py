@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class PyJpype(PythonPackage):
     homepage = "https://github.com/originell/jpype"
     url      = "https://pypi.io/packages/source/J/JPype1/JPype1-0.6.2.tar.gz"
 
-    version('0.6.2', '16e5ee92b29563dcc63bbc75556810c1')
-    version('0.6.1', '468ca2d4b2cff7802138789e951d5d58')
-    version('0.6.0', 'f0cbbe1d0c4b563f7e435d2bffc31736')
+    version('0.6.2', sha256='99206412d80b9d5a81a7cc205267ca63554403eb57f13420302e2f39bfad7f25')
+    version('0.6.1', sha256='0d366228b7b37b0266184161cc7ea1ce58f60199f6ec9451985149ea873774be')
+    version('0.6.0', sha256='f5d783520cb4c30595c3bc509065e30fc292ec7cfb57045141eae77c518bcdb0')
 
     depends_on('python@2.6:')
 

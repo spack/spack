@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,100 +8,54 @@ This module contains routines related to the module command for accessing and
 parsing environment modules.
 """
 import subprocess
-import re
 import os
+import json
+import re
+
 import llnl.util.tty as tty
-from spack.util.executable import which
+
+# This list is not exhaustive. Currently we only use load and unload
+# If we need another option that changes the environment, add it here.
+module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
+py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
+
+# This is just to enable testing. I hate it but we can't find a better way
+_test_mode = False
 
 
-def get_module_cmd(bashopts=''):
-    try:
-        return get_module_cmd_from_bash(bashopts)
-    except ModuleError:
-        # Don't catch the exception this time; we have no other way to do it.
-        tty.warn("Could not detect module function from bash."
-                 " Trying to detect modulecmd from `which`")
-        try:
-            return get_module_cmd_from_which()
-        except ModuleError:
-            raise ModuleError('Spack requires modulecmd or a defined module'
-                              ' fucntion. Make sure modulecmd is in your path'
-                              ' or the function "module" is defined in your'
-                              ' bash environment.')
+def module(*args):
+    module_cmd = 'module ' + ' '.join(args) + ' 2>&1'
+    if _test_mode:
+        tty.warn('module function operating in test mode')
+        module_cmd = ". %s 2>&1" % args[1]
+    if args[0] in module_change_commands:
+        # Do the module manipulation, then output the environment in JSON
+        # and read the JSON back in the parent process to update os.environ
+        module_cmd += ' >/dev/null; python -c %s' % py_cmd
+        module_p  = subprocess.Popen(module_cmd,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT,
+                                     shell=True,
+                                     executable="/bin/bash")
 
+        # Cray modules spit out warnings that we cannot supress.
+        # This hack skips to the last output (the environment)
+        env_output = str(module_p.communicate()[0].decode())
+        env = env_output.strip().split('\n')[-1]
 
-def get_module_cmd_from_which():
-    module_cmd = which('modulecmd')
-    if not module_cmd:
-        raise ModuleError('`which` did not find any modulecmd executable')
-    module_cmd.add_default_arg('python')
-
-    # Check that the executable works
-    module_cmd('list', output=str, error=str, fail_on_error=False)
-    if module_cmd.returncode != 0:
-        raise ModuleError('get_module_cmd cannot determine the module command')
-
-    return module_cmd
-
-
-def get_module_cmd_from_bash(bashopts=''):
-    # Find how the module function is defined in the environment
-    module_func = os.environ.get('BASH_FUNC_module()', None)
-    if module_func:
-        module_func = os.path.expandvars(module_func)
+        # Update os.environ with new dict
+        env_dict = json.loads(env)
+        os.environ.clear()
+        os.environ.update(env_dict)
     else:
-        module_func_proc = subprocess.Popen(['{0} typeset -f module | '
-                                             'envsubst'.format(bashopts)],
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.STDOUT,
-                                            executable='/bin/bash',
-                                            shell=True)
-        module_func_proc.wait()
-        module_func = module_func_proc.stdout.read()
-
-    # Find the portion of the module function that is evaluated
-    try:
-        find_exec = re.search(r'.*`(.*(:? bash | sh ).*)`.*', module_func)
-        exec_line = find_exec.group(1)
-    except BaseException:
-        try:
-            # This will fail with nested parentheses. TODO: expand regex.
-            find_exec = re.search(r'.*\(([^()]*(:? bash | sh )[^()]*)\).*',
-                                  module_func)
-            exec_line = find_exec.group(1)
-        except BaseException:
-            raise ModuleError('get_module_cmd cannot '
-                              'determine the module command from bash')
-
-    # Create an executable
-    args = exec_line.split()
-    module_cmd = which(args[0])
-    if module_cmd:
-        for arg in args[1:]:
-            if arg in ('bash', 'sh'):
-                module_cmd.add_default_arg('python')
-                break
-            else:
-                module_cmd.add_default_arg(arg)
-    else:
-        raise ModuleError('Could not create executable based on module'
-                          ' function.')
-
-    # Check that the executable works
-    module_cmd('list', output=str, error=str, fail_on_error=False)
-    if module_cmd.returncode != 0:
-        raise ModuleError('get_module_cmd cannot determine the module command'
-                          'from bash.')
-
-    return module_cmd
-
-
-def unload_module(mod):
-    """Takes a module name and unloads the module from the environment. It does
-    not check whether conflicts arise from the unloaded module"""
-    modulecmd = get_module_cmd()
-    exec(compile(modulecmd('unload', mod, output=str, error=str), '<string>',
-                 'exec'))
+        # Simply execute commands that don't change state and return output
+        module_p = subprocess.Popen(module_cmd,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT,
+                                    shell=True,
+                                    executable="/bin/bash")
+        # Decode and str to return a string object in both python 2 and 3
+        return str(module_p.communicate()[0].decode())
 
 
 def load_module(mod):
@@ -109,27 +63,21 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
-    # Create an executable of the module command that will output python code
-    modulecmd = get_module_cmd()
-
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
     # loaded does nothing.
-    text = modulecmd('show', mod, output=str, error=str).split()
+    text = module('show', mod).split()
     for i, word in enumerate(text):
         if word == 'conflict':
-            unload_module(text[i + 1])
+            module('unload', text[i + 1])
 
     # Load the module now that there are no conflicts
     # Some module systems use stdout and some use stderr
-    load = modulecmd('load', mod, output=str, error='/dev/null')
-    if not load:
-        load = modulecmd('load', mod, error=str)
-    exec(compile(load, '<string>', 'exec'))
+    module('load', mod)
 
 
-def get_path_arg_from_module_line(line):
+def get_path_args_from_module_line(line):
     if '(' in line and ')' in line:
         # Determine which lua quote symbol is being used for the argument
         comma_index = line.index(',')
@@ -144,18 +92,17 @@ def get_path_arg_from_module_line(line):
         path_arg = words_and_symbols[-2]
     else:
         path_arg = line.split()[2]
-    return path_arg
+
+    paths = path_arg.split(':')
+    return paths
 
 
 def get_path_from_module(mod):
     """Inspects a TCL module for entries that indicate the absolute path
     at which the library supported by said module can be found.
     """
-    # Create a modulecmd executable
-    modulecmd = get_module_cmd()
-
     # Read the module
-    text = modulecmd('show', mod, output=str, error=str).split('\n')
+    text = module('show', mod).split('\n')
 
     p = get_path_from_module_contents(text, mod)
     if p and not os.path.exists(p):
@@ -174,41 +121,68 @@ def get_path_from_module_contents(text, module_name):
         pkg_var_prefix = components[-2]
     tty.debug("Package directory variable prefix: " + pkg_var_prefix)
 
-    # If it sets the LD_LIBRARY_PATH or CRAY_LD_LIBRARY_PATH, use that
+    path_occurrences = {}
+
+    def strip_path(path, endings):
+        for ending in endings:
+            if path.endswith(ending):
+                return path[:-len(ending)]
+            if path.endswith(ending + '/'):
+                return path[:-(len(ending) + 1)]
+        return path
+
+    def match_pattern_and_strip(line, pattern, strip=[]):
+        if re.search(pattern, line):
+            paths = get_path_args_from_module_line(line)
+            for path in paths:
+                path = strip_path(path, strip)
+                path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    def match_flag_and_strip(line, flag, strip=[]):
+        flag_idx = line.find(flag)
+        if flag_idx >= 0:
+            end = line.find(' ', flag_idx)
+            if end >= 0:
+                path = line[flag_idx + len(flag):end]
+            else:
+                path = line[flag_idx + len(flag):]
+            path = strip_path(path, strip)
+            path_occurrences[path] = path_occurrences.get(path, 0) + 1
+
+    lib_endings = ['/lib64', '/lib']
+    bin_endings = ['/bin']
+    man_endings = ['/share/man', '/man']
+
     for line in text:
+        # Check entries of LD_LIBRARY_PATH and CRAY_LD_LIBRARY_PATH
         pattern = r'\W(CRAY_)?LD_LIBRARY_PATH'
-        if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/lib')]
+        match_pattern_and_strip(line, pattern, lib_endings)
 
-    # If it lists its package directory, return that
-    for line in text:
+        # Check {name}_DIR entries
         pattern = r'\W{0}_DIR'.format(pkg_var_prefix)
-        if re.search(pattern, line):
-            return get_path_arg_from_module_line(line)
+        match_pattern_and_strip(line, pattern)
 
-    # If it lists a -rpath instruction, use that
-    for line in text:
-        rpath = line.find('-rpath/')
-        if rpath >= 0:
-            return line[rpath + 6:line.find('/lib')]
+        # Check {name}_ROOT entries
+        pattern = r'\W{0}_ROOT'.format(pkg_var_prefix)
+        match_pattern_and_strip(line, pattern)
 
-    # If it lists a -L instruction, use that
-    for line in text:
-        lib_paths = line.find('-L/')
-        if lib_paths >= 0:
-            return line[lib_paths + 2:line.find('/lib')]
-
-    # If it sets the PATH, use it
-    for line in text:
+        # Check entries that update the PATH variable
         pattern = r'\WPATH'
-        if re.search(pattern, line):
-            path = get_path_arg_from_module_line(line)
-            return path[:path.find('/bin')]
+        match_pattern_and_strip(line, pattern, bin_endings)
 
-    # Unable to find module path
+        # Check entries that update the MANPATH variable
+        pattern = r'MANPATH'
+        match_pattern_and_strip(line, pattern, man_endings)
+
+        # Check entries that add a `-rpath` flag to a variable
+        match_flag_and_strip(line, '-rpath', lib_endings)
+
+        # Check entries that add a `-L` flag to a variable
+        match_flag_and_strip(line, '-L', lib_endings)
+
+    # Whichever path appeared most in the module, we assume is the correct path
+    if len(path_occurrences) > 0:
+        return max(path_occurrences.items(), key=lambda x: x[1])[0]
+
+    # Unable to find path in module
     return None
-
-
-class ModuleError(Exception):
-    """Raised the the module_cmd utility to indicate errors."""

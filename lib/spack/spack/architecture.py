@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,52 +56,169 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
-import os
+import functools
 import inspect
-import platform as py_platform
+import warnings
 
-import llnl.util.multiproc as mp
+import six
+
+import llnl.util.cpu as cpu
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
+import spack.compiler
 import spack.paths
 import spack.error as serr
+import spack.version
 from spack.util.naming import mod_to_class
-from spack.util.environment import get_path
 from spack.util.spack_yaml import syaml_dict
 
 
 class NoPlatformError(serr.SpackError):
-
     def __init__(self):
         super(NoPlatformError, self).__init__(
             "Could not determine a platform for this machine.")
 
 
-@key_ordering
-class Target(object):
-    """ Target is the processor of the host machine.
-        The host machine may have different front-end and back-end targets,
-        especially if it is a Cray machine. The target will have a name and
-        also the module_name (e.g craype-compiler). Targets will also
-        recognize which platform they came from using the set_platform method.
-        Targets will have compiler finding strategies
+def _ensure_other_is_target(method):
+    """Decorator to be used in dunder methods taking a single argument to
+    ensure that the argument is an instance of ``Target`` too.
     """
+    @functools.wraps(method)
+    def _impl(self, other):
+        if isinstance(other, six.string_types):
+            other = Target(other)
 
+        if not isinstance(other, Target):
+            return NotImplemented
+
+        return method(self, other)
+
+    return _impl
+
+
+class Target(object):
     def __init__(self, name, module_name=None):
-        self.name = name  # case of cray "ivybridge" but if it's x86_64
-        self.module_name = module_name  # craype-ivybridge
+        """Target models microarchitectures and their compatibility.
 
-    # Sets only the platform name to avoid recursiveness
+        Args:
+            name (str or Microarchitecture):micro-architecture of the
+                target
+            module_name (str): optional module name to get access to the
+                current target. This is typically used on machines
+                like Cray (e.g. craype-compiler)
+        """
+        if not isinstance(name, cpu.Microarchitecture):
+            name = cpu.targets.get(
+                name, cpu.generic_microarchitecture(name)
+            )
+        self.microarchitecture = name
+        self.module_name = module_name
 
-    def _cmp_key(self):
-        return (self.name, self.module_name)
+    @property
+    def name(self):
+        return self.microarchitecture.name
+
+    @_ensure_other_is_target
+    def __eq__(self, other):
+        return self.microarchitecture == other.microarchitecture and \
+            self.module_name == other.module_name
+
+    def __ne__(self, other):
+        # This method is necessary as long as we support Python 2. In Python 3
+        # __ne__ defaults to the implementation below
+        return not self == other
+
+    @_ensure_other_is_target
+    def __lt__(self, other):
+        # TODO: In the future it would be convenient to say
+        # TODO: `spec.architecture.target < other.architecture.target`
+        # TODO: and change the semantic of the comparison operators
+
+        # This is needed to sort deterministically specs in a list.
+        # It doesn't implement a total ordering semantic.
+        return self.microarchitecture.name < other.microarchitecture.name
+
+    def __hash__(self):
+        return hash((self.name, self.module_name))
+
+    @staticmethod
+    def from_dict_or_value(dict_or_value):
+        # A string here represents a generic target (like x86_64 or ppc64) or
+        # a custom micro-architecture
+        if isinstance(dict_or_value, six.string_types):
+            return Target(dict_or_value)
+
+        # TODO: From a dict we actually retrieve much more information than
+        # TODO: just the name. We can use that information to reconstruct an
+        # TODO: "old" micro-architecture or check the current definition.
+        target_info = dict_or_value
+        return Target(target_info['name'])
+
+    def to_dict_or_value(self):
+        """Returns a dict or a value representing the current target.
+
+        String values are used to keep backward compatibility with generic
+        targets, like e.g. x86_64 or ppc64. More specific micro-architectures
+        will return a dictionary which contains information on the name,
+        features, vendor, generation and parents of the current target.
+        """
+        # Generic targets represent either an architecture
+        # family (like x86_64) or a custom micro-architecture
+        if self.microarchitecture.vendor == 'generic':
+            return str(self)
+
+        return syaml_dict(
+            self.microarchitecture.to_dict(return_list_of_items=True)
+        )
 
     def __repr__(self):
-        return self.__str__()
+        cls_name = self.__class__.__name__
+        fmt = cls_name + '({0}, {1})'
+        return fmt.format(repr(self.microarchitecture),
+                          repr(self.module_name))
 
     def __str__(self):
-        return self.name
+        return str(self.microarchitecture)
+
+    def __contains__(self, cpu_flag):
+        return cpu_flag in self.microarchitecture
+
+    def optimization_flags(self, compiler):
+        """Returns the flags needed to optimize for this target using
+        the compiler passed as argument.
+
+        Args:
+            compiler (CompilerSpec or Compiler): object that contains both the
+                name and the version of the compiler we want to use
+        """
+        # Mixed toolchains are not supported yet
+        import spack.compilers
+        if isinstance(compiler, spack.compiler.Compiler):
+            if spack.compilers.is_mixed_toolchain(compiler):
+                msg = ('microarchitecture specific optimizations are not '
+                       'supported yet on mixed compiler toolchains [check'
+                       ' {0.name}@{0.version} for further details]')
+                warnings.warn(msg.format(compiler))
+                return ''
+
+        # Try to check if the current compiler comes with a version number or
+        # has an unexpected suffix. If so, treat it as a compiler with a
+        # custom spec.
+        compiler_version = compiler.version
+        version_number, suffix = cpu.version_components(compiler.version)
+        if not version_number or suffix not in ('', 'apple'):
+            # Try to deduce the correct version. Depending on where this
+            # function is called we might get either a CompilerSpec or a
+            # fully fledged compiler object
+            import spack.spec
+            if isinstance(compiler, spack.spec.CompilerSpec):
+                compiler = spack.compilers.compilers_for_spec(compiler).pop()
+            compiler_version = compiler.cc_version(compiler.cc)
+
+        return self.microarchitecture.optimization_flags(
+            compiler.name, str(compiler_version)
+        )
 
 
 @key_ordering
@@ -144,6 +261,8 @@ class Platform(object):
         front-end, and back-end. This can be overwritten
         by a subclass for which we want to provide further aliasing options.
         """
+        # TODO: Check if we can avoid using strings here
+        name = str(name)
         if name == 'default_target':
             name = self.default
         elif name == 'frontend' or name == 'fe':
@@ -231,98 +350,11 @@ class OperatingSystem(object):
     def _cmp_key(self):
         return (self.name, self.version)
 
-    def find_compilers(self, *paths):
-        """
-        Return a list of compilers found in the supplied paths.
-        This invokes the find() method for each Compiler class,
-        and appends the compilers detected to a list.
-        """
-        if not paths:
-            paths = get_path('PATH')
-        # Make sure path elements exist, and include /bin directories
-        # under prefixes.
-        filtered_path = []
-        for p in paths:
-            # Eliminate symlinks and just take the real directories.
-            p = os.path.realpath(p)
-            if not os.path.isdir(p):
-                continue
-            filtered_path.append(p)
-
-            # Check for a bin directory, add it if it exists
-            bin = os.path.join(p, 'bin')
-            if os.path.isdir(bin):
-                filtered_path.append(os.path.realpath(bin))
-
-        # Once the paths are cleaned up, do a search for each type of
-        # compiler.  We can spawn a bunch of parallel searches to reduce
-        # the overhead of spelunking all these directories.
-        # NOTE: we import spack.compilers here to avoid init order cycles
-        import spack.compilers
-        types = spack.compilers.all_compiler_types()
-        compiler_lists = mp.parmap(
-            lambda cmp_cls: self.find_compiler(cmp_cls, *filtered_path),
-            types)
-
-        # ensure all the version calls we made are cached in the parent
-        # process, as well.  This speeds up Spack a lot.
-        clist = [comp for cl in compiler_lists for comp in cl]
-        return clist
-
-    def find_compiler(self, cmp_cls, *path):
-        """Try to find the given type of compiler in the user's
-           environment. For each set of compilers found, this returns
-           compiler objects with the cc, cxx, f77, fc paths and the
-           version filled in.
-
-           This will search for compilers with the names in cc_names,
-           cxx_names, etc. and it will group them if they have common
-           prefixes, suffixes, and versions.  e.g., gcc-mp-4.7 would
-           be grouped with g++-mp-4.7 and gfortran-mp-4.7.
-        """
-        dicts = mp.parmap(
-            lambda t: cmp_cls._find_matches_in_path(*t),
-            [(cmp_cls.cc_names,  cmp_cls.cc_version)  + tuple(path),
-             (cmp_cls.cxx_names, cmp_cls.cxx_version) + tuple(path),
-             (cmp_cls.f77_names, cmp_cls.f77_version) + tuple(path),
-             (cmp_cls.fc_names,  cmp_cls.fc_version)  + tuple(path)])
-
-        all_keys = set()
-        for d in dicts:
-            all_keys.update(d)
-
-        compilers = {}
-        for k in all_keys:
-            ver, pre, suf = k
-
-            # Skip compilers with unknown version.
-            if ver == 'unknown':
-                continue
-
-            paths = tuple(pn[k] if k in pn else None for pn in dicts)
-            spec = spack.spec.CompilerSpec(cmp_cls.name, ver)
-
-            if ver in compilers:
-                prev = compilers[ver]
-
-                # prefer the one with more compilers.
-                prev_paths = [prev.cc, prev.cxx, prev.f77, prev.fc]
-                newcount = len([p for p in paths if p is not None])
-                prevcount = len([p for p in prev_paths if p is not None])
-
-                # Don't add if it's not an improvement over prev compiler.
-                if newcount <= prevcount:
-                    continue
-
-            compilers[ver] = cmp_cls(spec, self, py_platform.machine(), paths)
-
-        return list(compilers.values())
-
     def to_dict(self):
-        d = {}
-        d['name'] = self.name
-        d['version'] = self.version
-        return d
+        return syaml_dict([
+            ('name', self.name),
+            ('version', self.version)
+        ])
 
 
 @key_ordering
@@ -336,7 +368,7 @@ class Arch(object):
         self.platform = plat
         if plat and os:
             os = self.platform.operating_system(os)
-        self.platform_os = os
+        self.os = os
         if plat and target:
             target = self.platform.target(target)
         self.target = target
@@ -349,16 +381,16 @@ class Arch(object):
     def concrete(self):
         return all((self.platform is not None,
                     isinstance(self.platform, Platform),
-                    self.platform_os is not None,
-                    isinstance(self.platform_os, OperatingSystem),
+                    self.os is not None,
+                    isinstance(self.os, OperatingSystem),
                     self.target is not None, isinstance(self.target, Target)))
 
     def __str__(self):
-        if self.platform or self.platform_os or self.target:
+        if self.platform or self.os or self.target:
             if self.platform.name == 'darwin':
-                os_name = self.platform_os.name if self.platform_os else "None"
+                os_name = self.os.name if self.os else "None"
             else:
-                os_name = str(self.platform_os)
+                os_name = str(self.os)
 
             return (str(self.platform) + "-" +
                     os_name + "-" + str(self.target))
@@ -371,7 +403,7 @@ class Arch(object):
     # TODO: make this unnecessary: don't include an empty arch on *every* spec.
     def __nonzero__(self):
         return (self.platform is not None or
-                self.platform_os is not None or
+                self.os is not None or
                 self.target is not None)
     __bool__ = __nonzero__
 
@@ -380,22 +412,22 @@ class Arch(object):
             platform = self.platform.name
         else:
             platform = self.platform
-        if isinstance(self.platform_os, OperatingSystem):
-            platform_os = self.platform_os.name
+        if isinstance(self.os, OperatingSystem):
+            os = self.os.name
         else:
-            platform_os = self.platform_os
+            os = self.os
         if isinstance(self.target, Target):
-            target = self.target.name
+            target = self.target.microarchitecture
         else:
             target = self.target
-        return (platform, platform_os, target)
+        return (platform, os, target)
 
     def to_dict(self):
         str_or_none = lambda v: str(v) if v else None
         d = syaml_dict([
             ('platform', str_or_none(self.platform)),
-            ('platform_os', str_or_none(self.platform_os)),
-            ('target', str_or_none(self.target))])
+            ('platform_os', str_or_none(self.os)),
+            ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
     @staticmethod
@@ -404,6 +436,7 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
+@memoized
 def get_platform(platform_name):
     """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()
@@ -425,18 +458,18 @@ def verify_platform(platform_name):
 
 
 def arch_for_spec(arch_spec):
-    """Transforms the given architecture spec into an architecture objct."""
+    """Transforms the given architecture spec into an architecture object."""
     arch_spec = spack.spec.ArchSpec(arch_spec)
-    assert(arch_spec.concrete)
+    assert arch_spec.concrete
 
     arch_plat = get_platform(arch_spec.platform)
-    if not (arch_plat.operating_system(arch_spec.platform_os) and
+    if not (arch_plat.operating_system(arch_spec.os) and
             arch_plat.target(arch_spec.target)):
         raise ValueError(
             "Can't recreate arch for spec %s on current arch %s; "
             "spec architecture is too different" % (arch_spec, sys_type()))
 
-    return Arch(arch_plat, arch_spec.platform_os, arch_spec.target)
+    return Arch(arch_plat, arch_spec.os, arch_spec.target)
 
 
 @memoized
@@ -493,3 +526,15 @@ def sys_type():
     """
     arch = Arch(platform(), 'default_os', 'default_target')
     return str(arch)
+
+
+@memoized
+def compatible_sys_types():
+    """Returns a list of all the systypes compatible with the current host."""
+    compatible_archs = []
+    current_host = cpu.host()
+    compatible_targets = [current_host] + current_host.ancestors
+    for target in compatible_targets:
+        arch = Arch(platform(), 'default_os', target)
+        compatible_archs.append(str(arch))
+    return compatible_archs

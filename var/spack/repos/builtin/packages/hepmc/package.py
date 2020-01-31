@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,12 +14,12 @@ class Hepmc(CMakePackage):
     homepage = "http://hepmc.web.cern.ch/hepmc/"
     url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
 
-    version('3.0.0',   '2212a5e8d693fbf726c28b43ebc6377a')
-    version('2.06.09', '52518437a64f6b4284e9acc2ecad6212')
-    version('2.06.08', 'a2e889114cafc4f60742029d69abd907')
-    version('2.06.07', '11d7035dccb0650b331f51520c6172e7')
-    version('2.06.06', '102e5503537a3ecd6ea6f466aa5bc4ae')
-    version('2.06.05', '2a4a2a945adf26474b8bdccf4f881d9c')
+    version('3.0.0',   sha256='7ac3c939a857a5ad67bea1e77e3eb16e80d38cfdf825252ac57160634c26d9ec')
+    version('2.06.09', sha256='e0f8fddd38472c5615210894444686ac5d72df3be682f7d151b562b236d9b422')
+    version('2.06.08', sha256='8be6c1793e0a045f07ddb88bb64b46de7e66a52e75fb72b3f82f9a3e3ba8a8ce')
+    version('2.06.07', sha256='a0bdd6f36a3cc4cb59d6eb15cef9d46ce9b3739cae3324e81ebb2df6943e4594')
+    version('2.06.06', sha256='8cdff26c10783ed4248220a84a43b7e1f9b59cc2c9a29bd634d024ca469db125')
+    version('2.06.05', sha256='4c411077cc97522c03b74f973264b8d9fd2b6ccec0efc7ceced2645371c73618')
 
     depends_on('cmake@2.6:', type='build')
 

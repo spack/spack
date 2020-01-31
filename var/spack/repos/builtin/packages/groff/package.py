@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Groff(AutotoolsPackage):
     depends_on('sed',   type='build')
     depends_on('ghostscript', when='+pdf')
 
-    version('1.22.3', 'cc825fa64bc7306a885f2fb2268d3ec5')
+    version('1.22.3', sha256='3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5')
 
     # https://savannah.gnu.org/bugs/index.php?43581
     # TODO: figure out why this patch does not actually work for parallel

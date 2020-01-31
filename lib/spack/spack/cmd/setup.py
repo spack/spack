@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,7 +51,7 @@ def setup_parser(subparser):
 def spack_transitive_include_path():
     return ';'.join(
         os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
+        for dep in os.environ.get('SPACK_DEPENDENCIES', '').split(os.pathsep)
     )
 
 

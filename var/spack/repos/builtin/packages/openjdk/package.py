@@ -11,15 +11,31 @@ class Openjdk(Package):
     """The free and opensource java implementation"""
 
     homepage = "https://jdk.java.net"
-    url      = "https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz"
 
-    version('11.0.1', sha256='7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd')
+    version(
+        "11.0.2",
+        sha256="99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57",
+        url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz",
+    )
+
+    version(
+        "11.0.1",
+        sha256="7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd",
+        url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz",
+    )
+
+    version(
+        "1.8.0_202-b08",
+        sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
+        url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u202-b08/OpenJDK8U-jdk_x64_linux_openj9_8u202b08_openj9-0.12.0.tar.gz",
+    )
 
     provides('java')
     provides('java@11', when='@11.0:11.99')
+    provides('java@8', when='@1.8.0:1.8.999')
 
-    conflicts('target=ppc64', msg='openjdk is only available for x86_64')
-    conflicts('target=ppc64le', msg='openjdk is only available for x86_64')
+    conflicts('target=ppc64:', msg='openjdk is only available for x86_64')
+    conflicts('target=ppc64le:', msg='openjdk is only available for x86_64')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`

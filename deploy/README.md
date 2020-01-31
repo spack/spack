@@ -201,8 +201,11 @@ There are five stages:
 
 1. compilers: all necessary compilers
 2. tools: software involved in the building process
-3. serial-libraries: software dependencies of our stack
-4. parallel-libraries: software dependencies of our stack requiring MPI
+3. external-libraries: software dependencies of our stack that should only
+   be compiled once and can have their dependency tree truncated within
+   Spack
+4. libraries: software dependencies of our stack that are
+   compiler-dependent
 5. applications: packages maintained by Blue Brain
 
 During deployment, package specs required by Spack are generated with the
@@ -217,6 +220,7 @@ The definitions of software can be found in the `packages` directory:
     packages
     ├── bbp-packages.yaml
     ├── compilers.yaml
+    ├── external-libraries.yaml
     ├── parallel-libraries.yaml
     ├── python-packages.yaml
     ├── serial-libraries.yaml
@@ -227,10 +231,11 @@ Files used for the stages:
 
 1. compilers: `compilers.yaml`
 2. tools: `system-tools.yaml`
-3. serial-libraries: `serial-libraries.yaml`,
-                     `python-packages.yaml`
-4. parallel-libraries: `parallel-libraries.yaml`
-5. applications: `bbp-packages.yaml`
+3. external-libraries: `external-libraries.yaml`
+4. libraries: `parallel-libraries.yaml`,
+              `python-packages.yaml`,
+              `serial-libraries.yaml`
+4. applications: `bbp-packages.yaml`
 
 #### Spack configuration
 
@@ -258,8 +263,8 @@ serial libraries should be at least in part found in `packages.yaml` to
 truncate the dependency DAG and remove duplication with different
 compilers.
 
-The final stages, applications and parallel libraries will use Spack chains
-to see the package databases of all libraries.
+The final stages, the applications stage will use Spack chains to see the
+package databases of all libraries.
 
 ### Preparing the deployment
 
@@ -283,6 +288,8 @@ To generate and install the specs to be installed for all stages, use:
     ### ...using compilers.yaml
     ### generating specs for tools
     ### ...using system-tools.yaml
+    ### generating specs for external-libraries
+    ### ...using external-libraries.yaml
     ### generating specs for libraries
     ### ...using parallel-libraries.yaml
     ### ...using serial-libraries.yaml

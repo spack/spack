@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class M4(AutotoolsPackage):
     homepage = "https://www.gnu.org/software/m4/m4.html"
     url      = "https://ftpmirror.gnu.org/m4/m4-1.4.18.tar.gz"
 
-    version('1.4.18', 'a077779db287adf4e12a035029002d28')
-    version('1.4.17', 'a5e9954b1dae036762f7b13673a2cf76')
+    version('1.4.18', sha256='ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab')
+    version('1.4.17', sha256='3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e')
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
@@ -35,7 +35,13 @@ class M4(AutotoolsPackage):
         args = ['--enable-c++']
 
         if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
-            args.append('CFLAGS=-rtlib=compiler-rt')
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
+        if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
+
+        if spec.satisfies('%fj') and not spec.satisfies('platform=darwin'):
+            args.append('LDFLAGS=-rtlib=compiler-rt')
 
         if spec.satisfies('%intel'):
             args.append('CFLAGS=-no-gcc')
@@ -48,7 +54,7 @@ class M4(AutotoolsPackage):
 
         # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
-        if (arch.platform == 'darwin' and arch.platform_os == 'sierra' and
+        if (arch.platform == 'darwin' and arch.os == 'sierra' and
             '%gcc' in spec):
             args.append('ac_cv_type_struct_sched_param=yes')
 

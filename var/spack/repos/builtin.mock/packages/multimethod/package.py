@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Multimethod(MultimethodBase):
     url      = 'http://www.example.com/example-1.0.tar.gz'
 
     #
-    # These functions are only valid for versions 1, 2, and 3.
+    # These functions are only valid for versions 1, 3, and 4.
     #
     @when('@1.0')
     def no_version_2(self):
@@ -124,4 +124,47 @@ class Multimethod(MultimethodBase):
     #
     @when("@2:")
     def base_method(self):
-        return "subclass_method"
+        return 'multimethod'
+
+    #
+    # Make sure methods with non-default implementations in a superclass
+    # will invoke those methods when none in the subclass match but one in
+    # the superclass does.
+    #
+    @when("@1.0")
+    def inherited_and_overridden(self):
+        return "base@1.0"
+
+    @when("@2.0")
+    def inherited_and_overridden(self):
+        return "base@2.0"
+
+    #
+    # Make sure that multimethods follow MRO properly with diamond inheritance
+    #
+    @when('@2.0')
+    def diamond_inheritance(self):
+        return 'first_parent'
+
+    @when('@4.0')
+    def diamond_inheritance(self):
+        return "should_not_be_reached by diamond inheritance test"
+
+    #
+    # Check that multimethods work with boolean values
+    #
+    @when(True)
+    def boolean_true_first(self):
+        return 'True'
+
+    @when(False)
+    def boolean_true_first(self):
+        return 'False'
+
+    @when(False)
+    def boolean_false_first(self):
+        return 'False'
+
+    @when(True)
+    def boolean_false_first(self):
+        return 'True'

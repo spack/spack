@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,9 @@ class Gsl(AutotoolsPackage):
     url      = "https://ftpmirror.gnu.org/gsl/gsl-2.3.tar.gz"
 
     version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
-    version('2.4',   'dba736f15404807834dc1c7b93e83b92')
-    version('2.3',   '905fcbbb97bc552d1037e34d200931a0')
-    version('2.2.1', '3d90650b7cfe0a6f4b29c2d7b0f86458')
-    version('2.1',   'd8f70abafd3e9f0bae03c52d1f4e8de5')
-    version('2.0',   'ae44cdfed78ece40e73411b63a78c375')
-    version('1.16',  'e49a664db13d81c968415cd53f62bc8b')
+    version('2.4',   sha256='4d46d07b946e7b31c19bbf33dda6204d7bedc2f5462a1bae1d4013426cd1ce9b')
+    version('2.3',   sha256='562500b789cd599b3a4f88547a7a3280538ab2ff4939504c8b4ac4ca25feadfb')
+    version('2.2.1', sha256='13d23dc7b0824e1405f3f7e7d0776deee9b8f62c62860bf66e7852d402b8b024')
+    version('2.1',   sha256='59ad06837397617f698975c494fe7b2b698739a59e2fcf830b776428938a0c66')
+    version('2.0',   sha256='e361f0b19199b5e6c21922e9f16adf7eca8dd860842802424906d0f83485ca2d')
+    version('1.16',  sha256='73bc2f51b90d2a780e6d266d43e487b3dbd78945dd0b04b14ca5980fe28d2f53')

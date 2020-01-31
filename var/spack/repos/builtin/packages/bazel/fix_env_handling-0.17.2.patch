@@ -1,8 +1,8 @@
 diff --git a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
-index 72c40ac..2e73530 100755
+index ec2aafa..4ef3e13 100644
 --- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
 +++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
-@@ -168,6 +168,126 @@ public class BazelRuleClassProvider {
+@@ -169,6 +169,131 @@ public class BazelRuleClassProvider {
        env.put("PATH", null);
      }
  
@@ -124,6 +124,11 @@ index 72c40ac..2e73530 100755
 +    String spack_dependencies = System.getenv("SPACK_DEPENDENCIES");
 +    if (spack_dependencies != null) {
 +        env.put("SPACK_DEPENDENCIES", spack_dependencies);
++    }
++
++    String spack_target_args = System.getenv("SPACK_TARGET_ARGS");
++    if (spack_target_args != null) {
++        env.put("SPACK_TARGET_ARGS", spack_target_args);
 +    }
 +
      // Shell environment variables specified via options take precedence over the

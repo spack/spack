@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,12 @@ class Cmor(AutotoolsPackage):
     standard model experiments."""
 
     homepage = "http://cmor.llnl.gov"
-    url = "https://github.com/PCMDI/cmor/archive/3.1.2.tar.gz"
+    url = "https://github.com/PCMDI/cmor/archive/3.4.0.tar.gz"
 
-    version('3.3.0', 'cfdeeddab1aedb823e26ec38723bd67e')
-    version('3.2.0', 'b48105105d4261012c19cd65e89ff7a6')
-    version('3.1.2', '72f7227159c901e4bcf80d2c73a8ce77')
+    version('3.4.0', sha256='e700a6d50f435e6ffdedf23bf6832b7d37fe21dc78815e1372f218d1d52bd2cb')
+    version('3.3.0', sha256='b763707272c470fc6f7077d9c541591a60f9075b52f5f0298eaf2cb2f2fff4d2')
+    version('3.2.0', sha256='8d49899549dd4c08197739300d507e6fc2b4a5cfe2bfd3e6b44e8e3eaf79b132')
+    version('3.1.2', sha256='ee58b6d405f081e4e0633af931b7992f1a570953b71ece17c01ab9e15889211a')
 
     variant('fortran', default=True, description='Enable Fortran API')
     variant('python', default=False, description='Enable PYTHON support')
@@ -28,7 +29,7 @@ class Cmor(AutotoolsPackage):
     depends_on('hdf5@:1.8.19')
 
     extends('python', when='+python')
-    depends_on('python@:2.8', when='+python')
+    depends_on('python@:2', when='@:3.3 +python')
     depends_on('py-numpy', type=('build', 'run'), when='+python')
 
     @run_before('configure')

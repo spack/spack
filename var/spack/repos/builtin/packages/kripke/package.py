@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,11 +10,11 @@ class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.
     """
-    homepage = "https://computation.llnl.gov/projects/co-design/kripke"
-    url      = "https://computation.llnl.gov/projects/co-design/download/kripke-openmp-1.1.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/co-design/kripke"
+    url      = "https://computing.llnl.gov/projects/co-design/download/kripke-openmp-1.1.tar.gz"
 
     tags = ['proxy-app']
-    version('1.1', '7fe6f2b26ed983a6ce5495ab701f85bf')
+    version('1.1', sha256='232d74072fc7b848fa2adc8a1bc839ae8fb5f96d50224186601f55554a25f64a')
 
     variant('mpi',    default=True, description='Build with MPI.')
     variant('openmp', default=True, description='Build with OpenMP enabled.')
@@ -35,4 +35,4 @@ class Kripke(CMakePackage):
         # Kripke does not provide install target, so we have to copy
         # things into place.
         mkdirp(prefix.bin)
-        install('spack-build/kripke', prefix.bin)
+        install('../spack-build/kripke', prefix.bin)

@@ -12,9 +12,10 @@ class PyBasalt(PythonPackage):
     homepage = "https://github.com/tristan0x/basalt"
     url      = "git@github.com:tristan0x/basalt.git"
     
-    version('develop', git=url, branch='master', submodules=True, clean=False)
-    version('0.2.4', git=url, tag='v0.2.4', submodules=True, preferred=True, clean=False)
-    version('0.1.1', git=url, tag='v0.1.1', submodules=True, clean=False)
+    version('develop', git=url, branch='master', submodules=True, get_full_repo=True)
+    version('0.2.8', git=url, tag='v0.2.8', submodules=True, get_full_repo=True)
+    version('0.2.4', git=url, tag='v0.2.4', submodules=True, get_full_repo=True)
+    version('0.1.1', git=url, tag='v0.1.1', submodules=True, get_full_repo=True)
 
     depends_on('benchmark', type='build')
     depends_on('cmake@3.7:')

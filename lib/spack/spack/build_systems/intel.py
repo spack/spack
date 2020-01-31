@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ import glob
 import tempfile
 import re
 import inspect
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ElementTree
 import llnl.util.tty as tty
 
 from llnl.util.filesystem import \
@@ -25,10 +25,10 @@ from spack.util.executable import Executable
 from spack.util.prefix import Prefix
 from spack.build_environment import dso_suffix
 
-
 # A couple of utility functions that might be useful in general. If so, they
 # should really be defined elsewhere, unless deemed heretical.
 # (Or na"ive on my part).
+
 
 def debug_print(msg, *args):
     '''Prints a message (usu. a variable) and the callers' names for a couple
@@ -114,6 +114,14 @@ class IntelPackage(PackageBase):
         'intel-mkl@11.3.0:11.3.999':  2016,
         'intel-mpi@5.1:5.99':         2016,
     }
+
+    # Below is the list of possible values for setting auto dispatch functions
+    # for the Intel compilers. Using these allows for the building of fat
+    # binaries that will detect the CPU SIMD capabilities at run time and
+    # activate the appropriate extensions.
+    auto_dispatch_options = ('COMMON-AVX512', 'MIC-AVX512', 'CORE-AVX512',
+                             'CORE-AVX2', 'CORE-AVX-I', 'AVX', 'SSE4.2',
+                             'SSE4.1', 'SSSE3', 'SSE3', 'SSE2')
 
     @property
     def license_required(self):
@@ -227,7 +235,7 @@ class IntelPackage(PackageBase):
         #
         # https://software.intel.com/en-us/articles/configuration-file-format
         #
-        xmltree = ET.parse('pset/mediaconfig.xml')
+        xmltree = ElementTree.parse('pset/mediaconfig.xml')
         for entry in xmltree.getroot().findall('.//Abbr'):  # XPath expression
             name_present = entry.text
             for name_requested in requested:
@@ -683,6 +691,26 @@ class IntelPackage(PackageBase):
         return omp_libs
 
     @property
+    def _gcc_executable(self):
+        '''Return GCC executable'''
+        # Match the available gcc, as it's done in tbbvars.sh.
+        gcc_name = 'gcc'
+        # but first check if -gcc-name is specified in cflags
+        for flag in self.spec.compiler_flags['cflags']:
+            if flag.startswith('-gcc-name='):
+                gcc_name = flag.split('-gcc-name=')[1]
+                break
+        debug_print(gcc_name)
+        return Executable(gcc_name)
+
+    @property
+    def tbb_headers(self):
+        # Note: TBB is included as
+        # #include <tbb/task_scheduler_init.h>
+        return HeaderList([
+            self.component_include_dir('tbb') + '/dummy.h'])
+
+    @property
     def tbb_libs(self):
         '''Supply LibraryList for linking TBB'''
 
@@ -693,19 +721,18 @@ class IntelPackage(PackageBase):
         # option: "icpc -tbb"
 
         # TODO: clang(?)
-        gcc = Executable('gcc')     # must be gcc, not self.compiler.cc
+        gcc = self._gcc_executable     # must be gcc, not self.compiler.cc
         cxx_lib_path = gcc(
             '--print-file-name', 'libstdc++.%s' % dso_suffix, output=str)
 
-        libs = tbb_lib + LibraryList(cxx_lib_path)
+        libs = tbb_lib + LibraryList(cxx_lib_path.rstrip())
         debug_print(libs)
         return libs
 
     @property
     def _tbb_abi(self):
         '''Select the ABI needed for linking TBB'''
-        # Match the available gcc, as it's done in tbbvars.sh.
-        gcc = Executable('gcc')
+        gcc = self._gcc_executable
         matches = re.search(r'(gcc|LLVM).* ([0-9]+\.[0-9]+\.[0-9]+).*',
                             gcc('--version', output=str), re.I | re.M)
         abi = ''
@@ -790,9 +817,11 @@ class IntelPackage(PackageBase):
             blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root or
               '^mvapich2' in spec_root or
-              '^intel-mpi' in spec_root):
+              '^intel-mpi' in spec_root or
+              '^intel-parallel-studio' in spec_root):
             blacs_lib = 'libmkl_blacs_intelmpi'
-        elif '^mpt' in spec_root:
+        elif ('^mpt' in spec_root or
+              '^hpe-mpi' in spec_root):
             blacs_lib = 'libmkl_blacs_sgimpt'
         else:
             raise_lib_error('Cannot find a BLACS library for the given MPI.')
@@ -907,6 +936,11 @@ class IntelPackage(PackageBase):
                 'MPIF90': compiler_wrapper_commands['MPIF90'],
             })
 
+        # Ensure that the directory containing the compiler wrappers is in the
+        # PATH. Spack packages add `prefix.bin` to their dependents' paths,
+        # but because of the intel directory hierarchy that is insufficient.
+        spack_env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
+
         for key, value in wrapper_vars.items():
             spack_env.set(key, value)
 
@@ -928,24 +962,35 @@ class IntelPackage(PackageBase):
                 ['mkl_cblas', 'mkl_lapacke'],
                 root=self.component_include_dir('mkl'),
                 recursive=False)
+        if '+tbb' in self.spec or self.provides('tbb'):
+            result += self.tbb_headers
+
         debug_print(result)
         return result
 
     @property
     def libs(self):
         result = LibraryList([])
+        if '+tbb' in self.spec or self.provides('tbb'):
+            result = self.tbb_libs + result
+        if '+mkl' in self.spec or self.provides('blas'):
+            result = self.blas_libs + result
+        if '+mkl' in self.spec or self.provides('lapack'):
+            result = self.lapack_libs + result
         if '+mpi' in self.spec or self.provides('mpi'):
             # If prefix is too general, recursive searches may get files from
             # supported but inappropriate sub-architectures like 'mic'.
             libnames = ['libmpifort', 'libmpi']
             if 'cxx' in self.spec.last_query.extra_parameters:
                 libnames = ['libmpicxx'] + libnames
-            result += find_libraries(
+            result = find_libraries(
                 libnames,
                 root=self.component_lib_dir('mpi'),
-                shared=True, recursive=True)
+                shared=True, recursive=True) + result
 
-        # NB: MKL uses domain-specifics: blas_libs/lapack_libs/scalapack_libs
+        if '^mpi' in self.spec.root and ('+mkl' in self.spec or
+                                         self.provides('scalapack')):
+            result = self.scalapack_libs + result
 
         debug_print(result)
         return result
@@ -1179,6 +1224,9 @@ class IntelPackage(PackageBase):
         install_script = Executable('./install.sh')
         install_script.add_default_env('TMPDIR', tmpdir)
 
+        # Need to set HOME to avoid using ~/intel
+        install_script.add_default_env('HOME', prefix)
+
         # perform
         install_script('--silent', 'silent.cfg')
 
@@ -1206,6 +1254,30 @@ class IntelPackage(PackageBase):
             compiler_cfg = os.path.abspath(f + '.cfg')
             with open(compiler_cfg, 'w') as fh:
                 fh.write('-Xlinker -rpath={0}\n'.format(compilers_lib_dir))
+
+    @run_after('install')
+    def configure_auto_dispatch(self):
+        if self._has_compilers:
+            if ('auto_dispatch=none' in self.spec):
+                return
+
+            compilers_bin_dir = self.component_bin_dir('compiler')
+
+            for compiler_name in 'icc icpc ifort'.split():
+                f = os.path.join(compilers_bin_dir, compiler_name)
+                if not os.path.isfile(f):
+                    raise InstallError(
+                        'Cannot find compiler command to configure '
+                        'auto_dispatch:\n\t' + f)
+
+                ad = []
+                for x in IntelPackage.auto_dispatch_options:
+                    if 'auto_dispatch={0}'.format(x) in self.spec:
+                        ad.append(x)
+
+                compiler_cfg = os.path.abspath(f + '.cfg')
+                with open(compiler_cfg, 'a') as fh:
+                    fh.write('-ax{0}\n'.format(','.join(ad)))
 
     @run_after('install')
     def filter_compiler_wrappers(self):

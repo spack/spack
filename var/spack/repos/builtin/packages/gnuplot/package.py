@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,13 +26,14 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
-    version('5.2.5', '039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')
-    version('5.2.2', '60aedd08998160593199459dea8467fe')
-    version('5.2.0', '0bd8f9af84c0ad2fa9de16772c366416')
-    version('5.0.7', '8eaafddb0b12795f82ed6dd2a6ebbe80')
-    version('5.0.6', '8ec46520a86a61163a701b00404faf1a')
-    version('5.0.5', 'c5e96fca73afbee4f57cbc1bfce6b3b8')
-    version('5.0.1', '79b4f9e203728f76b60b28bcd402d3c7')
+    version('5.2.7', sha256='97fe503ff3b2e356fe2ae32203fc7fd2cf9cef1f46b60fe46dc501a228b9f4ed')
+    version('5.2.5', sha256='039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')
+    version('5.2.2', sha256='a416d22f02bdf3873ef82c5eb7f8e94146795811ef808e12b035ada88ef7b1a1')
+    version('5.2.0', sha256='7dfe6425a1a6b9349b1fb42dae46b2e52833b13e807a78a613024d6a99541e43')
+    version('5.0.7', sha256='0ad760ff013b4a9cf29853fa9b50c50030a33cd8fb86220a23abb466655136fc')
+    version('5.0.6', sha256='5bbe4713e555c2e103b7d4ffd45fca69551fff09cf5c3f9cb17428aaacc9b460')
+    version('5.0.5', sha256='25f3e0bf192e01115c580f278c3725d7a569eb848786e12b455a3fda70312053')
+    version('5.0.1', sha256='7cbc557e71df581ea520123fb439dea5f073adcc9010a2885dc80d4ed28b3c47')
 
     variant('wx',      default=False,
             description='Activates wxWidgets terminal')
@@ -59,11 +60,12 @@ class Gnuplot(AutotoolsPackage):
     depends_on('libcerf', when='+libcerf')
     depends_on('libgd', when='+gd')
     depends_on('cairo@1.2:', when='+cairo')
-    depends_on('wx', when='+wx')
+    depends_on('wxwidgets', when='+wx')
     depends_on('pango@1.10:', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
     depends_on('libx11', when='+X')
     depends_on('qt@5.7:+opengl', when='+qt')
+    depends_on('qt+framework', when='+qt platform=darwin')
 
     def configure_args(self):
         # see https://github.com/Homebrew/homebrew-core/blob/master/Formula/gnuplot.rb

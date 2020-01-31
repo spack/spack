@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Aspell(AutotoolsPackage):
 
     extendable = True           # support activating dictionaries
 
-    version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
+    version('0.60.6.1', sha256='f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1')
 
     patch('darwin.patch', when='platform=darwin')
+    patch('issue-519.patch', when='@:0.60.6.1')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Pathfinder(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0.0', '374269e8d42c305eda3e392444e22dde')
+    version('1.0.0', sha256='e002ff7df1ee9a6ee8a892fc208e047e2daf4215ff0d77e7ddc6b09d0506be16')
 
     build_targets = ['--directory=PathFinder_ref', 'CC=cc']
 

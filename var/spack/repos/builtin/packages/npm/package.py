@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class Npm(AutotoolsPackage):
     # base http://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-3.10.5.tgz"
 
-    version('3.10.9', 'ec1eb22b466ce87cdd0b90182acce07f')
-    version('3.10.5', '46002413f4a71de9b0da5b506bf1d992')
+    version('3.10.9', sha256='fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6')
+    version('3.10.5', sha256='ff019769e186152098841c1fa6325e5a79f7903a45f13bd0046a4dc8e63f845f')
 
     depends_on('node-js', type=('build', 'run'))
 

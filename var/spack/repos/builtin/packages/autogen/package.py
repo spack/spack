@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Autogen(AutotoolsPackage):
     list_url = "https://ftp.gnu.org/gnu/autogen"
     list_depth = 1
 
-    version('5.18.12', '551d15ccbf5b5fc5658da375d5003389')
+    version('5.18.12', sha256='805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe')
 
     variant('xml', default=True, description='Enable XML support')
 

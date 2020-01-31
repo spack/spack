@@ -1,36 +1,63 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import codecs
 import os
 import re
 import tarfile
 import shutil
-import platform
 import tempfile
 import hashlib
 from contextlib import closing
-
 import ruamel.yaml as yaml
 
+import json
+
+from six.moves.urllib.error import URLError
+
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree, get_filetype
+from llnl.util.filesystem import mkdirp, install_tree
 
 import spack.cmd
+import spack.config as config
 import spack.fetch_strategy as fs
 import spack.util.gpg as gpg_util
 import spack.relocate as relocate
+import spack.util.spack_yaml as syaml
+import spack.mirror
+import spack.util.url as url_util
+import spack.util.web as web_util
+
+from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.web import spider
 from spack.util.executable import ProcessError
+
+_build_cache_relative_path = 'build_cache'
+
+BUILD_CACHE_INDEX_TEMPLATE = '''
+<html>
+<head>
+  <title>{title}</title>
+</head>
+<body>
+<ul>
+{path_list}
+</ul>
+</body>
+</html>
+'''
+
+BUILD_CACHE_INDEX_ENTRY_TEMPLATE = '  <li><a href="{path}">{path}</a></li>'
 
 
 class NoOverwriteException(Exception):
     """
     Raised when a file exists and must be overwritten.
     """
+
     def __init__(self, file_path):
         err_msg = "\n%s\nexists\n" % file_path
         err_msg += "Use -f option to overwrite."
@@ -55,6 +82,7 @@ class PickKeyException(spack.error.SpackError):
     """
     Raised when multiple keys can be used to sign.
     """
+
     def __init__(self, keys):
         err_msg = "Multi keys available for signing\n%s\n" % keys
         err_msg += "Use spack buildcache create -k <key hash> to pick a key."
@@ -90,11 +118,19 @@ def has_gnupg2():
         return False
 
 
+def build_cache_relative_path():
+    return _build_cache_relative_path
+
+
+def build_cache_prefix(prefix):
+    return os.path.join(prefix, build_cache_relative_path())
+
+
 def buildinfo_file_name(prefix):
     """
     Filename of the binary package meta-data file
     """
-    name = prefix + "/.spack/binary_distribution"
+    name = os.path.join(prefix, ".spack/binary_distribution")
     return name
 
 
@@ -116,38 +152,49 @@ def write_buildinfo_file(prefix, workdir, rel=False):
     """
     text_to_relocate = []
     binary_to_relocate = []
+    link_to_relocate = []
     blacklist = (".spack", "man")
-    os_id = platform.system()
     # Do this at during tarball creation to save time when tarball unpacked.
     # Used by make_package_relative to determine binaries to change.
     for root, dirs, files in os.walk(prefix, topdown=True):
         dirs[:] = [d for d in dirs if d not in blacklist]
         for filename in files:
             path_name = os.path.join(root, filename)
-            #  Check if the file contains a string with the installroot.
-            #  This cuts down on the number of files added to the list
-            #  of files potentially needing relocation
-            if relocate.strings_contains_installroot(
-                    path_name, spack.store.layout.root):
-                filetype = get_filetype(path_name)
-                if relocate.needs_binary_relocation(filetype, os_id):
+            m_type, m_subtype = relocate.mime_type(path_name)
+            if os.path.islink(path_name):
+                link = os.readlink(path_name)
+                if os.path.isabs(link):
+                    # Relocate absolute links into the spack tree
+                    if link.startswith(spack.store.layout.root):
+                        rel_path_name = os.path.relpath(path_name, prefix)
+                        link_to_relocate.append(rel_path_name)
+                    else:
+                        msg = 'Absolute link %s to %s ' % (path_name, link)
+                        msg += 'outside of stage %s ' % prefix
+                        msg += 'cannot be relocated.'
+                        tty.warn(msg)
+
+            if relocate.needs_binary_relocation(m_type, m_subtype):
+                if not filename.endswith('.o'):
                     rel_path_name = os.path.relpath(path_name, prefix)
                     binary_to_relocate.append(rel_path_name)
-                elif relocate.needs_text_relocation(filetype):
-                    rel_path_name = os.path.relpath(path_name, prefix)
-                    text_to_relocate.append(rel_path_name)
+            if relocate.needs_text_relocation(m_type, m_subtype):
+                rel_path_name = os.path.relpath(path_name, prefix)
+                text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
     buildinfo = {}
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
+    buildinfo['spackprefix'] = spack.paths.prefix
     buildinfo['relative_prefix'] = os.path.relpath(
         prefix, spack.store.layout.root)
     buildinfo['relocate_textfiles'] = text_to_relocate
     buildinfo['relocate_binaries'] = binary_to_relocate
+    buildinfo['relocate_links'] = link_to_relocate
     filename = buildinfo_file_name(workdir)
     with open(filename, 'w') as outfile:
-        outfile.write(yaml.dump(buildinfo, default_flow_style=True))
+        outfile.write(syaml.dump(buildinfo, default_flow_style=True))
 
 
 def tarball_directory_name(spec):
@@ -220,53 +267,84 @@ def sign_tarball(key, force, specfile_path):
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
-def generate_index(outdir, indexfile_path):
-    f = open(indexfile_path, 'w')
-    header = """<html>\n
-<head>\n</head>\n
-<list>\n"""
-    footer = "</list>\n</html>\n"
-    paths = os.listdir(outdir + '/build_cache')
-    f.write(header)
-    for path in paths:
-        rel = os.path.basename(path)
-        f.write('<li><a href="%s"> %s</a>\n' % (rel, rel))
-    f.write(footer)
-    f.close()
+def generate_package_index(cache_prefix):
+    """Create the build cache index page.
+
+    Creates (or replaces) the "index.html" page at the location given in
+    cache_prefix.  This page contains a link for each binary package (*.yaml)
+    and signing key (*.key) under cache_prefix.
+    """
+    tmpdir = tempfile.mkdtemp()
+    try:
+        index_html_path = os.path.join(tmpdir, 'index.html')
+        file_list = (
+            entry
+            for entry in web_util.list_url(cache_prefix)
+            if (entry.endswith('.yaml')
+                or entry.endswith('.key')))
+
+        with open(index_html_path, 'w') as f:
+            f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
+                title='Spack Package Index',
+                path_list='\n'.join(
+                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path=path)
+                    for path in file_list)))
+
+        web_util.push_to_url(
+            index_html_path,
+            url_util.join(cache_prefix, 'index.html'),
+            keep_original=False,
+            extra_args={'ContentType': 'text/html'})
+    finally:
+        shutil.rmtree(tmpdir)
 
 
 def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
-                  allow_root=False, key=None):
+                  allow_root=False, key=None, regenerate_index=False):
     """
     Build a tarball from given spec and put it into the directory structure
     used at the mirror (following <tarball_directory_name>).
     """
+    if not spec.concrete:
+        raise ValueError('spec must be concrete to build tarball')
+
     # set up some paths
+    tmpdir = tempfile.mkdtemp()
+    cache_prefix = build_cache_prefix(tmpdir)
+
     tarfile_name = tarball_name(spec, '.tar.gz')
-    tarfile_dir = os.path.join(outdir, "build_cache",
-                               tarball_directory_name(spec))
+    tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
-    mkdirp(tarfile_dir)
     spackfile_path = os.path.join(
-        outdir, "build_cache", tarball_path_name(spec, '.spack'))
-    if os.path.exists(spackfile_path):
+        cache_prefix, tarball_path_name(spec, '.spack'))
+
+    remote_spackfile_path = url_util.join(
+        outdir, os.path.relpath(spackfile_path, tmpdir))
+
+    mkdirp(tarfile_dir)
+    if web_util.url_exists(remote_spackfile_path):
         if force:
-            os.remove(spackfile_path)
+            web_util.remove_url(remote_spackfile_path)
         else:
-            raise NoOverwriteException(str(spackfile_path))
+            raise NoOverwriteException(url_util.format(remote_spackfile_path))
+
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
     spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.realpath(
-        os.path.join(outdir, "build_cache", specfile_name))
-    indexfile_path = os.path.join(outdir, "build_cache", "index.html")
-    if os.path.exists(specfile_path):
+        os.path.join(cache_prefix, specfile_name))
+
+    remote_specfile_path = url_util.join(
+        outdir, os.path.relpath(specfile_path, os.path.realpath(tmpdir)))
+
+    if web_util.url_exists(remote_specfile_path):
         if force:
-            os.remove(specfile_path)
+            web_util.remove_url(remote_specfile_path)
         else:
-            raise NoOverwriteException(str(specfile_path))
+            raise NoOverwriteException(url_util.format(remote_specfile_path))
+
     # make a copy of the install directory to work with
     workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
     # set symlinks=False here to avoid broken symlinks when archiving and
@@ -280,22 +358,25 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
 
-    # optinally make the paths in the binaries relative to each other
+    # optionally make the paths in the binaries relative to each other
     # in the spack install tree before creating tarball
     if rel:
         try:
-            make_package_relative(workdir, spec.prefix, allow_root)
+            make_package_relative(workdir, spec, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
-            tty.die(str(e))
+            shutil.rmtree(tmpdir)
+            tty.die(e)
     else:
         try:
-            make_package_placeholder(workdir, allow_root)
+            make_package_placeholder(workdir, spec, allow_root)
         except Exception as e:
             shutil.rmtree(workdir)
             shutil.rmtree(tarfile_dir)
-            tty.die(str(e))
+            shutil.rmtree(tmpdir)
+            tty.die(e)
+
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
@@ -307,7 +388,6 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     checksum = checksum_tarball(tarfile_path)
 
     # add sha256 checksum to spec.yaml
-    spec_dict = {}
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
         spec_dict = yaml.load(content)
@@ -321,8 +401,17 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     buildinfo['relative_prefix'] = os.path.relpath(
         spec.prefix, spack.store.layout.root)
     spec_dict['buildinfo'] = buildinfo
+    spec_dict['full_hash'] = spec.full_hash()
+
+    tty.debug('The full_hash ({0}) of {1} will be written into {2}'.format(
+        spec_dict['full_hash'],
+        spec.name,
+        url_util.format(remote_specfile_path)))
+    tty.debug(spec.tree())
+
     with open(specfile_path, 'w') as outfile:
-        outfile.write(yaml.dump(spec_dict))
+        outfile.write(syaml.dump(spec_dict))
+
     # sign the tarball and spec file with gpg
     if not unsigned:
         sign_tarball(key, force, specfile_path)
@@ -339,10 +428,20 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     if not unsigned:
         os.remove('%s.asc' % specfile_path)
 
-    # create an index.html for the build_cache directory so specs can be found
-    if os.path.exists(indexfile_path):
-        os.remove(indexfile_path)
-    generate_index(outdir, indexfile_path)
+    web_util.push_to_url(
+        spackfile_path, remote_spackfile_path, keep_original=False)
+    web_util.push_to_url(
+        specfile_path, remote_specfile_path, keep_original=False)
+
+    try:
+        # create an index.html for the build_cache directory so specs can be
+        # found
+        if regenerate_index:
+            generate_package_index(url_util.join(
+                outdir, os.path.relpath(cache_prefix, tmpdir)))
+    finally:
+        shutil.rmtree(tmpdir)
+
     return None
 
 
@@ -351,13 +450,16 @@ def download_tarball(spec):
     Download binary tarball for given package into stage area
     Return True if successful
     """
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
                 "download of pre-compiled packages.")
+
     tarball = tarball_path_name(spec, '.spack')
-    for key in mirrors:
-        url = mirrors[key] + "/build_cache/" + tarball
+
+    for mirror in spack.mirror.MirrorCollection().values():
+        url = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path, tarball)
+
         # stage the tarball into standard place
         stage = Stage(url, name="build_cache", keep=True)
         try:
@@ -365,13 +467,16 @@ def download_tarball(spec):
             return stage.save_filename
         except fs.FetchError:
             continue
+
     return None
 
 
-def make_package_relative(workdir, prefix, allow_root):
+def make_package_relative(workdir, spec, allow_root):
     """
-    Change paths in binaries to relative paths
+    Change paths in binaries to relative paths. Change absolute symlinks
+    to relative symlinks.
     """
+    prefix = spec.prefix
     buildinfo = read_buildinfo_file(workdir)
     old_path = buildinfo['buildpath']
     orig_path_names = list()
@@ -379,31 +484,49 @@ def make_package_relative(workdir, prefix, allow_root):
     for filename in buildinfo['relocate_binaries']:
         orig_path_names.append(os.path.join(prefix, filename))
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.make_binary_relative(cur_path_names, orig_path_names,
-                                  old_path, allow_root)
+    if spec.architecture.platform == 'darwin':
+        relocate.make_macho_binaries_relative(cur_path_names, orig_path_names,
+                                              old_path, allow_root)
+    else:
+        relocate.make_elf_binaries_relative(cur_path_names, orig_path_names,
+                                            old_path, allow_root)
+    orig_path_names = list()
+    cur_path_names = list()
+    for filename in buildinfo.get('relocate_links', []):
+        orig_path_names.append(os.path.join(prefix, filename))
+        cur_path_names.append(os.path.join(workdir, filename))
+    relocate.make_link_relative(cur_path_names, orig_path_names)
 
 
-def make_package_placeholder(workdir, allow_root):
+def make_package_placeholder(workdir, spec, allow_root):
     """
-    Change paths in binaries to placeholder paths
+    Check if package binaries are relocatable.
+    Change links to placeholder links.
     """
+    prefix = spec.prefix
     buildinfo = read_buildinfo_file(workdir)
     cur_path_names = list()
     for filename in buildinfo['relocate_binaries']:
         cur_path_names.append(os.path.join(workdir, filename))
-    relocate.make_binary_placeholder(cur_path_names, allow_root)
+    relocate.check_files_relocatable(cur_path_names, allow_root)
+
+    cur_path_names = list()
+    for filename in buildinfo.get('relocate_links', []):
+        cur_path_names.append(os.path.join(workdir, filename))
+    relocate.make_link_placeholder(cur_path_names, workdir, prefix)
 
 
-def relocate_package(workdir, allow_root):
+def relocate_package(workdir, spec, allow_root):
     """
     Relocate the given package
     """
     buildinfo = read_buildinfo_file(workdir)
-    new_path = spack.store.layout.root
-    old_path = buildinfo['buildpath']
+    new_path = str(spack.store.layout.root)
+    new_prefix = str(spack.paths.prefix)
+    old_path = str(buildinfo['buildpath'])
+    old_prefix = str(buildinfo.get('spackprefix',
+                                   '/not/in/buildinfo/dictionary'))
     rel = buildinfo.get('relative_rpaths', False)
-    if rel:
-        return
 
     tty.msg("Relocating package from",
             "%s to %s." % (old_path, new_path))
@@ -413,16 +536,42 @@ def relocate_package(workdir, allow_root):
         # Don't add backup files generated by filter_file during install step.
         if not path_name.endswith('~'):
             path_names.add(path_name)
-    relocate.relocate_text(path_names, old_path, new_path)
+    relocate.relocate_text(path_names, oldpath=old_path,
+                           newpath=new_path, oldprefix=old_prefix,
+                           newprefix=new_prefix)
     # If the binary files in the package were not edited to use
     # relative RPATHs, then the RPATHs need to be relocated
-    if not rel:
+    if rel:
+        if old_path != new_path:
+            files_to_relocate = list(filter(
+                lambda pathname: not relocate.file_is_relocatable(
+                    pathname, paths_to_relocate=[old_path, old_prefix]),
+                map(lambda filename: os.path.join(workdir, filename),
+                    buildinfo['relocate_binaries'])))
+
+            if len(old_path) < len(new_path) and files_to_relocate:
+                tty.debug('Cannot do a binary string replacement with padding '
+                          'for package because %s is longer than %s.' %
+                          (new_path, old_path))
+            else:
+                for path_name in files_to_relocate:
+                    relocate.replace_prefix_bin(path_name, old_path, new_path)
+    else:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:
             path_name = os.path.join(workdir, filename)
             path_names.add(path_name)
-        relocate.relocate_binary(path_names, old_path, new_path,
-                                 allow_root)
+        if spec.architecture.platform == 'darwin':
+            relocate.relocate_macho_binaries(path_names, old_path,
+                                             new_path, allow_root)
+        else:
+            relocate.relocate_elf_binaries(path_names, old_path,
+                                           new_path, allow_root)
+        path_names = set()
+        for filename in buildinfo.get('relocate_links', []):
+            path_name = os.path.join(workdir, filename)
+            path_names.add(path_name)
+        relocate.relocate_links(path_names, old_path, new_path)
 
 
 def extract_tarball(spec, filename, allow_root=False, unsigned=False,
@@ -450,10 +599,11 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
-                Gpg.verify('%s.asc' % specfile_path, specfile_path)
+                suppress = config.get('config:suppress_gpg_warnings', False)
+                Gpg.verify('%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
                 shutil.rmtree(tmpdir)
-                tty.die(str(e))
+                tty.die(e)
         else:
             shutil.rmtree(tmpdir)
             raise NoVerifyException(
@@ -467,7 +617,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     spec_dict = {}
     with open(specfile_path, 'r') as inputfile:
         content = inputfile.read()
-        spec_dict = yaml.load(content)
+        spec_dict = syaml.load(content)
     bchecksum = spec_dict['binary_cache_checksum']
 
     # if the checksums don't match don't install
@@ -498,20 +648,24 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # so the pathname should be the same now that the directory layout
     # is confirmed
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    install_tree(workdir, spec.prefix, symlinks=True)
 
     # cleanup
     os.remove(tarfile_path)
     os.remove(specfile_path)
 
     try:
-        relocate_package(workdir, allow_root)
+        relocate_package(spec.prefix, spec, allow_root)
     except Exception as e:
-        shutil.rmtree(workdir)
-        tty.die(str(e))
-    # Delay creating spec.prefix until verification is complete
-    # and any relocation has been done.
+        shutil.rmtree(spec.prefix)
+        tty.die(e)
     else:
-        install_tree(workdir, spec.prefix, symlinks=True)
+        manifest_file = os.path.join(spec.prefix,
+                                     spack.store.layout.metadata_dir,
+                                     spack.store.layout.manifest_file_name)
+        if not os.path.exists(manifest_file):
+            spec_id = spec.format('{name}/{hash:7}')
+            tty.warn('No manifest file in tarball for spec %s' % spec_id)
     finally:
         shutil.rmtree(tmpdir)
 
@@ -530,32 +684,34 @@ def get_specs(force=False):
         tty.debug("Using previously-retrieved specs")
         return _cached_specs
 
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not spack.mirror.MirrorCollection():
         tty.warn("No Spack mirrors are currently configured")
         return {}
 
-    path = str(spack.architecture.sys_type())
     urls = set()
-    for key in mirrors:
-        url = mirrors[key]
-        if url.startswith('file'):
-            mirror = url.replace('file://', '') + '/build_cache'
-            tty.msg("Finding buildcaches in %s" % mirror)
-            if os.path.exists(mirror):
-                files = os.listdir(mirror)
+    for mirror in spack.mirror.MirrorCollection().values():
+        fetch_url_build_cache = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path)
+
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
+        if mirror_dir:
+            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            if os.path.exists(mirror_dir):
+                files = os.listdir(mirror_dir)
                 for file in files:
                     if re.search('spec.yaml', file):
-                        link = 'file://' + mirror + '/' + file
+                        link = url_util.join(fetch_url_build_cache, file)
                         urls.add(link)
         else:
-            tty.msg("Finding buildcaches on %s" % url)
-            p, links = spider(url + "/build_cache")
+            tty.msg("Finding buildcaches at %s" %
+                    url_util.format(fetch_url_build_cache))
+            p, links = web_util.spider(
+                url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
-                if re.search("spec.yaml", link) and re.search(path, link):
+                if re.search("spec.yaml", link):
                     urls.add(link)
 
-    _cached_specs = set()
+    _cached_specs = []
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -569,9 +725,9 @@ def get_specs(force=False):
                 # read the spec from the build cache file. All specs
                 # in build caches are concrete (as they are built) so
                 # we need to mark this spec concrete on read-in.
-                spec = spack.spec.Spec.from_yaml(f)
+                spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                _cached_specs.add(spec)
+                _cached_specs.append(spec)
 
     return _cached_specs
 
@@ -580,28 +736,33 @@ def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
     """
-    mirrors = spack.config.get('mirrors')
-    if len(mirrors) == 0:
+    if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
                 "download of build caches.")
 
     keys = set()
-    for key in mirrors:
-        url = mirrors[key]
-        if url.startswith('file'):
-            mirror = url.replace('file://', '') + '/build_cache'
-            tty.msg("Finding public keys in %s" % mirror)
-            files = os.listdir(mirror)
+
+    for mirror in spack.mirror.MirrorCollection().values():
+        fetch_url_build_cache = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path)
+
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
+        if mirror_dir:
+            tty.msg("Finding public keys in %s" % mirror_dir)
+            files = os.listdir(mirror_dir)
             for file in files:
                 if re.search(r'\.key', file):
-                    link = 'file://' + mirror + '/' + file
+                    link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
-            tty.msg("Finding public keys on %s" % url)
-            p, links = spider(url + "/build_cache", depth=1)
+            tty.msg("Finding public keys at %s" %
+                    url_util.format(fetch_url_build_cache))
+            p, links = web_util.spider(fetch_url_build_cache, depth=1)
+
             for link in links:
                 if re.search(r'\.key', link):
                     keys.add(link)
+
         for link in keys:
             with Stage(link, name="build_cache", keep=True) as stage:
                 if os.path.exists(stage.save_filename) and force:
@@ -619,3 +780,153 @@ def get_keys(install=False, trust=False, force=False):
                 else:
                     tty.msg('Will not add this key to trusted keys.'
                             'Use -t to install all downloaded keys')
+
+
+def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
+    if not spec.concrete:
+        raise ValueError('spec must be concrete to check against mirror')
+
+    pkg_name = spec.name
+    pkg_version = spec.version
+
+    pkg_hash = spec.dag_hash()
+    pkg_full_hash = spec.full_hash()
+
+    tty.debug('Checking {0}-{1}, dag_hash = {2}, full_hash = {3}'.format(
+        pkg_name, pkg_version, pkg_hash, pkg_full_hash))
+    tty.debug(spec.tree())
+
+    # Try to retrieve the .spec.yaml directly, based on the known
+    # format of the name, in order to determine if the package
+    # needs to be rebuilt.
+    cache_prefix = build_cache_prefix(mirror_url)
+    spec_yaml_file_name = tarball_name(spec, '.spec.yaml')
+    file_path = os.path.join(cache_prefix, spec_yaml_file_name)
+
+    result_of_error = 'Package ({0}) will {1}be rebuilt'.format(
+        spec.short_spec, '' if rebuild_on_errors else 'not ')
+
+    try:
+        _, _, yaml_file = web_util.read_from_url(file_path)
+        yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
+    except URLError as url_err:
+        err_msg = [
+            'Unable to determine whether {0} needs rebuilding,',
+            ' caught URLError attempting to read from {1}.',
+        ]
+        tty.error(''.join(err_msg).format(spec.short_spec, file_path))
+        tty.debug(url_err)
+        tty.warn(result_of_error)
+        return rebuild_on_errors
+
+    if not yaml_contents:
+        tty.error('Reading {0} returned nothing'.format(file_path))
+        tty.warn(result_of_error)
+        return rebuild_on_errors
+
+    spec_yaml = syaml.load(yaml_contents)
+
+    # If either the full_hash didn't exist in the .spec.yaml file, or it
+    # did, but didn't match the one we computed locally, then we should
+    # just rebuild.  This can be simplified once the dag_hash and the
+    # full_hash become the same thing.
+    if ('full_hash' not in spec_yaml or
+            spec_yaml['full_hash'] != pkg_full_hash):
+        if 'full_hash' in spec_yaml:
+            reason = 'hash mismatch, remote = {0}, local = {1}'.format(
+                spec_yaml['full_hash'], pkg_full_hash)
+        else:
+            reason = 'full_hash was missing from remote spec.yaml'
+        tty.msg('Rebuilding {0}, reason: {1}'.format(
+            spec.short_spec, reason))
+        tty.msg(spec.tree())
+        return True
+
+    return False
+
+
+def check_specs_against_mirrors(mirrors, specs, output_file=None,
+                                rebuild_on_errors=False):
+    """Check all the given specs against buildcaches on the given mirrors and
+    determine if any of the specs need to be rebuilt.  Reasons for needing to
+    rebuild include binary cache for spec isn't present on a mirror, or it is
+    present but the full_hash has changed since last time spec was built.
+
+    Arguments:
+        mirrors (dict): Mirrors to check against
+        specs (iterable): Specs to check against mirrors
+        output_file (string): Path to output file to be written.  If provided,
+            mirrors with missing or out-of-date specs will be formatted as a
+            JSON object and written to this file.
+        rebuild_on_errors (boolean): Treat any errors encountered while
+            checking specs as a signal to rebuild package.
+
+    Returns: 1 if any spec was out-of-date on any mirror, 0 otherwise.
+
+    """
+    rebuilds = {}
+    for mirror in spack.mirror.MirrorCollection(mirrors).values():
+        tty.msg('Checking for built specs at %s' % mirror.fetch_url)
+
+        rebuild_list = []
+
+        for spec in specs:
+            if needs_rebuild(spec, mirror.fetch_url, rebuild_on_errors):
+                rebuild_list.append({
+                    'short_spec': spec.short_spec,
+                    'hash': spec.dag_hash()
+                })
+
+        if rebuild_list:
+            rebuilds[mirror.fetch_url] = {
+                'mirrorName': mirror.name,
+                'mirrorUrl': mirror.fetch_url,
+                'rebuildSpecs': rebuild_list
+            }
+
+    if output_file:
+        with open(output_file, 'w') as outf:
+            outf.write(json.dumps(rebuilds))
+
+    return 1 if rebuilds else 0
+
+
+def _download_buildcache_entry(mirror_root, descriptions):
+    for description in descriptions:
+        description_url = os.path.join(mirror_root, description['url'])
+        path = description['path']
+        fail_if_missing = description['required']
+
+        mkdirp(path)
+
+        stage = Stage(
+            description_url, name="build_cache", path=path, keep=True)
+
+        try:
+            stage.fetch()
+        except fs.FetchError as e:
+            tty.debug(e)
+            if fail_if_missing:
+                tty.error('Failed to download required url {0}'.format(
+                    description_url))
+                return False
+
+    return True
+
+
+def download_buildcache_entry(file_descriptions):
+    if not spack.mirror.MirrorCollection():
+        tty.die("Please add a spack mirror to allow " +
+                "download of buildcache entries.")
+
+    for mirror in spack.mirror.MirrorCollection().values():
+        mirror_root = os.path.join(
+            mirror.fetch_url,
+            _build_cache_relative_path)
+
+        if _download_buildcache_entry(mirror_root, file_descriptions):
+            return True
+        else:
+            continue
+
+    return False

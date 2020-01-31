@@ -22,10 +22,6 @@ class Heaptrack(CMakePackage):
     depends_on('zlib')
     depends_on('zstd')
 
-    variant('build_type', default='Release',
-            description='CMake build type',
-            values=['Release'])
-
     def cmake_args(self):
 
         spec = self.spec

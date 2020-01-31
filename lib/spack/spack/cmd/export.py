@@ -164,7 +164,7 @@ def export(parser, args):
                         tty.warn(msg)
                 # Even with modules, the path needs to be present to, e.g.,
                 # have `spack setup` work!
-                paths[key] = str(spec.prefix)
+                paths.setdefault(key, []).append(spec)
 
             if versions and str(spec.version) not in versions:
                 versions.append(str(spec.version))
@@ -172,6 +172,14 @@ def export(parser, args):
         if versions:
             package['version'] = syaml_list(sorted(versions, reverse=True))
         if len(paths) > 0:
+            def install_date(s):
+                _, record = spack.store.db.query_by_spec_hash(s.dag_hash())
+                return record.installation_time
+            for k in paths.keys():
+                values = paths[k]
+                if values == '/activated':
+                    continue
+                paths[k] = str(sorted(values, key=install_date, reverse=True)[0].prefix)
             package.setdefault('paths', syaml_dict()).update(paths)
         if len(modules) > 0:
             package.setdefault('modules', syaml_dict()).update(modules)

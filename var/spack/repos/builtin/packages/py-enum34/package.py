@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyEnum34(PythonPackage):
     homepage = "https://pypi.python.org/pypi/enum34"
     url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('1.1.6', sha256='8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1')
 
     depends_on('python')
     conflicts('python@3.4:')

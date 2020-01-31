@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,9 +25,9 @@ class Verrou(AutotoolsPackage):
     git      = "https://github.com/edf-hpc/verrou.git"
 
     version('develop', branch='master')
-    version('2.1.0', 'b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d')
-    version('2.0.0', '388d493df3f253c9b049ce0ceae55fd6')
-    version('1.1.0', '9752d776fb534890e5e29f9721ee6125')
+    version('2.1.0', sha256='b1ba49f84aebab15b8ab5649946c9c31b53ad1499f6ffb681c98db41ed28566d')
+    version('2.0.0', sha256='798df6e426ec57646a2a626d756b72f0171647ae5b07c982952dae2d71e26045')
+    version('1.1.0', sha256='b5105f61c65680f31551199cd143b2e15f412c34c821537998a7165e315dde2d')
 
     resource(name='valgrind-3.14.0',
              url='https://sourceware.org/pub/valgrind/valgrind-3.14.0.tar.bz2',

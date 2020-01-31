@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Minighost(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0.1', '2a4ac4383e9be00f87b6067c3cfe6463')
+    version('1.0.1', sha256='713f305559d892923cde0ad3cbc53c7cefc52a684f65275ccc9fb0b1d049cccc')
 
     variant('mpi', default=True, description='Enable MPI Support')
 

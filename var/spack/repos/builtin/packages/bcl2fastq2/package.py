@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,13 +19,11 @@ class Bcl2fastq2(Package):
 
     homepage = "https://support.illumina.com/downloads/bcl2fastq-conversion-software-v2-20.html"
 
-    version('2.20.0.422', '4dc99f1af208498b7279b66556329488')
-    version('2.19.1.403', 'baba7a02767fd868e87cb36781d2be26')
-    version('2.18.0.12', 'fbe06492117f65609c41be0c27e3215c')
-    # 2.17.1.14 is no longer distributed.  If you have a copy of the
-    # source tarball, you can drop it into a local mirror w/ the name
-    # mirror/bcl2fastq2/bcl2fastq2-2.17.1.14.zip and go from there.
-    version('2.17.1.14', '7426226c6db095862e636b95c38608d3')
+    version('2.20.0.422', sha256='8dd3044767d044aa4ce46de0de562b111c44e5b8b7348e04e665eb1b4f101fe3')
+    version('2.19.1.403', sha256='cf13580f2c1ebcc3642b4d98a02ad01e41a44e644db7d31730f9767b25521806')
+
+    conflicts('platform=darwin',
+              msg='malloc.h/etc requirements break build on macs')
 
     depends_on('boost@1.54.0')
     depends_on('cmake@2.8.9:')
@@ -66,20 +64,34 @@ class Bcl2fastq2(Package):
     def unpack_it(self, f):
         def wrap():
             f()                 # call the original expand_archive()
+
+            # The tarfile should now reside in the well-known source
+            # directory (i.e., self.stage.source_path).
             with working_dir(self.stage.path):
-                if os.path.isdir('bcl2fastq'):
-                    tty.msg("The tarball has already been unpacked")
-                else:
+                source_subdir = os.path.relpath(self.stage.source_path,
+                                                self.stage.path)
+                files = glob.glob(os.path.join(source_subdir,
+                                               'bcl2fastq2*.tar.gz'))
+                if len(files) == 1:
+                    # Rename the tarball so it resides in self.stage.path
+                    # alongside the original zip file before unpacking it.
+                    tarball = files[0]
+                    basename = os.path.basename(tarball)
+                    os.rename(tarball, basename)
                     tty.msg("Unpacking bcl2fastq2 tarball")
-                    tty.msg("cwd sez: {0}".format(os.getcwd()))
-                    tarball = glob.glob(join_path('spack-expanded-archive',
-                                        'bcl2fastq2*.tar.gz'))[0]
-                    copy(tarball, '.')
-                    os.rmdir('spack-expanded-archive')
                     tar = which('tar')
-                    tarball = os.path.basename(tarball)
-                    tar('-xf', tarball)
+                    tar('-xf', basename)
+
+                    # Rename the unpacked directory to the well-known
+                    # source path self.stage.source_path.
+                    os.rename('bcl2fastq', source_subdir)
                     tty.msg("Finished unpacking bcl2fastq2 tarball")
+
+                elif self.stage.expanded:
+                    # The unpacked files already reside in the "well known"
+                    # source directory (i.e., self.stage.source_path).
+                    tty.msg("The tarball has already been unpacked.")
+
         return wrap
 
     def install(self, spec, prefix):

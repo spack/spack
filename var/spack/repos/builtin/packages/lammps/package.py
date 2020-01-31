@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,11 @@ class Lammps(CMakePackage):
     tags = ['ecp', 'ecp-apps']
 
     version('develop', branch='master')
+    version('20190807', sha256='895d71914057e070fdf0ae5ccf9d6552b932355056690bdb8e86d96549218cc0')
+    version('20190605', sha256='c7b35090aef7b114d2b47a7298c1e8237dd811da87995c997bf7639cca743152')
+    version('20181212', sha256='ccc5d2c21c4b62ce4afe7b3a0fe2f37b83e5a5e43819b7c2e2e255cce2ce0f24')
+    version('20181207', sha256='d92104d008a7f1d0b6071011decc5c6dc8b936a3418b20bd34b055371302557f')
+    version('20181127', sha256='c076b633eda5506f895de4c73103df8b995d9fec01be82c67c7608efcc345179')
     version('20181115', sha256='3bc9c166e465cac625c4a8e4060e597003f4619dadd57d3bc8d25bcd930f286e')
     version('20181109', sha256='dd30fe492fa147fb6f39bfcc79d8c786b9689f7fbe86d56de58cace53b6198c9')
     version('20181024', sha256='a171dff5aff7aaa2c9606ab2abc9260f2b685a5c7f6d650e7f2b59cf4aa149d6')
@@ -29,11 +34,11 @@ class Lammps(CMakePackage):
     version('20180905', sha256='ee0df649e33a9bf4fe62e062452978731548a56b7487e8e1ce9403676217958d')
     version('20180831', sha256='6c604b3ebd0cef1a5b18730d2c2eb1e659b2db65c5b1ae6240b8a0b150e4dff3')
     version('20180822', sha256='9f8942ca3f8e81377ae88ccfd075da4e27d0dd677526085e1a807777c8324074')
-    version('20180629', '6d5941863ee25ad2227ff3b7577d5e7c')
-    version('20180316', '25bad35679583e0dd8cb8753665bb84b')
-    version('20180222', '4d0513e3183bd57721814d217fdaf957')
-    version('20170922', '4306071f919ec7e759bda195c26cfd9a')
-    version('20170901', '767e7f07289663f033474dfe974974e7')
+    version('20180629', sha256='1acf7d9b37b99f17563cd4c8bb00ec57bb2e29eb77c0603fd6871898de74763b')
+    version('20180316', sha256='a81f88c93e417ecb87cd5f5464c9a2570384a48ff13764051c5e846c3d1258c1')
+    version('20180222', sha256='374254d5131b7118b9ab0f0e27d20c3d13d96b03ed2b5224057f0c1065828694')
+    version('20170922', sha256='f0bf6eb530d528f4d261d0a261e5616cbb6e990156808b721e73234e463849d3')
+    version('20170901', sha256='5d88d4e92f4e0bb57c8ab30e0d20de556830af820223778b9967bec2184efd46')
 
     def url_for_version(self, version):
         vdate = dt.datetime.strptime(str(version), "%Y%m%d")
@@ -55,11 +60,20 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('jpeg', default=True,
+            description='Build with jpeg support')
+    variant('png', default=True,
+            description='Build with png support')
+    variant('ffmpeg', default=True,
+            description='Build with ffmpeg support')
+    variant('openmp', default=True, description='Build with OpenMP')
+    variant('exceptions', default=False,
+            description='Build with lammps exceptions')
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
-    depends_on('voropp', when='+voronoi')
+    depends_on('voropp+pic', when='+voronoi')
     depends_on('netcdf+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
@@ -72,6 +86,9 @@ class Lammps(CMakePackage):
     depends_on('mpi', when='+user-lb')
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
+    depends_on('jpeg', when='+jpeg')
+    depends_on('libpng', when='+png')
+    depends_on('ffmpeg', when='+ffmpeg')
 
     conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
@@ -81,6 +98,7 @@ class Lammps(CMakePackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('+user-phonon', when='~kspace')
     conflicts('+user-misc', when='~manybody')
+    conflicts('%gcc@9:', when='+openmp')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -99,13 +117,24 @@ class Lammps(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS={0}'.format(
                 'ON' if '+lib' in spec else 'OFF'),
+            '-DLAMMPS_EXCEPTIONS={0}'.format(
+                'ON' if '+exceptions' in spec else 'OFF'),
             '-D{0}_MPI={1}'.format(
                 mpi_prefix,
-                'ON' if '+mpi' in spec else 'OFF')
+                'ON' if '+mpi' in spec else 'OFF'),
+            '-DBUILD_OMP={0}'.format(
+                'ON' if '+openmp' in spec else 'OFF'),
         ]
 
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')
+
+        args.append('-DWITH_JPEG={0}'.format(
+            'ON' if '+jpeg' in spec else 'OFF'))
+        args.append('-DWITH_PNG={0}'.format(
+            'ON' if '+png' in spec else 'OFF'))
+        args.append('-DWITH_FFMPEG={0}'.format(
+            'ON' if '+ffmpeg' in spec else 'OFF'))
 
         for pkg in self.supported_packages:
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())

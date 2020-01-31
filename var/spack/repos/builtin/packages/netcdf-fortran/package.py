@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,13 @@ from spack import *
 class NetcdfFortran(AutotoolsPackage):
     """Fortran interface for NetCDF4"""
 
-    homepage = "http://www.unidata.ucar.edu/software/netcdf"
-    url      = "http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.4.3.tar.gz"
+    homepage = "https://www.unidata.ucar.edu/software/netcdf"
+    url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.5.2.tar.gz"
 
-    version('4.4.4', 'e855c789cd72e1b8bc1354366bf6ac72')
-    version('4.4.3', 'bfd4ae23a34635b273d3eb0d91cbde9e')
+    version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
+    version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
+    version('4.4.4', sha256='b2d395175f8d283e68c8be516e231a96b191ade67ad0caafaf7fa01b1e6b5d75')
+    version('4.4.3', sha256='330373aa163d5931e475b5e83da5c1ad041e855185f24e6a8b85d73b48d6cda9')
 
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')

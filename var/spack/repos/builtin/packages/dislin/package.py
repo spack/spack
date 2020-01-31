@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Dislin(Package):
     homepage = "http://www.mps.mpg.de/dislin"
     url      = "ftp://ftp.gwdg.de/pub/grafik/dislin/linux/i586_64/dislin-11.0.linux.i586_64.tar.gz"
 
-    version('11.1.linux.i586_64', '34218c257efedaf706f058bdf111ce9d')
-    version('11.0.linux.i586_64', '6fb099b54f41db009cafc702eebb5bc6')
+    version('11.2.linux.i586_64', sha256='13d28188924e0b0b803d72aa4b48be4067e98e890701b0aa6f54a11c7d34dd10')
 
     depends_on('motif')
-    depends_on('mesa')
+    depends_on('gl')
+    depends_on('glx')
 
     @property
     def libs(self):

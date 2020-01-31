@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,29 +12,20 @@ import functools
 import multiprocessing
 import os
 import pytest
+import json
 
 from llnl.util.tty.colify import colify
 
 import spack.repo
 import spack.store
 import spack.database
+import spack.package
 import spack.spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 from spack.util.executable import Executable
 
 
 pytestmark = pytest.mark.db
-
-
-class MockLayout(object):
-    def __init__(self, root):
-        self.root = root
-
-    def path_for_spec(self, spec):
-        return self.root + '/'.join(['test_upstream_root', spec.name])
-
-    def check_installed(self, spec):
-        return True
 
 
 @pytest.fixture()
@@ -47,14 +38,30 @@ def test_store(tmpdir):
     spack.store.store = real_store
 
 
-@pytest.mark.usefixtures('config')
-def test_installed_upstream(tmpdir_factory, test_store):
+@pytest.fixture()
+def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    prepared_db = spack.database.Database(mock_db_root)
-
+    upstream_db = spack.database.Database(mock_db_root)
     # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as db_file:
-        prepared_db._write_to_file(db_file)
+    with open(upstream_db._index_path, 'w') as db_file:
+        upstream_db._write_to_file(db_file)
+    upstream_layout = gen_mock_layout('/a/')
+
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    downstream_db = spack.database.Database(
+        downstream_db_root, upstream_dbs=[upstream_db])
+    with open(downstream_db._index_path, 'w') as db_file:
+        downstream_db._write_to_file(db_file)
+    downstream_layout = gen_mock_layout('/b/')
+
+    yield upstream_db, upstream_layout, downstream_db, downstream_layout
+
+
+@pytest.mark.usefixtures('config')
+def test_installed_upstream(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -63,22 +70,12 @@ def test_installed_upstream(tmpdir_factory, test_store):
     w = MockPackage('w', [x, y], [default, default])
     mock_repo = MockPackageMultiRepo([w, x, y, z])
 
-    mock_layout = MockLayout('/a/')
-
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('w')
         spec.concretize()
 
         for dep in spec.traverse(root=False):
-            prepared_db.add(dep, mock_layout)
-
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        downstream_layout = MockLayout('/b/')
-        with open(downstream_db._index_path, 'w') as db_file:
-            downstream_db._write_to_file(db_file)
+            upstream_db.add(dep, upstream_layout)
 
         new_spec = spack.spec.Spec('w')
         new_spec.concretize()
@@ -87,63 +84,110 @@ def test_installed_upstream(tmpdir_factory, test_store):
             upstream, record = downstream_db.query_by_spec_hash(
                 dep.dag_hash())
             assert upstream
-            assert record.path == mock_layout.path_for_spec(dep)
+            assert record.path == upstream_layout.path_for_spec(dep)
         upstream, record = downstream_db.query_by_spec_hash(
             new_spec.dag_hash())
         assert not upstream
         assert record.installed
 
-        prepared_db._check_ref_counts()
+        upstream_db._check_ref_counts()
         downstream_db._check_ref_counts()
 
 
 @pytest.mark.usefixtures('config')
-def test_removed_upstream_dep(tmpdir_factory, test_store):
-    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    prepared_db = spack.database.Database(mock_db_root)
-
-    # Generate initial DB file to avoid reindex
-    with open(prepared_db._index_path, 'w') as db_file:
-        prepared_db._write_to_file(db_file)
+def test_removed_upstream_dep(upstream_and_downstream_db):
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
     y = MockPackage('y', [z], [default])
     mock_repo = MockPackageMultiRepo([y, z])
 
-    mock_layout = MockLayout('/a/')
-
     with spack.repo.swap(mock_repo):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
-        prepared_db.add(spec['z'], mock_layout)
-
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        downstream_db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        downstream_layout = MockLayout('/b/')
-        with open(downstream_db._index_path, 'w') as db_file:
-            downstream_db._write_to_file(db_file)
+        upstream_db.add(spec['z'], upstream_layout)
 
         new_spec = spack.spec.Spec('y')
         new_spec.concretize()
         downstream_db.add(new_spec, downstream_layout)
 
-        prepared_db.remove(new_spec['z'])
+        upstream_db.remove(new_spec['z'])
 
         new_downstream = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
+            downstream_db.root, upstream_dbs=[upstream_db])
         new_downstream._fail_when_missing_deps = True
         with pytest.raises(spack.database.MissingDependenciesError):
             new_downstream._read()
 
 
 @pytest.mark.usefixtures('config')
-def test_recursive_upstream_dbs(tmpdir_factory, test_store):
+def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
+    """An upstream DB can add a package after it is installed in the downstream
+    DB. When a package is recorded as installed in both, the results should
+    refer to the downstream DB.
+    """
+    upstream_db, upstream_layout, downstream_db, downstream_layout = (
+        upstream_and_downstream_db)
+
+    x = MockPackage('x', [], [])
+    mock_repo = MockPackageMultiRepo([x])
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+
+        downstream_db.add(spec, downstream_layout)
+
+        upstream_db.add(spec, upstream_layout)
+
+        upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
+        # Even though the package is recorded as installed in the upstream DB,
+        # we prefer the locally-installed instance
+        assert not upstream
+
+        qresults = downstream_db.query('x')
+        assert len(qresults) == 1
+        queried_spec, = qresults
+        try:
+            orig_db = spack.store.db
+            spack.store.db = downstream_db
+            assert queried_spec.prefix == downstream_layout.path_for_spec(spec)
+        finally:
+            spack.store.db = orig_db
+
+
+@pytest.mark.usefixtures('config')
+def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
+    roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
+    layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
+
+    x = MockPackage('x', [], [])
+    mock_repo = MockPackageMultiRepo([x])
+
+    # Instantiate the database that will be used as the upstream DB and make
+    # sure it has an index file
+    upstream_db_independent = spack.database.Database(roots[1])
+    with upstream_db_independent.write_transaction():
+        pass
+
+    upstream_dbs = spack.store._construct_upstream_dbs_from_install_roots(
+        [roots[1]], _test=True)
+
+    with spack.repo.swap(mock_repo):
+        spec = spack.spec.Spec('x')
+        spec.concretize()
+
+        with pytest.raises(spack.database.ForbiddenLockError):
+            upstream_dbs[0].add(spec, layouts[1])
+
+
+@pytest.mark.usefixtures('config')
+def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
-    layouts = [MockLayout(x) for x in ['/ra/', '/rb/', '/rc/']]
+    layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
@@ -164,22 +208,27 @@ def test_recursive_upstream_dbs(tmpdir_factory, test_store):
         db_a = spack.database.Database(roots[0], upstream_dbs=[db_b, db_c])
         db_a.add(spec['x'], layouts[0])
 
-        dbs = spack.store._construct_upstream_dbs_from_install_roots(
-            roots, _test=True)
+        upstream_dbs_from_scratch = (
+            spack.store._construct_upstream_dbs_from_install_roots(
+                [roots[1], roots[2]], _test=True))
+        db_a_from_scratch = spack.database.Database(
+            roots[0], upstream_dbs=upstream_dbs_from_scratch)
 
-        assert dbs[0].db_for_spec_hash(spec.dag_hash()) == dbs[0]
-        assert dbs[0].db_for_spec_hash(spec['y'].dag_hash()) == dbs[1]
-        assert dbs[0].db_for_spec_hash(spec['z'].dag_hash()) == dbs[2]
+        assert db_a_from_scratch.db_for_spec_hash(spec.dag_hash()) == (
+            db_a_from_scratch)
+        assert db_a_from_scratch.db_for_spec_hash(spec['y'].dag_hash()) == (
+            upstream_dbs_from_scratch[0])
+        assert db_a_from_scratch.db_for_spec_hash(spec['z'].dag_hash()) == (
+            upstream_dbs_from_scratch[1])
 
-        dbs[0]._check_ref_counts()
-        dbs[1]._check_ref_counts()
-        dbs[2]._check_ref_counts()
+        db_a_from_scratch._check_ref_counts()
+        upstream_dbs_from_scratch[0]._check_ref_counts()
+        upstream_dbs_from_scratch[1]._check_ref_counts()
 
-        assert (dbs[0].installed_relatives(spec) ==
+        assert (db_a_from_scratch.installed_relatives(spec) ==
                 set(spec.traverse(root=False)))
-        assert (dbs[0].installed_relatives(spec['z'], direction='parents') ==
-                set([spec, spec['y']]))
-        assert not dbs[2].installed_relatives(spec['z'], direction='parents')
+        assert (db_a_from_scratch.installed_relatives(
+                spec['z'], direction='parents') == set([spec, spec['y']]))
 
 
 @pytest.fixture()
@@ -393,7 +442,7 @@ def test_010_all_install_sanity(database):
     ) == 1
 
 
-def test_015_write_and_read(database):
+def test_015_write_and_read(mutable_database):
     # write and read DB
     with spack.store.db.write_transaction():
         specs = spack.store.db.query()
@@ -412,10 +461,20 @@ def test_020_db_sanity(database):
     _check_db_sanity(database)
 
 
-def test_025_reindex(database):
+def test_025_reindex(mutable_database):
     """Make sure reindex works and ref counts are valid."""
     spack.store.store.reindex()
-    _check_db_sanity(database)
+    _check_db_sanity(mutable_database)
+
+
+def test_026_reindex_after_deprecate(mutable_database):
+    """Make sure reindex works and ref counts are valid after deprecation."""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+    mutable_database.deprecate(mpich, zmpi)
+
+    spack.store.store.reindex()
+    _check_db_sanity(mutable_database)
 
 
 def test_030_db_sanity_from_another_process(mutable_database):
@@ -437,6 +496,15 @@ def test_030_db_sanity_from_another_process(mutable_database):
 def test_040_ref_counts(database):
     """Ensure that we got ref counts right when we read the DB."""
     database._check_ref_counts()
+
+
+def test_041_ref_counts_deprecate(mutable_database):
+    """Ensure that we have appropriate ref counts after deprecating"""
+    mpich = mutable_database.query_one('mpich')
+    zmpi = mutable_database.query_one('zmpi')
+
+    mutable_database.deprecate(mpich, zmpi)
+    mutable_database._check_ref_counts()
 
 
 def test_050_basic_query(database):
@@ -474,64 +542,64 @@ def test_050_basic_query(database):
     assert len(database.query(end_date=datetime.datetime.max)) == 16
 
 
-def test_060_remove_and_add_root_package(database):
-    _check_remove_and_add_package(database, 'mpileaks ^mpich')
+def test_060_remove_and_add_root_package(mutable_database):
+    _check_remove_and_add_package(mutable_database, 'mpileaks ^mpich')
 
 
-def test_070_remove_and_add_dependency_package(database):
-    _check_remove_and_add_package(database, 'dyninst')
+def test_070_remove_and_add_dependency_package(mutable_database):
+    _check_remove_and_add_package(mutable_database, 'dyninst')
 
 
-def test_080_root_ref_counts(database):
-    rec = database.get_record('mpileaks ^mpich')
+def test_080_root_ref_counts(mutable_database):
+    rec = mutable_database.get_record('mpileaks ^mpich')
 
     # Remove a top-level spec from the DB
-    database.remove('mpileaks ^mpich')
+    mutable_database.remove('mpileaks ^mpich')
 
     # record no longer in DB
-    assert database.query('mpileaks ^mpich', installed=any) == []
+    assert mutable_database.query('mpileaks ^mpich', installed=any) == []
 
     # record's deps have updated ref_counts
-    assert database.get_record('callpath ^mpich').ref_count == 0
-    assert database.get_record('mpich').ref_count == 1
+    assert mutable_database.get_record('callpath ^mpich').ref_count == 0
+    assert mutable_database.get_record('mpich').ref_count == 1
 
     # Put the spec back
-    database.add(rec.spec, spack.store.layout)
+    mutable_database.add(rec.spec, spack.store.layout)
 
     # record is present again
-    assert len(database.query('mpileaks ^mpich', installed=any)) == 1
+    assert len(mutable_database.query('mpileaks ^mpich', installed=any)) == 1
 
     # dependencies have ref counts updated
-    assert database.get_record('callpath ^mpich').ref_count == 1
-    assert database.get_record('mpich').ref_count == 2
+    assert mutable_database.get_record('callpath ^mpich').ref_count == 1
+    assert mutable_database.get_record('mpich').ref_count == 2
 
 
-def test_090_non_root_ref_counts(database):
-    database.get_record('mpileaks ^mpich')
-    database.get_record('callpath ^mpich')
+def test_090_non_root_ref_counts(mutable_database):
+    mutable_database.get_record('mpileaks ^mpich')
+    mutable_database.get_record('callpath ^mpich')
 
     # "force remove" a non-root spec from the DB
-    database.remove('callpath ^mpich')
+    mutable_database.remove('callpath ^mpich')
 
     # record still in DB but marked uninstalled
-    assert database.query('callpath ^mpich', installed=True) == []
-    assert len(database.query('callpath ^mpich', installed=any)) == 1
+    assert mutable_database.query('callpath ^mpich', installed=True) == []
+    assert len(mutable_database.query('callpath ^mpich', installed=any)) == 1
 
     # record and its deps have same ref_counts
-    assert database.get_record(
+    assert mutable_database.get_record(
         'callpath ^mpich', installed=any
     ).ref_count == 1
-    assert database.get_record('mpich').ref_count == 2
+    assert mutable_database.get_record('mpich').ref_count == 2
 
     # remove only dependent of uninstalled callpath record
-    database.remove('mpileaks ^mpich')
+    mutable_database.remove('mpileaks ^mpich')
 
     # record and parent are completely gone.
-    assert database.query('mpileaks ^mpich', installed=any) == []
-    assert database.query('callpath ^mpich', installed=any) == []
+    assert mutable_database.query('mpileaks ^mpich', installed=any) == []
+    assert mutable_database.query('callpath ^mpich', installed=any) == []
 
     # mpich ref count updated properly.
-    mpich_rec = database.get_record('mpich')
+    mpich_rec = mutable_database.get_record('mpich')
     assert mpich_rec.ref_count == 0
 
 
@@ -578,18 +646,18 @@ def test_115_reindex_with_packages_not_in_repo(mutable_database):
         _check_db_sanity(mutable_database)
 
 
-def test_external_entries_in_db(database):
-    rec = database.get_record('mpileaks ^zmpi')
+def test_external_entries_in_db(mutable_database):
+    rec = mutable_database.get_record('mpileaks ^zmpi')
     assert rec.spec.external_path is None
     assert rec.spec.external_module is None
 
-    rec = database.get_record('externaltool')
+    rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is False
 
     rec.spec.package.do_install(fake=True, explicit=True)
-    rec = database.get_record('externaltool')
+    rec = mutable_database.get_record('externaltool')
     assert rec.spec.external_path == '/path/to/external_tool'
     assert rec.spec.external_module is None
     assert rec.explicit is True
@@ -608,3 +676,33 @@ def test_regression_issue_8036(mutable_database, usr_folder_exists):
     # Now install the external package and check again the `installed` property
     s.package.do_install(fake=True)
     assert s.package.installed
+
+
+@pytest.mark.regression('11118')
+def test_old_external_entries_prefix(mutable_database):
+    with open(spack.store.db._index_path, 'r') as f:
+        db_obj = json.loads(f.read())
+
+    s = spack.spec.Spec('externaltool')
+    s.concretize()
+
+    db_obj['database']['installs'][s.dag_hash()]['path'] = 'None'
+
+    with open(spack.store.db._index_path, 'w') as f:
+        f.write(json.dumps(db_obj))
+
+    record = spack.store.db.get_record(s)
+
+    assert record.path is None
+    assert record.spec._prefix is None
+    assert record.spec.prefix == record.spec.external_path
+
+
+def test_uninstall_by_spec(mutable_database):
+    with mutable_database.write_transaction():
+        for spec in mutable_database.query():
+            if spec.package.installed:
+                spack.package.PackageBase.uninstall_by_spec(spec, force=True)
+            else:
+                mutable_database.remove(spec)
+    assert len(mutable_database.query()) == 0

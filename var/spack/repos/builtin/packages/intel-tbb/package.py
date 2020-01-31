@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,32 +18,34 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
-    version('2019.2', '1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
-    version('2019.1', 'a4875c6b6853213083e52ecd303546bdf424568ec67cfc7e51d132a7c037c66a')
-    version('2019',   '2119f1db2f905dc5b423482d7689b7d6')
-    version('2018.6', '9a0f78db4f72356068b00f29f54ee6bc')
-    version('2018.5', 'ff3ae09f8c23892fbc3008c39f78288f')
-    version('2018.4', '5e2e6ba0e25624a94331c945856551c2')
-    version('2018.3', 'cd2e136598ffa5c136f077ee85a35b4c')
-    version('2018.2', '0b8dfe30917a54e40828eeb0ed7562ae')
-    version('2018.1', 'b2f2fa09adf44a22f4024049907f774b')
-    version('2018',   '7fb30d5ea2545f26ce02757d9ab05e6c')
-    version('2017.8', '7240f57f1aeea0e266a5e17ae68fdc16')
-    version('2017.7', '364f2a4b80e978f38a69cbf7c466b898')
-    version('2017.6', 'ec21254af4fc2a29574c272f501a3138')
-    version('2017.5', '85b41c64102c052e24d8a39f6193e599')
-    version('2017.4', '71526b2fef098515e212302d1455de7d')
-    version('2017.3', 'd7622eeaafeff8d271c7aa684bd82ddb')
-    version('2017.2', '9605cbea96998a10a186fc72c35cbd76')
-    version('2017.1', '6c0fe8aa7bc911a85e8e522e620511b3')
-    version('2017',   '9e7f9ea684ecf84ac74dcd3c6012cfa6')
-    version('4.4.6',  '20e15206f70c2651bfc964e451a443a0')
-    version('4.4.5',  '531a67cd98f9b4ec8ece95c5f8193a83')
-    version('4.4.4',  '61531b2e8684e06a621dcdca1a7a420e')
-    version('4.4.3',  '8e3e39e1fdfb3f7c3a5ac8ec1afe186e')
-    version('4.4.2',  'e92b110e8eb238741b00e3789b39969e')
-    version('4.4.1',  'a02c9958f02c1b5f3626874219979ae8')
-    version('4.4',    '1d512085221996eae6cec04e1a4cd3dd')
+    version('2019.4', sha256='342a0a2cd583879850658284b86e9351ea019b4f3fcd731f4c18456f0ce9f900')
+    version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
+    version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
+    version('2019.1', sha256='a4875c6b6853213083e52ecd303546bdf424568ec67cfc7e51d132a7c037c66a')
+    version('2019',   sha256='4d149895826cea785cd3b9a14f4aa743b6ef0df520eca7ee27d438fdc3d73399')
+    version('2018.6', sha256='d3e5fbca3cc643d03bf332d576ff85e19aa774b483f148f95cd7d09958372109')
+    version('2018.5', sha256='c4c2896af527392496c5e01ef8579058a71b6eebbd695924cd138841c13f07be')
+    version('2018.4', sha256='d5604a04787c8a037d4944eeb89792e7c45f6a83c141b20df7ee89c2fb012ed1')
+    version('2018.3', sha256='23793c8645480148e9559df96b386b780f92194c80120acce79fcdaae0d81f45')
+    version('2018.2', sha256='78bb9bae474736d213342f01fe1a6d00c6939d5c75b367e2e43e7bf29a6d8eca')
+    version('2018.1', sha256='c6462217d4ecef2b44fce63cfdf31f9db4f6ff493869899d497a5aef68b05fc5')
+    version('2018',   sha256='94f643f1edfaccb57d64b503c7c96f00dec64e8635c054bbaa33855d72c5822d')
+    version('2017.8', sha256='1b1357f280e750d42506212adad02f85ac07c9d3e3c0813104f9122ef350497f')
+    version('2017.7', sha256='78ad6ec9dd492b9dcc4753938b06716f7458506084adc138ced09aa0aa609b6b')
+    version('2017.6', sha256='40d5409a6fd7e214a21fd1949df422ba113fa78fde42a6aac40a2fba36e9bcdb')
+    version('2017.5', sha256='3122c87a35fde759567c8579ba36a36037c6df84c3f9c4df6c9e171f866f352f')
+    version('2017.4', sha256='ed4f0cfc4acec8a0cf253037e8c555dd32ebe1b80b34fb0e3b2bf54087932562')
+    version('2017.3', sha256='00a8b2798c498507572e24c2db7bf4896f05b760a38ed9ba566ffd348a7c6cef')
+    version('2017.2', sha256='85e44041d967ce8c70077dbb57941cfa1d351688855aec47eb14c74eb2075f28')
+    version('2017.1', sha256='a68bb7926fb9bee2a5f17b293c6d6aa33ccb089c3b321569bd4fe281cf65fa77')
+    version('2017',   sha256='c49139279067df1260dae4f0fe7e4d485898ce45e5f7e314c37eb5da8a0c303a')
+    version('4.4.6',  sha256='1d6b7e7db9141238c70984103f04280605dbcaa7fbcd049d332d2e73deed4f6d')
+    version('4.4.5',  sha256='984308f9dd8a36ff274c124b6f7f7d0ff74d4b7ebdf06511af78e098b5b6e70f')
+    version('4.4.4',  sha256='40e94c1adfd13308d207971629316ae9f76639b24f080bae8757c42d35778f10')
+    version('4.4.3',  sha256='9acb1c4e71edc3d5004ab9f0ed2bbd697ecec28a4315bbd2be8c5365e8214b90')
+    version('4.4.2',  sha256='3f6d7a32ac8b58469de7df3a2fcfe318793241ea39ce73aae1e637dbed833375')
+    version('4.4.1',  sha256='d67c5860ba1116b320b0d60a0ce403b088dc19355ab32c28cdaa3e352609713a')
+    version('4.4',    sha256='88e37f08ffcfaa24a2caf6c1a9084000cce689cc4b11edea7e89b20ab74ceceb')
 
     provides('tbb')
 
@@ -65,10 +67,38 @@ class IntelTbb(Package):
     # Build and install CMake config files if we're new enough.
     depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
 
+    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
+    # specified one at a time.  In a nutshell, it is currently impossible
+    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
+    # can be simplified.
+
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='%gcc@4.8.0: os=centos6')
+    # one patch format for 2019.1 and after...
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
+    # ...another patch file for 2019 and before
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
+
+    # patch for pedantic warnings (#10836)
+    # one patch file for 2019.1 and after...
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
+    # ...another patch file for 2019 and before
+    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
@@ -94,7 +124,7 @@ class IntelTbb(Package):
                     if l.strip().startswith("CPLUS ="):
                         of.write("# coerced to spack\n")
                         of.write("CPLUS = $(CXX)\n")
-                    elif l.strip().startswith("CPLUS ="):
+                    elif l.strip().startswith("CONLY ="):
                         of.write("# coerced to spack\n")
                         of.write("CONLY = $(CC)\n")
                     else:

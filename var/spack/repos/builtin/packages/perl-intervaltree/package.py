@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,6 @@ class PerlIntervaltree(PerlPackage):
     homepage = "https://metacpan.org/release/Set-IntervalTree"
     url      = "https://cpan.metacpan.org/authors/id/B/BE/BENBOOTH/Set-IntervalTree-0.10.tar.gz"
 
-    version('0.10', '42efe9369f1b30e7fd04e10c07226b06')
+    version('0.10', sha256='e3bd9ccf0d074b5f879eef1ed88254983697bf83d02744fce62150ee46553ebc')
 
     depends_on('perl-extutils-makemaker', type='build')

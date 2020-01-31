@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyIpywidgets(PythonPackage):
     homepage = "https://github.com/ipython/ipywidgets"
     url      = "https://github.com/ipython/ipywidgets/archive/5.2.2.tar.gz"
 
-    version('5.2.2', '112f3daa4aa0f42f8dda831cea3649c8')
+    version('5.2.2', sha256='d61ab8bb12b90981a3a6010429816d70eaa041e622043207bcb74239b664d4f3')
 
     depends_on('python@2.7:2.8,3.3:')
     depends_on('py-ipython@4.0.0:', type=('build', 'run'))

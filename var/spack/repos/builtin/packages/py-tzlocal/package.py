@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyTzlocal(PythonPackage):
     homepage = "https://github.com/regebro/tzlocal"
     url      = "https://pypi.io/packages/source/t/tzlocal/tzlocal-1.3.tar.gz"
 
-    version('1.3', '3cb544b3975b59f91a793850a072d4a8')
+    version('1.3', sha256='d160c2ce4f8b1831dabfe766bd844cf9012f766539cf84139c2faac5201882ce')
 
     depends_on('py-setuptools', type='build')
 

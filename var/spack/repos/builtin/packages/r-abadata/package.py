@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,6 @@ class RAbadata(RPackage):
     All datasets are restricted to protein coding genes."""
 
     homepage = "https://bioconductor.org/packages/ABAData/"
-    url      = "https://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.6.0.tar.gz"
+    url      = "https://bioconductor.org/packages/release/data/experiment/src/contrib/ABAData_1.14.0.tar.gz"
 
-    version('1.6.0', '9adfb9fbb39ad05cf72852a229476fb7')
+    version('1.14.0', sha256='d203d968044c292cdfab57a4d6bf52dfb60470bd78b4c9bd88892577ac42b2b7')

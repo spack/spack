@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,9 +20,10 @@ class Occa(Package):
     git      = 'https://github.com/libocca/occa.git'
 
     version('develop')
-    version('v1.0.0-alpha.5', tag='v1.0.0-alpha.5')
-    version('v0.2.0', tag='v0.2.0')
-    version('v0.1.0', tag='v0.1.0')
+    version('1.0.8', tag='v1.0.8')
+    version('1.0.0-alpha.5', tag='v1.0.0-alpha.5')
+    version('0.2.0', tag='v0.2.0')
+    version('0.1.0', tag='v0.1.0')
 
     variant('cuda',
             default=True,

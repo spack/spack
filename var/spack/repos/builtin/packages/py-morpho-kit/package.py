@@ -13,8 +13,8 @@ class PyMorphoKit(PythonPackage):
     url      = "https://bbpcode.epfl.ch/code/a/nse/morpho-kit"
     git      = "ssh://bbpcode.epfl.ch/nse/morpho-kit"
 
-    version('develop', branch='master', submodules=True, clean=False)
-    version('0.1.0', tag='v0.1.0', submodules=True, clean=False)
+    version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('0.1.0', tag='v0.1.0', submodules=True, get_full_repo=True)
 
     depends_on('py-setuptools', type='build')
 

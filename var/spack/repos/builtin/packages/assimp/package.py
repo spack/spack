@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Assimp(CMakePackage):
     homepage = "https://www.assimp.org"
     url      = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
 
-    version('4.1.0', '3520b1e9793b93a2ca3b797199e16f40d61762617e072f2d525fad70f9678a71')
-    version('4.0.1', '23a6301c728a413aafbfa1cca19ba91f')
+    version('4.1.0', sha256='3520b1e9793b93a2ca3b797199e16f40d61762617e072f2d525fad70f9678a71')
+    version('4.0.1', sha256='60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e')
 
     variant('shared',  default=True,
             description='Enables the build of shared libraries')

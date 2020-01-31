@@ -18,37 +18,37 @@ packages:
       - architecture
       - compiler
     specs:
-      - arrow+parquet~python@0.11.0
-      - boost~mpi@1.68.0
+      - arrow+parquet~python@0.15.0
+      - boost~mpi@1.70.0
       - bzip2@1.0.6
       - cgal
       - cuda@9.0.176
       - cuda@9.2.88
-      - cudnn@7.3
-      - freeimage@3.18.0
+      - cuda@10.1.243
+      - cudnn@7.3.0
+      # - freeimage@3.18.0
       - glew
       - gmsh+metis~mpi+oce+openmp+shared@4.4.1
-      - hdf5~mpi@1.10.4
-      - intel-mkl@2018.1.163
-      - jdk@1.8.0_191-b12
+      - hdf5~mpi@1.10.5
+      - intel-mkl@2019.3.199
+      - jdk@1.8.0_131-b11
       - julia
-      - libjpeg@1.2.90
-      - libjpeg-turbo@1.5.90
-      - libxml2@2.9.8
-      - libxslt@1.1.29
+      - libjpeg
+      - libjpeg-turbo
+      - libxml2
+      - libxslt
       - metis+int64@5.1.0
-      - ncurses@5.9
+      - ncurses
       - ninja@1.8.2
       - openblas@0.3.3
       - optix
-      - python@2.7.15
-      - python@3.6.5
+      - python@3.7.4
       - qhull@2015.2
-      - qt@5.11.2
-      - readline@7.0
+      - qt@5.11.2 ^libjpeg-turbo
+      - readline
       - snakemake
       - spark@2.4.0+hadoop
-      - sqlite@3.23.1
+      - sqlite
       - symengine@0.3.0
       - timemory+mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
       - virtualgl

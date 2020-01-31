@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,17 +13,18 @@ class Nco(AutotoolsPackage):
     homepage = "http://nco.sourceforge.net/"
     url      = "https://github.com/nco/nco/archive/4.6.7.tar.gz"
 
-    version('4.6.7', 'b04c92aa715d3fad3ebebd1fd178ce32')
-    version('4.6.6', 'df6fa47aaf6e41adfc0631912a7a341f')
-    version('4.6.5', '2afd34a6bb5ff6c7ed39cf40c917b6e4')
-    version('4.6.4', '22f4e779d0011a9c0db90fda416c8e45')
-    version('4.6.3', '0e1d6616c65ed3a30c54cc776da4f987')
-    version('4.6.2', 'b7471acf0cc100343392f4171fb56113')
-    version('4.6.1', 'ef43cc989229c2790a9094bd84728fd8')
-    version('4.5.5', '9f1f1cb149ad6407c5a03c20122223ce')
+    version('4.7.9', sha256='048f6298bceb40913c3ae433f875dea1e9129b1c86019128e7271d08f274a879')
+    version('4.6.7', sha256='2fe2dabf14a60bface694307cbe719df57103682b715348e9d77bfe8d31487f3')
+    version('4.6.6', sha256='079d83f800b73d9b12b8de1634a88c2cbe40a639aaf7bc056cd2e836c6047697')
+    version('4.6.5', sha256='d5b18c9ada25d062a539e2995be445db39e8021c56cd4b20c88485cb2452c7ae')
+    version('4.6.4', sha256='1c2ab906fc81f91bf8aff3e6da27ae7a4c89821c5836d787188fff5262418062')
+    version('4.6.3', sha256='414ccb349ed25cb37b669fb87f9e2e4ca8d58c2f45538feda199bf895b982bf8')
+    version('4.6.2', sha256='cec82e35d47a6bbf8ab9301d5ff4cf08051f489b49e8529ebf780380f2c21ed3')
+    version('4.6.1', sha256='7433fe5901f48eb5170f24c6d53b484161e1c63884d9350600070573baf8b8b0')
+    version('4.5.5', sha256='bc6f5b976fdfbdec51f2ebefa158fa54672442c2fd5f042ba884f9f32c2ad666')
 
     # https://github.com/nco/nco/issues/43
-    patch('NUL-0-NULL.patch')
+    patch('NUL-0-NULL.patch', when='@:4.6.7')
 
     variant('doc', default=False, description='Build/install NCO TexInfo-based documentation')
 
@@ -37,6 +38,8 @@ class Nco(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('texinfo@4.12:', type='build', when='+doc')
+
+    conflicts('%gcc@9:', when='@:4.7.8')
 
     def configure_args(self):
         spec = self.spec

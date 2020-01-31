@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class Pangomm(AutotoolsPackage):
     homepage = "http://www.pango.org/"
     url      = "https://ftp.gnome.org/pub/GNOME/sources/pangomm/2.14/pangomm-2.14.1.tar.gz"
 
-    version('2.14.1', '607a404291d9eeb895f1df3d08f531d7')
-    version('2.14.0', '897d8c56cec4a9c297a426eb0fc2af91')
+    version('2.14.1', sha256='2ea6cee273cca1aae2ee5a5dac0c416b4dc354e46debb51f20c6eeba828f5ed5')
+    version('2.14.0', sha256='baa3b231c9498fb1140254e3feb4eb93c638f07e6e26ae0e36c3699ec14d80fd')
 
     depends_on('pango')
     depends_on('glibmm')

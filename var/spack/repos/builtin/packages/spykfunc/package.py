@@ -35,16 +35,17 @@ class Spykfunc(PythonPackage):
     url      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
     git      = "ssh://bbpcode.epfl.ch/building/Spykfunc"
 
-    version('develop', submodules=True, clean=False)
-    version('0.12.2', tag='v0.12.2', submodules=True, clean=False)
-    version('0.13.1', tag='v0.13.1', submodules=True, clean=False)
+    version('develop', submodules=True, get_full_repo=True)
+    version('0.12.2', tag='v0.12.2', submodules=True, get_full_repo=True)
+    version('0.13.1', tag='v0.13.1', submodules=True, get_full_repo=True)
     # versions 0.13.2-0.14.x require legacy mvdtool+python
-    version('0.15.0', tag='v0.15.0', submodules=True, clean=False)
-    version('0.15.1', tag='v0.15.1', submodules=True, clean=False)
-    version('0.15.2', tag='v0.15.2', submodules=True, clean=False)
+    version('0.15.0', tag='v0.15.0', submodules=True, get_full_repo=True)
+    version('0.15.1', tag='v0.15.1', submodules=True, get_full_repo=True)
+    version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
 
-    depends_on('hdf5~mpi')
-    depends_on('highfive~mpi', type='build')
+    depends_on('cmake', type='build', when='@0.16:')
+    depends_on('boost', type=('build', 'link'), when='@0.16:')
+    depends_on('morpho-kit', type=('build', 'link'), when='@0.16:')
 
     # Note : when spark is used as external package, spec['java'] is not
     # accessible. Add explicit dependency for now.
@@ -53,7 +54,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:')
 
     depends_on('python@3.6:')
-    depends_on('py-cython', type='run')
+    depends_on('py-cython', type='run', when='@:0.15.99')
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('spark+hadoop@2.3.2rc2:', type='run')
@@ -72,17 +73,20 @@ class Spykfunc(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))
-    depends_on('py-pyarrow+parquet', type=('build', 'run'))
+    depends_on('py-pyarrow+parquet@:0.12.1', type=('build', 'run'))
     depends_on('py-pyspark@2.3.2rc2:', type=('build', 'run'))
     depends_on('py-sparkmanager', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
         # activate all python packages.
-        run_env.set('JAVA_HOME', self.spec['java'].prefix)
-        run_env.set('SPARK_HOME', self.spec['spark'].prefix)
-        run_env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
+        env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
-        run_env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
-        run_env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
-        run_env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))
+    def setup_run_environment(self, env):
+        env.set('JAVA_HOME', self.spec['java'].prefix)
+        env.set('SPARK_HOME', self.spec['spark'].prefix)
+        env.set('HADOOP_HOME', self.spec['hadoop'].prefix)
+
+        env.prepend_path('PATH', os.path.join(self.spec['py-bb5'].prefix, 'bin'))
+        env.prepend_path('PATH', os.path.join(self.spec['py-sparkmanager'].prefix, 'bin'))
+        env.prepend_path('PATH', os.path.join(self.spec['spark'].prefix, 'bin'))

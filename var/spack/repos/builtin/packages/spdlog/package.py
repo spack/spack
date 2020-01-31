@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Spdlog(CMakePackage):
     homepage = "https://github.com/gabime/spdlog"
     url = "https://github.com/gabime/spdlog/archive/v0.9.0.tar.gz"
 
+    version('1.4.1', sha256='3291958eb54ed942d1bd3aef1b4f8ccf70566cbc04d34296ec61eb96ceb73cff')
     version('1.2.1', sha256='867a4b7cedf9805e6f76d3ca41889679054f7e5a3b67722fe6d0eae41852a767')
     version('1.2.0', sha256='0ba31b9e7f8e43a7be328ab0236d57810e5d4fc8a1a7842df665ae22d5cbd128')
     version('1.1.0',  sha256='3dbcbfd8c07e25f5e0d662b194d3a7772ef214358c49ada23c044c4747ce8b19')
@@ -24,8 +25,29 @@ class Spdlog(CMakePackage):
     version('0.14.0', sha256='eb5beb4e53f4bfff5b32eb4db8588484bdc15a17b90eeefef3a9fc74fec1d83d')
     version('0.13.0', sha256='d798a6ca19165f0a18a43938859359269f5a07fd8e0eb83ab8674739c9e8f361')
     version('0.12.0', sha256='5cfd6a0b3182a88e1eb35bcb65a7ef9035140d7c73b16ba6095939dbf07325b9')
-    version('0.11.0', '08232203f18a6f9ff47e083cc7a141a050805d3b')
-    version('0.10.0', '57b471ef97a23cc29c38b62e00e89a411a87ea7f')
-    version('0.9.0', 'dda741ef8e12d57d91f778d85e95a27d84a82ac4')
+    version('0.11.0', sha256='8c0f1810fb6b7d23fef70c2ea8b6fa6768ac8d18d6e0de39be1f48865e22916e')
+    version('0.10.0', sha256='fbbc53c1cc09b93b4c3d76b683bbe9315e2efe3727701227374dce6aa4264075')
+    version('0.9.0', sha256='bbbe5a855c8b309621352921d650449eb2f741d35d55ec50fb4d8122ddfb8f01')
 
-    depends_on('cmake@3.1:', type='build')
+    variant('shared', default=True,
+            description='Build shared libraries (v1.4.0+)')
+
+    depends_on('cmake@3.2:', type='build')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = []
+
+        if self.spec.version >= Version('1.4.0'):
+            args.extend([
+                '-DSPDLOG_BUILD_SHARED:BOOL={0}'.format(
+                    'ON' if '+shared' in spec else 'OFF'),
+                # tests and examples
+                '-DSPDLOG_BUILD_TESTS:BOOL={0}'.format(
+                    'ON' if self.run_tests else 'OFF'),
+                '-DSPDLOG_BUILD_EXAMPLE:BOOL={0}'.format(
+                    'ON' if self.run_tests else 'OFF')
+            ])
+
+        return args

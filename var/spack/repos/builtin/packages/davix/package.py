@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Davix(CMakePackage):
     list_url = "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/"
     list_depth = 1
 
-    version('0.6.8', 'e1820f4cc3fc44858ae97197a3922cce2a1130ff553b080ba19e06eb8383ddf7',
+    version('0.6.8', sha256='e1820f4cc3fc44858ae97197a3922cce2a1130ff553b080ba19e06eb8383ddf7',
             url='http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/0.6.8/davix-0.6.8.tar.gz')
 
     depends_on('pkgconfig', type='build')

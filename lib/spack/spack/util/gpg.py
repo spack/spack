@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,21 @@ from spack.util.executable import Executable
 
 
 GNUPGHOME = spack.paths.gpg_path
+
+
+def parse_keys_output(output):
+    keys = []
+    found_sec = False
+    for line in output.split('\n'):
+        if found_sec:
+            if line.startswith('fpr'):
+                keys.append(line.split(':')[9])
+                found_sec = False
+            elif line.startswith('ssb'):
+                found_sec = False
+        elif line.startswith('sec'):
+            found_sec = True
+    return keys
 
 
 class Gpg(object):
@@ -45,13 +60,9 @@ class Gpg(object):
 
     @classmethod
     def signing_keys(cls):
-        keys = []
         output = cls.gpg()('--list-secret-keys', '--with-colons',
-                           '--fingerprint', output=str)
-        for line in output.split('\n'):
-            if line.startswith('fpr'):
-                keys.append(line.split(':')[9])
-        return keys
+                           '--fingerprint', '--fingerprint', output=str)
+        return parse_keys_output(output)
 
     @classmethod
     def export_keys(cls, location, *keys):
@@ -89,8 +100,11 @@ class Gpg(object):
         cls.gpg()(*args)
 
     @classmethod
-    def verify(cls, signature, file):
-        cls.gpg()('--verify', signature, file)
+    def verify(cls, signature, file, suppress_warnings=False):
+        if suppress_warnings:
+            cls.gpg()('--verify', signature, file, error=str)
+        else:
+            cls.gpg()('--verify', signature, file)
 
     @classmethod
     def list(cls, trusted, signing):

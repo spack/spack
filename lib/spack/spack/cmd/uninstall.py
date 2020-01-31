@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,12 @@ import argparse
 
 import spack.cmd
 import spack.environment as ev
+import spack.error
 import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
+from spack.database import InstallStatuses
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
@@ -80,7 +82,9 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     specs_from_cli = []
     has_errors = False
     for spec in specs:
-        matching = spack.store.db.query_local(spec, hashes=hashes)
+        install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
+        matching = spack.store.db.query_local(spec, hashes=hashes,
+                                              installed=install_query)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -126,9 +130,11 @@ def installed_dependents(specs, env):
 
     env_hashes = set(env.all_hashes()) if env else set()
 
+    with spack.store.db.read_transaction():
+        all_specs_in_db = spack.store.db.query()
+
     for spec in specs:
-        installed = spack.store.db.installed_relatives(
-            spec, direction='parents', transitive=True)
+        installed = [x for x in all_specs_in_db if spec in x]
 
         # separate installed dependents into dpts in this environment and
         # dpts that are outside this environment
@@ -212,16 +218,23 @@ def do_uninstall(env, specs, force):
         if env:
             _remove_from_env(item, env)
 
-    # Sort packages to be uninstalled by the number of installed dependents
-    # This ensures we do things in the right order
-    def num_installed_deps(pkg):
-        dependents = spack.store.db.installed_relatives(
-            pkg.spec, 'parents', True)
-        return len(dependents)
+    # A package is ready to be uninstalled when nothing else references it,
+    # unless we are requested to force uninstall it.
+    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
+    if force:
+        is_ready = lambda x: True
 
-    packages.sort(key=num_installed_deps)
-    for item in packages:
-        item.do_uninstall(force=force)
+    while packages:
+        ready = [x for x in packages if is_ready(x.spec.dag_hash())]
+        if not ready:
+            msg = 'unexpected error [cannot proceed uninstalling specs with' \
+                  ' remaining dependents {0}]'
+            msg = msg.format(', '.join(x.name for x in packages))
+            raise spack.error.SpackError(msg)
+
+        packages = [x for x in packages if x not in ready]
+        for item in ready:
+            item.do_uninstall(force=force)
 
     # write any changes made to the active environment
     if env:
@@ -260,7 +273,8 @@ def get_uninstall_list(args, specs, env):
             if i > 0:
                 print()
 
-            tty.info("Will not uninstall %s" % spec.cformat("$_$@$%@$/"),
+            spec_format = '{name}{@version}{%compiler}{/hash:7}'
+            tty.info("Will not uninstall %s" % spec.cformat(spec_format),
                      format='*r')
 
             dependents = active_dpts.get(spec)
@@ -301,7 +315,7 @@ def get_uninstall_list(args, specs, env):
 
 
 def uninstall_specs(args, specs):
-    env = ev.get_env(args, 'uninstall', required=False)
+    env = ev.get_env(args, 'uninstall')
 
     uninstall_list, remove_list = get_uninstall_list(args, specs, env)
     anything_to_do = set(uninstall_list).union(set(remove_list))
@@ -331,5 +345,5 @@ def uninstall(parser, args):
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
     # [any] here handles the --all case by forcing all specs to be returned
-    uninstall_specs(
-        args, spack.cmd.parse_specs(args.packages) if args.packages else [any])
+    specs = spack.cmd.parse_specs(args.packages) if args.packages else [any]
+    uninstall_specs(args, specs)

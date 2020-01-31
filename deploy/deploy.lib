@@ -9,10 +9,15 @@
 # * `DEPLOYMENT_DATE` to force a date for the installation directory
 
 DEFAULT_DEPLOYMENT_DATE=${DEFAULT_DEPLOYMENT_DATE:-$(date +%Y-%m-%d)}
-DEFAULT_MODULE_DATE=${DEFAULT_MODULE_DATE-$(date +Y-%m)}
+
+BASE_GCC_VERSION=${DEFAULT_BASE_GCC_VERSION:-8.3.0}
+BASE_ARCHITECTURE=${DEFAULT_BASE_ARCHITECTURE:-linux-rhel7-x86_64}
 
 # A list of stages in the order they will be built
-stages="compilers tools external-libraries serial-libraries parallel-libraries applications"
+stages="compilers tools external-libraries libraries applications"
+
+# A list of all stage names ever used, to be used for module creation
+historic_stages="compilers tools external-libraries serial-libraries parallel-libraries libraries applications"
 
 # Definitions for the installation spec generation. For every stage
 # mentioned above, this should be a list of filenames *without* extension
@@ -20,8 +25,13 @@ stages="compilers tools external-libraries serial-libraries parallel-libraries a
 declare -A spec_definitions=([compilers]=compilers
                              [tools]=tools
                              [external-libraries]="external-libraries"
-                             [serial-libraries]="serial-libraries python-packages"
-                             [parallel-libraries]=parallel-libraries
+                             [libraries]="serial-libraries python-packages parallel-libraries"
+                             [applications]=bbp-packages)
+
+declare -A module_locations=([compilers]=compilers
+                             [tools]=tools
+                             [external-libraries]=libraries
+                             [libraries]=libraries
                              [applications]=bbp-packages)
 
 # Export installed software as packages to be re-used later
@@ -35,8 +45,7 @@ declare -A spec_definitions=([compilers]=compilers
 declare -A export_packages=([compilers]=no
                             [tools]=yes
                             [external-libraries]=yes
-                            [serial-libraries]=no
-                            [parallel-libraries]=no
+                            [libraries]=no
                             [applications]=no)
 
 # Re-use installed software via the chain mechanism
@@ -44,8 +53,7 @@ declare -A export_packages=([compilers]=no
 declare -A include_in_chain=([compilers]=no
                              [tools]=no
                              [external-libraries]=no
-                             [serial-libraries]=yes
-                             [parallel-libraries]=yes
+                             [libraries]=yes
                              [applications]=yes)
 
 # Set up the dependency graph
@@ -80,7 +88,7 @@ install_dir_raw() {
     # variables set.
     what=$1
     date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
-    name="${DEPLOYMENT_ROOT}/${DEPLOYMENT_TYPE:-deploy}/${what}/${date}"
+    name="${DEPLOYMENT_ROOT}/deploy/${what}/${date}"
     echo "${name}"
 }
 
@@ -269,6 +277,14 @@ configure_compilers() {
     update_module_path "compilers" "yes"
     while read -r line; do
         set +o nounset
+        # When a compiler is compiled with *anything but the base
+        # compiler*, it's module will not be generated in the initial
+        # module refresh
+        #
+        # As the input should be sorted by compilers, the module generation
+        # will now find the compilers that were used when bootstrapping.
+        log "...regenerating module for ${line}"
+        spack module tcl refresh -y --latest --upstream-modules ${line}
         log "...processing ${line}"
         cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
         echo "${cmd}"
@@ -278,11 +294,10 @@ configure_compilers() {
             spack compiler find --scope=user
         fi
 
+        GCC_DIR=$(spack location --latest --install-dir gcc@${BASE_GCC_VERSION})
         if [[ ${line} = *"intel"* ]]; then
-            GCC_DIR=$(spack location --install-dir gcc@6.4.0)
-
             # update intel modules to use gcc@6.4.0 in .cfg files
-            install_dir=$(spack location --install-dir ${line})
+            install_dir=$(spack location --latest --install-dir ${line})
             for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
                     echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
@@ -353,7 +368,9 @@ populate_build_cache() {
     log "gpg keys available"
     spack gpg list
     log "creating build caches"
+    log "...fetching existing cache"
     cached=$(spack buildcache list -l|awk '!/^--|^==/ {print $1}')
+    log "...determining new installations"
     created=$(spack find -l --start-date "${start_date}"|awk '!/^--|^==/ {print $1}')
     for checksum in ${created}; do
         spec=$(spack find /${checksum}|tail -n 1)
@@ -361,7 +378,7 @@ populate_build_cache() {
             log "...already in build cache: ${spec}"
         else
             log "...caching ${spec}"
-            spack buildcache create --no-dependencies -d "${HOME}" "/${checksum}" || true
+            spack buildcache create --no-deps -d "${HOME}" "/${checksum}" || true
         fi
     done
 
@@ -431,6 +448,8 @@ generate_specs() {
     venv="${DEPLOYMENT_ROOT}/spack/venv"
 
     log "updating the deployment virtualenv"
+    log "...virtualenv binary: $(which virtualenv)"
+    log "...python binary:     $(which python)"
     # Recreate the virtualenv and update the command line
     mkdir -p ${venv}
     virtualenv -q -p $(which python) ${venv} --clear
@@ -452,9 +471,15 @@ generate_specs() {
         rm -f "${datadir}/specs.txt"
         for stub in ${spec_definitions[$stage]}; do
             log "...using ${stub}.yaml"
-            spackd --input packages/${stub}.yaml packages x86_64 >> "${datadir}/specs.txt"
+            spackd --input packages/${stub}.yaml packages ${BASE_ARCHITECTURE} >> "${datadir}/specs.txt"
         done
+
+        rpm -q -a > "${datadir}/rpms.txt"
     done
+    log "leaving the deployment virtualenv"
+    set +o nounset
+    deactivate
+    set -o nounset
 }
 
 copy_configuration() {
@@ -486,12 +511,80 @@ copy_configuration() {
     chmod 600 "${DEPLOYMENT_ROOT}/spack/opt/spack/gpg/"*
 }
 
+# Outputs the contents of a module file to set the module path
+# corresponding to a software deployment "release".
+generate_archive_module() {
+    time="${1}"
+
+    modulepaths=""
+    for stage in ${historic_stages}; do
+        expansion="${DEPLOYMENT_ROOT}/modules/${stage}/${time}/tcl/*"
+        paths="$(echo ${expansion})"
+        if [ "${paths}" != "${expansion}" ]; then
+            modulepaths="${modulepaths}${modulepaths:+ }${paths}"
+        fi
+    done
+
+    # Did not find any paths, return
+    if [ -z "${modulepaths}" ]; then
+        return
+    fi
+
+    cat <<-EOF
+	#%Module1.0
+
+	conflict archive
+	conflict unstable
+
+EOF
+
+    for path in ${modulepaths}; do
+        [ -d "${path}" ] && echo "append-path MODULEPATH \"${path}\""
+    done
+}
+
+generate_archive_modules() {
+    local root="${1}"
+
+    mkdir -p "${root}/archive"
+
+    for year in $(seq 2019 $(date +%Y)); do
+        for month in $(seq 1 12); do
+            time="${year}-$(printf '%02d' ${month})"
+
+            if [ "${time}" = "$(date +%Y-%m)" ]; then
+                module="unstable"
+            else
+                module="archive/${time}"
+                if [ -f "${root}/${module}" ]; then
+                    log "...skipping ${module}"
+                    continue
+                fi
+            fi
+
+            contents=$(generate_archive_module ${time})
+
+            if [ -n "${contents}" ]; then
+                echo "${contents}" > "${root}/${module}"
+            fi
+
+            if [ "${module}" = "unstable" ]; then
+                break
+            fi
+        done
+    done
+}
+
 copy_user_configuration() {
     what="$1"
 
     local source="$(install_dir ${what})/data"
-    local target="${DEPLOYMENT_ROOT}/config"
-    local modpaths=$(list_module_archive_paths ${what})
+    local target="${DEPLOYMENT_ROOT}/config/$(date +%Y)"
+
+    local root="${DEPLOYMENT_ROOT}/modules/all"
+
+    log "regenerating archive modules"
+    generate_archive_modules "${root}"
 
     log "copying configuration"
     log "...from ${source}"
@@ -501,18 +594,8 @@ copy_user_configuration() {
     cp ${source}/{compilers,.spack/upstreams,packages}.yaml ${target}
 
     rm -f ${target}/modules.{,c}sh
-    for modpath in ${modpaths}; do
-        echo "MODULEPATH=\"\${MODULEPATH}\${MODULEPATH:+:}${modpath}\"" >> ${target}/modules.sh
-
-        cat <<EOF >> ${target}/modules.csh
-if ( \$?MODULEPATH ) then
-    setenv MODULEPATH \${MODULEPATH}:${modpath}
-else
-    setenv MODULEPATH ${modpath}
-endif
-EOF
-    done
-    echo "export MODULEPATH" >> ${target}/modules.sh
+    echo "module use \"${root}\"" > ${target}/modules.sh
+    echo "module use \"${root}\"" > ${target}/modules.csh
 
     ./modules.rb > "${target}/modules.yaml"
 
@@ -533,6 +616,7 @@ EOF
 copy_modules() {
     what="$1"
 
+    local where="${module_locations[${what}]}"
     local source="$(install_dir ${what})/modules"
     local target="${DEPLOYMENT_ROOT}/modules/${what}/$(date +%Y-%m)"
 
@@ -543,22 +627,45 @@ copy_modules() {
     rsync -av "${source}/" "${target}"
 }
 
+bogus_packages() {
+    for toplevel in $(ls "${1}"); do
+        if [ "${toplevel}" = "modules" ]; then
+            continue
+        elif [ "${toplevel}" = "data" ]; then
+            continue
+        fi
+        find "${SPACK_INSTALL_PREFIX}/${toplevel}" -mindepth 2 -maxdepth 2 -type d | while read dirname; do
+            [ -z "$(ls ${dirname})" ] && [ -f "${dirname}/.spack/spec.yaml" ] && {
+                pkgname=$(sed -ne '/spec:/ { n; s/^- //; s/:$//; p }' ${dirname}/.spack/spec.yaml)
+                pkgdir=$(find ${dirname}/.spack -name ${pkgname} -type d)
+
+                log "...found empty installation directory for $(basename ${dirname})"
+                if [ -f "${pkgdir}/package.py" ]; then
+                    [ -z "$(grep Bundle ${pkgdir}/package.py)" ] && {
+                        echo ${dirname}
+                    }
+                else
+                    echo ${dirname}
+                fi
+            }
+        done
+    done
+}
+
 install_specs() {
     what="$1"
 
     location="$(install_dir ${what})"
     HOME="${location}/data"
-    SOFTS_DIR_PATH="${location}"
-    MODS_DIR_PATH="${location}/modules"
-    export HOME SOFTS_DIR_PATH MODS_DIR_PATH
+    SPACK_INSTALL_PREFIX="${location}"
+    export HOME SPACK_INSTALL_PREFIX
 
     cat > "${HOME}/.profile" <<EOF
 . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
 
-SOFTS_DIR_PATH="${location}"
-MODS_DIR_PATH="${location}/modules"
+SPACK_INSTALL_PREFIX="${location}"
 
-export MODS_DIR_PATH SOFTS_DIR_PATH
+export SPACK_INSTALL_PREFIX
 EOF
 
     copy_configuration "${what}"
@@ -591,8 +698,17 @@ EOF
     log "cleaning up after a bad spack"
     spack clean -a
 
+    log "cleaning failed installations"
+    bogus_packages "${SPACK_INSTALL_PREFIX}" | while read bogus_package; do
+        log "...removing potentially failed installation of $(basename ${bogus_package})"
+        rm -rf "${bogus_package}"
+    done
+
+    log "reindexing software"
+    spack reindex
+
     log "installed specs"
-    spack reindex && spack find -lv
+    spack find -lv
 
     log "gathering specs"
     spec_list=$(spack filter --not-installed $(< ${HOME}/specs.txt))
@@ -609,7 +725,7 @@ EOF
 
         # todo : patchelf recursion issue
         log "installing patchelf for buildcache"
-        spack install --no-cache -y patchelf %gcc
+        spack install --no-cache -y patchelf
 
         # INSTALL
         #
@@ -645,17 +761,32 @@ EOF
     spack module tcl refresh -y --delete-tree --latest --upstream-modules $(<${HOME}/specs.txt)
 
     . ${DEPLOYMENT_ROOT}/spack/share/spack/setup-env.sh
+
+    if [[ -f "${HOME}/packages.yaml" ]]; then
+        cp "${HOME}/packages.yaml" "${HOME}/packages.yaml.old"
+    fi
+
     if [[ "${export_packages[${what}]}" = "yes" ]]; then
         log "augmenting packages.yaml"
-        spack export --scope=user --module tcl --explicit --exclude 'py-.*|neuron|hdf5|intel-parallel-studio|pgi' > "${HOME}/packages.yaml"
+        spack export --scope=user --module tcl --explicit --exclude 'allinea|py-.*|neuron|hdf5|intel-parallel-studio|pgi' arch=${BASE_ARCHITECTURE} > "${HOME}/packages.yaml"
     else
         log "copying packages.yaml"
         cp "${HOME}/.spack/packages.yaml" "${HOME}"
     fi
 
+    if [[ -f "${HOME}/packages.yaml.old" ]]; then
+        log "differences to old packages.yaml"
+        diff -u "${HOME}/packages.yaml.old" "${HOME}/packages.yaml" || true
+    fi
+
     if [[ "${what}" = "compilers" ]]; then
+        # When adding the compilers, first add everything compiled with the
+        # system compiler, then other compilers bootstrapped with new
+        # compilers (LLVM, I'm looking at you)
+        #
+        # Sort by the compiler spec part to achieve this.
         log "adding compilers"
-        configure_compilers < "${HOME}/specs.txt"
+        configure_compilers < <(sort -t% -k2 "${HOME}/specs.txt")
     fi
 
     cp "${HOME}/.spack/compilers.yaml" "${HOME}" || true

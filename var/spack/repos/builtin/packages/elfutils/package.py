@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,22 +17,24 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-
-    url = "https://sourceware.org/elfutils/ftp/0.168/elfutils-0.168.tar.bz2"
+    url      = "https://sourceware.org/elfutils/ftp/0.177/elfutils-0.177.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
-    version('0.174', '48bec24c0c8b2c16820326956dff9378')
-    version('0.173', '35decb1ebfb90d565e4c411bee4185cc')
-    version('0.170', '03599aee98c9b726c7a732a2dd0245d5')
-    version('0.168', '52adfa40758d0d39e5d5c57689bf38d6')
-    version('0.163', '77ce87f259987d2e54e4d87b86cbee41')
+    version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
+    version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')
+    version('0.175', sha256='f7ef925541ee32c6d15ae5cb27da5f119e01a5ccdbe9fe57bf836730d7b7a65b')
+    version('0.174', sha256='cdf27e70076e10a29539d89e367101d516bc4aa11b0d7777fe52139e3fcad08a')
+    version('0.173', sha256='b76d8c133f68dad46250f5c223482c8299d454a69430d9aa5c19123345a000ff')
+    version('0.170', sha256='1f844775576b79bdc9f9c717a50058d08620323c1e935458223a12f249c9e066')
+    version('0.168', sha256='b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276')
+    version('0.163', sha256='7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23')
 
     # Libraries for reading compressed DWARF sections.
     variant('bzip2', default=False,
             description='Support bzip2 compressed sections.')
     variant('xz', default=False,
-            description='Support xz compressed sections.')
+            description='Support xz (lzma) compressed sections.')
 
     # Native language support from libintl.
     variant('nls', default=True,
@@ -42,6 +44,7 @@ class Elfutils(AutotoolsPackage):
     depends_on('xz',    type='link', when='+xz')
     depends_on('zlib',  type='link')
     depends_on('gettext', when='+nls')
+    depends_on('m4',    type='build')
 
     conflicts('%gcc@7.2.0:', when='@0.163')
 
@@ -86,6 +89,11 @@ class Elfutils(AutotoolsPackage):
             args.append('--disable-nls')
 
         return args
+
+    # Install elf.h to include directory.
+    @run_after('install')
+    def install_elfh(self):
+        install(join_path('libelf', 'elf.h'), self.prefix.include)
 
     # Provide location of libelf.so to match libelf.
     @property

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Turbomole(Package):
     see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.turbomole-gmbh.com/"
+    manual_download = True
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
             url="file://%s/turbolinux702.tar.gz" % os.getcwd())

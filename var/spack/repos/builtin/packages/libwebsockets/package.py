@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,11 @@ class Libwebsockets(CMakePackage):
 
     version('3.1.0', 'db948be74c78fc13f1f1a55e76707d7baae3a1c8f62b625f639e8f2736298324')
     version('3.0.1', 'cb0cdd8d0954fcfd97a689077568f286cdbb44111883e0a85d29860449c47cbf')
-    version('2.2.1', '1f641cde2ab3687db3d553f68fe0f620')
-    version('2.1.1', '674684ffb90d4a0bcf7a075eb7b90192')
-    version('2.1.0', '4df3be57dee43aeebd54a3ed56568f50')
-    version('2.0.3', 'a025156d606d90579e65d53ccd062a94')
-    version('1.7.9', '7b3692ead5ae00fd0e1d56c080170f07')
+    version('2.2.1', sha256='e7f9eaef258e003c9ada0803a9a5636757a5bc0a58927858834fb38a87d18ad2')
+    version('2.1.1', sha256='96183cbdfcd6e6a3d9465e854a924b7bfde6c8c6d3384d6159ad797c2e823b4d')
+    version('2.1.0', sha256='bcc96aaa609daae4d3f7ab1ee480126709ef4f6a8bf9c85de40aae48e38cce66')
+    version('2.0.3', sha256='cf0e91b564c879ab98844385c98e7c9e298cbb969dbc251a3f18a47feb94342c')
+    version('1.7.9', sha256='86a5105881ea2cb206f8795483d294e9509055decf60436bcc1e746262416438')
 
     depends_on('zlib')
     depends_on('openssl')

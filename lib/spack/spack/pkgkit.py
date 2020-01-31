@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,9 @@ Everything in this module is automatically imported into Spack package files.
 import llnl.util.filesystem
 from llnl.util.filesystem import *
 
-from spack.package import Package, run_before, run_after, on_package_attributes
+from spack.package import \
+    Package, BundlePackage, \
+    run_before, run_after, on_package_attributes
 from spack.package import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
@@ -27,6 +29,7 @@ from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
+from spack.build_systems.sip import SIPPackage
 
 from spack.mixins import filter_compiler_wrappers
 
@@ -47,3 +50,6 @@ from spack.util.executable import *
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
     DependencyConflictError, InstallError, ExternalPackageError
+
+from spack.variant import any_combination_of, auto_or_any_combination_of
+from spack.variant import disjoint_sets

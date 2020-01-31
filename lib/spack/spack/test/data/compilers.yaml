@@ -98,9 +98,9 @@ compilers:
       f77: /path/to/gfortran472
       fc: /path/to/gfortran472
     flags:
-      cflags: -O0
-      cxxflags: -O0
-      fflags: -O0
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
     modules: 'None'
 - compiler:
     spec: clang@3.5
@@ -113,4 +113,43 @@ compilers:
     flags:
       cflags: -O3
       cxxflags: -O3
+    modules: 'None'
+- compiler:
+    spec: clang@8.0.0
+    operating_system: redhat7
+    paths:
+      cc: /path/to/clang-8
+      cxx: /path/to/clang++-8
+      f77: /path/to/gfortran-9
+      fc: /path/to/gfortran-9
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
+- compiler:
+    spec: clang@9.1.0-apple
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: gcc@foo
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    modules: 'None'
+- compiler:
+    spec: gcc@4.4.0-special
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
     modules: 'None'

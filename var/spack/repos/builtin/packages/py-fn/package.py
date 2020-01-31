@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,6 @@ class PyFn(PythonPackage):
     homepage = "https://github.com/fnpy/fn.py"
     url      = "https://github.com/fnpy/fn.py/archive/v0.5.2.tar.gz"
 
-    version('0.5.2', '48c168fe335e31fc6152ea0944741be2')
+    version('0.5.2', sha256='fda2253d792867a79514496932630622df9340f214a2f4b2d597b60a8cc3d96b')
 
     depends_on('py-setuptools', type='build')

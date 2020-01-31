@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,8 @@ class PyElasticsearch(PythonPackage):
     homepage = "https://github.com/elastic/elasticsearch-py"
     url = "https://pypi.io/packages/source/e/elasticsearch/elasticsearch-5.2.0.tar.gz"
 
-    version('5.2.0', '66692fd1b4189039206c2fde4a4d616a')
-    version('2.3.0', '2550f3b51629cf1ef9636608af92c340')
+    version('5.2.0', sha256='45d9f8fbe0878a1b7493afeb20f4f6677a43982776ed1a77d9373e9c5b9de966')
+    version('2.3.0', sha256='be3080a2bf32dff0a9f9fcc1c087515a25a357645673a976d25ef77166134d81')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-urllib3@1.8:1.999', type=('build', 'run'))

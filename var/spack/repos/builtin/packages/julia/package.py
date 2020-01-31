@@ -19,7 +19,7 @@ class Julia(MakefilePackage):
     extendable = True
 
     version('master', branch='master')
-    version('1.2.0-rc1', sha256='e301421b869c6ecea8c3ae06bfdddf67843d16e694973b4958924914249afa46')
+    version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
     version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
 
     # TODO: Split these out into jl-hdf5, jl-mpi packages etc.
@@ -41,7 +41,7 @@ class Julia(MakefilePackage):
     depends_on("openssl")
 
     # 1.2 and higher can be built with an external LLVM installation
-    depends_on("llvm@7: +link_dylib", when="+external_llvm")
+    depends_on("llvm@7:7.999 +link_dylib", when="+external_llvm")
     # Python needed to build heavily patched included LLVM
     depends_on("python@2.7:2.8", when="@:1.2~external_llvm")
 

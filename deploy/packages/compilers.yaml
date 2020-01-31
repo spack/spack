@@ -13,9 +13,17 @@ combinations:
   # core toolchain typically represent system compilers
   core:
     architecture:
-    - x86_64
+    - linux-rhel7-x86_64
     compiler:
     - gcc@4.8.5
+    mpi: None
+    lapack: None
+    python: None
+  bootstrapped_core:
+    architecture:
+    - linux-rhel7-x86_64
+    compiler:
+    - gcc@8.3.0
     mpi: None
     lapack: None
     python: None
@@ -29,10 +37,18 @@ packages:
       - architecture
       - compiler
     specs:
-      - gcc@8.2.0
-      - gcc@7.3.0
-      - gcc@6.4.0
-      - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2018.3
-      - intel@18.0.3
-      - llvm@7.0.0
+      - gcc@9.2.0
+      - gcc@8.3.0
+      - intel-parallel-studio+advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune@cluster.2019.5
+      #- intel@18.0.3
+      - intel@19.0.4
       - pgi+network+nvidia+mpi@19.4
+
+  bootstrapped_compilers:
+    target_matrix:
+      - bootstrapped_core
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - llvm@9.0.0

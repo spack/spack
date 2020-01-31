@@ -1,15 +1,20 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
 
 class PyContextlib2(PythonPackage):
-    """Backports and enhancements for the contextlib module"""
+    """contextlib2 is a backport of the standard library's contextlib module to
+    earlier Python versions."""
 
-    homepage = "http://contextlib2.readthedocs.org/"
-    url      = "https://files.pythonhosted.org/packages/6e/db/41233498c210b03ab8b072c8ee49b1cd63b3b0c76f8ea0a0e5d02df06898/contextlib2-0.5.5.tar.gz"
+    homepage = "https://contextlib2.readthedocs.io/en/stable/"
+    url      = "https://github.com/jazzband/contextlib2/archive/v0.6.0.tar.gz"
 
-    version('0.5.5', sha256='509f9419ee91cdd00ba34443217d5ca51f5a364a404e1dce9e8979cea969ca48')
+    version('0.6.0', sha256='4f18e2f28bb642aae9447aacec93b1319c8ee838711553c0a2bd906753f2ad33')
+
+    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))

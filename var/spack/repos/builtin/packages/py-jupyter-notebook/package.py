@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,24 +10,20 @@ class PyJupyterNotebook(PythonPackage):
     """Jupyter Interactive Notebook"""
 
     homepage = "https://github.com/jupyter/notebook"
-    url      = "https://github.com/jupyter/notebook/archive/4.2.3.tar.gz"
+    url      = "https://pypi.io/packages/source/n/notebook/notebook-4.2.3.tar.gz"
 
-    version('4.2.3', '5c6b0b1303adacd8972c4db21eda3e98')
-    version('4.2.2', '7f9717ae4fed930d187a44c0707b6379')
-    version('4.2.1', '4286f1eaf608257bd69cad4042c7c2fe')
-    version('4.2.0', '136be6b72fe9db7f0269dc7fa5652a62')
-    version('4.1.0', '763ab54b3fc69f6225b9659b6994e756')
-    version('4.0.6', 'd70d8a6d01893f4b64df9edbc0e13b52')
-    version('4.0.5', '2681a70e4c62aafe7ce69f1da5799ac8')
-    version('4.0.4', 'ab72f28f6af8107d71241a4110e92c05')
-    version('4.0.3', '119beea793865ee4b1673a50043ead2a')
-    version('4.0.2', '77f371e9a23a840d14d8a60fee7ba1b7')
+    version('4.2.3', sha256='39a9603d3fe88b60de2903680c965cf643acf2c16fb2c6bac1d905e1042b5851')
+    version('4.2.2', sha256='418ba230c9b2e7e739940cae9fb4625e10a63f038e9c95cf1a9b7a244256ba38')
+    version('4.2.1', sha256='a49de524dabb99f214bdf2a58f26c7892650251a23a3669c6492fb180492e197')
+    version('4.2.0', sha256='e10c4916c77b48394796b5b1440d61d7b210f9941194048fe20ef88948016d84')
+    version('4.1.0', sha256='b597437ba33538221008e21fea71cd01eda9da1515ca3963d7c74e44f4b03d90')
+    version('4.0.6', sha256='f62e7a6afbc00bab3615b927595d27b1874cff3218bddcbab62f97f6dae567c3')
+    version('4.0.4', sha256='a57852514bce1b1cf41fa0311f6cf894960cf68b083b55e6c408316b598d5648')
+    version('4.0.2', sha256='8478d7e2ab474855b0ff841f693983388af8662d3af1adcb861acb900274f22a')
 
     variant('terminal', default=False, description="Enable terminal functionality")
 
     depends_on('python@2.7:2.8,3.3:')
-    depends_on('npm', type='build')
-    depends_on('node-js', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ipython-genutils', type=('build', 'run'))
@@ -38,5 +34,6 @@ class PyJupyterNotebook(PythonPackage):
     depends_on('py-nbformat', type=('build', 'run'))
     depends_on('py-nbconvert', type=('build', 'run'))
     depends_on('py-ipykernel', type=('build', 'run'))
+    depends_on('py-ipykernel@5.1.0:', when='@4.2.0:', type=('build', 'run'))
     depends_on('py-terminado@0.3.3:', when="+terminal", type=('build', 'run'))
     depends_on('py-ipywidgets', when="+terminal", type=('build', 'run'))

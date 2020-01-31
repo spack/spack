@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,24 +19,28 @@ class Hdf5(AutotoolsPackage):
     url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
+    git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
 
-    version('1.10.4', '8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
-    version('1.10.3', 'b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
-    version('1.10.2', '8d4eae84e533efa57496638fd0dca8c3')
-    version('1.10.1', '43a2f9466702fb1db31df98ae6677f15')
-    version('1.10.0-patch1', '9180ff0ef8dc2ef3f61bd37a7404f295')
-    version('1.10.0', 'bdc935337ee8282579cd6bc4270ad199')
+    version('develop', branch='develop')
 
-    version('1.8.21', '87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
-    version('1.8.19', '7f568e2464d4ab0a74d16b23956d900b')
-    version('1.8.18', 'dd2148b740713ca0295442ec683d7b1c')
-    version('1.8.17', '7d572f8f3b798a628b8245af0391a0ca')
-    version('1.8.16', 'b8ed9a36ae142317f88b0c7ef4b9c618')
-    version('1.8.15', '03cccb5b33dbe975fdcd8ae9dc021f24')
-    version('1.8.14', 'a482686e733514a51cde12d6fe5c5d95')
-    version('1.8.13', 'c03426e9e77d7766944654280b467289')
-    version('1.8.12', 'd804802feb99b87fc668a90e6fa34411')
-    version('1.8.10', '710aa9fb61a51d61a7e2c09bf0052157')
+    version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
+    version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
+    version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
+    version('1.10.2', sha256='bfec1be8c366965a99812cf02ddc97e4b708c1754fccba5414d4adccdc073866')
+    version('1.10.1', sha256='048a9d149fb99aaa1680a712963f5a78e9c43b588d0e79d55e06760ec377c172')
+    version('1.10.0-patch1', sha256='6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0')
+    version('1.10.0', sha256='81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a')
+
+    version('1.8.21', sha256='87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
+    version('1.8.19', sha256='a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38')
+    version('1.8.18', sha256='cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063')
+    version('1.8.17', sha256='d9cda297ee76ade9881c4208987939250d397bae6252d0ccb66fa7d24d67e263')
+    version('1.8.16', sha256='ed17178abd9928a7237f30370189ba767b9e39e0db45917c2ac4665eb9cb4771')
+    version('1.8.15', sha256='4e963216b7d32469596bc1321a8c3f6e0c278dcbbdb7be6414c63c081b34c275')
+    version('1.8.14', sha256='1dbefeeef7f591897c632b2b090db96bb8d35ad035beaa36bc39cb2bc67e0639')
+    version('1.8.13', sha256='82f6b38eec103b4fccfbf14892786e0c27a8135d3252d8601cf5bf20066d38c1')
+    version('1.8.12', sha256='b5cccea850096962b5fd9e96f22c4f47d2379224bb41130d9bc038bb6c37dfcb')
+    version('1.8.10', sha256='4813b79c5fb8701a625b9924b8203bc7154a77f9b826ad4e034144b4056a160a')
 
     variant('debug', default=False,
             description='Builds a debug version of the library')
@@ -53,6 +57,11 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('automake', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
     # numactl does not currently build on darwin
@@ -98,13 +107,25 @@ class Hdf5(AutotoolsPackage):
 
     # There are build errors with GCC 8, see
     # https://forum.hdfgroup.org/t/1-10-2-h5detect-compile-error-gcc-8-1-0-on-centos-7-2-solved/4441
-    patch('https://salsa.debian.org/debian-gis-team/hdf5/raw/bf94804af5f80f662cad80a5527535b3c6537df6/debian/patches/gcc-8.patch', sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523', when='@1.10.2%gcc@8:')
+    patch('https://salsa.debian.org/debian-gis-team/hdf5/raw/bf94804af5f80f662cad80a5527535b3c6537df6/debian/patches/gcc-8.patch',
+          sha256='57cee5ff1992b4098eda079815c36fc2da9b10e00a9056df054f2384c4fc7523',
+          when='@1.10.2%gcc@8:')
+
+    # Disable MPI C++ interface when C++ is disabled, otherwise downstream
+    # libraries fail to link; see https://github.com/spack/spack/issues/12586
+    patch('h5public-skip-mpicxx.patch', when='+mpi~cxx',
+          sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        autogen = Executable('./autogen.sh')
+        autogen()
 
     @property
     def libs(self):
@@ -181,6 +202,7 @@ class Hdf5(AutotoolsPackage):
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
         extra_args = ['--enable-unsupported']
+        extra_args += ['--enable-symbols=yes']
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')

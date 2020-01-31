@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Gaussian(Package):
 
     homepage = "http://www.gaussian.com/"
     url = "file://{0}/g09.tgz".format(os.getcwd())
+    manual_download = True
 
     version('09', '7d4c95b535e68e48af183920df427e4e')
 

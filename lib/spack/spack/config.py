@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,6 @@ import re
 import sys
 import multiprocessing
 from contextlib import contextmanager
-from six import string_types
 from six import iteritems
 from ordereddict_backport import OrderedDict
 
@@ -49,6 +48,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
+import spack.schema
 import spack.schema.compilers
 import spack.schema.mirrors
 import spack.schema.repos
@@ -100,13 +100,17 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': multiprocessing.cpu_count(),
+        'build_jobs': min(16, multiprocessing.cpu_count()),
+        'build_stage': '$tempdir/spack-stage',
     }
 }
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
 scopes_metavar = '{defaults,system,site,user}[/PLATFORM]'
+
+#: Base name for the (internal) overrides scope.
+overrides_base_name = 'overrides-'
 
 
 def first_existing(dictionary, keys):
@@ -115,47 +119,6 @@ def first_existing(dictionary, keys):
         return next(k for k in keys if k in dictionary)
     except StopIteration:
         raise KeyError("None of %s is in dict!" % keys)
-
-
-def _extend_with_default(validator_class):
-    """Add support for the 'default' attr for properties and patternProperties.
-
-       jsonschema does not handle this out of the box -- it only
-       validates.  This allows us to set default values for configs
-       where certain fields are `None` b/c they're deleted or
-       commented out.
-
-    """
-    import jsonschema
-    validate_properties = validator_class.VALIDATORS["properties"]
-    validate_pattern_properties = validator_class.VALIDATORS[
-        "patternProperties"]
-
-    def set_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                instance.setdefault(
-                    property, copy.deepcopy(subschema["default"]))
-        for err in validate_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    def set_pp_defaults(validator, properties, instance, schema):
-        for property, subschema in iteritems(properties):
-            if "default" in subschema:
-                if isinstance(instance, dict):
-                    for key, val in iteritems(instance):
-                        if re.match(property, key) and val is None:
-                            instance[key] = copy.deepcopy(subschema["default"])
-
-        for err in validate_pattern_properties(
-                validator, properties, instance, schema):
-            yield err
-
-    return jsonschema.validators.extend(validator_class, {
-        "properties": set_defaults,
-        "patternProperties": set_pp_defaults
-    })
 
 
 class ConfigScope(object):
@@ -185,13 +148,13 @@ class ConfigScope(object):
     def write_section(self, section):
         filename = self.get_section_filename(section)
         data = self.get_section(section)
-        _validate(data, section_schemas[section])
+        validate(data, section_schemas[section])
 
         try:
             mkdirp(self.path)
             with open(filename, 'w') as f:
-                _validate(data, section_schemas[section])
-                syaml.dump(data, stream=f, default_flow_style=False)
+                validate(data, section_schemas[section])
+                syaml.dump_config(data, stream=f, default_flow_style=False)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
                 "Error writing to config file: '%s'" % str(e))
@@ -236,6 +199,22 @@ class SingleFileScope(ConfigScope):
         #      ... data ...
         #   },
         # }
+        #
+        # To preserve overrides up to the section level (e.g. to override
+        # the "packages" section with the "::" syntax), data in self.sections
+        # looks like this:
+        # {
+        #   'config': {
+        #      'config': {
+        #         ... data ...
+        #       }
+        #   },
+        #   'packages': {
+        #      'packages': {
+        #         ... data ...
+        #      }
+        #   }
+        # }
         if self._raw_data is None:
             self._raw_data = _read_config_file(self.path, self.schema)
             if self._raw_data is None:
@@ -251,39 +230,21 @@ class SingleFileScope(ConfigScope):
 
                 self._raw_data = self._raw_data[key]
 
-        # data in self.sections looks (awkwardly) like this:
-        # {
-        #   'config': {
-        #      'config': {
-        #         ... data ...
-        #       }
-        #   },
-        #   'packages': {
-        #      'packages': {
-        #         ... data ...
-        #      }
-        #   }
-        # }
-        #
-        # UNLESS there is no section, in which case it is stored as:
-        # {
-        #   'config': None,
-        #   ...
-        # }
-        value = self._raw_data.get(section)
-        self.sections.setdefault(
-            section, None if value is None else {section: value})
-        return self.sections[section]
+            for section_key, data in self._raw_data.items():
+                self.sections[section_key] = {section_key: data}
+
+        return self.sections.get(section, None)
 
     def write_section(self, section):
-        _validate(self.sections, self.schema)
+        validate(self.sections, self.schema)
         try:
             parent = os.path.dirname(self.path)
             mkdirp(parent)
 
             tmp = os.path.join(parent, '.%s.tmp' % self.path)
             with open(tmp, 'w') as f:
-                syaml.dump(self.sections, stream=f, default_flow_style=False)
+                syaml.dump_config(self.sections, stream=f,
+                                  default_flow_style=False)
             os.path.move(tmp, self.path)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
@@ -320,7 +281,7 @@ class InternalConfigScope(ConfigScope):
         if data:
             for section in data:
                 dsec = data[section]
-                _validate({section: dsec}, section_schemas[section])
+                validate({section: dsec}, section_schemas[section])
                 self.sections[section] = _mark_internal(
                     syaml.syaml_dict({section: dsec}), name)
 
@@ -338,7 +299,7 @@ class InternalConfigScope(ConfigScope):
         """This only validates, as the data is already in memory."""
         data = self.get_section(section)
         if data is not None:
-            _validate(data, section_schemas[section])
+            validate(data, section_schemas[section])
         self.sections[section] = _mark_internal(data, self.name)
 
     def __repr__(self):
@@ -393,6 +354,15 @@ class Configuration(object):
     def highest_precedence_scope(self):
         """Non-internal scope with highest precedence."""
         return next(reversed(self.file_scopes), None)
+
+    def matching_scopes(self, reg_expr):
+        """
+        List of all scopes whose names match the provided regular expression.
+
+        For example, matching_scopes(r'^command') will return all scopes
+        whose names begin with `command`.
+        """
+        return [s for s in self.scopes.values() if re.search(reg_expr, s.name)]
 
     def _validate_scope(self, scope):
         """Ensure that scope is valid in this configuration.
@@ -560,7 +530,7 @@ class Configuration(object):
         try:
             data = syaml.syaml_dict()
             data[section] = self.get_config(section)
-            syaml.dump(
+            syaml.dump_config(
                 data, stream=sys.stdout, default_flow_style=False, blame=blame)
         except (yaml.YAMLError, IOError):
             raise ConfigError("Error reading configuration: %s" % section)
@@ -583,9 +553,21 @@ def override(path_or_scope, value=None):
         overrides = path_or_scope
         config.push_scope(path_or_scope)
     else:
-        overrides = InternalConfigScope('overrides')
+        base_name = overrides_base_name
+        # Ensure the new override gets a unique scope name
+        current_overrides = [s.name for s in
+                             config.matching_scopes(r'^{0}'.format(base_name))]
+        num_overrides = len(current_overrides)
+        while True:
+            scope_name = '{0}{1}'.format(base_name, num_overrides)
+            if scope_name in current_overrides:
+                num_overrides += 1
+            else:
+                break
+
+        overrides = InternalConfigScope(scope_name)
         config.push_scope(overrides)
-        config.set(path_or_scope, value, scope='overrides')
+        config.set(path_or_scope, value, scope=scope_name)
 
     yield config
 
@@ -689,7 +671,7 @@ def _validate_section_name(section):
             % (section, " ".join(section_schemas.keys())))
 
 
-def _validate(data, schema, set_defaults=True):
+def validate(data, schema, set_defaults=True):
     """Validate data read in from a Spack YAML file.
 
     Arguments:
@@ -699,17 +681,10 @@ def _validate(data, schema, set_defaults=True):
 
     This leverages the line information (start_mark, end_mark) stored
     on Spack YAML structures.
-
     """
     import jsonschema
-
-    if not hasattr(_validate, 'validator'):
-        default_setting_validator = _extend_with_default(
-            jsonschema.Draft4Validator)
-        _validate.validator = default_setting_validator
-
     try:
-        _validate.validator(schema).validate(data)
+        spack.schema.Validator(schema).validate(data)
     except jsonschema.ValidationError as e:
         raise ConfigFormatError(e, data)
 
@@ -730,10 +705,10 @@ def _read_config_file(filename, schema):
     try:
         tty.debug("Reading config file %s" % filename)
         with open(filename) as f:
-            data = _mark_overrides(syaml.load(f))
+            data = syaml.load_config(f)
 
         if data:
-            _validate(data, schema)
+            validate(data, schema)
         return data
 
     except MarkedYAMLError as e:
@@ -754,23 +729,6 @@ def _override(string):
 
     """
     return hasattr(string, 'override') and string.override
-
-
-def _mark_overrides(data):
-    if isinstance(data, list):
-        return syaml.syaml_list(_mark_overrides(elt) for elt in data)
-
-    elif isinstance(data, dict):
-        marked = syaml.syaml_dict()
-        for key, val in iteritems(data):
-            if isinstance(key, string_types) and key.endswith(':'):
-                key = syaml.syaml_str(key[:-1])
-                key.override = True
-            marked[key] = _mark_overrides(val)
-        return marked
-
-    else:
-        return data
 
 
 def _mark_internal(data, name):
@@ -842,9 +800,14 @@ def _merge_yaml(dest, source):
 
         # ensure that keys are marked in the destination.  the key_marks dict
         # ensures we can get the actual source key objects from dest keys
-        for dk in dest.keys():
-            if dk in key_marks:
+        for dk in list(dest.keys()):
+            if dk in key_marks and syaml.markable(dk):
                 syaml.mark(dk, key_marks[dk])
+            elif dk in key_marks:
+                # The destination key may not be markable if it was derived
+                # from a schema default. In this case replace the key.
+                val = dest.pop(dk)
+                dest[key_marks[dk]] = val
 
         return dest
 

@@ -19,8 +19,8 @@ class NeurodamusModel(SimModel):
     # NOTE: Several variants / dependencies come from SimModel
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
     variant('mvdtool',     default=True , description="Enable MVDTool reader (for nodes)")
-    variant('common_mods', default='',    description="Source of common mods. '': no change,"
-                                                      " other string: alternate path")
+    variant('common_mods', default='default', description="Source of common mods. '': no change,"
+                                                          " other string: alternate path")
     # Note: We dont request link to MPI so that mpicc can do what is best
     # and dont rpath it so we stay dynamic. 'run' mode will load the same mpi module
     depends_on("mpi", type=('build', 'run'))
@@ -56,7 +56,7 @@ class NeurodamusModel(SimModel):
 
         # If specified common_mods then we must change the source
         # Particularly useful for CI of changes to models/common
-        if spec.variants['common_mods'].value:
+        if spec.variants['common_mods'].value != 'default':
             shutil.move('common', '_common_orig')
             force_symlink(spec.variants['common_mods'].value, 'common')
 

@@ -32,24 +32,37 @@ config:
   module_roots:
     tcl:    $spack/share/spack/modules
     lmod:   $spack/share/spack/lmod
-    dotkit: $spack/share/spack/dotkit
 
 
   # Temporary locations Spack can try to use for builds.
   #
-  # Spack will use the first one it finds that exists and is writable.
-  # You can use $tempdir to refer to the system default temp directory
-  # (as returned by tempfile.gettempdir()).
+  # Recommended options are given below.
   #
-  # A value of $spack/var/spack/stage indicates that Spack should run
-  # builds directly inside its install directory without staging them in
-  # temporary space.
+  # Builds can be faster in temporary directories on some (e.g., HPC) systems.
+  # Specifying `$tempdir` will ensure use of the default temporary directory
+  # (i.e., ``$TMP` or ``$TMPDIR``).
   #
-  # The build stage can be purged with `spack clean --stage`.
+  # Another option that prevents conflicts and potential permission issues is
+  # to specify `~/.spack/stage`, which ensures each user builds in their home
+  # directory.
+  #
+  # A more traditional path uses the value of `$spack/var/spack/stage`, which
+  # builds directly inside Spack's instance without staging them in a
+  # temporary space.  Problems with specifying a path inside a Spack instance
+  # are that it precludes its use as a system package and its ability to be
+  # pip installable.
+  #
+  # In any case, if the username is not already in the path, Spack will append
+  # the value of `$user` in an attempt to avoid potential conflicts between
+  # users in shared temporary spaces.
+  #
+  # The build stage can be purged with `spack clean --stage` and
+  # `spack clean -a`, so it is important that the specified directory uniquely
+  # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
-    - $tempdir
-    - /nfs/tmp2/$user
-    - $spack/var/spack/stage
+    - $tempdir/$user/spack-stage
+    - ~/.spack/stage
+  # - $spack/var/spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived
@@ -65,6 +78,20 @@ config:
   # If this is false, tools like curl that use SSL will not verify
   # certifiates. (e.g., curl will use use the -k option)
   verify_ssl: true
+
+
+  # Suppress gpg warnings from binary package verification
+  # Only suppresses warnings, gpg failure will still fail the install
+  # Potential rationale to set True: users have already explicitly trusted the
+  # gpg key they are using, and may not want to see repeated warnings that it
+  # is self-signed or something of the sort.
+  suppress_gpg_warnings: false
+
+
+  # If set to true, Spack will attempt to build any compiler on the spec
+  # that is not already available. If set to False, Spack will only use
+  # compilers already configured in compilers.yaml
+  install_missing_compilers: False
 
 
   # If set to true, Spack will always check checksums after downloading
@@ -94,10 +121,12 @@ config:
   locks: true
 
 
-  # The default number of jobs to use when running `make` in parallel.
-  # If set to 4, for example, `spack install` will run `make -j4`.
-  # If not set, all available cores are used by default.
-  # build_jobs: 4
+  # The maximum number of jobs to use when running `make` in parallel,
+  # always limited by the number of cores available. For instance:
+  # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
+  # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
+  # If not set, Spack will use all available cores up to 16.
+  # build_jobs: 16
 
 
   # If set to true, Spack will use ccache to cache C compiles.
@@ -117,3 +146,8 @@ config:
   # anticipates that a significant delay indicates that the lock attempt will
   # never succeed.
   package_lock_timeout: null
+
+  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
+  # Has no effect on macOS. DO NOT MIX these within the same install tree.
+  # See the Spack documentation for details.
+  shared_linking: 'rpath'
