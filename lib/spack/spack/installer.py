@@ -92,23 +92,23 @@ STATUS_REMOVED = 'removed'
 # TODO:       2019-02-07-staticmethod-considered-beneficial.html
 
 
-def _check_install_locally(pkg, explicit):
+def _handle_external_and_upstream(pkg, explicit):
     """
-    Determine if the package is to be installed locally, registering any
-    external package in the database in the process.
+    Determine if the package is external or upstream and register it in the
+    database if it is external package.
 
     Args:
         pkg (Package): the package whose installation is under consideration
         explicit (bool): the package was explicitly requested by the user
     Return:
-        (bool): ``True`` if the package is to be installed locally, otherwise,
-            ``False``
+        (bool): ``True`` if the package is external or upstream (so not to
+            be installed locally), otherwise, ``True``
     """
     # For external packages the workflow is simplified, and basically
     # consists in module file generation and registration in the DB.
     if pkg.spec.external:
         _process_external_package(pkg, explicit)
-        return False
+        return True
 
     if pkg.installed_upstream:
         tty.verbose('{0} is installed in an upstream Spack instance at {1}'
@@ -118,9 +118,9 @@ def _check_install_locally(pkg, explicit):
         # This will result in skipping all post-install hooks. In the case
         # of modules this is considered correct because we want to retrieve
         # the module from the upstream Spack instance.
-        return False
+        return True
 
-    return True
+    return False
 
 
 def _do_fake_install(pkg):
@@ -1256,7 +1256,8 @@ class PackageInstaller(object):
 
         # Skip out early if the spec is not being installed locally (i.e., if
         # external or upstream).
-        if not _check_install_locally(self.pkg, True):
+        not_local = _handle_external_and_upstream(self.pkg, True)
+        if not_local:
             return
 
         # Initialize the build task queue
@@ -1292,11 +1293,12 @@ class PackageInstaller(object):
             # Skip the installation if the spec is not being installed locally
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
-            if pkg_id != self.pkg.unique_id and \
-                    not _check_install_locally(pkg, False):
-                self._update_installed(task)
-                _print_installed_pkg(pkg.prefix)
-                continue
+            if pkg_id != self.pkg.unique_id:
+                not_local = _handle_external_and_upstream(pkg, False)
+                if not_local:
+                    self._update_installed(task)
+                    _print_installed_pkg(pkg.prefix)
+                    continue
 
             # Flag a failed spec.  Do not need an (install) prefix lock since
             # assume using a separate (failed) prefix lock file.
