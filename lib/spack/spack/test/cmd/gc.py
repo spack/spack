@@ -30,7 +30,9 @@ def test_packages_are_removed(config, mutable_database, capsys):
 
 
 @pytest.mark.db
-def test_gc_with_environment(config, mutable_database, capsys):
+def test_gc_with_environment(
+        config, mutable_database, mutable_mock_env_path, capsys
+):
     s = spack.spec.Spec('simple-inheritance')
     s.concretize()
     s.package.do_install(fake=True, explicit=True)
