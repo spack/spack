@@ -431,7 +431,7 @@ def log(pkg):
     Copy provenance into the install directory on success
 
     Args:
-        pkg (Package): the package to be installed and built
+        pkg (Package): the package that was installed and built
     """
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
 
@@ -524,8 +524,12 @@ install_args_docstring = """
 
 class PackageInstaller(object):
     '''
-    Class for managing distributed builds based on bottom-up DAG
-    processing.
+    Class for managing the install process for a Spack instance based on a
+    bottom-up DAG approach.
+
+    This installer can coordinate concurrent batch and interactive, local
+    and distributed (on a shared file system) builds for the same Spack
+    instance.
     '''
 
     def __init__(self, pkg):
@@ -878,7 +882,7 @@ class PackageInstaller(object):
 
     def _install_task(self, task, **kwargs):
         """
-        Perform the installation of the requested spec and or dependency
+        Perform the installation of the requested spec and/or dependency
         represented by the build task.
 
         Args:
@@ -1236,7 +1240,7 @@ class PackageInstaller(object):
 
     def install(self, **kwargs):
         """
-        Install the package and or associated dependencies.
+        Install the package and/or associated dependencies.
 
         Args:"""
 
@@ -1328,21 +1332,22 @@ class PackageInstaller(object):
             self._prepare_for_install(task, keep_prefix, keep_stage,
                                       restage)
 
-            # Flag an already installed pkg
+            # Flag an already installed package
             if pkg_id in self.installed:
-                # Downgrade to a read lock to preclude another processes
-                # from uninstalling the pkg until we're done.
-                #
-                # In the off chance we cannot get a read lock, then another
-                # process has probably taken a write lock between our releasing
-                # the write and acquiring the read.
+                # Downgrade to a read lock to preclude other processes from
+                # uninstalling the package until we're done installing its
+                # dependents.
                 ltype, lock = self._ensure_locked('read', pkg)
                 if lock is not None:
                     self._update_installed(task)
                     _print_installed_pkg(pkg.prefix)
                 else:
-                    # Since we cannot assess their intentions at this point,
-                    # requeue the task so we can re-check the status presumably
+                    # At this point we've failed to get a write or a read
+                    # lock, which means another process has taken a write
+                    # lock between our releasing the write and acquiring the
+                    # read.
+                    #
+                    # Requeue the task so we can re-check the status
                     # established by the other process -- failed, installed,
                     # or uninstalled -- on the next pass.
                     self._requeue_task(task)
@@ -1360,8 +1365,8 @@ class PackageInstaller(object):
                 self._requeue_task(task)
                 continue
 
-            # Proceed with the installation since this is the only process
-            # that can work on the current package.
+            # Proceed with the installation since we have an exclusive write
+            # lock on the package.
             try:
                 self._install_task(task, **kwargs)
                 self._update_installed(task)
@@ -1438,7 +1443,7 @@ class BuildTask(object):
                 been installed so far
         """
 
-        # Ensure dealing with a package that has a concretized spec
+        # Ensure dealing with a package that has a concrete spec
         if not isinstance(pkg, spack.package.PackageBase):
             raise ValueError("{0} must be a package".format(str(pkg)))
 
