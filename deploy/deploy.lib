@@ -88,7 +88,7 @@ install_dir_raw() {
     # variables set.
     what=$1
     date="${DEPLOYMENT_DATE:-${DEFAULT_DEPLOYMENT_DATE}}"
-    name="${DEPLOYMENT_ROOT}/${DEPLOYMENT_TYPE:-deploy}/${what}/${date}"
+    name="${DEPLOYMENT_ROOT}/deploy/${what}/${date}"
     echo "${name}"
 }
 
@@ -579,7 +579,7 @@ copy_user_configuration() {
     what="$1"
 
     local source="$(install_dir ${what})/data"
-    local target="${DEPLOYMENT_ROOT}/config"
+    local target="${DEPLOYMENT_ROOT}/config/$(date +%Y)"
 
     local root="${DEPLOYMENT_ROOT}/modules/all"
 

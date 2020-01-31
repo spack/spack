@@ -317,13 +317,13 @@ pipeline {
                     }
                 }
 
-                // stage("Test Modules") {
-                //     steps {
-                //         build job: "hpc.module-testing", parameters: [
-                //             string(name: "MODULE_SCRIPT_PATH", value: "${DEPLOYMENT_ROOT}/config/modules.sh")
-                //         ]
-                //     }
-                // }
+                stage("Test Modules") {
+                    steps {
+                        build job: "hpc.module-testing", parameters: [
+                            string(name: "MODULE_SCRIPT_PATH", value: "${DEPLOYMENT_ROOT}/config/modules.sh")
+                        ]
+                    }
+                }
 
                 stage('Build Docker') {
                     agent {
