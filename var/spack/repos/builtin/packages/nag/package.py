@@ -10,6 +10,7 @@ import os
 class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
+    maintainers = ['ThemosTsikas']
 
     version('7.0', sha256='ea83075cde9e625083b85be04426b0536b2da32db3cfd0c3eb3f2cf8253a2030')
     version('6.2', sha256='e22f70f52949c4eb5526229c13920c924af5254d07a584cf54fefecd130fd29c')
