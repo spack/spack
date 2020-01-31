@@ -837,15 +837,15 @@ class PackageInstaller(object):
         self.locks[pkg_id] = (lock_type, lock)
         return self.locks[pkg_id]
 
-    def _init_queue(self, install_deps, install_self):
+    def _init_queue(self, install_deps, install_package):
         """
         Initialize the build task priority queue and spec state.
 
         Args:
             install_deps (bool): ``True`` if installing package dependencies,
                 otherwise ``False``
-            install_self (bool): ``True`` if installing the package, otherwise
-                ``False``
+            install_package (bool): ``True`` if installing the package,
+                otherwise ``False``
         """
         tty.debug('Initializing the build queue for {0}'.format(self.pkg.name))
         install_compilers = spack.config.get(
@@ -872,7 +872,7 @@ class PackageInstaller(object):
             if install_compilers:
                 self._add_bootstrap_compilers(self, self.pkg)
 
-        if install_self and self.pkg.unique_id not in self.build_tasks:
+        if install_package and self.pkg.unique_id not in self.build_tasks:
             # Now add the package itself, if appropriate
             self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
 
@@ -1245,9 +1245,9 @@ class PackageInstaller(object):
         keep_stage = kwargs.get('keep_stage', False)
         restage = kwargs.get('restage', False)
 
-        # install_self defaults True and is popped so that dependencies are
+        # install_package defaults True and is popped so that dependencies are
         # always installed regardless of whether the root was installed
-        install_self = kwargs.pop('install_package', True)
+        install_package = kwargs.pop('install_package', True)
 
         # Ensure not attempting to perform an installation when user didn't
         # want to go that far.
@@ -1260,7 +1260,7 @@ class PackageInstaller(object):
             return
 
         # Initialize the build task queue
-        self._init_queue(install_deps, install_self)
+        self._init_queue(install_deps, install_package)
 
         # Proceed with the installation
         while self.build_pq:
