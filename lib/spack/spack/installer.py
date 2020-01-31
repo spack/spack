@@ -714,16 +714,14 @@ class PackageInstaller(object):
             except Exception as exc:
                 tty.warn(err.format(exc.__class__.__name__, pkg_id, str(exc)))
 
-    def _cleanup_task(self, pkg, remove_task):
+    def _cleanup_task(self, pkg):
         """
         Cleanup the build task for the spec
 
         Args:
             pkg (PackageBase): the package being installed
-            remove_task (bool): ``True`` if the build task should be removed
         """
-        if remove_task:
-            self._remove_task(pkg.unique_id)
+        self._remove_task(pkg.unique_id)
 
         # Ensure we have a read lock to prevent others from uninstalling the
         # spec during our installation.
@@ -1401,7 +1399,7 @@ class PackageInstaller(object):
 
             # Perform basic task cleanup for the installed spec to
             # include downgrading the write to a read lock
-            self._cleanup_task(pkg, True)
+            self._cleanup_task(pkg)
 
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
