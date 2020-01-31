@@ -72,6 +72,7 @@ class SuperluDist(CMakePackage):
             args.append('-Denable_openmp=ON')
         else:
             args.append('-Denable_openmp=OFF')
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')
