@@ -57,7 +57,7 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
-    patch('http://www.linuxfromscratch.org/patches/blfs/svn/graphviz-2.40.1-qt5-1.patch',
+    patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='+qt^qt@5:')
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.38.0_icc_sfio.patch',
@@ -118,9 +118,9 @@ class Graphviz(AutotoolsPackage):
         bash = which('bash')
         bash('./autogen.sh', 'NOCONFIG')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if '+quartz' in self.spec:
-            spack_env.set('OBJC', self.compiler.cc)
+            env.set('OBJC', self.compiler.cc)
 
     @when('%clang platform=darwin')
     def patch(self):
