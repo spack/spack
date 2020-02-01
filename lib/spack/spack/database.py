@@ -942,7 +942,7 @@ class Database(object):
             except BaseException:
                 pass
             if ((current_verifier != self.last_seen_verifier) or
-                (current_verifier == '')):
+                    (current_verifier == '')):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
                 self._read_from_file(self._index_path)
@@ -1355,7 +1355,7 @@ class Database(object):
             # TODO: handling of hashes restriction is not particularly elegant.
             hash_key = query_spec.dag_hash()
             if (hash_key in self._data and
-                (not hashes or hash_key in hashes)):
+                    (not hashes or hash_key in hashes)):
                 return [self._data[hash_key].spec]
             else:
                 return []
