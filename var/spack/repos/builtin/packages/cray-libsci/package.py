@@ -5,6 +5,7 @@
 
 from llnl.util.filesystem import LibraryList
 from spack import *
+import os
 
 
 class CrayLibsci(Package):
