@@ -543,6 +543,7 @@ def mutable_database(database, _store_dir_and_cache):
     store_path.remove(rec=1)
     store_cache.copy(store_path, mode=True, stat=True)
     store_path.join('.spack-db').chmod(mode=0o555, rec=1)
+    database.last_seen_verifier = ''
 
 
 @pytest.fixture()

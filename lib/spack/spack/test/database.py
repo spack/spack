@@ -518,8 +518,7 @@ def test_041_ref_counts_deprecate(mutable_database):
     zmpi = mutable_database.query_one('zmpi')
 
     mutable_database.deprecate(mpich, zmpi)
-    with mutable_database.read_transaction():
-        mutable_database._check_ref_counts()
+    mutable_database._check_ref_counts()
 
 
 def test_050_basic_query(database):
