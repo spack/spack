@@ -744,13 +744,13 @@ def mock_archive(request, tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
-    """Creates a very simple git repository with two branches,
-    two commits and five submodules.
+    """Creates a simple git repository with two branches,
+    two commits and two submodules. Each submodule has one commit.
     """
     git = spack.util.executable.which('git', required=True)
 
     suburls = []
-    for submodule_count in range(5):
+    for submodule_count in range(2):
         tmpdir = tmpdir_factory.mktemp('mock-git-repo-submodule-dir-{0}'
                                        .format(submodule_count))
         tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -764,10 +764,10 @@ def mock_git_repository(tmpdir_factory):
             git('config', 'user.email', 'spack@spack.io')
 
             # r0 is just the first commit
-            r0_file = 'r0_file'
-            repodir.ensure(r0_file)
-            git('add', r0_file)
-            git('commit', '-m', 'mock-git-repo r0')
+            submodule_file = 'r0_file_{0}'.format(submodule_count)
+            repodir.ensure(submodule_file)
+            git('add', submodule_file)
+            git('commit', '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)

@@ -237,9 +237,9 @@ def test_gitsubmodule(submodules, mock_git_repository, config,
     pkg.versions[ver('git')] = args
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
-        for submodule_count in range(5):
+        for submodule_count in range(2):
             file_path = os.path.join(pkg.stage.source_path,
-                                     'third_party/submodule{0}/r0_file'
+                                     'third_party/submodule{0}/r0_file_{0}'
                                      .format(submodule_count))
             if submodules:
                 assert os.path.isfile(file_path)
@@ -262,7 +262,7 @@ def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
     args = copy.copy(t.args)
     args['submodules'] = True
     args['submodules_delete'] = ['third_party/submodule0',
-                                 'third_party/submodule3']
+                                 'third_party/submodule1']
     pkg.versions[ver('git')] = args
     pkg.do_stage()
     with working_dir(pkg.stage.source_path):
@@ -270,14 +270,5 @@ def test_gitsubmodules_delete(mock_git_repository, config, mutable_mock_repo):
                                  'third_party/submodule0')
         assert not os.path.isdir(file_path)
         file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule1/r0_file')
-        assert os.path.isfile(file_path)
-        file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule2/r0_file')
-        assert os.path.isfile(file_path)
-        file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule3')
+                                 'third_party/submodule1')
         assert not os.path.isdir(file_path)
-        file_path = os.path.join(pkg.stage.source_path,
-                                 'third_party/submodule4/r0_file')
-        assert os.path.isfile(file_path)
