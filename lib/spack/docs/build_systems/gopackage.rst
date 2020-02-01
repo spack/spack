@@ -196,7 +196,10 @@ definition:
 
    .. code-block:: python
 
-      import_resources("resources-1.2.3.py", when="@1.2.3")
+      # Note that the resource definitions should include a when
+      # clause that constrains their version (modules2tuple handles)
+      # this automatically.
+      import_resources("resources-1.2.3.json")
 
 ^^^^^^^^^^^^^^^
 Advanced topics
@@ -211,8 +214,10 @@ can't use ``GoPackage`` seem to end up using ``MakefilePackage``.
 
 Things to keep in mind include:
 
-* the package should use only a *build* dependency on go (unless
-  something wacky is happening at run time);
+* the package should only have a *build* dependency on go unless
+  something unusual is happening at run time, e.g. the application
+  runs a "script" via `go run` or calls some other sub-tool of the
+  `go` command (e.g. `go fmt`).
 
 * you'll need to provide ``resource`` definitions for dependencies
   (``modules2tuple`` might be helpful) and ensure that ``go`` does not

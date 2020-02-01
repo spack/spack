@@ -617,7 +617,7 @@ def resource(**kwargs):
 def import_resources(filename):
     """Load one or more resource definitions from a JSON file.  The JSON
     file must contains an array of objects, where the keys of each
-    object are be valid resource keywords (e.g. 'when', 'destination')
+    object are valid resource keywords (e.g. 'when', 'destination')
     and the values are the valid values for the corresponding resource
     definition.  E.g.
 

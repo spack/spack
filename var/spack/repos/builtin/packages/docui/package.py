@@ -16,6 +16,6 @@ class Docui(GoPackage):
 
     depends_on('go@1.13:', type='build')  # go.mod value overrides default
 
-    import_resources("resources.json")
+    import_resources("resources-2.0.4.json")
 
     executables = ['docui']
