@@ -1482,6 +1482,9 @@ class BuildTask(object):
             raise ValueError("{0} must have a concrete spec"
                              .format(self.pkg.name))
 
+        # The "unique" identifier for the task's package
+        self.pkg_id = package_id(self.pkg)
+
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
@@ -1490,9 +1493,6 @@ class BuildTask(object):
             raise InstallError(msg.format(self.pkg_id, status))
 
         self.status = status
-
-        # The "unique" identifier for the task's package
-        self.pkg_id = package_id(self.pkg)
 
         # Package is associated with a bootstrap compiler
         self.compiler = compiler
