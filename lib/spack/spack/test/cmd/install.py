@@ -619,9 +619,7 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
 
     # libelf from cache failed to install, which automatically removed the
     # the libdwarf build task and flagged the package as failed to install.
-    install_failed = re.compile(
-        r'Installation of libdwarf(.+) failed.  Review log for details')
-    assert install_failed.search(msg)
+    assert 'Installation of libdwarf failed' in msg
 
 
 def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):

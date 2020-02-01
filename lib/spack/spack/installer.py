@@ -515,7 +515,13 @@ def package_id(pkg):
 
     # TODO: Is the extra "readability" of the version worth keeping?
     # return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
-    return "{0}-{1}".format(pkg.name, pkg.version)
+
+    # TODO: Including the version causes some installs to fail.  Specifically
+    # TODO: failures occur when the version of a dependent of one of the
+    # TODO: packages does not match the version that is installed.
+    # return "{0}-{1}".format(pkg.name, pkg.version)
+
+    return pkg.name
 
 
 install_args_docstring = """

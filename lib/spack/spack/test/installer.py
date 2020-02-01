@@ -127,5 +127,4 @@ def test_package_id(install_mockery):
     spec.concretize()
     assert spec.concrete
     pkg = spec.package
-    expected = "{0}-{1}".format(pkg.name, pkg.version)
-    assert expected in inst.package_id(pkg)
+    assert pkg.name in inst.package_id(pkg)
