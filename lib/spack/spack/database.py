@@ -917,7 +917,9 @@ class Database(object):
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
             with open(self._verifier_path, 'w') as f:
-                f.write(str(uuid.uuid4()))
+                new_verifier = str(uuid.uuid4())
+                f.write(new_verifier)
+                self.last_seen_verifier = new_verifier
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
