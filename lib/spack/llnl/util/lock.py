@@ -341,6 +341,23 @@ class Lock(object):
             self._writes += 1
             return False
 
+    def is_write_locked(self):
+        """Check if the file is write locked
+
+        Return:
+            (bool): ``True`` if the path is write locked, otherwise, ``False``
+        """
+        try:
+            self.acquire_read()
+
+            # If we have a read lock then no other process has a write lock.
+            self.release_read()
+        except LockTimeoutError:
+            # Another process is holding a write lock on the file
+            return True
+
+        return False
+
     def downgrade_write_to_read(self, timeout=None):
         """
         Downgrade from an exclusive write lock to a shared read.

@@ -485,20 +485,7 @@ class Database(object):
             length=1,
             default_timeout=self.package_lock_timeout, desc=spec.name)
 
-        try:
-            check.acquire_read()
-
-            # If we have a read lock then no other process has a failure lock
-            # indicating an active installation failure for the spec.  There
-            # is no reason to hang on to the read lock itself.
-            check.release_read()
-        except lk.LockTimeoutError:
-            # Another process is holding a write lock, which indicates
-            # installation of the spec has failed.
-            tty.debug('{0} is failure locked'.format(spec.name))
-            return True
-
-        return False
+        return check.is_write_locked()
 
     def prefix_failure_marked(self, spec):
         """Determine if the spec has a persistent failure marking."""
