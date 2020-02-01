@@ -170,7 +170,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock', spack.stage._source_path_subdir])
+    return set(['.lock', spack.stage._source_path_subdir, 'build_cache'])
 
 
 def remove_whatever_it_is(path):
