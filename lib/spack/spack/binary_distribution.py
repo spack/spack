@@ -661,7 +661,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
 
 # Internal cache for downloaded specs
-_cached_specs = []
+_cached_specs = set()
 
 
 def try_download_specs(urls=None, force=False):
@@ -686,7 +686,7 @@ def try_download_specs(urls=None, force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                _cached_specs.append(spec)
+                _cached_specs.add(spec)
 
     return _cached_specs
 
