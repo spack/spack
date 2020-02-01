@@ -493,7 +493,7 @@ class Database(object):
             # is no reason to hang on to the read lock itself.
             check.release_read()
         except lk.LockTimeoutError:
-            # Another process is holding a write lock, which indicates 
+            # Another process is holding a write lock, which indicates
             # installation of the spec has failed.
             tty.debug('{0} is failure locked'.format(spec.name))
             return True
