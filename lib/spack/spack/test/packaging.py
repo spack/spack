@@ -214,7 +214,7 @@ echo $PATH"""
     stage.destroy()
 
     # Remove cached binary specs since we deleted the mirror
-    bindist._cached_specs = None
+    bindist._cached_specs = set()
 
 
 def test_relocate_text(tmpdir):
