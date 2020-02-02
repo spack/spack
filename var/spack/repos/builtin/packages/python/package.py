@@ -160,7 +160,7 @@ class Python(AutotoolsPackage):
 
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
-    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1: %intel')
+    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
