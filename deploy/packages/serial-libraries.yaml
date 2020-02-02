@@ -20,7 +20,7 @@ packages:
       - python
     specs:
       - arrow+parquet+python@0.15.0
-      - neuron~mpi@7.6.8
+      - neuron~mpi
 
   gnu-stable-serial-python3:
     target_matrix:

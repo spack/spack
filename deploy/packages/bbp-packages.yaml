@@ -137,7 +137,7 @@ packages:
       - py-bluepy@0.14.5
       - py-bluepymm@0.6.38
       - py-bluepyopt@1.6.56
-      - py-efel@3.0.22
+      - py-efel@3.0.39
       - py-bglibpy@4.1.4
 
 

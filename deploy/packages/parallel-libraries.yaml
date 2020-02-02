@@ -87,7 +87,6 @@ packages:
       - python
     specs:
       - neuron
-      - neuron@7.6.8
       - neuron+debug
       - py-h5py
       - py-mpi4py
