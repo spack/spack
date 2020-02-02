@@ -79,7 +79,6 @@ modules:
       autoload: 'all'
       suffixes:
         '^coreneuron+knl': 'knl'
-        'neuron~mpi': 'serial'
         '+common': 'commonmods'  # neurodamus-core
       environment:
         set:

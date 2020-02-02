@@ -29,9 +29,9 @@ modules:
     whitelist:
       - boost
       - gmsh
-      - hdf5
-      - highfive
-      - neuron
+      - hdf5+mpi
+      - highfive+mpi
+      - neuron+mpi%intel
       - omega-h
       - petsc
       - py-mpi4py
@@ -48,8 +48,6 @@ modules:
     naming_scheme: '${PACKAGE}/${VERSION}'
     all:
       autoload: 'all'
-      suffixes:
-        '+mpi': 'parallel'
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'
