@@ -37,6 +37,9 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2020.01', 'x86_64'):  '3cd5a2a382cec1d64c8bd0abaf2b1461dcd4092a4b4074ddbdc1b96d2a0b4220',
+        ('2020.01', 'ppc64'):   '814394a5f410033cc1019526c268ef98b5b381e311fcd39ae8b2bde6c6ff017c',
+        ('2020.01', 'ppc64le'): 'e830e956b8088c415fb25ef44a8aca16ebcb27bcd34536866612343217e3f9e4',
         ('2019.12', 'x86_64'):  '6ba149c8d23d9913291655602894f7a91f9c838e69ae5682fd7b605467255c2d',
         ('2019.12', 'ppc64'):   '787257272381fac26401e1013952bea94635172503e7abf8063081fe03f08384',
         ('2019.12', 'ppc64le'): 'fd20891fdae6dd5c2313cdd98e53c52023a0cf146a1121d0c889ebedc08a8bb9',
@@ -58,6 +61,9 @@ class Hpcviewer(Package):
     }
 
     trace_sha = {
+        ('2020.01', 'x86_64'):  '9459177a2445e85d648384e2ccee20524592e91a74d615262f32d0876831cd7c',
+        ('2020.01', 'ppc64'):   '02366a2ba30b9b2450d50cf44933288f04fae5bf9868eef7bb2ae1b49d4f454e',
+        ('2020.01', 'ppc64le'): '39970e84e397ed96bc994e7b8db3b7b3aab4e3155fa7ca8e68b9274bb58115f0',
         ('2019.12', 'x86_64'):  '6339b36e655e2c2b07af4cb40946f325acc46da3ec590d36069661e69b046a92',
         ('2019.12', 'ppc64'):   'fe4ee5af22a983fa0ddbfbd97fa6676f07492400536e900188455f21e489c59b',
         ('2019.12', 'ppc64le'): '2688ea834c546b9e2c6e9d69d271a62dd00f6bc7ff4cb874563ba8d0ae5824e3',
