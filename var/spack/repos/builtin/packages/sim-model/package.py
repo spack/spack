@@ -54,12 +54,15 @@ class SimModel(Package):
     def lib_suffix(self):
         return ('_' + self.mech_name) if self.mech_name else ''
 
-    def _build_mods(self, mods_location, link_flag='', include_flag='', corenrn_mods=None):
+    def _build_mods(self, mods_location, link_flag='', include_flag='', corenrn_mods=None,
+                    dependencies=None):
         """Build shared lib & special from mods in a given path
         """
         # pass include and link flags for all dependency libraries
         # Compiler wrappers are not used to have a more reproducible building
-        for dep in set(self.spec.dependencies_dict('link').keys()):
+        if dependencies is None:
+            dependencies = self.spec.dependencies_dict('link').keys()
+        for dep in set(dependencies):
             link_flag += " {0.ld_flags} {0.rpath_flags}".format(self.spec[dep].libs)
             include_flag += " -I " + str(self.spec[dep].prefix.include)
 

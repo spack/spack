@@ -42,7 +42,7 @@ class NeurodamusModel(SimModel):
     def build_model(self, spec, prefix):
         """Build and install the bare model.
         """
-        SimModel.build(self, spec, prefix)
+        SimModel._build_mods(self, 'mod', dependencies=[])  # No dependencies
         # Dont install intermediate src.
         SimModel.install(self, spec, prefix, install_src=False)
 
