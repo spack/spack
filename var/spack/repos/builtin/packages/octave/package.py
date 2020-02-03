@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import os.path
 import sys
 
 
@@ -91,6 +90,26 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
+
+    def patch(self):
+        # Filter mkoctfile.in.cc to use underlying compilers and not
+        # Spack compiler wrappers. We are patching the template file
+        # and not mkoctfile.cc since the latter is generated as part
+        # of the build.
+        mkoctfile_in = os.path.join(
+            self.stage.source_path, 'src', 'mkoctfile.in.cc'
+        )
+        quote = lambda s: '"' + s + '"'
+        entries_to_patch = {
+            r'%OCTAVE_CONF_MKOCTFILE_CC%': quote(self.compiler.cc),
+            r'%OCTAVE_CONF_MKOCTFILE_CXX%': quote(self.compiler.cxx),
+            r'%OCTAVE_CONF_MKOCTFILE_F77%': quote(self.compiler.f77),
+            r'%OCTAVE_CONF_MKOCTFILE_DL_LD%': quote(self.compiler.cxx),
+            r'%OCTAVE_CONF_MKOCTFILE_LD_CXX%': quote(self.compiler.cxx)
+        }
+
+        for pattern, subst in entries_to_patch.items():
+            filter_file(pattern, subst, mkoctfile_in)
 
     def configure_args(self):
         # See
