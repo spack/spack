@@ -3,7 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
+import shutil
 import sys
+import tempfile
+
+import spack.util.environment
 
 
 class Octave(AutotoolsPackage, GNUMirrorPackage):
@@ -110,6 +114,37 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
         for pattern, subst in entries_to_patch.items():
             filter_file(pattern, subst, mkoctfile_in)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_mkoctfile_works_outside_of_build_env(self):
+        # Check that mkoctfile is properly configured and can compile
+        # Octave extensions outside of the build env
+        mkoctfile = Executable(os.path.join(self.prefix, 'bin', 'mkoctfile'))
+        helloworld_cc = os.path.join(
+            os.path.dirname(__file__), 'helloworld.cc'
+        )
+        tmp_dir = tempfile.mkdtemp()
+        shutil.copy(helloworld_cc, tmp_dir)
+
+        # We need to unset these variables since we are still within
+        # Spack's build environment when running tests
+        vars_to_unset = ['CC', 'CXX', 'F77', 'FC']
+
+        with spack.util.environment.preserve_environment(*vars_to_unset):
+            # Delete temporarily the environment variables that point
+            # to Spack compiler wrappers
+            for v in vars_to_unset:
+                del os.environ[v]
+            # Check that mkoctfile outputs the expected value for CC
+            cc = mkoctfile('-p', 'CC', output=str)
+            msg = "mkoctfile didn't output the expected CC compiler"
+            assert self.compiler.cc in cc, msg
+
+            # Try to compile an Octave extension
+            shutil.copy(helloworld_cc, tmp_dir)
+            with working_dir(tmp_dir):
+                mkoctfile('helloworld.cc')
 
     def configure_args(self):
         # See
