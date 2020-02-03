@@ -23,17 +23,12 @@ packages:
     specs:
       - archngv@0.0.0
       - asciitoh5@1.0
-      - brainbuilder@0.11.3
-      - brainbuilder@0.11.4
-      - brainbuilder@0.11.5
-      - brainbuilder@0.11.6
       - brainbuilder@0.11.7
       - brion@3.1.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
       - spykfunc@0.15.2
       - psp-validation@0.2.1
-      - psp-validation@0.1.12
       - py-pytouchreader@1.4.3
       # - py-basalt@0.2.4
       - py-entity-management@1.0.20
@@ -75,8 +70,6 @@ packages:
       - functionalizer@3.12.2
       - parquet-converters@0.5.3
       - synapsetool@0.5.8
-      - touchdetector@4.4.2
-      - touchdetector@5.1.0
       - touchdetector@5.3.3
       - brayns +opendeck +brion ^ospray@1.7.3%intel@19.0.4
       - brayns@1.0.1 +brion ^ospray%intel@19.0.4
@@ -108,7 +101,6 @@ packages:
       - mpi
       - python
     specs:
-      - steps@3.4.1+petsc
       - steps@3.5.0b+petsc
       - nest@2.18.0
 
