@@ -9,10 +9,13 @@ import sys
 
 class Octave(AutotoolsPackage, GNUMirrorPackage):
     """GNU Octave is a high-level language, primarily intended for numerical
-    computations. It provides a convenient command line interface for solving
-    linear and nonlinear problems numerically, and for performing other
-    numerical experiments using a language that is mostly compatible with
-    Matlab. It may also be used as a batch-oriented language."""
+    computations.
+
+    It provides a convenient command line interface for solving linear and
+    nonlinear problems numerically, and for performing other numerical
+    experiments using a language that is mostly compatible with Matlab.
+    It may also be used as a batch-oriented language.
+    """
 
     homepage = "https://www.gnu.org/software/octave/"
     gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
