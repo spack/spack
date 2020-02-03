@@ -175,8 +175,9 @@ class Qt(Package):
 
     use_xcode = True
 
-    # Mapping for compilers in the QT 'mkspecs'
+    # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+    platform_mapping = {'darwin': 'macx'}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -226,6 +227,25 @@ class Qt(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
+
+    def get_mkspec(self):
+        """Determine the mkspecs root directory and QT platform.
+        """
+        spec = self.spec
+        cname = spec.compiler.name
+        cname = self.compiler_mapping.get(cname, cname)
+        pname = spec.architecture.platform
+        pname = self.platform_mapping.get(pname, pname)
+
+        qtplat = None
+        mkspec_dir = 'qtbase/mkspecs' if spec.satisfies('@5:') else 'mkspecs'
+        for subdir in ('', 'unsupported'):
+            platdirname = "".join([subdir, pname, "-", cname])
+            if os.path.exists(os.path.join(mkspec_dir, platdirname)):
+                qtplat = platdirname
+                break
+
+        return (mkspec_dir, qtplat)
 
     @when('@4 platform=darwin')
     def patch(self):
@@ -284,32 +304,40 @@ class Qt(Package):
         ]
         filter_file(r'(\+=.*)debug_and_release', r'\1', *files_to_filter)
 
-    @when('@4')  # *NOT* darwin/mac
+    @when('@4: %gcc')  # *NOT* darwin/mac gcc
     def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        def conf(name):
+            return os.path.join(mkspec_dir, 'common', name + '.conf')
+
         # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc', conf('g++-base'))
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++', conf('g++-base'))
 
-        # Necessary to build with GCC 6 and other modern compilers
-        # http://stackoverflow.com/questions/10354371/
-        filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
-                    'mkspecs/common/gcc-base.conf')
-
+        # Don't error out on undefined symbols
         filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'mkspecs/common/g++-unix.conf')
+                    conf('g++-unix'))
 
-    @when('@5')
+        if self.spec.satisfies('@4'):
+            # Necessary to build with GCC 6 and other modern compilers
+            # http://stackoverflow.com/questions/10354371/
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    @when('@4: %intel')
     def patch(self):
-        # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'qtbase/mkspecs/common/g++-base.conf')
+        (mkspec_dir, platform) = self.get_mkspec()
+        conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
 
-        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'qtbase/mkspecs/common/g++-unix.conf')
+        # Intel's `ar` equivalent might not be in the path: replace it with
+        # explicit
+        xiar = os.path.join(os.path.dirname(self.compiler.cc), 'xiar')
+        filter_file(r'\bxiar\b', xiar, conf_file)
+
+        if self.spec.satisfies('@4'):
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @property
     def common_config_args(self):
@@ -437,35 +465,11 @@ class Qt(Package):
             config_args.append('-{0}framework'.format(
                 '' if '+framework' in self.spec else 'no-'))
 
-        # Note: QT defaults to the following compilers
-        #  QT4 mac: gcc
-        #  QT5 mac: clang
-        #  linux: gcc
-        # In QT4, unsupported compilers lived under an 'unsupported'
-        # subdirectory but are now in the main platform directory.
-        spec = self.spec
-        cname = spec.compiler.name
-        cname = self.compiler_mapping.get(cname, cname)
-        is_new_qt = spec.satisfies('@5:')
-        platform = None
-        if MACOS_VERSION:
-            if is_new_qt and cname != "clang-libc++":
-                platform = 'macx-' + cname
-            elif not is_new_qt and cname != "g++":
-                platform = 'unsupported/macx-' + cname
-        elif cname != 'g++':
-            if is_new_qt:
-                platform = 'linux-' + cname
-            else:
-                platform = 'unsupported/linux-' + cname
-
-        if platform is not None:
-            config_args.extend(['-platform', platform])
+        (_, qtplat) = self.get_mkspec()
+        if qtplat is not None:
+            config_args.extend(['-platform', qtplat])
 
         return config_args
-
-    # Don't disable all the database drivers, but should
-    # really get them into spack at some point.
 
     @when('@3')
     def configure(self, spec, prefix):
