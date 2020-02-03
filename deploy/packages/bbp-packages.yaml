@@ -78,12 +78,12 @@ packages:
       - touchdetector@4.4.2
       - touchdetector@5.1.0
       - touchdetector@5.3.3
-      - brayns +opendeck +brion ^ospray@1.7.3%intel
-      - brayns@1.0.1 +brion ^ospray%intel
+      - brayns +opendeck +brion ^ospray@1.7.3%intel@19.0.4
+      - brayns@1.0.1 +brion ^ospray%intel@19.0.4
       - brayns@immersive +opendeck +brion +optix
-      - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
-      - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
-      - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel
+      - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
+      - brayns-brainatlas@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
+      - brayns-membranelessorganelles@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
 
   gnu-stable-parallel-python:
     target_matrix:
