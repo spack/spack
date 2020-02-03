@@ -218,7 +218,7 @@ _keys() {
 _config_sections() {
     if [[ -z "${SPACK_CONFIG_SECTIONS:-}" ]]
     then
-        SPACK_CONFIG_SECTIONS="compilers mirrors repos packages modules config upstreams"
+        SPACK_CONFIG_SECTIONS="$(spack config list)"
     fi
     SPACK_COMPREPLY="$SPACK_CONFIG_SECTIONS"
 }
@@ -313,7 +313,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
     fi
 }
 
@@ -364,7 +364,7 @@ _spack_build() {
 _spack_build_env() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle -y --yes"
+        SPACK_COMPREPLY="-h --help --clean --dirty --dump --pickle"
     else
         _all_packages
     fi
@@ -400,7 +400,7 @@ _spack_buildcache_install() {
 _spack_buildcache_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force -a --arch"
     else
         _all_packages
     fi
@@ -455,7 +455,7 @@ _spack_cd() {
 _spack_checksum() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --keep-stage"
+        SPACK_COMPREPLY="-h --help --keep-stage -y --yes"
     else
         _all_packages
     fi
@@ -507,7 +507,7 @@ _spack_clone() {
 _spack_commands() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --aliases --format --header --update"
+        SPACK_COMPREPLY="-h --help --update-completion -a --aliases --format --header --update"
     else
         SPACK_COMPREPLY=""
     fi
@@ -584,7 +584,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit"
+        SPACK_COMPREPLY="get blame edit list"
     fi
 }
 
@@ -615,6 +615,10 @@ _spack_config_edit() {
     fi
 }
 
+_spack_config_list() {
+    SPACK_COMPREPLY="-h --help"
+}
+
 _spack_configure() {
     if $list_options
     then
@@ -622,6 +626,10 @@ _spack_configure() {
     else
         _all_packages
     fi
+}
+
+_spack_containerize() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_create() {

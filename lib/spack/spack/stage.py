@@ -757,6 +757,8 @@ def get_checksums_for_versions(
         first_stage_function (callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
+        batch (bool): whether to ask user how many versions to fetch (false) 
+            or fetch all versions (true)
 
     Returns:
         (str): A multi-line string containing versions and corresponding hashes
