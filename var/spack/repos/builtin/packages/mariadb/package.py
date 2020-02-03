@@ -52,3 +52,10 @@ class Mariadb(CMakePackage):
     depends_on('openssl@:1.0', when='@:10.1')
 
     conflicts('%gcc@9.1.0:', when='@:5.5')
+
+    def cmake_args(self):
+        args = []
+
+        args.append('-DENABLE_DTRACE:BOOL=OFF')
+
+        return args
