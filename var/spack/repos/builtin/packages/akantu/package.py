@@ -14,34 +14,34 @@ class Akantu(CMakePackage):
 
     """
     homepage = "https://akantu.ch"
-    url      = "https://gitlab.com/akantu/akantu/-/archive/master/akantu-master.tar.bz2"
+    url      = "https://gitlab.com/akantu/akantu/-/archive/v3.0.0/akantu-v3.0.0.tar.gz"
 
     maintainers = ['nrichart']
 
     version('master', git='https://gitlab.com/akantu/akantu.git')
+    version('3.0.0', sha256='7e8f64e25956eba44def1b2d891f6db8ba824e4a82ff0d51d6b585b60ab465db')
 
-    variant('external_solver', values=('none', 'mumps', 'petsc'),
-            default='none', multi=True,
+    variant('external_solvers', values=any_combination_of('mumps', 'petsc'),
             description="Activates the implicit solver")
     variant('mpi', default=True,
             description="Activates parallel capabilities")
-    variant('python', default=True,
+    variant('python', default=False,
             description="Activates python bindings")
 
-    depends_on('boost@:1.67', when='@:3.0.1')
+    depends_on('boost@:1.66', when='@:3.0.99')
     depends_on('boost')
     depends_on('lapack')
     depends_on('cmake@3.5.1:', type='build')
-    depends_on('python', when='+python')
-    depends_on('py-numpy', when='+python')
-    depends_on('py-scipy', when='+python')
-    depends_on('py-pybind11', when='+python')
+    depends_on('python', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-scipy', when='+python', type=('build', 'run'))
+    depends_on('py-pybind11', when='@3.1:+python', type=('build', 'run'))
 
-    depends_on('mumps', when='~mpi external_solver=mumps')
-    depends_on('mumps+mpi', when='+mpi external_solver=mumps')
-    depends_on('netlib-scalapack', when='+mpi external_solver=mumps')
-    depends_on('petsc+double', when='~mpi external_solver=petsc')
-    depends_on('petsc+double+mpi', when='+mpi external_solver=petsc')
+    depends_on('mumps', when='~mpi external_solvers=mumps')
+    depends_on('mumps+mpi', when='+mpi external_solvers=mumps')
+    depends_on('netlib-scalapack', when='+mpi external_solvers=mumps')
+    depends_on('petsc+double', when='~mpi external_solvers=petsc')
+    depends_on('petsc+double+mpi', when='+mpi external_solvers=petsc')
 
     depends_on('mpi', when='+mpi')
     depends_on('scotch', when='+mpi')
@@ -49,6 +49,8 @@ class Akantu(CMakePackage):
     extends('python', when='+python')
 
     conflicts('gcc@:5.3.99')
+    conflicts('@:3.0.99 external_solvers=petsc')
+    conflicts('@:3.0.99 +python')
 
     def cmake_args(self):
         spec = self.spec
@@ -58,19 +60,24 @@ class Akantu(CMakePackage):
             '-DAKANTU_DAMAGE_NON_LOCAL:BOOL=ON',
             '-DAKANTU_HEAT_TRANSFER:BOOL=ON',
             '-DAKANTU_SOLID_MECHANICS:BOOL=ON',
-            '-DAKANTU_STRUCTURAL_MECHANICS:BOOL=ON',
-            '-DAKANTU_TRACTION_AT_SPLIT_NODE_CONTACT:BOOL=ON',
+            '-DAKANTU_STRUCTURAL_MECHANICS:BOOL=OFF',
             '-DAKANTU_PARALLEL:BOOL={0}'.format(
                 'ON' if spec.satisfies('+mpi') else 'OFF'),
             '-DAKANTU_PYTHON_INTERFACE:BOOL={0}'.format(
                 'ON' if spec.satisfies('+python') else 'OFF'),
         ]
 
+        if spec.satisfies('@:3.0.99'):
+            args.extend(['-DCMAKE_CXX_FLAGS=-Wno-class-memaccess',
+                         '-DAKANTU_TRACTION_AT_SPLIT_NODE_CONTACT:BOOL=OFF'])
+        else:
+            args.append('-DAKANTU_TRACTION_AT_SPLIT_NODE_CONTACT:BOOL=ON')
+
         solvers = []
-        if self.spec.satisfies('external_solver=mumps'):
+        if spec.satisfies('external_solvers=mumps'):
             solvers.append('Mumps')
             args.append('-DMUMPS_DIR:PATH=${0}'.format(spec['mumps'].prefix))
-        if self.spec.satisfies('external_solver=petsc'):
+        if spec.satisfies('external_solvers=petsc'):
             solvers.append('PETSc')
 
         if len(solvers) > 0:
