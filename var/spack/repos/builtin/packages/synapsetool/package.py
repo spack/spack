@@ -95,7 +95,6 @@ class Synapsetool(CMakePackage):
                 '-DCMAKE_C_COMPILER:STRING={}'.format(spec['mpi'].mpicc),
                 '-DCMAKE_CXX_COMPILER:STRING={}'.format(spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
-                '-DSYNTOOL_UNIT_TESTS=OFF',
             ])
 
         if spec.satisfies('~shared'):
