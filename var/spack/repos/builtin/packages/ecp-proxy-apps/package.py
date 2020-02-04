@@ -18,7 +18,7 @@ class EcpProxyApps(BundlePackage):
 
     homepage = "https://proxyapps.exascaleproject.org"
 
-    version('2.2')
+    version('3.0')
     version('2.1')
     version('2.0')
     version('1.1')
@@ -27,9 +27,9 @@ class EcpProxyApps(BundlePackage):
     variant('candle', default=False,
             description='Also build CANDLE Benchmarks')
 
-    # Added with release 2.2
-    depends_on('miniamr@1.4.4', when='@2.2:')
-    depends_on('xsbench@19', when='@2.2:')
+    # Added with release 3.0
+    depends_on('miniamr@1.4.4', when='@3.0:')
+    depends_on('xsbench@19', when='@3.0:')
 
     # Added with release 2.1
     depends_on('amg@1.2', when='@2.1:')
