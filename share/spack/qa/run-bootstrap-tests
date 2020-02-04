@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 #
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
@@ -12,6 +12,9 @@
 # Usage:
 #     run-bootstrap-tests
 #
+
+set -e
+
 . "$(dirname $0)/setup.sh"
 check_dependencies ${coverage} git hg svn
 
