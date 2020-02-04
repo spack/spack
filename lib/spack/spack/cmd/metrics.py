@@ -21,8 +21,8 @@ def setup_parser(subparser):
 
 def metrics(parser, args):
     if args.metrics_toggle == "enable":
-        spack.config.set('config:metrics', 'enable', scope='site')
+        spack.config.set('config:metrics', True, scope='site')
     elif args.metrics_toggle == "disable":
-        spack.config.set('config:metrics', 'disable', scope='site')
+        spack.config.set('config:metrics', False, scope='site')
     else:
         tty.die("Error: Unrecognized Option: %s" % args.metrics_toggle)
