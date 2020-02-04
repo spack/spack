@@ -724,7 +724,7 @@ class Environment(object):
         """The location of the lock file used to synchronize multiple
         processes updating the same environment.
         """
-        return os.path.join(self.path, 'transaction_lock')
+        return os.path.join(self.env_subdir_path, 'transaction_lock')
 
     @property
     def lock_path(self):
