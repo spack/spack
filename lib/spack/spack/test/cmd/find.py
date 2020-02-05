@@ -331,3 +331,10 @@ def test_find_loaded(database, working_env):
     output = find('--loaded')
     expected = find()
     assert output == expected
+
+
+@pytest.mark.regression('10019')
+def test_find_packages_with_dependencies(database):
+    # Check that only one version of mpileaks is returned
+    output = find('--no-groups', 'mpileaks ^zmpi')
+    assert output.strip() == 'mpileaks@2.3'
