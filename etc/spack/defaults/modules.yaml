@@ -30,7 +30,8 @@ modules:
     lib64:
       - LIBRARY_PATH
     include:
-      - CPATH
+      - C_INCLUDE_PATH
+      - CPLUS_INCLUDE_PATH
     lib/pkgconfig:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:
