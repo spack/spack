@@ -322,7 +322,7 @@ class Qt(Package):
         if self.spec.satisfies('@4'):
             # Necessary to build with GCC 6 and other modern compilers
             # http://stackoverflow.com/questions/10354371/
-            with open(conf_file, 'a') as f:
+            with open(conf('gcc-base'), 'a') as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @when('@4: %intel')
