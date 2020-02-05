@@ -49,6 +49,7 @@ class VtkH(Package, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
+    variant("logging", default=True, description="Build vtk-h with logging enabled")
 
     # use cmake 3.14, newest that provides proper cuda support
     # and we have seen errors with cuda in 3.15
@@ -99,6 +100,10 @@ class VtkH(Package, CudaPackage):
             # openmp support
             if "+openmp" in spec:
                 cmake_args.append("-DENABLE_OPENMP=ON")
+
+            # build with logging
+            if "+logging" in spec:
+                cmake_args.append("-DENABLE_LOGGING=ON")
 
             # cuda support
             if "+cuda" in spec:
@@ -215,6 +220,14 @@ class VtkH(Package, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
+
+        #######################
+        # Logging
+        #######################
+        if "+logging" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_LOGGING", "OFF"))
 
         #######################
         # MPI
