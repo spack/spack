@@ -18,6 +18,13 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # See url_for_version() below.
+    version('2020.1', sha256='48d51c63b16787af54e1ee4aaf30042087f20564b4eecf9a032d5568bc2f0bf8')
+    version('2020.0', sha256='8eed2377ac62e6ac10af5a8303ce861e4525ffe491a061b48e8fe094fc741ce9')
+    version('2019.9', sha256='15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe')
+    version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
+    version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
+    version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
+    version('2019.5', sha256='2ea82d74dec50e18075b4982b8d360f8bd2bf2950f38e2db483aef82e0047444')
     version('2019.4', sha256='342a0a2cd583879850658284b86e9351ea019b4f3fcd731f4c18456f0ce9f900')
     version('2019.3', sha256='b2244147bc8159cdd8f06a38afeb42f3237d3fc822555499d7ccfbd4b86f8ece')
     version('2019.2', sha256='1245aa394a92099e23ce2f60cdd50c90eb3ddcd61d86cae010ef2f1de61f32d9')
@@ -74,6 +81,27 @@ class IntelTbb(Package):
 
     # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
     # one patch format for 2019.1 and after...
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=centos6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=rhel6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=scientific6')
+    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=centos6')
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
     patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')

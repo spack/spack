@@ -11,8 +11,16 @@ class IntelIpp(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-ipp"
 
+    version('2020.0.166', sha256='6844007892ba524e828f245355cee44e8149f4c233abbbea16f7bb55a7d6ecff',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16233/l_ipp_2020.0.166.tgz")
+    version('2019.5.281', sha256='61d1e1da1a4a50f1cf02a3ed44e87eed05e94d58b64ef1e67a3bdec363bee713',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15817/l_ipp_2019.5.281.tgz")
+    version('2019.4.243', sha256='d4f4232323e66b010d8440c75189aeb6a3249966e05035242b21982238a7a7f2',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15541/l_ipp_2019.4.243.tgz")
     version('2019.3.199', sha256='02545383206c1ae4dd66bfa6a38e2e14480ba11932eeed632df8ab798aa15ccd',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15276/l_ipp_2019.3.199.tgz')
+    version('2019.2.187', sha256='280e9081278a0db3892fe82474c1201ec780a6f7c8d1f896494867f4b3bd8421',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15096/l_ipp_2019.2.187.tgz")
     version('2019.1.144', sha256='1eb7cd0fba74615aeafa4e314c645414497eb73f1705200c524fe78f00620db3',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14887/l_ipp_2019.1.144.tgz')
     version('2019.0.117', sha256='d552ba49fba58f0e94da2048176f21c5dfd490dca7c5ce666dfc2d18db7fd551',

@@ -11,13 +11,20 @@ class IntelDaal(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2020.0.166', sha256='695166c9ab32ac5d3006d6d35162db3c98734210507144e315ed7c3b7dbca9c1',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16234/l_daal_2020.0.166.tgz")
+    version('2019.5.281', sha256='e92aaedbe35c9daf1c9483260cb2363da8a85fa1aa5566eb38cf4b1f410bc368',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15818/l_daal_2019.5.281.tgz")
+    version('2019.4.243', sha256='c74486a555ca5636c2ac1b060d5424726c022468f3ee0898bb46e333cda6f7b8',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15552/l_daal_2019.4.243.tgz")
     version('2019.3.199', sha256='1f7d9cdecc1091b03f1ee6303fc7566179d1e3f1813a98ef7a6239f7d456b8ef',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15277/l_daal_2019.3.199.tgz")
+    version('2019.2.187', sha256='2982886347e9376e892a5c4e22fa1d4b7b843e1ae988a107dd2d0a639f257765',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15097/l_daal_2019.2.187.tgz")
     version('2019.1.144', sha256='1672afac568c93e185283cf7e044d511381092ebc95d7204c4dccb83cc493197',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14869/l_daal_2019.1.144.tgz")
     version('2019.0.117', sha256='85ac8e983bc9b9cc635e87cb4ec775ffd3695e44275d20fdaf53c19ed280d69f',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13577/l_daal_2019.0.117.tgz")
-    # Doesn't appear to be a 2018.4 update yet
     version('2018.3.222', sha256='378fec529a36508dd97529037e1164ff98e0e062a9a47ede99ccf9e91493d1e2',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13007/l_daal_2018.3.222.tgz")
     version('2018.2.199', sha256='cee30299b3ffaea515f5a9609f4df0f644579c8a1ba2b61747b390f6caf85b14',

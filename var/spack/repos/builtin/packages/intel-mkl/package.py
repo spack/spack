@@ -13,8 +13,16 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2020.0.166', sha256='f6d92deb3ff10b11ba3df26b2c62bb4f0f7ae43e21905a91d553e58f0f5a8ae0',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16318/l_mkl_2020.0.166.tgz")
+    version('2019.5.281', sha256='9995ea4469b05360d509c9705e9309dc983c0a10edc2ae3a5384bc837326737e',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15816/l_mkl_2019.5.281.tgz")
+    version('2019.4.243', sha256='fcac7b0369665d93f0c4dd98afe2816aeba5410e2b760655fe55fc477f8f33d0',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15540/l_mkl_2019.4.243.tgz")
     version('2019.3.199', sha256='06de2b54f4812e7c39a118536259c942029fe1d6d8918ad9df558a83c4162b8f',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15275/l_mkl_2019.3.199.tgz")
+    version('2019.2.187', sha256='2bf004e6b5adb4f956993d6c20ea6ce289bb630314dd501db7f2dd5b9978ed1d',
+            url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15095/l_mkl_2019.2.187.tgz")
     version('2019.1.144', sha256='5205a460a9c685f7a442868367389b2d0c25e1455346bc6a37c5b8ff90a20fbb',
             url="http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14895/l_mkl_2019.1.144.tgz")
     version('2019.0.117', sha256='4e1fe2c705cfc47050064c0d6c4dee1a8c6740ac1c4f64dde9c7511c4989c7ad',
