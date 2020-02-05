@@ -49,7 +49,7 @@ class VtkH(Package, CudaPackage):
     variant("cuda", default=False, description="build cuda support")
     variant("openmp", default=(sys.platform != 'darwin'),
             description="build openmp support")
-    variant("logging", default=True, description="Build vtk-h with logging enabled")
+    variant("logging", default=False, description="Build vtk-h with logging enabled")
 
     # use cmake 3.14, newest that provides proper cuda support
     # and we have seen errors with cuda in 3.15

@@ -60,9 +60,11 @@ config:
   # `spack clean -a`, so it is important that the specified directory uniquely
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
-    - $tempdir/$user/spack-stage
-    - ~/.spack/stage
-  # - $spack/var/spack/stage
+  # skipping tempdir b/c running mpi tests fails with local fs
+  # - $tempdir/$user/spack-stage
+  # - ~/.spack/stage
+  # prefer current working dir as stage
+    - $spack/var/spack/stage
 
 
   # Cache directory for already downloaded source tarballs and archived
@@ -72,7 +74,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $spack/var/spack/cache
 
 
   # If this is false, tools like curl that use SSL will not verify
@@ -110,7 +112,7 @@ config:
   # of Spack.  For filesystems that don't support locking, you should set
   # this to false and run one Spack at a time, but otherwise we recommend
   # enabling locks.
-  locks: true
+  locks: false
 
 
   # The maximum number of jobs to use when running `make` in parallel,
@@ -118,7 +120,7 @@ config:
   # - If set to 16 on a 4 cores machine `spack install` will run `make -j4`
   # - If set to 16 on a 18 cores machine `spack install` will run `make -j16`
   # If not set, Spack will use all available cores up to 16.
-  # build_jobs: 16
+  build_jobs: 8
 
 
   # If set to true, Spack will use ccache to cache C compiles.
@@ -138,8 +140,3 @@ config:
   # anticipates that a significant delay indicates that the lock attempt will
   # never succeed.
   package_lock_timeout: null
-
-  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
-  # Has no effect on macOS. DO NOT MIX these within the same install tree.
-  # See the Spack documentation for details.
-  shared_linking: 'rpath'
