@@ -75,6 +75,8 @@ class Openmpi(AutotoolsPackage):
     list_url = "http://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
+    maintainers = ['hppritcha']
+
     version('develop', branch='master')
 
     # Current
@@ -426,6 +428,10 @@ class Openmpi(AutotoolsPackage):
 
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
+
+        if spec.satisfies('@4.0.0:4.0.2'):
+            # uct btl doesn't work with some UCX versions so just disable
+            config_args.append('--enable-mca-no-build=btl-uct')
 
         # some scientific packages ignore deprecated/remove symbols. Re-enable
         # them for now, for discussion see

@@ -316,14 +316,14 @@ def test_uninstall_by_spec_errors(mutable_database):
     """Test exceptional cases with the uninstall command."""
 
     # Try to uninstall a spec that has not been installed
-    rec = mutable_database.get_record('zmpi')
-    with pytest.raises(InstallError, matches="not installed"):
-        PackageBase.uninstall_by_spec(rec.spec)
+    spec = Spec('dependent-install')
+    spec.concretize()
+    with pytest.raises(InstallError, match="is not installed"):
+        PackageBase.uninstall_by_spec(spec)
 
     # Try an unforced uninstall of a spec with dependencies
     rec = mutable_database.get_record('mpich')
-
-    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+    with pytest.raises(PackageStillNeededError, match="Cannot uninstall"):
         PackageBase.uninstall_by_spec(rec.spec)
 
 

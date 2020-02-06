@@ -1,0 +1,10 @@
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -26,7 +26,6 @@ SET(libftgl_la_SOURCES
+     FTGlyphContainer.h
+     FTInternals.h
+     FTLibrary.cpp
+-    FTLibrary.h
+     FTList.h
+     FTPoint.cpp
+     FTSize.cpp
