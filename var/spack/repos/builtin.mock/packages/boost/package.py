@@ -59,7 +59,3 @@ class Boost(Package):
             description="Build the Boost Graph library")
     variant('taggedlayout', default=False,
             description="Augment library names with build options")
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.include)

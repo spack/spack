@@ -36,7 +36,3 @@ class PatchSeveralDependencies(Package):
               archive_sha256='abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd',
               sha256='1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd')
     ])
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

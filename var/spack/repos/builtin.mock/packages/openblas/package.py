@@ -14,7 +14,3 @@ class Openblas(Package):
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
 
     provides('blas')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.include)

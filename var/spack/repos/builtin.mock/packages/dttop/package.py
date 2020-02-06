@@ -17,7 +17,3 @@ class Dttop(Package):
     depends_on('dtbuild1', type='build')
     depends_on('dtlink1')
     depends_on('dtrun1', type='run')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

@@ -25,7 +25,3 @@ X   Y
 
     # single patch file in repo
     depends_on('patch', patches='mid1.patch')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

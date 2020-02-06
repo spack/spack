@@ -11,7 +11,3 @@ class HgTest(Package):
     homepage = "http://www.hg-fetch-example.com"
 
     version('hg', hg='to-be-filled-in-by-test')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

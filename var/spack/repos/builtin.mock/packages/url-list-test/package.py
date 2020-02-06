@@ -24,7 +24,3 @@ class UrlListTest(Package):
     version('2.0.0b2', 'abc200b2')
     version('3.0a1',   'abc30a1')
     version('4.5-rc5', 'abc45rc5')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

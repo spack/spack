@@ -12,7 +12,3 @@ class GitTopLevel(Package):
 
     git = 'https://example.com/some/git/repo'
     version('1.0')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

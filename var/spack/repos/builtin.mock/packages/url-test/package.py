@@ -11,7 +11,3 @@ class UrlTest(Package):
     homepage = "http://www.url-fetch-example.com"
 
     version('test', url='to-be-filled-in-by-test')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

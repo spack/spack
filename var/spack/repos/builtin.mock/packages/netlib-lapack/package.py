@@ -14,7 +14,3 @@ class NetlibLapack(Package):
 
     provides('lapack')
     depends_on('blas')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.lib)

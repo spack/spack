@@ -15,7 +15,3 @@ class Dtlink1(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
 
     depends_on('dtlink3')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

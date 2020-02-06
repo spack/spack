@@ -33,7 +33,3 @@ class MultivalueVariant(Package):
     depends_on('callpath')
     depends_on('a')
     depends_on('a@1.0', when='fee=barbaz')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

@@ -11,7 +11,3 @@ class Externalprereq(Package):
     url      = "http://somewhere.com/prereq-1.0.tar.gz"
 
     version('1.4', 'f1234567890abcdef1234567890abcde')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

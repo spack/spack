@@ -11,7 +11,3 @@ class SvnTopLevel(Package):
 
     svn = 'https://example.com/some/svn/repo'
     version('1.0')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

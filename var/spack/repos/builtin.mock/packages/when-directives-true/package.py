@@ -23,7 +23,3 @@ class WhenDirectivesTrue(Package):
     resource(url="http://www.example.com/example-1.0-resource.tar.gz",
              md5='0123456789abcdef0123456789abcdef',
              when=True)
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

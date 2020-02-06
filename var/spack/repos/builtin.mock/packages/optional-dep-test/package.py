@@ -30,7 +30,3 @@ class OptionalDepTest(Package):
     depends_on('mpi', when='^g')
 
     depends_on('mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

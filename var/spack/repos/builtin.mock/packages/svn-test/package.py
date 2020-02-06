@@ -11,7 +11,3 @@ class SvnTest(Package):
     url      = "http://www.example.com/svn-test-1.0.tar.gz"
 
     version('svn', svn='to-be-filled-in-by-test')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

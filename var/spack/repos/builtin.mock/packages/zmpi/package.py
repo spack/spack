@@ -16,7 +16,3 @@ class Zmpi(Package):
 
     provides('mpi@:10.0')
     depends_on('fake')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

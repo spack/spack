@@ -16,7 +16,3 @@ class Hypre(Package):
 
     depends_on('lapack')
     depends_on('blas')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.include)

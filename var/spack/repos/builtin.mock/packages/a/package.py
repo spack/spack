@@ -50,4 +50,5 @@ class A(AutotoolsPackage):
 
     def install(self, spec, prefix):
         # sanity_check_prefix requires something in the install directory
+        # Test requires overriding the one provided by `AutotoolsPackage`
         mkdirp(prefix.bin)

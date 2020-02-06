@@ -16,7 +16,3 @@ class Dtrun1(Package):
 
     depends_on('dtlink5')
     depends_on('dtrun3', type='run')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

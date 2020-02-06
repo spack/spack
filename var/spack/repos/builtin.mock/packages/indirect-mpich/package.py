@@ -18,7 +18,3 @@ class IndirectMpich(Package):
 
     depends_on('mpi')
     depends_on('direct-mpich')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

@@ -13,7 +13,3 @@ class Othervirtual(Package):
     version('1.0', '67890abcdef1234567890abcdef12345')
 
     provides('stuff')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

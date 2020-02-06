@@ -11,7 +11,3 @@ class GitTest(Package):
     homepage = "http://www.git-fetch-example.com"
 
     version('git', git='to-be-filled-in-by-test')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

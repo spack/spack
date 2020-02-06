@@ -14,7 +14,3 @@ class OverrideModuleTemplates(Package):
 
     tcl_template = 'override.txt'
     lmod_template = 'override.txt'
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)

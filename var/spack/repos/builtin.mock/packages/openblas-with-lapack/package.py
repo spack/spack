@@ -15,7 +15,3 @@ class OpenblasWithLapack(Package):
 
     provides('lapack')
     provides('blas')
-
-    def install(self, spec, prefix):
-        # sanity_check_prefix requires something in the install directory
-        mkdirp(prefix.bin)
