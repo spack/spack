@@ -34,7 +34,7 @@ class Libvips(AutotoolsPackage):
             description='Enable PDF rendering via poppler')
 
     # TODO: Add more variants!
- 
+
     depends_on('glib')
     depends_on('expat')
 
