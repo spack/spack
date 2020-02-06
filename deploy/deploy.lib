@@ -108,8 +108,10 @@ set_latest() {
     # Set the "latest" symlink to the current deployment date
     what=$1
     source="$(install_dir_name ${what})"
+    OLD_DEPLOYMENT_DATE="${DEPLOYMENT_DATE}"
     DEPLOYMENT_DATE="latest"
     target="$(install_dir_raw ${what})"
+    DEPLOYMENT_DATE="${OLD_DEPLOYMENT_DATE}"
     if [[ -e "${target}" && ! -L "${target}" ]]; then
         log "link target is not a symlink: ${target}"
         return 1
