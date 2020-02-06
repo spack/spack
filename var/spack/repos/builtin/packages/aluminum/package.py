@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import sys
 from spack import *
 
 
@@ -45,4 +47,14 @@ class Aluminum(CMakePackage):
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+gpu' in spec),
             '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+mpi_cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec)]
+
+        # Add support for OS X to find OpenMP
+        if (self.spec.satisfies('%clang')):
+            if (sys.platform == 'darwin'):
+                clang = self.compiler.cc
+                clang_bin = os.path.dirname(clang)
+                clang_root = os.path.dirname(clang_bin)
+                args.extend([
+                    '-DOpenMP_DIR={0}'.format(clang_root)])
+
         return args
