@@ -21,7 +21,7 @@ class Reframe(Package):
     # notify when the package is updated.
     maintainers = ['victorusu', 'vkarak']
 
-    version('develop',   branch='master')
+    version('master',   branch='master')
     version('2.21',      sha256='f35d4fda2f9672c87d3ef664d9a2d6eb0c01c88218a31772a6645c32c8934c4d')
     version('2.20',      sha256='310c18d705858bbe6bd9a2dc4d382b254c1f093b0671d72363f2111e8c162ba4')
     version('2.17.3',    sha256='dc8dfb2ccb9a966303879b7cdcd188c47063e9b7999cbd5d6255223b066bf357')
@@ -29,7 +29,6 @@ class Reframe(Package):
     version('2.17.1',    sha256='0b0d32a892607840a7d668f5dcea6f03f7022a26b23e5042a0faf5b8c41cb146')
 
     depends_on('python@3.5:', type=('run'))
-    phases = ['install']
 
     def install(self, spec, prefix):
         install_tree(self.stage.source_path, self.prefix)
