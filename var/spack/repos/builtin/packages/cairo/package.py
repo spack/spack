@@ -50,7 +50,7 @@ class Cairo(AutotoolsPackage):
     conflicts('+svg', when='platform=darwin')
 
     # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
-    patch('fontconfig.patch', when='@1.16.0:0.17.2')
+    patch('fontconfig.patch', when='@1.16.0:1.17.2')
 
     def setup_build_environment(self, env):
         env.set('NOCONFIGURE', "1")
