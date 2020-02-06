@@ -154,5 +154,7 @@ config:
 
   # Toggle Spack's install/uninstall metrics to a syslog server. When enabled
   # SPACK_INSTALL/SPACK_UNINSTALL [spec] is logged to syslog to determine how
-  # which packages are being commonly installed by users. Disabled by default. 
+  # which packages are being commonly installed by users. Disabled by default.
+  # If defined, the location of where metrics can be logged can be overwritten with 
+  # metrics_address: [address]
   metrics: false
