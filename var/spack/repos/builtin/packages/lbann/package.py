@@ -159,7 +159,10 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
-            '-DLBANN_VERBOSE=0'])
+            '-DLBANN_VERBOSE=0',
+            '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
+            # protobuf is included by py-protobuf+cpp
+            '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
 
         if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
             args.extend([

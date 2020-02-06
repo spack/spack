@@ -223,8 +223,13 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
         # handle active environment, if any
         env = ev.get_env(cli_args, 'install')
         if env:
-            env.install(abstract_spec, spec, **kwargs)
-            env.write()
+            with env.write_transaction():
+                concrete = env.concretize_and_add(
+                    abstract_spec, spec)
+                env.write(regenerate_views=False)
+            env._install(concrete, **kwargs)
+            with env.write_transaction():
+                env.regenerate_views()
         else:
             spec.package.do_install(**kwargs)
 
@@ -259,16 +264,20 @@ environment variables:
         env = ev.get_env(args, 'install')
         if env:
             if not args.only_concrete:
-                concretized_specs = env.concretize()
-                ev.display_specs(concretized_specs)
+                with env.write_transaction():
+                    concretized_specs = env.concretize()
+                    ev.display_specs(concretized_specs)
 
-                # save view regeneration for later, so that we only do it
-                # once, as it can be slow.
-                env.write(regenerate_views=False)
+                    # save view regeneration for later, so that we only do it
+                    # once, as it can be slow.
+                    env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
             env.install_all(args)
-            env.regenerate_views()
+            with env.write_transaction():
+                # It is not strictly required to synchronize view regeneration
+                # but doing so can prevent redundant work in the filesystem.
+                env.regenerate_views()
             return
         else:
             tty.die("install requires a package argument or a spack.yaml file")

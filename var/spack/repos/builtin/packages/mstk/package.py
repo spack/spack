@@ -28,6 +28,7 @@ class Mstk(CMakePackage):
     maintainers = ['raovgarimella', 'julienloiseau']
 
     version('master', branch='master')
+    version('3.3.2', sha256='fb4ffa97af4d0a0d4771c8585d0b27538b013d8b1cfaff992e5e054fef62af0b')
     version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
     version('3.3.0', sha256='205c48fb5619937b5dd83788da739b7c2060155b7c41793e29ce05422b8f7dfb')
     version('3.2.1', sha256='09bc6684abb576e34c324322db6f71f8987c6ec436a54256b85ef4db40185470')
@@ -52,7 +53,7 @@ class Mstk(CMakePackage):
     conflicts('partitioner=all', when='-parallel')
     conflicts('partitioner=zoltan', when='-parallel')
 
-    # MSTK turns on METIS only for parallel buildsu
+    # MSTK turns on METIS only for parallel builds
     conflicts('partitioner=metis', when='-parallel')
 
     # dependencies
