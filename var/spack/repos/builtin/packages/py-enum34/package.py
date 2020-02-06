@@ -14,6 +14,11 @@ class PyEnum34(PythonPackage):
 
     version('1.1.6', sha256='8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1')
 
-    depends_on('python')
+    # enum34 is a backport of the enum library from Python 3.4. It is not
+    # intended to be used with Python 3.4+. In fact, it won't build at all
+    # for Python 3.6+, as new constructs were added to builtin enum module
+    # that aren't present in enum34. See:
+    # https://bitbucket.org/stoneleaf/enum34/issues/19/enum34-isnt-compatible-with-python-36
+    depends_on('python@:3.5', type=('build', 'run'))
     depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

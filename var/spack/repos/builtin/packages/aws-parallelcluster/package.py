@@ -19,11 +19,14 @@ class AwsParallelcluster(PythonPackage):
     version('2.5.0', sha256='3b0209342ea0d9d8cc95505456103ad87c2d4e35771aa838765918194efd0ad3')
 
     depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-boto3@1.10.15:', type=('build', 'run'))
     depends_on('py-future@0.16.0:0.18.2', type=('build', 'run'))
     depends_on('py-tabulate@0.8.2:0.8.3', type=('build', 'run'))
     depends_on('py-ipaddress@1.0.22:', type=('build', 'run'))
-    depends_on('py-enum34@1.1.6:', type=('build', 'run'))
+    depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-pyyaml@5.1.2:', type=('build', 'run'))
     depends_on('py-configparser@3.5.0:3.8.1', when='^python@:2', type=('build', 'run'))
+
+    # https://github.com/aws/aws-parallelcluster/pull/1633
+    patch('enum34.patch', when='@:2.5.1')
