@@ -13,7 +13,7 @@ class RRmariadb(RPackage):
 
     homepage = "https://rmariadb.r-dbi.org/"
     url      = "https://cloud.r-project.org/src/contrib/RMariaDB_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RMariaDB"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RMariaDB"
 
     version('1.0.8', sha256='3c8aedc519dc063ceb068535a3700bc5caf26f867078cc5a228aa8961e2d99f5')
 
