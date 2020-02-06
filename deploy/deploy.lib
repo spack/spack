@@ -579,7 +579,7 @@ copy_user_configuration() {
     what="$1"
 
     local source="$(install_dir ${what})/data"
-    local target="${DEPLOYMENT_ROOT}/config/$(date +%Y)"
+    local target="${DEPLOYMENT_ROOT}/config/"
 
     local root="${DEPLOYMENT_ROOT}/modules/all"
 
