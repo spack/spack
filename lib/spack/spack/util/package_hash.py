@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,8 +69,17 @@ class TagMultiMethods(ast.NodeVisitor):
         if node.decorator_list:
             dec = node.decorator_list[0]
             if isinstance(dec, ast.Call) and dec.func.id == 'when':
-                cond = dec.args[0].s
-                nodes.append((node, self.spec.satisfies(cond, strict=True)))
+                try:
+                    cond = dec.args[0].s
+                    nodes.append(
+                        (node, self.spec.satisfies(cond, strict=True)))
+                except AttributeError:
+                    # In this case the condition for the 'when' decorator is
+                    # not a string literal (for example it may be a Python
+                    # variable name). Therefore the function is added
+                    # unconditionally since we don't know whether the
+                    # constraint applies or not.
+                    nodes.append((node, None))
         else:
             nodes.append((node, None))
 

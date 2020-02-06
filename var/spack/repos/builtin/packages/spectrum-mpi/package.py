@@ -1,9 +1,8 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import os.path
 
 
 class SpectrumMpi(Package):
@@ -19,41 +18,41 @@ class SpectrumMpi(Package):
     def setup_dependent_package(self, module, dependent_spec):
         # get the compiler names
         if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpixlc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpixlC')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpixlf')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpixlf')
+            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpixlc')
+            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpixlC')
+            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpixlf')
+            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpixlf')
         elif '%pgi' in dependent_spec:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpipgicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpipgic++')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpipgifort')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpipgifort')
+            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpipgicc')
+            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpipgic++')
+            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpipgifort')
+            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpipgifort')
         else:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+            self.spec.mpicc = os.path.join(self.prefix.bin, 'mpicc')
+            self.spec.mpicxx = os.path.join(self.prefix.bin, 'mpicxx')
+            self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
+            self.spec.mpifc = os.path.join(self.prefix.bin, 'mpif90')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
-            spack_env.set('MPICC', join_path(self.prefix.bin, 'mpixlc'))
-            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpixlC'))
-            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpixlf'))
-            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpixlf'))
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpixlc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpixlC'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpixlf'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpixlf'))
         elif '%pgi' in dependent_spec:
-            spack_env.set('MPICC', join_path(self.prefix.bin, 'mpipgicc'))
-            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpipgic++'))
-            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpipgifort'))
-            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpipgifort'))
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpipgicc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpipgic++'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpipgifort'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpipgifort'))
         else:
-            spack_env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
-            spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-            spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-            spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+            env.set('MPICC', os.path.join(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', os.path.join(self.prefix.bin, 'mpic++'))
+            env.set('MPIF77', os.path.join(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', os.path.join(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)
 
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib)

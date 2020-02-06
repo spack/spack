@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@ import json
 import os.path
 
 try:
-    from collections.abc import MutableMapping
+    from collections.abc import MutableMapping  # novm
 except ImportError:
     from collections import MutableMapping
 
@@ -72,7 +72,21 @@ properties = {
                 'additionalProperties': False
             }
         },
-
+    },
+    'conversions': {
+        'type': 'object',
+        'properties': {
+            'description': {
+                'type': 'string'
+            },
+            'arm_vendors': {
+                'type': 'object',
+            },
+            'darwin_flags': {
+                'type': 'object'
+            }
+        },
+        'additionalProperties': False
     }
 }
 

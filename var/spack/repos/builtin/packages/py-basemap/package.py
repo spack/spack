@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,7 @@ class PyBasemap(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-pyproj@:1.99', type=('build', 'run'), when='@:1.2.0')
-    depends_on('py-pyproj', type=('build', 'run'))
+    depends_on('py-pyproj@:1.99', type=('build', 'run'))
     depends_on('py-pyshp', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
     depends_on('geos')
@@ -34,8 +33,8 @@ class PyBasemap(PythonPackage):
         else:
             return 'https://downloads.sourceforge.net/project/matplotlib/matplotlib-toolkits/basemap-{0}/basemap-{0}.tar.gz'.format(version)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GEOS_DIR', self.spec['geos'].prefix)
+    def setup_build_environment(self, env):
+        env.set('GEOS_DIR', self.spec['geos'].prefix)
 
     def install(self, spec, prefix):
         """Install everything from build directory."""

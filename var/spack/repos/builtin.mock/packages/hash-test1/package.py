@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class HashTest1(Package):
     version('1.2', 'b' * 32)
     version('1.3', 'c' * 32)
     version('1.4', 'd' * 32)
+    version('1.5', 'd' * 32)
+    version('1.6', 'e' * 32)
+    version('1.7', 'f' * 32)
 
     patch('patch1.patch', when="@1.1")
     patch('patch2.patch', when="@1.4")
@@ -34,6 +37,10 @@ class HashTest1(Package):
         print("install 1")
         os.listdir(os.getcwd())
 
-    @when('@1.5')
+    @when('@1.5:')
     def install(self, spec, prefix):
         os.listdir(os.getcwd())
+
+    @when('@1.5,1.6')
+    def extra_phase(self, spec, prefix):
+        pass

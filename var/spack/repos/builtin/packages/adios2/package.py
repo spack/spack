@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -85,8 +85,8 @@ class Adios2(CMakePackage):
     # depends_on('flex', when='+sst')      # optional in FFS, depends on BISON
 
     depends_on('mpi', when='+mpi')
-    depends_on('zeromq', when='+dataman')
-    depends_on('zeromq', when='@2.4: +ssc')
+    depends_on('libzmq', when='+dataman')
+    depends_on('libzmq', when='@2.4: +ssc')
     depends_on('dataspaces@1.8.0:', when='+dataspaces')
 
     depends_on('hdf5', when='+hdf5')
@@ -108,6 +108,11 @@ class Adios2(CMakePackage):
     # Fix findmpi when called by dependees
     # See https://github.com/ornladios/ADIOS2/pull/1632
     patch('cmake-update-findmpi.patch', when='@2.4.0')
+
+    # Fix the signature of the builtin clear_cache function in the
+    # third-party dill library.
+    # See https://github.com/ornladios/ADIOS2/pull/1899
+    patch('2.5-fix-clear_cache.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec

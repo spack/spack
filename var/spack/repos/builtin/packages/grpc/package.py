@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,9 @@ class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
     homepage = "https://grpc.io"
-    url      = "https://github.com/grpc/grpc/archive/v1.23.1.tar.gz"
+    url      = "https://github.com/grpc/grpc/archive/v1.24.3.tar.gz"
 
+    version('1.24.3', sha256='c84b3fa140fcd6cce79b3f9de6357c5733a0071e04ca4e65ba5f8d306f10f033')
     version('1.23.1', sha256='dd7da002b15641e4841f20a1f3eb1e359edb69d5ccf8ac64c362823b05f523d9')
 
     variant('codegen', default=True,
@@ -20,7 +21,7 @@ class Grpc(CMakePackage):
     depends_on('protobuf')
     depends_on('openssl')
     depends_on('zlib')
-    depends_on('cares')
+    depends_on('c-ares')
 
     def cmake_args(self):
         args = [

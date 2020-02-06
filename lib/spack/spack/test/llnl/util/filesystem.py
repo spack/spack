@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -116,13 +116,13 @@ class TestCopyTree:
 
         # Make sure we get the right error if we try to copy a parent into
         # a descendent directory.
-        with pytest.raises(ValueError, matches="Cannot copy"):
+        with pytest.raises(ValueError, match="Cannot copy"):
             with fs.working_dir(str(stage)):
                 fs.copy_tree('source', 'source/sub/directory')
 
         # Only point with this check is to make sure we don't try to perform
         # the copy.
-        with pytest.raises(IOError, matches="No such file or directory"):
+        with pytest.raises(IOError, match="No such file or directory"):
             with fs.working_dir(str(stage)):
                 fs.copy_tree('foo/ba', 'foo/bar')
 

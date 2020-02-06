@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ import spack.directives
 import spack.error as error
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
 
@@ -600,7 +600,9 @@ def substitute_abstract_variants(spec):
     for name, v in spec.variants.items():
         if name in spack.directives.reserved_names:
             continue
-        pkg_variant = spec.package_class.variants[name]
+        pkg_variant = spec.package_class.variants.get(name, None)
+        if not pkg_variant:
+            raise UnknownVariantError(spec, [name])
         new_variant = pkg_variant.make_variant(v._original_value)
         pkg_variant.validate_or_raise(new_variant, spec.package_class)
         spec.variants.substitute(new_variant)
@@ -778,12 +780,13 @@ class DuplicateVariantError(error.SpecError):
 
 class UnknownVariantError(error.SpecError):
     """Raised when an unknown variant occurs in a spec."""
-
-    def __init__(self, pkg, variants):
+    def __init__(self, spec, variants):
         self.unknown_variants = variants
-        super(UnknownVariantError, self).__init__(
-            'Package {0} has no variant {1}!'.format(pkg, comma_or(variants))
-        )
+        variant_str = 'variant' if len(variants) == 1 else 'variants'
+        msg = ('trying to set {0} "{1}" in package "{2}", but the package'
+               ' has no such {0} [happened during concretization of {3}]')
+        msg = msg.format(variant_str, comma_or(variants), spec.name, spec.root)
+        super(UnknownVariantError, self).__init__(msg)
 
 
 class InconsistentValidationError(error.SpecError):

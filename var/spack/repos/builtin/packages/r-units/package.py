@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,4 +25,4 @@ class RUnits(RPackage):
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-udunits2@0.13:', when='@:0.5-1', type=('build', 'run'))
     depends_on('r-rcpp@0.12.10:', type=('build', 'run'))
-    depends_on('udunits2', when='@0.6-0:')
+    depends_on('udunits', when='@0.6-0:')

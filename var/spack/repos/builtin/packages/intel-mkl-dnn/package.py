@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,10 @@ class IntelMklDnn(CMakePackage):
     """Intel(R) Math Kernel Library for Deep Neural Networks
     (Intel(R) MKL-DNN)."""
 
-    homepage = "https://01.org/mkl-dnn"
-    url      = "https://github.com/intel/mkl-dnn/archive/v1.1.tar.gz"
+    homepage = "https://intel.github.io/mkl-dnn/"
+    url      = "https://github.com/intel/mkl-dnn/archive/v1.1.1.tar.gz"
+
+    maintainers = ['adamjstewart']
 
     version('1.2',    sha256='30979a09753e8e35d942446c3778c9f0eba543acf2fb0282af8b9c89355d0ddf')
     version('1.1.3',  sha256='0e9bcbc86cc215a84a5455a395ce540c68e255eaa586e37222fff622b9b17df7', preferred=True)
@@ -40,4 +42,26 @@ class IntelMklDnn(CMakePackage):
     version('0.10',   sha256='59828764ae43f1151f77b8997012c52e0e757bc50af1196b86fce8934178c570')
     version('0.9',    sha256='8606a80851c45b0076f7d4047fbf774ce13d6b6d857cb2edf95c7e1fd4bca1c7')
 
+    depends_on('cmake@2.8.11:', type='build')
     depends_on('intel-mkl')
+    depends_on('llvm-openmp', when='%clang platform=darwin')
+
+    def cmake_args(self):
+        args = []
+
+        # https://github.com/intel/mkl-dnn/issues/591
+        if self.spec.satisfies('%clang platform=darwin'):
+            args.extend([
+                '-DOpenMP_CXX_FLAGS={0}'.format(self.compiler.openmp_flag),
+                '-DOpenMP_C_FLAGS={0}'.format(self.compiler.openmp_flag),
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_C_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}'.format(
+                    self.spec['llvm-openmp'].libs.libraries[0]
+                ),
+                '-DCMAKE_SHARED_LINKER_FLAGS={0}'.format(
+                    self.spec['llvm-openmp'].libs.ld_flags
+                ),
+            ])
+
+        return args

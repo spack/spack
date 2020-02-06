@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class CandleBenchmarks(Package):
     """ECP-CANDLE Benchmarks"""
 
     homepage = "https://github.com/ECP-CANDLE/Benchmarks"
-    url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v1.0.tar.gz"
+    url      = "https://github.com/ECP-CANDLE/Benchmarks/archive/v0.1.tar.gz"
 
     tags = ['proxy-app', 'ecp-proxy-app']
 

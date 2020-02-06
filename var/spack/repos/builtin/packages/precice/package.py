@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Precice(CMakePackage):
     # Skip version 1.1.1 entirely, the cmake was lacking install.
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('petsc', default=False, description='Enable PETSc support')
+    variant('petsc', default=True, description='Enable PETSc support')
     variant('python', default=False, description='Enable Python support')
     variant('shared', default=True, description='Build shared libraries')
 
@@ -47,6 +47,13 @@ class Precice(CMakePackage):
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
     # numpy 1.17+ requires Python 3
     depends_on('py-numpy@:1.16', when='+python', type=('build', 'run'))
+
+    # We require C++11 compiler support as well as
+    # library support for time manipulators (N2071, N2072)
+    conflicts('%gcc@:4')
+    conflicts('%clang@:3.7')
+    conflicts('%intel@:14')
+    conflicts('%pgi@:14')
 
     def cmake_args(self):
         """Populate cmake arguments for precice."""

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,26 +10,14 @@ class Libxc(AutotoolsPackage):
     """Libxc is a library of exchange-correlation functionals for
     density-functional theory."""
 
-    homepage = "http://www.tddft.org/programs/octopus/wiki/index.php/Libxc"
-    url      = "http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz"
+    homepage = "https://tddft.org/programs/libxc/"
+    url      = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
 
     version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
     version('4.2.3', sha256='02e49e9ba7d21d18df17e9e57eae861e6ce05e65e966e1e832475aa09e344256')
     version('3.0.0', sha256='5542b99042c09b2925f2e3700d769cda4fb411b476d446c833ea28c6bfa8792a')
     version('2.2.2', sha256='6ca1d0bb5fdc341d59960707bc67f23ad54de8a6018e19e02eee2b16ea7cc642')
     version('2.2.1', sha256='ade61c1fa4ed238edd56408fd8ee6c2e305a3d5753e160017e2a71817c98fd00')
-
-    patch('configure_add_fj.patch')
-
-    def url_for_version(self, version):
-        if version < Version('3.0.0'):
-            return ("http://www.tddft.org/programs/octopus/"
-                    "down.php?file=libxc/libxc-{0}.tar.gz"
-                    .format(version))
-
-        return ("http://www.tddft.org/programs/octopus/"
-                "down.php?file=libxc/{0}/libxc-{0}.tar.gz"
-                .format(version))
 
     @property
     def libs(self):
@@ -61,7 +49,7 @@ class Libxc(AutotoolsPackage):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         optflags = '-O2'
         if self.compiler.name == 'intel':
             # Optimizations for the Intel compiler, suggested by CP2K
@@ -88,10 +76,10 @@ class Libxc(AutotoolsPackage):
             #
             optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
             if which('xiar'):
-                spack_env.set('AR', 'xiar')
+                env.set('AR', 'xiar')
 
-        spack_env.append_flags('CFLAGS',  optflags)
-        spack_env.append_flags('FCFLAGS', optflags)
+        env.append_flags('CFLAGS',  optflags)
+        env.append_flags('FCFLAGS', optflags)
 
     def configure_args(self):
         args = ['--enable-shared']

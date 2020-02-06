@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -153,13 +153,14 @@ def strip_version_suffixes(path):
         r'[Ii]nstall',
         r'all',
         r'code',
-        r'src(_0)?',
         r'[Ss]ources?',
         r'file',
         r'full',
         r'single',
-        r'public',
         r'with[a-zA-Z_-]+',
+        r'rock',
+        r'src(_0)?',
+        r'public',
         r'bin',
         r'binary',
         r'run',
@@ -174,6 +175,7 @@ def strip_version_suffixes(path):
 
         # Download version
         r'release',
+        r'bin',
         r'stable',
         r'[Ff]inal',
         r'rel',
@@ -189,15 +191,24 @@ def strip_version_suffixes(path):
         r'ia32',
         r'intel',
         r'amd64',
+        r'linux64',
         r'x64',
+        r'64bit',
         r'x86[_-]64',
+        r'i586_64',
         r'x86',
         r'i[36]86',
         r'ppc64(le)?',
         r'armv?(7l|6l|64)',
 
+        # Other
+        r'cpp',
+        r'gtk',
+        r'incubating',
+
         # OS
         r'[Ll]inux(_64)?',
+        r'LINUX',
         r'[Uu]ni?x',
         r'[Ss]un[Oo][Ss]',
         r'[Mm]ac[Oo][Ss][Xx]?',
@@ -208,14 +219,18 @@ def strip_version_suffixes(path):
         r'[Ww]in(64|32)?',
         r'[Cc]ygwin(64|32)?',
         r'[Mm]ingw',
+        r'centos',
 
         # Arch
         # Needs to come before and after OS, appears in both orders
         r'ia32',
         r'intel',
         r'amd64',
+        r'linux64',
         r'x64',
+        r'64bit',
         r'x86[_-]64',
+        r'i586_64',
         r'x86',
         r'i[36]86',
         r'ppc64(le)?',
@@ -270,30 +285,40 @@ def strip_name_suffixes(path, version):
         # name-ver
         # name_ver
         # name.ver
-        r'[._-]v?' + str(version) + '.*',
+        r'[._-][rvV]?' + str(version) + '.*',
 
         # namever
-        str(version) + '.*',
+        r'V?' + str(version) + '.*',
 
         # Download type
         r'install',
-        r'src',
+        r'[Ss]rc',
         r'(open)?[Ss]ources?',
+        r'[._-]open',
         r'[._-]archive',
         r'[._-]std',
+        r'[._-]bin',
+        r'Software',
 
         # Download version
         r'release',
         r'snapshot',
         r'distrib',
+        r'everywhere',
+        r'latest',
 
         # Arch
-        r'Linux64',
+        r'Linux(64)?',
+        r'x86_64',
 
         # VCS
         r'0\+bzr',
 
         # License
+        r'gpl',
+
+        # Needs to come before and after gpl, appears in both orders
+        r'[._-]x11',
         r'gpl',
     ]
 
@@ -407,7 +432,7 @@ def parse_version_offset(path):
     # 3. names can contain A-Z, a-z, 0-9, '+', separators
     # 4. versions can contain A-Z, a-z, 0-9, separators
     # 5. versions always start with a digit
-    # 6. versions are often prefixed by a 'v' character
+    # 6. versions are often prefixed by a 'v' or 'r' character
     # 7. separators are most reliable to determine name/version boundaries
 
     # List of the following format:
@@ -450,7 +475,7 @@ def parse_version_offset(path):
         (r'^[a-zA-Z+-]*(\d[\da-zA-Z-]*)$', stem),
 
         # name_name_ver_ver
-        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128, v1_6_3
+        # e.g. tinyxml_2_6_2, boost_1_55_0, tbb2017_20161128
         (r'^[a-zA-Z+_]*(\d[\da-zA-Z_]*)$', stem),
 
         # name.name.ver.ver
@@ -475,6 +500,10 @@ def parse_version_offset(path):
         # name_name.ver.ver
         # e.g. fer_source.v696
         (r'^[a-zA-Z\d+_]+\.v?(\d[\da-zA-Z.]*)$', stem),
+
+        # name_ver-ver
+        # e.g. Bridger_r2014-12-01
+        (r'^[a-zA-Z\d+]+_r?(\d[\da-zA-Z-]*)$', stem),
 
         # name-name-ver.ver-ver.ver
         # e.g. sowing-1.1.23-p1, bib2xhtml-v3.0-15-gf506, 4.6.3-alpha04
@@ -507,19 +536,17 @@ def parse_version_offset(path):
         # e.g. STAR-CCM+11.06.010_02
         (r'^[a-zA-Z+-]+(\d[\da-zA-Z._]*)$', stem),
 
+        # name-name_name-ver.ver
+        # e.g. PerlIO-utf8_strict-0.002
+        (r'^[a-zA-Z\d+_-]+-v?(\d[\da-zA-Z.]*)$', stem),
+
         # 7th Pass: Specific VCS
 
         # bazaar
         # e.g. libvterm-0+bzr681
         (r'bzr(\d[\da-zA-Z._-]*)$', stem),
 
-        # 8th Pass: Version in path
-
-        # github.com/repo/name/releases/download/vver/name
-        # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
-        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa
-
-        # 9th Pass: Query strings
+        # 8th Pass: Query strings
 
         # e.g. https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0
         (r'\?sha=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
@@ -528,13 +555,24 @@ def parse_version_offset(path):
         (r'\?ref=[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)$', suffix),
 
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1
-        (r'\?version=v?(\d[\da-zA-Z._-]*)$', suffix),
+        # e.g. https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef
+        (r'[?&]version=v?(\d[\da-zA-Z._-]*)$', suffix),
 
         # e.g. http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz
-        (r'\?filename=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),
+        # e.g. http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz
+        (r'[?&]filename=[a-zA-Z\d+-]+[_-]v?(\d[\da-zA-Z.]*)', stem),
 
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
-        (r'\?package=[a-zA-Z\d+-]+&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+        (r'&get=[a-zA-Z\d+-]+-v?(\d[\da-zA-Z.]*)$', stem),  # noqa
+
+        # 9th Pass: Version in path
+
+        # github.com/repo/name/releases/download/vver/name
+        # e.g. https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow
+        (r'github\.com/[^/]+/[^/]+/releases/download/[a-zA-Z+._-]*v?(\d[\da-zA-Z._-]*)/', path),  # noqa
+
+        # e.g. ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz
+        (r'(\d[\da-zA-Z._-]*)/[^/]+$', path),
     ]
 
     for i, version_regex in enumerate(version_regexes):
@@ -661,6 +699,9 @@ def parse_name_offset(path, v=None):
         # ?package=name
         # e.g. http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz
         (r'\?package=([A-Za-z\d+-]+)', stem),
+
+        # ?package=name-version
+        (r'\?package=([A-Za-z\d]+)', suffix),
 
         # download.php
         # e.g. http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1

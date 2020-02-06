@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Gdal(AutotoolsPackage):
     """
 
     homepage   = "https://www.gdal.org/"
-    url        = "https://download.osgeo.org/gdal/3.0.1/gdal-3.0.1.tar.xz"
+    url        = "https://download.osgeo.org/gdal/3.0.4/gdal-3.0.4.tar.xz"
     list_url   = "https://download.osgeo.org/gdal/"
     list_depth = 1
 
@@ -29,8 +29,13 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.0.4',  sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
+    version('3.0.3',  sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
+    version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
     version('3.0.1',  sha256='45b4ae25dbd87282d589eca76481c426f72132d7a599556470d5c38263b09266')
     version('3.0.0',  sha256='ad316fa052d94d9606e90b20a514b92b2dd64e3142dfdbd8f10981a5fcd5c43e')
+    version('2.4.4',  sha256='a383bd3cf555d6e1169666b01b5b3025b2722ed39e834f1b65090f604405dcd8')
+    version('2.4.3',  sha256='d52dc3e0cff3af3e898d887c4151442989f416e839948e73f0994f0224bbff60')
     version('2.4.2',  sha256='dcc132e469c5eb76fa4aaff238d32e45a5d947dc5b6c801a123b70045b618e0c')
     version('2.4.1',  sha256='fd51b4900b2fc49b98d8714f55fc8a78ebfd07218357f93fb796791115a5a1ad')
     version('2.4.0',  sha256='c3791dcc6d37e59f6efa86e2df2a55a4485237b0a48e330ae08949f0cdf00f27')
@@ -93,9 +98,9 @@ class Gdal(AutotoolsPackage):
 
     # Required dependencies
     depends_on('libtiff@3.6.0:')  # 3.9.0+ needed to pass testsuite
-    depends_on('libgeotiff@1.2.1:')
-    depends_on('libgeotiff@:1.4', when='@:2.4')
-    depends_on('libgeotiff@1.5:', when='@3:')
+    depends_on('libgeotiff@1.2.1:1.4', when='@:2.4.0')
+    depends_on('libgeotiff@1.2.1:1.5', when='@2.4.1:2.4.99')
+    depends_on('libgeotiff@1.5:', when='@3.0.0:')
     depends_on('json-c')
     depends_on('json-c@0.12.1', when='@:2.2')
 
@@ -114,7 +119,7 @@ class Gdal(AutotoolsPackage):
     depends_on('hdf', when='+hdf4')
     depends_on('hdf5', when='+hdf5')
     depends_on('kealib', when='+kea @2:')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('jasper@1.900.1', patches='uuid.patch', when='+jasper')
     depends_on('openjpeg', when='+openjpeg')
     depends_on('xerces-c', when='+xerces')
@@ -157,12 +162,12 @@ class Gdal(AutotoolsPackage):
 
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.
-        spack_env.set('PREFIX', self.prefix)
-        spack_env.set('DESTDIR', '/')
+        env.set('PREFIX', self.prefix)
+        env.set('DESTDIR', '/')
 
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
@@ -299,7 +304,7 @@ class Gdal(AutotoolsPackage):
 
         # https://trac.osgeo.org/gdal/wiki/NetCDF
         if '+netcdf' in spec:
-            args.append('--with-netcdf={0}'.format(spec['netcdf'].prefix))
+            args.append('--with-netcdf={0}'.format(spec['netcdf-c'].prefix))
         else:
             args.append('--with-netcdf=no')
 

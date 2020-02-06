@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,14 +28,6 @@ from six.moves.urllib.error import HTTPError, URLError
 install = SpackCommand('install')
 env = SpackCommand('env')
 add = SpackCommand('add')
-
-
-@pytest.fixture(scope='module')
-def parser():
-    """Returns the parser for the module command"""
-    parser = argparse.ArgumentParser()
-    spack.cmd.install.setup_parser(parser)
-    return parser
 
 
 @pytest.fixture()
@@ -115,7 +107,9 @@ def test_install_package_already_installed(
     (['--clean'], False),
     (['--dirty'], True),
 ])
-def test_install_dirty_flag(parser, arguments, expected):
+def test_install_dirty_flag(arguments, expected):
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
     args = parser.parse_args(arguments)
     assert args.dirty == expected
 
@@ -664,3 +658,32 @@ def test_install_only_dependencies_of_all_in_env(
             assert not os.path.exists(root.prefix)
             for dep in root.traverse(root=False):
                 assert os.path.exists(dep.prefix)
+
+
+def test_install_help_does_not_show_cdash_options(capsys):
+    """Make sure `spack install --help` does not describe CDash arguments"""
+    with pytest.raises(SystemExit):
+        install('--help')
+        captured = capsys.readouterr()
+        assert 'CDash URL' not in captured.out
+
+
+def test_install_help_cdash(capsys):
+    """Make sure `spack install --help-cdash` describes CDash arguments"""
+    install_cmd = SpackCommand('install')
+    out = install_cmd('--help-cdash')
+    assert 'CDash URL' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with tmpdir.as_cwd():
+        with capfd.disabled():
+            os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
+            out = install(
+                '-v',
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'a')
+            assert 'Using CDash auth token from environment' in out

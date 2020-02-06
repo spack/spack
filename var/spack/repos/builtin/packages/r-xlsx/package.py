@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class RXlsx(RPackage):
     97/2000/XP/2003 file formats."""
 
     homepage = "http://code.google.com/p/rexcel/"
-    url      = "https://cloud.r-project.org/src/contrib/xlsx_0.5.7.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/xlsx_0.6.1.tar.gz"
     listurl  = "https://cloud.r-project.org/src/contrib/Archive/xlsx"
 
     version('0.6.1', sha256='a580bd16b5477c1c185bf681c12c1ffff4088089f97b6a37997913d93ec5a8b4')

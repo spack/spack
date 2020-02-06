@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,32 +19,16 @@ import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
+import spack.util.gpg
 from spack.spec import Spec
 from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
-from spack.util.executable import ProcessError
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import strings_contains_installroot
 from spack.relocate import get_patchelf, relocate_text, relocate_links
 from spack.relocate import substitute_rpath, get_relative_rpaths
 from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
-
-
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = spack.util.gpg.GNUPGHOME
-    spack.util.gpg.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    spack.util.gpg.GNUPGHOME = old_gpg_path
-
-
-def has_gnupg2():
-    try:
-        spack.util.gpg.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except ProcessError:
-        return False
 
 
 def fake_fetchify(url, pkg):
@@ -54,7 +38,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.usefixtures('install_mockery', 'testing_gpg_directory')
+@pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
     spec = Spec("patchelf")
@@ -107,7 +91,7 @@ echo $PATH"""
     buildcache.setup_parser(parser)
 
     # Create a private key to sign package with if gpg2 available
-    if has_gnupg2():
+    if spack.util.gpg.Gpg.gpg():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
                                   email='spack@googlegroups.com',
                                   comment='Spack test key')
@@ -230,7 +214,7 @@ echo $PATH"""
     stage.destroy()
 
     # Remove cached binary specs since we deleted the mirror
-    bindist._cached_specs = None
+    bindist._cached_specs = set()
 
 
 def test_relocate_text(tmpdir):

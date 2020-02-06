@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Mpich(AutotoolsPackage):
     list_depth = 1
 
     version('develop', submodules=True)
+    version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
     version('3.3.1', sha256='fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
     version('3.3',   sha256='329ee02fe6c3d101b6b30a7b6fb97ddf6e82b28844306771fa9dd8845108fa0b')
     version('3.2.1', sha256='5db53bf2edfaa2238eb6a0a5bc3d2c2ccbfbb1badd79b664a1a919d2ce2330f1')
@@ -93,6 +94,8 @@ spack package at this time.''',
     # See https://github.com/pmodels/mpich/issues/3665
     depends_on('libfabric@:1.6', when='device=ch3 netmod=ofi')
 
+    depends_on('ucx', when='netmod=ucx')
+
     depends_on('libpciaccess', when="+pci")
     depends_on('libxml2')
 
@@ -100,6 +103,12 @@ spack package at this time.''',
     depends_on('slurm', when='+slurm')
 
     depends_on('pmix', when='pmi=pmix')
+
+    # building from git requires regenerating autotools files
+    depends_on('automake@1.15:', when='@develop', type=("build"))
+    depends_on('libtool@2.4.4:', when='@develop', type=("build"))
+    depends_on("m4", when="@develop", type=("build")),
+    depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -166,7 +175,7 @@ spack package at this time.''',
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError(
-                'Mpich requires both C and Fortran compilers!'
+                'MPICH requires both C and Fortran compilers!'
             )
 
     def configure_args(self):
@@ -179,6 +188,15 @@ spack package at this time.''',
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
                                                 spec else 'yes')
         ]
+
+        if '+slurm' in spec:
+            config_args.append('--with-slurm=yes')
+            config_args.append('--with-slurm-include={0}'.format(
+                spec['slurm'].prefix.include))
+            config_args.append('--with-slurm-lib={0}'.format(
+                spec['slurm'].prefix.lib))
+        else:
+            config_args.append('--with-slurm=no')
 
         if 'pmi=off' in spec:
             config_args.append('--with-pmi=no')
@@ -207,10 +225,13 @@ spack package at this time.''',
 
         config_args.append(device_config)
 
-        # Specify libfabric's path explicitly, otherwise configure might fall
-        # back to an embedded version of libfabric.
+        # Specify libfabric or ucx path explicitly, otherwise
+        # configure might fall back to an embedded version.
         if 'netmod=ofi' in spec:
             config_args.append('--with-libfabric={0}'.format(
                 spec['libfabric'].prefix))
+        if 'netmod=ucx' in spec:
+            config_args.append('--with-ucx={0}'.format(
+                spec['ucx'].prefix))
 
         return config_args

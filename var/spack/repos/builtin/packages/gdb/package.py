@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,15 +6,16 @@
 from spack import *
 
 
-class Gdb(AutotoolsPackage):
+class Gdb(AutotoolsPackage, GNUMirrorPackage):
     """GDB, the GNU Project debugger, allows you to see what is going on
     'inside' another program while it executes -- or what another
     program was doing at the moment it crashed.
     """
 
     homepage = "https://www.gnu.org/software/gdb"
-    url      = "https://ftpmirror.gnu.org/gdb/gdb-7.10.tar.gz"
+    gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
+    version('8.3.1', sha256='26ce655216cd03f4611518a7a1c31d80ec8e884c16715e9ba8b436822e51434b')
     version('8.3', sha256='b2266ec592440d0eec18ee1790f8558b3b8a2845b76cc83a872e39b501ce8a28')
     version('8.2.1', sha256='0107985f1edb8dddef6cdd68a4f4e419f5fec0f488cc204f0b7d482c0c6c9282')
     version('8.2', sha256='847e4b65e5a7b872e86019dd59659029e2b06cae962e0ef345f169dcb4b851b8')

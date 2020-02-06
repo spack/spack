@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1118,7 +1118,27 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+        # hash is a full hash and is in the data somewhere
+        if dag_hash in self._data:
+            rec = self._data[dag_hash]
+            if rec.install_type_matches(installed):
+                return [rec.spec]
+            else:
+                return default
+
+        # check if hash is a prefix of some installed (or previously
+        # installed) spec.
+        matches = [record.spec for h, record in self._data.items()
+                   if h.startswith(dag_hash) and
+                   record.install_type_matches(installed)]
+        if matches:
+            return matches
+
+        # nothing found
+        return default
+
+    def get_by_hash_local(self, *args, **kwargs):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Arguments:
@@ -1142,24 +1162,7 @@ class Database(object):
 
         """
         with self.read_transaction():
-            # hash is a full hash and is in the data somewhere
-            if dag_hash in self._data:
-                rec = self._data[dag_hash]
-                if rec.install_type_matches(installed):
-                    return [rec.spec]
-                else:
-                    return default
-
-            # check if hash is a prefix of some installed (or previously
-            # installed) spec.
-            matches = [record.spec for h, record in self._data.items()
-                       if h.startswith(dag_hash) and
-                       record.install_type_matches(installed)]
-            if matches:
-                return matches
-
-            # nothing found
-            return default
+            return self._get_by_hash_local(*args, **kwargs)
 
     def get_by_hash(self, dag_hash, default=None, installed=any):
         """Look up a spec by DAG hash, or by a DAG hash prefix.
@@ -1184,9 +1187,14 @@ class Database(object):
             (list): a list of specs matching the hash or hash prefix
 
         """
-        search_path = [self] + self.upstream_dbs
-        for db in search_path:
-            spec = db.get_by_hash_local(
+
+        spec = self.get_by_hash_local(
+            dag_hash, default=default, installed=installed)
+        if spec is not None:
+            return spec
+
+        for upstream_db in self.upstream_dbs:
+            spec = upstream_db._get_by_hash_local(
                 dag_hash, default=default, installed=installed)
             if spec is not None:
                 return spec
@@ -1294,6 +1302,30 @@ class Database(object):
         key = spec.dag_hash()
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
+
+    @property
+    def unused_specs(self):
+        """Return all the specs that are currently installed but not needed
+        at runtime to satisfy user's requests.
+
+        Specs in the return list are those which are not either:
+            1. Installed on an explicit user request
+            2. Installed as a "run" or "link" dependency (even transitive) of
+               a spec at point 1.
+        """
+        needed, visited = set(), set()
+        with self.read_transaction():
+            for key, rec in self._data.items():
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
+
+            unused = [rec.spec for key, rec in self._data.items()
+                      if key not in needed and rec.installed]
+
+        return unused
 
 
 class UpstreamDatabaseLockingError(SpackError):

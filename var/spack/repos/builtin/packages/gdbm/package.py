@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,14 @@
 from spack import *
 
 
-class Gdbm(AutotoolsPackage):
+class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     """GNU dbm (or GDBM, for short) is a library of database functions
     that use extensible hashing and work similar to the standard UNIX dbm.
     These routines are provided to a programmer needing to create and
     manipulate a hashed database."""
 
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
-    # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://ftpmirror.gnu.org/gdbm/gdbm-1.13.tar.gz"
+    gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
 
     version('1.18.1', sha256='86e613527e5dba544e73208f42b78b7c022d4fa5a6d5498bf18c8d6f745b91dc')
     version('1.14.1', sha256='cdceff00ffe014495bed3aed71c7910aa88bf29379f795abc0f46d4ee5f8bc5f')

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,15 +18,17 @@ class Mgis(CMakePackage):
     """
 
     homepage = "https://thelfer.github.io/mgis/web/index.html"
-    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.0.tar.gz"
+    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.1.tar.gz"
     git      = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
     maintainers = ['thelfer']
 
     # development branches
     version("master", branch="master")
+    version("rliv-1.1", branch="rliv-1.1")
     version("rliv-1.0", branch="rliv-1.0")
 
     # released version
+    version('1.1',   sha256='06593d7a052678deaee87ef60b2213db7545c5be9823f261d3388b3978a0b7a5')
     version('1.0.1', sha256='6102621455bc5d9b1591cd33e93b2e15a9572d2ce59ca6dfa30ba57ae1265c08')
     version('1.0', sha256='279c98da00fa6855edf29c2b8f8bad6e7732298dc62ef67d028d6bbeaac043b3')
 
@@ -42,11 +44,13 @@ class Mgis(CMakePackage):
             values=('Debug', 'Release'))
 
     # dependencies
-    depends_on('tfel@3.2.0', when="@1.0")
+    depends_on('tfel@3.3.0', when="@1.1")
     depends_on('tfel@3.2.1', when="@1.0.1")
+    depends_on('tfel@3.2.0', when="@1.0")
+    depends_on('tfel@rliv-3.3', when="@rliv-1.1")
     depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
-    depends_on('boost+python', when='+python')
+    depends_on('boost+python+numpy', when='+python')
     extends('python', when='+python')
 
     def cmake_args(self):

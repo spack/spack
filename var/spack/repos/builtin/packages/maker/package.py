@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,7 @@ class Maker(Package):
     depends_on('perl-inline-c', type=('build', 'run'))
     depends_on('perl-io-all', type=('build', 'run'))
     depends_on('perl-io-prompt', type=('build', 'run'))
-    depends_on('perl-bio-perl', type=('build', 'run'))
+    depends_on('perl-bioperl', type=('build', 'run'))
     depends_on('blast-plus')
     depends_on('snap-korf')
     depends_on('repeatmasker')

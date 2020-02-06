@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,11 @@ class Mc(AutotoolsPackage):
     depends_on('glib@2.14:')
     depends_on('libssh2@1.2.5:')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Fix compilation bug on macOS by pretending we don't have utimensat()
         # https://github.com/MidnightCommander/mc/pull/130
         if 'darwin' in self.spec.architecture:
-            env['ac_cv_func_utimensat'] = 'no'
+            env.set('ac_cv_func_utimensat', 'no')
 
     def configure_args(self):
         args = [

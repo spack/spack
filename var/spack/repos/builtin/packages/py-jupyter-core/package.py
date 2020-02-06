@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,19 +10,21 @@ class PyJupyterCore(PythonPackage):
     """Core Jupyter functionality"""
 
     homepage = "http://jupyter-core.readthedocs.io/"
-    url      = "https://github.com/jupyter/jupyter_core/archive/4.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jupyter-core/jupyter_core-4.6.0.tar.gz"
 
-    version('4.4.0', sha256='a3c693cb4cd1251f887f034eba4b74e5ad1beab5baef43cc3ae9387450e72367')
-    version('4.2.0', sha256='ca2db4bc44b870ad9039bfdcad81bb0466e6bf0e6e2e03626815977ee73dc7a7')
-    version('4.1.1', sha256='1908dd9eceb8994c1f0b1bb81c20a52dbb01692e4f1fdf5d12e04846b94eb05c')
-    version('4.1.0', sha256='80b78d215399760f4678cc1512118257543e17b48316254d1e1dbddfafa2dffc')
-    version('4.0.6', sha256='76d9f95eec679d1ce8a07fba4e373bda3b17ca89e3b03ee6186a7dbdc117d7e8')
-    version('4.0.5', sha256='783c2be522010db9dd0ff54c28fcdf31afe73a5f7d956eb89ddce2c48f381548')
-    version('4.0.4', sha256='ee81c1e2c67afe0b9c1097043f76063b452670fc63377ab4656ce1b2826cd166')
-    version('4.0.3', sha256='5ecc177e8c711a410f857adc65f8413b06ea1f2fa2330559a723d6c1981852f8')
-    version('4.0.2', sha256='ad2f537aacaa9978b37ac5d39d9bd582d2a9dfc104b3d289b88687c1c5a0ece0')
-    version('4.0.1', sha256='faa3878b286f63d1853aec3e4b80e2a7299f580a9acebd4a1cafa36b264ec0a3')
-    version('4.0',   sha256='2b491a5da687ffab4e5702e37d3cb8b6b184cd46520cae9c459bdb1fd144f026')
+    version('4.6.0', sha256='85103cee6548992780912c1a0a9ec2583a4a18f1ef79a248ec0db4446500bce3')
+    version('4.4.0', sha256='ba70754aa680300306c699790128f6fbd8c306ee5927976cbe48adacf240c0b7')
+    version('4.2.0', sha256='44ec837a53bebf4e937112d3f9ccf31fee4f8db3e406dd0dd4f0378a354bed9c')
+    version('4.1.1', sha256='ae0e69435258126466c86cd989e465a9c334c50107ef4f257decc8693650bf4c')
+    version('4.1.0', sha256='146af0679c33c56db4b85b785f3dacd933ffaca97e7d2d56ff577a5485c2bd13')
+    version('4.0.6', sha256='96a68a3b1d018ff7776270b26b7cb0cfd7a18a53ef2061421daff435707d198c')
+    version('4.0.5', sha256='9f6581b827f56cfa1771d7b1bd8ecc1274afa7f6e3e1046b7e0d4e05d52bf6e8')
+    version('4.0.4', sha256='fcf45478025f34174943993947f51a41ad871ac998a14bf1cb87d8eb61e75c6d')
+    version('4.0.3', sha256='12258d8c593c53bb08e09f3da63a418d7cb5b5852b3d0ffa29639402f56dcbdb')
+    version('4.0.2', sha256='13a46b3c493ac63bd75048d6d2142cfc44258bc6c260d96c506f0214fcd78a70')
+    version('4.0.1', sha256='7c165f7de7a063596f8be1bcfc86e9ba6897e38baf24e8510514690963600122')
+    version('4.0.0', sha256='9025208cdfc40718c7e3ab62b5e17aacf68e3fc66e34ff21fe032d553620122a')
 
-    depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('py-setuptools', when='@4.5.0:', type='build')
     depends_on('py-traitlets', type=('build', 'run'))

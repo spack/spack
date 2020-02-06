@@ -1,9 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+
+import os
 
 
 class Nghttp2(AutotoolsPackage):
@@ -19,17 +21,17 @@ class Nghttp2(AutotoolsPackage):
     depends_on('py-cython@0.19:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
 
-    def setup_environment(self, spack_env, run_env):
-        site_packages_dir = '/'.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
-        spack_env.prepend_path('PYTHONPATH', site_packages_dir)
+    def setup_build_environment(self, env):
+        site_packages_dir = os.path.join(
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
+        env.prepend_path('PYTHONPATH', site_packages_dir)
 
     @run_before('install')
     def ensure_install_dir_exists(self):
-        site_packages_dir = '/'.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
+        site_packages_dir = os.path.join(
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
         mkdirp(site_packages_dir)

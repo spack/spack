@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,5 +30,5 @@ class PyPyproj(PythonPackage):
     depends_on('proj@6.1:', when='@2.2:')
     depends_on('proj@6.0:', when='@2.0:')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PROJ_DIR', self.spec['proj'].prefix)
+    def setup_build_environment(self, env):
+        env.set('PROJ_DIR', self.spec['proj'].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyMatplotlib(PythonPackage):
     environments across platforms."""
 
     homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.1.1.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.1.3.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -28,9 +28,12 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.1.3', sha256='db3121f12fb9b99f105d1413aebaeb3d943f269f3d262b45586d12765866f0c6')
+    version('3.1.2', sha256='8e8e2c2fe3d873108735c6ee9884e6f36f467df4a143136209cff303b183bada')
     version('3.1.1', sha256='1febd22afe1489b13c6749ea059d392c03261b2950d1d45c17e3aed812080c93')
     version('3.0.2', sha256='c94b792af431f6adb6859eb218137acd9a35f4f7442cea57e4a59c54751c36af')
     version('3.0.0', sha256='b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9')
+    version('2.2.5', sha256='a3037a840cd9dfdc2df9fee8af8f76ca82bfab173c0f9468193ca7a89a2b60ea')
     version('2.2.3', sha256='7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5')
     version('2.2.2', sha256='4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8')
     version('2.0.2', sha256='0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1')
@@ -85,35 +88,35 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
-               when='@2.1.0:2.999.999')
+               when='@2.1.0:2.999.999 ^python@:2')
     depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
 
     # Optional backend dependencies
-    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg')
-    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkcairo')
-    depends_on('python+tkinter', when='backend=tkagg')
-    depends_on('python+tkinter', when='backend=tkcairo')
-    depends_on('py-pyqt4@4.6:', when='backend=qt4agg')    # or py-pyside@1.0.3:
-    depends_on('py-pyqt4@4.6:', when='backend=qt4cairo')  # or py-pyside@1.0.3:
-    depends_on('py-pyqt5', when='backend=qt5agg')
-    depends_on('py-pyqt5', when='backend=qt5cairo')
-    depends_on('py-pygobject', when='backend=gtk3agg')
-    depends_on('py-pygobject', when='backend=gtk3cairo')
-    depends_on('py-wxpython@4:', when='backend=wx')
-    depends_on('py-wxpython@4:', when='backend=wxagg')
-    depends_on('py-wxpython@4:', when='backend=wxcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=gtk3cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=qt4cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=qt5cairo')
-    depends_on('py-cairocffi@0.8:', when='backend=tkcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=wxcairo')
-    depends_on('py-cairocffi@0.8:', when='backend=cairo')
-    depends_on('py-tornado', when='backend=webagg')
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg', type='run')
+    depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkcairo', type='run')
+    depends_on('python+tkinter', when='backend=tkagg', type='run')
+    depends_on('python+tkinter', when='backend=tkcairo', type='run')
+    depends_on('py-pyqt4@4.6:', when='backend=qt4agg', type='run')    # or py-pyside@1.0.3:
+    depends_on('py-pyqt4@4.6:', when='backend=qt4cairo', type='run')  # or py-pyside@1.0.3:
+    depends_on('py-pyqt5', when='backend=qt5agg', type='run')
+    depends_on('py-pyqt5', when='backend=qt5cairo', type='run')
+    depends_on('py-pygobject', when='backend=gtk3agg', type='run')
+    depends_on('py-pygobject', when='backend=gtk3cairo', type='run')
+    depends_on('py-wxpython@4:', when='backend=wx', type='run')
+    depends_on('py-wxpython@4:', when='backend=wxagg', type='run')
+    depends_on('py-wxpython@4:', when='backend=wxcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=gtk3cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=qt4cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=qt5cairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=tkcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=wxcairo', type='run')
+    depends_on('py-cairocffi@0.8:', when='backend=cairo', type='run')
+    depends_on('py-tornado', when='backend=webagg', type='run')
 
     # Optional dependencies
     depends_on('ffmpeg', when='+movies')
     # depends_on('libav', when='+movies')
-    depends_on('image-magick', when='+animation')
+    depends_on('imagemagick', when='+animation')
     depends_on('py-pillow@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
     depends_on('ghostscript@0.9:', when='+latex', type='run')

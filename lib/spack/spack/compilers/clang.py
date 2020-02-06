@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -208,7 +208,9 @@ class Clang(Compiler):
             r'^Apple (?:LLVM|clang) version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
-            r'clang version ([^ )]+)-[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )]+?)-[~.\w\d-]*|'
             r'clang version ([^ )]+)',
             output
         )

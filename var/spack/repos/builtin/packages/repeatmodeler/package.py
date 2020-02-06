@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Repeatmodeler(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('perl-json', type=('build', 'run'))
     depends_on('perl-uri', type=('build', 'run'))
-    depends_on('perl-lwp', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))
 
     depends_on('repeatmasker', type='run')
     depends_on('recon+repeatmasker', type='run')

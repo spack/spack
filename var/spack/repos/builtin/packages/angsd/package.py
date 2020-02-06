@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,8 @@ class Angsd(MakefilePackage):
     depends_on('htslib')
     conflicts('^htslib@1.6:', when='@0.919')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('R_LIBS', prefix.R)
+    def setup_run_environment(self, env):
+        env.set('R_LIBS', self.prefix.R)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

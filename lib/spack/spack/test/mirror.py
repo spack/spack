@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ from spack.util.executable import which
 
 from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 
-pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']

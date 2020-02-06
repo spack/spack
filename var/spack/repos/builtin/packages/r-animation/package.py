@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class RAnimation(RPackage):
 
     depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-magick', when='@2.6:', type=('build', 'run'))
-    depends_on('image-magick')
+    depends_on('imagemagick')
     depends_on('ffmpeg')
     depends_on('swftools')
     depends_on('texlive')

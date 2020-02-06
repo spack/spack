@@ -1,0 +1,714 @@
+diff -ru a/docs/cpp2markdown-1.py b/docs/cpp2markdown-1.py
+--- a/docs/cpp2markdown-1.py	2019-12-27 17:22:22.059961303 -0600
++++ b/docs/cpp2markdown-1.py	2019-12-27 17:22:43.072910448 -0600
+@@ -39,7 +39,7 @@
+         check2 = re.compile(r"^\s[*]\s+\b[Cc]opyright\b")
+         empty1 = re.compile(r"^\s[*]\s*$")
+         state = "intro"
+-        for i in xrange(1,len(lines)-1):
++        for i in range(1,len(lines)-1):
+             line = lines[i]
+             if state == "intro":
+                 if empty1.match(line):
+@@ -108,7 +108,7 @@
+     def run(self, filename):
+         filetext = open(filename).read()
+         for line in self.process(filetext, filename):
+-            print line
++            print(line)
+     def process(self, filetext, filename=""):
+         section_ruler = "-----------------------------------------"
+         copyright = ""
+@@ -136,7 +136,7 @@
+             else:
+                 if text:
+                     yield "#### NOTES"
+-                    print token, text.replace("\n", "\n  ")
++                    print(token, text.replace("\n", "\n  "))
+         if copyright:
+             yield section_ruler
+             yield "### COPYRIGHT"
+diff -ru a/docs/cpp2markdown.py b/docs/cpp2markdown.py
+--- a/docs/cpp2markdown.py	2019-12-27 17:22:22.059961303 -0600
++++ b/docs/cpp2markdown.py	2019-12-27 17:22:43.140910284 -0600
+@@ -62,7 +62,7 @@
+     def run(self, filename):
+         filetext = open(filename).read()
+         for line in self.process(filetext, filename):
+-            print line
++            print(line)
+     def process(self, filetext, filename=""):
+         for token, text in self.parse(filetext):
+             if token == FileInclude:
+@@ -86,7 +86,7 @@
+             else:
+                 if text:
+                     yield "#### NOTES"
+-                    print token, text.replace("\n", "\n  ")
++                    print(token, text.replace("\n", "\n  "))
+     def isexported_function(self):
+         function = self.function_text.strip().replace("\n"," ")
+         logg.debug("@ --------------------------------------") 
+diff -ru a/docs/make-doc.py b/docs/make-doc.py
+--- a/docs/make-doc.py	2019-12-27 17:22:22.059961303 -0600
++++ b/docs/make-doc.py	2019-12-27 17:22:43.515909376 -0600
+@@ -3,7 +3,7 @@
+ import sys
+ import re
+ import string
+-import commands
++import subprocess
+ import warnings
+ 
+ errors = 0
+@@ -23,7 +23,7 @@
+ def m(string, pattern):
+     return re.match(pattern, string)
+ def sorted_keys(dict):
+-    keys = dict.keys()
++    keys = list(dict.keys())
+     keys.sort()
+     return keys
+ 
+@@ -126,7 +126,7 @@
+ class Options:
+     var = {}
+     def __getattr__(self, name):
+-        if not self.var.has_key(name): return None
++        if name not in self.var: return None
+         return self.var[name]
+     def __setattr__(self, name, value):
+         self.var[name] = value
+@@ -135,15 +135,15 @@
+ o = Options()
+ o.verbose = 0
+ 
+-o.version = s( commands.getoutput(
++o.version = s( subprocess.getoutput(
+     """ grep -i "^version *:" *.spec 2>/dev/null |
+         sed -e "s/[Vv]ersion *: *//" """),  r"\s*",r"")
+-o.package = s(commands.getoutput(
++o.package = s(subprocess.getoutput(
+     """ grep -i "^name *:" *.spec 2>/dev/null |
+         sed -e "s/[Nn]ame *: *//" """),     r"\s*",r"")
+ 
+ if not len(o.version):
+-    o.version = commands.getoutput(""" date +%Y.%m.%d """)
++    o.version = subprocess.getoutput(""" date +%Y.%m.%d """)
+ if not len(o.package):
+     o.package = "_project"
+ 
+@@ -158,7 +158,7 @@
+         self.copyright = ""
+     def __getattr__(self, name):
+         """ defend against program to break on uninited members """
+-        if self.__dict__.has_key(name): return self.__dict__[name]
++        if name in self.__dict__: return self.__dict__[name]
+         warn("no such member: "+name); return None
+     def set_author(self, text):
+         if self.authors:
+@@ -215,7 +215,7 @@
+         #else
+         try:
+             input = open(name, "r")
+-        except IOError, error:
++        except IOError as error:
+             warn(#...... (scan_options) ...............
+                 "can not open input file: "+name, error)
+             continue
+@@ -294,12 +294,12 @@
+ #        return ""
+     def __getattr__(self, name):
+         """ defend against program exit on members being not inited """
+-        if self.__dict__.has_key(name): return self.__dict__[name]
++        if name in self.__dict__: return self.__dict__[name]
+         warn("no such member: "+name); return None
+     def dict(self):
+         return self.__dict__
+     def dict_sorted_keys(self):
+-        keys = self.__dict__.keys()
++        keys = list(self.__dict__.keys())
+         keys.sort()
+         return keys
+     def parse(self, prototype):
+@@ -376,7 +376,7 @@
+         function.head = s(function.head, r"(.*)also:(.*)", lambda x
+                           : set_seealso(function, x.group(2)) and x.group(1))
+         if function.seealso and None:
+-            print "function[",function.name,"].seealso=",function.seealso
++            print("function[",function.name,"].seealso=",function.seealso)
+ examine_head_anchors(function_list)
+ 
+ # =============================================================== HTML =====
+@@ -455,7 +455,7 @@
+             s(ensure_name(this_function_link(section2html( func.body ),
+                                              func.name), func.name),
+               r"(?sx) (</?para>\s*) <br\s*\/>", r"\1"))
+-    return combined.values()
++    return list(combined.values())
+ html_pages = combined_html_pages(function_list)
+ 
+ def html_resolve_links_on_page(text, list):
+@@ -495,7 +495,7 @@
+         return T
+     def add_page_map(self, list):
+         """ generate the index-block at the start of the onepage-html file """
+-        keys = list.keys()
++        keys = list(list.keys())
+         keys.sort()
+         for name in keys:
+             self.toc += "<tr valign=\"top\">\n"+ \
+@@ -524,11 +524,11 @@
+ # and finally print the html-formatted output
+ try:
+     F = open(o.libhtmlfile, "w")
+-except IOError, error:
++except IOError as error:
+     warn(# ............. open(o.libhtmlfile, "w") ..............
+         "can not open html output file: "+o.libhtmlfile, error)
+ else:
+-    print >> F, html.page_text()
++    print(html.page_text(), file=F)
+     F.close()
+ #fi
+ 
+@@ -954,7 +954,7 @@
+         if not header[file].authors and page.authors_list:
+             header[file].authors_list = page.authors_list
+         if not header[file].description:
+-            found = m(commands.getoutput("cat "+o.package+".spec"),
++            found = m(subprocess.getoutput("cat "+o.package+".spec"),
+                       r"(?s)\%description\b([^\%]*)\%")
+             if found:
+                 header[file].description = found.group(1)
+@@ -987,40 +987,40 @@
+ 
+ try:
+     F = open(o.docbookfile,"w")
+-except IOError, error:
++except IOError as error:
+     warn("can not open docbook output file: "+o.docbookfile, error)
+ else:
+-    print >> F, doctype, '<reference><title>Manual Pages</title>'
++    print(doctype, '<reference><title>Manual Pages</title>', file=F)
+ 
+     for page in combined_pages:
+-        print >> F, page.refentry_text()
++        print(page.refentry_text(), file=F)
+     #od
+ 
+-    for page in header_refpages.values():
++    for page in list(header_refpages.values()):
+         if not page.refentry: continue
+-        print >> F, "\n<!-- _______ "+page.id+" _______ -->",
+-        print >> F, page.refentry_text()
++        print("\n<!-- _______ "+page.id+" _______ -->", end=' ', file=F)
++        print(page.refentry_text(), file=F)
+     #od
+ 
+-    print >> F, "\n",'</reference>',"\n"
++    print("\n",'</reference>',"\n", file=F)
+     F.close()
+ #fi
+ 
+ # _____________________________________________________________________
+ try:
+     F = open( o.dumpdocfile, "w")
+-except IOError, error:
++except IOError as error:
+     warn ("can not open"+o.dumpdocfile,error)
+ else:
+     for func in function_list:
+         name = func.name
+-        print >> F, "<fn id=\""+name+"\">"+"<!-- FOR \""+name+"\" -->\n"
++        print("<fn id=\""+name+"\">"+"<!-- FOR \""+name+"\" -->\n", file=F)
+         for H in sorted_keys(func.dict()):
+-            print >> F, "<"+H+" name=\""+name+"\">",
+-            print >> F, str(func.dict()[H]),
+-            print >> F, "</"+H+">"
++            print("<"+H+" name=\""+name+"\">", end=' ', file=F)
++            print(str(func.dict()[H]), end=' ', file=F)
++            print("</"+H+">", file=F)
+         #od
+-        print >> F, "</fn><!-- END \""+name+"\" -->\n\n";
++        print("</fn><!-- END \""+name+"\" -->\n\n", file=F);
+     #od
+     F.close();
+ #fi
+diff -ru a/docs/makedocs.py b/docs/makedocs.py
+--- a/docs/makedocs.py	2019-12-27 17:22:22.059961303 -0600
++++ b/docs/makedocs.py	2019-12-27 17:22:43.644909064 -0600
+@@ -37,7 +37,7 @@
+         return None
+     def print_list_mainheader(self):
+         for t_fileheader in self.headers:
+-            print t_fileheader.get_filename(), t_fileheader.src_mainheader()
++            print(t_fileheader.get_filename(), t_fileheader.src_mainheader())
+         
+ class PerFunctionEntry:
+     def __init__(self, header, comment, prototype):
+@@ -66,10 +66,10 @@
+                                            functionprototype) ]
+     def print_list_titleline(self):
+         for funcheader in self.headers:
+-            print funcheader.get_filename(), "[=>]", funcheader.get_titleline()
++            print(funcheader.get_filename(), "[=>]", funcheader.get_titleline())
+     def print_list_name(self):
+         for funcheader in self.prototypes:
+-            print funcheader.get_filename(), "[>>]", funcheader.get_name()
++            print(funcheader.get_filename(), "[>>]", funcheader.get_name())
+ 
+ class PerFunctionFamilyEntry:
+     def __init__(self, leader):
+@@ -122,12 +122,12 @@
+         for name in self.retarget:
+             into = self.retarget[name]
+             if into not in name_list:
+-                print ("function '"+name+"' retarget into '"+into+
+-                       "' does not exist - keep alone")
++                print(("function '"+name+"' retarget into '"+into+
++                       "' does not exist - keep alone"))
+             if into in self.retarget:
+                 other = self.retarget[into]
+-                print ("function '"+name+"' retarget into '"+into+
+-                       "' which is itself a retarget into '"+other+"'")
++                print(("function '"+name+"' retarget into '"+into+
++                       "' which is itself a retarget into '"+other+"'"))
+             if into not in lead_list:
+                 lead_list += [ into ]
+         for func in self.functions:
+@@ -141,7 +141,7 @@
+                 entry.add(func) # the first
+                 self.entries += [ entry ]
+             else:
+-                print "head function '"+name+" has no entry"
++                print("head function '"+name+" has no entry")
+         for func in self.functions:
+             name = func.get_name()
+             if name in self.retarget:
+@@ -150,14 +150,14 @@
+                 if entry is not None:
+                     entry.add(func) # will not add duplicates
+                 else:
+-                    print "into function '"+name+" has no entry"
++                    print("into function '"+name+" has no entry")
+     def print_list_name(self):
+         for family in self.entries:
+             name = family.get_name()
+-            print name, ":",
++            print(name, ":", end=' ')
+             for item in family.functions:
+-                print item.get_name(), ",",
+-            print ""
++                print(item.get_name(), ",", end=' ')
++            print("")
+ class HtmlManualPageAdapter:
+     def __init__(self, entry):
+         """ usually takes a PerFunctionEntry """
+diff -ru a/docs/zzipdoc/commentmarkup.py b/docs/zzipdoc/commentmarkup.py
+--- a/docs/zzipdoc/commentmarkup.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/commentmarkup.py	2019-12-27 17:22:43.674908991 -0600
+@@ -1,4 +1,4 @@
+-from match import Match
++from .match import Match
+ 
+ def markup_link_syntax(text):
+     """ markup the link-syntax ` => somewhere ` in the text block """
+@@ -31,7 +31,7 @@
+         comment = self.header.comment
+         try:
+             comment = self.header.get_otherlines()
+-        except Exception, e:
++        except Exception as e:
+             pass
+         mode = ""
+         text = ""
+diff -ru a/docs/zzipdoc/dbk2htm.py b/docs/zzipdoc/dbk2htm.py
+--- a/docs/zzipdoc/dbk2htm.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/dbk2htm.py	2019-12-27 17:22:43.685908965 -0600
+@@ -1,4 +1,4 @@
+-from match import Match
++from .match import Match
+ import string
+ 
+ class dbk2htm_conversion:
+diff -ru a/docs/zzipdoc/docbookdocument.py b/docs/zzipdoc/docbookdocument.py
+--- a/docs/zzipdoc/docbookdocument.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/docbookdocument.py	2019-12-27 17:22:43.723908873 -0600
+@@ -1,6 +1,6 @@
+ #! /usr/bin/env python
+ # -*- coding: UTF-8 -*-
+-from match import Match
++from .match import Match
+ 
+ class DocbookDocument:
+     """ binds some xml content page with additional markup - in this
+@@ -23,14 +23,14 @@
+     def get_title(self):
+         if self.title: return title
+         try:   return self.text[0].get_title()
+-        except Exception, e: pass
++        except Exception as e: pass
+         return self.title
+     def _xml_doctype(self, rootnode):
+         return "<!DOCTYPE "+rootnode+self.docbook_dtd+">"
+     def _xml_text(self, xml):
+         """ accepts adapter objects with .xml_text() """
+         try:   return xml.xml_text()
+-        except Exception, e: print "DocbookDocument/text", e; pass
++        except Exception as e: print("DocbookDocument/text", e); pass
+         return str(xml)
+     def _fetch_rootnode(self, text):
+         fetch = Match(r"^[^<>]*<(\w+)\b")
+@@ -47,7 +47,7 @@
+         return filename
+     def save(self, filename = None):
+         filename = self._filename(filename)
+-        print "writing '"+filename+"'"
++        print("writing '"+filename+"'")
+         if len(self.text) > 1:
+             self.save_all(filename)
+         else:
+@@ -58,12 +58,12 @@
+             xml_text = self._xml_text(text)
+             rootnode = self._fetch_rootnode(xml_text)
+             doctype = self._xml_doctype(rootnode)
+-            print >>fd, doctype
+-            print >>fd, xml_text
++            print(doctype, file=fd)
++            print(xml_text, file=fd)
+             fd.close()
+             return True
+-        except IOError, e:
+-            print "could not open '"+filename+"'file", e
++        except IOError as e:
++            print("could not open '"+filename+"'file", e)
+             return False
+     def save_all(self, filename):
+         assert len(self.text) > 1
+@@ -76,20 +76,20 @@
+             else:
+                 rootnode = self.rootnode
+             doctype = self._xml_doctype(rootnode)
+-            print >>fd, doctype
++            print(doctype, file=fd)
+             title = self.get_title()
+             if title and self.rootnode in self.has_title_child:
+-                print >>fd, "<"+self.rootnode+'><title>'+title+'</title>'
++                print("<"+self.rootnode+'><title>'+title+'</title>', file=fd)
+             elif title:
+-                print >>fd, "<"+self.rootnode+' id="'+title+'">'
++                print("<"+self.rootnode+' id="'+title+'">', file=fd)
+             else:
+-                print >>fd, "<"+self.rootnode+'>'
++                print("<"+self.rootnode+'>', file=fd)
+             for text in self.text:
+                 text = self._xml_text(text)
+-                print >>fd, text
+-            print >>fd, "</"+self.rootnode+">"
++                print(text, file=fd)
++            print("</"+self.rootnode+">", file=fd)
+             fd.close()
+             return True
+-        except IOError, e:
+-            print "could not open '"+filename+"'file", e
++        except IOError as e:
++            print("could not open '"+filename+"'file", e)
+             return False
+diff -ru a/docs/zzipdoc/functionheader.py b/docs/zzipdoc/functionheader.py
+--- a/docs/zzipdoc/functionheader.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/functionheader.py	2019-12-27 17:22:43.756908793 -0600
+@@ -1,4 +1,4 @@
+-from match import Match
++from .match import Match
+ 
+ class FunctionHeader:
+     """ parsing the comment block that is usually presented before
+diff -ru a/docs/zzipdoc/functionlisthtmlpage.py b/docs/zzipdoc/functionlisthtmlpage.py
+--- a/docs/zzipdoc/functionlisthtmlpage.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/functionlisthtmlpage.py	2019-12-27 17:22:43.803908679 -0600
+@@ -1,5 +1,5 @@
+-from options import *
+-from match import Match
++from .options import *
++from .match import Match
+ 
+ class FunctionListHtmlPage:
+     """ The main part here is to create a TOC (table of contents) at the
+@@ -35,7 +35,7 @@
+         head_text = entry.head_xml_text()
+         body_text = entry.body_xml_text(name)
+         if not head_text:
+-            print "no head_text for", name
++            print("no head_text for", name)
+             return
+         try:
+             prespec = entry.head_get_prespec()
+@@ -43,7 +43,7 @@
+             callspec = entry.head_get_callspec()
+             head_text = ("<code><b><function>"+namespec+"</function></b>"
+                          +callspec+" : "+prespec+"</code>")
+-        except Exception, e:
++        except Exception as e:
+             pass
+         try:
+             extraline = ""
+@@ -56,7 +56,7 @@
+                              '<em><small>'+filename+'</small></em>'+
+                              '</td></table>')
+             body_text = extraline + body_text
+-        except Exception, e:
++        except Exception as e:
+             pass
+         def link(text):
+             return (text & Match("<function>(\w*)</function>")
+@@ -102,7 +102,7 @@
+         text &= (Match("(?s)<link>(\w+)</link>")
+                  >> (lambda x: self.resolve_internal(x.group(1))))
+         if len(self.not_found_in_anchors):
+-            print "not found in anchors: ", self.not_found_in_anchors
++            print("not found in anchors: ", self.not_found_in_anchors)
+         return (text & Match("(?s)<link>([^<>]*)</link>")
+                 >> "<code>\\1</code>")
+     def resolve_external(self, func, sect):
+diff -ru a/docs/zzipdoc/functionlistreference.py b/docs/zzipdoc/functionlistreference.py
+--- a/docs/zzipdoc/functionlistreference.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/functionlistreference.py	2019-12-27 17:22:43.875908505 -0600
+@@ -1,7 +1,7 @@
+ #! /usr/bin/env python
+ # -*- coding: UTF-8 -*-
+-from match import Match
+-from htm2dbk import *
++from .match import Match
++from .htm2dbk import *
+ 
+ class FunctionListReference:
+     """ Creating a docbook-style <reference> list of <refentry> parts
+@@ -19,7 +19,7 @@
+         description = entry.body_xml_text(name)
+         funcsynopsis = entry.head_xml_text()
+         if not funcsynopsis:
+-            print "no funcsynopsis for", name
++            print("no funcsynopsis for", name)
+             return
+         if self.entry is None:
+             self.entry = FunctionListRefEntry(entry, self.o)
+diff -ru a/docs/zzipdoc/functionprototype.py b/docs/zzipdoc/functionprototype.py
+--- a/docs/zzipdoc/functionprototype.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/functionprototype.py	2019-12-27 17:22:43.898908449 -0600
+@@ -1,4 +1,4 @@
+-from match import Match
++from .match import Match
+ 
+ class FunctionPrototype:
+     """ takes a single function prototype line (cut from some source file)
+diff -ru a/docs/zzipdoc/htm2dbk.py b/docs/zzipdoc/htm2dbk.py
+--- a/docs/zzipdoc/htm2dbk.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/htm2dbk.py	2019-12-27 17:22:43.946908333 -0600
+@@ -7,7 +7,7 @@
+ present in the world of docbook-to-anything converters. """
+ 
+ from datetime import date
+-import match
++from . import match
+ import sys
+ 
+ m = match.Match
+@@ -146,8 +146,8 @@
+             doc.filename = filename
+             doc.add(f.read())
+             f.close()
+-        except IOError, e:
+-            print >> sys.stderr, "can not open "+filename
++        except IOError as e:
++            print("can not open "+filename, file=sys.stderr)
+     return doc.value()
+ 
+ def html2docbook(text):
+@@ -155,4 +155,4 @@
+     return htm2dbk_conversion().convert2(text)
+ 
+ if __name__ == "__main__":
+-    print htm2dbk_files(sys.argv[1:])
++    print(htm2dbk_files(sys.argv[1:]))
+diff -ru a/docs/zzipdoc/htmldocument.py b/docs/zzipdoc/htmldocument.py
+--- a/docs/zzipdoc/htmldocument.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/htmldocument.py	2019-12-27 17:22:43.990908227 -0600
+@@ -1,6 +1,6 @@
+ #! /usr/bin/env python
+ # -*- coding: UTF-8 -*-
+-from match import Match
++from .match import Match
+ 
+ class HtmlDocument:
+     """ binds some html content page with additional markup - in this
+@@ -29,31 +29,31 @@
+     def get_title(self):
+         if self.title: return self.title
+         try:   return self.text[0].get_title()
+-        except Exception, e: pass
++        except Exception as e: pass
+         return self.title
+     def _html_meta(self, meta):
+         """ accepts adapter objects with .html_meta() """
+         try:   return meta.html_meta()
+-        except Exception, e: pass
++        except Exception as e: pass
+         return str(meta)
+     def _html_style(self, style):
+         """ accepts adapter objects with .html_style() and .xml_style() """
+         ee = None
+         try:   return style.html_style()
+-        except Exception, e: ee = e; pass
++        except Exception as e: ee = e; pass
+         try:   return style.xml_style()
+-        except Exception, e: print "HtmlDocument/style", ee, e; pass
++        except Exception as e: print("HtmlDocument/style", ee, e); pass
+         try:   return str(style)
+-        except Exception, e: print "HtmlDocument/style", e; return ""
++        except Exception as e: print("HtmlDocument/style", e); return ""
+     def _html_text(self, html):
+         """ accepts adapter objects with .html_text() and .xml_text() """
+         ee = None
+         try:   return html.html_text()
+-        except Exception, e: ee = e; pass
++        except Exception as e: ee = e; pass
+         try:   return html.xml_text()
+-        except Exception, e: print "HtmlDocument/text", ee, e; pass
++        except Exception as e: print("HtmlDocument/text", ee, e); pass
+         try:   return str(html)
+-        except Exception, e: print "HtmlDocument/text", e; return "&nbsp;"
++        except Exception as e: print("HtmlDocument/text", e); return "&nbsp;"
+     def navigation(self):
+         if self.navi:
+             return self.navi
+@@ -63,7 +63,7 @@
+                 self.navi = fd.read()
+                 fd.close()
+                 return self.navi
+-            except Exception, e:
++            except Exception as e:
+                 pass
+         return None
+     def html_header(self):
+@@ -103,15 +103,15 @@
+         return filename
+     def save(self, filename = None):
+         filename = self._filename(filename)
+-        print "writing '"+filename+"'"
++        print("writing '"+filename+"'")
+         try:
+             fd = open(filename, "w")
+-            print >>fd, self.html_header()
++            print(self.html_header(), file=fd)
+             for text in self.text:
+-                print >>fd, self._html_text(text)
+-            print >>fd, self.html_footer()
++                print(self._html_text(text), file=fd)
++            print(self.html_footer(), file=fd)
+             fd.close()
+             return True
+-        except IOError, e:
+-            print "could not open '"+filename+"'file", e
++        except IOError as e:
++            print("could not open '"+filename+"'file", e)
+             return False
+diff -ru a/docs/zzipdoc/match.py b/docs/zzipdoc/match.py
+--- a/docs/zzipdoc/match.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/match.py	2019-12-27 17:23:03.216861711 -0600
+@@ -18,7 +18,7 @@
+         MatchReplace.__call__(self, matching, template, count, flags)
+     def __call__(self, matching, template = None, count = 0, flags = None):
+         """ other than __init__ the template may be left off to be unchanged"""
+-        if isinstance(count, basestring): # count/flags swapped over?
++        if isinstance(count, str): # count/flags swapped over?
+             flags = count; count = 0
+         if isinstance(matching, Match):
+             self.matching = matching
+@@ -57,7 +57,7 @@
+     def __call__(self, pattern, flags = None):
+         assert isinstance(pattern, str) or pattern is None
+         assert isinstance(flags, str) or flags is None
+-        str.__init__(self, pattern)
++        str.__init__(self)
+         self.replaced = 0 # set by subn() inside MatchReplace
+         self.found = None # set by search() to a MatchObject
+         self.pattern = pattern
+@@ -90,14 +90,14 @@
+ if __name__ == "__main__":
+     # matching:
+     if "foo" & Match("oo"):
+-        print "oo"
++        print("oo")
+     x = Match()
+     if "foo" & x("(o+)"):
+-        print x[1]
++        print(x[1])
+     # replacing:
+     y = "fooboo" & Match("oo") >> "ee"
+-    print y
++    print(y)
+     r = Match("oo") >> "ee"
+-    print "fooboo" & r
++    print("fooboo" & r)
+     s = MatchReplace("oo", "ee")
+-    print "fooboo" & s
++    print("fooboo" & s)
+diff -ru a/docs/zzipdoc/options.py b/docs/zzipdoc/options.py
+--- a/docs/zzipdoc/options.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/options.py	2019-12-27 17:22:44.036908116 -0600
+@@ -3,13 +3,13 @@
+ # @creator (C) 2003 Guido U. Draheim
+ # @license http://creativecommons.org/licenses/by-nc-sa/2.0/de/
+ 
+-from match import Match
++from .match import Match
+ 
+ # use as o.optionname to check for commandline options.
+ class Options:
+     var = {}
+     def __getattr__(self, name):
+-        if not self.var.has_key(name): return None
++        if name not in self.var: return None
+         return self.var[name]
+     def __setattr__(self, name, value):
+         self.var[name] = value
+diff -ru a/docs/zzipdoc/textfileheader.py b/docs/zzipdoc/textfileheader.py
+--- a/docs/zzipdoc/textfileheader.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/textfileheader.py	2019-12-27 17:22:44.071908031 -0600
+@@ -1,4 +1,4 @@
+-from match import Match
++from .match import Match
+ 
+ class TextFileHeader:
+     """ scan for a comment block at the source file start and fill the
+@@ -17,7 +17,7 @@
+         x = Match()
+         text = self.textfile.get_src_text()
+         if not text:
+-            print "nonexistent file:", self.textfile.get_filename()
++            print("nonexistent file:", self.textfile.get_filename())
+             return False
+         if text & x(r"(?s)[/][*]+(\s(?:.(?!\*\/))*.)\*\/"
+                     r"(?:\s*\#(?:define|ifdef|endif)[ ]*\S*[ ]*\S*)*"
+diff -ru a/docs/zzipdoc/textfile.py b/docs/zzipdoc/textfile.py
+--- a/docs/zzipdoc/textfile.py	2019-12-27 17:22:22.058961305 -0600
++++ b/docs/zzipdoc/textfile.py	2019-12-27 17:22:44.054908072 -0600
+@@ -17,7 +17,7 @@
+             self.src_text = fd.read()
+             fd.close()
+             return True
+-        except IOError, e:
++        except IOError as e:
+             pass
+         return False
+     def assert_src_text(self):
+@@ -41,7 +41,7 @@
+         self._line(self.src_text, offset)
+     def _line(self, text, offset):
+         line = 1
+-        for x in xrange(0,offset):
++        for x in range(0,offset):
+             if x == "\n":
+                 line += 1
+         return line

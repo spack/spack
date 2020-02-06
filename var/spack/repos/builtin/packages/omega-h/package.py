@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class OmegaH(CMakePackage):
     """
 
     homepage = "https://github.com/SNLComputation/omega_h"
-    url      = "https://github.com/SNLComputation/omega_h/archive/v9.13.4.tar.gz"
+    url      = "https://github.com/SNLComputation/omega_h/archive/v9.29.0.tar.gz"
     git      = "https://github.com/SNLComputation/omega_h.git"
 
     maintainers = ['ibaned']

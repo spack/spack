@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,6 +10,7 @@ import shutil
 from llnl.util.filesystem import mkdirp, touch, working_dir
 
 from spack.package import InstallError, PackageBase, PackageStillNeededError
+import spack.error
 import spack.patch
 import spack.repo
 import spack.store
@@ -128,7 +129,7 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
 
 
 def test_installed_dependency_request_conflicts(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
@@ -136,12 +137,12 @@ def test_installed_dependency_request_conflicts(
     dependency_hash = dependency.dag_hash()
     dependent = Spec(
         'conflicting-dependent ^/' + dependency_hash)
-    with pytest.raises(spack.spec.UnsatisfiableSpecError):
+    with pytest.raises(spack.error.UnsatisfiableSpecError):
         dependent.concretize()
 
 
 def test_install_dependency_symlinks_pkg(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     """Test dependency flattening/symlinks mock package."""
     spec = Spec('flatten-deps')
     spec.concretize()
@@ -154,7 +155,7 @@ def test_install_dependency_symlinks_pkg(
 
 
 def test_flatten_deps(
-        install_mockery, mock_fetch, mutable_mock_packages):
+        install_mockery, mock_fetch, mutable_mock_repo):
     """Explicitly test the flattening code for coverage purposes."""
     # Unfortunately, executing the 'flatten-deps' spec's installation does
     # not affect code coverage results, so be explicit here.
@@ -315,14 +316,14 @@ def test_uninstall_by_spec_errors(mutable_database):
     """Test exceptional cases with the uninstall command."""
 
     # Try to uninstall a spec that has not been installed
-    rec = mutable_database.get_record('zmpi')
-    with pytest.raises(InstallError, matches="not installed"):
-        PackageBase.uninstall_by_spec(rec.spec)
+    spec = Spec('dependent-install')
+    spec.concretize()
+    with pytest.raises(InstallError, match="is not installed"):
+        PackageBase.uninstall_by_spec(spec)
 
     # Try an unforced uninstall of a spec with dependencies
     rec = mutable_database.get_record('mpich')
-
-    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+    with pytest.raises(PackageStillNeededError, match="Cannot uninstall"):
         PackageBase.uninstall_by_spec(rec.spec)
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Lbann(CMakePackage):
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
+
+    maintainers = ['bvanessen']
 
     version('develop', branch='develop')
     version('0.99', branch='develop')
@@ -46,6 +48,7 @@ class Lbann(CMakePackage):
             '(note that for v0.99 conduit is required)')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')
+    variant('extras', default=False, description='Add python modules for LBANN related tools')
 
     conflicts('@:0.90,0.99:', when='~conduit')
 
@@ -94,7 +97,6 @@ class Lbann(CMakePackage):
                '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
                '~videostab ~videoio ~vtk', when='+opencv')
 
-    depends_on('protobuf@3.6.1: build_type=Release')
     depends_on('cnpy')
     depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
 
@@ -104,19 +106,23 @@ class Lbann(CMakePackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99:')
-    depends_on('py-configparser', type='run', when='@:0.90,0.99:')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99:')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99:')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99:')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99:')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99:')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99:')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
+    depends_on('py-configparser', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +extras')
+    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-pytest', type='test', when='@:0.90,0.99:')
+    depends_on('py-protobuf+cpp@3.6.1:', type=('build', 'run'), when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
+    depends_on('catch2', type='test')
+    depends_on('clara')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -153,7 +159,10 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
-            '-DLBANN_VERBOSE=0'])
+            '-DLBANN_VERBOSE=0',
+            '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
+            # protobuf is included by py-protobuf+cpp
+            '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
 
         if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
             args.extend([

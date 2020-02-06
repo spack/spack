@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Rust(Package):
     git      = "https://github.com/rust-lang/rust.git"
 
     version('develop', branch='master')
+    version('1.41.0', tag='1.41.0')
     version('1.34.0', tag='1.34.0')
     version('1.32.0', tag='1.32.0')
     version('1.31.1', tag='1.31.1')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -237,7 +237,7 @@ class Julia(Package):
         if "+plot" in spec:
             julia("-e", pkgstart + 'Pkg.add("PyPlot"); using PyPlot')
             julia("-e", pkgstart + 'Pkg.add("Colors"); using Colors')
-            # These require maybe gtk and image-magick
+            # These require maybe gtk and imagemagick
             julia("-e", pkgstart + 'Pkg.add("Plots"); using Plots')
             julia("-e", pkgstart + 'Pkg.add("PlotRecipes"); using PlotRecipes')
             julia(

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Gsl(AutotoolsPackage):
+class Gsl(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Scientific Library (GSL) is a numerical library for C and C++
     programmers. It is free software under the GNU General Public License. The
     library provides a wide range of mathematical routines such as random
@@ -15,7 +15,7 @@ class Gsl(AutotoolsPackage):
     over 1000 functions in total with an extensive test suite."""
 
     homepage = "http://www.gnu.org/software/gsl"
-    url      = "https://ftpmirror.gnu.org/gsl/gsl-2.3.tar.gz"
+    gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
 
     version('2.5', sha256='0460ad7c2542caaddc6729762952d345374784100223995eb14d614861f2258d')
     version('2.4',   sha256='4d46d07b946e7b31c19bbf33dda6204d7bedc2f5462a1bae1d4013426cd1ce9b')

@@ -1,10 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Gnutls(AutotoolsPackage):
@@ -49,11 +48,10 @@ class Gnutls(AutotoolsPackage):
         url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
         if '+guile' in spec:
-            build_env.set('GUILE', os.path.join(spec["guile"].prefix.bin,
-                                                'guile'))
+            env.set('GUILE', spec["guile"].prefix.bin.guile)
 
     def configure_args(self):
         spec = self.spec

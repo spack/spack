@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
+import sys
 
 
 class IntelTbb(Package):
@@ -17,7 +18,11 @@ class IntelTbb(Package):
     """
     homepage = "http://www.threadingbuildingblocks.org/"
 
+    # Note: when adding new versions, please check and update the
+    # patches and filters below as needed.
+
     # See url_for_version() below.
+
     version('2020.1', sha256='48d51c63b16787af54e1ee4aaf30042087f20564b4eecf9a032d5568bc2f0bf8')
     version('2020.0', sha256='8eed2377ac62e6ac10af5a8303ce861e4525ffe491a061b48e8fe094fc741ce9')
     version('2019.9', sha256='15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe')
@@ -56,6 +61,16 @@ class IntelTbb(Package):
 
     provides('tbb')
 
+    # Clang builds incorrectly determine GCC version which in turn incorrectly
+    # causes a mismatch in C++ features resulting in a link error. This also
+    # means that clang builds require a gcc compiler to work correctly (this
+    # has always been the case).
+    #
+    #    See https://github.com/intel/tbb/pull/147 for details.
+    #
+    conflicts('%clang', when='@:2019.6',
+              msg='2019.7 or later required for clang')
+
     conflicts('%gcc@6.1:', when='@:4.4.3',
               msg='4.4.4 or later required for GCC >= 6.1.')
 
@@ -71,65 +86,21 @@ class IntelTbb(Package):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
+    # Testing version ranges inside when clauses was fixed in e9ee9eaf.
+    # See: #8957 and #13989.
+
     # Build and install CMake config files if we're new enough.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+    # CMake support started in 2017.7.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
 
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
-    # specified one at a time.  In a nutshell, it is currently impossible
-    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
-    # can be simplified.
-
-    # Deactivate use of RTM with GCC when on an OS with an elderly assembler.
-    # one patch format for 2019.1 and after...
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.1 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2020.0 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.9 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.8 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.7 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.6 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.5 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.4 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.3 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.2 %gcc@4.8.0: os=centos6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key_2019U1.patch", level=0, when='@2019.1 %gcc@4.8.0: os=centos6')
-    # ...another patch file for 2019 and before
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=rhel6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=scientific6')
-    patch("tbb_gcc_rtm_key.patch", level=0, when='@:2019.0 %gcc@4.8.0: os=centos6')
-
-    # patch for pedantic warnings (#10836)
-    # one patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.4')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.3')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.2')
-    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1')
-    # ...another patch file for 2019 and before
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
+    # Patch for pedantic warnings (#10836).  This was fixed in the TBB
+    # source tree in 2019.6.
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1:2019.5')
+    patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -159,6 +130,14 @@ class IntelTbb(Package):
                         of.write(l)
 
     def install(self, spec, prefix):
+        # Deactivate use of RTM with GCC when on an OS with a very old
+        # assembler.
+        if (spec.satisfies('%gcc@4.8.0: os=rhel6')
+            or spec.satisfies('%gcc@4.8.0: os=centos6')
+            or spec.satisfies('%gcc@4.8.0: os=scientific6')):
+            filter_file(r'RTM_KEY.*=.*rtm.*', 'RTM_KEY =',
+                        join_path('build', 'linux.gcc.inc'))
+
         # We need to follow TBB's compiler selection logic to get the proper
         # build + link flags but we still need to use spack's compiler wrappers
         # to accomplish this, we do two things:
@@ -218,7 +197,7 @@ class IntelTbb(Package):
             for f in fs:
                 install(f, prefix.lib)
 
-        if self.spec.satisfies('@2017.0:'):
+        if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
             cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
                           '-DTBB_OS={0}'.format(platform.system()),
@@ -226,3 +205,9 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)

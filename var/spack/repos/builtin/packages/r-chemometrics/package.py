@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,9 @@ from spack import *
 
 
 class RChemometrics(RPackage):
-    """R companion to the book "Introduction to Multivariate Statistical Analysis
-    in Chemometrics" written by K. Varmuza and P. Filzmoser (2009)."""
+    """R companion to the book "Introduction to Multivariate Statistical
+       Analysis in Chemometrics" written by K. Varmuza and P. Filzmoser
+       (2009)."""
 
     homepage = "https://cloud.r-project.org/package=chemometrics"
     url      = "https://cloud.r-project.org/src/contrib/chemometrics_1.4.2.tar.gz"

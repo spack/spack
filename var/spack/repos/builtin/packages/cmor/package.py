@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,8 +24,8 @@ class Cmor(AutotoolsPackage):
     variant('python', default=False, description='Enable PYTHON support')
 
     depends_on('uuid')
-    depends_on('netcdf')
-    depends_on('udunits2')
+    depends_on('netcdf-c')
+    depends_on('udunits')
     depends_on('hdf5@:1.8.19')
 
     extends('python', when='+python')

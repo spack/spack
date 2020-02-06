@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Openldap(AutotoolsPackage):
     """
 
     homepage = "https://www.openldap.org/"
-    url      = "ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.9.tgz"
+    url      = "ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.48.tgz"
 
     version('2.4.48', sha256='d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d')
 

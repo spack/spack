@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 import sys
 import pytest
 
-from spack.spec import Spec, UnsatisfiableSpecError, SpecError
-from spack.spec import substitute_abstract_variants
-from spack.spec import SpecFormatSigilError, SpecFormatStringError
-from spack.variant import InvalidVariantValueError
+from spack.error import SpecError, UnsatisfiableSpecError
+from spack.spec import Spec, SpecFormatSigilError, SpecFormatStringError
+from spack.variant import InvalidVariantValueError, UnknownVariantError
 from spack.variant import MultipleValuesInExclusiveVariantError
+from spack.variant import substitute_abstract_variants
 
 import spack.architecture
 import spack.directives
@@ -981,3 +981,9 @@ class TestSpecSematics(object):
     def test_target_constraints(self, spec, constraint, expected_result):
         s = Spec(spec)
         assert s.satisfies(constraint) is expected_result
+
+    @pytest.mark.regression('13124')
+    def test_error_message_unknown_variant(self):
+        s = Spec('mpileaks +unknown')
+        with pytest.raises(UnknownVariantError, match=r'package has no such'):
+            s.concretize()

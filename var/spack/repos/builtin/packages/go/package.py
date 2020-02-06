@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,18 @@ class Go(Package):
 
     extendable = True
 
+    version('1.13.6', sha256='aae5be954bdc40bcf8006eb77e8d8a5dde412722bc8effcdaf9772620d06420c')
+    version('1.13.5', sha256='27d356e2a0b30d9983b60a788cf225da5f914066b37a6b4f69d457ba55a626ff')
+    version('1.13.4',  sha256='95dbeab442ee2746b9acf0934c8e2fc26414a0565c008631b04addb8c02e7624')
+    version('1.13.3', sha256='4f7123044375d5c404280737fbd2d0b17064b66182a65919ffe20ffe8620e3df')
+    version('1.13.2', sha256='1ea68e01472e4276526902b8817abd65cf84ed921977266f0c11968d5e915f44')
     version('1.13.1', sha256='81f154e69544b9fa92b1475ff5f11e64270260d46e7e36c34aafc8bc96209358')
     version('1.13', sha256='3fc0b8b6101d42efd7da1da3029c0a13f22079c0c37ef9730209d8ec665bf122')
+    version('1.12.15', sha256='8aba74417e527524ad5724e6e6c21016795d1017692db76d1b0851c6bdec84c3')
+    version('1.12.14', sha256='39dbf05f7e2ffcb19b08f07d53dcc96feadeb1987fef9e279e7ff0c598213064')
+    version('1.12.13', sha256='5383d3b8db4baa48284ffcb14606d9cad6f03e9db843fa6d835b94d63cccf5a7')
+    version('1.12.12', sha256='fcb33b5290fa9bcc52be3211501540df7483d7276b031fc77528672a3c705b99')
+    version('1.12.11', sha256='fcf58935236802929f5726e96cd1d900853b377bec2c51b2e37219c658a4950f')
     version('1.12.10', sha256='f56e48fce80646d3c94dcf36d3e3f490f6d541a92070ad409b87b6bbb9da3954')
     version('1.12.9', sha256='ab0e56ed9c4732a653ed22e232652709afbf573e710f56a07f7fdeca578d62fc')
     version('1.12.8', sha256='11ad2e2e31ff63fcf8a2bdffbe9bfa2e1845653358daed593c8c2d03453c9898')
@@ -104,12 +114,12 @@ class Go(Package):
 
         install_tree(wd, prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GOROOT_FINAL', self.spec.prefix)
+    def setup_build_environment(self, env):
+        env.set('GOROOT_FINAL', self.spec.prefix)
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
-        spack_env.set('CC_FOR_TARGET', self.compiler.cc)
-        spack_env.set('CXX_FOR_TARGET', self.compiler.cxx)
+        env.set('CC_FOR_TARGET', self.compiler.cc)
+        env.set('CXX_FOR_TARGET', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before go modules' install() methods.
@@ -123,19 +133,24 @@ class Go(Package):
         #  Add a go command/compiler for extensions
         module.go = self.spec['go'].command
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def generate_path_components(self, dependent_spec):
         if os.environ.get('GOROOT', False):
             tty.warn('GOROOT is set, this is not recommended')
 
+        # Set to include paths of dependencies
         path_components = []
-        # Set GOPATH to include paths of dependencies
         for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 path_components.append(d.prefix)
+        return path_components
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # This *MUST* be first, this is where new code is installed
-        spack_env.set('GOPATH', ':'.join(path_components))
+        env.set('GOPATH', ':'.join(self.generate_path_components(
+            dependent_spec)))
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
         # Allow packages to find this when using module files
-        run_env.prepend_path('GOPATH', ':'.join(
-            [dependent_spec.prefix] + path_components))
+        env.prepend_path('GOPATH', ':'.join(
+            [dependent_spec.prefix] + self.generate_path_components(
+                dependent_spec)))

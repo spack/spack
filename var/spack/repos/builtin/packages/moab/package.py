@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,8 +39,6 @@ class Moab(AutotoolsPackage):
             description='Required to enable the ExodusII reader/writer.')
     variant('pnetcdf', default=False,
             description='Enable pnetcdf (AKA parallel-netcdf) support')
-    variant('netcdf', default=False,
-            description='Required to enable the ExodusII reader/writer.')
     variant('zoltan', default=False, description='Enable zoltan support')
     variant('cgm', default=False, description='Enable common geometric module')
     variant('metis', default=True, description='Enable metis link')
@@ -77,7 +75,7 @@ class Moab(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('parallel-netcdf', when='+pnetcdf')
     depends_on('cgm', when='+cgm')
     depends_on('metis', when='+metis')
@@ -129,7 +127,7 @@ class Moab(AutotoolsPackage):
             options.append('--without-hdf5')
 
         if '+netcdf' in spec:
-            options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+            options.append('--with-netcdf=%s' % spec['netcdf-c'].prefix)
         else:
             options.append('--without-netcdf')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,13 +8,13 @@ from spack.operating_systems.mac_os import macos_version
 import sys
 
 
-class Bison(AutotoolsPackage):
+class Bison(AutotoolsPackage, GNUMirrorPackage):
     """Bison is a general-purpose parser generator that converts
     an annotated context-free grammar into a deterministic LR or
     generalized LR (GLR) parser employing LALR(1) parser tables."""
 
     homepage = "https://www.gnu.org/software/bison/"
-    url      = "https://ftpmirror.gnu.org/bison/bison-3.4.2.tar.gz"
+    gnu_mirror_path = "bison/bison-3.4.2.tar.gz"
 
     version('3.4.2', sha256='ff3922af377d514eca302a6662d470e857bd1a591e96a2050500df5a9d59facf')
     version('3.0.5', sha256='cd399d2bee33afa712bac4b1f4434e20379e9b4099bce47189e09a7675a2d566')
@@ -30,6 +30,9 @@ class Bison(AutotoolsPackage):
     depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
+
+    conflicts('%intel@:14', when='@3.4.2:',
+              msg="Intel 14 has immature C11 support")
 
     if sys.platform == 'darwin' and macos_version() >= Version('10.13'):
         patch('secure_snprintf.patch', level=0, when='@3.0.4')

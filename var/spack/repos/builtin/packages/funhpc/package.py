@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Funhpc(CMakePackage):
     """FunHPC: Functional HPC Programming"""
 
     homepage = "https://github.com/eschnett/FunHPC.cxx"
-    url      = "https://github.com/eschnett/FunHPC.cxx/archive/version/0.1.0.tar.gz"
+    url      = "https://github.com/eschnett/FunHPC.cxx/archive/version/1.3.0.tar.gz"
     git      = "https://github.com/eschnett/FunHPC.cxx.git"
 
     version('develop', branch='master')

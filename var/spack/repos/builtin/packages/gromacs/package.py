@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,14 +25,21 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('develop', branch='master')
+    version('2020', sha256='477e56142b3dcd9cb61b8f67b24a55760b04d1655e8684f979a75a5eec40ba01')
+    version('2019.5', sha256='438061a4a2d45bbb5cf5c3aadd6c6df32d2d77ce8c715f1c8ffe56156994083a')
+    version('2019.4', sha256='ba4366eedfc8a1dbf6bddcef190be8cd75de53691133f305a7f9c296e5ca1867')
+    version('2019.3', sha256='4211a598bf3b7aca2b14ad991448947da9032566f13239b1a05a2d4824357573')
     version('2019.2', sha256='bcbf5cc071926bc67baa5be6fb04f0986a2b107e1573e15fadcb7d7fc4fb9f7e')
     version('2019.1', sha256='b2c37ed2fcd0e64c4efcabdc8ee581143986527192e6e647a197c76d9c4583ec')
     version('2019', sha256='c5b281a5f0b5b4eeb1f4c7d4dc72f96985b566561ca28acc9c7c16f6ee110d0b')
+    version('2018.8', sha256='776923415df4bc78869d7f387c834141fdcda930b2e75be979dc59ecfa6ebecf')
+    version('2018.5', sha256='32261df6f7ec4149fc0508f9af416953d056e281590359838c1ed6644ba097b8')
     version('2018.4', sha256='6f2ee458c730994a8549d6b4f601ecfc9432731462f8bd4ffa35d330d9aaa891')
     version('2018.3', sha256='4423a49224972969c52af7b1f151579cea6ab52148d8d7cbae28c183520aa291')
     version('2018.2', sha256='4bdde8120c510b6543afb4b18f82551fddb11851f7edbd814aa24022c5d37857')
     version('2018.1', sha256='4d3533340499323fece83b4a2d4251fa856376f2426c541e00b8e6b4c0d705cd')
     version('2018',   sha256='deb5d0b749a52a0c6083367b5f50a99e08003208d81954fb49e7009e1b1fd0e9')
+    version('2016.6', sha256='bac0117d2cad21f9b94fe5b854fb9ae7435b098a6da4e732ee745f18e52473d7')
     version('2016.5', sha256='57db26c6d9af84710a1e0c47a1f5bf63a22641456448dcd2eeb556ebd14e0b7c')
     version('2016.4', sha256='4be9d3bfda0bdf3b5c53041e0b8344f7d22b75128759d9bfa9442fe65c289264')
     version('2016.3', sha256='7bf00e74a9d38b7cef9356141d20e4ba9387289cbbfd4d11be479ef932d77d27')
@@ -65,6 +72,7 @@ class Gromacs(CMakePackage):
             ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True, description='Enables OpenMP at configure time')
     variant('double_precision', default=False, description='Enables a double-precision configuration')
+    variant('hwloc', default=True, description='Use the hwloc portable hardware locality library')
 
     depends_on('mpi', when='+mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
@@ -74,7 +82,10 @@ class Gromacs(CMakePackage):
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cuda', when='+cuda')
 
-    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:^cmake@3.14.0:')
+    # TODO: openmpi constraint; remove when concretizer is fixed
+    depends_on('hwloc@:1.999', when='+hwloc')
+
+    patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
 
     def patch(self):
@@ -93,6 +104,11 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+
+        if '+hwloc' in self.spec:
+            options.append('-DGMX_HWLOC:BOOL=ON')
+        else:
+            options.append('-DGMX_HWLOC:BOOL=OFF')
 
         if '+cuda' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')

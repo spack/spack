@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Bash(AutotoolsPackage):
+class Bash(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Project's Bourne Again SHell."""
 
     homepage = "https://www.gnu.org/software/bash/"
-    url      = "https://ftpmirror.gnu.org/bash/bash-4.4.tar.gz"
+    gnu_mirror_path = "bash/bash-4.4.tar.gz"
 
     version('5.0',    sha256='b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d')
     version('4.4.12', sha256='57d8432be54541531a496fd4904fdc08c12542f43605a9202594fa5d5f9f2331')
@@ -35,6 +35,7 @@ class Bash(AutotoolsPackage):
         ('5.0', '011', '2c4de332b91eaf797abbbd6c79709690b5cbd48b12e8dfe748096dbd7bf474ea'),
     ]
 
+    # TODO: patches below are not managed by the GNUMirrorPackage base class
     for ver, num, checksum in patches:
         ver = Version(ver)
         patch('https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}'.format(ver, ver.joined, num),

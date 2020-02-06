@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,6 +117,10 @@ class Qt(Package):
     patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
     patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
+    # patch overflow builtins
+    patch('qt5_11-intel-overflow.patch', when='@5.11')
+    patch('qt5_12-intel-overflow.patch', when='@5.12:')
+
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
     depends_on("flex", when='+webkit', type='build')
@@ -135,11 +139,12 @@ class Qt(Package):
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
     depends_on("sqlite", when='+sql', type=('build', 'run'))
+    depends_on("sqlite+column_metadata", when='+sql%intel', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl~krellpatch')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
@@ -160,7 +165,8 @@ class Qt(Package):
         depends_on("xcb-util-keysyms")
         depends_on("xcb-util-renderutil")
         depends_on("xcb-util-wm")
-        depends_on("libxext", when='@3:4.99')
+        depends_on("libxext")
+        depends_on("libxrender")
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
@@ -168,6 +174,10 @@ class Qt(Package):
                   msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
+
+    # Mapping for compilers/systems in the QT 'mkspecs'
+    compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+    platform_mapping = {'darwin': 'macx'}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -217,6 +227,25 @@ class Qt(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
+
+    def get_mkspec(self):
+        """Determine the mkspecs root directory and QT platform.
+        """
+        spec = self.spec
+        cname = spec.compiler.name
+        cname = self.compiler_mapping.get(cname, cname)
+        pname = spec.architecture.platform
+        pname = self.platform_mapping.get(pname, pname)
+
+        qtplat = None
+        mkspec_dir = 'qtbase/mkspecs' if spec.satisfies('@5:') else 'mkspecs'
+        for subdir in ('', 'unsupported'):
+            platdirname = "".join([subdir, pname, "-", cname])
+            if os.path.exists(os.path.join(mkspec_dir, platdirname)):
+                qtplat = platdirname
+                break
+
+        return (mkspec_dir, qtplat)
 
     @when('@4 platform=darwin')
     def patch(self):
@@ -275,32 +304,40 @@ class Qt(Package):
         ]
         filter_file(r'(\+=.*)debug_and_release', r'\1', *files_to_filter)
 
-    @when('@4')  # *NOT* darwin/mac
+    @when('@4: %gcc')  # *NOT* darwin/mac gcc
     def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        def conf(name):
+            return os.path.join(mkspec_dir, 'common', name + '.conf')
+
         # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc', conf('g++-base'))
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++', conf('g++-base'))
 
-        # Necessary to build with GCC 6 and other modern compilers
-        # http://stackoverflow.com/questions/10354371/
-        filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
-                    'mkspecs/common/gcc-base.conf')
-
+        # Don't error out on undefined symbols
         filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'mkspecs/common/g++-unix.conf')
+                    conf('g++-unix'))
 
-    @when('@5')
+        if self.spec.satisfies('@4'):
+            # Necessary to build with GCC 6 and other modern compilers
+            # http://stackoverflow.com/questions/10354371/
+            with open(conf('gcc-base'), 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    @when('@4: %intel')
     def patch(self):
-        # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'qtbase/mkspecs/common/g++-base.conf')
+        (mkspec_dir, platform) = self.get_mkspec()
+        conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
 
-        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'qtbase/mkspecs/common/g++-unix.conf')
+        # Intel's `ar` equivalent might not be in the path: replace it with
+        # explicit
+        xiar = os.path.join(os.path.dirname(self.compiler.cc), 'xiar')
+        filter_file(r'\bxiar\b', xiar, conf_file)
+
+        if self.spec.satisfies('@4'):
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @property
     def common_config_args(self):
@@ -314,8 +351,8 @@ class Qt(Package):
             '-release',
             '-confirm-license',
             '-openssl-linked',
-            '{0}'.format(openssl.libs.search_flags),
-            '{0}'.format(openssl.headers.include_flags),
+            openssl.libs.search_flags,
+            openssl.headers.include_flags,
             '-optimized-qmake',
             '-no-pch',
         ]
@@ -339,7 +376,11 @@ class Qt(Package):
             config_args.append('-no-openssl')
 
         if '+sql' in self.spec:
-            config_args.append('-system-sqlite')
+            sqlite = self.spec['sqlite']
+            config_args.extend([
+                '-system-sqlite',
+                '-R', sqlite.prefix.lib,
+            ])
         else:
             comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
                      'sqlite', 'sqlite2']
@@ -356,19 +397,19 @@ class Qt(Package):
             harfbuzz = self.spec['harfbuzz']
             config_args.extend([
                 '-system-harfbuzz',
-                '{0}'.format(harfbuzz.libs.search_flags),
-                '{0}'.format(harfbuzz.headers.include_flags),
+                harfbuzz.libs.search_flags,
+                harfbuzz.headers.include_flags,
                 '-system-pcre',
-                '{0}'.format(pcre.libs.search_flags),
-                '{0}'.format(pcre.headers.include_flags)
+                pcre.libs.search_flags,
+                pcre.headers.include_flags
             ])
 
         if self.spec.satisfies('@5.7:'):
             dc = self.spec['double-conversion']
             config_args.extend([
                 '-system-doubleconversion',
-                '{0}'.format(dc.libs.search_flags),
-                '{0}'.format(dc.headers.include_flags)
+                dc.libs.search_flags,
+                dc.headers.include_flags
             ])
 
         if '@:5.7.1' in self.spec:
@@ -376,19 +417,27 @@ class Qt(Package):
         else:
             # FIXME: those could work for other versions
             png = self.spec['libpng']
+            config_args.append('-system-libpng')
+            if not png.external:
+                config_args.extend([
+                    png.libs.search_flags,
+                    png.headers.include_flags
+                ])
+
             jpeg = self.spec['jpeg']
+            config_args.append('-system-libjpeg')
+            if not jpeg.external:
+                config_args.extend([
+                    jpeg.libs.search_flags,
+                    jpeg.headers.include_flags,
+                ])
             zlib = self.spec['zlib']
-            config_args.extend([
-                '-system-libpng',
-                '{0}'.format(png.libs.search_flags),
-                '{0}'.format(png.headers.include_flags),
-                '-system-libjpeg',
-                '{0}'.format(jpeg.libs.search_flags),
-                '{0}'.format(jpeg.headers.include_flags),
-                '-system-zlib',
-                '{0}'.format(zlib.libs.search_flags),
-                '{0}'.format(zlib.headers.include_flags)
-            ])
+            config_args.append('-system-zlib')
+            if not zlib.external:
+                config_args.extend([
+                    zlib.libs.search_flags,
+                    zlib.headers.include_flags
+                ])
 
         if '@:5.7.0' in self.spec:
             config_args.extend([
@@ -415,21 +464,12 @@ class Qt(Package):
         if MACOS_VERSION:
             config_args.append('-{0}framework'.format(
                 '' if '+framework' in self.spec else 'no-'))
-        if '@5:' in self.spec and MACOS_VERSION:
-            config_args.extend([
-                '-no-xcb-xlib',
-                '-no-pulseaudio',
-                '-no-alsa',
-            ])
-            if self.spec.satisfies('@:5.11'):
-                config_args.append('-no-xinput2')
 
-        # FIXME: else: -system-xcb ?
+        (_, qtplat) = self.get_mkspec()
+        if qtplat is not None:
+            config_args.extend(['-platform', qtplat])
 
         return config_args
-
-    # Don't disable all the database drivers, but should
-    # really get them into spack at some point.
 
     @when('@3')
     def configure(self, spec, prefix):
@@ -472,51 +512,56 @@ class Qt(Package):
             sdkpath = which('xcrun')('--show-sdk-path', output=str).strip()
             config_args.extend([
                 '-cocoa',
-                '-platform', 'unsupported/macx-clang-libc++',
                 '-sdk', sdkpath])
 
         configure(*config_args)
 
-    @when('@5.0:5.6')
-    def configure(self, spec, prefix):
-        webkit_args = [] if '+webkit' in spec else ['-skip', 'qtwebkit']
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtkstyle'.format('' if '+gtk' in spec else 'no-'),
-                  *(webkit_args + self.common_config_args))
-
-    @when('@5.7:')
+    @when('@5')
     def configure(self, spec, prefix):
         config_args = self.common_config_args
+        version = self.version
 
-        if not MACOS_VERSION:
+        config_args.extend([
+            '-no-eglfs',
+            '-no-directfb',
+            '-{0}gtk{1}'.format(
+                '' if '+gtk' in spec else 'no-',
+                '' if version >= Version('5.7') else 'style')
+        ])
+
+        if MACOS_VERSION:
             config_args.extend([
-                '-system-xcb',
+                '-no-xcb-xlib',
+                '-no-pulseaudio',
+                '-no-alsa',
             ])
+            if version < Version('5.12'):
+                config_args.append('-no-xinput2')
+        else:
+            # Linux-only QT5 dependencies
+            config_args.append('-system-xcb')
 
         if '~webkit' in spec:
             config_args.extend([
-                '-skip', 'webengine',
+                '-skip',
+                'webengine' if version >= Version('5.7') else 'qtwebkit',
             ])
 
-        if '~opengl' in spec and spec.satisfies('@5.10:'):
-            config_args.extend([
-                '-skip', 'webglplugin',
-            ])
+        if spec.satisfies('@5.7'):
+            config_args.extend(['-skip', 'virtualkeyboard'])
 
-        if self.version > Version('5.8'):
+        if version >= Version('5.8'):
             # relies on a system installed wayland, i.e. no spack package yet
             # https://wayland.freedesktop.org/ubuntu16.04.html
             # https://wiki.qt.io/QtWayland
             config_args.extend(['-skip', 'wayland'])
 
-        if spec.satisfies('@5.7'):
-            config_args.extend(['-skip', 'virtualkeyboard'])
+        if version >= Version('5.10') and '~opengl' in spec:
+            config_args.extend([
+                '-skip', 'webglplugin',
+            ])
 
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtk'.format('' if '+gtk' in spec else 'no-'),
-                  *config_args)
+        configure(*config_args)
 
     def build(self, spec, prefix):
         make()
