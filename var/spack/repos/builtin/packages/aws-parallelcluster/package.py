@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class AwsParallelcluster(PythonPackage):
@@ -12,8 +13,15 @@ class AwsParallelcluster(PythonPackage):
 
     homepage = "https://github.com/aws/aws-parallelcluster"
     url      = "https://pypi.io/packages/source/a/aws-parallelcluster/aws-parallelcluster-2.5.1.tar.gz"
-    maintainers = ['sean-smith', 'demartinofra', 'enrico-usai',
-                   'lukeseawalker', 'rexcsn', 'ddeidda', 'tilne']
+
+    maintainers = [
+        'sean-smith', 'demartinofra', 'enrico-usai', 'lukeseawalker', 'rexcsn',
+        'ddeidda', 'tilne'
+    ]
+    import_modules = [
+        'pcluster', 'awsbatch', 'pcluster.dcv', 'pcluster.configure',
+        'pcluster.config', 'pcluster.networking'
+    ]
 
     version('2.5.1', sha256='4fd6e14583f8cf81f9e4aa1d6188e3708d3d14e6ae252de0a94caaf58be76303')
     version('2.5.0', sha256='3b0209342ea0d9d8cc95505456103ad87c2d4e35771aa838765918194efd0ad3')
@@ -30,3 +38,12 @@ class AwsParallelcluster(PythonPackage):
 
     # https://github.com/aws/aws-parallelcluster/pull/1633
     patch('enum34.patch', when='@:2.5.1')
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
+        # Make sure executables work
+        for exe in ['awsbhosts', 'awsbkill', 'awsbout', 'awsbqueues',
+                    'awsbstat', 'awsbsub', 'pcluster']:
+            exe = Executable(os.path.join(self.prefix.bin, exe))
+            exe('--help')
