@@ -73,6 +73,10 @@ properties = {
                 ],
             },
             'metrics': {'type': 'boolean'},
+            'metrcis_address': [
+                {'type': 'string'},
+                {'type': 'integer'}
+            ]
         },
     },
 }

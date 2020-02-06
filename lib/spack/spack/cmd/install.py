@@ -228,16 +228,23 @@ def install_spec(cli_args, kwargs, abstract_spec, spec):
     """Do the actual installation."""
 
     try:
+        # Handle metrics logging if enabled
         if spack.config.get('config:metrics'):
             # Logs spec to install to syslog for metrics collection
             config_path = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(config_path, '../metrics_logger.yaml')
             with open(config_path, 'r') as f:
-                yaml_content = syaml.load(f)
-            logging.config.dictConfig(yaml_content)
+                yaml_dict = syaml.load(f)
+            logging.config.dictConfig(yaml_dict)
             if sys.platform == 'darwin':
+                if spack.config.get('config:metrics_address'):
+                    addr = spack.config.get('config:metrics_address')
+                    yaml_dict['handlers']['handler_darwin']['address'] = addr
                 logger = logging.getLogger('metrics_darwin')
             else:
+                if spack.config.get('config:metrics_address'):
+                    addr = spack.config.get('config:metrics_address')
+                    yaml_dict['handlers']['handler_linux']['address'] = addr
                 logger = logging.getLogger('metrics_linux')
             logger.info("SPACK_INSTALL: " + str(spec))
 
