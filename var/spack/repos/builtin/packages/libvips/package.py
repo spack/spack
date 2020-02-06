@@ -15,28 +15,31 @@ class Libvips(AutotoolsPackage):
     url      = "https://github.com/libvips/libvips/releases/download/v8.9.0/vips-8.9.0.tar.gz"
     git      = "https://github.com/libvips/libvips.git"
 
-    version('develop', branch='master')
-    version('8.9.0', sha256="97334a5e70aff343d2587f23cb8068fc846a58cd937c89a446142ccf00ea0349")
-    version('8.7.4', sha256="ce7518a8f31b1d29a09b3d7c88e9852a5a2dcb3ee1501524ab477e433383f205")
+    version('8.9.1', sha256='45633798877839005016c9d3494e98dee065f5cb9e20f4552d3b315b8e8bce91', preferred=True)
+    version('8.9.0', sha256='97334a5e70aff343d2587f23cb8068fc846a58cd937c89a446142ccf00ea0349')
 
-    # Necessary dependencies
+    variant('fftw', default=True,
+            description='Uses FFTW3 for fourier transforms.')
+
+    variant('jpeg', default=False,
+            description='Enable JPEG support')
+
+    variant('tiff', default=False,
+            description='Enable TIFF support')
+
+    variant('png', default=False,
+            description='Enable pngfile support')
+
+    variant('poppler', default=False,
+            description='Enable PDF rendering via poppler')
+
+    # TODO: Add more variants! 
+    
     depends_on('glib')
     depends_on('expat')
 
-    # Optional, split into variants!
-    depends_on('gobject-introspection')
-    depends_on('swig',when='@develop')
-    depends_on('libjpeg')
-    depends_on('libtiff')
-    depends_on('poppler')
-    depends_on('libtiff')
-    depends_on('fftw')
-    depends_on('lcms')
-    depends_on('libpng')
-
-
-    def configure_args(self):
-        args = []
-        args.append('--enable-gtk-doc=no')
-        return args
-
+    depends_on('fftw', when='+fftw')
+    depends_on('libjpeg', when='+jpeg')
+    depends_on('libtiff', when='+tiff')
+    depends_on('libpng', when='+png')
+    depends_on('poppler', when='+poppler')
