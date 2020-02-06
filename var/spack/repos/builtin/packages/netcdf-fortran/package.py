@@ -42,18 +42,18 @@ class NetcdfFortran(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name in ['cflags', 'fflags'] and '+pic' in self.spec:
-            flags.append(self.compiler.pic_flag)
+            return flags, None, [self.compiler.pic_flag]
         elif name == 'cppflags':
-            flags.append(self.spec['netcdf-c'].headers.cpp_flags)
+            return flags, None, [self.spec['netcdf-c'].headers.cpp_flags]
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
             # could correctly link to all the dependencies even when the
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
-            flags.append(self.spec['netcdf-c'].libs.search_flags)
-
-        return None, None, flags
+            return flags, None, [self.spec['netcdf-c'].libs.search_flags]
+        else:
+            return flags, None, None
 
     @property
     def libs(self):
