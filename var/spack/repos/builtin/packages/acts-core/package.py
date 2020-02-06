@@ -80,7 +80,7 @@ class ActsCore(CMakePackage):
     depends_on('nlohmann-json @3.2.0:', when='@0.14.0: +json')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.10: cxxstd=17', when='+tgeo @0.8.1:')
-    depends_on('dd4hep @1.2:', when='+dd4hep')
+    depends_on('dd4hep @1.2: +xercesc', when='+dd4hep')
 
     def cmake_args(self):
         spec = self.spec
