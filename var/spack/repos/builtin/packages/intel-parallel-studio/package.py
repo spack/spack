@@ -97,7 +97,7 @@ class IntelParallelStudio(IntelPackage):
     version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
     version('composer.2019.4',     sha256='1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
     version('composer.2019.3',     sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
-    version('composer.2019.2',     sha256='1e0f400be1f458592a8c2e7d55c1b2a4506f68f22bacbf1175af947809a4cd87 ', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15092/parallel_studio_xe_2019_update2_composer_edition.tgz')
+    version('composer.2019.2',     sha256='1e0f400be1f458592a8c2e7d55c1b2a4506f68f22bacbf1175af947809a4cd87', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15092/parallel_studio_xe_2019_update2_composer_edition.tgz')
     version('composer.2019.1',     sha256='db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('composer.2019.0',     sha256='e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
     #
