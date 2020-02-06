@@ -24,6 +24,6 @@ class AwsParallelcluster(PythonPackage):
     depends_on('py-future@0.16.0:0.18.2', type=('build', 'run'))
     depends_on('py-tabulate@0.8.2:0.8.3', type=('build', 'run'))
     depends_on('py-ipaddress@1.0.22:', type=('build', 'run'))
-    depends_on('py-enum34@1.1.6:', when='^python@:3.3', type=('build', 'run'))
+    depends_on('py-enum34@1.1.6:', type=('build', 'run'))
     depends_on('py-pyyaml@5.1.2:', type=('build', 'run'))
     depends_on('py-configparser@3.5.0:3.8.1', when='^python@:2', type=('build', 'run'))
