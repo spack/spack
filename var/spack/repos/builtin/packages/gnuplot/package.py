@@ -26,6 +26,7 @@ class Gnuplot(AutotoolsPackage):
     # dependency of readline. Fix it with a small patch
     patch('term_include.patch')
 
+    version('5.2.8', sha256='60a6764ccf404a1668c140f11cc1f699290ab70daa1151bb58fed6139a28ac37')
     version('5.2.7', sha256='97fe503ff3b2e356fe2ae32203fc7fd2cf9cef1f46b60fe46dc501a228b9f4ed')
     version('5.2.5', sha256='039db2cce62ddcfd31a6696fe576f4224b3bc3f919e66191dfe2cdb058475caa')
     version('5.2.2', sha256='a416d22f02bdf3873ef82c5eb7f8e94146795811ef808e12b035ada88ef7b1a1')
