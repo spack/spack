@@ -33,8 +33,8 @@ class Libvips(AutotoolsPackage):
     variant('poppler', default=False,
             description='Enable PDF rendering via poppler')
 
-    # TODO: Add more variants! 
-    
+    # TODO: Add more variants!
+ 
     depends_on('glib')
     depends_on('expat')
 
