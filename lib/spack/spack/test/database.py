@@ -729,3 +729,15 @@ def test_query_unused_specs(mutable_database):
     unused = spack.store.db.unused_specs
     assert len(unused) == 1
     assert unused[0].name == 'cmake'
+
+
+@pytest.mark.regression('10019')
+def test_query_spec_with_dependency(mutable_database):
+    # The issue is triggered by having dependencies that are
+    # conditional on a Boolean variant
+    s = spack.spec.Spec('hdf5~mpi')
+    s.concretize()
+    s.package.do_install(fake=True, explicit=True)
+
+    results = spack.store.db.query_local('hdf5 ^mpich')
+    assert not results
