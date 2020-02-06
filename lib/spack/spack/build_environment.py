@@ -36,6 +36,7 @@ import inspect
 import re
 import multiprocessing
 import os
+import platform
 import shutil
 import sys
 import traceback
@@ -70,6 +71,7 @@ from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, path_from_modules, module
 from spack.util.log_parse import parse_log_events, make_log_context
+from spack.compilers import is_mixed_toolchain
 
 
 #
@@ -251,13 +253,32 @@ def set_compiler_environment_variables(pkg, env):
     env.set('SPACK_FC_RPATH_ARG',  compiler.fc_rpath_arg)
     env.set('SPACK_LINKER_ARG', compiler.linker_arg)
 
+    if platform.system() == 'Darwin':
+        # Silently disable the filtering of old/new dtags on MacOS:
+        enable_new_dtags_flag = ''
+        disable_new_dtags_flag = ''
+    elif is_mixed_toolchain(compiler):
+        # Mixed toolchains are not supported yet because compilers from
+        # different vendors might require different flags for
+        # enabling/disabling new dtags.
+        import warnings
+        msg = ('RPATH/RUNPATH forcing is not supported yet on mixed '
+               'compiler toolchains [check {0.name}@{0.version} for '
+               'further details]')
+        warnings.warn(msg.format(compiler))
+        enable_new_dtags_flag = ''
+        disable_new_dtags_flag = ''
+    else:
+        enable_new_dtags_flag = compiler.enable_new_dtags
+        disable_new_dtags_flag = compiler.disable_new_dtags
+
     # Check whether we want to force RPATH or RUNPATH
     if spack.config.get('config:shared_linking') == 'rpath':
-        env.set('SPACK_DTAGS_TO_STRIP', compiler.enable_new_dtags)
-        env.set('SPACK_DTAGS_TO_ADD', compiler.disable_new_dtags)
+        env.set('SPACK_DTAGS_TO_STRIP', enable_new_dtags_flag)
+        env.set('SPACK_DTAGS_TO_ADD', disable_new_dtags_flag)
     else:
-        env.set('SPACK_DTAGS_TO_STRIP', compiler.disable_new_dtags)
-        env.set('SPACK_DTAGS_TO_ADD', compiler.enable_new_dtags)
+        env.set('SPACK_DTAGS_TO_STRIP', disable_new_dtags_flag)
+        env.set('SPACK_DTAGS_TO_ADD', enable_new_dtags_flag)
 
     # Set the target parameters that the compiler will add
     isa_arg = spec.architecture.target.optimization_flags(compiler)

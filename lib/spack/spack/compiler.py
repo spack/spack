@@ -5,7 +5,6 @@
 
 import contextlib
 import os
-import platform
 import re
 import itertools
 import shutil
@@ -248,14 +247,10 @@ class Compiler(object):
 
     @property
     def disable_new_dtags(self):
-        if platform.system() == 'Darwin':
-            return ''
         return '--disable-new-dtags'
 
     @property
     def enable_new_dtags(self):
-        if platform.system() == 'Darwin':
-            return ''
         return '--enable-new-dtags'
 
     @property

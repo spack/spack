@@ -622,3 +622,28 @@ def test_filter_enable_new_dtags(wrapper_flags):
         result = cc(*(test_args + ['-Wl,--enable-new-dtags']), output=str)
         result = result.strip().split('\n')
         assert '-Wl,--enable-new-dtags' not in result
+
+
+@pytest.mark.regression('9160')
+def test_keep_dtags(wrapper_flags):
+    with set_env(SPACK_TEST_COMMAND='dump-args',
+                 SPACK_DTAGS_TO_ADD='',
+                 SPACK_DTAGS_TO_STRIP=''):
+        result = ld(*test_args, output=str).strip().split('\n')
+        assert '--enable-new-dtags' not in result
+        assert '--disable-new-dtags' not in result
+        result = cc(*test_args, output=str).strip().split('\n')
+        assert '-Wl,--enable-new-dtags' not in result
+        assert '-Wl,--disable-new-dtags' not in result
+
+        result = ld(*(test_args + ['--enable-new-dtags']), output=str)
+        assert '--enable-new-dtags' in result
+        result = cc(*(test_args + ['-Wl,--enable-new-dtags']), output=str)
+        result = result.strip().split('\n')
+        assert '-Wl,--enable-new-dtags' in result
+
+        result = ld(*(test_args + ['--disable-new-dtags']), output=str)
+        assert '--disable-new-dtags' in result
+        result = cc(*(test_args + ['-Wl,--disable-new-dtags']), output=str)
+        result = result.strip().split('\n')
+        assert '-Wl,--disable-new-dtags' in result

@@ -135,7 +135,7 @@ compilers:
     target: x86_64
 - compiler:
     spec: clang@8.0.0
-    operating_system: redhat7
+    operating_system: {0.name}{0.version}
     paths:
       cc: /path/to/clang-8
       cxx: /path/to/clang++-8

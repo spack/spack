@@ -316,15 +316,23 @@ def test_parallel_false_is_not_propagating(config, mock_packages):
         assert m.make_jobs == expected_jobs
 
 
-@pytest.mark.parametrize('config_setting,expected_flag', [
-    ('runpath', '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
-    ('rpath', '' if platform.system() == 'Darwin' else '--disable-new-dtags'),
+@pytest.mark.parametrize('config_setting,compiler_spec, expected_flag', [
+    # Non-mixed toolchain
+    ('runpath', 'gcc@4.5.0',
+     '' if platform.system() == 'Darwin' else '--enable-new-dtags'),
+    ('rpath', 'gcc@4.5.0',
+     '' if platform.system() == 'Darwin' else '--disable-new-dtags'),
+    # Mixed toolchain
+    ('runpath', 'clang@8.0.0', ''),
+    ('rpath', 'clang@8.0.0', ''),
 ])
+@pytest.mark.filterwarnings("ignore:microarchitecture specific")
+@pytest.mark.filterwarnings("ignore:RPATH/RUNPATH forcing")
 def test_setting_dtags_based_on_config(
-        config_setting, expected_flag, config, mock_packages
+        config_setting, compiler_spec, expected_flag, config, mock_packages
 ):
     # Pick a random package to be able to set compiler's variables
-    s = spack.spec.Spec('cmake')
+    s = spack.spec.Spec('cmake%' + compiler_spec)
     s.concretize()
     pkg = s.package
 
