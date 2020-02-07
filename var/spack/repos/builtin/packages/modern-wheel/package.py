@@ -35,6 +35,9 @@ class ModernWheel(CMakePackage):
     depends_on('boost           +system +filesystem', when='@:1.1.999')
     depends_on('boost@:1.65.999 +system +filesystem', when='@1.2:')
 
+    # add virtual destructor to BaseMultiParms class.
+    patch('add_virtual_destructor.patch')
+
     def cmake_args(self):
         spec = self.spec
         return [
