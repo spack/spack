@@ -541,7 +541,9 @@ generate_archive_module() {
 EOF
 
     for path in ${modulepaths}; do
-        [ -d "${path}" ] && echo "append-path MODULEPATH \"${path}\""
+        if [ -d "${path}" ]; then
+            echo "append-path MODULEPATH \"${path}\""
+        fi
     done
 }
 
