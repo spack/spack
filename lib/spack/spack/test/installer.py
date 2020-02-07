@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import pytest
 
 import spack.installer as inst
@@ -128,3 +129,12 @@ def test_package_id(install_mockery):
     assert spec.concrete
     pkg = spec.package
     assert pkg.name in inst.package_id(pkg)
+
+
+def test_fake_install(install_mockery):
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    pkg = spec.package
+    inst._do_fake_install(pkg)
+    assert os.path.isdir(pkg.prefix.lib)
