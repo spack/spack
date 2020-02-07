@@ -5,8 +5,6 @@
 
 from spack import *
 
-import os
-
 
 class HashTest4(Package):
     """This package isn't compared with others, but it contains constructs
