@@ -6,6 +6,7 @@
 import os
 import pytest
 
+import spack.compilers
 import spack.installer as inst
 import spack.repo
 import spack.spec
@@ -138,3 +139,11 @@ def test_fake_install(install_mockery):
     pkg = spec.package
     inst._do_fake_install(pkg)
     assert os.path.isdir(pkg.prefix.lib)
+
+
+def test_packages_needed_to_bootstrap_compiler(install_mockery):
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    assert not packages
