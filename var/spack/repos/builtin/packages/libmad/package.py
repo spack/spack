@@ -10,8 +10,7 @@ class Libmad(AutotoolsPackage):
     """MAD is a high-quality MPEG audio decoder."""
 
     homepage = "https://www.underbit.com/products/mad/"
-    url      = "ftp://ftp.mars.org/pub/mpeg/libmad-0.15.1b.tar.gz"
-    list_url = "ftp://ftp.mars.org/pub/mpeg/"
+    url      = "https://sourceforge.net/projects/mad/files/libmad/0.15.1b/libmad-0.15.1b.tar.gz/download"
 
     version('0.15.1b', sha256='bbfac3ed6bfbc2823d3775ebb931087371e142bb0e9bb1bee51a76a6e0078690')
 
