@@ -14,6 +14,18 @@ import spack.modules
 module = spack.main.SpackCommand('module')
 
 
+#: make sure module files are generated for all the tests here
+@pytest.fixture(scope='module', autouse=True)
+def ensure_module_files_are_there(
+        mock_repo_path, mock_store, mock_configuration):
+    """Generate module files for module tests."""
+    module = spack.main.SpackCommand('module')
+    with use_store(mock_store):
+        with use_configuration(mock_configuration):
+            with use_repo(mock_repo_path):
+                module('tcl', 'refresh', '-y')
+
+
 def _module_files(module_type, *specs):
     specs = [spack.spec.Spec(x).concretized() for x in specs]
     writer_cls = spack.modules.module_types[module_type]

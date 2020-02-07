@@ -349,15 +349,18 @@ def refresh(module_type, specs, args):
         msg = 'Nothing to be done for {0} module files.'
         tty.msg(msg.format(module_type))
         return
-
     # If we arrived here we have at least one writer
     module_type_root = writers[0].layout.dirname()
-    spack.modules.common.generate_module_index(module_type_root, writers)
+
     # Proceed regenerating module files
     tty.msg('Regenerating {name} module files'.format(name=module_type))
     if os.path.isdir(module_type_root) and args.delete_tree:
         shutil.rmtree(module_type_root, ignore_errors=False)
     filesystem.mkdirp(module_type_root)
+
+    # Dump module index after potentially removing module tree
+    spack.modules.common.generate_module_index(
+        module_type_root, writers, overwrite=args.delete_tree)
     with spack.store.db.read_transaction():
         for x in writers:
             try:
