@@ -43,9 +43,9 @@ class Likwid(Package):
 
     supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
     if platform.machine() == 'aarch64':
-        supported_compilers = {'gcc' : 'GCCARMv8'}
+        supported_compilers = {'gcc': 'GCCARMv8'}
     elif platform.machine().startswith('ppc64'):
-        supported_compilers = {'gcc' : 'GCCPOWER'}
+        supported_compilers = {'gcc': 'GCCPOWER'}
 
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
