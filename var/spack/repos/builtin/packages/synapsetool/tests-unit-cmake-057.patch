@@ -1,31 +1,57 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index d475eee..7e5a8ec 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -39,7 +39,9 @@ if(SYNTOOL_WITH_MPI)
+     set(HDF5_PREFER_PARALLEL TRUE)
+ endif()
+
+-find_package(Boost 1.55 QUIET REQUIRED COMPONENTS system filesystem)
++set(BUILD_SHARED_LIBS ON)
++set(Boost_USE_STATIC_LIBS OFF)
++find_package(Boost 1.55 QUIET REQUIRED COMPONENTS system filesystem unit_test_framework)
+ find_package(HDF5 REQUIRED)
+ find_package(HighFive REQUIRED)
+ find_package(sonata REQUIRED)
 diff --git a/tests/unit/CMakeLists.txt b/tests/unit/CMakeLists.txt
-index 4de8d53..7c1f3fe 100644
+index 4de8d53..9d2a3d7 100644
 --- a/tests/unit/CMakeLists.txt
 +++ b/tests/unit/CMakeLists.txt
-@@ -2,16 +2,12 @@
- find_package(Boost 1.41.0 REQUIRED system unit_test_framework)
- include_directories(SYSTEM ${Boost_INCLUDE_DIRS} )
- 
+@@ -1,20 +1,11 @@
+ # Targets
+-find_package(Boost 1.41.0 REQUIRED system unit_test_framework)
+-include_directories(SYSTEM ${Boost_INCLUDE_DIRS} )
+-
 -if(NOT Boost_USE_STATIC_LIBS)
 -    add_definitions(-DBOOST_TEST_DYN_LINK=TRUE)
 -endif()
 -
- 
- 
+-
+-
  set(_test_syn2_src "test_synapses.cpp")
- 
+
  add_executable(test_syn2_bin ${_test_syn2_src})
 -target_link_libraries(test_syn2_bin syn2 ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} HighFive)
 +target_link_libraries(test_syn2_bin syn2 Boost::unit_test_framework HighFive)
++target_compile_definitions(test_syn2_bin PRIVATE BOOST_TEST_DYN_LINK)
  add_test(test_unit test_syn2_bin)
- 
- 
-@@ -25,7 +21,7 @@ if(SYNTOOL_WITH_MPI)
+
+-
+ if(SYNTOOL_WITH_MPI)
+     find_program(mpi_launcher
+         NAMES srun mpirun ${MPIEXEC_EXECUTABLE}
+@@ -25,12 +16,12 @@ if(SYNTOOL_WITH_MPI)
      set(_test_syn2mpi_src "test_synapses_mpi.cpp")
- 
+
      add_executable(test_syn2mpi_bin ${_test_syn2mpi_src})
 -    target_link_libraries(test_syn2mpi_bin syn2  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES} HighFive)
++    target_compile_definitions(test_syn2mpi_bin PRIVATE BOOST_TEST_DYN_LINK)
 +    target_link_libraries(test_syn2mpi_bin syn2  Boost::unit_test_framework HighFive)
- 
+
      add_test(test_unit_mpi ${mpi_launcher} -n 2 test_syn2mpi_bin)
  endif()
+
+-
+ # C Reader
+ add_executable(test_c_reader_bin "test_c_reader.c")
+ set_property(TARGET test_c_reader_bin PROPERTY C_STANDARD 99)
