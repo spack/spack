@@ -15,6 +15,7 @@ class Qscintilla(QMakePackage):
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
     url      = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.2/QScintilla_gpl-2.11.2.tar.gz"
 
+    version('2.11.3', sha256='cfadbb7f32fb8a9404fbe5db0ad14ac02229ebdf30a519141236080236ae2dd6')
     version('2.11.2', sha256='029bdc476a069fda2cea3cd937ba19cc7fa614fb90578caef98ed703b658f4a1')
     # Newer versions of Qscintilla won't build, so prefer the following version
     version('2.10.2', sha256='14b31d20717eed95ea9bea4cd16e5e1b72cee7ebac647cba878e0f6db6a65ed0', preferred=True)
@@ -24,6 +25,11 @@ class Qscintilla(QMakePackage):
     # built by PyQt5+qsci instead
 
     depends_on('qt')
+
+    def url_for_version(self, version):
+        if version >= Version('2.11.3'):
+            url = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.3/QScintilla-2.11.3.tar.gz"
+        return url.format(version)
 
     @run_before('qmake')
     def chdir(self):
