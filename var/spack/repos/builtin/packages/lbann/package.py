@@ -100,8 +100,8 @@ class Lbann(CMakePackage):
     depends_on('cnpy')
     depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
 
-    depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
-    depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0.99 +conduit')
+    depends_on('conduit@0.4.0: +hdf5', when='@:0.90,0.99:')
 
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
