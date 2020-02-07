@@ -45,6 +45,8 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('mapp', commit='f77a8b4fbd0d0fa016682db81aeb42a27bc9e9b9')
+
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
 
