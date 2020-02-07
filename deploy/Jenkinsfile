@@ -100,16 +100,16 @@ pipeline {
     }
 
     environment {
-        DEPLOYMENT_UPSTREAM = deployment_directory(false)
+        DEPLOYMENT_UPSTREAM = deployment_directory(true)
         DEPLOYMENT_ROOT = deployment_directory(false)
         BASEDIR = "${DEPLOYMENT_ROOT}/spack/deploy"
         DOCKERDIR = "${DEPLOYMENT_ROOT}/spack/docker"
     }
 
     // Configured via the UI to allow concurrent PR builds
-    // triggers {
-    //     cron('H H(0-7) * * *')
-    // }
+    triggers {
+        cron('H H(0-7) * * *')
+    }
 
     stages {
         stage('Setup') {

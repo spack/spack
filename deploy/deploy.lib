@@ -108,7 +108,7 @@ set_latest() {
     # Set the "latest" symlink to the current deployment date
     what=$1
     source="$(install_dir_name ${what})"
-    OLD_DEPLOYMENT_DATE="${DEPLOYMENT_DATE}"
+    local OLD_DEPLOYMENT_DATE="${DEPLOYMENT_DATE}"
     DEPLOYMENT_DATE="latest"
     target="$(install_dir_raw ${what})"
     DEPLOYMENT_DATE="${OLD_DEPLOYMENT_DATE}"
@@ -268,7 +268,7 @@ update_chain_config() {
   ${stage}${suffix}:
     install_tree: $(last_install_dir ${stage})
     modules:
-      tcl: $(last_install_dir ${stage})/modules
+      tcl: $(last_install_dir ${stage})/modules/tcl
 EOF
         done
     fi
@@ -286,7 +286,7 @@ configure_compilers() {
         # As the input should be sorted by compilers, the module generation
         # will now find the compilers that were used when bootstrapping.
         log "...regenerating module for ${line}"
-        spack module tcl refresh -y --latest ${line}
+        spack module tcl refresh -y --latest --upstream ${line}
         log "...processing ${line}"
         cmd=$(spack module tcl loads --latest ${line}|tail -n 1)
         echo "${cmd}"
@@ -675,7 +675,7 @@ EOF
     update_module_path "${what}"
 
     if [[ "${DEPLOYMENT_UPSTREAM:-${DEPLOYMENT_ROOT}}" != "${DEPLOYMENT_ROOT}" ]]; then
-        OLD_DEPLOYMENT_ROOT="${DEPLOYMENT_ROOT}"
+        local OLD_DEPLOYMENT_ROOT="${DEPLOYMENT_ROOT}"
         DEPLOYMENT_ROOT="${DEPLOYMENT_UPSTREAM}"
         export DEPLOYMENT_ROOT
         log "setting up upstream chains, modules"
