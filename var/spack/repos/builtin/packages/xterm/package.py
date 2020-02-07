@@ -12,9 +12,13 @@ class Xterm(AutotoolsPackage):
     that can't use the window system directly."""
 
     homepage = "http://invisible-island.net/xterm/"
-    url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
+    url      = "https://github.com/ThomasDickey/xterm-snapshots/archive/xterm-353.tar.gz"
 
-    version('327', sha256='66fb2f6c35b342148f549c276b12a3aa3fb408e27ab6360ddec513e14376150b')
+    version('353', sha256='f5859a0e07a958576f78866aa32a59d66c34b4bd8f1894d0d1db30733d4380b1')
+    version('350', sha256='382ee3c321fbec18eeecb7772ec0485d4cb9fba7968cbe2f7c82dc9d2f2e93c8')
+    version('340', sha256='7488deeecdae7275a064518fae202179af5fc97916c2ea36a8132927b51441c6')
+    version('330', sha256='e9845fc91330bdedefbe4f427b095d7854f679274f43b3d342da9e4029aab244')
+    version('327', sha256='3bc81be814f612095a4c16a01db89fcfc8cce410a04ae567090a70efa829c726')
 
     depends_on('libxft')
     depends_on('fontconfig')
