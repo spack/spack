@@ -103,10 +103,8 @@ class Llvm(CMakePackage):
     # openmp dependencies
     depends_on('perl-data-dumper', type=('build'))
 
-    # ncurses dependency
-    depends_on('ncurses+termlib')
-
     # lldb dependencies
+    depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
     depends_on('py-six', when='@5.0.0: +lldb +python')
@@ -183,6 +181,7 @@ class Llvm(CMakePackage):
             '-DLLVM_REQUIRES_RTTI:BOOL=ON',
             '-DLLVM_ENABLE_RTTI:BOOL=ON',
             '-DLLVM_ENABLE_EH:BOOL=ON',
+            '-DLLVM_ENABLE_TERMINFO:BOOL=OFF',
             '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
