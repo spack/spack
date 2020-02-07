@@ -7,6 +7,7 @@ import os
 import platform
 from spack.architecture import Platform, Target
 from spack.operating_systems.linux_distro import LinuxDistro
+import llnl.util.cpu as cpu
 
 
 class SpackCross(Platform):
@@ -16,12 +17,13 @@ class SpackCross(Platform):
         ''' Cross Compiler Environment.'''
 
         super(SpackCross, self).__init__('SpackCross')
+        for name in cpu.targets:
+            self.add_target(name, Target(name))
 
         self.back_end = os.environ.get('SPACK_BACKEND_TARGET')
         backend_os = os.environ.get('SPACK_BACKEND_OS')
         backend_os_version = os.environ.get('SPACK_BACKEND_OS_VERSION')
-        self.front_end = platform.machine()
-        self.add_target(self.front_end, Target(self.front_end))
+        self.front_end = cpu.host().name
         self.add_target("front_end", Target(self.front_end))
         self.add_target(self.back_end, Target(self.back_end))
         self.add_target("back_end", Target(self.back_end))
