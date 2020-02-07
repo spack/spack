@@ -14,6 +14,7 @@ from spack.test.conftest import use_store, use_configuration, use_repo
 
 module = spack.main.SpackCommand('module')
 
+
 #: make sure module files are generated for all the tests here
 @pytest.fixture(scope='module', autouse=True)
 def ensure_module_files_are_there(
