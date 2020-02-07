@@ -11,7 +11,7 @@ class Libid3tag(AutotoolsPackage):
     """library for id3 tagging"""
 
     homepage = "https://www.underbit.com/products/mad/"
-    url      = "ftp://ftp.mars.org/pub/mpeg/libid3tag-0.15.1b.tar.gz"
+    url      = "https://sourceforge.net/projects/mad/files/libid3tag/0.15.1b/libid3tag-0.15.1b.tar.gz/download"
 
     maintainers = ['TheQueasle']
 
