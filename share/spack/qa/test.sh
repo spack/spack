@@ -3,9 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-teardown() {
-    echo FAIL
-    exit 1
-}
+export QA_DIR=$(dirname "$0")
+export SHARE_DIR=$(cd "$QA_DIR/.." && pwd)
+export SPACK_ROOT=$(cd "$QA_DIR/../../.." && pwd)
 
-trap teardown EXIT
+. "$QA_DIR/test-framework.sh"
+
+fail
+pass
