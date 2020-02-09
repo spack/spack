@@ -1,3 +1,12 @@
+# v0.13.4 (2020-02-07)
+
+This release contains several bugfixes:
+
+* bugfixes for invoking python in various environments (#14349, #14496, #14569)
+* brought tab completion up to date (#14392)
+* bugfix for removing extensions from views in order (#12961)
+* bugfix for nondeterministic hashing for specs with externals (#14390)
+
 # v0.13.3 (2019-12-23)
 
 This release contains more major performance improvements for Spack

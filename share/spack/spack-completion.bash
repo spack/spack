@@ -34,6 +34,7 @@ function _bash_completion_spack {
     # For example, `spack -d install []` will call _spack_install
     # and `spack compiler add []` will call _spack_compiler_add
     local subfunction=$(IFS='_'; echo "_${COMP_WORDS_NO_FLAGS[*]}")
+
     # Translate dashes to underscores, as dashes are not permitted in
     # compatibility mode. See https://github.com/spack/spack/pull/4079
     subfunction=${subfunction//-/_}
@@ -96,11 +97,11 @@ function _spack {
     if $list_options
     then
         compgen -W "-h --help -H --all-help --color -C --config-scope
-                    -d --debug --pdb -e --env -D --env-dir -E --no-env
-                    --use-env-repo -k --insecure -l --enable-locks
-                    -L --disable-locks -m --mock -p --profile
-                    --sorted-profile --lines -v --verbose --stacktrace
-                    -V --version --print-shell-vars" -- "$cur"
+                    -d --debug --timestamp --pdb -e --env -D --env-dir
+                    -E --no-env --use-env-repo -k --insecure
+                    -l --enable-locks -L --disable-locks -m --mock
+                    -p --profile --sorted-profile --lines -v --verbose
+                    --stacktrace -V --version --print-shell-vars" -- "$cur"
     else
         compgen -W "$(_subcommands)" -- "$cur"
     fi
@@ -118,15 +119,16 @@ function _spack_activate {
 function _spack_add {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help -l --list-name" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
 function _spack_arch {
-    compgen -W "-h --help -p --platform -o --operating-system
-                -t --target --known-targets" -- "$cur"
+    compgen -W "-h --help --known-targets -p --platform
+                -o --operating-system -t --target -f --frontend
+                -b --backend" -- "$cur"
 }
 
 function _spack_blame {
@@ -141,7 +143,7 @@ function _spack_blame {
 function _spack_bootstrap {
     compgen -W "-h --help -j --jobs --keep-prefix --keep-stage
                 -n --no-checksum -v --verbose --use-cache --no-cache
-                --clean --dirty" -- "$cur"
+                --cache-only --clean --dirty" -- "$cur"
 }
 
 function _spack_build {
@@ -156,7 +158,7 @@ function _spack_build {
 function _spack_build_env {
     if $list_options
     then
-        compgen -W "-h --help --clean --dirty" -- "$cur"
+        compgen -W "-h --help --clean --dirty --dump --pickle" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -167,15 +169,17 @@ function _spack_buildcache {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "create install keys list" -- "$cur"
+        compgen -W "create install list keys preview check download
+                    get-buildcache-name save-yaml copy update-index" -- "$cur"
     fi
 }
 
 function _spack_buildcache_create {
     if $list_options
     then
-        compgen -W "-h --help -r --rel -f --force -u --unsigned -a --allow-root
-                    -k --key -d --directory" -- "$cur"
+        compgen -W "-h --help -r --rel -f --force -u --unsigned
+                    -a --allow-root -k --key -d --directory
+                    --no-rebuild-index -y --spec-yaml --no-deps" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -184,8 +188,18 @@ function _spack_buildcache_create {
 function _spack_buildcache_install {
     if $list_options
     then
-        compgen -W "-h --help -f --force -m --multiple -a --allow-root -u
-                    --unsigned" -- "$cur"
+        compgen -W "-h --help -f --force -m --multiple -a --allow-root
+                    -u --unsigned" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_buildcache_list {
+    if $list_options
+    then
+        compgen -W "-h --help -l --long -L --very-long -v --variants
+                    -f --force" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -195,13 +209,40 @@ function _spack_buildcache_keys {
     compgen -W "-h --help -i --install -t --trust -f --force" -- "$cur"
 }
 
-function _spack_buildcache_list {
+function _spack_buildcache_preview {
     if $list_options
     then
-        compgen -W "-h --help -f --force" -- "$cur"
+        compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_all_packages)" -- "$cur"
+        compgen -W "$(_installed_packages)" -- "$cur"
     fi
+}
+
+function _spack_buildcache_check {
+    compgen -W "-h --help -m --mirror-url -o --output-file --scope
+                -s --spec -y --spec-yaml --rebuild-on-error" -- "$cur"
+}
+
+function _spack_buildcache_download {
+    compgen -W "-h --help -s --spec -y --spec-yaml -p --path
+                -c --require-cdashid" -- "$cur"
+}
+
+function _spack_buildcache_get_buildcache_name {
+    compgen -W "-h --help -s --spec -y --spec-yaml" -- "$cur"
+}
+
+function _spack_buildcache_save_yaml {
+    compgen -W "-h --help --root-spec --root-spec-yaml -s --specs
+                -y --yaml-dir" -- "$cur"
+}
+
+function _spack_buildcache_copy {
+    compgen -W "-h --help --base-dir --spec-yaml --destination-url" -- "$cur"
+}
+
+function _spack_buildcache_update_index {
+    compgen -W "-h --help -d --mirror-url" -- "$cur"
 }
 
 function _spack_cd {
@@ -257,29 +298,16 @@ function _spack_compiler {
     fi
 }
 
-function _spack_compiler_add {
-    if $list_options
-    then
-        compgen -W "-h --help --scope" -- "$cur"
-    fi
-}
-
 function _spack_compiler_find {
-    # Alias to `spack compiler add`
-    _spack_compiler_add
-}
-
-function _spack_compiler_info {
     if $list_options
     then
         compgen -W "-h --help --scope" -- "$cur"
-    else
-        compgen -W "$(_installed_compilers)" -- "$cur"
     fi
 }
 
-function _spack_compiler_list {
-    compgen -W "-h --help --scope" -- "$cur"
+function _spack_compiler_add {
+    # Alias to `spack compiler find`
+    _spack_compiler_find
 }
 
 function _spack_compiler_remove {
@@ -296,8 +324,22 @@ function _spack_compiler_rm {
     _spack_compiler_remove
 }
 
-function _spack_compilers {
+function _spack_compiler_list {
     compgen -W "-h --help --scope" -- "$cur"
+}
+
+function _spack_compiler_info {
+    if $list_options
+    then
+        compgen -W "-h --help --scope" -- "$cur"
+    else
+        compgen -W "$(_installed_compilers)" -- "$cur"
+    fi
+}
+
+function _spack_compilers {
+    # Alias to `spack compiler list`
+    _spack_compiler_list
 }
 
 function _spack_concretize {
@@ -309,25 +351,7 @@ function _spack_config {
     then
         compgen -W "-h --help --scope" -- "$cur"
     else
-        compgen -W "blame edit get" -- "$cur"
-    fi
-}
-
-function _spack_config_blame {
-    if $list_options
-    then
-        compgen -W "-h --help" -- "$cur"
-    else
-        compgen -W "mirrors repos modules packages config compilers" -- "$cur"
-    fi
-}
-
-function _spack_config_edit {
-    if $list_options
-    then
-        compgen -W "-h --help --print-file" -- "$cur"
-    else
-        compgen -W "mirrors repos modules packages config compilers" -- "$cur"
+        compgen -W "get blame edit" -- "$cur"
     fi
 }
 
@@ -336,7 +360,28 @@ function _spack_config_get {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "mirrors repos modules packages config compilers" -- "$cur"
+        compgen -W "compilers mirrors repos packages modules config
+                    upstreams" -- "$cur"
+    fi
+}
+
+function _spack_config_blame {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "compilers mirrors repos packages modules config
+                    upstreams" -- "$cur"
+    fi
+}
+
+function _spack_config_edit {
+    if $list_options
+    then
+        compgen -W "-h --help --print-file" -- "$cur"
+    else
+        compgen -W "compilers mirrors repos packages modules config
+                    upstreams" -- "$cur"
     fi
 }
 
@@ -382,8 +427,8 @@ function _spack_debug_create_db_tarball {
 function _spack_dependencies {
     if $list_options
     then
-        compgen -W "-h --help -i --installed -t --transitive -V
-                    --no-expand-virtuals" -- "$cur"
+        compgen -W "-h --help -i --installed -t --transitive
+                    --deptype -V --no-expand-virtuals" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -398,13 +443,36 @@ function _spack_dependents {
     fi
 }
 
+function _spack_deprecate {
+    if $list_options
+    then
+        compgen -W "-h --help -y --yes-to-all -d --dependencies
+                    -D --no-dependencies -i --install-deprecator
+                    -I --no-install-deprecator -l --link-type" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
+function _spack_dev_build {
+    if $list_options
+    then
+        compgen -W "-h --help -j --jobs -d --source-path
+                    -i --ignore-dependencies -n --no-checksum
+                    --keep-prefix --skip-patch -q --quiet -u --until
+                    --clean --dirty" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
+    fi
+}
+
 function _spack_diy {
     if $list_options
     then
         compgen -W "-h --help -j --jobs -d --source-path
                     -i --ignore-dependencies -n --no-checksum
-                    --keep-prefix --skip-patch -q --quiet --clean
-                    --dirty -u --until" -- "$cur"
+                    --keep-prefix --skip-patch -q --quiet -u --until
+                    --clean --dirty" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -417,8 +485,8 @@ function _spack_docs {
 function _spack_edit {
     if $list_options
     then
-        compgen -W "-h --help -b --build-system -c --command -d --docs -t
-                    --test -m --module -r --repo -N --namespace" -- "$cur"
+        compgen -W "-h --help -b --build-system -c --command -d --docs
+                    -t --test -m --module -r --repo -N --namespace" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -429,24 +497,18 @@ function _spack_env {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "activate create deactivate list ls loads
-                    remove rm status st" -- "$cur"
+        compgen -W "activate deactivate create remove rm list ls
+                    status st loads view" -- "$cur"
     fi
 }
 
 function _spack_env_activate {
     if $list_options
     then
-        compgen -W "-h --help --sh --csh -d --dir -p --prompt" -- "$cur"
+        compgen -W "-h --help --sh --csh -v --with-view
+                    -V --without-view -d --dir -p --prompt" -- "$cur"
     else
         compgen -W "$(_environments)" -- "$cur"
-    fi
-}
-
-function _spack_env_create {
-    if $list_options
-    then
-        compgen -W "-h --help -d --dir" -- "$cur"
     fi
 }
 
@@ -454,22 +516,10 @@ function _spack_env_deactivate {
     compgen -W "-h --help --sh --csh" -- "$cur"
 }
 
-function _spack_env_list {
-    compgen -W "-h --help" -- "$cur"
-}
-
-function _spack_env_ls {
-    # Alias to `spack env list`
-    _spack_env_list
-}
-
-function _spack_env_loads {
+function _spack_env_create {
     if $list_options
     then
-        compgen -W "-h --help -m --module-type --input-only -p --prefix
-                    -x --exclude -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_environments)" -- "$cur"
+        compgen -W "-h --help -d --dir --without-view --with-view" -- "$cur"
     fi
 }
 
@@ -487,6 +537,15 @@ function _spack_env_rm {
     _spack_env_remove
 }
 
+function _spack_env_list {
+    compgen -W "-h --help" -- "$cur"
+}
+
+function _spack_env_ls {
+    # Alias to `spack env list`
+    _spack_env_list
+}
+
 function _spack_env_status {
     compgen -W "-h --help" -- "$cur"
 }
@@ -496,15 +555,34 @@ function _spack_env_st {
     _spack_env_status
 }
 
+function _spack_env_loads {
+    if $list_options
+    then
+        compgen -W "-h --help -m --module-type --input-only -p --prefix
+                    -x --exclude -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_environments)" -- "$cur"
+    fi
+}
+
+function _spack_env_view {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "regenerate enable disable" -- "$cur"
+    fi
+}
+
 function _spack_extensions {
     if $list_options
     then
-        compgen -W "-h --help -l --long -p --paths -d --deps
-                    -s --show -v --view" -- "$cur"
+        compgen -W "-h --help -l --long -L --very-long -d --deps
+                    -p --paths -s --show -v --view" -- "$cur"
     else
-        compgen -W "aspell go-bootstrap go icedtea java jdk lua
-                    matlab mofem-cephas octave perl python r ruby
-                    rust tcl yorick" -- "$cur"
+        compgen -W "aspell go-bootstrap go icedtea jdk kim-api lua
+                    matlab mofem-cephas octave openjdk perl python r
+                    ruby rust tcl yorick" -- "$cur"
     fi
 }
 
@@ -521,13 +599,13 @@ function _spack_fetch {
 function _spack_find {
     if $list_options
     then
-        compgen -W "-h --help -s --short -d --deps -p --paths
-                    --format --json --groups --no-groups -l --long
-                    -L --very-long -t --tags -c --show-concretized
-                    -f --show-flags --show-full-compiler -x --explicit
-                    -X --implicit -u --unknown -m --missing -v --variants
-                    -M --only-missing -N --namespace --start-date
-                    --end-date" -- "$cur"
+        compgen -W "-h --help --format --json -d --deps -p --paths
+                    --groups --no-groups -l --long -L --very-long
+                    -t --tags -c --show-concretized -f --show-flags
+                    --show-full-compiler -x --explicit -X --implicit
+                    -u --unknown -m --missing -v --variants
+                    -M --only-missing --deprecated --only-deprecated
+                    -N --namespace --start-date --end-date" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
@@ -546,36 +624,15 @@ function _spack_gpg {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "create export init list sign trust untrust verify" -- "$cur"
+        compgen -W "verify trust untrust sign create list init
+                    export" -- "$cur"
     fi
 }
 
-function _spack_gpg_create {
-    if $list_options
-    then
-        compgen -W "-h --help --comment --expires --export" -- "$cur"
-    fi
-}
-
-function _spack_gpg_export {
+function _spack_gpg_verify {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
-    fi
-}
-
-function _spack_gpg_init {
-    compgen -W "-h --help" -- "$cur"
-}
-
-function _spack_gpg_list {
-    compgen -W "-h --help --trusted --signing" -- "$cur"
-}
-
-function _spack_gpg_sign {
-    if $list_options
-    then
-        compgen -W "-h --help --output --key --clearsign" -- "$cur"
     else
         compgen -W "$(installed_packages)" -- "$cur"
     fi
@@ -592,23 +649,49 @@ function _spack_gpg_untrust {
     if $list_options
     then
         compgen -W "-h --help --signing" -- "$cur"
+    else
+        compgen -W "$(_keys)" -- "$cur"
     fi
 }
 
-function _spack_gpg_verify {
+function _spack_gpg_sign {
+    if $list_options
+    then
+        compgen -W "-h --help --output --key --clearsign" -- "$cur"
+    else
+        compgen -W "$(installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_gpg_create {
+    if $list_options
+    then
+        compgen -W "-h --help --comment --expires --export" -- "$cur"
+    fi
+}
+
+function _spack_gpg_list {
+    compgen -W "-h --help --trusted --signing" -- "$cur"
+}
+
+function _spack_gpg_init {
+    compgen -W "-h --help" -- "$cur"
+}
+
+function _spack_gpg_export {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(installed_packages)" -- "$cur"
+        compgen -W "$(_keys)" -- "$cur"
     fi
 }
 
 function _spack_graph {
     if $list_options
     then
-        compgen -W "-h --help -a --ascii -d --dot -n --normalize -s --static
-                    -i --installed -t --deptype" -- "$cur"
+        compgen -W "-h --help -a --ascii -d --dot -s --static
+                    -i --installed --deptype" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -635,12 +718,14 @@ function _spack_info {
 function _spack_install {
     if $list_options
     then
-        compgen -W "-h --help --only -j --jobs -I --install-status
-                    --overwrite --keep-prefix --keep-stage --dont-restage
-                    --use-cache --no-cache --show-log-on-error --source
+        compgen -W "-h --help --only -u --until -j --jobs --overwrite
+                    --keep-prefix --keep-stage --dont-restage --use-cache
+                    --no-cache --cache-only --show-log-on-error --source
                     -n --no-checksum -v --verbose --fake --only-concrete
-                    -f --file --clean --dirty --test --log-format --log-file
-                    --cdash-upload-url -y --yes-to-all" -- "$cur"
+                    -f --file --clean --dirty --test --run-tests
+                    --log-format --log-file -y --yes-to-all
+                    --cdash-upload-url --cdash-build --cdash-site
+                    --cdash-track --cdash-buildstamp" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -704,7 +789,7 @@ function _spack_log_parse {
 function _spack_maintainers {
     if $list_options
     then
-        compgen -W "-h --help -a --all --maintained --unmaintained
+        compgen -W "-h --help --maintained --unmaintained -a --all
                     --by-user" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
@@ -716,7 +801,17 @@ function _spack_mirror {
     then
         compgen -W "-h --help -n --no-checksum" -- "$cur"
     else
-        compgen -W "add create list remove rm" -- "$cur"
+        compgen -W "create add remove rm set-url list" -- "$cur"
+    fi
+}
+
+function _spack_mirror_create {
+    if $list_options
+    then
+        compgen -W "-h --help -d --directory -a --all -f --file
+                    -D --dependencies -n --versions-per-spec" -- "$cur"
+    else
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -725,20 +820,6 @@ function _spack_mirror_add {
     then
         compgen -W "-h --help --scope" -- "$cur"
     fi
-}
-
-function _spack_mirror_create {
-    if $list_options
-    then
-        compgen -W "-h --help -d --directory -f --file
-                    -D --dependencies -n --versions-per-spec" -- "$cur"
-    else
-        compgen -W "$(_all_packages)" -- "$cur"
-    fi
-}
-
-function _spack_mirror_list {
-    compgen -W "-h --help --scope" -- "$cur"
 }
 
 function _spack_mirror_remove {
@@ -755,6 +836,19 @@ function _spack_mirror_rm {
     _spack_mirror_remove
 }
 
+function _spack_mirror_set_url {
+    if $list_options
+    then
+        compgen -W "-h --help --push --scope" -- "$cur"
+    else
+        compgen -W "$(_mirrors)" -- "$cur"
+    fi
+}
+
+function _spack_mirror_list {
+    compgen -W "-h --help --scope" -- "$cur"
+}
+
 function _spack_module {
     if $list_options
     then
@@ -763,55 +857,6 @@ function _spack_module {
         compgen -W "lmod tcl" -- "$cur"
     fi
 }
-
-function _spack_module_tcl {
-    if $list_options
-    then
-        compgen -W "-h --help" -- "$cur"
-    else
-        compgen -W "refresh find rm loads" -- "$cur"
-    fi
-}
-
-
-function _spack_module_tcl_find {
-    if $list_options
-    then
-        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_tcl_loads {
-    if $list_options
-    then
-        compgen -W "-h --help --input-only -p --prefix -x --exclude
-                    -r --dependencies" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-
-}
-
-function _spack_module_tcl_refresh {
-    if $list_options
-    then
-        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
-function _spack_module_tcl_rm {
-    if $list_options
-    then
-        compgen -W "-h --help -y --yes-to-all" -- "$cur"
-    else
-        compgen -W "$(_installed_packages)" -- "$cur"
-    fi
-}
-
 
 function _spack_module_lmod {
     if $list_options
@@ -822,11 +867,29 @@ function _spack_module_lmod {
     fi
 }
 
+function _spack_module_lmod_refresh {
+    if $list_options
+    then
+        compgen -W "-h --help --delete-tree --upstream-modules
+                    -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
 
 function _spack_module_lmod_find {
     if $list_options
     then
         compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_lmod_rm {
+    if $list_options
+    then
+        compgen -W "-h --help -y --yes-to-all" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
@@ -843,16 +906,44 @@ function _spack_module_lmod_loads {
 
 }
 
-function _spack_module_lmod_refresh {
+function _spack_module_lmod_setdefault {
     if $list_options
     then
-        compgen -W "-h --help --delete-tree -y --yes-to-all" -- "$cur"
+        compgen -W "-h --help" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
 }
 
-function _spack_module_lmod_rm {
+function _spack_module_tcl {
+    if $list_options
+    then
+        compgen -W "-h --help" -- "$cur"
+    else
+        compgen -W "refresh find rm loads" -- "$cur"
+    fi
+}
+
+function _spack_module_tcl_refresh {
+    if $list_options
+    then
+        compgen -W "-h --help --delete-tree --upstream-modules
+                    -y --yes-to-all" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_tcl_find {
+    if $list_options
+    then
+        compgen -W "-h --help --full-path -r --dependencies" -- "$cur"
+    else
+        compgen -W "$(_installed_packages)" -- "$cur"
+    fi
+}
+
+function _spack_module_tcl_rm {
     if $list_options
     then
         compgen -W "-h --help -y --yes-to-all" -- "$cur"
@@ -861,10 +952,11 @@ function _spack_module_lmod_rm {
     fi
 }
 
-function _spack_module_lmod_setdefault {
+function _spack_module_tcl_loads {
     if $list_options
     then
-        compgen -W "-h --help" -- "$cur"
+        compgen -W "-h --help --input-only -p --prefix -x --exclude
+                    -r --dependencies" -- "$cur"
     else
         compgen -W "$(_installed_packages)" -- "$cur"
     fi
@@ -884,7 +976,7 @@ function _spack_pkg {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "add added diff list removed" -- "$cur"
+        compgen -W "add list diff added changed removed" -- "$cur"
     fi
 }
 
@@ -897,7 +989,7 @@ function _spack_pkg_add {
     fi
 }
 
-function _spack_pkg_added {
+function _spack_pkg_list {
     # FIXME: How to list git revisions?
     if $list_options
     then
@@ -913,11 +1005,19 @@ function _spack_pkg_diff {
     fi
 }
 
-function _spack_pkg_list {
+function _spack_pkg_added {
     # FIXME: How to list git revisions?
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
+    fi
+}
+
+function _spack_pkg_changed {
+    # FIXME: How to list git revisions?
+    if $list_options
+    then
+        compgen -W "-h --help -t --type" -- "$cur"
     fi
 }
 
@@ -956,10 +1056,15 @@ function _spack_reindex {
     compgen -W "-h --help" -- "$cur"
 }
 
+function _spack_release_jobs {
+    compgen -W "-h --help -o --output-file -p --print-summary
+                --cdash-credentials" -- "$cur"
+}
+
 function _spack_remove {
     if $list_options
     then
-        compgen -W "-h --help -a --all -f --force" -- "$cur"
+        compgen -W "-h --help -a --all -l --list-name -f --force" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
     fi
@@ -970,14 +1075,7 @@ function _spack_repo {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "add create list remove rm" -- "$cur"
-    fi
-}
-
-function _spack_repo_add {
-    if $list_options
-    then
-        compgen -W "-h --help --scope" -- "$cur"
+        compgen -W "create list add remove rm" -- "$cur"
     fi
 }
 
@@ -990,6 +1088,13 @@ function _spack_repo_create {
 
 function _spack_repo_list {
     compgen -W "-h --help --scope" -- "$cur"
+}
+
+function _spack_repo_add {
+    if $list_options
+    then
+        compgen -W "-h --help --scope" -- "$cur"
+    fi
 }
 
 function _spack_repo_remove {
@@ -1051,7 +1156,7 @@ function _spack_spec {
     if $list_options
     then
         compgen -W "-h --help -l --long -L --very-long -I --install-status
-                    -j --json -y --yaml -c --cover -N --namespaces
+                    -y --yaml -j --json -c --cover -N --namespaces
                     -t --types" -- "$cur"
     else
         compgen -W "$(_all_packages)" -- "$cur"
@@ -1092,17 +1197,26 @@ function _spack_unload {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_installed_packages)"
+        compgen -W "$(_installed_packages)" -- "$cur"
     fi
 }
 
-function _spack_unuse {
+function _spack_upload_s3 {
     if $list_options
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "$(_installed_packages)"
+        compgen -W "spec index" -- "$cur"
     fi
+}
+
+function _spack_upload_s3_spec {
+    compgen -W "-h --help -s --spec -y --spec-yaml -b --base-dir
+                -e --endpoint-url" -- "$cur"
+}
+
+function _spack_upload_s3_index {
+    compgen -W "-h --help -e --endpoint-url" -- "$cur"
 }
 
 function _spack_url {
@@ -1110,14 +1224,8 @@ function _spack_url {
     then
         compgen -W "-h --help" -- "$cur"
     else
-        compgen -W "list parse stats summary" -- "$cur"
+        compgen -W "parse list summary stats" -- "$cur"
     fi
-}
-
-function _spack_url_list {
-    compgen -W "-h --help -c --color -e --extrapolation
-                -n --incorrect-name -N --correct-name
-                -v --incorrect-version -V --correct-version" -- "$cur"
 }
 
 function _spack_url_parse {
@@ -1127,20 +1235,27 @@ function _spack_url_parse {
     fi
 }
 
-function _spack_url_stats {
-    compgen -W "-h --help" -- "$cur"
+function _spack_url_list {
+    compgen -W "-h --help -c --color -e --extrapolation
+                -n --incorrect-name -N --correct-name
+                -v --incorrect-version -V --correct-version" -- "$cur"
 }
 
 function _spack_url_summary {
     compgen -W "-h --help" -- "$cur"
 }
 
-function _spack_use {
+function _spack_url_stats {
+    compgen -W "-h --help" -- "$cur"
+}
+
+function _spack_verify {
     if $list_options
     then
-        compgen -W "-h --help -r --dependencies" -- "$cur"
+        compgen -W "-h --help -l --local -j --json -a --all -s --specs
+                    -f --files" -- "$cur"
     else
-        compgen -W "$(_installed_packages)" -- "$cur"
+        compgen -W "$(_all_packages)" -- "$cur"
     fi
 }
 
@@ -1159,8 +1274,16 @@ function _spack_view {
         compgen -W "-h --help -v --verbose -e --exclude
                     -d --dependencies" -- "$cur"
     else
-        compgen -W "add check hard hardlink remove rm soft
-                    statlink status symlink" -- "$cur"
+        compgen -W "symlink add soft hardlink hard remove rm statlink
+                    status check" -- "$cur"
+    fi
+}
+
+function _spack_view_symlink {
+    if $list_options
+    then
+        compgen -W "-h --help --projection-file
+                    -i --ignore-conflicts" -- "$cur"
     fi
 }
 
@@ -1169,21 +1292,22 @@ function _spack_view_add {
     _spack_view_symlink
 }
 
-function _spack_view_check {
-    # Alias for `spack view statlink`
-    _spack_view_statlink
-}
-
-function _spack_view_hard {
-    # Alias for `spack view hardlink`
-    _spack_view_hardlink
+function _spack_view_soft {
+    # Alias for `spack view symlink`
+    _spack_view_symlink
 }
 
 function _spack_view_hardlink {
     if $list_options
     then
-        compgen -W "-h --help -i --ignore-conflicts" -- "$cur"
+        compgen -W "-h --help --projection-file
+                    -i --ignore-conflicts" -- "$cur"
     fi
+}
+
+function _spack_view_hard {
+    # Alias for `spack view hardlink`
+    _spack_view_hardlink
 }
 
 function _spack_view_remove {
@@ -1198,11 +1322,6 @@ function _spack_view_rm {
     _spack_view_remove
 }
 
-function _spack_view_soft {
-    # Alias for `spack view symlink`
-    _spack_view_symlink
-}
-
 function _spack_view_statlink {
     if $list_options
     then
@@ -1215,11 +1334,9 @@ function _spack_view_status {
     _spack_view_statlink
 }
 
-function _spack_view_symlink {
-    if $list_options
-    then
-        compgen -W "-h --help -i --ignore-conflicts" -- "$cur"
-    fi
+function _spack_view_check {
+    # Alias for `spack view statlink`
+    _spack_view_statlink
 }
 
 # Helper functions for subcommands
@@ -1262,6 +1379,10 @@ function _tests {
 
 function _environments {
     spack env list
+}
+
+function _keys {
+    spack gpg list
 }
 
 # Testing functions

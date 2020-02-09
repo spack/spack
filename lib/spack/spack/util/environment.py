@@ -918,8 +918,14 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file.extend(x for x in file_and_args)
         source_file = ' '.join(source_file)
 
+        # If the environment contains 'python' use it, if not
+        # go with sys.executable. Below we just need a working
+        # Python interpreter, not necessarily sys.executable.
+        python_cmd = executable.which('python3', 'python', 'python2')
+        python_cmd = python_cmd.name if python_cmd else sys.executable
+
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = sys.executable + ' -c "{0}"'.format(dump_cmd)
+        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([
