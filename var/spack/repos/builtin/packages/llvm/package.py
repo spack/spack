@@ -104,7 +104,7 @@ class Llvm(CMakePackage):
     depends_on('perl-data-dumper', type=('build'))
 
     # ncurses dependency
-    depends_on('ncurses+termlib')
+    depends_on('ncurses')
 
     # lldb dependencies
     depends_on('swig', when='+lldb')
@@ -146,6 +146,9 @@ class Llvm(CMakePackage):
 
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch('thread-p9.patch', when='@develop+libcxx')
+
+    # Change search order of tinfo symbols
+    patch('terminfo.patch')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):

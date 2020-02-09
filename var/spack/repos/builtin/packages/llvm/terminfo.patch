@@ -1,0 +1,11 @@
+--- a/llvm/cmake/config-ix.cmake	2019-12-11 13:15:30.000000000 -0600
++++ b/llvm/cmake/config-ix.cmake	2020-02-07 18:46:04.172859510 -0600
+@@ -141,7 +141,7 @@
+     endif()
+     if(LLVM_ENABLE_TERMINFO)
+       set(HAVE_TERMINFO 0)
+-      foreach(library terminfo tinfo curses ncurses ncursesw)
++      foreach(library terminfo curses ncurses ncursesw tinfo)
+         string(TOUPPER ${library} library_suffix)
+         check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
+         if(HAVE_TERMINFO_${library_suffix})
