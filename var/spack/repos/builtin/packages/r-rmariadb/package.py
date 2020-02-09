@@ -26,4 +26,4 @@ class RRmariadb(RPackage):
     depends_on('r-plogr', type=('build', 'run'))
 
     # non-R dependencies
-    depends_on('mariadb-c-client')
+    depends_on('mariadb-client')
