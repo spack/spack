@@ -7,15 +7,16 @@ from spack import *
 
 
 class H5cpp(CMakePackage):
-    """Easy to use HDF5 C++ templates for Serial and Paralell HDF5"""
+    """Easy to use HDF5 C++ templates for Serial and Parallel HDF5"""
 
     homepage = "http://h5cpp.org"
-    # url      = "https://github.com/steven-varga/h5cpp"
+    url      = "https://github.com/steven-varga/h5cpp/archive/v1.10.4-5.tar.gz"
     git      = "https://github.com/steven-varga/h5cpp.git"
 
     maintainers = ['eschnett']
 
-    version('master',  branch='master')
+    version('master', branch='master')
+    version('1.10.4-5', sha256='42d0ca1aaff1ead8998a26d892a51c12b1b89023382f191dc438bd0fa4513455')
 
     variant('mpi', default=True, description='Include MPI support')
 

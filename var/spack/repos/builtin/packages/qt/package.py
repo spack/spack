@@ -21,6 +21,8 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8')
+    version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba')
     version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
     version('5.12.5', sha256='a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
     version('5.12.2', sha256='59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
@@ -175,8 +177,9 @@ class Qt(Package):
 
     use_xcode = True
 
-    # Mapping for compilers in the QT 'mkspecs'
+    # Mapping for compilers/systems in the QT 'mkspecs'
     compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+    platform_mapping = {'darwin': 'macx'}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -226,6 +229,25 @@ class Qt(Package):
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
+
+    def get_mkspec(self):
+        """Determine the mkspecs root directory and QT platform.
+        """
+        spec = self.spec
+        cname = spec.compiler.name
+        cname = self.compiler_mapping.get(cname, cname)
+        pname = spec.architecture.platform
+        pname = self.platform_mapping.get(pname, pname)
+
+        qtplat = None
+        mkspec_dir = 'qtbase/mkspecs' if spec.satisfies('@5:') else 'mkspecs'
+        for subdir in ('', 'unsupported'):
+            platdirname = "".join([subdir, pname, "-", cname])
+            if os.path.exists(os.path.join(mkspec_dir, platdirname)):
+                qtplat = platdirname
+                break
+
+        return (mkspec_dir, qtplat)
 
     @when('@4 platform=darwin')
     def patch(self):
@@ -284,32 +306,40 @@ class Qt(Package):
         ]
         filter_file(r'(\+=.*)debug_and_release', r'\1', *files_to_filter)
 
-    @when('@4')  # *NOT* darwin/mac
+    @when('@4: %gcc')  # *NOT* darwin/mac gcc
     def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+
+        def conf(name):
+            return os.path.join(mkspec_dir, 'common', name + '.conf')
+
         # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'mkspecs/common/g++-base.conf')
+        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc', conf('g++-base'))
+        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++', conf('g++-base'))
 
-        # Necessary to build with GCC 6 and other modern compilers
-        # http://stackoverflow.com/questions/10354371/
-        filter_file('(^QMAKE_CXXFLAGS .*)', r'\1 -std=gnu++98',
-                    'mkspecs/common/gcc-base.conf')
-
+        # Don't error out on undefined symbols
         filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'mkspecs/common/g++-unix.conf')
+                    conf('g++-unix'))
 
-    @when('@5')
+        if self.spec.satisfies('@4'):
+            # Necessary to build with GCC 6 and other modern compilers
+            # http://stackoverflow.com/questions/10354371/
+            with open(conf('gcc-base'), 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    @when('@4: %intel')
     def patch(self):
-        # Fix qmake compilers in the default mkspec
-        filter_file('^QMAKE_CC .*', 'QMAKE_CC = cc',
-                    'qtbase/mkspecs/common/g++-base.conf')
-        filter_file('^QMAKE_CXX .*', 'QMAKE_CXX = c++',
-                    'qtbase/mkspecs/common/g++-base.conf')
+        (mkspec_dir, platform) = self.get_mkspec()
+        conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
 
-        filter_file('^QMAKE_LFLAGS_NOUNDEF .*', 'QMAKE_LFLAGS_NOUNDEF = ',
-                    'qtbase/mkspecs/common/g++-unix.conf')
+        # Intel's `ar` equivalent might not be in the path: replace it with
+        # explicit
+        xiar = os.path.join(os.path.dirname(self.compiler.cc), 'xiar')
+        filter_file(r'\bxiar\b', xiar, conf_file)
+
+        if self.spec.satisfies('@4'):
+            with open(conf_file, 'a') as f:
+                f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @property
     def common_config_args(self):
@@ -323,8 +353,8 @@ class Qt(Package):
             '-release',
             '-confirm-license',
             '-openssl-linked',
-            '{0}'.format(openssl.libs.search_flags),
-            '{0}'.format(openssl.headers.include_flags),
+            openssl.libs.search_flags,
+            openssl.headers.include_flags,
             '-optimized-qmake',
             '-no-pch',
         ]
@@ -351,7 +381,7 @@ class Qt(Package):
             sqlite = self.spec['sqlite']
             config_args.extend([
                 '-system-sqlite',
-                '-R', '{0}'.format(sqlite.prefix.lib),
+                '-R', sqlite.prefix.lib,
             ])
         else:
             comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
@@ -369,19 +399,19 @@ class Qt(Package):
             harfbuzz = self.spec['harfbuzz']
             config_args.extend([
                 '-system-harfbuzz',
-                '{0}'.format(harfbuzz.libs.search_flags),
-                '{0}'.format(harfbuzz.headers.include_flags),
+                harfbuzz.libs.search_flags,
+                harfbuzz.headers.include_flags,
                 '-system-pcre',
-                '{0}'.format(pcre.libs.search_flags),
-                '{0}'.format(pcre.headers.include_flags)
+                pcre.libs.search_flags,
+                pcre.headers.include_flags
             ])
 
         if self.spec.satisfies('@5.7:'):
             dc = self.spec['double-conversion']
             config_args.extend([
                 '-system-doubleconversion',
-                '{0}'.format(dc.libs.search_flags),
-                '{0}'.format(dc.headers.include_flags)
+                dc.libs.search_flags,
+                dc.headers.include_flags
             ])
 
         if '@:5.7.1' in self.spec:
@@ -389,19 +419,27 @@ class Qt(Package):
         else:
             # FIXME: those could work for other versions
             png = self.spec['libpng']
+            config_args.append('-system-libpng')
+            if not png.external:
+                config_args.extend([
+                    png.libs.search_flags,
+                    png.headers.include_flags
+                ])
+
             jpeg = self.spec['jpeg']
+            config_args.append('-system-libjpeg')
+            if not jpeg.external:
+                config_args.extend([
+                    jpeg.libs.search_flags,
+                    jpeg.headers.include_flags,
+                ])
             zlib = self.spec['zlib']
-            config_args.extend([
-                '-system-libpng',
-                '{0}'.format(png.libs.search_flags),
-                '{0}'.format(png.headers.include_flags),
-                '-system-libjpeg',
-                '{0}'.format(jpeg.libs.search_flags),
-                '{0}'.format(jpeg.headers.include_flags),
-                '-system-zlib',
-                '{0}'.format(zlib.libs.search_flags),
-                '{0}'.format(zlib.headers.include_flags)
-            ])
+            config_args.append('-system-zlib')
+            if not zlib.external:
+                config_args.extend([
+                    zlib.libs.search_flags,
+                    zlib.headers.include_flags
+                ])
 
         if '@:5.7.0' in self.spec:
             config_args.extend([
@@ -429,35 +467,11 @@ class Qt(Package):
             config_args.append('-{0}framework'.format(
                 '' if '+framework' in self.spec else 'no-'))
 
-        # Note: QT defaults to the following compilers
-        #  QT4 mac: gcc
-        #  QT5 mac: clang
-        #  linux: gcc
-        # In QT4, unsupported compilers lived under an 'unsupported'
-        # subdirectory but are now in the main platform directory.
-        spec = self.spec
-        cname = spec.compiler.name
-        cname = self.compiler_mapping.get(cname, cname)
-        is_new_qt = spec.satisfies('@5:')
-        platform = None
-        if MACOS_VERSION:
-            if is_new_qt and cname != "clang-libc++":
-                platform = 'macx-' + cname
-            elif not is_new_qt and cname != "g++":
-                platform = 'unsupported/macx-' + cname
-        elif cname != 'g++':
-            if is_new_qt:
-                platform = 'linux-' + cname
-            else:
-                platform = 'unsupported/linux-' + cname
-
-        if platform is not None:
-            config_args.extend(['-platform', platform])
+        (_, qtplat) = self.get_mkspec()
+        if qtplat is not None:
+            config_args.extend(['-platform', qtplat])
 
         return config_args
-
-    # Don't disable all the database drivers, but should
-    # really get them into spack at some point.
 
     @when('@3')
     def configure(self, spec, prefix):

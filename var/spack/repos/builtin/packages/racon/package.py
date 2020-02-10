@@ -29,10 +29,8 @@ class Racon(CMakePackage):
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.1')
 
+    patch('aarch64.patch', when='target=aarch64:')
+
     def cmake_args(self):
         args = ['-Dracon_build_wrapper=ON']
         return args
-
-    def install(self, spec, prefix):
-        install_tree('spack-build/bin', prefix.bin)
-        install_tree('spack-build/lib', prefix.lib)

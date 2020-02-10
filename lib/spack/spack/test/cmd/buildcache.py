@@ -17,7 +17,7 @@ buildcache = spack.main.SpackCommand('buildcache')
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
     monkeypatch.setattr(
-        spack.binary_distribution, 'get_specs', lambda x: specs
+        spack.binary_distribution, 'get_specs', lambda x, y: specs
     )
 
 
