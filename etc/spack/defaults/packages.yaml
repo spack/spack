@@ -15,50 +15,34 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    variants: ~docs~openmp+logging
-    compiler: [clang, gcc, intel, pgi, xl, nag]
+    compiler: [gcc, intel, pgi, clang, xl, nag, fj]
     providers:
+      D: [ldc]
       awk: [gawk]
       blas: [openblas]
       daal: [intel-daal]
       elf: [elfutils]
+      fftw-api: [fftw]
+      gl: [mesa+opengl, opengl]
+      glx: [mesa+glx, opengl]
+      glu: [mesa-glu, openglu]
       golang: [gcc]
       ipp: [intel-ipp]
-      java: [jdk]
+      java: [openjdk, jdk, ibm-java]
+      jpeg: [libjpeg-turbo, libjpeg]
       lapack: [openblas]
+      mariadb-client: [mariadb-c-client, mariadb]
       mkl: [intel-mkl]
       mpe: [mpe2]
-      mpi: [openmpi]
+      mpi: [openmpi, mpich]
+      mysql-client: [mysql, mariadb-c-client]
       opencl: [pocl]
-      openfoam: [openfoam-com, openfoam-org, foam-extend]
       pil: [py-pillow]
+      pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
-      jpeg: [libjpeg-turbo, libjpeg]
-# custom variants
-  conduit:
-    version: [master]
-  python:
-    variants: +shared~dbm
-  cmake:
-    paths:
-      cmake@3.14.5: /Users/larsen30/cmake-v3.14.5/
-    buildable: False
-  hwloc:
-    variants: ~libxml2
-  perl:
-    paths:
-      perl: /usr/
-    buildable: False
-# CUDA standard MacOS install paths
-  cuda:
-    paths:
-      cuda@8.0: /Developer/NVIDIA/CUDA-8.0
-      cuda@9.0: /Developer/NVIDIA/CUDA-9.0
-    buildable: False
-  openmpi:
-    paths:
-      openmpi@2.0.4%clang: /Users/larsen30/research/gui/openmpi-2.0.4/install_dir/
-    buildable: False
-
+      unwind: [libunwind]
+    permissions:
+      read: world
+      write: user

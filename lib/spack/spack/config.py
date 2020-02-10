@@ -81,14 +81,14 @@ configuration_paths = (
 
     # System configuration is per machine.
     # No system-level configs should be checked into spack by default
-    #DISABLED BY UBERENV: #DISABLED BY UBERENV: ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
+    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
-    #DISABLED BY UBERENV: #DISABLED BY UBERENV: ('site', os.path.join(spack.paths.etc_path, 'spack')),
+    ('site', os.path.join(spack.paths.etc_path, 'spack')),
 
     # User configuration can override both spack defaults and site config
-    #DISABLED BY UBERENV: #DISABLED BY UBERENV: ('user', spack.paths.user_config_path)
+    ('user', spack.paths.user_config_path)
 )
 
 #: Hard-coded default values for some key configuration options.
