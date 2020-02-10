@@ -1094,12 +1094,9 @@ class PackageInstaller(object):
         msg = "{0} a build task for {1} with status '{2}'"
         pkg_id = package_id(pkg)
 
-        # Ensure do not (re-)queue failed or installed packages.
+        # Ensure do not (re-)queue installed or failed packages.
+        assert pkg_id not in self.installed
         assert pkg_id not in self.failed
-
-        if pkg_id in self.installed:
-            tty.warn('Refusing to retry installed spec {0}'.format(pkg_id))
-            return
 
         # Remove any associated build task since its sequence will change
         self._remove_task(pkg_id)
