@@ -598,8 +598,14 @@ copy_user_configuration() {
     cp ${source}/{compilers,.spack/upstreams,packages}.yaml ${target}
 
     rm -f ${target}/modules.{,c}sh
-    echo "module use \"${root}\"" > ${target}/modules.sh
-    echo "module use \"${root}\"" > ${target}/modules.csh
+    echo "export MODULEPATH=\"\${MODULEPATH}\${MODULEPATH:+:}${root}\"" > ${target}/modules.sh
+    cat <<EOF > ${target}/modules.csh
+if ( \$?MODULEPATH ) then
+    setenv MODULEPATH \${MODULEPATH}:${root}
+else
+    setenv MODULEPATH ${root}
+endif
+EOF
 
     ./modules.rb > "${target}/modules.yaml"
 
