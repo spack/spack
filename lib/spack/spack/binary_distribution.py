@@ -661,7 +661,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
 
 # Internal cache for downloaded specs
-_cached_specs = None
+_cached_specs = set()
 
 
 def try_download_specs(urls=None, force=False):
@@ -669,7 +669,6 @@ def try_download_specs(urls=None, force=False):
     Try to download the urls and cache them
     '''
     global _cached_specs
-    _cached_specs = []
     if urls is None:
         return {}
     for link in urls:
@@ -687,7 +686,7 @@ def try_download_specs(urls=None, force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                _cached_specs.append(spec)
+                _cached_specs.add(spec)
 
     return _cached_specs
 
@@ -701,13 +700,13 @@ def get_spec(spec=None, force=False):
     if spec is None:
         return {}
     specfile_name = tarball_name(spec, '.spec.yaml')
-    if _cached_specs:
-        tty.debug("Using previously-retrieved specs")
-        return _cached_specs
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
         return {}
+
+    if spec in _cached_specs:
+        return _cached_specs
 
     for mirror in spack.mirror.MirrorCollection().values():
         fetch_url_build_cache = url_util.join(
@@ -728,28 +727,18 @@ def get_spec(spec=None, force=False):
     return try_download_specs(urls=urls, force=force)
 
 
-def get_specs(force=False, use_arch=False, names=None):
+def get_specs(force=False, allarch=False):
     """
     Get spec.yaml's for build caches available on mirror
     """
-    global _cached_specs
     arch = architecture.Arch(architecture.platform(),
                              'default_os', 'default_target')
     arch_pattern = ('([^-]*-[^-]*-[^-]*)')
-    if use_arch:
+    if not allarch:
         arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
 
-    if names is None:
-        names = ['']
-    names_or_hashes = [name.replace('/', '') for name in names]
-    names_pattern = '|'.join(names_or_hashes)
-    regex_pattern = '%s(.*)(%s)(.*)(spec.yaml$)' % (arch_pattern,
-                                                    names_pattern)
-    name_re = re.compile(regex_pattern)
-
-    if _cached_specs:
-        tty.debug("Using previously-retrieved specs")
-        return _cached_specs
+    regex_pattern = '%s(.*)(spec.yaml$)' % (arch_pattern)
+    arch_re = re.compile(regex_pattern)
 
     if not spack.mirror.MirrorCollection():
         tty.debug("No Spack mirrors are currently configured")
@@ -766,7 +755,7 @@ def get_specs(force=False, use_arch=False, names=None):
             if os.path.exists(mirror_dir):
                 files = os.listdir(mirror_dir)
                 for file in files:
-                    m = name_re.search(file)
+                    m = arch_re.search(file)
                     if m:
                         link = url_util.join(fetch_url_build_cache, file)
                         urls.add(link)
@@ -776,7 +765,7 @@ def get_specs(force=False, use_arch=False, names=None):
             p, links = web_util.spider(
                 url_util.join(fetch_url_build_cache, 'index.html'))
             for link in links:
-                m = name_re.search(link)
+                m = arch_re.search(link)
                 if m:
                     urls.add(link)
 
