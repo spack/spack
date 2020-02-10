@@ -12,13 +12,13 @@ class Xterm(AutotoolsPackage):
     that can't use the window system directly."""
 
     homepage = "http://invisible-island.net/xterm/"
-    url      = "https://github.com/ThomasDickey/xterm-snapshots/archive/xterm-353.tar.gz"
+    url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
 
-    version('353', sha256='f5859a0e07a958576f78866aa32a59d66c34b4bd8f1894d0d1db30733d4380b1')
-    version('350', sha256='382ee3c321fbec18eeecb7772ec0485d4cb9fba7968cbe2f7c82dc9d2f2e93c8')
-    version('340', sha256='7488deeecdae7275a064518fae202179af5fc97916c2ea36a8132927b51441c6')
-    version('330', sha256='e9845fc91330bdedefbe4f427b095d7854f679274f43b3d342da9e4029aab244')
-    version('327', sha256='3bc81be814f612095a4c16a01db89fcfc8cce410a04ae567090a70efa829c726')
+    version('353', sha256='e521d3ee9def61f5d5c911afc74dd5c3a56ce147c7071c74023ea24cac9bb768')
+    version('350', sha256='aefb59eefd310268080d1a90a447368fb97a9a6737bfecfc3800bf6cc304104d')
+    version('340', sha256='b5c7f77b7afade798461e2a2f86d5af64f9c9c9f408b1af0f545add978df722a')
+    version('330', sha256='7aeef9f29f6b95e09f481173c8c3053357bf5ffe162585647f690fd1707556df')
+    version('327', sha256='66fb2f6c35b342148f549c276b12a3aa3fb408e27ab6360ddec513e14376150b')
 
     depends_on('libxft')
     depends_on('fontconfig')
