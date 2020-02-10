@@ -95,7 +95,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
-    conflicts('+afqmc', when='@:3.6.0 +cuda', msg='AFQMC CUDA support available with QMCPACK 3.7.0 or later')
+    conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
     conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
     conflicts('+afqmc', when='~complex +cuda', msg='AFQMC real build not supported with CUDA. Add +complex')
     conflicts('+afqmc', when='%gcc@:6.0', msg='AFQMC code requires gcc@6.1 or greater')
