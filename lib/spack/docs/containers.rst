@@ -197,9 +197,13 @@ The tables below describe the configuration options that are currently supported
      - Whether to strip binaries
      - ``true`` (default) or ``false``
      - No
-   * - ``os_packages``
-     - System packages to be installed
-     - Valid packages for the ``final`` OS
+   * - ``os_packages.build``
+     - System packages needed at build-time
+     - Valid packages for the current OS
+     - No
+   * - ``os_packages.final``
+     - System packages needed at run-time
+     - Valid packages for the current OS
      - No
    * - ``extra_instructions:build``
      - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the end of the ``build`` stage

@@ -3,6 +3,13 @@ From: {{ build.image }}:{{ build.tag }}
 Stage: build
 
 %post
+{% if os_packages_build.list %}
+  # Update, install and cleanup of system packages needed at build-time
+  {{ os_packages_build.update }}
+  {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }}
+  {{ os_packages_build.clean }}
+
+{% endif %}
   # Create the manifest file for the installation in /opt/spack-environment
   mkdir {{ paths.environment }} && cd {{ paths.environment }}
   cat << EOF > spack.yaml
@@ -50,11 +57,11 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
-{% if os_packages.list %}
-  # Update, install and cleanup of system packages
-  {{ os_packages.update }}
-  {{ os_packages.install }} {{ os_packages.list | join | replace('\n', ' ') }}
-  {{ os_packages.clean }}
+{% if os_packages_final.list %}
+  # Update, install and cleanup of system packages needed at run-time
+  {{ os_packages_final.update }}
+  {{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }}
+  {{ os_packages_final.clean }}
 {% endif %}
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT

@@ -4,6 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for the 'container' subsection of Spack environments."""
 
+#: List of packages for the schema below
+_list_of_packages = {
+    'type': 'array',
+    'items': {
+        'type': 'string'
+    }
+}
+
 #: Schema for the container attribute included in Spack environments
 container_schema = {
     'type': 'object',
@@ -41,10 +49,13 @@ container_schema = {
         },
         # Additional system packages that are needed at runtime
         'os_packages': {
-            'type': 'array',
-            'items': {
-                'type': 'string'
-            }
+            'anyOf': [
+                _list_of_packages,
+                {'type': 'object',
+                 'properties': {'build': _list_of_packages,
+                                'final': _list_of_packages},
+                 'additionalProperties': False}
+            ]
         },
         # Add labels to the image
         'labels': {

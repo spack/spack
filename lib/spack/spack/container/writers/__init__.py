@@ -8,6 +8,11 @@ convenience functions.
 import collections
 import copy
 
+try:
+    from collections.abc import Sequence  # novm
+except ImportError:
+    from collections import Sequence
+
 import spack.environment
 import spack.schema.env
 import spack.tengine as tengine
@@ -116,9 +121,36 @@ class PathContext(tengine.Context):
         return syaml.dump(manifest, default_flow_style=False).strip()
 
     @tengine.context_property
-    def os_packages(self):
+    def os_packages_final(self):
         """Additional system packages that are needed at run-time."""
-        package_list = self.container_config.get('os_packages', None)
+        os_packages = self.container_config.get('os_packages', {})
+        # To simplify the configuration YAML it's possible to specify
+        # a list directly. In that case we assume the packages are for
+        # the final stage.
+        if isinstance(os_packages, Sequence):
+            os_packages = {'final': os_packages}
+
+        package_list = os_packages.get('final', None)
+        return self._package_info_from(package_list)
+
+    @tengine.context_property
+    def os_packages_build(self):
+        """Additional system packages that are needed at build-time."""
+        os_packages = self.container_config.get('os_packages', {})
+        package_list = os_packages.get('build', None)
+        return self._package_info_from(package_list)
+
+    def _package_info_from(self, package_list):
+        """Helper method to pack a list of packages with the additional
+        information required by the template.
+
+        Args:
+            package_list: list of packages
+
+        Returns:
+            Enough information to know how to update the cache, install
+            a list opf packages, and clean in the end.
+        """
         if not package_list:
             return package_list
 

@@ -1,6 +1,13 @@
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }}:{{ build.tag }} as builder
 
+{% if os_packages_build %}
+# Install OS packages needed to build the software
+RUN {{ os_packages_build.update }}                                   \
+ && {{ os_packages_build.install }}{% for pkg in os_packages_build.list %} {{ pkg }}{% endfor %} \
+ && {{ os_packages_build.clean }}
+{% endif %}
+
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
 RUN mkdir {{ paths.environment }} \
@@ -34,10 +41,10 @@ COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
-{% if os_packages %}
-RUN {{ os_packages.update }}                                   \
- && {{ os_packages.install }}{% for pkg in os_packages.list %} {{ pkg }}{% endfor %} \
- && {{ os_packages.clean }}
+{% if os_packages_final %}
+RUN {{ os_packages_final.update }}                                   \
+ && {{ os_packages_final.install }}{% for pkg in os_packages_final.list %} {{ pkg }}{% endfor %} \
+ && {{ os_packages_final.clean }}
 {% endif %}
 
 {% if extra_instructions.final %}

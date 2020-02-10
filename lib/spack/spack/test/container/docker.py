@@ -29,13 +29,14 @@ def test_build_and_run_images(minimal_configuration):
 def test_packages(minimal_configuration):
     # In this minimal configuration we don't have packages
     writer = writers.create(minimal_configuration)
-    assert writer.os_packages is None
+    assert writer.os_packages_build is None
+    assert writer.os_packages_final is None
 
     # If we add them a list should be returned
     pkgs = ['libgomp1']
     minimal_configuration['spack']['container']['os_packages'] = pkgs
     writer = writers.create(minimal_configuration)
-    p = writer.os_packages
+    p = writer.os_packages_final
     assert p.update
     assert p.install
     assert p.clean
