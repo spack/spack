@@ -246,7 +246,10 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append('-DQMC_COMPLEX=0')
 
         if '+afqmc' in spec:
-            args.append('-DBUILD_AFQMC=1')
+            if '+nccl' in spec:
+                args.append('-DBUILD_AFQMC_WITH_NCCL=1')
+            else:
+                args.append('-DBUILD_AFQMC=1')
         else:
             args.append('-DBUILD_AFQMC=0')
 
