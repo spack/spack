@@ -81,17 +81,6 @@ STATUS_DEQUEUED = 'dequeued'
 STATUS_REMOVED = 'removed'
 
 
-# TODO: Should the following be static methods?
-# TODO: If static, which class: package or installer?
-# TODO: Or keep as module functions as described in:
-# TODO:   https://www.webucator.com/blog/2016/05/\
-# TODO:       when-to-use-static-methods-in-python-never/
-# TODO: Or "..a class with a lot of static methods might just be better off as
-# TODO:    a module with top-level functions." in
-# TODO:   https://frasertweedale.github.io/blog-redhat/posts/\
-# TODO:       2019-02-07-staticmethod-considered-beneficial.html
-
-
 def _handle_external_and_upstream(pkg, explicit):
     """
     Determine if the package is external or upstream and register it in the
@@ -1105,12 +1094,11 @@ class PackageInstaller(object):
         msg = "{0} a build task for {1} with status '{2}'"
         pkg_id = package_id(pkg)
 
-        # Ensure do not (re-)queue installed or failed specs.
+        # Ensure do not (re-)queue failed or installed packages.
+        assert pkg_id not in self.failed
+
         if pkg_id in self.installed:
             tty.warn('Refusing to retry installed spec {0}'.format(pkg_id))
-            return
-        elif pkg_id in self.failed:
-            tty.warn('Refusing to retry failed spec {0}'.format(pkg_id))
             return
 
         # Remove any associated build task since its sequence will change
@@ -1145,8 +1133,6 @@ class PackageInstaller(object):
                         lock.release_read()
                     else:
                         lock.release_write()
-                except AssertionError:
-                    pass
                 except Exception as exc:
                     tty.warn(err.format(exc.__class__.__name__, ltype,
                                         pkg_id, str(exc)))
