@@ -18,9 +18,8 @@ class Unifdef(MakefilePackage):
 
     maintainers = ['matthiasdiener']
 
-    version('2.11',            sha256='828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537')
+    version('2.11', sha256='828ffc270ac262b88fe011136acef2780c05b0dc3c5435d005651740788d4537')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
-        makefile.filter('ln -s', 'ln -sf')
-        makefile.filter('\$\{HOME\}', prefix)
+        makefile.filter(r'\$\{HOME\}', prefix)
