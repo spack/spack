@@ -248,3 +248,18 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
 
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_install_ready', _noop)
     installer._prepare_for_install(task, True, True, False)
+
+
+def test_installer_init_queue(install_mockery, monkeypatch):
+    """Test of installer queue functions."""
+    with spack.config.override('config:install_missing_compilers', True):
+        spec = spack.spec.Spec('dependent-install')
+        spec.concretize()
+        assert spec.concrete
+        installer = inst.PackageInstaller(spec.package)
+        installer._init_queue(True, True)
+
+        ids = list(installer.build_tasks)
+        assert len(ids) == 2
+        assert 'dependency-install' in ids
+        assert 'dependent-install' in ids

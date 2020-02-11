@@ -883,7 +883,7 @@ class PackageInstaller(object):
 
                 # First push any missing compilers (if requested)
                 if install_compilers:
-                    self._add_bootstrap_compilers(self, dep_pkg)
+                    self._add_bootstrap_compilers(dep_pkg)
 
                 if package_id(dep_pkg) not in self.build_tasks:
                     self._push_task(dep_pkg, False, 0, 0, STATUS_ADDED)
@@ -896,7 +896,7 @@ class PackageInstaller(object):
             # Push any missing compilers (if requested) as part of the
             # package dependencies.
             if install_compilers:
-                self._add_bootstrap_compilers(self, self.pkg)
+                self._add_bootstrap_compilers(self.pkg)
 
         if install_package and self.pkg_id not in self.build_tasks:
             # Now add the package itself, if appropriate
