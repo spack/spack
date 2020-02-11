@@ -231,3 +231,20 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     assert len(ids) == 1
     task = installer.build_tasks[ids[0]]
     assert task.compiler
+
+
+def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
+    """Test of _prepare_for_install's early return for installed task path."""
+    def _noop(installer, pkg):
+        pass
+
+    spec = spack.spec.Spec('dependent-install')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+    installer.installed.add(task.pkg_id)
+
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_install_ready', _noop)
+    installer._prepare_for_install(task, True, True, False)
