@@ -1409,7 +1409,8 @@ class Database(object):
             if not (start_date < inst_date < end_date):
                 continue
 
-            if query_spec is any or rec.spec.satisfies(query_spec):
+            if (query_spec is any or
+                rec.spec.satisfies(query_spec, strict=True)):
                 results.append(rec.spec)
 
         return results
