@@ -320,3 +320,16 @@ def test_requeue_task(install_mockery, capfd):
 
     out = capfd.readouterr()[0]
     assert 'Installing a in progress by another process' in out
+
+
+def test_update_failed_no_mark(install_mockery):
+    """Test of _update_failed sans mark and dependent build tasks."""
+    spec = spack.spec.Spec('dependent-install')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+    installer._update_failed(task)
+
+    assert installer.failed['dependent-install'] is None
