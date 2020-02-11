@@ -485,3 +485,28 @@ def test_fj_version_detection(version_str, expected_version):
 def test_detecting_mixed_toolchains(compiler_spec, expected_result, config):
     compiler = spack.compilers.compilers_for_spec(compiler_spec).pop()
     assert spack.compilers.is_mixed_toolchain(compiler) is expected_result
+
+
+@pytest.mark.regression('14798,13733')
+def test_raising_if_compiler_target_is_over_specific(config):
+    # Compiler entry with an overly specific target
+    compilers = [{'compiler': {
+        'spec': 'gcc@9.0.1',
+        'paths': {
+            'cc': '/usr/bin/gcc-9',
+            'cxx': '/usr/bin/g++-9',
+            'f77': '/usr/bin/gfortran-9',
+            'fc': '/usr/bin/gfortran-9'
+        },
+        'flags': {},
+        'operating_system': 'ubuntu18.04',
+        'target': 'haswell',
+        'modules': [],
+        'environment': {},
+        'extra_rpaths': []
+    }}]
+    arch_spec = spack.spec.ArchSpec(('linux', 'ubuntu18.04', 'haswell'))
+    with spack.config.override('compilers', compilers):
+        cfg = spack.compilers.get_compiler_config()
+        with pytest.raises(ValueError):
+            spack.compilers.get_compilers(cfg, 'gcc@9.0.1', arch_spec)
