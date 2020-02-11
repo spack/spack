@@ -12,6 +12,7 @@ class Snakemake(PythonPackage):
     homepage = "https://snakemake.readthedocs.io/en/stable/"
     url      = "https://pypi.io/packages/source/s/snakemake/snakemake-3.11.2.tar.gz"
 
+    version('5.10.0', sha256='a3fa8b12db84938c919996d61be66031bcb99c4b4d017278731324a6112b0d59')
     version('5.6.0', sha256='65b944bcf06fd31b5da7430a6012a542c4c3c05a822b92ca218f2406eabd2c24')
     version('3.11.2', sha256='f7a3b586bc2195f2dce4a4817b7ec828b6d2a0cff74a04e0f7566dcd923f9761')
 
