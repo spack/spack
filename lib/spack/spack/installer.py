@@ -620,8 +620,7 @@ class PackageInstaller(object):
             pkg (PackageBase): the package with possible compiler dependencies
         """
         packages = _packages_needed_to_bootstrap_compiler(pkg)
-        for (packg, is_compiler) in packages:
-            comp_pkg = packg.package
+        for (comp_pkg, is_compiler) in packages:
             if package_id(comp_pkg) not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 

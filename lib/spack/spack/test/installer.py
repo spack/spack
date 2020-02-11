@@ -209,3 +209,25 @@ def test_dump_packages_deps(install_mockery, tmpdir):
     spec = spack.spec.Spec('simple-inheritance').concretized()
     with tmpdir.as_cwd():
         inst.dump_packages(spec, '.')
+
+
+def test_add_bootstrap_compilers(install_mockery, monkeypatch):
+    """Test to cover _add_bootstrap_compilers."""
+    def _pkgs(pkg):
+        spec = spack.spec.Spec('mpi').concretized()
+        return [(spec.package, True)]
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+    assert len(installer.build_tasks) == 0
+
+    monkeypatch.setattr(spack.installer,
+                        '_packages_needed_to_bootstrap_compiler', _pkgs)
+    installer._add_bootstrap_compilers(spec.package)
+
+    ids = list(installer.build_tasks)
+    assert len(ids) == 1
+    task = installer.build_tasks[ids[0]]
+    assert task.compiler
