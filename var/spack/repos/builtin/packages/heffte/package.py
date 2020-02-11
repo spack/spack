@@ -14,6 +14,7 @@ class Heffte(CMakePackage):
     git      = "https://bitbucket.org/icl/heffte.git"
 
     version('master', branch='master')
+    version('0.2', sha256='4e76ae60982b316c2e873b2e5735669b22620fefa1fc82f325cdb6989bec78d1')
     version('0.1', sha256='d279a03298d2dc76574b1ae1031acb4ea964348cf359273d1afa4668b5bfe748')
 
     variant('cuda', default=False, description='Builds with support for GPUs via CUDA')
