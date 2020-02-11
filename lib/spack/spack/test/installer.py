@@ -333,3 +333,26 @@ def test_update_failed_no_mark(install_mockery):
     installer._update_failed(task)
 
     assert installer.failed['dependent-install'] is None
+
+
+def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
+    """Test install with uninstalled dependencies."""
+    def _noop(installer, task):
+        return
+
+    spec = spack.spec.Spec('dependent-install')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    # Skip the actual installation and any status updates
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
+    monkeypatch.setattr(inst.PackageInstaller, '_update_installed', _noop)
+    monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
+
+    msg = 'Cannot proceed with dependent-install'
+    with pytest.raises(spack.installer.InstallError, matches=msg):
+        installer.install()
+
+    out = str(capsys.readouterr())
+    assert 'Detected uninstalled dependencies for' in out
