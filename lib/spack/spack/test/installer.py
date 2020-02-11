@@ -48,6 +48,22 @@ def dest_install_from_cache_errors(install_mockery, capsys):
     assert not spec.package.installed_from_binary_cache
 
 
+def test_install_from_cache_ok(install_mockery, monkeypatch):
+    def _installed(pkg, explicit):
+        return True
+
+    def _post_hook(spec):
+        pass
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    monkeypatch.setattr(spack.installer, '_try_install_from_binary_cache',
+                        _installed)
+    monkeypatch.setattr(spack.hooks, 'post_install', _post_hook)
+
+    assert inst._install_from_cache(spec.package, True, True)
+
+
 def test_installer_init_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
         inst.PackageInstaller('abc')
