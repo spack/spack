@@ -8,6 +8,7 @@ import pytest
 
 import spack.compilers
 import spack.installer as inst
+import spack.util.lock as lk
 import spack.repo
 import spack.spec
 
@@ -280,3 +281,22 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
     installer._install_task(task)
     assert spec.package.name in installer.installed
+
+
+def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
+    """Test _release_lock for supposed write lock with exception."""
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    pkg_id = 'test'
+    with tmpdir.as_cwd():
+        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        installer.locks[pkg_id] = ('write', lock)
+        assert lock._writes == 0
+
+        installer._release_lock(pkg_id)
+        out = str(capsys.readouterr()[1])
+        msg = 'exception when releasing write lock for {0}'.format(pkg_id)
+        assert msg in out
