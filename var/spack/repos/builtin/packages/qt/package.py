@@ -5,6 +5,8 @@
 
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+import llnl.util.tty as tty
+import itertools
 import os
 import sys
 
@@ -18,6 +20,7 @@ class Qt(Package):
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
+    maintainers = ['sethrj']
 
     phases = ['configure', 'build', 'install']
 
@@ -178,7 +181,9 @@ class Qt(Package):
     use_xcode = True
 
     # Mapping for compilers/systems in the QT 'mkspecs'
-    compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+    compiler_mapping = {'intel': ('icc',),
+                        'clang': ('clang-libc++', 'clang'),
+                        'gcc': ('g++',)}
     platform_mapping = {'darwin': 'macx'}
 
     def url_for_version(self, version):
@@ -235,17 +240,26 @@ class Qt(Package):
         """
         spec = self.spec
         cname = spec.compiler.name
-        cname = self.compiler_mapping.get(cname, cname)
         pname = spec.architecture.platform
+
+        # Transform spack compiler name to a list of possible QT compilers
+        cnames = self.compiler_mapping.get(cname, [cname])
+        # Transform platform name to match those in QT
         pname = self.platform_mapping.get(pname, pname)
 
         qtplat = None
         mkspec_dir = 'qtbase/mkspecs' if spec.satisfies('@5:') else 'mkspecs'
-        for subdir in ('', 'unsupported'):
+        for subdir, cname in itertools.product(('', 'unsupported/'), cnames):
             platdirname = "".join([subdir, pname, "-", cname])
+            tty.debug("Checking for platform '{0}' in {1}".format(
+                      platdirname, mkspec_dir))
             if os.path.exists(os.path.join(mkspec_dir, platdirname)):
                 qtplat = platdirname
                 break
+        else:
+            tty.warn("No matching QT platform was found in {0} "
+                     "for platform '{1}' and compiler {2}".format(
+                         mkspec_dir, pname, ",".join(cnames)))
 
         return (mkspec_dir, qtplat)
 
