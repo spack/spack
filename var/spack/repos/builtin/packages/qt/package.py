@@ -355,6 +355,14 @@ class Qt(Package):
             with open(conf_file, 'a') as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
+    @when('@4 %clang')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+        conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+
+        with open(conf_file, 'a') as f:
+            f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
     @property
     def common_config_args(self):
         # incomplete list is here http://doc.qt.io/qt-5/configure-options.html
