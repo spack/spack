@@ -30,6 +30,7 @@ def test_install_msg():
 
 
 def dest_install_from_cache_errors(install_mockery, capsys):
+    """Test to ensure cover _install_from_cache errors."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -49,6 +50,7 @@ def dest_install_from_cache_errors(install_mockery, capsys):
 
 
 def test_install_from_cache_ok(install_mockery, monkeypatch):
+    """Test to ensure cover _install_from_cache to the return."""
     def _installed(pkg, explicit):
         return True
 
@@ -86,6 +88,7 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
 
 
 def test_installer_init_errors(install_mockery):
+    """Test to ensure cover installer constructor errors."""
     with pytest.raises(ValueError, match='must be a package'):
         inst.PackageInstaller('abc')
 
@@ -115,6 +118,7 @@ def test_installer_strings(install_mockery):
 
 
 def test_installer_last_phase_error(install_mockery, capsys):
+    """Test to cover last phase error."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -127,6 +131,7 @@ def test_installer_last_phase_error(install_mockery, capsys):
 
 
 def test_installer_ensure_ready_errors(install_mockery):
+    """Test to cover _ensure_ready errors."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -158,6 +163,7 @@ def test_installer_ensure_ready_errors(install_mockery):
 
 
 def test_package_id(install_mockery):
+    """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
     with pytest.raises(ValueError, matches='spec is not concretized'):
         inst.package_id(pkg)
@@ -170,6 +176,7 @@ def test_package_id(install_mockery):
 
 
 def test_fake_install(install_mockery):
+    """Test to cover fake install basics."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -178,21 +185,20 @@ def test_fake_install(install_mockery):
     assert os.path.isdir(pkg.prefix.lib)
 
 
-def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
+def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
+    """Test to cover most of _packages_needed_to_boostrap_compiler."""
+    # TODO: More work is needed to go beyond the dependency check
+    def _no_compilers(pkg, arch_spec):
+        return []
+
+    # Test path where no compiler packages returned
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
     packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
     assert not packages
 
-
-def test_packages_needed_to_bootstrap_compiler_2dep(install_mockery,
-                                                    monkeypatch):
-    def _no_compilers(pkg, arch_spec):
-        return []
-
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
+    # Test up to the dependency check
     monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
     with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
