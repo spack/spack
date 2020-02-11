@@ -202,3 +202,10 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
     monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
     with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
+
+
+def test_dump_packages_deps(install_mockery, tmpdir):
+    """Test to add coverage to dump_packages."""
+    spec = spack.spec.Spec('simple-inheritance').concretized()
+    with tmpdir.as_cwd():
+        inst.dump_packages(spec, '.')
