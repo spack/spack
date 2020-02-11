@@ -300,3 +300,23 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
         out = str(capsys.readouterr()[1])
         msg = 'exception when releasing write lock for {0}'.format(pkg_id)
         assert msg in out
+
+
+def test_requeue_task(install_mockery, capfd):
+    """Test to ensure cover _requeue_task."""
+    spec = spack.spec.Spec('a')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+    assert task.status == inst.STATUS_ADDED
+    installer._requeue_task(task)
+
+    ids = list(installer.build_tasks)
+    assert len(ids) == 1
+    qtask = installer.build_tasks[ids[0]]
+    assert qtask.status == inst.STATUS_INSTALLING
+
+    out = capfd.readouterr()[0]
+    assert 'Installing a in progress by another process' in out
