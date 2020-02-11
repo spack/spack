@@ -160,7 +160,8 @@ of environments:
 
        # Additional system packages that are needed at runtime
        os_packages:
-       - libgomp
+         final:
+         - libgomp
 
        # Extra instructions
        extra_instructions:
@@ -196,6 +197,10 @@ The tables below describe the configuration options that are currently supported
    * - ``strip``
      - Whether to strip binaries
      - ``true`` (default) or ``false``
+     - No
+   * - ``os_packages``
+     - Equivalent to specifying the same packages for ``build`` and ``final``
+     - Valid packages for the current OS
      - No
    * - ``os_packages.build``
      - System packages needed at build-time

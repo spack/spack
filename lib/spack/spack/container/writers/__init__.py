@@ -123,21 +123,21 @@ class PathContext(tengine.Context):
     @tengine.context_property
     def os_packages_final(self):
         """Additional system packages that are needed at run-time."""
+        return self._os_packages_for_stage('final')
+
+    @tengine.context_property
+    def os_packages_build(self):
+        """Additional system packages that are needed at build-time."""
+        return self._os_packages_for_stage('build')
+
+    def _os_packages_for_stage(self, stage):
         os_packages = self.container_config.get('os_packages', {})
         # To simplify the configuration YAML it's possible to specify
         # a list directly. In that case we assume the packages are for
         # the final stage.
         if isinstance(os_packages, Sequence):
-            os_packages = {'final': os_packages}
-
-        package_list = os_packages.get('final', None)
-        return self._package_info_from(package_list)
-
-    @tengine.context_property
-    def os_packages_build(self):
-        """Additional system packages that are needed at build-time."""
-        os_packages = self.container_config.get('os_packages', {})
-        package_list = os_packages.get('build', None)
+            os_packages = {stage: os_packages}
+        package_list = os_packages.get(stage, None)
         return self._package_info_from(package_list)
 
     def _package_info_from(self, package_list):
