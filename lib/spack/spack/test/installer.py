@@ -141,9 +141,21 @@ def test_fake_install(install_mockery):
     assert os.path.isdir(pkg.prefix.lib)
 
 
-def test_packages_needed_to_bootstrap_compiler(install_mockery):
+def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
     packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
     assert not packages
+
+
+def test_packages_needed_to_bootstrap_compiler_2dep(install_mockery,
+                                                    monkeypatch):
+    def _no_compilers(pkg, arch_spec):
+        return []
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
+    with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
+        inst._packages_needed_to_bootstrap_compiler(spec.package)
