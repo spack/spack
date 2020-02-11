@@ -356,3 +356,31 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
 
     out = str(capsys.readouterr())
     assert 'Detected uninstalled dependencies for' in out
+
+
+def test_install_failed(install_mockery, monkeypatch, capsys):
+    """Test install with failed install."""
+    def _noop(installer, task):
+        return
+
+    def _failed(spec):
+        return True
+
+    spec = spack.spec.Spec('b')
+    spec.concretize()
+    assert spec.concrete
+
+    installer = inst.PackageInstaller(spec.package)
+
+    # Make sure the package is identified as failed
+    monkeypatch.setattr(spack.store.db, 'prefix_failed', _failed)
+
+    # Skip the actual installation though it should never get there
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
+
+    msg = 'Installation of b failed'
+    with pytest.raises(spack.installer.InstallError, matches=msg):
+        installer.install()
+
+    out = str(capsys.readouterr())
+    assert 'Warning: b failed to install' in out
