@@ -28,6 +28,8 @@ class Mono(AutotoolsPackage):
     depends_on('libiconv')
     depends_on('perl', type=('build'))
 
+    version('6.8.0.105', sha256='578799c44c3c86a9eb5daf6dec6c60a24341940fd376371956d4a46cf8612178',
+            url='https://download.mono-project.com/sources/mono/mono-6.8.0.105.tar.xz')
     version('5.18.0.240', sha256='143e80eb00519ff496742e78ee07403a3c3629437f3a498eee539de8108da895')
     version('5.16.0.220', sha256='f420867232b426c062fa182256a66b29efa92992c119847359cdd1ab75af8de3')
     version('5.14.0.177', sha256='d4f5fa2e8188d66fbc8054f4145711e45c1faa6d070e63600efab93d1d189498')
