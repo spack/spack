@@ -263,3 +263,20 @@ def test_installer_init_queue(install_mockery, monkeypatch):
         assert len(ids) == 2
         assert 'dependency-install' in ids
         assert 'dependent-install' in ids
+
+
+def test_install_task_use_cache(install_mockery, monkeypatch):
+    """Test _install_task to cover use_cache path."""
+    def _install_true(pkg, cache_only, explicit):
+        return True
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    monkeypatch.setattr(spack.installer, '_install_from_cache',
+                        _install_true)
+    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+    installer._install_task(task)
+    assert spec.package.name in installer.installed
