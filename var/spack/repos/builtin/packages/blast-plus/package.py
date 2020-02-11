@@ -38,6 +38,8 @@ class BlastPlus(AutotoolsPackage):
     # aren't any .svn dirs in the tree, so I've updated their patch
     # to just comment out the block.
     patch('blast-make-fix2.5.0.diff', when="@2.5.0:2.6.0")
+    # update config.guess
+    patch('config.guess-update.diff', working_dir="c++/src/build-system")
 
     # See https://github.com/Homebrew/homebrew-science/issues/2337#issuecomment-170011511
     @when('@:2.2.31')
