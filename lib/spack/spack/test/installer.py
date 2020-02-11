@@ -64,6 +64,27 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     assert inst._install_from_cache(spec.package, True, True)
 
 
+def test_process_external_package_module(install_mockery, monkeypatch, capfd):
+    """Test to simply cover the external module message path."""
+    def _no_rec(spec):
+        return None
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+
+    # Ensure take the external module path WITHOUT any changes to the database
+    monkeypatch.setattr(spack.store.db, 'get_record', _no_rec)
+
+    spec.external_path = '/actual/external/path/not/checked'
+    spec.external_module = 'unchecked_module'
+    inst._process_external_package(spec.package, False)
+
+    out = capfd.readouterr()[0]
+    assert 'has external module in {0}'.format(spec.external_module) in out
+    assert 'is actually installed in {0}'.format(spec.external_path) in out
+
+
 def test_installer_init_errors(install_mockery):
     with pytest.raises(ValueError, match='must be a package'):
         inst.PackageInstaller('abc')
