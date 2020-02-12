@@ -945,7 +945,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --upstream -g --global --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1419,7 +1419,7 @@ _spack_test() {
 _spack_uninstall() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all"
+        SPACK_COMPREPLY="-h --help -f --force -R --dependents -y --yes-to-all -a --all -u --upstream -g --global"
     else
         _installed_packages
     fi
