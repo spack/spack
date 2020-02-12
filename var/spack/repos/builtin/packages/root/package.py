@@ -117,6 +117,8 @@ class Root(CMakePackage):
             description='Enable postgres support')
     variant('pythia6', default=False,
             description='Enable pythia6 support')
+    variant('pythia8', default=False,
+            description='Enable pythia8 support')
     variant('python', default=True,
             description='Enable Python ROOT bindings')
     variant('qt4', default=False,
@@ -216,6 +218,7 @@ class Root(CMakePackage):
     depends_on('openssl',   when='+davix')  # Also with davix
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
+    depends_on('pythia8',   when='+pythia8')
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
@@ -361,8 +364,8 @@ class Root(CMakePackage):
                 ['oracle', False],
                 ['pgsql', 'postgres'],
                 ['pythia6'],
-                ['pythia8', False],
-                ['python', self.spec.satisfies('+python')],
+                ['pythia8'],
+                ['python'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],
