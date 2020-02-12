@@ -60,8 +60,10 @@ def setup_parser(subparser):
                                             "building package(s)")
     create.add_argument('-y', '--spec-yaml', default=None,
                         help='Create buildcache entry for spec from yaml file')
-    create.add_argument('--no-deps', action='store_true', default='false',
-                        help='Create buildcache entry wo/ dependencies')
+    create.add_argument('--only', default='package,dependencies',
+                        dest='things_to_install',
+                        choices=['package', 'dependencies'],
+                        help="add package and/or its dependencies")
     arguments.add_common_arguments(create, ['specs'])
     create.set_defaults(func=createtarball)
 
@@ -299,8 +301,8 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
-                   rel, unsigned, allow_root, no_rebuild_index):
+def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory, key,
+                   force, rel, unsigned, allow_root, no_rebuild_index):
     if spec_yaml:
         packages = set()
         with open(spec_yaml, 'r') as fd:
@@ -342,14 +344,23 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
             tty.debug('skipping external or virtual spec %s' %
                       match.format())
         else:
-            tty.debug('adding matching spec %s' % match.format())
-            specs.add(match)
-            if no_deps is True:
+            if add_spec:
+                tty.debug('adding matching spec %s' % match.format())
+                specs.add(match)
+            else:
+                tty.debug('skipping matching spec %s' % match.format())
+
+            if not add_deps:
                 continue
+
             tty.debug('recursing dependencies')
             for d, node in match.traverse(order='post',
                                           depth=True,
                                           deptype=('link', 'run')):
+                # skip root, since it's handled above
+                if d == 0:
+                    continue
+
                 if node.external or node.virtual:
                     tty.debug('skipping external or virtual dependency %s' %
                               node.format())
@@ -376,9 +387,12 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
-    _createtarball(env, args.spec_yaml, args.specs, args.directory,
-                   args.key, args.no_deps, args.force, args.rel, args.unsigned,
-                   args.allow_root, args.no_rebuild_index)
+    add_spec = ('package' in args.things_to_install)
+    add_deps = ('dependencies' in args.things_to_install)
+
+    _createtarball(env, args.spec_yaml, args.specs, add_spec, add_deps,
+                   args.directory, args.key, args.force, args.rel,
+                   args.unsigned, args.allow_root, args.no_rebuild_index)
 
 
 def installtarball(args):
