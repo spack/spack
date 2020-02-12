@@ -201,6 +201,10 @@ The tables below describe the configuration options that are currently supported
      - System packages to be installed
      - Valid packages for the ``final`` OS
      - No
+   * - ``extra_instructions:setup``
+     - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the beginning of the ``build`` stage
+     - Anything understood by the current ``format``
+     - No
    * - ``extra_instructions:build``
      - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the end of the ``build`` stage
      - Anything understood by the current ``format``

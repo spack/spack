@@ -1,6 +1,11 @@
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }}:{{ build.tag }} as builder
 
+{% if extra_instructions.setup %}
+# Custom instructions before building the packages
+{{ extra_instructions.setup }}
+{% endif %}
+
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
 RUN mkdir {{ paths.environment }} \
@@ -23,6 +28,7 @@ RUN cd {{ paths.environment }} && \
     spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
 
 {% if extra_instructions.build %}
+# Custom instructions at the end of the build stage
 {{ extra_instructions.build }}
 {% endif %}
 
@@ -41,6 +47,7 @@ RUN {{ os_packages.update }}                                   \
 {% endif %}
 
 {% if extra_instructions.final %}
+# Custom instructions at the end of the final stage
 {{ extra_instructions.final }}
 {% endif %}
 

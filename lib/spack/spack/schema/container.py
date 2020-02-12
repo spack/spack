@@ -55,6 +55,7 @@ container_schema = {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
+                'setup': {'type': 'string'},
                 'build': {'type': 'string'},
                 'final': {'type': 'string'}
             }

@@ -3,6 +3,10 @@ From: {{ build.image }}:{{ build.tag }}
 Stage: build
 
 %post
+{% if extra_instructions.setup %}
+  # Custom instructions before building the packages
+{{ extra_instructions.setup | indent(width=2, first=True) }}
+{% endif %}
   # Create the manifest file for the installation in /opt/spack-environment
   mkdir {{ paths.environment }} && cd {{ paths.environment }}
   cat << EOF > spack.yaml
@@ -24,7 +28,9 @@ EOF
     awk -F: '{print $1}' | xargs strip -s
 {% endif %}
 {% if extra_instructions.build %}
-{{ extra_instructions.build }}
+
+  # Custom instructions at the end of the build stage
+{{ extra_instructions.build | indent(width=2, first=True) }}
 {% endif %}
 
 
@@ -59,7 +65,9 @@ Stage: final
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
 {% if extra_instructions.final %}
-{{ extra_instructions.final }}
+
+  # Custom instructions at the end of the final stage
+{{ extra_instructions.final | indent(width=2, first=True) }}
 {% endif %}
 
 {% if runscript %}
