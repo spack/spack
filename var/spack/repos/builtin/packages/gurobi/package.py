@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,8 @@ class Gurobi(Package):
     def url_for_version(self, version):
         return "file://{0}/gurobi{1}_linux64.tar.gz".format(os.getcwd(), version)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('GUROBI_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('GUROBI_HOME', self.prefix)
 
     def install(self, spec, prefix):
         install_tree('linux64', prefix)

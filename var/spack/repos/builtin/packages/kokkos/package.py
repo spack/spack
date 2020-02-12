@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -67,6 +67,11 @@ class Kokkos(Package):
     variant('enable_lambda', default=False,
             description="set enable_lambda Kokkos CUDA option")
 
+    host_values = ('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+                   'Power7', 'Power8', 'Power9',
+                   'WSM', 'SNB', 'HSW', 'BDW', 'SKX',
+                   'KNC', 'KNL')
+
     gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
                   'Maxwell50', 'Maxwell52', 'Maxwell53',
                   'Pascal60', 'Pascal61',
@@ -82,9 +87,7 @@ class Kokkos(Package):
     variant(
         'host_arch',
         default='none',
-        values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
-                'Power7', 'Power8', 'Power9',
-                'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
+        values=host_values,
         description='Set the host architecture to use'
     )
 

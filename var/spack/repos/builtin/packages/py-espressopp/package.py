@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyEspressopp(CMakePackage):
        atomistic or bead-spring models as they are used in soft matter research
     """
     homepage = "https://espressopp.github.io"
-    url      = "https://github.com/espressopp/espressopp/tarball/v1.9.4.1"
+    url      = "https://github.com/espressopp/espressopp/tarball/v2.0.2"
     git      = "https://github.com/espressopp/espressopp.git"
 
     version('develop', branch='master')

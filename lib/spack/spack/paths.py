@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ from llnl.util.filesystem import ancestor
 
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = ancestor(__file__, 4)
+
+#: User configuration location
+user_config_path = os.path.expanduser('~/.spack')
 
 #: synonym for prefix
 spack_root = prefix
@@ -38,15 +41,14 @@ operating_system_path = os.path.join(module_path, 'operating_systems')
 test_path             = os.path.join(module_path, "test")
 hooks_path            = os.path.join(module_path, "hooks")
 var_path              = os.path.join(prefix, "var", "spack")
+user_var_path         = os.path.join(user_config_path, "var", "spack")
+stage_path            = os.path.join(user_var_path, "stage")
 repos_path            = os.path.join(var_path, "repos")
 share_path            = os.path.join(prefix, "share", "spack")
 
 # Paths to built-in Spack repositories.
 packages_path      = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
-
-#: User configuration location
-user_config_path = os.path.expanduser('~/.spack')
 
 
 opt_path        = os.path.join(prefix, "opt")

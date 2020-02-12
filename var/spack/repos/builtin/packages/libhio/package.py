@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,10 +48,6 @@ class Libhio(AutotoolsPackage):
     patch('0001-configury-fix-a-problem-with-bz2-configury.patch', when="@1.4.1.0")
     patch('0001-hdf5-make-docs-optional.patch', when="@1.4.1.0")
     patch('0001-spack-fix-for-spack-to-work-on-non-cray-systems.patch', when="@1.4.1.2")
-
-    def autoreconf(self, spec, prefix):
-        autoreconf = which('autoreconf')
-        autoreconf('-ifv')
 
     def configure_args(self):
         spec = self.spec

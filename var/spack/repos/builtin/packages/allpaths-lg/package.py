@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class AllpathsLg(AutotoolsPackage):
        small and large (mammalian size) genomes."""
 
     homepage = "http://www.broadinstitute.org/software/allpaths-lg/blog/"
-    url      = "ftp://ftp.broadinstitute.org/pub/crd/ALLPATHS/Release-LG/latest_source_code/LATEST_VERSION.tar.gz"
+    url      = "ftp://ftp.broadinstitute.org/pub/crd/ALLPATHS/Release-LG/latest_source_code/allpathslg-52488.tar.gz"
 
     version('52488', sha256='035b49cb21b871a6b111976757d7aee9c2513dd51af04678f33375e620998542')
 

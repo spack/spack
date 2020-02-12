@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,7 @@ def test_uninstall_deprecated(mock_packages, mock_archive, mock_fetch,
 
     non_deprecated = spack.store.db.query()
 
-    uninstall('-y', 'libelf@0.8.10')
+    uninstall('-y', '-g', 'libelf@0.8.10')
 
     assert spack.store.db.query() == spack.store.db.query(installed=any)
     assert spack.store.db.query() == non_deprecated

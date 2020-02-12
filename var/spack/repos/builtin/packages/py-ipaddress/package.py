@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ class PyIpaddress(PythonPackage):
     """Python 3.3's ipaddress for older Python versions"""
 
     homepage = "https://github.com/phihag/ipaddress"
-    url      = "https://pypi.io/packages/source/i/ipaddress/ipaddress-1.0.18.tar.gz"
+    url      = "https://pypi.io/packages/source/i/ipaddress/ipaddress-1.0.23.tar.gz"
 
+    version('1.0.23', sha256='b7f8e0369580bb4a24d5ba1d7cc29660a4a6987763faf1d8a8046830e020e7e2')
     version('1.0.18', sha256='5d8534c8e185f2d8a1fda1ef73f2c8f4b23264e8e30063feeb9511d492a413e1')
 
     depends_on('py-setuptools', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,6 @@ class Cinch(Package):
         # (CMake) Header Only library so just copy
         install_tree(self.stage.source_path, prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('CMAKE_PREFIX_PATH', self.prefix)
-        spack_env.set('CINCH_SOURCE_DIR', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('CMAKE_PREFIX_PATH', self.prefix)
+        env.set('CINCH_SOURCE_DIR', self.prefix)

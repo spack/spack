@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,11 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-    url      = "https://sourceware.org/elfutils/ftp/0.177/elfutils-0.177.tar.bz2"
+    url      = "https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
     version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
     version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')
     version('0.175', sha256='f7ef925541ee32c6d15ae5cb27da5f119e01a5ccdbe9fe57bf836730d7b7a65b')
@@ -87,6 +88,11 @@ class Elfutils(AutotoolsPackage):
                         spec['gettext'].prefix.lib)
         else:
             args.append('--disable-nls')
+
+        # The experimental debuginfod server requires libmicrohttpd
+        # which doesn't have a spack package
+        if spec.satisfies('@0.178:'):
+            args.append('--disable-debuginfod')
 
         return args
 

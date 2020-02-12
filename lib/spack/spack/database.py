@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -279,7 +279,6 @@ class Database(object):
 
         """
         self.root = root
-
         if db_dir is None:
             # If the db_dir is not provided, default to within the db root.
             self._db_dir = os.path.join(self.root, _db_dirname)
@@ -300,6 +299,31 @@ class Database(object):
             mkdirp(self._db_dir)
 
         self.is_upstream = is_upstream
+
+        # Create .spack-db/index.json for global upstream it doesn't exist
+        global_install_tree = spack.config.get(
+            'upstreams')['global']['install_tree']
+        global_install_tree = global_install_tree.replace(
+            '$spack', spack.paths.prefix)
+        if self.is_upstream:
+            if global_install_tree in self._db_dir:
+                if not os.path.isfile(self._index_path):
+                    f = open(self._index_path, "w+")
+                    database = {
+                        'database': {
+                            'installs': {},
+                            'version': str(_db_version)
+                        }
+                    }
+                    try:
+                        sjson.dump(database, f)
+                    except YAMLError as e:
+                        raise syaml.SpackYAMLError(
+                            "error writing YAML database:", str(e))
+
+            self.lock = ForbiddenLock()
+        else:
+            self.lock = Lock(self._lock_path)
 
         # initialize rest of state.
         self.db_lock_timeout = (
@@ -987,6 +1011,9 @@ class Database(object):
             rec.installed = False
             return rec.spec
 
+        if self.is_upstream:
+            return rec.spec
+
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
@@ -1294,6 +1321,30 @@ class Database(object):
         key = spec.dag_hash()
         upstream, record = self.query_by_spec_hash(key)
         return record and not record.installed
+
+    @property
+    def unused_specs(self):
+        """Return all the specs that are currently installed but not needed
+        at runtime to satisfy user's requests.
+
+        Specs in the return list are those which are not either:
+            1. Installed on an explicit user request
+            2. Installed as a "run" or "link" dependency (even transitive) of
+               a spec at point 1.
+        """
+        needed, visited = set(), set()
+        with self.read_transaction():
+            for key, rec in self._data.items():
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
+
+            unused = [rec.spec for key, rec in self._data.items()
+                      if key not in needed and rec.installed]
+
+        return unused
 
 
 class UpstreamDatabaseLockingError(SpackError):

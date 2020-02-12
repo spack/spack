@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,5 @@ class PyEnum34(PythonPackage):
     version('1.1.6', sha256='8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1')
 
     depends_on('python')
-    conflicts('python@3.4:')
     depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

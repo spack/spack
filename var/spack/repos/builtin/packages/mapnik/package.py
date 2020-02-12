@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Mapnik(AutotoolsPackage):
     depends_on('libjpeg')
     depends_on('libtiff')
     depends_on('proj')
-    depends_on('cairo')
+    depends_on('cairo+pdf')  # +pdf needed for mapnik.printing
     depends_on('postgresql', type=('build', 'link', 'run'))
     depends_on('gdal', type=('build', 'link', 'run'))
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
@@ -37,9 +37,9 @@ class Mapnik(AutotoolsPackage):
 
     conflicts('%gcc@9.0.0:')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
+        env.set('GDAL_DATA', spec['gdal'].prefix.share.gdal)
 
     def configure_args(self):
         return [

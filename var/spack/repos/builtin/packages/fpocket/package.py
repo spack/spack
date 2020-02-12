@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,11 +14,11 @@ class Fpocket(MakefilePackage):
     version('master', branch='master',
             git='https://github.com/Discngine/fpocket.git')
 
-    depends_on("netcdf")
+    depends_on("netcdf-c")
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.compiler.name == 'gcc':
-            spack_env.set('CXX', 'g++')
+            env.set('CXX', 'g++')
 
     def edit(self):
         makefile = FileFilter('makefile')

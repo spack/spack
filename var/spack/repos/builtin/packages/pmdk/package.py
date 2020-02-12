@@ -1,10 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import spack.architecture
 
 
 class Pmdk(Package):
@@ -36,7 +35,7 @@ class Pmdk(Package):
 
         # pmdk is particular about the ARCH specification, must be
         # exactly "x86_64" for build to work
-        if 'x86_64' in spack.architecture.sys_type():
+        if spec.target.family == 'x86_64':
             make_args += ['ARCH=x86_64']
 
         make("install", *make_args)

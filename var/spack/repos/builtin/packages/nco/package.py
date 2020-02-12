@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,10 +30,10 @@ class Nco(AutotoolsPackage):
 
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('antlr@2.7.7+cxx')  # required for ncap2
     depends_on('gsl')              # desirable for ncap2
-    depends_on('udunits2')         # allows dimensional unit transformations
+    depends_on('udunits')          # allows dimensional unit transformations
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
@@ -45,9 +45,9 @@ class Nco(AutotoolsPackage):
         spec = self.spec
         return ['--{0}-doc'.format('enable' if '+doc' in spec else 'disable')]
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
-        spack_env.set('NETCDF_INC', spec['netcdf'].prefix.include)
-        spack_env.set('NETCDF_LIB', spec['netcdf'].prefix.lib)
-        spack_env.set('ANTLR_ROOT', spec['antlr'].prefix)
-        spack_env.set('UDUNITS2_PATH', spec['udunits2'].prefix)
+        env.set('NETCDF_INC', spec['netcdf-c'].prefix.include)
+        env.set('NETCDF_LIB', spec['netcdf-c'].prefix.lib)
+        env.set('ANTLR_ROOT', spec['antlr'].prefix)
+        env.set('UDUNITS2_PATH', spec['udunits'].prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,39 +13,64 @@ class Flang(CMakePackage):
 
     homepage = "https://github.com/flang-compiler/flang"
 
-    url      = "https://github.com/flang-compiler/flang/archive/flang_20180612.tar.gz"
+    url      = "https://github.com/flang-compiler/flang/archive/flang_20190329.tar.gz"
     git      = "https://github.com/flang-compiler/flang.git"
 
-    version('develop', branch='master')
+    maintainers = ['naromero77']
+
+    version('master', branch='master')
+    version('20190329', sha256='b8c621da53829f8c53bad73125556fb1839c9056d713433b05741f7e445199f2')
+    version('20181226', sha256='00e716bea258c3bb60d6a5bb0c82bc79f67000062dc89939693e75f501883c36')
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
-    depends_on('llvm@flang-develop', when='@develop')
-    depends_on('llvm@flang-20180921', when='@20180921 target=x86_64:')
-    depends_on('llvm@flang-20180612', when='@20180612 target=x86_64:')
+    # Variants
+    variant('nvptx',
+            default=False,
+            description='Target OpenMP offload to NVidia GPUs')
 
-    depends_on('llvm@flang-20180921', when='@20180921 target=aarch64:')
+    # Build dependency
+    depends_on('cmake@3.8:', type='build')
+    depends_on('python@2.7:', type='build')
 
-    # LLVM version specific to OpenPOWER.
-    depends_on('llvm@flang-ppc64le-20180921', when='@20180921 target=ppc64le:')
-    depends_on('llvm@flang-ppc64le-20180612', when='@20180612 target=ppc64le:')
+    depends_on('llvm-flang@release_70', when='@master')
+    depends_on('llvm-flang@20190329', when='@20190329')
+    depends_on('llvm-flang@20181226_70', when='@20181226')
+    depends_on('llvm-flang@20180921', when='@20180921')
+    depends_on('llvm-flang@20180612', when='@20180612')
 
-    depends_on('pgmath@develop', when='@develop')
+    depends_on('pgmath@master', when='@master')
+    depends_on('pgmath@20190329', when='@20190329')
+    depends_on('pgmath@20181226', when='@20181226')
     depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
+    depends_on('cuda', when='+nvptx', type=('run'))
+
+    # conflicts
+    conflicts('+nvptx', when='@:20181226',
+              msg='OMP offload to NVidia GPUs available March 2019 or later')
+
     def cmake_args(self):
+        spec = self.spec
         options = [
             '-DWITH_WERROR=OFF',
             '-DCMAKE_C_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'clang'),
+                spec['llvm-flang'].prefix.bin, 'clang'),
             '-DCMAKE_CXX_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'clang++'),
+                spec['llvm-flang'].prefix.bin, 'clang++'),
             '-DCMAKE_Fortran_COMPILER=%s' % os.path.join(
-                self.spec['llvm'].prefix.bin, 'flang'),
+                spec['llvm-flang'].prefix.bin, 'flang'),
             '-DFLANG_LIBOMP=%s' % find_libraries(
-                'libomp', root=self.spec['llvm'].prefix.lib)
+                'libomp', root=spec['llvm-flang'].prefix.lib),
+            '-DPYTHON_EXECUTABLE={0}'.format(
+                spec['python'].command.path)
         ]
+
+        if '+nvptx' in spec:
+            options.append('-DFLANG_OPENMP_GPU_NVIDIA=ON')
+        else:
+            options.append('-DFLANG_OPENMP_GPU_NVIDIA=OFF')
 
         return options
 
@@ -61,7 +86,7 @@ class Flang(CMakePackage):
             out.write('#!/bin/bash\n')
             out.write(
                 '{0} -I{1} -L{2} -L{3} {4}{5} {6}{7} -B{8} "$@"\n'.format(
-                    self.spec['llvm'].prefix.bin.flang,
+                    self.spec['llvm-flang'].prefix.bin.flang,
                     self.prefix.include, self.prefix.lib,
                     self.spec['pgmath'].prefix.lib,
                     self.compiler.fc_rpath_arg, self.prefix.lib,
@@ -71,9 +96,11 @@ class Flang(CMakePackage):
         chmod = which('chmod')
         chmod('+x', flang)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # to find llvm's libc++.so
-        spack_env.set('LD_LIBRARY_PATH', self.spec['llvm'].prefix.lib)
-        run_env.set('FC', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F77', join_path(self.spec.prefix.bin, 'flang'))
-        run_env.set('F90', join_path(self.spec.prefix.bin, 'flang'))
+        env.set('LD_LIBRARY_PATH', self.spec['llvm-flang'].prefix.lib)
+
+    def setup_run_environment(self, env):
+        env.set('FC',  self.spec.prefix.bin.flang)
+        env.set('F77', self.spec.prefix.bin.flang)
+        env.set('F90', self.spec.prefix.bin.flang)

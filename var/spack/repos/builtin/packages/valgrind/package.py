@@ -1,9 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import glob
 import sys
 
 
@@ -67,3 +68,10 @@ clang: error: unknown argument: '-static-libubsan'
         if sys.platform == 'darwin':
             options.append('--build=amd64-darwin')
         return options
+
+    # Valgrind the potential for overlong perl shebangs
+    def patch(self):
+        for link_tool_in in glob.glob('coregrind/link_tool_exe_*.in'):
+            filter_file('^#! @PERL@',
+                        '#! /usr/bin/env perl',
+                        link_tool_in)

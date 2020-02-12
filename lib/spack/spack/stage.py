@@ -1,7 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
 
 import os
 import stat
@@ -152,6 +154,7 @@ def get_stage_root():
 
     if _stage_root is None:
         candidates = spack.config.get('config:build_stage')
+
         if isinstance(candidates, string_types):
             candidates = [candidates]
 
@@ -269,7 +272,7 @@ class Stage(object):
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -456,7 +459,7 @@ class Stage(object):
 
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
@@ -771,7 +774,7 @@ def get_checksums_for_versions(
             *spack.cmd.elide_list(
                 ["{0:{1}}  {2}".format(str(v), max_len, url_dict[v])
                  for v in sorted_versions]))
-    tty.msg('')
+    print()
 
     archives_to_fetch = tty.get_number(
         "How many would you like to checksum?", default=1, abort='q')
@@ -818,7 +821,7 @@ def get_checksums_for_versions(
     ])
 
     num_hash = len(version_hashes)
-    tty.msg("Checksummed {0} version{1} of {2}".format(
+    tty.msg("Checksummed {0} version{1} of {2}:".format(
         num_hash, '' if num_hash == 1 else 's', name))
 
     return version_lines

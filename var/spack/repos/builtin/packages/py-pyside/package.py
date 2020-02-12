@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,17 @@ class PyPyside(PythonPackage):
         rpath = self.rpath
         rpath.append(os.path.join(
             self.prefix, pypkg.site_packages_dir, 'PySide'))
+
+        # Fix subprocess.mswindows check for Python 3.5
+        # https://github.com/pyside/pyside-setup/pull/55
+        filter_file(
+            '^if subprocess.mswindows:',
+            'mswindows = (sys.platform == "win32")\r\nif mswindows:',
+            "popenasync.py")
+        filter_file(
+            '^    if subprocess.mswindows:',
+            '    if mswindows:',
+            "popenasync.py")
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.

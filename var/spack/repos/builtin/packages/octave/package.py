@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class Octave(AutotoolsPackage):
+class Octave(AutotoolsPackage, GNUMirrorPackage):
     """GNU Octave is a high-level language, primarily intended for numerical
     computations. It provides a convenient command line interface for solving
     linear and nonlinear problems numerically, and for performing other
@@ -15,10 +15,11 @@ class Octave(AutotoolsPackage):
     Matlab. It may also be used as a batch-oriented language."""
 
     homepage = "https://www.gnu.org/software/octave/"
-    url      = "https://ftpmirror.gnu.org/octave/octave-4.0.0.tar.gz"
+    gnu_mirror_path = "octave/octave-4.0.0.tar.gz"
 
     extendable = True
 
+    version('5.1.0', sha256='e36b1124cac27c7caa51cc57de408c31676d5f0096349b4d50b57bfe1bcd7495')
     version('4.4.1', sha256='09fbd0f212f4ef21e53f1d9c41cf30ce3d7f9450fb44911601e21ed64c67ae97')
     version('4.4.0', sha256='72f846379fcec7e813d46adcbacd069d72c4f4d8f6003bcd92c3513aafcd6e96')
     version('4.2.2', sha256='77b84395d8e7728a1ab223058fe5e92dc38c03bc13f7358e6533aab36f76726e')
@@ -75,7 +76,7 @@ class Octave(AutotoolsPackage):
     depends_on('glpk',         when='+glpk')
     depends_on('gl2ps',        when='+gl2ps')
     depends_on('gnuplot',      when='+gnuplot')
-    depends_on('image-magick',  when='+magick')
+    depends_on('imagemagick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
     depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
@@ -156,7 +157,7 @@ class Octave(AutotoolsPackage):
 
         if '+magick' in spec:
             config_args.append("--with-magick=%s"
-                               % spec['image-magick'].prefix.lib)
+                               % spec['imagemagick'].prefix.lib)
         else:
             config_args.append("--without-magick")
 

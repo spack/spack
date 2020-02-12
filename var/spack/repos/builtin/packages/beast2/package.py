@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,8 +22,8 @@ class Beast2(Package):
 
     depends_on('java')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('BEAST', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('BEAST', self.prefix)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)

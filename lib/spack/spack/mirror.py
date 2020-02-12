@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,10 @@ import six
 
 import ruamel.yaml.error as yaml_error
 
+from ordereddict_backport import OrderedDict
+
 try:
-    from collections.abc import Mapping
+    from collections.abc import Mapping  # novm
 except ImportError:
     from collections import Mapping
 
@@ -166,7 +168,7 @@ class MirrorCollection(Mapping):
     """A mapping of mirror names to mirrors."""
 
     def __init__(self, mirrors=None, scope=None):
-        self._mirrors = dict(
+        self._mirrors = OrderedDict(
             (name, Mirror.from_dict(mirror, name))
             for name, mirror in (
                 mirrors.items() if mirrors is not None else
@@ -178,6 +180,7 @@ class MirrorCollection(Mapping):
     def to_yaml(self, stream=None):
         return syaml.dump(self.to_dict(True), stream)
 
+    # TODO: this isn't called anywhere
     @staticmethod
     def from_yaml(stream, name=None):
         try:

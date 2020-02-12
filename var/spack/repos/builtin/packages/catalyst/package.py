@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -148,7 +148,7 @@ class Catalyst(CMakePackage):
             tty.msg("Already generated %s in %s" % (self.name,
                                                     self.stage.source_path))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib
@@ -160,18 +160,18 @@ class Catalyst(CMakePackage):
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, paraview_subdir)
-        run_env.set('ParaView_DIR', self.prefix)
-        run_env.prepend_path('LIBRARY_PATH', lib_dir)
-        run_env.prepend_path('LD_LIBRARY_PATH', lib_dir)
+        env.set('ParaView_DIR', self.prefix)
+        env.prepend_path('LIBRARY_PATH', lib_dir)
+        env.prepend_path('LD_LIBRARY_PATH', lib_dir)
 
         if '+python' in self.spec or '+python3' in self.spec:
             python_version = self.spec['python'].version.up_to(2)
-            run_env.prepend_path('PYTHONPATH', join_path(lib_dir,
-                                 'python{0}'.format(python_version),
-                                 'site-packages'))
+            env.prepend_path('PYTHONPATH', join_path(lib_dir,
+                             'python{0}'.format(python_version),
+                             'site-packages'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('ParaView_DIR', self.prefix)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('ParaView_DIR', self.prefix)
 
     @property
     def root_cmakelists_dir(self):

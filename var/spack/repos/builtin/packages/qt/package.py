@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,6 +117,10 @@ class Qt(Package):
     patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
     patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
 
+    # patch overflow builtins
+    patch('qt5_11-intel-overflow.patch', when='@5.11')
+    patch('qt5_12-intel-overflow.patch', when='@5.12:')
+
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
     depends_on("flex", when='+webkit', type='build')
@@ -135,11 +139,12 @@ class Qt(Package):
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
     depends_on("sqlite", when='+sql', type=('build', 'run'))
+    depends_on("sqlite+column_metadata", when='+sql%intel', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl~krellpatch')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
@@ -160,7 +165,8 @@ class Qt(Package):
         depends_on("xcb-util-keysyms")
         depends_on("xcb-util-renderutil")
         depends_on("xcb-util-wm")
-        depends_on("libxext", when='@3:4.99')
+        depends_on("libxext")
+        depends_on("libxrender")
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
@@ -168,6 +174,9 @@ class Qt(Package):
                   msg="QT 4 for macOS is only patched for 4.8.7")
 
     use_xcode = True
+
+    # Mapping for compilers in the QT 'mkspecs'
+    compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
@@ -339,7 +348,11 @@ class Qt(Package):
             config_args.append('-no-openssl')
 
         if '+sql' in self.spec:
-            config_args.append('-system-sqlite')
+            sqlite = self.spec['sqlite']
+            config_args.extend([
+                '-system-sqlite',
+                '-R', '{0}'.format(sqlite.prefix.lib),
+            ])
         else:
             comps = ['db2', 'ibase', 'oci', 'tds', 'mysql', 'odbc', 'psql',
                      'sqlite', 'sqlite2']
@@ -415,16 +428,31 @@ class Qt(Package):
         if MACOS_VERSION:
             config_args.append('-{0}framework'.format(
                 '' if '+framework' in self.spec else 'no-'))
-        if '@5:' in self.spec and MACOS_VERSION:
-            config_args.extend([
-                '-no-xcb-xlib',
-                '-no-pulseaudio',
-                '-no-alsa',
-            ])
-            if self.spec.satisfies('@:5.11'):
-                config_args.append('-no-xinput2')
 
-        # FIXME: else: -system-xcb ?
+        # Note: QT defaults to the following compilers
+        #  QT4 mac: gcc
+        #  QT5 mac: clang
+        #  linux: gcc
+        # In QT4, unsupported compilers lived under an 'unsupported'
+        # subdirectory but are now in the main platform directory.
+        spec = self.spec
+        cname = spec.compiler.name
+        cname = self.compiler_mapping.get(cname, cname)
+        is_new_qt = spec.satisfies('@5:')
+        platform = None
+        if MACOS_VERSION:
+            if is_new_qt and cname != "clang-libc++":
+                platform = 'macx-' + cname
+            elif not is_new_qt and cname != "g++":
+                platform = 'unsupported/macx-' + cname
+        elif cname != 'g++':
+            if is_new_qt:
+                platform = 'linux-' + cname
+            else:
+                platform = 'unsupported/linux-' + cname
+
+        if platform is not None:
+            config_args.extend(['-platform', platform])
 
         return config_args
 
@@ -472,51 +500,56 @@ class Qt(Package):
             sdkpath = which('xcrun')('--show-sdk-path', output=str).strip()
             config_args.extend([
                 '-cocoa',
-                '-platform', 'unsupported/macx-clang-libc++',
                 '-sdk', sdkpath])
 
         configure(*config_args)
 
-    @when('@5.0:5.6')
-    def configure(self, spec, prefix):
-        webkit_args = [] if '+webkit' in spec else ['-skip', 'qtwebkit']
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtkstyle'.format('' if '+gtk' in spec else 'no-'),
-                  *(webkit_args + self.common_config_args))
-
-    @when('@5.7:')
+    @when('@5')
     def configure(self, spec, prefix):
         config_args = self.common_config_args
+        version = self.version
 
-        if not MACOS_VERSION:
+        config_args.extend([
+            '-no-eglfs',
+            '-no-directfb',
+            '-{0}gtk{1}'.format(
+                '' if '+gtk' in spec else 'no-',
+                '' if version >= Version('5.7') else 'style')
+        ])
+
+        if MACOS_VERSION:
             config_args.extend([
-                '-system-xcb',
+                '-no-xcb-xlib',
+                '-no-pulseaudio',
+                '-no-alsa',
             ])
+            if version < Version('5.12'):
+                config_args.append('-no-xinput2')
+        else:
+            # Linux-only QT5 dependencies
+            config_args.append('-system-xcb')
 
         if '~webkit' in spec:
             config_args.extend([
-                '-skip', 'webengine',
+                '-skip',
+                'webengine' if version >= Version('5.7') else 'qtwebkit',
             ])
 
-        if '~opengl' in spec and spec.satisfies('@5.10:'):
-            config_args.extend([
-                '-skip', 'webglplugin',
-            ])
+        if spec.satisfies('@5.7'):
+            config_args.extend(['-skip', 'virtualkeyboard'])
 
-        if self.version > Version('5.8'):
+        if version >= Version('5.8'):
             # relies on a system installed wayland, i.e. no spack package yet
             # https://wayland.freedesktop.org/ubuntu16.04.html
             # https://wiki.qt.io/QtWayland
             config_args.extend(['-skip', 'wayland'])
 
-        if spec.satisfies('@5.7'):
-            config_args.extend(['-skip', 'virtualkeyboard'])
+        if version >= Version('5.10') and '~opengl' in spec:
+            config_args.extend([
+                '-skip', 'webglplugin',
+            ])
 
-        configure('-no-eglfs',
-                  '-no-directfb',
-                  '-{0}gtk'.format('' if '+gtk' in spec else 'no-'),
-                  *config_args)
+        configure(*config_args)
 
     def build(self, spec, prefix):
         make()

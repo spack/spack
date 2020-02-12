@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1154,7 +1154,9 @@ class HeaderList(FileList):
 
     # Make sure to only match complete words, otherwise path components such
     # as "xinclude" will cause false matches.
-    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+    # Avoid matching paths such as <prefix>/include/something/detail/include,
+    # e.g. in the CUDA Toolkit which ships internal libc++ headers.
+    include_regex = re.compile(r'(.*?)(\binclude\b)(.*)')
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)

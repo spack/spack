@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,11 +45,11 @@ class Regcm(AutotoolsPackage):
             description='Build NetCDF using the high performance parallel '
                         'NetCDF implementation.')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
     depends_on('hdf5')
     depends_on('mpi')
-    depends_on('netcdf +parallel-netcdf', when='+pnetcdf')
+    depends_on('netcdf-c +parallel-netcdf', when='+pnetcdf')
 
     intel_msg = ('Intel compiler not working with this specific version of '
                  'RegCM (generates a bug at runtime): please install a newer '

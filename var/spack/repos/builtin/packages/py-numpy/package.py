@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import platform
+import subprocess
 
 
 class PyNumpy(PythonPackage):
@@ -14,8 +15,9 @@ class PyNumpy(PythonPackage):
     Fortran code, and useful linear algebra, Fourier transform, and random
     number capabilities"""
 
-    homepage = "http://www.numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.17.3.zip"
+    homepage = "https://numpy.org/"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.18.1.zip"
+    git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
@@ -27,10 +29,16 @@ class PyNumpy(PythonPackage):
         'numpy.distutils.command', 'numpy.distutils.fcompiler'
     ]
 
+    version('master', branch='master')
+    version('1.18.1', sha256='b6ff59cee96b454516e47e7721098e6ceebef435e3e21ac2d6c3b8b02628eb77')
+    version('1.18.0', sha256='a9d72d9abaf65628f0f31bbb573b7d9304e43b1e6bbae43149c17737a42764c4')
+    version('1.17.5', sha256='16507ba6617f62ae3c6ab1725ae6f550331025d4d9a369b83f6d5a470446c342')
+    version('1.17.4', sha256='f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316')
     version('1.17.3', sha256='a0678793096205a4d784bd99f32803ba8100f639cf3b932dc63b21621390ea7e')
     version('1.17.2', sha256='73615d3edc84dd7c4aeb212fa3748fb83217e00d201875a47327f55363cef2df')
     version('1.17.1', sha256='f11331530f0eff69a758d62c2461cd98cdc2eae0147279d8fc86e0464eb7e8ca')
     version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
+    version('1.16.6', sha256='e5cf3fdf13401885e8eea8170624ec96225e2174eb0c611c6f26dd33b489e3ff')
     version('1.16.5', sha256='8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c')
     version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
     version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
@@ -71,6 +79,9 @@ class PyNumpy(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
     depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
     depends_on('py-setuptools', type='build')
+    # Check pyproject.toml for updates to the required cython version
+    depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
+    depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
@@ -88,6 +99,28 @@ class PyNumpy(PythonPackage):
         # -std=c99 at least required, old versions of GCC default to -std=c90
         if self.spec.satisfies('%gcc@:5.1') and name == 'cflags':
             flags.append(self.compiler.c99_flag)
+        # Check gcc version in use by intel compiler
+        # This will essentially check the system gcc compiler unless a gcc
+        # module is already loaded.
+        if self.spec.satisfies('%intel') and name == 'cflags':
+            p1 = subprocess.Popen(
+                [self.compiler.cc, '-v'],
+                stderr=subprocess.PIPE
+            )
+            p2 = subprocess.Popen(
+                ['grep', 'compatibility'],
+                stdin=p1.stderr,
+                stdout=subprocess.PIPE
+            )
+            p1.stderr.close()
+            out, err = p2.communicate()
+            gcc_version = Version(out.split()[5].decode('utf-8'))
+            if gcc_version < Version('4.8'):
+                raise InstallError('The GCC version that the Intel compiler '
+                                   'uses must be >= 4.8. The GCC in use is '
+                                   '{0}'.format(gcc_version))
+            if gcc_version <= Version('5.1'):
+                flags.append(self.compiler.c99_flag)
         return (flags, None, None)
 
     @run_before('build')

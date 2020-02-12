@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.21.3.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.22.tar.gz"
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
@@ -33,6 +33,8 @@ class PyScikitLearn(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('0.22.1', sha256='51ee25330fc244107588545c70e2f3570cfc4017cff09eed69d6e1d82a212b7d')
+    version('0.22',   sha256='314abf60c073c48a1e95feaae9f3ca47a2139bd77cebb5b877c23a45c9e03012')
     version('0.21.3', sha256='eb9b8ebf59eddd8b96366428238ab27d05a19e89c5516ce294abc35cea75d003')
     version('0.21.2', sha256='0aafc312a55ebf58073151b9308761a5fcfa45b7f7730cea4b1f066f824c72db')
     version('0.21.1', sha256='228d0611e69e5250946f8cd7bbefec75347950f0ca426d0c518db8f06583f660')
@@ -79,7 +81,7 @@ class PyScikitLearn(PythonPackage):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#mac-osx
         elif self.spec.satisfies('@0.21: %clang platform=darwin +openmp'):
             env.append_flags(
-                'CPPFLAGS', '-Xpreprocessor -fopenmp')
+                'CPPFLAGS', self.compiler.openmp_flag)
             env.append_flags(
                 'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             env.append_flags(

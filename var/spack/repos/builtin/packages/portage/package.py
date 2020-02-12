@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,7 +51,12 @@ class Portage(CMakePackage):
         else:
             options.append('-DENABLE_MPI=OFF')
 
-        options.append("-DLAPACKE_LIBRARIES=" +
+        options.append('-DBLA_VENDOR=' + self.spec['blas'].name.upper())
+        options.append('-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined())
+        options.append('-DLAPACK_LIBRARIES=' +
+                       self.spec['lapack'].libs.joined())
+
+        options.append("-DLAPACKE_LIBRARY=" +
                        self.spec["lapack"].libs.joined(";"))
 
         return options

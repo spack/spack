@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,6 @@ class PySpyder(PythonPackage):
     # to pick up webkit, but this is the easier solution (see #9207)
     depends_on('qt+webkit',           type=('build', 'run'))
     depends_on('py-pickleshare',      type=('build', 'run'))
-    depends_on('py-zmq',              type=('build', 'run'))
+    depends_on('py-pyzmq',              type=('build', 'run'))
     depends_on('py-chardet@2.0.0:',   type=('build', 'run'))
     depends_on('py-numpydoc',         type=('build', 'run'))

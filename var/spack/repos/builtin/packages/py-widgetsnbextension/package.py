@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,4 +16,4 @@ class PyWidgetsnbextension(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.3:')
-    depends_on('py-jupyter-notebook@4.2.0:', type=('build', 'run'))
+    depends_on('py-notebook@4.2.0:', type=('build', 'run'))

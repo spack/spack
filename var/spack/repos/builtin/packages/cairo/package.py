@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,18 +21,39 @@ class Cairo(AutotoolsPackage):
     variant('X', default=False, description="Build with X11 support")
     variant('pdf', default=False, description="Enable cairo's PDF surface backend feature")
     variant('gobject', default=False, description="Enable cairo's gobject functions feature")
+    variant('ft', default=False, description="Enable cairo's FreeType font backend feature")
+    variant('fc', default=False, description="Enable cairo's Fontconfig font backend feature")
+    variant('png', default=False, description="Enable cairo's PNG functions feature")
+    variant('svg', default=False, description="Enable cairo's SVN functions feature")
 
     depends_on('libx11', when='+X')
     depends_on('libxext', when='+X')
     depends_on('libxrender', when='+X')
     depends_on('libxcb', when='+X')
     depends_on('python', when='+X', type='build')
-    depends_on('libpng')
+    depends_on('libpng', when='+png')
+    depends_on('librsvg', when='+svg')
     depends_on('glib')
     depends_on('pixman')
-    depends_on('freetype')
+    depends_on('automake', type='build')
+    depends_on('autoconf', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+    depends_on('freetype', when='+ft')
     depends_on('pkgconfig', type='build')
-    depends_on('fontconfig@2.10.91:')  # Require newer version of fontconfig.
+    depends_on('fontconfig@2.10.91:', when='+fc')  # Require newer version of fontconfig.
+
+    conflicts('+png', when='platform=darwin')
+    conflicts('+svg', when='platform=darwin')
+
+    # patch from https://gitlab.freedesktop.org/cairo/cairo/issues/346
+    patch('fontconfig.patch', when='@1.16.0')
+
+    def setup_build_environment(self, env):
+        env.set('NOCONFIGURE', "1")
+
+    def autoreconf(self, spec, prefix):
+        which('sh')('./autogen.sh')
 
     def configure_args(self):
         args = [
@@ -47,5 +68,7 @@ class Cairo(AutotoolsPackage):
 
         args.extend(self.enable_or_disable('pdf'))
         args.extend(self.enable_or_disable('gobject'))
+        args.extend(self.enable_or_disable('ft'))
+        args.extend(self.enable_or_disable('fc'))
 
         return args

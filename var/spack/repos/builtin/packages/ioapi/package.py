@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Ioapi(MakefilePackage):
     homepage = "https://www.cmascenter.org/ioapi/"
     url      = "https://www.cmascenter.org/ioapi/download/ioapi-3.2.tar.gz"
     version('3.2', sha256='56771ff0053d47f2445e00ff369bca7bfc484325a2816b2c648744e523134fe9')
-    depends_on('netcdf@4:')
+    depends_on('netcdf-c@4:')
     depends_on('netcdf-fortran@4:')
     depends_on('sed', type='build')
 

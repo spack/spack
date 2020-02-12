@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2020.0',      sha256='573b1d20707d68ce85b70934cfad15b5ad9cc14124a261c17ddd7717ba842c64', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16225/parallel_studio_xe_2020_cluster_edition.tgz')
+    version('cluster.2019.5',      sha256='c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
     version('cluster.2019.4',      sha256='32aee12de3b5ca14caf7578313c06b205795c67620f4a9606ea45696ee3b3d9e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15533/parallel_studio_xe_2019_update4_cluster_edition.tgz')
     version('cluster.2019.3',      sha256='b5b022366d6d1a98dbb63b60221c62bc951c9819653ad6f5142192e89f78cf63', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15268/parallel_studio_xe_2019_update3_cluster_edition.tgz')
     version('cluster.2019.2',      sha256='8c526bdd95d1da454e5cada00f7a2353089b86d0c9df2088ca7f842fe3ff4cae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15088/parallel_studio_xe_2019_update2_cluster_edition.tgz')
@@ -55,6 +57,7 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
+    version('professional.2020.0', sha256='e88cad18d28da50ed9cb87b12adccf13efd91bf94731dc33290481306c6f15ac', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16226/parallel_studio_xe_2020_professional_edition.tgz')
     version('professional.2019.4', sha256='9b2818ea5739ade100841e99ce79ef7f4049a2513beb2ce20fc94706f1ba0231', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15534/parallel_studio_xe_2019_update4_professional_edition.tgz')
     version('professional.2019.3', sha256='92a8879106d0bdf1ecf4670cd97fbcdc67d78b13bdf484f2c516a533aa7a27f9', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15269/parallel_studio_xe_2019_update3_professional_edition.tgz')
     version('professional.2019.1', sha256='bc83ef5a728903359ae11a2b90ad7dae4ae61194afb28bb5bb419f6a6aea225d', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14825/parallel_studio_xe_2019_update1_professional_edition.tgz')
@@ -85,6 +88,8 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', sha256='84fdf48d1de20e1d580ba5d419a5bc1c55d217a4f5dc1807190ecffe0229a62b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2020.0',     sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
+    version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')
     version('composer.2019.4',     sha256='1915993445323e1e78d6de73702a88fa3df2036109cde03d74ee38fef9f1abf2', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15537/parallel_studio_xe_2019_update4_composer_edition.tgz')
     version('composer.2019.3',     sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('composer.2019.1',     sha256='db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
@@ -199,7 +204,7 @@ class IntelParallelStudio(IntelPackage):
     conflicts('auto_dispatch=SSE3', 'platform=darwin target=x86_64:',
               msg='SSE3 is not supported on MacOS x86_64')
 
-    def setup_dependent_environment(self, *args):
+    def setup_dependent_build_environment(self, *args):
         # Handle in callback, conveying client's compilers in additional arg.
         # CAUTION - DUP code in:
         #   ../intel-mpi/package.py

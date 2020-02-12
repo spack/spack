@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -68,7 +68,7 @@ def test_concrete_spec(config, mock_packages):
     check_yaml_round_trip(spec)
 
 
-def test_yaml_multivalue():
+def test_yaml_multivalue(config, mock_packages):
     spec = Spec('multivalue_variant foo="bar,baz"')
     spec.concretize()
     check_yaml_round_trip(spec)

@@ -1,13 +1,12 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
-class Ceed(Package):
+class Ceed(BundlePackage):
     """Ceed is a collection of benchmarks, miniapps, software libraries and
        APIs for efficient high-order finite element and spectral element
        discretizations for exascale applications developed in the Department of
@@ -17,11 +16,7 @@ class Ceed(Package):
 
     homepage = "https://ceed.exascaleproject.org"
 
-    url  = 'file://' + os.path.dirname(__file__) + '/README.md'
-    sha256 = '418c4b6b6a098648e25befdc28cdf9c351ecea9deaa660c0d9a674f8c6917122'
-
-    version('2.0.0', sha256, expand=False)
-    version('1.0.0', sha256, expand=False)
+    version('2.0')
 
     variant('cuda', default=False,
             description='Build MAGMA; enable CUDA support in libCEED and OCCA')
@@ -139,7 +134,3 @@ class Ceed(Package):
 
     # If using gcc version <= 4.8 build suite-sparse version <= 5.1.0
     depends_on('suite-sparse@:5.1.0', when='@1.0.0%gcc@:4.8+mfem+petsc')
-
-    # Dummy install
-    def install(self, spec, prefix):
-        install('README.md', prefix)

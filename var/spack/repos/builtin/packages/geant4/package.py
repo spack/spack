@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
 
+    version('10.05.p01', sha256='f4a292220500fad17e0167ce3153e96e3410ecbe96284e572dc707f63523bdff')
     version('10.04', sha256='f6d883132f110eb036c69da2b21df51f13c585dc7b99d4211ddd32f4ccee1670')
     version('10.03.p03', sha256='a164f49c038859ab675eec474d08c9d02be8c4be9c0c2d3aa8e69adf89e1e138')
 
@@ -61,7 +62,7 @@ class Geant4(CMakePackage):
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
-    depends_on("qt@4.8:4.999", when="+qt")
+    depends_on("qt@4.8:", when="+qt")
 
     # if G4 data not installed with geant4
     # depend on G4 data packages
@@ -145,7 +146,7 @@ class Geant4(CMakePackage):
                 target = os.readlink(d)
                 os.symlink(target, os.path.basename(target))
 
-    def setup_dependent_environment(self, spack_env, run_env, dep_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         version = self.version
         major = version[0]
         minor = version[1]
@@ -154,6 +155,5 @@ class Geant4(CMakePackage):
         else:
             patch = 0
         datadir = 'Geant4-%s.%s.%s' % (major, minor, patch)
-        spack_env.append_path('CMAKE_MODULE_PATH',
-                              '{0}/{1}/Modules'.format(
-                                  self.prefix.lib64, datadir))
+        env.append_path('CMAKE_MODULE_PATH', join_path(
+            self.prefix.lib64, datadir, 'Modules'))

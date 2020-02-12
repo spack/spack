@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Slepc(Package):
 
     homepage = "http://slepc.upv.es"
     url      = "http://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
-    git      = "https://bitbucket.org/slepc/slepc.git"
+    git      = "https://gitlab.com/slepc/slepc.git"
 
     maintainers = ['joseeroman', 'balay']
 
@@ -101,6 +101,6 @@ class Slepc(Package):
 
         make('install', parallel=False)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package
-        spack_env.set('SLEPC_DIR', self.prefix)
+        env.set('SLEPC_DIR', self.prefix)

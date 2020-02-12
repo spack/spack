@@ -61,61 +61,10 @@ jobs:
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
       if: type != pull_request
-# mpich (AutotoolsPackage)
-    - stage: 'build tests'
-      python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-# astyle (MakefilePackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
-# tut (WafPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=tut' ]
-# py-setuptools (PythonPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
-# perl-dbi (PerlPackage)
-#    - python: '3.8'
-#      os: linux
-#      language: python
-#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
-# openjpeg (CMakePackage + external cmake)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
-# r-rcpp (RPackage + external R)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
-# mpich (AutotoolsPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.8'
-      stage: 'docker build'
-      os: linux
-      language: python
-      env: TEST_SUITE=docker
-  allow_failures:
-    - env: TEST_SUITE=docker
 
 stages:
   - 'style checks'
   - 'unit tests + documentation'
-  - 'build tests'
-  - name: 'docker build'
-    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
@@ -159,7 +108,6 @@ cache:
   pip: true
   ccache: true
   directories:
-    - ~/.mirror
     - ~/.ccache
 
 # Work around Travis's lack of support for Python on OSX
@@ -192,17 +140,9 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
-  # Set up external deps for build tests, b/c they take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then
-        cp share/spack/qa/configuration/*.yaml etc/spack/;
-    fi
-
 #=============================================================================
 # Building
 #=============================================================================
-services:
-  - docker
-
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
 

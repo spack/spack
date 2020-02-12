@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,6 +42,7 @@ def _fetch_cache():
     building the same package different ways or multiple times.
     """
     path = spack.config.get('config:source_cache')
+
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
     path = spack.util.path.canonicalize_path(path)

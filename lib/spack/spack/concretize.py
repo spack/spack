@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,7 +74,7 @@ class Concretizer(object):
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
             if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
+                raise spack.error.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.

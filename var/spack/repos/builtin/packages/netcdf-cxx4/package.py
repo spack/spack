@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class NetcdfCxx4(AutotoolsPackage):
-    """C++ interface for NetCDF4"""
+    """NetCDF (network Common Data Form) is a set of software libraries and
+    machine-independent data formats that support the creation, access, and
+    sharing of array-oriented scientific data. This is the C++ distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
     url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-cxx4-4.3.1.tar.gz"
@@ -19,7 +21,7 @@ class NetcdfCxx4(AutotoolsPackage):
     # force its usage with this variant.
     variant('pic', default=True, description='Produce position-independent code (for shared libs)')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
@@ -32,7 +34,7 @@ class NetcdfCxx4(AutotoolsPackage):
         if name == 'cflags' and '+pic' in self.spec:
             flags.append(self.compiler.pic_flag)
         elif name == 'cppflags':
-            flags.append('-I' + self.spec['netcdf'].prefix.include)
+            flags.append('-I' + self.spec['netcdf-c'].prefix.include)
 
         return (None, None, flags)
 

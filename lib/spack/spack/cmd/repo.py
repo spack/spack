@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,8 +51,8 @@ def setup_parser(subparser):
     remove_parser = sp.add_parser(
         'remove', help=repo_remove.__doc__, aliases=['rm'])
     remove_parser.add_argument(
-        'path_or_namespace',
-        help="path or namespace of a Spack package repository")
+        'namespace_or_path',
+        help="namespace or path of a Spack package repository")
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
@@ -101,10 +101,10 @@ def repo_add(args):
 def repo_remove(args):
     """Remove a repository from Spack's configuration."""
     repos = spack.config.get('repos', scope=args.scope)
-    path_or_namespace = args.path_or_namespace
+    namespace_or_path = args.namespace_or_path
 
     # If the argument is a path, remove that repository from config.
-    canon_path = canonicalize_path(path_or_namespace)
+    canon_path = canonicalize_path(namespace_or_path)
     for repo_path in repos:
         repo_canon_path = canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
@@ -117,7 +117,7 @@ def repo_remove(args):
     for path in repos:
         try:
             repo = Repo(path)
-            if repo.namespace == path_or_namespace:
+            if repo.namespace == namespace_or_path:
                 repos.remove(path)
                 spack.config.set('repos', repos, args.scope)
                 tty.msg("Removed repository %s with namespace '%s'."
@@ -127,7 +127,7 @@ def repo_remove(args):
             continue
 
     tty.die("No repository with path or namespace: %s"
-            % path_or_namespace)
+            % namespace_or_path)
 
 
 def repo_list(args):

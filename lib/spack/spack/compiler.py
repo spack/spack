@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ def _verify_executables(*paths):
 
 
 @llnl.util.lang.memoized
-def get_compiler_version_output(compiler_path, version_arg):
+def get_compiler_version_output(compiler_path, version_arg, ignore_errors=()):
     """Invokes the compiler at a given path passing a single
     version argument and returns the output.
 
@@ -41,7 +41,8 @@ def get_compiler_version_output(compiler_path, version_arg):
         version_arg (str): the argument used to extract version information
     """
     compiler = spack.util.executable.Executable(compiler_path)
-    output = compiler(version_arg, output=str, error=str)
+    output = compiler(
+        version_arg, output=str, error=str, ignore_errors=ignore_errors)
     return output
 
 
@@ -198,6 +199,9 @@ class Compiler(object):
 
     #: Compiler argument that produces version information
     version_argument = '-dumpversion'
+
+    #: Return values to ignore when invoking the compiler to get its version
+    ignore_version_errors = ()
 
     #: Regex used to extract version from compiler's output
     version_regex = '(.*)'
@@ -412,7 +416,8 @@ class Compiler(object):
     @classmethod
     def default_version(cls, cc):
         """Override just this to override all compiler version functions."""
-        output = get_compiler_version_output(cc, cls.version_argument)
+        output = get_compiler_version_output(
+            cc, cls.version_argument, tuple(cls.ignore_version_errors))
         return cls.extract_version_from_output(output)
 
     @classmethod

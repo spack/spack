@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -101,10 +101,10 @@ class Extrae(AutotoolsPackage):
             else:
                 make('install', parallel=False)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # set EXTRAE_HOME in the module file
-        run_env.set('EXTRAE_HOME', self.prefix)
+        env.set('EXTRAE_HOME', self.prefix)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # set EXTRAE_HOME for everyone using the Extrae package
-        spack_env.set('EXTRAE_HOME', self.prefix)
+        env.set('EXTRAE_HOME', self.prefix)

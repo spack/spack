@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RPkgmaker(RPackage):
     changes in the interface(s) are more than likely to happen."""
 
     homepage = "https://renozao.github.io/pkgmaker"
-    url      = "https://cloud.r-project.org/src/contrib/pkgmaker_0.22.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/pkgmaker_0.27.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/pkgmaker"
 
     version('0.27', sha256='17a289d8f596ba5637b07077b3bff22411a2c2263c0b7de59fe848666555ec6a')

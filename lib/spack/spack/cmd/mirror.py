@@ -1,11 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 
-import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -40,9 +39,6 @@ def setup_parser(subparser):
                                help="directory in which to create mirror")
 
     create_parser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to put in mirror")
-    create_parser.add_argument(
         '-a', '--all', action='store_true',
         help="mirror all versions of all packages in Spack, or all packages"
              " in the current environment if there is an active environment"
@@ -57,6 +53,7 @@ def setup_parser(subparser):
         '-n', '--versions-per-spec',
         help="the number of versions to fetch for each spec, choose 'all' to"
              " retrieve all versions of each package")
+    arguments.add_common_arguments(create_parser, ['specs'])
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -64,7 +61,8 @@ def setup_parser(subparser):
 
     # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
-    add_parser.add_argument('name', help="mnemonic name for mirror")
+    add_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     add_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
@@ -75,7 +73,8 @@ def setup_parser(subparser):
     # Remove
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help=mirror_remove.__doc__)
-    remove_parser.add_argument('name')
+    remove_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
@@ -83,7 +82,8 @@ def setup_parser(subparser):
 
     # Set-Url
     set_url_parser = sp.add_parser('set-url', help=mirror_set_url.__doc__)
-    set_url_parser.add_argument('name', help="mnemonic name for mirror")
+    set_url_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     set_url_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     set_url_parser.add_argument(

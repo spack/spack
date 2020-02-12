@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,10 +27,10 @@ class Cantera(SConsPackage):
 
     # Required dependencies
     depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
-    depends_on('googletest',      when='@2.3.0:')
+    depends_on('googletest+gmock', when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials', when='+sundials')  # must be compiled with -fPIC
+    depends_on('sundials@:3.1.2', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
