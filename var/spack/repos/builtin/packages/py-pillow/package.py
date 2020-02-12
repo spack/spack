@@ -61,6 +61,7 @@ class PyPillow(PythonPackage):
     depends_on('libwebp', when='+webp')
     depends_on('libwebp+libwebpmux+libwebpdemux', when='+webpmux')
     depends_on('openjpeg', when='+jpeg2000')
+    depends_on('imagemagick', type='test')
 
     # Spack does not (yet) support these modes of building
     # depends_on('libimagequant', when='+imagequant')
@@ -86,23 +87,29 @@ class PyPillow(PythonPackage):
         setup.filter('include_dirs = []',
                      'include_dirs = {0}'.format(include_dirs), string=True)
 
-    def build_ext_args(self, spec, prefix):
-        def variant_to_flag(variant):
-            able = 'enable' if '+' + variant in spec else 'disable'
-            return '--{0}-{1}'.format(able, variant)
+        def variant_to_cfg(setup):
+            able = 'enable' if '+' + variant in self.spec else 'disable'
+            return '{0}-{1}=1\n'.format(able, variant)
 
-        args = ['--enable-zlib', '--enable-jpeg']
+        with open('setup.cfg', 'a') as setup:
+            # Default backend
+            setup.write('[build_ext]\n')
+            setup.write('enable-zlib=1\n')
+            setup.write('enable-jpeg=1\n')
+            variants = ['tiff', 'freetype', 'lcms', 'webp',
+                        'webpmux', 'jpeg2000']
+            for variant in variants:
+                setup.write(variant_to_cfg(setup))
 
-        variants = ['tiff', 'freetype', 'lcms', 'webp', 'webpmux', 'jpeg2000']
-        args.extend(list(map(variant_to_flag, variants)))
+            # Spack does not (yet) support these modes of building
+            setup.write('disable-imagequant=1\n')
 
-        # Spack does not (yet) support these modes of building
-        args.append('--disable-imagequant')
-
-        args.append('--rpath={0}'.format(':'.join(self.rpath)))
-        return args
+            setup.write('rpath={0}\n'.format(':'.join(self.rpath)))
+            setup.write('[install]\n')
 
     # Tests need to be re-added since `phases` was overridden
-    run_after('build_ext')(PythonPackage.test)
-    run_after('install')(PythonPackage.import_module_test)
+    run_after('build_ext')(
+        PythonPackage._run_default_build_time_test_callbacks)
+    run_after('install')(
+        PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)

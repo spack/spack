@@ -33,7 +33,7 @@ class Gapfiller(Package):
 
     def patch(self):
         with working_dir('.'):
-            files = glob.iglob("*.pl")
+            files = glob.glob("*.pl") + glob.glob('bwa/*.pl')
             for file in files:
                 change = FileFilter(file)
                 change.filter('usr/bin/perl', 'usr/bin/env perl')

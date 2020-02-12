@@ -175,7 +175,7 @@ spack package at this time.''',
         # avoid delayed build errors in dependents.
         if (self.compiler.f77 is None) or (self.compiler.fc is None):
             raise InstallError(
-                'Mpich requires both C and Fortran compilers!'
+                'MPICH requires both C and Fortran compilers!'
             )
 
     def configure_args(self):

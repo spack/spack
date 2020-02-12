@@ -1262,7 +1262,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             raise spack.error.SpackError(err_msg)
 
         hash_content = list()
-        source_id = fs.for_package_version(self, self.version).source_id()
+        try:
+            source_id = fs.for_package_version(self, self.version).source_id()
+        except fs.ExtrapolationError:
+            source_id = None
         if not source_id:
             # TODO? in cases where a digest or source_id isn't available,
             # should this attempt to download the source and set one? This
@@ -1505,9 +1508,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 message = '{s.name}@{s.version} : marking the package explicit'
                 tty.msg(message.format(s=self))
 
-    def try_install_from_binary_cache(self, explicit):
+    def try_install_from_binary_cache(self, explicit, unsigned=False):
         tty.msg('Searching for binary cache of %s' % self.name)
-        specs = binary_distribution.get_specs()
+        specs = binary_distribution.get_spec(spec=self.spec,
+                                             force=False)
         binary_spec = spack.spec.Spec.from_dict(self.spec.to_dict())
         binary_spec._mark_concrete()
         if binary_spec not in specs:
@@ -1521,7 +1525,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         tty.msg('Installing %s from binary cache' % self.name)
         binary_distribution.extract_tarball(
             binary_spec, tarball, allow_root=False,
-            unsigned=False, force=False)
+            unsigned=unsigned, force=False)
         self.installed_from_binary_cache = True
         spack.store.db.add(
             self.spec, spack.store.layout, explicit=explicit)
@@ -1662,14 +1666,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         tty.msg(colorize('@*{Installing} @*g{%s}' % self.name))
 
         if kwargs.get('use_cache', True):
-            if self.try_install_from_binary_cache(explicit):
+            if self.try_install_from_binary_cache(
+                    explicit, unsigned=kwargs.get('unsigned', False)):
                 tty.msg('Successfully installed %s from binary cache'
                         % self.name)
                 print_pkg(self.prefix)
                 spack.hooks.post_install(self.spec)
                 return
             elif kwargs.get('cache_only', False):
-                tty.die('No binary for %s found and cache-only specified')
+                tty.die('No binary for %s found and cache-only specified'
+                        % self.name)
 
             tty.msg('No binary for %s found: installing from source'
                     % self.name)

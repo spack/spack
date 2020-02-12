@@ -1118,7 +1118,27 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+        # hash is a full hash and is in the data somewhere
+        if dag_hash in self._data:
+            rec = self._data[dag_hash]
+            if rec.install_type_matches(installed):
+                return [rec.spec]
+            else:
+                return default
+
+        # check if hash is a prefix of some installed (or previously
+        # installed) spec.
+        matches = [record.spec for h, record in self._data.items()
+                   if h.startswith(dag_hash) and
+                   record.install_type_matches(installed)]
+        if matches:
+            return matches
+
+        # nothing found
+        return default
+
+    def get_by_hash_local(self, *args, **kwargs):
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
         Arguments:
@@ -1142,24 +1162,7 @@ class Database(object):
 
         """
         with self.read_transaction():
-            # hash is a full hash and is in the data somewhere
-            if dag_hash in self._data:
-                rec = self._data[dag_hash]
-                if rec.install_type_matches(installed):
-                    return [rec.spec]
-                else:
-                    return default
-
-            # check if hash is a prefix of some installed (or previously
-            # installed) spec.
-            matches = [record.spec for h, record in self._data.items()
-                       if h.startswith(dag_hash) and
-                       record.install_type_matches(installed)]
-            if matches:
-                return matches
-
-            # nothing found
-            return default
+            return self._get_by_hash_local(*args, **kwargs)
 
     def get_by_hash(self, dag_hash, default=None, installed=any):
         """Look up a spec by DAG hash, or by a DAG hash prefix.
@@ -1184,9 +1187,14 @@ class Database(object):
             (list): a list of specs matching the hash or hash prefix
 
         """
-        search_path = [self] + self.upstream_dbs
-        for db in search_path:
-            spec = db.get_by_hash_local(
+
+        spec = self.get_by_hash_local(
+            dag_hash, default=default, installed=installed)
+        if spec is not None:
+            return spec
+
+        for upstream_db in self.upstream_dbs:
+            spec = upstream_db._get_by_hash_local(
                 dag_hash, default=default, installed=installed)
             if spec is not None:
                 return spec
@@ -1246,7 +1254,8 @@ class Database(object):
             if not (start_date < inst_date < end_date):
                 continue
 
-            if query_spec is any or rec.spec.satisfies(query_spec):
+            if (query_spec is any or
+                rec.spec.satisfies(query_spec, strict=True)):
                 results.append(rec.spec)
 
         return results

@@ -201,7 +201,6 @@ def filter_file(regex, repl, *filenames, **kwargs):
                         output_file.writelines(input_file.readlines())
 
         except BaseException:
-            os.remove(tmp_filename)
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise

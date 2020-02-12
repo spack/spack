@@ -175,6 +175,7 @@ def strip_version_suffixes(path):
 
         # Download version
         r'release',
+        r'bin',
         r'stable',
         r'[Ff]inal',
         r'rel',

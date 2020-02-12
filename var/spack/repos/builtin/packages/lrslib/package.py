@@ -27,6 +27,8 @@ class Lrslib(Package):
     depends_on("libtool", type="build")
 
     patch("Makefile.spack.patch")
+    # Ref: https://github.com/mkoeppe/lrslib/commit/2e8c5bd6c06430151faea5910f44aa032c4178a9
+    patch('fix-return-value.patch')
 
     def url_for_version(self, version):
         url = "http://cgm.cs.mcgill.ca/~avis/C/lrslib/archive/lrslib-0{0}.tar.gz"

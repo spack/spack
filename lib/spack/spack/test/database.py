@@ -41,10 +41,11 @@ def test_store(tmpdir):
 @pytest.fixture()
 def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
-    upstream_db = spack.database.Database(mock_db_root)
+    upstream_write_db = spack.database.Database(mock_db_root)
+    upstream_db = spack.database.Database(mock_db_root, is_upstream=True)
     # Generate initial DB file to avoid reindex
-    with open(upstream_db._index_path, 'w') as db_file:
-        upstream_db._write_to_file(db_file)
+    with open(upstream_write_db._index_path, 'w') as db_file:
+        upstream_write_db._write_to_file(db_file)
     upstream_layout = gen_mock_layout('/a/')
 
     downstream_db_root = str(
@@ -55,13 +56,14 @@ def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
         downstream_db._write_to_file(db_file)
     downstream_layout = gen_mock_layout('/b/')
 
-    yield upstream_db, upstream_layout, downstream_db, downstream_layout
+    yield upstream_write_db, upstream_db, upstream_layout,\
+        downstream_db, downstream_layout
 
 
 @pytest.mark.usefixtures('config')
 def test_installed_upstream(upstream_and_downstream_db):
-    upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db)
+    upstream_write_db, upstream_db, upstream_layout,\
+        downstream_db, downstream_layout = (upstream_and_downstream_db)
 
     default = ('build', 'link')
     x = MockPackage('x', [], [])
@@ -75,7 +77,14 @@ def test_installed_upstream(upstream_and_downstream_db):
         spec.concretize()
 
         for dep in spec.traverse(root=False):
-            upstream_db.add(dep, upstream_layout)
+            upstream_write_db.add(dep, upstream_layout)
+        upstream_db._read()
+
+        for dep in spec.traverse(root=False):
+            record = downstream_db.get_by_hash(dep.dag_hash())
+            assert record is not None
+            with pytest.raises(spack.database.ForbiddenLockError):
+                record = upstream_db.get_by_hash(dep.dag_hash())
 
         new_spec = spack.spec.Spec('w')
         new_spec.concretize()
@@ -96,8 +105,8 @@ def test_installed_upstream(upstream_and_downstream_db):
 
 @pytest.mark.usefixtures('config')
 def test_removed_upstream_dep(upstream_and_downstream_db):
-    upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db)
+    upstream_write_db, upstream_db, upstream_layout,\
+        downstream_db, downstream_layout = (upstream_and_downstream_db)
 
     default = ('build', 'link')
     z = MockPackage('z', [], [])
@@ -108,13 +117,15 @@ def test_removed_upstream_dep(upstream_and_downstream_db):
         spec = spack.spec.Spec('y')
         spec.concretize()
 
-        upstream_db.add(spec['z'], upstream_layout)
+        upstream_write_db.add(spec['z'], upstream_layout)
+        upstream_db._read()
 
         new_spec = spack.spec.Spec('y')
         new_spec.concretize()
         downstream_db.add(new_spec, downstream_layout)
 
-        upstream_db.remove(new_spec['z'])
+        upstream_write_db.remove(new_spec['z'])
+        upstream_db._read()
 
         new_downstream = spack.database.Database(
             downstream_db.root, upstream_dbs=[upstream_db])
@@ -129,8 +140,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
     DB. When a package is recorded as installed in both, the results should
     refer to the downstream DB.
     """
-    upstream_db, upstream_layout, downstream_db, downstream_layout = (
-        upstream_and_downstream_db)
+    upstream_write_db, upstream_db, upstream_layout,\
+        downstream_db, downstream_layout = (upstream_and_downstream_db)
 
     x = MockPackage('x', [], [])
     mock_repo = MockPackageMultiRepo([x])
@@ -141,7 +152,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
 
         downstream_db.add(spec, downstream_layout)
 
-        upstream_db.add(spec, upstream_layout)
+        upstream_write_db.add(spec, upstream_layout)
+        upstream_db._read()
 
         upstream, record = downstream_db.query_by_spec_hash(spec.dag_hash())
         # Even though the package is recorded as installed in the upstream DB,
@@ -717,3 +729,23 @@ def test_query_unused_specs(mutable_database):
     unused = spack.store.db.unused_specs
     assert len(unused) == 1
     assert unused[0].name == 'cmake'
+
+
+@pytest.mark.regression('10019')
+def test_query_spec_with_conditional_dependency(mutable_database):
+    # The issue is triggered by having dependencies that are
+    # conditional on a Boolean variant
+    s = spack.spec.Spec('hdf5~mpi')
+    s.concretize()
+    s.package.do_install(fake=True, explicit=True)
+
+    results = spack.store.db.query_local('hdf5 ^mpich')
+    assert not results
+
+
+@pytest.mark.regression('10019')
+def test_query_spec_with_non_conditional_virtual_dependency(database):
+    # Ensure the same issue doesn't come up for virtual
+    # dependency that are not conditional on variants
+    results = spack.store.db.query_local('mpileaks ^mpich')
+    assert len(results) == 1

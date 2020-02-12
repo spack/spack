@@ -1117,6 +1117,18 @@ class Spec(object):
         self._dependencies[spec.name] = dspec
         spec._dependents[self.name] = dspec
 
+    def _add_default_platform(self):
+        """If a spec has an os or a target and no platform, give it
+           the default platform.
+
+           This is private because it is used by the parser -- it's not
+           expected to be used outside of ``spec.py``.
+
+        """
+        arch = self.architecture
+        if arch and not arch.platform and (arch.os or arch.target):
+            self._set_architecture(platform=spack.architecture.platform().name)
+
     #
     # Public interface
     #
@@ -1492,10 +1504,10 @@ class Spec(object):
             d['parameters'] = params
 
         if self.external:
-            d['external'] = {
-                'path': self.external_path,
-                'module': self.external_module
-            }
+            d['external'] = syaml.syaml_dict([
+                ('path', self.external_path),
+                ('module', self.external_module),
+            ])
 
         if not self._concrete:
             d['concrete'] = False
@@ -4053,14 +4065,6 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
 
-        # If the spec has an os or a target and no platform, give it
-        # the default platform
-        platform_default = spack.architecture.platform().name
-        for spec in specs:
-            for s in spec.traverse():
-                if s.architecture and not s.architecture.platform and \
-                        (s.architecture.os or s.architecture.target):
-                    s._set_architecture(platform=platform_default)
         return specs
 
     def spec_from_file(self):
@@ -4192,6 +4196,7 @@ class SpecParser(spack.parse.Parser):
             else:
                 break
 
+        spec._add_default_platform()
         return spec
 
     def variant(self, name=None):

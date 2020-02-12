@@ -208,7 +208,9 @@ class Clang(Compiler):
             r'^Apple (?:LLVM|clang) version ([^ )]+)|'
             # Normal clang compiler versions are left as-is
             r'clang version ([^ )]+)-svn[~.\w\d-]*|'
-            r'clang version ([^ )]+)-[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )]+?)-[~.\w\d-]*|'
             r'clang version ([^ )]+)',
             output
         )

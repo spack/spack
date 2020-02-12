@@ -348,6 +348,14 @@ def test_fj_flags():
     ('clang version 8.0.0-3~ubuntu18.04.1 (tags/RELEASE_800/final)\n'
      'Target: x86_64-pc-linux-gnu\n'
      'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '8.0.0'),
+    ('clang version 9.0.1-+201911131414230800840845a1eea-1~exp1~20191113231141.78\n' # noqa
+     'Target: x86_64-pc-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '9.0.1'),
+    ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
+     'Target: aarch64-unknown-linux-gnu\n'
+     'Thread model: posix\n'
      'InstalledDir: /usr/bin\n', '8.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):

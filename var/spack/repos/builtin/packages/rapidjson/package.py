@@ -22,3 +22,6 @@ class Rapidjson(CMakePackage):
     patch('0001-turn-off-Werror.patch')
 
     patch('arm.patch', when='@1.1.0 target=aarch64: %gcc@:5.9')
+
+    # Not correspond to define '-march=native' with Fujitsu compiler.
+    patch('remove_march.patch', when='%fj')
