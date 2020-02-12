@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyHpcbench(PythonPackage):
     """Define and run your benchmarks"""
 
