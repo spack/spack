@@ -319,6 +319,31 @@ def test_requeue_task(install_mockery, capfd):
     assert 'Installing a in progress by another process' in out
 
 
+def test_cleanup_all_tasks(install_mockery, monkeypatch):
+    """Test to ensure cover _cleanup_all_tasks."""
+    def _mktask(pkg):
+        return inst.BuildTask(pkg, False, 0, 0, inst.STATUS_ADDED, [])
+
+    def _rmtask(installer, pkg_id):
+        raise RuntimeError('Raise an exception to test except path')
+
+    spec = spack.spec.Spec('a')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    # Cover task removal happy path
+    installer.build_tasks['a'] = _mktask(spec.package)
+    installer._cleanup_all_tasks()
+    assert len(installer.build_tasks) == 0
+
+    # Cover task removal exception path
+    installer.build_tasks['a'] = _mktask(spec.package)
+    monkeypatch.setattr(inst.PackageInstaller, '_remove_task', _rmtask)
+    installer._cleanup_all_tasks()
+    assert len(installer.build_tasks) == 1
+
+
 def test_update_failed_no_mark(install_mockery):
     """Test of _update_failed sans mark and dependent build tasks."""
     spec = spack.spec.Spec('dependent-install')
