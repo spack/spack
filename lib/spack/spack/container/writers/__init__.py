@@ -139,6 +139,36 @@ class PathContext(tengine.Context):
         return Extras(setup=setup, build=build, final=final)
 
     @tengine.context_property
+    def from_host_to_build(self):
+        """Files that needs to be copied from the host to the build stage."""
+        return self._files_to_be_copied('build')
+
+    @tengine.context_property
+    def from_host_to_final(self):
+        """Files that needs to be copied from the host to the build stage."""
+        files = self._files_to_be_copied('final')
+        files = [x for x in files if not x.source.startswith('build:')]
+        return files
+
+    @tengine.context_property
+    def from_build_to_final(self):
+        """Files that needs to be copied from the host to the build stage."""
+        files = self._files_to_be_copied('final')
+        files = [x for x in files if x.source.startswith('build:')]
+        return files
+
+    def _files_to_be_copied(self, destination_stage):
+        copy_config = self.container_config.get('copy', {})
+        CopyItem = collections.namedtuple(
+            'CopyItem', ['source', 'destination']
+        )
+        files = []
+        for item in copy_config.get(destination_stage, []):
+            source, destination = item['source'], item['destination']
+            files.append(CopyItem(source=source, destination=destination))
+        return files
+
+    @tengine.context_property
     def labels(self):
         return self.container_config.get('labels', {})
 

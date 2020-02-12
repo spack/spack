@@ -1,6 +1,10 @@
 # Build stage with Spack pre-installed and ready to be used
 FROM {{ build.image }}:{{ build.tag }} as builder
 
+{% for item in from_host_to_build %}
+COPY {{ item.source }} {{ item.destination }}
+{% endfor %}
+
 {% if extra_instructions.setup %}
 # Custom instructions before building the packages
 {{ extra_instructions.setup }}
@@ -39,6 +43,13 @@ COPY --from=builder {{ paths.environment }} {{ paths.environment }}
 COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
+{% for item in from_build_to_final %}
+COPY --from=builder {{ item.source | replace('build:', '') }} {{ item.destination }}
+{% endfor %}
+
+{% for item in from_host_to_final %}
+COPY {{ item.source }} {{ item.destination }}
+{% endfor %}
 
 {% if os_packages %}
 RUN {{ os_packages.update }}                                   \

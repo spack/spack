@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pytest
 
 import spack.container.writers as writers
 
@@ -59,16 +60,39 @@ def test_strip_is_set_from_config(minimal_configuration):
 
 def test_extra_instructions_is_set_from_config(minimal_configuration):
     writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (None, None)
+    assert writer.extra_instructions == (None, None, None)
 
     test_line = 'RUN echo Hello world!'
     e = minimal_configuration['spack']['container']
     e['extra_instructions'] = {}
-    e['extra_instructions']['build'] = test_line
+    e['extra_instructions']['setup'] = test_line
     writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (test_line, None)
+    assert writer.extra_instructions == (test_line, None, None)
+
+    e['extra_instructions']['build'] = test_line
+    del e['extra_instructions']['setup']
+    writer = writers.create(minimal_configuration)
+    assert writer.extra_instructions == (None, test_line, None)
 
     e['extra_instructions']['final'] = test_line
     del e['extra_instructions']['build']
     writer = writers.create(minimal_configuration)
-    assert writer.extra_instructions == (None, test_line)
+    assert writer.extra_instructions == (None, None, test_line)
+
+
+@pytest.mark.parametrize('copy_config,results', [
+    ({}, ([], [], [])),
+    ({'build': [{'source': 'path/a', 'destination': '/opt/a'}],
+      'final': [{'source': 'path/b', 'destination': '/opt/b'},
+                {'source': 'path/c', 'destination': '/opt/c'},
+                {'source': 'build:/path/d', 'destination': '/opt/d'}]},
+     ([('path/a', '/opt/a')], [('path/b', '/opt/b'), ('path/c', '/opt/c')],
+     [('build:/path/d', '/opt/d')]))
+])
+def test_copy_is_set_from_config(copy_config, results, minimal_configuration):
+    minimal_configuration['spack']['container']['copy'] = copy_config
+    writer = writers.create(minimal_configuration)
+
+    assert writer.from_host_to_build == results[0]
+    assert writer.from_host_to_final == results[1]
+    assert writer.from_build_to_final == results[2]

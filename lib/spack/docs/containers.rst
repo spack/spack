@@ -197,6 +197,14 @@ The tables below describe the configuration options that are currently supported
      - Whether to strip binaries
      - ``true`` (default) or ``false``
      - No
+   * - ``copy:build``
+     - Files to be copied into the build stage
+     - Any valid file on the host
+     - No
+   * - ``copy:final``
+     - Files to be copied into the final stage
+     - Any valid file on the host or from the build stage
+     - No
    * - ``os_packages``
      - System packages to be installed
      - Valid packages for the ``final`` OS

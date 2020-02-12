@@ -2,6 +2,13 @@ Bootstrap: docker
 From: {{ build.image }}:{{ build.tag }}
 Stage: build
 
+{% if from_host_to_build %}
+%files
+{% for item in from_host_to_build %}
+  {{item.source}} {{item.destination}}
+{% endfor %}
+
+{% endif %}
 %post
 {% if extra_instructions.setup %}
   # Custom instructions before building the packages
@@ -54,7 +61,17 @@ Stage: final
   {{ paths.store }} /opt
   {{ paths.view }} /opt
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
+{% for item in from_build_to_final %}
+  {{ item.source | replace('build:', '') }} {{ item.destination }}
+{% endfor %}
+{% if from_host_to_final %}
 
+%files
+{% for item in from_host_to_final %}
+  {{item.source}} {{item.destination}}
+{% endfor %}
+
+{% endif %}
 %post
 {% if os_packages.list %}
   # Update, install and cleanup of system packages

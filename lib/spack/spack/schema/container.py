@@ -4,6 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for the 'container' subsection of Spack environments."""
 
+#: Represents a source/destination pair when copying objects
+#: in a container image
+_source_destination_pair = {
+    'type': 'object',
+    'properties': {
+        'source': {'type': 'string'},
+        'destination': {'type': 'string'}
+    },
+    'required': ['source', 'destination']
+}
+
 #: Schema for the container attribute included in Spack environments
 container_schema = {
     'type': 'object',
@@ -33,6 +44,21 @@ container_schema = {
                 }
             },
             'required': ['image', 'spack']
+        },
+        # Copy resources from host or previous stages into the container
+        'copy': {
+            'type': 'object',
+            'properties': {
+                'build': {
+                    'type': 'array',
+                    'items': _source_destination_pair
+                },
+                'final': {
+                    'type': 'array',
+                    'items': _source_destination_pair
+                }
+            },
+            'additionalProperties': False
         },
         # Whether or not to strip installed binaries
         'strip': {
