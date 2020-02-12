@@ -66,7 +66,6 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     assert inst._install_from_cache(spec.package, True, True)
 
 
-#def test_process_external_package_module(install_mockery, mutable_database,
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     """Test to simply cover the external module message path."""
     def _no_rec(db, spec):
@@ -356,7 +355,6 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     assert 'Detected uninstalled dependencies for' in out
 
 
-#def test_install_failed(install_mockery, mutable_database, monkeypatch, capsys):
 def test_install_failed(install_mockery, monkeypatch, capsys):
     """Test install with failed install."""
     def _noop(installer, task):
