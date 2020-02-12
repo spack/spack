@@ -1016,7 +1016,7 @@ _spack_maintainers() {
 _spack_metrics() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --set-path"
     else
         SPACK_COMPREPLY=""
     fi

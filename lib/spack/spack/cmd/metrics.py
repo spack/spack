@@ -17,9 +17,20 @@ def setup_parser(subparser):
                                    nargs='?',
                                    default=None,
                                    help='enable/disable')
+    metrics_cmd_group.add_argument('--set-path',
+                                   dest='metrics_address',
+                                   help="""set path where
+                                           metrics are logged to""")
 
 
 def metrics(parser, args):
+
+    if args.metrics_address:
+        spack.config.set('config:metrics_address',
+                         args.metrics_address,
+                         "site")
+        return 0
+
     if args.metrics_toggle == "enable":
         spack.config.set('config:metrics', True, scope='site')
     elif args.metrics_toggle == "disable":
