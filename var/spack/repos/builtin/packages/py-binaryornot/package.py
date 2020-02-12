@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyBinaryornot(PythonPackage):
-    """Ultra-lightweight pure Python package to check if a file is binary or text."""
+    """Ultra-lightweight pure Python package to check if a file is binary or text.
+    """
 
     homepage = "https://binaryornot.readthedocs.io"
     url      = "https://github.com/audreyr/binaryornot/archive/0.4.0.tar.gz"
