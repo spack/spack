@@ -190,6 +190,13 @@ class Llvm(CMakePackage):
             '-DPYTHON_EXECUTABLE:PATH={0}'.format(spec['python'].command.path),
         ]
 
+        if '+termlib' in spec['ncurses']:
+            cmake_args.extend([
+                '-DCURSES_TINFO:STRING=tinfo'])
+        else:
+            cmake_args.extend([
+                '-DCURSES_TINFO:STRING=ncurses'])
+
         projects = []
 
         # TODO: Instead of unconditionally disabling CUDA, add a "cuda" variant
