@@ -51,12 +51,12 @@
       "compilers": {
         "gcc": [
           {
-            "versions": "4.2.0:",
+            "versions": "4.1.2:",
             "name": "x86-64",
             "flags": "-march={name} -mtune=generic"
           },
           {
-            "versions": ":4.1.2",
+            "versions": ":4.1.1",
             "name": "x86-64",
             "flags": "-march={name} -mtune={name}"
           }
