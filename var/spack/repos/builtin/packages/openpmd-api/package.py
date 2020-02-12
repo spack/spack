@@ -14,7 +14,7 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
-    version('develop', branch='dev')
+    version('dev', branch='dev')
     version('0.10.3',  tag='0.10.3-alpha')
     version('0.10.2',  tag='0.10.2-alpha')
     version('0.10.1',  tag='0.10.1-alpha')
@@ -114,4 +114,4 @@ class OpenpmdApi(CMakePackage):
         # pre-load dependent CMake-PUBLIC header-only libs
         env.prepend_path('CMAKE_PREFIX_PATH',
                          self.spec['mpark-variant'].prefix)
-        prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
+        env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
