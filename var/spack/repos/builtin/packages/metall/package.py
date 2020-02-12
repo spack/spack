@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 class Metall(CMakePackage):
     """An allocator for persistent memory"""
 
@@ -17,6 +18,6 @@ class Metall(CMakePackage):
     depends_on('boost@1.64:', type=('link'), when='+boost')
 
     def cmake_args(self):
-      args = []
-      args.append('-DINSTALL_HEADER_ONLY=ON')
-      return args
+        args = []
+        args.append('-DINSTALL_HEADER_ONLY=ON')
+        return args
