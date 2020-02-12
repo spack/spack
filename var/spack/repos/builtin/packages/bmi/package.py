@@ -15,6 +15,7 @@ class Bmi(AutotoolsPackage):
     version('develop', branch='master')
 
     depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
 
     # need to override 'autoreconf' so we can run BMI's 'prepare' script
     def autoreconf(self, spec, prefix):
