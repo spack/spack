@@ -7,6 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
+import sys
 
 
 class IntelTbb(Package):
@@ -21,7 +22,10 @@ class IntelTbb(Package):
     # patches and filters below as needed.
 
     # See url_for_version() below.
-    version('2020', sha256='db80f4f7abb95c2d08fe64abdc0a9250903e4c725f1c667ac517450de426023a')
+
+    version('2020.1', sha256='72cffaeac3b50b117c4e2279f9162308d35873b3e744aff5a088beff6f65c9af')
+    version('2020',   sha256='db80f4f7abb95c2d08fe64abdc0a9250903e4c725f1c667ac517450de426023a')
+    version('2019.9', sha256='15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe')
     version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
     version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
     version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
@@ -97,6 +101,9 @@ class IntelTbb(Package):
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
     patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
+
+    # Restore the debug targets.
+    patch("makefile-debug.patch", when="@2020:")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -201,3 +208,9 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)
