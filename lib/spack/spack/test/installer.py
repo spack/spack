@@ -60,16 +60,16 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
 
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
-    monkeypatch.setattr(spack.installer, '_try_install_from_binary_cache',
-                        _installed)
+    monkeypatch.setattr(inst, '_try_install_from_binary_cache', _installed)
     monkeypatch.setattr(spack.hooks, 'post_install', _post_hook)
 
     assert inst._install_from_cache(spec.package, True, True)
 
 
+#def test_process_external_package_module(install_mockery, mutable_database,
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     """Test to simply cover the external module message path."""
-    def _no_rec(spec):
+    def _no_rec(db, spec):
         return None
 
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -77,7 +77,7 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     assert spec.concrete
 
     # Ensure take the external module path WITHOUT any changes to the database
-    monkeypatch.setattr(spack.store.db, 'get_record', _no_rec)
+    monkeypatch.setattr(spack.database.Database, 'get_record', _no_rec)
 
     spec.external_path = '/actual/external/path/not/checked'
     spec.external_module = 'unchecked_module'
@@ -224,8 +224,7 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     installer = inst.PackageInstaller(spec.package)
     assert len(installer.build_tasks) == 0
 
-    monkeypatch.setattr(spack.installer,
-                        '_packages_needed_to_bootstrap_compiler', _pkgs)
+    monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
     installer._add_bootstrap_compilers(spec.package)
 
     ids = list(installer.build_tasks)
@@ -251,7 +250,7 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     installer._prepare_for_install(task, True, True, False)
 
 
-def test_installer_init_queue(install_mockery, monkeypatch):
+def test_installer_init_queue(install_mockery):
     """Test of installer queue functions."""
     with spack.config.override('config:install_missing_compilers', True):
         spec = spack.spec.Spec('dependent-install')
@@ -276,8 +275,7 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     assert spec.concrete
     installer = inst.PackageInstaller(spec.package)
 
-    monkeypatch.setattr(spack.installer, '_install_from_cache',
-                        _install_true)
+    monkeypatch.setattr(inst, '_install_from_cache', _install_true)
     task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
     installer._install_task(task)
     assert spec.package.name in installer.installed
@@ -358,12 +356,13 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     assert 'Detected uninstalled dependencies for' in out
 
 
+#def test_install_failed(install_mockery, mutable_database, monkeypatch, capsys):
 def test_install_failed(install_mockery, monkeypatch, capsys):
     """Test install with failed install."""
     def _noop(installer, task):
         return
 
-    def _failed(spec):
+    def _failed(db, spec):
         return True
 
     spec = spack.spec.Spec('b')
@@ -373,7 +372,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     installer = inst.PackageInstaller(spec.package)
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.store.db, 'prefix_failed', _failed)
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _failed)
 
     # Skip the actual installation though it should never get there
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
