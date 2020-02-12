@@ -25,10 +25,11 @@ def setup_parser(subparser):
 def add(parser, args):
     env = ev.get_env(args, 'add', required=True)
 
-    for spec in spack.cmd.parse_specs(args.specs):
-        if not env.add(spec, args.list_name):
-            tty.msg("Package {0} was already added to {1}"
-                    .format(spec.name, env.name))
-        else:
-            tty.msg('Adding %s to environment %s' % (spec, env.name))
-    env.write()
+    with env.write_transaction():
+        for spec in spack.cmd.parse_specs(args.specs):
+            if not env.add(spec, args.list_name):
+                tty.msg("Package {0} was already added to {1}"
+                        .format(spec.name, env.name))
+            else:
+                tty.msg('Adding %s to environment %s' % (spec, env.name))
+        env.write()

@@ -19,6 +19,7 @@ class Openldap(AutotoolsPackage):
     homepage = "https://www.openldap.org/"
     url      = "ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.48.tgz"
 
+    version('2.4.49', sha256='e3b117944b4180f23befe87d0dcf47f29de775befbc469dcf4ac3dab3311e56e')
     version('2.4.48', sha256='d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d')
 
     variant('client_only', default=True, description='Client only installation')
