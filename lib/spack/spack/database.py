@@ -72,7 +72,7 @@ _skip_reindex = [
 # A balance needs to be struck between quick turnaround for parallel installs
 # (to avoid excess delays) and waiting long enough when the system is busy
 # (to ensure the database is updated).
-_db_lock_timeout = 3
+_db_lock_timeout = 120
 
 # Default timeout for spack package locks in seconds or None (no timeout).
 # A balance needs to be struck between quick turnaround for parallel installs
