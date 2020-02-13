@@ -28,26 +28,24 @@ and is divided among four classes:
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
+import collections
 import copy
 import datetime
 import inspect
 import os.path
 import re
-import collections
 
-import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-
-import spack.paths
 import spack.build_environment as build_environment
-import spack.util.environment
-import spack.tengine as tengine
-import spack.util.path
-import spack.util.environment
 import spack.error
-import spack.util.spack_yaml as syaml
+import spack.paths
+import spack.schema.environment
+import spack.tengine as tengine
+import spack.util.environment
 import spack.util.file_permissions as fp
+import spack.util.path
+import spack.util.spack_yaml as syaml
 
 
 #: config section for this file
@@ -415,22 +413,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.util.environment.EnvironmentModifications()
-        actions = self.conf.get('environment', {})
-
-        def process_arglist(arglist):
-            if method == 'unset':
-                for x in arglist:
-                    yield (x,)
-            else:
-                for x in six.iteritems(arglist):
-                    yield x
-
-        for method, arglist in actions.items():
-            for args in process_arglist(arglist):
-                getattr(env_mods, method)(*args)
-
-        return env_mods
+        return spack.schema.environment.parse(self.conf.get('environment', {}))
 
     @property
     def suffixes(self):

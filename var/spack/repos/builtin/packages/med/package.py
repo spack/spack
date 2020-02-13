@@ -22,6 +22,9 @@ class Med(CMakePackage):
     depends_on('mpi')
     depends_on('hdf5@:1.8.19+mpi')
 
+    # C++11 requires a space between literal and identifier
+    patch('add_space.patch')
+
     # FIXME This is minimal installation.
 
     def cmake_args(self):

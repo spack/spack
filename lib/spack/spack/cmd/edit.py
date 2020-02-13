@@ -84,12 +84,11 @@ def setup_parser(subparser):
         help="namespace of package to edit")
 
     subparser.add_argument(
-        'name', nargs='?', default=None,
-        help="name of package to edit")
+        'package', nargs='?', default=None, help="package name")
 
 
 def edit(parser, args):
-    name = args.name
+    name = args.package
 
     # By default, edit package files
     path = spack.paths.packages_path
