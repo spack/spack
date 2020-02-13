@@ -700,8 +700,8 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = patchelf('--print-rpath', file, output=str).strip()
-            set_of_strings.discard(rpaths.strip())
+            rpaths = get_existing_elf_rpaths(file)
+            set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macho_get_paths(file)
