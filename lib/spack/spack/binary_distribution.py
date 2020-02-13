@@ -17,6 +17,7 @@ from contextlib import closing
 import ruamel.yaml as yaml
 
 import json
+from jsonschema import validate
 
 from six.moves.urllib.error import URLError
 
@@ -32,7 +33,7 @@ import spack.util.spack_yaml as syaml
 import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
-
+from spack.schema.buildcache_index import schema
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
@@ -307,6 +308,58 @@ def generate_package_index(cache_prefix):
             url_util.join(cache_prefix, 'index.html'),
             keep_original=False,
             extra_args={'ContentType': 'text/html'})
+    finally:
+        shutil.rmtree(tmpdir)
+
+
+def generate_package_index_json(cache_prefix):
+    """Create the build cache index page.
+
+    Creates (or replaces) the "index.json" page at the location given in
+    cache_prefix.  This page contains a link for each binary package (*.yaml)
+    and public key (*.key) under cache_prefix.
+    """
+    index_object = {}
+
+    file_list = (
+        entry
+        for entry in web_util.list_url(cache_prefix)
+        if entry.endswith('.yaml'))
+
+    for file_path in file_list:
+        try:
+            yaml_url = url_util.join(cache_prefix, file_path)
+            _, _, yaml_file = web_util.read_from_url(yaml_url)
+            yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
+            # yaml_obj = syaml.load(yaml_contents)
+            # s = Spec.from_yaml(yaml_obj)
+            s = Spec.from_yaml(yaml_contents)
+            entry = {
+                'name': s.name,
+                'version': '{0}'.format(s.version),
+                'compiler': '{0}'.format(s.compiler),
+                'os_arch': '{0}'.format(s.architecture),
+                'full_hash': s.full_hash(),
+            }
+            index_object[s.dag_hash()] = entry
+        except (URLError, web_util.SpackWebError) as url_err:
+            tty.error('Error reading spec.yaml: {0}'.format(file_path))
+            tty.error(url_err)
+
+    validate(index_object, schema)
+
+    tmpdir = tempfile.mkdtemp()
+
+    try:
+        index_json_path = os.path.join(tmpdir, 'index.json')
+        with open(index_json_path, 'w') as f:
+            f.write(json.dumps(index_object))
+
+        web_util.push_to_url(
+            index_json_path,
+            url_util.join(cache_prefix, 'index.json'),
+            keep_original=False,
+            extra_args={'ContentType': 'application/json'})
     finally:
         shutil.rmtree(tmpdir)
 
