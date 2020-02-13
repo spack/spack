@@ -43,7 +43,7 @@ class Macsio(CMakePackage):
     depends_on('scr', when="+scr")
 
     # Ref: https://github.com/LLNL/MACSio/commit/51b8c40cd9813adec5dd4dd6cee948bb9ddb7ee1
-    patch('cast.patch')
+    patch('cast.patch', when='@1.1')
 
     def cmake_args(self):
         spec = self.spec
