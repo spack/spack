@@ -301,8 +301,8 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory, key,
-                   force, rel, unsigned, allow_root, no_rebuild_index):
+def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory,
+                   key, force, rel, unsigned, allow_root, no_rebuild_index):
     if spec_yaml:
         packages = set()
         with open(spec_yaml, 'r') as fd:
