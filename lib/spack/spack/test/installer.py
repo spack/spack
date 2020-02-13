@@ -14,6 +14,36 @@ import spack.repo
 import spack.spec
 
 
+def create_build_task(pkg):
+    """
+    Create a built task for the given (concretized) package
+
+    Args:
+        pkg (PackageBase): concretized package associated with the task
+
+    Return:
+        (BuildTask) A basic package build task
+    """
+    return inst.BuildTask(pkg, False, 0, 0, inst.STATUS_ADDED, [])
+
+
+def create_installer(spec_name):
+    """
+    Create an installer for the named spec
+
+    Args:
+        spec_name (str):  Name of the explicit install spec
+
+    Return:
+        spec (Spec): concretized spec
+        installer (PackageInstaller): the associated package installer
+    """
+    spec = spack.spec.Spec(spec_name)
+    spec.concretize()
+    assert spec.concrete
+    return spec, inst.PackageInstaller(spec.package)
+
+
 @pytest.mark.parametrize('sec,result', [
     (86400, "24h"),
     (3600, "1h"),
@@ -136,10 +166,7 @@ def test_installer_init_errors(install_mockery):
 
 def test_installer_strings(install_mockery):
     """Tests of installer repr and str for coverage purposes."""
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('trivial-install-test-package')
 
     # Cover __repr__
     irep = installer.__repr__()
@@ -169,11 +196,7 @@ def test_installer_last_phase_error(install_mockery, capsys):
 
 def test_installer_ensure_ready_errors(install_mockery):
     """Test to cover _ensure_ready errors."""
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
-    assert installer
+    spec, installer = create_installer('trivial-install-test-package')
 
     fmt = r'cannot be installed locally.*{0}'
     # Force an external package error
@@ -201,10 +224,7 @@ def test_installer_ensure_ready_errors(install_mockery):
 
 def test_ensure_locked_have(install_mockery, tmpdir):
     """Test to cover _ensure_locked when already have lock."""
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('trivial-install-test-package')
 
     with tmpdir.as_cwd():
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
@@ -269,11 +289,7 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
         spec = spack.spec.Spec('mpi').concretized()
         return [(spec.package, True)]
 
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
-    assert len(installer.build_tasks) == 0
+    spec, installer = create_installer('trivial-install-test-package')
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
     installer._add_bootstrap_compilers(spec.package)
@@ -289,12 +305,8 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     def _noop(installer, pkg):
         pass
 
-    spec = spack.spec.Spec('dependent-install')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
-
-    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
+    spec, installer = create_installer('dependent-install')
+    task = create_build_task(spec.package)
     installer.installed.add(task.pkg_id)
 
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_install_ready', _noop)
@@ -304,10 +316,7 @@ def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
 def test_installer_init_queue(install_mockery):
     """Test of installer queue functions."""
     with spack.config.override('config:install_missing_compilers', True):
-        spec = spack.spec.Spec('dependent-install')
-        spec.concretize()
-        assert spec.concrete
-        installer = inst.PackageInstaller(spec.package)
+        spec, installer = create_installer('dependent-install')
         installer._init_queue(True, True)
 
         ids = list(installer.build_tasks)
@@ -321,23 +330,17 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     def _install_true(pkg, cache_only, explicit):
         return True
 
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('trivial-install-test-package')
+    task = create_build_task(spec.package)
 
     monkeypatch.setattr(inst, '_install_from_cache', _install_true)
-    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
     installer._install_task(task)
     assert spec.package.name in installer.installed
 
 
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     """Test _release_lock for supposed write lock with exception."""
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('trivial-install-test-package')
 
     pkg_id = 'test'
     with tmpdir.as_cwd():
@@ -353,13 +356,9 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
 
 def test_requeue_task(install_mockery, capfd):
     """Test to ensure cover _requeue_task."""
-    spec = spack.spec.Spec('a')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('a')
+    task = create_build_task(spec.package)
 
-    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
-    assert task.status == inst.STATUS_ADDED
     installer._requeue_task(task)
 
     ids = list(installer.build_tasks)
@@ -374,15 +373,12 @@ def test_requeue_task(install_mockery, capfd):
 def test_cleanup_all_tasks(install_mockery, monkeypatch):
     """Test to ensure cover _cleanup_all_tasks."""
     def _mktask(pkg):
-        return inst.BuildTask(pkg, False, 0, 0, inst.STATUS_ADDED, [])
+        return create_build_task(pkg)
 
     def _rmtask(installer, pkg_id):
         raise RuntimeError('Raise an exception to test except path')
 
-    spec = spack.spec.Spec('a')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('a')
 
     # Cover task removal happy path
     installer.build_tasks['a'] = _mktask(spec.package)
@@ -403,10 +399,7 @@ def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
     def _raise_except(lock):
         raise RuntimeError(msg)
 
-    spec = spack.spec.Spec('trivial-install-test-package')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('trivial-install-test-package')
 
     monkeypatch.setattr(lk.Lock, 'release_write', _raise_except)
     pkg_id = 'test'
@@ -422,14 +415,10 @@ def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
 
 def test_update_failed_no_mark(install_mockery):
     """Test of _update_failed sans mark and dependent build tasks."""
-    spec = spack.spec.Spec('dependent-install')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('dependent-install')
+    task = create_build_task(spec.package)
 
-    task = inst.BuildTask(spec.package, False, 0, 0, inst.STATUS_ADDED, [])
     installer._update_failed(task)
-
     assert installer.failed['dependent-install'] is None
 
 
@@ -438,10 +427,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     def _noop(installer, task):
         return
 
-    spec = spack.spec.Spec('dependent-install')
-    spec.concretize()
-    assert spec.concrete
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('dependent-install')
 
     # Skip the actual installation and any status updates
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
@@ -464,11 +450,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     def _failed(db, spec):
         return True
 
-    spec = spack.spec.Spec('b')
-    spec.concretize()
-    assert spec.concrete
-
-    installer = inst.PackageInstaller(spec.package)
+    spec, installer = create_installer('b')
 
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _failed)
