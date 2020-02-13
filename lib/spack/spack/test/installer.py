@@ -381,6 +381,30 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
+def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
+    """Test to increase coverage of _cleanup_failed."""
+    msg = 'Fake release_write exception'
+
+    def _raise_except(lock):
+        raise RuntimeError(msg)
+
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    monkeypatch.setattr(lk.Lock, 'release_write', _raise_except)
+    pkg_id = 'test'
+    with tmpdir.as_cwd():
+        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        installer.failed[pkg_id] = lock
+
+        installer._cleanup_failed(pkg_id)
+        out = str(capsys.readouterr()[1])
+        assert 'exception when removing failure mark' in out
+        assert msg in out
+
+
 def test_update_failed_no_mark(install_mockery):
     """Test of _update_failed sans mark and dependent build tasks."""
     spec = spack.spec.Spec('dependent-install')
