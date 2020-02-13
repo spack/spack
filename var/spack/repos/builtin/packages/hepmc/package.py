@@ -14,10 +14,10 @@ class Hepmc(CMakePackage):
     homepage = "http://hepmc.web.cern.ch/hepmc/"
     url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
 
-    version('3.2.0', sha256='b59f301e2660db3c81e4fd4aa0701cc010463691ac57424edf4301e16a5944b4')
-    version('3.1.2', sha256='7df91b862cead2657ee54ab043ecf0a8f46da354c8a7ea90d8db2c435904bce0')
-    version('3.1.1', sha256='46098a7e9717921e436c265836c914d515cb831dde898f3f1d129468df7982e7')
-    version('3.1.0', sha256='ac02977d6bde18398abf9d25a2e55614e22b5e819ed4b21ea55cf31aabe6df67')
+    version('3.2.0', sha256='f132387763d170f25a7cc9f0bd586b83373c09acf0c3daa5504063ba460f89fc')
+    version('3.1.2', sha256='4133074b3928252877982f3d4b4c6c750bb7a324eb6c7bb2afc6fa256da3ecc7')
+    version('3.1.1', sha256='2fcbc9964d6f9f7776289d65f9c73033f85c15bf5f0df00c429a6a1d8b8248bb')
+    version('3.1.0', sha256='cd37eed619d58369041018b8627274ad790020a4714b54ac05ad1ebc1a6e7f8a')
     version('3.0.0',   sha256='7ac3c939a857a5ad67bea1e77e3eb16e80d38cfdf825252ac57160634c26d9ec')
     version('2.06.09', sha256='e0f8fddd38472c5615210894444686ac5d72df3be682f7d151b562b236d9b422')
     version('2.06.08', sha256='8be6c1793e0a045f07ddb88bb64b46de7e66a52e75fb72b3f82f9a3e3ba8a8ce')
