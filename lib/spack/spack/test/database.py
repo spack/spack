@@ -749,3 +749,41 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
     # dependency that are not conditional on variants
     results = spack.store.db.query_local('mpileaks ^mpich')
     assert len(results) == 1
+
+
+def test_failed_spec_path_error(database):
+    """Ensure spec not concrete check is covered."""
+    s = spack.spec.Spec('a')
+    with pytest.raises(ValueError, matches='Concrete spec required'):
+        spack.store.db._failed_spec_path(s)
+
+
+def test_clear_failure_keep(database, monkeypatch, capfd):
+    """Add test coverage for clear_failure operation when to be retained."""
+    def _is(db, spec):
+        return True
+
+    # Pretend the spec has been failure locked
+    monkeypatch.setattr(spack.database.Database, 'prefix_failure_locked', _is)
+
+    s = spack.spec.Spec('a')
+    spack.store.db.clear_failure(s)
+    out = capfd.readouterr()[0]
+    assert 'Retaining failure marking' in out
+
+
+def test_clear_failure_forced(database, monkeypatch, capfd):
+    """Add test coverage for clear_failure operation when force."""
+    def _is(db, spec):
+        return True
+
+    # Pretend the spec has been failure locked
+    monkeypatch.setattr(spack.database.Database, 'prefix_failure_locked', _is)
+    # Ensure raise OSError when try to remove the non-existent marking
+    monkeypatch.setattr(spack.database.Database, 'prefix_failure_marked', _is)
+
+    s = spack.spec.Spec('a').concretized()
+    spack.store.db.clear_failure(s, force=True)
+    out = capfd.readouterr()[1]
+    assert 'Removing failure marking despite lock' in out
+    assert 'Unable to remove failure marking' in out

@@ -394,7 +394,7 @@ class Database(object):
         """
         failure_locked = self.prefix_failure_locked(spec)
         if failure_locked and not force:
-            tty.log('Retaining failure marking for {0} due to lock'
+            tty.msg('Retaining failure marking for {0} due to lock'
                     .format(spec.name))
             return
 
