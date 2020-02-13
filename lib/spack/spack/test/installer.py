@@ -6,6 +6,7 @@
 import os
 import pytest
 
+import spack.binary_distribution
 import spack.compilers
 import spack.installer as inst
 import spack.util.lock as lk
@@ -30,7 +31,7 @@ def test_install_msg():
     assert inst.install_msg(name, pid) == expected
 
 
-def dest_install_from_cache_errors(install_mockery, capsys):
+def test_install_from_cache_errors(install_mockery, capsys):
     """Test to ensure cover _install_from_cache errors."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
@@ -85,6 +86,42 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     out = capfd.readouterr()[0]
     assert 'has external module in {0}'.format(spec.external_module) in out
     assert 'is actually installed in {0}'.format(spec.external_path) in out
+
+
+def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
+                                           capfd):
+    """Tests to cover _process_binary_cache_tarball when no tarball."""
+    def _no_tarball(spec):
+        return None
+
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
+                        _no_tarball)
+    pkg = spack.repo.get('trivial-install-test-package')
+    assert not inst._process_binary_cache_tarball(pkg, None, False)
+
+    assert 'exists in binary cache but' in capfd.readouterr()[0]
+
+
+def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
+    """Tests to cover _process_binary_cache_tarball with a tar file."""
+    def _use_spec(spec):
+        return spec
+
+    def _noop(*args, **kwargs):
+        pass
+
+    # Skip binary distribution functionality since assume tested elsewhere
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
+                        _use_spec)
+    monkeypatch.setattr(spack.binary_distribution, 'extract_tarball', _noop)
+
+    # Skip database updates
+    monkeypatch.setattr(spack.database.Database, 'add', _noop)
+
+    spec = spack.spec.Spec('a').concretized()
+    assert inst._process_binary_cache_tarball(spec.package, spec, False)
+
+    assert 'Installing a from binary cache' in capfd.readouterr()[0]
 
 
 def test_installer_init_errors(install_mockery):

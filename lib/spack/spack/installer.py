@@ -298,6 +298,35 @@ def _process_external_package(pkg, explicit):
         spack.store.db.add(spec, None, explicit=explicit)
 
 
+def _process_binary_cache_tarball(pkg, binary_spec, explicit):
+    """
+    Process the binary cache tarball.
+
+    Args:
+        pkg (PackageBase): the package being installed
+        binary_spec (Spec): the spec  whose cache has been confirmed
+        explicit (bool): the package was explicitly requested by the user
+
+    Return:
+        (bool) ``True`` if the package was installed from binary cache,
+            else ``False``
+    """
+    tarball = binary_distribution.download_tarball(binary_spec)
+    # see #10063 : install from source if tarball doesn't exist
+    if tarball is None:
+        tty.msg('{0} exists in binary cache but with different hash'
+                .format(pkg.name))
+        return False
+
+    pkg_id = package_id(pkg)
+    tty.msg('Installing {0} from binary cache'.format(pkg_id))
+    binary_distribution.extract_tarball(binary_spec, tarball, allow_root=False,
+                                        unsigned=False, force=False)
+    pkg.installed_from_binary_cache = True
+    spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
+    return True
+
+
 def _try_install_from_binary_cache(pkg, explicit):
     """
     Try to install the package from binary cache.
@@ -314,20 +343,7 @@ def _try_install_from_binary_cache(pkg, explicit):
     if binary_spec not in specs:
         return False
 
-    tarball = binary_distribution.download_tarball(binary_spec)
-    # see #10063 : install from source if tarball doesn't exist
-    if tarball is None:
-        tty.msg('{0} exists in binary cache but with different hash'
-                .format(pkg.name))
-        return False
-
-    tty.msg('Installing {0} from binary cache'.format(pkg_id))
-    binary_distribution.extract_tarball(
-        binary_spec, tarball, allow_root=False,
-        unsigned=False, force=False)
-    pkg.installed_from_binary_cache = True
-    spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
-    return True
+    return _process_binary_cache_tarball(pkg, binary_spec, explicit)
 
 
 def _update_explicit_entry_in_db(pkg, rec, explicit):
