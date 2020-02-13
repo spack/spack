@@ -684,13 +684,6 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     strings = Executable('strings')
 
-    # if we're relocating patchelf itself, use it
-
-    if file[-13:] == "/bin/patchelf":
-        patchelf = Executable(file)
-    else:
-        patchelf = Executable(get_patchelf())
-
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
 
