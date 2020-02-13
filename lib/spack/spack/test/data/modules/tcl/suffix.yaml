@@ -4,5 +4,5 @@ tcl:
   mpileaks:
     suffixes:
       '+debug': foo
-      '~debug': bar
       '^mpich': foo
+      '~debug': bar
