@@ -1254,3 +1254,43 @@ def test_lock_str():
     assert 'lockfile[0:0]' in lockstr
     assert 'timeout=None' in lockstr
     assert '#reads=0, #writes=0' in lockstr
+
+
+def test_downgrade_write_okay(tmpdir):
+    """Test the lock write-to-read downgrade operation."""
+    with tmpdir.as_cwd():
+        lock = lk.Lock('lockfile')
+        lock.acquire_write()
+        lock.downgrade_write_to_read()
+        assert lock._reads == 1
+        assert lock._writes == 0
+
+
+def test_downgrade_write_fails(tmpdir):
+    """Test failing the lock write-to-read downgrade operation."""
+    with tmpdir.as_cwd():
+        lock = lk.Lock('lockfile')
+        lock.acquire_read()
+        msg = 'Cannot downgrade lock from write to read on file: lockfile'
+        with pytest.raises(lk.LockDowngradeError, matches=msg):
+            lock.downgrade_write_to_read()
+
+
+def test_upgrade_read_okay(tmpdir):
+    """Test the lock read-to-write upgrade operation."""
+    with tmpdir.as_cwd():
+        lock = lk.Lock('lockfile')
+        lock.acquire_read()
+        lock.upgrade_read_to_write()
+        assert lock._reads == 0
+        assert lock._writes == 1
+
+
+def test_upgrade_read_fails(tmpdir):
+    """Test failing the lock read-to-write upgrade operation."""
+    with tmpdir.as_cwd():
+        lock = lk.Lock('lockfile')
+        lock.acquire_write()
+        msg = 'Cannot upgrade lock from read to write on file: lockfile'
+        with pytest.raises(lk.LockUpgradeError, matches=msg):
+            lock.upgrade_read_to_write()

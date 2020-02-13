@@ -382,7 +382,7 @@ class Lock(object):
         Attempts to upgrade from a shared read lock to an exclusive write.
 
         Raises:
-            LockDowngradeError: if this is an attempt at a nested transaction
+            LockUpgradeError: if this is an attempt at a nested transaction
         """
         timeout = timeout or self.default_timeout
 
