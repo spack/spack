@@ -30,15 +30,18 @@ def get_packages_config():
     # Get a list of virtuals from packages.yaml.  Note that because we
     # check spack.repo, this collects virtuals that are actually provided
     # by sometihng, not just packages/names that don't exist.
+    # Only include a virtual if it specifies externals
     # So, this won't include, e.g., 'all'.
     virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                if spack.repo.path.is_virtual(pkg_name)]
+                if spack.repo.path.is_virtual(pkg_name) and
+                any(config[pkg_name].get(key, None)
+                    for key in ('paths', 'modules'))]
 
-    # die if there are virtuals in `packages.py`
+    # die if there are virtuals in `packages.py` specifying a path
     if virtuals:
         errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
         raise VirtualInPackagesYAMLError(
-            "packages.yaml entries cannot be virtual packages:",
+            "packages.yaml for virtual packages cannot specify a path:",
             '\n'.join(errors))
 
     return config
@@ -216,11 +219,10 @@ def spec_externals(spec):
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
     allpkgs = get_packages_config()
-    if spec.name not in allpkgs:
-        return True
-    if 'buildable' not in allpkgs[spec.name]:
-        return True
-    return allpkgs[spec.name]['buildable']
+    do_not_build = [name for name in allpkgs
+                    if not allpkgs[name].get('buildable', True)]
+    return not (spec.name in do_not_build or
+                any(spec.package.provides(name) for name in do_not_build))
 
 
 def get_package_dir_permissions(spec):
