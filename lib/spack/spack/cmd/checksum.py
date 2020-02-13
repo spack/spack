@@ -28,8 +28,8 @@ def setup_parser(subparser):
         help="don't clean up staging area when command completes")
     arguments.add_common_arguments(subparser, ['package'])
     subparser.add_argument(
-        '-y', '--yes', action='store_true',
-        help='non-interactive mode')
+        '-b', '--batch', action='store_true',
+        help="don't ask which versions to checksum")
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
         help='versions to generate checksums for')
