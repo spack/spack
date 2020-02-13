@@ -199,6 +199,21 @@ def test_installer_ensure_ready_errors(install_mockery):
         installer._ensure_install_ready(spec.package)
 
 
+def test_ensure_locked_have(install_mockery, tmpdir):
+    """Test to cover _ensure_locked when already have lock."""
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+    installer = inst.PackageInstaller(spec.package)
+
+    with tmpdir.as_cwd():
+        lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
+        lock_type = 'read'
+        tpl = (lock_type, lock)
+        installer.locks[installer.pkg_id] = tpl
+        assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+
 def test_package_id(install_mockery):
     """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
