@@ -31,6 +31,15 @@ from spack.relocate import macho_replace_paths, macho_make_paths_relative
 from spack.relocate import modify_macho_object, macho_get_paths
 
 
+def has_gpg():
+    try:
+        gpg = spack.util.gpg.Gpg.gpg()
+    except spack.util.gpg.SpackGPGError:
+        gpg = None
+    return bool(gpg)
+no_gpg = not has_gpg()
+
+
 def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
     fetcher = FetchStrategyComposite()
@@ -38,6 +47,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
+@pytest.mark.skipif(no_gpg, reason='This test requires gpg')
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download

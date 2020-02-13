@@ -13,6 +13,7 @@ import spack.config as cfg
 import spack.paths as spack_paths
 import spack.spec as spec
 import spack.util.web as web_util
+import spack.util.gpg
 
 
 @pytest.fixture
@@ -41,6 +42,16 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
+def has_gpg():
+    try:
+        gpg = spack.util.gpg.Gpg.gpg()
+    except spack.util.gpg.SpackGPGError:
+        gpg = None
+    return bool(gpg)
+no_gpg = not has_gpg()
+
+
+@pytest.mark.skipif(no_gpg, reason='This test requires gpg')
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')
