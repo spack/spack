@@ -5,6 +5,8 @@
 
 from spack import *
 from spack.operating_systems.mac_os import macos_version
+import llnl.util.tty as tty
+import itertools
 import os
 import sys
 
@@ -18,9 +20,12 @@ class Qt(Package):
     url      = 'http://download.qt.io/archive/qt/5.7/5.7.0/single/qt-everywhere-opensource-src-5.7.0.tar.gz'
     list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
+    maintainers = ['sethrj']
 
     phases = ['configure', 'build', 'install']
 
+    version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8')
+    version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba')
     version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
     version('5.12.5', sha256='a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
     version('5.12.2', sha256='59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
@@ -176,7 +181,9 @@ class Qt(Package):
     use_xcode = True
 
     # Mapping for compilers/systems in the QT 'mkspecs'
-    compiler_mapping = {'intel': 'icc', 'clang': 'clang-libc++', 'gcc': 'g++'}
+    compiler_mapping = {'intel': ('icc',),
+                        'clang': ('clang-libc++', 'clang'),
+                        'gcc': ('g++',)}
     platform_mapping = {'darwin': 'macx'}
 
     def url_for_version(self, version):
@@ -233,17 +240,26 @@ class Qt(Package):
         """
         spec = self.spec
         cname = spec.compiler.name
-        cname = self.compiler_mapping.get(cname, cname)
         pname = spec.architecture.platform
+
+        # Transform spack compiler name to a list of possible QT compilers
+        cnames = self.compiler_mapping.get(cname, [cname])
+        # Transform platform name to match those in QT
         pname = self.platform_mapping.get(pname, pname)
 
         qtplat = None
         mkspec_dir = 'qtbase/mkspecs' if spec.satisfies('@5:') else 'mkspecs'
-        for subdir in ('', 'unsupported'):
+        for subdir, cname in itertools.product(('', 'unsupported/'), cnames):
             platdirname = "".join([subdir, pname, "-", cname])
+            tty.debug("Checking for platform '{0}' in {1}".format(
+                      platdirname, mkspec_dir))
             if os.path.exists(os.path.join(mkspec_dir, platdirname)):
                 qtplat = platdirname
                 break
+        else:
+            tty.warn("No matching QT platform was found in {0} "
+                     "for platform '{1}' and compiler {2}".format(
+                         mkspec_dir, pname, ",".join(cnames)))
 
         return (mkspec_dir, qtplat)
 
@@ -338,6 +354,14 @@ class Qt(Package):
         if self.spec.satisfies('@4'):
             with open(conf_file, 'a') as f:
                 f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
+
+    @when('@4 %clang')
+    def patch(self):
+        (mkspec_dir, platform) = self.get_mkspec()
+        conf_file = os.path.join(mkspec_dir, platform, "qmake.conf")
+
+        with open(conf_file, 'a') as f:
+            f.write("QMAKE_CXXFLAGS += -std=gnu++98\n")
 
     @property
     def common_config_args(self):
