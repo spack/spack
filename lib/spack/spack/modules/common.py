@@ -36,7 +36,6 @@ import os.path
 import re
 
 import llnl.util.filesystem
-from llnl.util.lang import dedupe
 import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.error
@@ -425,7 +424,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
-        suffixes = list(dedupe(suffixes))
+        suffixes = sorted(set(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes

@@ -218,9 +218,7 @@ class TestTcl(object):
         assert 'foo-foo' not in writer.layout.use_name
 
         writer, spec = factory('mpileaks~debug arch=x86-linux')
-        # Note: ordering is based on YAML input in
-        # test/data/modules/tcl/suffix.yaml
-        assert 'foo-bar' in writer.layout.use_name
+        assert 'bar-foo' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""
