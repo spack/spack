@@ -57,6 +57,8 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with patched Quantum Espresso 6.4.1')
     variant('afqmc', default=False,
             description='Install with AFQMC support')
+    variant('nccl', default=False,
+            description='Include NCCL libraries for AFQMC CUDA build')
 
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
@@ -95,12 +97,15 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
 
-    conflicts('+afqmc', when='@:3.6.0 +cuda', msg='AFQMC CUDA support available with QMCPACK 3.7.0 or later')
+    conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
     conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
     conflicts('+afqmc', when='~complex +cuda', msg='AFQMC real build not supported with CUDA. Add +complex')
     conflicts('+afqmc', when='%gcc@:6.0', msg='AFQMC code requires gcc@6.1 or greater')
     conflicts('+afqmc', when='%clang@:4.0', msg='AFQMC code requires clang 4.1 or greater')
     conflicts('+afqmc', when='%intel@:18',msg='AFQMC code requires intel19 or greater')
+
+    conflicts('+nccl', when='~afqmc', msg='NCCL libraries used in AFQMC only')
+    conflicts('+nccl', when='+afqmc ~cuda', msg='Must have +cuda to use NCCL with AFQMC')
 
     # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
     # non-Intel compilers without a Spack-based hack. This hack
@@ -125,6 +130,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
+
+    depends_on('nccl', when='+nccl')
 
     # HDF5
     depends_on('hdf5~mpi', when='~phdf5')
@@ -239,7 +246,10 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append('-DQMC_COMPLEX=0')
 
         if '+afqmc' in spec:
-            args.append('-DBUILD_AFQMC=1')
+            if '+nccl' in spec:
+                args.append('-DBUILD_AFQMC_WITH_NCCL=1')
+            else:
+                args.append('-DBUILD_AFQMC=1')
         else:
             args.append('-DBUILD_AFQMC=0')
 
