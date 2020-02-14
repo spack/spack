@@ -18,9 +18,11 @@ class PyJpype1(PythonPackage):
     version('0.6.1', sha256='0d366228b7b37b0266184161cc7ea1ce58f60199f6ec9451985149ea873774be')
     version('0.6.0', sha256='f5d783520cb4c30595c3bc509065e30fc292ec7cfb57045141eae77c518bcdb0')
 
+    variant('numpy', default=False, description='Build numpy extensions')
+
     depends_on('python@2.6:')
 
     depends_on('py-setuptools', type='build')
     depends_on('java', type=('build', 'run'))
     # extra requirements
-    # depends_on('py-numpy@1.6:', type=('build', 'run'))
+    depends_on('py-numpy@1.6:', type=('build', 'run'), when='+numpy')
