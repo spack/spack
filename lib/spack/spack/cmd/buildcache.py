@@ -65,9 +65,9 @@ def setup_parser(subparser):
                         choices=['package', 'dependencies'],
                         help=('Select the buildcache mode. the default is to'
                               ' build a cache for the package along with all'
-                              ' its dependencies. Alternatively, one can decide'
-                              ' to build a cache for only the package or only'
-                              ' the dependencies'))
+                              ' its dependencies. Alternatively, one can'
+                              ' decide to build a cache for only the package'
+                              ' or only the dependencies'))
     arguments.add_common_arguments(create, ['specs'])
     create.set_defaults(func=createtarball)
 
