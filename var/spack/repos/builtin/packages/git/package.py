@@ -178,6 +178,7 @@ class Git(AutotoolsPackage):
     depends_on('expat')
     depends_on('gettext')
     depends_on('libiconv')
+    depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
