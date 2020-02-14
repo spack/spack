@@ -16,6 +16,21 @@ import spack.repo
 import spack.spec
 
 
+def _noop(*args, **kwargs):
+    """Generic monkeypatch no-op routine."""
+    pass
+
+
+def _none(*args, **kwargs):
+    """Generic monkeypatch function that always returns None."""
+    return None
+
+
+def _true(*args, **kwargs):
+    """Generic monkeypatch function that always returns True."""
+    return True
+
+
 def create_build_task(pkg):
     """
     Create a built task for the given (concretized) package
@@ -85,31 +100,22 @@ def test_install_from_cache_errors(install_mockery, capsys):
 
 def test_install_from_cache_ok(install_mockery, monkeypatch):
     """Test to ensure cover _install_from_cache to the return."""
-    def _installed(pkg, explicit):
-        return True
-
-    def _post_hook(spec):
-        pass
-
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
-    monkeypatch.setattr(inst, '_try_install_from_binary_cache', _installed)
-    monkeypatch.setattr(spack.hooks, 'post_install', _post_hook)
+    monkeypatch.setattr(inst, '_try_install_from_binary_cache', _true)
+    monkeypatch.setattr(spack.hooks, 'post_install', _noop)
 
     assert inst._install_from_cache(spec.package, True, True)
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
     """Test to simply cover the external module message path."""
-    def _no_rec(db, spec):
-        return None
-
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
 
     # Ensure take the external module path WITHOUT any changes to the database
-    monkeypatch.setattr(spack.database.Database, 'get_record', _no_rec)
+    monkeypatch.setattr(spack.database.Database, 'get_record', _none)
 
     spec.external_path = '/actual/external/path/not/checked'
     spec.external_module = 'unchecked_module'
@@ -123,11 +129,8 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
 def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
                                            capfd):
     """Tests to cover _process_binary_cache_tarball when no tarball."""
-    def _no_tarball(spec):
-        return None
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _none)
 
-    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
-                        _no_tarball)
     pkg = spack.repo.get('trivial-install-test-package')
     assert not inst._process_binary_cache_tarball(pkg, None, False)
 
@@ -136,15 +139,11 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     """Tests to cover _process_binary_cache_tarball with a tar file."""
-    def _use_spec(spec):
+    def _spec(spec):
         return spec
 
-    def _noop(*args, **kwargs):
-        pass
-
     # Skip binary distribution functionality since assume tested elsewhere
-    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
-                        _use_spec)
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _spec)
     monkeypatch.setattr(spack.binary_distribution, 'extract_tarball', _noop)
 
     # Skip database updates
@@ -304,9 +303,6 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
 
 def test_prepare_for_install_on_installed(install_mockery, monkeypatch):
     """Test of _prepare_for_install's early return for installed task path."""
-    def _noop(installer, pkg):
-        pass
-
     spec, installer = create_installer('dependent-install')
     task = create_build_task(spec.package)
     installer.installed.add(task.pkg_id)
@@ -329,13 +325,10 @@ def test_installer_init_queue(install_mockery):
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
     """Test _install_task to cover use_cache path."""
-    def _install_true(pkg, cache_only, explicit):
-        return True
-
     spec, installer = create_installer('trivial-install-test-package')
     task = create_build_task(spec.package)
 
-    monkeypatch.setattr(inst, '_install_from_cache', _install_true)
+    monkeypatch.setattr(inst, '_install_from_cache', _true)
     installer._install_task(task)
     assert spec.package.name in installer.installed
 
@@ -426,9 +419,6 @@ def test_update_failed_no_mark(install_mockery):
 
 def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     """Test install with uninstalled dependencies."""
-    def _noop(installer, task):
-        return
-
     spec, installer = create_installer('dependent-install')
 
     # Skip the actual installation and any status updates
@@ -446,16 +436,10 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
 
 def test_install_failed(install_mockery, monkeypatch, capsys):
     """Test install with failed install."""
-    def _noop(installer, task):
-        return
-
-    def _failed(db, spec):
-        return True
-
     spec, installer = create_installer('b')
 
     # Make sure the package is identified as failed
-    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _failed)
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
     # Skip the actual installation though it should never get there
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
@@ -470,9 +454,6 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
 
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
-    def _noop(installer, task):
-        pass
-
     def _requeued(installer, task):
         tty.msg('requeued {0}' .format(task.pkg.spec.name))
 
