@@ -8,7 +8,7 @@ class Metall(CMakePackage):
     """An allocator for persistent memory"""
 
     homepage = "https://github.com/LLNL/metall"
-    git      = "git@github.com:LLNL/metall.git"
+    git      = "https://github.com/LLNL/metall.git"
 
     maintainers = ['KIwabuchi', 'rogerpearce', 'mayagokhale']
 
