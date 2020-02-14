@@ -13,3 +13,5 @@ class PyWhichcraft(PythonPackage):
     url      = "https://github.com/pydanny/whichcraft/archive/0.4.1.tar.gz"
 
     version('0.4.1', sha256='66875022b3b9da8ddf7ab236c15670a782094550d07daeb51ceba4bc61b6b4aa')
+
+    depends_on('py-setuptools', type='build')
