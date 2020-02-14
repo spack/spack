@@ -23,7 +23,7 @@ import spack.repo
 import spack.store
 import spack.util.url as url_util
 
-from spack.error import SpecError
+from spack.error import SpecError, SpackError
 from spack.spec import Spec, save_dependency_spec_yamls
 
 from spack.cmd import display_specs
@@ -365,9 +365,9 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
             bindist.build_tarball(spec, outdir, force, rel,
                                   unsigned, allow_root, signkey,
                                   not no_rebuild_index)
-        except Exception as e:
-            tty.warn('%s' % e)
-            pass
+        except SpackError as e:
+            tty.die('%s' % e)
+            continue
 
 
 def createtarball(args):

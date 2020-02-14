@@ -87,3 +87,20 @@ def test_file_is_relocatable_errors(tmpdir):
         with pytest.raises(ValueError) as exc_info:
             spack.relocate.file_is_relocatable('delete.me')
         assert 'is not an absolute path' in str(exc_info.value)
+
+
+@pytest.mark.requires_executables(
+    '/usr/bin/gcc'
+)
+def test_replace_prefix_bin(source_file):
+    sroot = spack.store.layout.root
+    compiler = spack.util.executable.Executable('/usr/bin/gcc')
+    executable = str(source_file).replace('.c', '.x')
+    compiler_env = {
+        'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+    }
+    compiler(str(source_file), '-o', executable, env=compiler_env)
+
+    assert (replace_prefix_bin(executable, sroot, '/tmp') is None)
+    with pytest.raises(BinaryTextReplaceException):
+        replace_prefix_bin(executable, sroot, '/tmp/%s' % sroot)
