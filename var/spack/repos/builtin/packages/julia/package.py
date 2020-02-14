@@ -96,7 +96,7 @@ class Julia(Package):
     conflicts('@:0.7.0', when='target=aarch64:')
 
     # GCC conflicts
-    conflicts('@:0.5.1', when='%gcc@8:', msg='Julia <= 0.5.1 need GCC <= 7')
+    conflicts('@:0.5.1', when='%gcc@8:', msg='Julia <= 0.5.1 needs GCC <= 7')
 
     # Building recent versions of Julia with Intel is untested and unsupported
     # by the Julia project, https://github.com/JuliaLang/julia/issues/23407.
