@@ -37,7 +37,6 @@ def has_gpg():
     except spack.util.gpg.SpackGPGError:
         gpg = None
     return bool(gpg)
-no_gpg = not has_gpg()
 
 
 def fake_fetchify(url, pkg):
@@ -47,7 +46,7 @@ def fake_fetchify(url, pkg):
     pkg.fetcher = fetcher
 
 
-@pytest.mark.skipif(no_gpg, reason='This test requires gpg')
+@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download

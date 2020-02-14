@@ -58,10 +58,10 @@ def has_gpg():
     except spack.util.gpg.SpackGPGError:
         gpg = None
     return bool(gpg)
-no_gpg = not has_gpg()
+
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(no_gpg,
+@pytest.mark.skipif(not has_gpg(),
                     reason='These tests require gnupg2')
 def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.

@@ -39,7 +39,6 @@ def has_gpg():
     except spack.util.gpg.SpackGPGError:
         gpg = None
     return bool(gpg)
-no_gpg = not has_gpg()
 
 
 @pytest.fixture()
@@ -504,7 +503,7 @@ def test_ci_pushyaml(tmpdir):
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.skipif(no_gpg, reason='This test requires gpg')
+@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
                               mock_stage, mock_gnupghome):
