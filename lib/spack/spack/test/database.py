@@ -14,6 +14,7 @@ import os
 import pytest
 import json
 
+import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
 
 import spack.repo
@@ -787,3 +788,72 @@ def test_clear_failure_forced(database, monkeypatch, capfd):
     out = capfd.readouterr()[1]
     assert 'Removing failure marking despite lock' in out
     assert 'Unable to remove failure marking' in out
+
+
+def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
+    """Add coverage to mark_failed."""
+    def _raise_exc(lock):
+        raise lk.LockTimeoutError('Mock acquire_write failure')
+
+    # Ensure attempt to acquire write lock on the mark raises the exception
+    monkeypatch.setattr(lk.Lock, 'acquire_write', _raise_exc)
+
+    with tmpdir.as_cwd():
+        s = spack.spec.Spec('a').concretized()
+        spack.store.db.mark_failed(s)
+
+        out = str(capsys.readouterr()[1])
+        assert 'Unable to mark a as failed' in out
+
+
+def test_prefix_failed(mutable_database, monkeypatch):
+    """Add coverage to prefix_failed operation."""
+    def _is(db, spec):
+        return True
+
+    s = spack.spec.Spec('a').concretized()
+
+    # Confirm the spec is not already marked as failed
+    assert not spack.store.db.prefix_failed(s)
+
+    # Check that a failure entry is sufficient
+    spack.store.db._prefix_failures[s.prefix] = None
+    assert spack.store.db.prefix_failed(s)
+
+    # Remove the entry and check again
+    del spack.store.db._prefix_failures[s.prefix]
+    assert not spack.store.db.prefix_failed(s)
+
+    # Now pretend that the prefix failure is locked
+    monkeypatch.setattr(spack.database.Database, 'prefix_failure_locked', _is)
+    assert spack.store.db.prefix_failed(s)
+
+
+def test_prefix_read_lock_error(mutable_database, monkeypatch):
+    """Cover the prefix read lock exception."""
+    def _raise(db, spec):
+        raise lk.LockError('Mock lock error')
+
+    s = spack.spec.Spec('a').concretized()
+
+    # Ensure subsequent lock operations fail
+    monkeypatch.setattr(lk.Lock, 'acquire_read', _raise)
+
+    with pytest.raises(Exception):
+        with spack.store.db.prefix_read_lock(s):
+            assert False
+
+
+def test_prefix_write_lock_error(mutable_database, monkeypatch):
+    """Cover the prefix write lock exception."""
+    def _raise(db, spec):
+        raise lk.LockError('Mock lock error')
+
+    s = spack.spec.Spec('a').concretized()
+
+    # Ensure subsequent lock operations fail
+    monkeypatch.setattr(lk.Lock, 'acquire_write', _raise)
+
+    with pytest.raises(Exception):
+        with spack.store.db.prefix_write_lock(s):
+            assert False
