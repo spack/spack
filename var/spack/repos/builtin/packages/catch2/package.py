@@ -15,6 +15,9 @@ class Catch2(CMakePackage):
 
     variant('single_header', default=True,
             description='Install a single header only.')
+    variant('use_cmake', default=False,
+            description='Build with CMake; useful for generation of'
+                        ' a CMake configuration file.')
 
     # - "make install" was added in 1.7.0
     # - pkg-config package was added in 2.0.1
@@ -66,15 +69,26 @@ class Catch2(CMakePackage):
     version('1.3.5', sha256='f15730d81b4173fb860ce3561768de7d41bbefb67dc031d7d1f5ae2c07f0a472')
     version('1.3.0', sha256='245f6ee73e2fea66311afa1da59e5087ddab8b37ce64994ad88506e8af28c6ac')
 
-    @when('+single_header')
+    @when('+single_header~use_cmake')
     def cmake(self, spec, prefix):
         pass
 
-    @when('+single_header')
+    @when('+single_header+use_cmake')
+    def cmake_args(self):
+        cmake_args = [
+            '-DBUILD_TESTING=OFF',
+        ]
+        return cmake_args
+
+    @when('@:2.1.1')
+    def cmake(self):
+        pass
+
+    @when('+single_header~use_cmake')
     def build(self, spec, prefix):
         pass
 
-    @when('+single_header')
+    @when('+single_header~use_cmake')
     def install(self, spec, prefix):
         mkdirp(prefix.include)
         if spec.satisfies('@2.3.0:'):
