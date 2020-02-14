@@ -6,6 +6,8 @@
 import os
 import pytest
 
+import llnl.util.tty as tty
+
 import spack.binary_distribution
 import spack.compilers
 import spack.installer as inst
@@ -464,3 +466,33 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
 
     out = str(capsys.readouterr())
     assert 'Warning: b failed to install' in out
+
+
+def test_install_lock_failures(install_mockery, monkeypatch, capfd):
+    """Cover basic install lock failure handling in a single pass."""
+    def _noop(installer, task):
+        pass
+
+    def _requeued(installer, task):
+        tty.msg('requeued {0}' .format(task.pkg.spec.name))
+
+    def _not_locked(installer, lock_type, pkg):
+        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
+        return lock_type, None
+
+    spec, installer = create_installer('b')
+
+    # Ensure never acquire a lock
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
+
+    # Ensure don't continually requeue the task
+    monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
+
+    # Skip the actual installation though should never reach it
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
+
+    installer.install()
+    out = capfd.readouterr()[0]
+    expected = ['write locked', 'read locked', 'requeued']
+    for exp, ln in zip(expected, out.split('\n')):
+        assert exp in ln
