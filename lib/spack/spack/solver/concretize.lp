@@ -7,16 +7,19 @@
 %-----------------------------------------------------------------------------
 
 % versions are declared w/priority -- declared with priority implies declared
-version_declared(P, V) :- version_declared(P, V, _).
+version_declared(Package, Version) :- version_declared(Package, Version, _).
 
 % If something is a package, it has only one version and that must be a
 % possible version.
-1 { version(P, V) : version_possible(P, V) } 1 :- node(P).
+1 { version(Package, Version) : version_possible(Package, Version) } 1
+ :- node(Package).
 
 % If a version is declared but conflicted, it's not possible.
-version_possible(P, V) :- version_declared(P, V), not version_conflict(P, V).
+version_possible(Package, Version)
+ :- version_declared(Package, Version), not version_conflict(Package, Version).
 
-version_weight(P, V, N) :- version(P, V), version_declared(P, V, N).
+version_weight(Package, Version, Weight)
+ :- version(Package, Version), version_declared(Package, Version, Weight).
 
 #defined version_conflict/2.
 
@@ -24,46 +27,60 @@ version_weight(P, V, N) :- version(P, V), version_declared(P, V, N).
 % Dependency semantics
 %-----------------------------------------------------------------------------
 % Dependencies of any type imply that one package "depends on" another
-depends_on(P, D) :- depends_on(P, D, _).
+depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
 % declared dependencies are real if they're not virtual
-depends_on(P, D, T) :- declared_dependency(P, D, T), not virtual(D), node(P).
+depends_on(Package, Dependency, Type)
+ :- declared_dependency(Package, Dependency, Type), not virtual(Dependency),
+    node(Package).
 
 % if you declare a dependency on a virtual, you depend on one of its providers
-1 { depends_on(P, Q, T) : provides_virtual(Q, V) } 1
-    :- declared_dependency(P, V, T), virtual(V), node(P).
+1 {
+  depends_on(Package, Provider, Type)
+  : provides_virtual(Provider, Virtual)
+} 1
+ :- declared_dependency(Package, Virtual, Type),
+    virtual(Virtual),
+    node(Package).
 
 % if a virtual was required by some root spec, one provider is in the DAG
-1 { node(P) : provides_virtual(P, V) } 1 :- virtual_node(V).
+1 { node(Package) : provides_virtual(Package, Virtual) } 1
+ :- virtual_node(Virtual).
 
 % for any virtual, there can be at most one provider in the DAG
-provider(P, V) :- node(P), provides_virtual(P, V).
-0 { provider(P, V) : node(P) } 1 :- virtual(V).
+provider(Package, Virtual)
+ :- node(Package), provides_virtual(Package, Virtual).
+0 { provider(Package, Virtual) : node(Package) } 1 :- virtual(Virtual).
 
 % give dependents the virtuals they want
-provider_weight(D, N)
-    :- virtual(V), depends_on(P, D), provider(D, V),
-       pkg_provider_preference(P, V, D, N).
-provider_weight(D, N)
-    :- virtual(V), depends_on(P, D), provider(D, V),
-       not pkg_provider_preference(P, V, D, _),
-       default_provider_preference(V, D, N).
+provider_weight(Dependency, Weight)
+ :- virtual(Virtual), depends_on(Package, Dependency),
+    provider(Dependency, Virtual),
+    pkg_provider_preference(Package, Virtual, Dependency, Weight).
+provider_weight(Dependency, Weight)
+ :- virtual(Virtual), depends_on(Package, Dependency),
+    provider(Dependency, Virtual),
+    not pkg_provider_preference(Package, Virtual, Dependency, _),
+    default_provider_preference(Virtual, Dependency, Weight).
 
 % if there's no preference for something, it costs 100 to discourage its
 % use with minimization
-provider_weight(D, 100)
-    :- virtual(V), depends_on(P, D), provider(D, V),
-       not pkg_provider_preference(P, V, D, _),
-       not default_provider_preference(V, D, _).
+provider_weight(Dependency, 100)
+ :- virtual(Virtual),
+    provider(Dependency, Virtual),
+    depends_on(Package, Dependency),
+    not pkg_provider_preference(Package, Virtual, Dependency, _),
+    not default_provider_preference(Virtual, Dependency, _).
 
 % all nodes must be reachable from some root
-needed(D) :- root(D), node(D).
-needed(D) :- root(P), depends_on(P, D).
-needed(D) :- needed(P), depends_on(P, D), node(P).
-:- node(P), not needed(P).
+needed(Package) :- root(Package), node(Package).
+needed(Dependency) :- root(Package), depends_on(Package, Dependency).
+needed(Dependency)
+ :- needed(Package), depends_on(Package, Dependency), node(Package).
+:- node(Package), not needed(Package).
 
 % real dependencies imply new nodes.
-node(D) :- node(P), depends_on(P, D).
+node(Dependency) :- node(Package), depends_on(Package, Dependency).
 
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
@@ -79,30 +96,43 @@ node(D) :- node(P), depends_on(P, D).
 % Variant semantics
 %-----------------------------------------------------------------------------
 % one variant value for single-valued variants.
-1 { variant_value(P, V, X) : variant_possible_value(P, V, X) } 1
-    :- node(P), variant(P, V), variant_single_value(P, V).
+1 {
+  variant_value(Package, Variant, Value)
+  : variant_possible_value(Package, Variant, Value)
+} 1
+ :- node(Package),
+    variant(Package, Variant),
+    variant_single_value(Package, Variant).
 
 % at least one variant value for multi-valued variants.
-1 { variant_value(P, V, X) : variant_possible_value(P, V, X) }
-    :- node(P), variant(P, V), not variant_single_value(P, V).
+1 {
+ variant_value(Package, Variant, Value)
+ : variant_possible_value(Package, Variant, Value)
+}
+ :- node(Package),
+    variant(Package, Variant),
+    not variant_single_value(Package, Variant).
 
 % if a variant is set to anything, it is considered 'set'.
-variant_set(P, V) :- variant_set(P, V, _).
+variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
-variant_value(P, V, X) :- node(P), variant(P, V), variant_set(P, V, X).
+variant_value(Package, Variant, Value)
+ :- node(Package),
+    variant(Package, Variant),
+    variant_set(Package, Variant, Value).
 
 % prefer default values.
-variant_not_default(P, V, X, 1)
-    :- variant_value(P, V, X),
-       not variant_default_value(P, V, X),
-       node(P).
+variant_not_default(Package, Variant, Value, 1)
+ :- variant_value(Package, Variant, Value),
+    not variant_default_value(Package, Variant, Value),
+    node(Package).
 
-variant_not_default(P, V, X, 0)
-    :- variant_value(P, V, X),
-       variant_default_value(P, V, X),
-       node(P).
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    variant_default_value(Package, Variant, Value),
+    node(Package).
 
 % suppress wranings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
@@ -118,21 +148,26 @@ variant_not_default(P, V, X, 0)
 %-----------------------------------------------------------------------------
 % one platform, os per node
 % TODO: convert these to use optimization, like targets.
-1 { node_platform(P, A) : node_platform(P, A) } 1 :- node(P).
-1 { node_os(P, A) : node_os(P, A) } 1 :- node(P).
+1 { node_platform(Package, Platform) : node_platform(Packagee, Platform) } 1
+  :- node(Package).
+1 { node_os(Package, OS) : node_os(Package, OS) } 1 :- node(Package).
 
 % arch fields for pkg P are set if set to anything
-node_platform_set(P) :- node_platform_set(P, _).
-node_os_set(P) :- node_os_set(P, _).
+node_platform_set(Package) :- node_platform_set(Package, _).
+node_os_set(Package) :- node_os_set(Package, _).
 
 % if no platform/os is set, fall back to the defaults
-node_platform(P, A)
-    :- node(P), not node_platform_set(P), node_platform_default(A).
-node_os(P, A) :- node(P), not node_os_set(P), node_os_default(A).
+node_platform(Package, Platform)
+ :- node(Package),
+    not node_platform_set(Package),
+    node_platform_default(Platform).
+node_os(Package, OS)
+  :- node(Package), not node_os_set(Package), node_os_default(OS).
 
 % setting os/platform on a node is a hard constraint
-node_platform(P, A) :- node(P), node_platform_set(P, A).
-node_os(P, A) :- node(P), node_os_set(P, A).
+node_platform(Package, Platform)
+ :- node(Package), node_platform_set(Package, Platform).
+node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
 
 % avoid info warnings (see variants)
 #defined node_platform_set/2.
@@ -142,17 +177,21 @@ node_os(P, A) :- node(P), node_os_set(P, A).
 % Target semantics
 %-----------------------------------------------------------------------------
 % one target per node -- optimization will pick the "best" one
-1 { node_target(P, T) : target(T) } 1 :- node(P).
+1 { node_target(Package, Target) : target(Target) } 1 :- node(Package).
 
 % can't use targets on node if the compiler for the node doesn't support them
-:- node_target(P, T), not compiler_supports_target(C, V, T),
-   node_compiler(P, C), node_compiler_version(P, C, V).
+:- node_target(Package, Target),
+   not compiler_supports_target(Compiler, Version, Target),
+   node_compiler(Package, Compiler),
+   node_compiler_version(Package, Compiler, Version).
 
 % if a target is set explicitly, respect it
-node_target(P, T) :- node(P), node_target_set(P, T).
+node_target(Package, Target)
+ :- node(Package), node_target_set(Package, Target).
 
 % each node has the weight of its assigned target
-node_target_weight(P, N) :- node(P), node_target(P, T), target_weight(T, N).
+node_target_weight(Package, Weight)
+ :- node(Package), node_target(Package, Target), target_weight(Target, Weight).
 
 #defined node_target_set/2.
 
@@ -161,43 +200,53 @@ node_target_weight(P, N) :- node(P), node_target(P, T), target_weight(T, N).
 %-----------------------------------------------------------------------------
 
 % one compiler per node
-1 { node_compiler(P, C) : compiler(C) } 1 :- node(P).
-1 { node_compiler_version(P, C, V) : compiler_version(C, V) } 1 :- node(P).
-1 { compiler_weight(P, N) : compiler_weight(P, N) } 1 :- node(P).
+1 { node_compiler(Package, Compiler) : compiler(Compiler) } 1 :- node(Package).
+1 { node_compiler_version(Package, Compiler, Version)
+    : compiler_version(Compiler, Version) } 1 :- node(Package).
+1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
+ :- node(Package).
 
 % dependencies imply we should try to match hard compiler constraints
 % todo: look at what to do about intersecting constraints here. we'd
 % ideally go with the "lowest" pref in the DAG
-node_compiler_match_pref(P, C) :- node_compiler_hard(P, C).
-node_compiler_match_pref(D, C)
-    :- depends_on(P, D), node_compiler_match_pref(P, C),
-       not node_compiler_hard(D, _).
-compiler_match(P, 1) :- node_compiler(P, C), node_compiler_match_pref(P, C).
+node_compiler_match_pref(Package, Compiler)
+ :- node_compiler_hard(Package, Compiler).
+node_compiler_match_pref(Dependency, Compiler)
+ :- depends_on(Package, Dependency),
+    node_compiler_match_pref(Package, Compiler),
+    not node_compiler_hard(Dependency, _).
+compiler_match(Package, 1)
+ :- node_compiler(Package, Compiler),
+    node_compiler_match_pref(Package, Compiler).
 
-node_compiler_version_match_pref(P, C, V)
-    :- node_compiler_version_hard(P, C, V).
-node_compiler_version_match_pref(D, C, V)
-    :- depends_on(P, D), node_compiler_version_match_pref(P, C, V),
-       not node_compiler_version_hard(D, C, _).
-compiler_version_match(P, 1)
-    :- node_compiler_version(P, C, V),
-       node_compiler_version_match_pref(P, C, V).
+node_compiler_version_match_pref(Package, Compiler, V)
+ :- node_compiler_version_hard(Package, Compiler, V).
+node_compiler_version_match_pref(Dependency, Compiler, V)
+ :- depends_on(Package, Dependency),
+    node_compiler_version_match_pref(Package, Compiler, V),
+    not node_compiler_version_hard(Dependency, Compiler, _).
+compiler_version_match(Package, 1)
+ :- node_compiler_version(Package, Compiler, V),
+    node_compiler_version_match_pref(Package, Compiler, V).
 
 #defined node_compiler_hard/2.
 #defined node_compiler_version_hard/3.
 
 % compilers weighted by preference acccording to packages.yaml
-compiler_weight(P, N)
-    :- node_compiler(P, C), node_compiler_version(P, C, V),
-       node_compiler_preference(P, C, V, N).
-compiler_weight(P, N)
-    :- node_compiler(P, C), node_compiler_version(P, C, V),
-       not node_compiler_preference(P, C, _, _),
-       default_compiler_preference(C, V, N).
-compiler_weight(P, 100)
-    :- node_compiler(P, C), node_compiler_version(P, C, V),
-       not node_compiler_preference(P, C, _, _),
-       not default_compiler_preference(C, _, _).
+compiler_weight(Package, Weight)
+ :- node_compiler(Package, Compiler),
+    node_compiler_version(Package, Compiler, V),
+    node_compiler_preference(Package, Compiler, V, Weight).
+compiler_weight(Package, Weight)
+ :- node_compiler(Package, Compiler),
+    node_compiler_version(Package, Compiler, V),
+    not node_compiler_preference(Package, Compiler, _, _),
+    default_compiler_preference(Compiler, V, Weight).
+compiler_weight(Package, 100)
+ :- node_compiler(Package, Compiler),
+    node_compiler_version(Package, Compiler, Version),
+    not node_compiler_preference(Package, Compiler, _, _),
+    not default_compiler_preference(Compiler, _, _).
 
 #defined node_compiler_preference/4.
 #defined default_compiler_preference/3.
@@ -206,33 +255,44 @@ compiler_weight(P, 100)
 % Compiler flags
 %-----------------------------------------------------------------------------
 % propagate flags when compilers match
-inherit_flags(P, D)
-    :- depends_on(P, D), node_compiler(P, C), node_compiler(D, C),
-       compiler(C), flag_type(T).
-node_flag_inherited(D, T, F) :- node_flag_set(P, T, F), inherit_flags(P, D).
-node_flag_inherited(D, T, F)
-    :- node_flag_inherited(P, T, F), inherit_flags(P, D).
+inherit_flags(Package, Dependency)
+ :- depends_on(Package, Dependency),
+    node_compiler(Package, Compiler),
+    node_compiler(Dependency, Compiler),
+    compiler(Compiler), flag_type(FlagType).
+node_flag_inherited(Dependency, FlagType, Flag)
+ :- node_flag_set(Package, FlagType, Flag), inherit_flags(Package, Dependency).
+node_flag_inherited(Dependency, FlagType, Flag)
+ :- node_flag_inherited(Package, FlagType, Flag),
+    inherit_flags(Package, Dependency).
 
 % node with flags set to anythingg is "set"
-node_flag_set(P) :- node_flag_set(P, _, _).
+node_flag_set(Package) :- node_flag_set(Package, _, _).
 
 % remember where flags came from
-node_flag_source(P, P) :- node_flag_set(P).
-node_flag_source(D, Q) :- node_flag_source(P, Q), inherit_flags(P, D).
+node_flag_source(Package, Package) :- node_flag_set(Package).
+node_flag_source(Dependency, Q)
+ :- node_flag_source(Package, Q), inherit_flags(Package, Dependency).
 
 % compiler flags from compilers.yaml are put on nodes if compiler matches
-node_flag(P, T, F),
-node_flag_compiler_default(P)
-    :- not node_flag_set(P), compiler_version_flag(C, V, T, F),
-       node_compiler(P, C), node_compiler_version(P, C, V),
-       flag_type(T), compiler(C), compiler_version(C, V).
+node_flag(Package, FlagType, Flag),
+node_flag_compiler_default(Package)
+ :- not node_flag_set(Package),
+    compiler_version_flag(Compiler, Version, FlagType, Flag),
+    node_compiler(Package, Compiler),
+    node_compiler_version(Package, Compiler, Version),
+    flag_type(FlagType),
+    compiler(Compiler),
+    compiler_version(Compiler, Version).
 
 % if a flag is set to something or inherited, it's included
-node_flag(P, T, F) :- node_flag_set(P, T, F).
-node_flag(P, T, F) :- node_flag_inherited(P, T, F).
+node_flag(Package, FlagType, Flag) :- node_flag_set(Package, FlagType, Flag).
+node_flag(Package, FlagType, Flag)
+ :- node_flag_inherited(Package, FlagType, Flag).
 
 % if no node flags are set for a type, there are no flags.
-no_flags(P, T) :- not node_flag(P, T, _), node(P), flag_type(T).
+no_flags(Package, FlagType)
+ :- not node_flag(Package, FlagType, _), node(Package), flag_type(FlagType).
 
 #defined compiler_version_flag/4.
 #defined node_flag/3.
@@ -258,25 +318,32 @@ no_flags(P, T) :- not node_flag(P, T, _), node(P), flag_type(T).
 % into our weights.  e.g., a non-default variant resulting from a version
 % constraint counts like a version constraint.  Needs more thought later.
 %
-root(D, 2) :- root(D), node(D).
-root(D, 1) :- not root(D), node(D).
+root(Package, 2) :- root(Package), node(Package).
+root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % prefer default variants
-#minimize { N*R@10,P,V,X : variant_not_default(P, V, X, N), root(P, R) }.
+#minimize {
+    Weight*R@10,Package,Variant,Value
+    : variant_not_default(Package, Variant, Value, Weight), root(Package, R)
+}.
 
 % pick most preferred virtual providers
-#minimize{ N*R@9,D : provider_weight(D, N), root(P, R) }.
+#minimize{
+    Weight*R@9,Provider : provider_weight(Provider, Weight), root(Package, R)
+}.
 
 % prefer more recent versions.
-#minimize{ N@8,P,V : version_weight(P, V, N) }.
+#minimize{
+    Weight@8,Package,Version : version_weight(Package, Version, Weight)
+}.
 
 % compiler preferences
-#maximize{ N@7,P : compiler_match(P, N) }.
-#minimize{ N@6,P : compiler_weight(P, N) }.
+#maximize{ Weight@7,Package : compiler_match(Package, Weight) }.
+#minimize{ Weight@6,Package : compiler_weight(Package, Weight) }.
 
 % fastest target for node
 
 % TODO: if these are slightly different by compiler (e.g., skylake is
 % best, gcc supports skylake and broadweell, clang's best is haswell)
 % things seem to get really slow.
-#minimize{ N@5,P : node_target_weight(P, N) }.
+#minimize{ Weight@5,Package : node_target_weight(Package, Weight) }.
