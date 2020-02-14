@@ -16,21 +16,26 @@ properties = {
         'required': ['nodes'],
         'properties': {
             'nodes': {
-                'type': 'object',
-                'additionalProperties': False,
-                'patternProperties': {
-                    r'\w[\w-]*': {  # node name
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'required': ['target', 'operating_system'],
-                        'properties': {
-                            'operating_system': {'type': 'string'},
-                            'target': {'type': 'string'}
+                'type': 'array',
+                'items': [{
+                    'type': 'object',
+                    'additionalProperties': False,
+                    'properties': {
+                        'node': {
+                            'type': 'object',
+                            'additionalProperties': False,
+                            'required': ['name', 'target', 'operating_system'],
+                            'properties': {
+                                'name': {'type': 'string'},
+                                'operating_system': {'type': 'string'},
+                                'target': {'type': 'string'}
+                            }
                         }
                     }
-                }
+                }]
             }
         }
+
     }
 }
 
