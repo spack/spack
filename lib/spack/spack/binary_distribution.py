@@ -18,7 +18,7 @@ import json
 from six.moves.urllib.error import URLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config as config
@@ -648,7 +648,17 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # so the pathname should be the same now that the directory layout
     # is confirmed
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
-    install_tree(workdir, spec.prefix, symlinks=True)
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, '.tar')
+    temp_tarfile_path = os.path.join(tmpdir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
+        tar.add(name='%s' % workdir,
+                arcname='.')
+    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
+        tar.extractall(spec.prefix)
+    os.remove(temp_tarfile_path)
 
     # cleanup
     os.remove(tarfile_path)
