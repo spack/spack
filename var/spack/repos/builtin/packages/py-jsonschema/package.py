@@ -16,12 +16,11 @@ class PyJsonschema(PythonPackage):
     version('2.6.0', sha256='6ff5f3180870836cae40f06fa10419f557208175f13ad7bc26caa77beb1f6e02')
     version('2.5.1', sha256='36673ac378feed3daa5956276a829699056523d7961027911f064b52255ead41')
 
-    depends_on('python@2.7.0:2.7.999,3.5:')
+    depends_on('python@2.6:2.7.999,3.4:')
+    depends_on('python@2.7:2.7.999,3.5:', when='@2.6.0:')
     depends_on('py-setuptools', type='build')
     depends_on('py-vcversioner', type=('build', 'run'))
     depends_on('py-functools32', when="^python@2.7.0:2.7.999", type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', when='@3.0.1:', type=('build', 'run'))
     depends_on('py-pyrsistent@0.14.0:', when='@3.0.1:', type=('build', 'run'))
     depends_on('py-six@1.11.0:', when='@3.0.1:', type=('build', 'run'))
-    
-    
