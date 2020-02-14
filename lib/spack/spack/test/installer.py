@@ -10,6 +10,7 @@ import llnl.util.tty as tty
 
 import spack.binary_distribution
 import spack.compilers
+import spack.directory_layout as dl
 import spack.installer as inst
 import spack.util.lock as lk
 import spack.repo
@@ -477,3 +478,102 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     expected = ['write locked', 'read locked', 'requeued']
     for exp, ln in zip(expected, out.split('\n')):
         assert exp in ln
+
+
+def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
+    """Cover basic install handling for installed package."""
+    def _install(installer, task, **kwargs):
+        tty.msg('{0} installing'.format(task.pkg.spec.name))
+
+    def _not_locked(installer, lock_type, pkg):
+        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
+        return lock_type, None
+
+    def _prep(installer, task, keep_prefix, keep_stage, restage):
+        installer.installed.add('b')
+        tty.msg('{0} is installed' .format(task.pkg.spec.name))
+
+        # also do not allow the package to be locked again
+        monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked',
+                            _not_locked)
+
+    def _requeued(installer, task):
+        tty.msg('requeued {0}' .format(task.pkg.spec.name))
+
+    # Skip the actual installation though should never reach it
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
+
+    # Flag the package as installed
+    monkeypatch.setattr(inst.PackageInstaller, '_prepare_for_install', _prep)
+
+    # Ensure don't continually requeue the task
+    monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
+
+    spec, installer = create_installer('b')
+
+    installer.install()
+    assert 'b' not in installer.installed
+
+    out = capfd.readouterr()[0]
+    expected = ['is installed', 'read locked', 'requeued']
+    for exp, ln in zip(expected, out.split('\n')):
+        assert exp in ln
+
+
+def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
+    """Cover basic read lock handling for uninstalled package with requeue."""
+    orig_fn = inst.PackageInstaller._ensure_locked
+
+    def _install(installer, task, **kwargs):
+        tty.msg('{0} installing'.format(task.pkg.spec.name))
+
+    def _read(installer, lock_type, pkg):
+        tty.msg('{0}->read locked {1}' .format(lock_type, pkg.spec.name))
+        return orig_fn(installer, 'read', pkg)
+
+    def _prep(installer, task, keep_prefix, keep_stage, restage):
+        tty.msg('preparing {0}' .format(task.pkg.spec.name))
+        assert task.pkg.spec.name not in installer.installed
+
+    def _requeued(installer, task):
+        tty.msg('requeued {0}' .format(task.pkg.spec.name))
+
+    # Force a read lock
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _read)
+
+    # Skip the actual installation though should never reach it
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
+
+    # Flag the package as installed
+    monkeypatch.setattr(inst.PackageInstaller, '_prepare_for_install', _prep)
+
+    # Ensure don't continually requeue the task
+    monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
+
+    spec, installer = create_installer('b')
+
+    installer.install()
+    assert 'b' not in installer.installed
+
+    out = capfd.readouterr()[0]
+    expected = ['write->read locked', 'preparing', 'requeued']
+    for exp, ln in zip(expected, out.split('\n')):
+        assert exp in ln
+
+
+def test_install_dir_exists(install_mockery, monkeypatch, capfd):
+    """Cover capture of install directory exists error."""
+    err = 'Mock directory exists error'
+
+    def _install(installer, task, **kwargs):
+        raise dl.InstallDirectoryAlreadyExistsError(err)
+
+    # Skip the actual installation though should never reach it
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _install)
+
+    spec, installer = create_installer('b')
+
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
+        installer.install()
+
+    assert 'b' in installer.installed

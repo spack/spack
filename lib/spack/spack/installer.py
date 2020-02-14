@@ -1384,6 +1384,7 @@ class PackageInstaller(object):
                     # Requeue the task so we can re-check the status
                     # established by the other process -- failed, installed,
                     # or uninstalled -- on the next pass.
+                    self.installed.remove(pkg_id)
                     self._requeue_task(task)
                 continue
 
