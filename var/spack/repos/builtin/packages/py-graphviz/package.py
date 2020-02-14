@@ -13,6 +13,7 @@ class PyGraphviz(PythonPackage):
     homepage = "https://github.com/xflr6/graphviz"
     url      = "https://pypi.io/packages/source/g/graphviz/graphviz-0.10.1.zip"
 
+    version('0.11.1', sha256='914b8b124942d82e3e1dcef499c9fe77c10acd3d18a1cfeeb2b9de05f6d24805')
     version('0.10.1', sha256='d311be4fddfe832a56986ac5e1d6e8715d7fcb0208560da79d1bb0f72abef41f')
 
     variant('dev', default=False, description='development mode')
