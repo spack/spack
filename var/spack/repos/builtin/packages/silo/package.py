@@ -41,6 +41,32 @@ class Silo(AutotoolsPackage):
             flags.append('-ldl')
         return (flags, None, None)
 
+    @when('%clang@9:')
+    def patch(self):
+        # Clang 9 and later include macro definitions in <math.h> that conflict
+        # with typedefs DOMAIN and RANGE used in Silo plugins.
+        # It looks like the upstream fpzip repo has been fixed, but that change
+        # hasn't yet made it into silo.
+        # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
+
+        def repl(match):
+            # Change macro-like uppercase to title-case.
+            return match.group(1).title()
+
+        files_to_filter = [
+            "src/fpzip/codec.h",
+            "src/fpzip/pcdecoder.inl",
+            "src/fpzip/pcencoder.inl",
+            "src/fpzip/pcmap.h",
+            "src/fpzip/pcmap.inl",
+            "src/fpzip/read.cpp",
+            "src/fpzip/write.cpp",
+            "src/hzip/hzmap.h",
+            "src/hzip/hzresidual.h",
+        ]
+
+        filter_file(r'\b(DOMAIN|RANGE|UNION)\b', repl, *files_to_filter)
+
     def configure_args(self):
         spec = self.spec
         config_args = [
