@@ -778,11 +778,11 @@ def get_checksums_for_versions(
                  for v in sorted_versions]))
     print()
 
-    if not batch:
+    if batch:
+        archives_to_fetch = len(sorted_versions)
+    else:
         archives_to_fetch = tty.get_number(
             "How many would you like to checksum?", default=1, abort='q')
-    else:
-        archives_to_fetch = len(sorted_versions)
 
     if not archives_to_fetch:
         tty.die("Aborted.")
