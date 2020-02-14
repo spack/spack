@@ -50,6 +50,7 @@ import spack.paths
 import spack.architecture
 import spack.schema
 import spack.schema.compilers
+import spack.schema.hardware
 import spack.schema.mirrors
 import spack.schema.repos
 import spack.schema.packages
@@ -65,6 +66,7 @@ import spack.util.spack_yaml as syaml
 #: Dict from section names -> schema for that section
 section_schemas = {
     'compilers': spack.schema.compilers.schema,
+    'hardware': spack.schema.hardware.schema,
     'mirrors': spack.schema.mirrors.schema,
     'repos': spack.schema.repos.schema,
     'packages': spack.schema.packages.schema,
