@@ -37,6 +37,7 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
+    variant('consistentFPCSR', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
 
     variant(
         'threads', default='none',
@@ -233,6 +234,11 @@ class Openblas(MakefilePackage):
         # 64bit ints
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
+
+        # Synchronize floating-point control and status register (FPCSR)
+        # between threads (x86/x86_64 only).
+        if '+consistentFPCSR' in self.spec:
+            make_defs += ['CONSISTENT_FPCSR=1']
 
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
