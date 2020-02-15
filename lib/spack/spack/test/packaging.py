@@ -30,6 +30,7 @@ from spack.relocate import macho_make_paths_relative
 from spack.relocate import set_placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
 
+
 def fake_fetchify(url, pkg):
     """Fake the URL for a package so it downloads from a file."""
     fetcher = FetchStrategyComposite()
