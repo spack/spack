@@ -557,12 +557,6 @@ def relocate_package(spec, allow_root):
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
 
-    # Relocate links making them relative to the new install prefix
-    link_names = [linkname
-                  for linkname in buildinfo.get('relocate_links', [])]
-    relocate.relocate_links(link_names, old_layout_root, new_layout_root,
-                            old_prefix, spec.prefix, prefix_to_prefix)
-
     def is_backup_file(file):
         return file.endswith('~')
 
@@ -574,7 +568,7 @@ def relocate_package(spec, allow_root):
         if not is_backup_file(text_name):
             text_names.append(text_name)
 
-# If we are installing back to the same location don't replace text
+# If we are installing back to the same location don't replace anything
     if old_layout_root != new_layout_root:
         paths_to_relocate = [old_layout_root, old_prefix,
                              old_spack_prefix]
@@ -585,10 +579,9 @@ def relocate_package(spec, allow_root):
             map(lambda filename: os.path.join(workdir, filename),
                 buildinfo['relocate_binaries'])))
 
-# If the buildcache was not created with relativized rpaths
-# and not installing into the old_prefix do the
-# the relocation of path in binaries
-        if not rel and new_prefix != old_prefix:
+        # If the buildcache was not created with relativized rpaths
+        # do the relocation of path in binaries
+        if not rel:
             if (spec.architecture.platform == 'darwin' or
                 spec.architecture.platform == 'test' and
                     platform.system().lower() == 'darwin'):
@@ -600,10 +593,18 @@ def relocate_package(spec, allow_root):
                     platform.system().lower() == 'linux'):
                 relocate.relocate_elf_binaries(files_to_relocate,
                                                prefix_to_prefix)
+        # Relocate links to the new install prefix
+            link_names = [linkname
+                          for linkname in buildinfo.get('relocate_links', [])]
+            relocate.relocate_links(link_names,
+                                    old_layout_root,
+                                    new_layout_root,
+                                    old_prefix,
+                                    spec.prefix,
+                                    prefix_to_prefix)
 
-    # For all buildcaches:
-
-    # relocate the install prefixes in text files including dependencies
+    # For all buildcaches
+        # relocate the install prefixes in text files including dependencies
         relocate.relocate_text(text_names,
                                old_layout_root, new_layout_root,
                                old_prefix, new_prefix,
@@ -611,7 +612,7 @@ def relocate_package(spec, allow_root):
                                new_spack_prefix,
                                prefix_to_prefix)
 
-    # relocate the install prefixes in binary files including dependencies
+        # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate,
                                    old_layout_root, new_layout_root,
                                    old_prefix, new_prefix,
