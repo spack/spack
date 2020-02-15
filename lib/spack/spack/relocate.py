@@ -450,6 +450,8 @@ def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix):
                     if orig_rpath.startswith(old_prefix):
                         new_rpaths.append(re.sub(re.escape(old_prefix),
                                                  new_prefix, orig_rpath))
+            else:
+                new_rpaths.append(orig_rpath)
         modify_elf_object(path_name, new_rpaths)
 
 
