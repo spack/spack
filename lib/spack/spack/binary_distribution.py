@@ -10,7 +10,6 @@ import tarfile
 import shutil
 import tempfile
 import hashlib
-import glob
 import platform
 
 from contextlib import closing
@@ -358,7 +357,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    workdir = os.path.join(tmpdir, spec.dag_hash())
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
@@ -395,8 +394,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
 
     # create compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:bz2')) as tar:
-        tar.add(name='%s' % workdir,
-                arcname='%s' % os.path.basename(spec.prefix))
+        tar.add(name='%s' % workdir, arcname='.')
     # remove copy of install directory
     shutil.rmtree(workdir)
 
@@ -695,25 +693,9 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         msg += "uses relative rpaths."
         raise NewLayoutException(msg)
 
-    # extract the tarball in a temp directory
+    # extract the tarball into new install prefix
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
-        tar.extractall(path=tmpdir)
-    # get the parent directory of the file .spack/binary_distribution
-    # this should the directory unpacked from the tarball whose
-    # name is unknown because the prefix naming is unknown
-    bindist_file = glob.glob('%s/*/.spack/binary_distribution' % tmpdir)[0]
-    workdir = re.sub('/.spack/binary_distribution$', '', bindist_file)
-    # install_tree copies hardlinks
-    # create a temporary tarfile from prefix and exract it to workdir
-    # tarfile preserves hardlinks
-    temp_tarfile_name = tarball_name(spec, '.tar')
-    temp_tarfile_path = os.path.join(tmpdir, temp_tarfile_name)
-    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
-        tar.add(name='%s' % workdir,
-                arcname='.')
-    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
-        tar.extractall(spec.prefix)
-    os.remove(temp_tarfile_path)
+        tar.extractall(path=spec.prefix)
 
     # cleanup
     os.remove(tarfile_path)
