@@ -14,7 +14,6 @@ class Metall(CMakePackage):
 
     version('develop', branch='develop')
 
-    # Install only header files (no binary files)
     depends_on('boost@1.64:', type=('build', 'link'))
 
     def cmake_args(self):
