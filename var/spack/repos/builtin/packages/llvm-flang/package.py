@@ -30,7 +30,11 @@ class LlvmFlang(CMakePackage, CudaPackage):
     variant('all_targets', default=False,
             description='Build all supported targets')
 
-    # Build dependency
+    variant('build_type', default='Release',
+            description='The CMake build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # Universal dependency
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
