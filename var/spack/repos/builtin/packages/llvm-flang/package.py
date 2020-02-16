@@ -7,7 +7,7 @@
 from spack import *
 
 
-class LlvmFlang(CMakePackage):
+class LlvmFlang(CMakePackage, CudaPackage):
     """LLVM-Flang is the Flang fork of LLVM needed by the Flang package."""
 
     homepage = "https://github.com/flang-compiler"
