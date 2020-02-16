@@ -24,10 +24,10 @@ class Flang(CMakePackage, CudaPackage):
     version('20180921', sha256='f33bd1f054e474f1e8a204bb6f78d42f8f6ecf7a894fdddc3999f7c272350784')
     version('20180612', sha256='6af858bea013548e091371a97726ac784edbd4ff876222575eaae48a3c2920ed')
 
-    # Variants
-    variant('nvptx',
-            default=False,
-            description='Target OpenMP offload to NVidia GPUs')
+    # Patched only relevant for March 2019 release with OpenMP Offload support
+    patch('https://github.com/flang-compiler/flang/commit/b342225a64692d2b9c3aff7658a8e4f94a8923eb.diff',
+          sha256='3bd2c7453131eaaf11328785a3031fa2298bdd0c02cfd5e2b478e6e847d5da43',
+          when='@20190329 +cuda')
 
     # Build dependency
     depends_on('cmake@3.8:', type='build')
