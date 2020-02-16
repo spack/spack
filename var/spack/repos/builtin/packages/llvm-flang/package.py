@@ -38,6 +38,15 @@ class LlvmFlang(CMakePackage, CudaPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('python@2.7:', type='build')
 
+    # openmp dependencies
+    depends_on('perl-data-dumper', type=('build'))
+    depends_on('hwloc')
+
+    # libomptarget dependencies
+    depends_on('libelf', when='+cuda')
+    depends_on('libffi', when='+cuda')
+    depends_on('cuda@:9', when='+cuda')  # llvm 7 not compatible with newer version of cuda
+
     # LLVM-Flang Componentes: Driver, OpenMP
     resource(name='flang-driver',
              git='https://github.com/flang-compiler/flang-driver.git',
@@ -166,7 +175,28 @@ class LlvmFlang(CMakePackage, CudaPackage):
                 raise InstallError(
                     'Unsupported architecture: ' + spec.target.family)
 
-            args.append(
-                '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
+            if '+cuda' in spec:
+                args.append(
+                    '-DLLVM_TARGETS_TO_BUILD:STRING=NVPTX;' + target)
+            else:
+                args.append(
+                    '-DLLVM_TARGETS_TO_BUILD:STRING=' + target)
+
+        # used by openmp
+        args.append('-DLIBOMP_USE_HWLOC=On')
+        args.append('-DLIBOMP_FORTRAN_MODULES=ON')
+        args.append('-DLIBOMP_ENABLE_SHARED=TRUE')
+
+        # used by libomptarget for NVidia gpu
+        if '+cuda' in spec:
+            args.append('-DOPENMP_ENABLE_LIBOMPTARGET=ON')
+            cuda_arch_list = spec.variants['cuda_arch'].value
+            args.append('-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix)
+            args.append('-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}'.format(
+                ','.join(cuda_arch_list)))
+            args.append('-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}'.format(
+                cuda_arch_list[-1]))
+        else:
+            args.append('-DOPENMP_ENABLE_LIBOMPTARGET=OFF')
 
         return args
