@@ -405,15 +405,6 @@ class Boost(Package):
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, 'boost')
-            mkdirp(join_path(prefix, 'include'))
-            dst = join_path(prefix, 'include', 'boost')
-            install_tree(src, dst)
-            return
 
         # Remove libraries that the release version does not support
         if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
@@ -432,6 +423,16 @@ class Boost(Package):
             with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
+
+        if not with_libs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix
+            # directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path
