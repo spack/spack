@@ -155,9 +155,17 @@ class LlvmFlang(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
+        # universal
+        args = [
+            '-DLLVM_ENABLE_RTTI:BOOL=ON',
+            '-DLLVM_ENABLE_EH:BOOL=ON',
+            '-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp',
+        ]
         args.append('-DPYTHON_EXECUTABLE={0}'.format(
             spec['python'].command.path))
+
+        # needed by flang-driver
+        args.append('-DFLANG_LLVM_EXTENSIONS=ON')
 
         if '+all_targets' not in spec:  # all is default in cmake
             if spec.target.family == 'x86' or spec.target.family == 'x86_64':
