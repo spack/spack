@@ -16,17 +16,17 @@ class Julia(Package):
     url      = "https://github.com/JuliaLang/julia/releases/download/v0.4.3/julia-0.4.3-full.tar.gz"
     git      = "https://github.com/JuliaLang/julia.git"
 
+    maintainers = ['glennpj']
+
     version('master', branch='master')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
     version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
     version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
     version('1.0.0', sha256='1a2497977b1d43bb821a5b7475b4054b29938baae8170881c6b8dd4099d133f1')
     version('0.6.2', sha256='1e34c13091c9ddb47cf87a51566d94a06613f3db3c483b8f63b276e416dd621b')
-    version('release-0.5', branch='release-0.5')
     version('0.5.2', sha256='f5ef56d79ed55eacba9fe968bb175317be3f61668ef93e747d76607678cc01dd')
     version('0.5.1', sha256='533b6427a1b01bd38ea0601f58a32d15bf403f491b8415e9ce4305b8bc83bb21')
     version('0.5.0', sha256='732478536b6dccecbf56e541eef0aed04de0e6d63ae631b136e033dda2e418a9')
-    version('release-0.4', branch='release-0.4')
     version('0.4.7', sha256='d658d5bd5fb79b19f3c01cadb9aba8622ca8a12a4b687acc7d99c21413623570')
     version('0.4.6', sha256='4c23c9fc72398014bd39327c2f7efd3a301884567d4cb2a89105c984d4d633ba')
     version('0.4.5', sha256='cbf361c23a77e7647040e8070371691083e92aa93c8a318afcc495ad1c3a71d9')
@@ -39,9 +39,6 @@ class Julia(Package):
     patch('openblas.patch', when='@0.4:0.4.5')
     patch('armgcc.patch', when='@1.0.0:1.1.1 %gcc@:5.9 target=aarch64:')
 
-    variant('binutils', default=sys.platform != 'darwin',
-            description='Build via binutils')
-
     # Build-time dependencies:
     # depends_on('awk')
     depends_on('m4', type='build')
@@ -49,15 +46,16 @@ class Julia(Package):
     # Python only needed to build LLVM?
     depends_on('python@2.7:2.8', type='build', when='@:1.1')
     depends_on('python@2.7:', type='build', when='@1.2:')
+    depends_on('cmake @2.8:', type='build', when='@1.0:')
+    depends_on('git', type='build', when='@master')
 
     # Combined build-time and run-time dependencies:
     # (Yes, these are run-time dependencies used by Julia's package manager.)
-    depends_on('binutils', when='+binutils')
-    depends_on('cmake @2.8:')
-    depends_on('curl')
+    depends_on('cmake @2.8:', type=('build', 'run'), when='@:0.6')
+    depends_on('curl', when='@:1')
     depends_on('git', when='@:0.4')
-    depends_on('git', when='@release-0.4')
-    depends_on('openssl')
+    depends_on('openssl@:1.0', when='@:0.5.0')
+    depends_on('openssl', when='@0.5.1:')
     depends_on('mkl', when='+mkl')
 
     # Run-time dependencies:
@@ -93,6 +91,8 @@ class Julia(Package):
     # USE_SYSTEM_UTF8PROC=0
     # USE_SYSTEM_LIBGIT2=0
 
+    conflicts('+cxx', when='@:0.6', msg='Variant cxx requires Julia >= 1.0.0')
+
     conflicts('@:0.7.0', when='target=aarch64:')
 
     # GCC conflicts
@@ -101,8 +101,10 @@ class Julia(Package):
     # Building recent versions of Julia with Intel is untested and unsupported
     # by the Julia project, https://github.com/JuliaLang/julia/issues/23407.
     conflicts('@0.6:', when='%intel',
-              msg='The Julia project does not currently support building with '
-                  'the Intel compiler.')
+              msg='Only Julia <= 0.5.x can be built with the Intel compiler.')
+    conflicts('%intel', when='~mkl',
+              msg='Building with the Intel compiler requires the mkl variant '
+              '(+mkl)')
 
     def setup_build_environment(self, env):
         # The julia build can have trouble with finding GCC libraries with the
@@ -120,22 +122,25 @@ class Julia(Package):
         # of Julia's dependencies. This might be a Darwin-specific
         # problem. Given how Spack sets up compilers, Julia should
         # still use Spack's compilers, even if we don't specify them
-        # explicitly.
+        # explicitly. Potential options are
+        # 'CC=cc',
+        # 'CXX=c++',
+        # 'FC=fc',
+        # 'USE_SYSTEM_ARPACK=1',
+        # 'override USE_SYSTEM_CURL=1',
+        # 'USE_SYSTEM_FFTW=1',
+        # 'USE_SYSTEM_GMP=1',
+        # 'USE_SYSTEM_MPFR=1',
+        # 'USE_SYSTEM_PCRE=1',
         options = [
-            # 'CC=cc',
-            # 'CXX=c++',
-            # 'FC=fc',
-            # 'USE_SYSTEM_ARPACK=1',
-            'override USE_SYSTEM_CURL=1',
-            # 'USE_SYSTEM_FFTW=1',
-            # 'USE_SYSTEM_GMP=1',
-            # 'USE_SYSTEM_MPFR=1',
-            # 'USE_SYSTEM_PCRE=1',
-            'prefix={0}'.format(prefix)]
+            'prefix={0}'.format(prefix)
+        ]
+        if '@:1' in spec:
+            options += [
+                'override USE_SYSTEM_CURL=1'
+            ]
+
         if '+cxx' in spec:
-            if '@master' not in spec:
-                raise InstallError(
-                    'Variant +cxx requires the @master version of Julia')
             options += [
                 'BUILD_LLVM_CLANG=1',
                 'LLVM_ASSERTIONS=1',
@@ -175,25 +180,11 @@ class Julia(Package):
         make('install')
 
         # Julia's package manager needs a certificate
-        cacert_dir = join_path(prefix, 'etc', 'curl')
-        mkdirp(cacert_dir)
-        cacert_file = join_path(cacert_dir, 'cacert.pem')
-        curl = which('curl')
-        curl('--create-dirs',
-             '--output', cacert_file,
-             'https://curl.haxx.se/ca/cacert.pem')
-
-        # Configure Julia
-        julia_config = 'juliarc.jl'
-        if '@master' in spec or '@release-0.5' in spec or '@0.5' in spec:
-            with open(join_path(prefix, 'etc', 'julia', julia_config),
-                      'a') as juliarc:
-                # This is required for versions @0.5:
-                juliarc.write(
-                    '# Point package manager to working certificates\n')
-                if spec.satisfies('@master') or spec.satisfies('@0,7'):
-                    juliarc.write('import LibGit2;')
-                juliarc.write(
-                    'LibGit2.set_ssl_cert_locations("{0}")\n'.format(
-                        cacert_file))
-                juliarc.write('\n')
+        if '@:0.6' in spec:
+            cacert_dir = join_path(prefix, 'etc', 'curl')
+            mkdirp(cacert_dir)
+            cacert_file = join_path(cacert_dir, 'cacert.pem')
+            curl = which('curl')
+            curl('--create-dirs',
+                 '--output', cacert_file,
+                 'https://curl.haxx.se/ca/cacert.pem')
