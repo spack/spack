@@ -41,6 +41,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
 
+    build_directory = 'spack-build'
+
     def configure_args(self):
         args = []
         if '+python' in self.spec:
