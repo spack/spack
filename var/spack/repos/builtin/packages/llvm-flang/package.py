@@ -208,3 +208,36 @@ class LlvmFlang(CMakePackage, CudaPackage):
             args.append('-DOPENMP_ENABLE_LIBOMPTARGET=OFF')
 
         return args
+
+    @run_after("install")
+    def post_install(self):
+        spec = self.spec
+
+        # Manual bootstrap needed to get NVidia BC compiled with the
+        # clang that was just built
+        if '+cuda' in spec:
+            ompdir = 'build-bootstrapped-omp'
+            # rebuild libomptarget to get bytecode runtime library files
+            with working_dir(ompdir, create=True):
+                args = [
+                    self.stage.source_path + '/projects/openmp',
+                    '-DCMAKE_C_COMPILER:PATH={0}'.format(
+                        spec.prefix.bin + '/clang'),
+                    '-DCMAKE_CXX_COMPILER:PATH={0}'.format(
+                        spec.prefix.bin + '/clang++'),
+                    '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(
+                        spec.prefix)
+                ]
+                args = args + self.cmake_args()
+                # args = self.cmake_args()
+                # enable CUDA bitcode
+                args.append('-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB=true')
+                # work around bad libelf detection in libomptarget
+                args.append(
+                    '-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}'.format(
+                        spec['libelf'].prefix.include,
+                        spec['hwloc'].prefix.include))
+
+        cmake(*args)
+        make()
+        make('install')
