@@ -8,7 +8,7 @@ from spack import *
 import os
 
 
-class Flang(CMakePackage):
+class Flang(CMakePackage, CudaPackage):
     """Flang is a Fortran compiler targeting LLVM."""
 
     homepage = "https://github.com/flang-compiler/flang"
@@ -45,11 +45,12 @@ class Flang(CMakePackage):
     depends_on('pgmath@20180921', when='@20180921')
     depends_on('pgmath@20180612', when='@20180612')
 
-    depends_on('cuda', when='+nvptx', type=('run'))
+    depends_on('llvm-flang +cuda', when='+cuda')
 
     # conflicts
-    conflicts('+nvptx', when='@:20181226',
-              msg='OMP offload to NVidia GPUs available March 2019 or later')
+    conflicts('+cuda', when='@:20181226',
+              msg='OpenMP offload to NVidia GPUs available 20190329 or later')
+
 
     def cmake_args(self):
         spec = self.spec
@@ -67,7 +68,7 @@ class Flang(CMakePackage):
                 spec['python'].command.path)
         ]
 
-        if '+nvptx' in spec:
+        if '+cuda' in spec:
             options.append('-DFLANG_OPENMP_GPU_NVIDIA=ON')
         else:
             options.append('-DFLANG_OPENMP_GPU_NVIDIA=OFF')
