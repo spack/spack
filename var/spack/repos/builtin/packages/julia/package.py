@@ -6,7 +6,6 @@
 
 from spack import *
 import os
-import sys
 
 
 class Julia(Package):
