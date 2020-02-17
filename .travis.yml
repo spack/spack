@@ -4,9 +4,7 @@
 # Only build master and develop on push; do not build every branch.
 branches:
   only:
-    - master
     - develop
-    - /^releases\/.*$/
 
 #=============================================================================
 # Build matrix
@@ -27,21 +25,11 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=bootstrap ]
-    - stage: 'unit tests + documentation'
-      python: '2.6'
-      dist: trusty
-      os: linux
-      language: python
-      env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.6'
       os: linux
       language: python
       env: TEST_SUITE=unit
@@ -57,58 +45,6 @@ jobs:
       os: linux
       language: python
       env: TEST_SUITE=doc
-    - os: osx
-      language: generic
-      env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-      if: type != pull_request
-# mpich (AutotoolsPackage)
-    - stage: 'build tests'
-      python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-# astyle (MakefilePackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
-# tut (WafPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=tut' ]
-# py-setuptools (PythonPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
-# perl-dbi (PerlPackage)
-#    - python: '3.8'
-#      os: linux
-#      language: python
-#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
-# openjpeg (CMakePackage + external cmake)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
-# r-rcpp (RPackage + external R)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
-# mpich (AutotoolsPackage)
-    - python: '3.8'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.8'
-      stage: 'docker build'
-      os: linux
-      language: python
-      env: TEST_SUITE=docker
-  allow_failures:
-    - env: TEST_SUITE=docker
 
 stages:
   - 'style checks'
@@ -223,6 +159,6 @@ after_success:
 #=============================================================================
 notifications:
   email:
-    recipients: tgamblin@llnl.gov
+    recipients: [matthias.wolf@epfl.ch, pramod.kumbhar@epfl.ch]
     on_success: change
     on_failure: always
