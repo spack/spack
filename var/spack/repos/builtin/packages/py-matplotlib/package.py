@@ -91,7 +91,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
                when='@2.1.0:2.999.999 ^python@:2')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2.999')
-    depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1.999.999')
+    depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1')
 
     # Optional backend dependencies
     depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg', type='run')
