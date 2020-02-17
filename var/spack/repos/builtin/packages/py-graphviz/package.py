@@ -19,7 +19,8 @@ class PyGraphviz(PythonPackage):
     variant('dev', default=False, description='development mode')
     variant('docs', default=False, description='build documentation')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:0.10.1')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@0.11.0:')
     depends_on('py-setuptools', type='build')
     depends_on('py-tox@3.0:', type=('build', 'run'), when='+dev')
     depends_on('py-flake8', type=('build', 'run'), when='+dev')
