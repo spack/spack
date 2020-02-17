@@ -110,6 +110,8 @@ packages:
         paths:
             python@2.7.15: /usr
         version: [2.7.15]
+    range-v3:
+        variants: ~doc
     readline:
         paths:
             readline@7.0: /usr
