@@ -22,6 +22,9 @@ class PyDask(PythonPackage):
     variant('bag',         default=True, description='Install requirements for dask.bag')
     variant('dataframe',   default=True, description='Install requirements for dask.dataframe')
     variant('delayed',     default=True, description='Install requirements for dask.delayed')
+    variant('distributed', default=True, description='Install requirements for dask.distributed')
+    
+    conflicts('+distributed', when='@:1.2.1')  # Only present in 1.2.2+
 
     depends_on('py-setuptools',         type='build')
     depends_on('py-pytest@3.1.0:',      type='test')
@@ -29,6 +32,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.array
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='+array')
+    depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='@1.2.2: +array')
     depends_on('py-toolz@0.7.3:',       type=('build', 'run'), when='+array')
 
     # Requirements for dask.bag
@@ -38,13 +42,18 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.dataframe
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='+dataframe')
+    depends_on('py-numpy@1.13.0:',      type=('build', 'run'), when='@1.2.2: +dataframe')
     depends_on('py-pandas@0.19.0:',     type=('build', 'run'), when='+dataframe')
+    depends_on('py-pandas@0.21.0:',     type=('build', 'run'), when='@1.2.2: +dataframe')
     depends_on('py-toolz@0.7.3:',       type=('build', 'run'), when='+dataframe')
     depends_on('py-partd@0.3.8:',       type=('build', 'run'), when='+dataframe')
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='+dataframe')
 
     # Requirements for dask.delayed
     depends_on('py-toolz@0.7.3:',       type=('build', 'run'), when='+delayed')
+    
+    # Requirements for dask.distributed
+    depends_on('py-distributed@1.22:',  type=('build', 'run'), when='+distributed')
 
     @property
     def import_modules(self):
