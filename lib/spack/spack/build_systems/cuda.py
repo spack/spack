@@ -6,8 +6,6 @@
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 
-import spack.variant
-
 
 class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
