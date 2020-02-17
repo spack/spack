@@ -20,7 +20,7 @@ class PyLxml(PythonPackage):
     version('2.3', sha256='eea1b8d29532739c1383cb4794c5eacd6176f0972b59e8d29348335b87ff2e66')
 
     variant('html5', default=False, description='Enable html5lib backend')
-    variant('soup',  default=False, description='Enable BeautifulSoup4 backend')
+    variant('htmlsoup',  default=False, description='Enable BeautifulSoup4 backend')
     variant('css',   default=False, description='Enable cssselect module')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
