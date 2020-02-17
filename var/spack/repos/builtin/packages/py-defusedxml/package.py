@@ -16,3 +16,4 @@ class PyDefusedxml(PythonPackage):
     version('0.5.0', sha256='24d7f2f94f7f3cb6061acb215685e5125fbcdc40a857eff9de22518820b0a4f4')
 
     depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.7.999,3.5:', type=('build', 'run'))
