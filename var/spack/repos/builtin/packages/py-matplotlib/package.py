@@ -83,16 +83,15 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-cycler@0.10:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
-    depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:2.2.4')
-    depends_on('py-kiwisolver@1:', type=('build', 'run'), when='@2.2.0:')
+    depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
                when='@2.1.0:2.999.999 ^python@:2')
-    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2:')
-    depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:2')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2:2.999.999')
+    depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1.999.999')
 
     # Optional backend dependencies
     depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg', type='run')
