@@ -29,6 +29,7 @@ class PyDask(PythonPackage):
     depends_on('py-setuptools',         type='build')
     depends_on('py-pytest@3.1.0:',      type='test')
     depends_on('py-requests',           type='test')
+    depends_on('py-pytest-runner',      type='test')
 
     # Requirements for dask.array
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='+array')
