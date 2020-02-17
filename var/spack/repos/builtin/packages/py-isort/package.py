@@ -18,7 +18,7 @@ class PyIsort(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pytest', type='test')
     depends_on('py-mock', type='test')
-    depends_on('python@2.6:2.7.999,3.3:', type=('build', 'run'), when='@4.2.15:')
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.7.999,3.4:', type=('build', 'run'), when='@4.3.0:')
     depends_on('py-futures', type=('build', 'run'), when='@4.3.0: ^python@2.7:2.7.999,:3.1')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10: ^python@:3.2')
