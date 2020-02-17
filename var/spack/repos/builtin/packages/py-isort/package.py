@@ -21,4 +21,4 @@ class PyIsort(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@4.3.0:')
     depends_on('py-futures', type=('build', 'run'), when='@4.3.0: ^python@:3.1')
-    depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10: ^python@:3.2')
+    depends_on('py-backports-functools-lru-cache', type=('build', 'run'), when='@4.3.10: ^python@:3.1')
