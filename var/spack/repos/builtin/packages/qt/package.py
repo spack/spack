@@ -47,10 +47,6 @@ class Qt(Package):
     version('4.8.5',  sha256='eb728f8268831dc4373be6403b7dd5d5dde03c169ad6882f9a8cb560df6aa138')
     version('3.3.8b', sha256='1b7a1ff62ec5a9cb7a388e2ba28fda6f960b27f27999482ebeceeadb72ac9f6e')
 
-    # Add patch for compile issues with qt3 found with use in the
-    # OpenSpeedShop project
-    variant('krellpatch', default=False,
-            description="Build with openspeedshop based patch.")
     variant('gtk',        default=False,
             description="Build with gtkplus.")
     variant('webkit',     default=False,
@@ -76,55 +72,44 @@ class Qt(Package):
     variant('freetype', default='spack', description='Freetype2 support',
             values=('spack', 'qt', 'none'), multi=False)
 
-    # fix installation of pkgconfig files
-    # see https://github.com/Homebrew/homebrew-core/pull/5951
-    patch('restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
+    # Patches for qt@3
+    patch('qt3-accept.patch', when='@3')
+    patch('qt3-headers.patch', when='@3')
 
-    patch('qt3accept.patch', when='@3.3.8b')
-    patch('qt3krell.patch', when='@3.3.8b+krellpatch')
-    patch('qt3ptrdiff.patch', when='@3.3.8b')
-
-    # see https://bugreports.qt.io/browse/QTBUG-57656
-    patch('QTBUG-57656.patch', when='@5.8.0')
-    # see https://bugreports.qt.io/browse/QTBUG-58038
-    patch('QTBUG-58038.patch', when='@5.8.0')
-
-    # https://github.com/xboxdrv/xboxdrv/issues/188
-    patch('btn_trigger_happy.patch', when='@5.7.0:')
-
-    # https://github.com/spack/spack/issues/1517
-    patch('qt5-pcre.patch', when='@5:')
-
-    patch('qt4-pcre-include-conflict.patch', when='@4.8.6')
+    # Patches for qt@4
+    patch('qt4-configure-gcc.patch', when='@4:4.8.6 %gcc')
+    patch('qt4-87-configure-gcc.patch', when='@4.8.7 %gcc')
     patch('qt4-tools.patch', when='@4+tools')
-    if not MACOS_VERSION:
-        # Allow Qt's configure script to build the webkit option with more
-        # recent versions of gcc.
-        # https://github.com/spack/spack/issues/9205
-        # https://github.com/spack/spack/issues/9209
-        patch('qt4-gcc-and-webkit.patch', when='@4:4.8.6')
-        patch('qt4-gcc-and-webkit-487.patch', when='@4.8.7')
-    else:
-        patch('qt4-mac.patch', when='@4.8.7')
+    patch('qt4-mac.patch', when='@4.8.7 platform=darwin')
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
+    patch("qt4-qforeach.patch", when="@4 %gcc@9:")
 
-    # Fix build failure with newer versions of GCC
+    # Patches for qt@4:
+    # https://github.com/spack/spack/issues/1517
+    patch('qt4-pcre.patch', when='@4')
+    patch('qt5-pcre.patch', when='@5:')
+    # https://bugreports.qt.io/browse/QTBUG-74196
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
+    patch('qt4-asm-volatile.patch', when='@4')
+    patch('qt5-asm-volatile.patch', when='@5.0.0:5.12.1')
+
+    # Patches for qt@5
+    # https://bugreports.qt.io/browse/QTBUG-74219
+    patch('qt5-btn_trigger_happy.patch', when='@5.7:5.12')
+    # https://bugreports.qt.io/browse/QTBUG-57656
+    patch('qt5-8-framework.patch', when='@5.8.0 +framework')
+    # https://bugreports.qt.io/browse/QTBUG-58038
+    patch('qt5-8-freetype.patch', when='@5.8.0 freetype=spack')
+    # https://codereview.qt-project.org/c/qt/qtbase/+/245425
     patch('https://github.com/qt/qtbase/commit/a52d7861edfb5956de38ba80015c4dd0b596259b.patch',
           sha256='c49b228c27e3ad46ec3af4bac0e9985af5b5b28760f238422d32e14f98e49b1e',
           working_dir='qtbase',
           when='@5.10:5.12.0 %gcc@9:')
-
-    # Fix build of QT4 with GCC 9
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
-    patch("qt4-gcc9-qforeach.patch", when="@4:4.999 %gcc@9")
-
-    # https://bugreports.qt.io/browse/QTBUG-74196
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
-    patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
-    patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
-
-    # patch overflow builtins
-    patch('qt5_11-intel-overflow.patch', when='@5.11')
-    patch('qt5_12-intel-overflow.patch', when='@5.12:')
+    # https://github.com/Homebrew/homebrew-core/pull/5951
+    patch('qt5-restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
+    # https://github.com/spack/spack/issues/14400
+    patch('qt5-11-intel-overflow.patch', when='@5.11 %intel')
+    patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -149,7 +134,7 @@ class Qt(Package):
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl~krellpatch')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
