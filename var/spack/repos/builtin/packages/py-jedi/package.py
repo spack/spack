@@ -21,7 +21,7 @@ class PyJedi(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('python@2.6:2.7,3.2:3.4', type=('build', 'run'), when='@0.9.0')
     depends_on('python@2.6:2.7,3.3:3.5', type=('build', 'run'), when='@0.10.0')
-    depends_on('python@2.7,3.4:3.7', type=('build', 'run'), when='@0.13.3')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@0.13.3')
     depends_on('py-parso@0.1.0', type=('build', 'run'), when='@0.11.0')
     depends_on('py-parso@0.1.1', type=('build', 'run'), when='@0.11.1')
     depends_on('py-parso@0.2.0:', type=('build', 'run'), when='@0.12.0')
