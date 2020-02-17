@@ -124,7 +124,7 @@ class Qt(Package):
 
     # patch overflow builtins
     patch('qt5_11-intel-overflow.patch', when='@5.11')
-    patch('qt5_12-intel-overflow.patch', when='@5.12:')
+    patch('qt5_12-intel-overflow.patch', when='@5.12:5.14.0')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
