@@ -21,7 +21,7 @@ class PyLxml(PythonPackage):
 
     variant('html5', default=False, description='Enable html5lib backend')
     variant('htmlsoup',  default=False, description='Enable BeautifulSoup4 backend')
-    variant('css',   default=False, description='Enable cssselect module')
+    variant('cssselect',   default=False, description='Enable cssselect module')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
