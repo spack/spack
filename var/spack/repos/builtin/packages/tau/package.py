@@ -76,7 +76,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
-    depends_on('zlib', type='build')
+    depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
     depends_on('otf2@2.1:', when='+otf2')
@@ -135,7 +135,6 @@ class Tau(Package):
 
     def setup_build_environment(self, env):
         env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
-        env.prepend_path('LIBRARY_PATH', self.spec['elf'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
