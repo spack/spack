@@ -6,8 +6,6 @@
 import shutil
 import sys
 
-import os.path
-
 from spack import *
 
 
@@ -124,16 +122,16 @@ class Hdf5(AutotoolsPackage):
     # result, aggressive compilers such as Fujitsu's may do a wrong
     # optimization to cause an error.
     def patch(self):
-        if os.path.exists('fortran/src/H5Fff.F90'):
-            filter_file(
-                r'INTEGER\(SIZE_T\), INTENT\(IN\) :: buf_size',
-                'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
-                'fortran/src/H5Fff.F90')
-        if os.path.exists('fortran/src/H5Fff_F03.f90'):
-            filter_file(
-                r'INTEGER\(SIZE_T\), INTENT\(IN\) :: buf_size',
-                'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
-                'fortran/src/H5Fff_F03.f90')
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff.F90',
+            string=True, ignore_absent=True)
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff_F03.f90',
+            string=True, ignore_absent=True)
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
