@@ -6,6 +6,8 @@
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 
+import spack.variant
+
 
 class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
@@ -30,8 +32,7 @@ class CudaPackage(PackageBase):
 
     variant('cuda_arch',
             description='CUDA architecture',
-            values=cuda_arch_values,
-            multi=True)
+            values=spack.variant.any_combination_of(*cuda_arch_values))
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
     # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
