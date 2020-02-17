@@ -158,8 +158,8 @@ of environments:
        format: docker
 
        # Select from a valid list of images
-       base:
-         image: "centos:7"
+       images:
+         os: "centos:7"
          spack: develop
 
        # Whether or not to strip binaries
@@ -192,12 +192,12 @@ The tables below describe the configuration options that are currently supported
      - The format of the recipe
      - ``docker`` or ``singularity``
      - Yes
-   * - ``base:image``
-     - Base image for ``final`` stage
+   * - ``images:os``
+     - Operating system used as a base for the image
      - See :ref:`containers-supported-os`
      - Yes
-   * - ``base:spack``
-     - Version of Spack
+   * - ``images:spack``
+     - Version of Spack use in the ``build`` stage
      - Valid tags for ``base:image``
      - Yes
    * - ``strip``

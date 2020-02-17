@@ -63,7 +63,7 @@ class PathContext(tengine.Context):
     @tengine.context_property
     def run(self):
         """Information related to the run image."""
-        image = self.container_config['base']['image']
+        image = self.container_config['images']['os']
         Run = collections.namedtuple('Run', ['image'])
         return Run(image=image)
 
@@ -72,8 +72,8 @@ class PathContext(tengine.Context):
         """Information related to the build image."""
 
         # Map the final image to the correct build image
-        run_image = self.container_config['base']['image']
-        spack_version = self.container_config['base']['spack']
+        run_image = self.container_config['images']['os']
+        spack_version = self.container_config['images']['spack']
         image, tag = build_info(run_image, spack_version)
 
         Build = collections.namedtuple('Build', ['image', 'tag'])
@@ -122,7 +122,7 @@ class PathContext(tengine.Context):
         if not package_list:
             return package_list
 
-        image = self.container_config['base']['image']
+        image = self.container_config['images']['os']
         update, install, clean = package_info(image)
         Packages = collections.namedtuple(
             'Packages', ['update', 'install', 'list', 'clean']

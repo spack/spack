@@ -16,11 +16,11 @@ container_schema = {
         },
         # Describes the base image to start from and the version
         # of Spack to be used
-        'base': {
+        'images': {
             'type': 'object',
             'additionalProperties': False,
             'properties': {
-                'image': {
+                'os': {
                     'type': 'string',
                     'enum': ['ubuntu:18.04',
                              'ubuntu:16.04',
@@ -31,7 +31,7 @@ container_schema = {
                     'type': 'string',
                 },
             },
-            'required': ['image', 'spack']
+            'required': ['os', 'spack']
         },
         # Whether or not to strip installed binaries
         'strip': {
