@@ -47,10 +47,6 @@ class Qt(Package):
     version('4.8.5',  sha256='eb728f8268831dc4373be6403b7dd5d5dde03c169ad6882f9a8cb560df6aa138')
     version('3.3.8b', sha256='1b7a1ff62ec5a9cb7a388e2ba28fda6f960b27f27999482ebeceeadb72ac9f6e')
 
-    # Add patch for compile issues with qt3 found with use in the
-    # OpenSpeedShop project
-    variant('krellpatch', default=False,
-            description="Build with openspeedshop based patch.")
     variant('gtk',        default=False,
             description="Build with gtkplus.")
     variant('webkit',     default=False,
@@ -79,10 +75,9 @@ class Qt(Package):
     # fix installation of pkgconfig files
     # see https://github.com/Homebrew/homebrew-core/pull/5951
     patch('restore-pc-files.patch', when='@5.9:5.11 platform=darwin')
+    patch('qt3-accept.patch', when='@3')
+    patch('qt3-headers.patch', when='@3')
 
-    patch('qt3accept.patch', when='@3.3.8b')
-    patch('qt3krell.patch', when='@3.3.8b+krellpatch')
-    patch('qt3ptrdiff.patch', when='@3.3.8b')
 
     # see https://bugreports.qt.io/browse/QTBUG-57656
     patch('QTBUG-57656.patch', when='@5.8.0')
@@ -149,7 +144,7 @@ class Qt(Package):
     depends_on("libpng@1.2.57", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl~krellpatch')
+    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
