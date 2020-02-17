@@ -19,7 +19,7 @@ class PyJedi(PythonPackage):
     version('0.9.0', sha256='3b4c19fba31bdead9ab7350fb9fa7c914c59b0a807dcdd5c00a05feb85491d31')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('python@2.6:2.7,3.2:3.4', type=('build', 'run'), when='@0.9.0')
+    depends_on('python@2.6:2.8,3.2:', type=('build', 'run'), when='@0.9.0')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'), when='@0.10.0')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@0.13.3')
     depends_on('py-parso@0.1.0', type=('build', 'run'), when='@0.11.0')
