@@ -4,6 +4,34 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Schema for the 'container' subsection of Spack environments."""
 
+_stages_from_dockerhub = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'os': {
+            'type': 'string',
+            'enum': ['ubuntu:18.04',
+                     'ubuntu:16.04',
+                     'centos:7',
+                     'centos:6']
+        },
+        'spack': {
+            'type': 'string',
+        },
+    },
+    'required': ['os', 'spack']
+}
+
+_custom_stages = {
+    'type': 'object',
+    'additionalProperties': False,
+    'properties': {
+        'build': {'type': 'string'},
+        'final': {'type': 'string'}
+    },
+    'required': ['build', 'final']
+}
+
 #: Schema for the container attribute included in Spack environments
 container_schema = {
     'type': 'object',
@@ -16,23 +44,7 @@ container_schema = {
         },
         # Describes the base image to start from and the version
         # of Spack to be used
-        'images': {
-            'type': 'object',
-            'additionalProperties': False,
-            'properties': {
-                'os': {
-                    'type': 'string',
-                    'enum': ['ubuntu:18.04',
-                             'ubuntu:16.04',
-                             'centos:7',
-                             'centos:6']
-                },
-                'spack': {
-                    'type': 'string',
-                },
-            },
-            'required': ['os', 'spack']
-        },
+        'images': {'anyOf': [_stages_from_dockerhub, _custom_stages]},
         # Whether or not to strip installed binaries
         'strip': {
             'type': 'boolean',

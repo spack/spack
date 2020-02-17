@@ -131,9 +131,10 @@ All the images are tagged with the corresponding release of Spack:
 with the exception of the ``latest`` tag that points to the HEAD
 of the ``develop`` branch. These images are available for anyone
 to use and take care of all the repetitive tasks that are necessary
-to setup Spack within a container. All the container recipes generated
-automatically by Spack use them as base images for their ``build`` stage.
-
+to setup Spack within a container. The container recipes generated
+by Spack use them as default base images for their ``build`` stage
+though expert users can provide their own custom image as a
+substitute.
 
 -------------------------
 Environment Configuration
@@ -179,6 +180,27 @@ of environments:
          app: "gromacs"
          mpi: "mpich"
 
+To select a proper base image for both the ``build`` and ``final`` stage the ``images`` attribute
+provides two different modes of operation.
+
+The one shown in the example ``spack.yaml`` above requires the user to specify an ``os``
+and a ``spack`` version from a list of possible ones. Spack will then select one of the
+images in :ref:`containers-supported-os` for the build stage and use the base operating
+system image for the final stage.
+
+Alternatively a user might specify explicitly both images:
+
+.. code-block:: yaml
+
+  container:
+    images:
+      build: spack/ubuntu-bionic:latest
+      final: ubuntu:18.04
+
+In this case there's no consistency check performed by Spack, but users are allowed to prepare
+their base images to satisfy custom use cases that cannot be handled with the general purpose
+Spack images distributed on Docker Hub.
+
 The tables below describe the configuration options that are currently supported:
 
 .. list-table:: General configuration options for the ``container`` section of ``spack.yaml``
@@ -195,11 +217,19 @@ The tables below describe the configuration options that are currently supported
    * - ``images:os``
      - Operating system used as a base for the image
      - See :ref:`containers-supported-os`
-     - Yes
+     - Yes, if using constrained selection of base images
    * - ``images:spack``
      - Version of Spack use in the ``build`` stage
      - Valid tags for ``base:image``
-     - Yes
+     - Yes, if using constrained selection of base images
+   * - ``images:build``
+     - Image to be used in the ``build`` stage
+     - Any valid container image
+     - Yes, if using custom selection of base images
+   * - ``images:final``
+     - Image to be used in the ``build`` stage
+     - Any valid container image
+     - Yes, if using custom selection of base images
    * - ``strip``
      - Whether to strip binaries
      - ``true`` (default) or ``false``

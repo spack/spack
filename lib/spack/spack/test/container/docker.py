@@ -22,8 +22,7 @@ def test_build_and_run_images(minimal_configuration):
 
     # Test the output of the build property
     build = writer.build
-    assert build.image == 'spack/ubuntu-bionic'
-    assert build.tag == 'latest'
+    assert build.image == 'spack/ubuntu-bionic:latest'
 
 
 def test_packages(minimal_configuration):

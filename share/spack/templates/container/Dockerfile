@@ -1,5 +1,5 @@
 # Build stage with Spack pre-installed and ready to be used
-FROM {{ build.image }}:{{ build.tag }} as builder
+FROM {{ build.image }} as builder
 
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
