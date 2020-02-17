@@ -67,12 +67,7 @@ Environments:
    COPY --from=builder /opt/view /opt/view
    COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
-   RUN yum update -y && yum install -y epel-release && yum update -y                                   \
-    && yum install -y libgomp \
-    && rm -rf /var/cache/yum  && yum clean all
-
    RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
-
 
    LABEL "app"="gromacs"
    LABEL "mpi"="mpich"
@@ -166,10 +161,6 @@ of environments:
        # Whether or not to strip binaries
        strip: true
 
-       # Additional system packages that are needed at runtime
-       os_packages:
-       - libgomp
-
        # Extra instructions
        extra_instructions:
          final: |
@@ -233,10 +224,6 @@ The tables below describe the configuration options that are currently supported
    * - ``strip``
      - Whether to strip binaries
      - ``true`` (default) or ``false``
-     - No
-   * - ``os_packages``
-     - System packages to be installed
-     - Valid packages for the ``final`` OS
      - No
    * - ``extra_instructions:build``
      - Extra instructions (e.g. `RUN`, `COPY`, etc.) at the end of the ``build`` stage
@@ -325,10 +312,6 @@ following ``Dockerfile``:
    COPY --from=builder /opt/software /opt/software
    COPY --from=builder /opt/view /opt/view
    COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
-
-   RUN yum update -y && yum install -y epel-release && yum update -y                                   \
-    && yum install -y libgomp \
-    && rm -rf /var/cache/yum  && yum clean all
 
    RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
 

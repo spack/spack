@@ -52,12 +52,6 @@ Stage: final
   {{ paths.environment }}/environment_modifications.sh {{ paths.environment }}/environment_modifications.sh
 
 %post
-{% if os_packages.list %}
-  # Update, install and cleanup of system packages
-  {{ os_packages.update }}
-  {{ os_packages.install }} {{ os_packages.list | join | replace('\n', ' ') }}
-  {{ os_packages.clean }}
-{% endif %}
   # Modify the environment without relying on sourcing shell specific files at startup
   cat {{ paths.environment }}/environment_modifications.sh >> $SINGULARITY_ENVIRONMENT
 {% if extra_instructions.final %}

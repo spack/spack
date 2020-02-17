@@ -34,12 +34,6 @@ COPY --from=builder {{ paths.store }} {{ paths.store }}
 COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
-{% if os_packages %}
-RUN {{ os_packages.update }}                                   \
- && {{ os_packages.install }}{% for pkg in os_packages.list %} {{ pkg }}{% endfor %} \
- && {{ os_packages.clean }}
-{% endif %}
-
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}

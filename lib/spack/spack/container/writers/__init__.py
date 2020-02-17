@@ -13,7 +13,7 @@ import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
 
-from spack.container.images import build_info, package_info
+from spack.container.images import build_info
 
 #: Caches all the writers that are currently supported
 _writer_factory = {}
@@ -127,21 +127,6 @@ class PathContext(tengine.Context):
         jsonschema.validate(manifest, schema=spack.schema.env.schema)
 
         return syaml.dump(manifest, default_flow_style=False).strip()
-
-    @tengine.context_property
-    def os_packages(self):
-        """Additional system packages that are needed at run-time."""
-        package_list = self.container_config.get('os_packages', None)
-        if not package_list:
-            return package_list
-
-        image = self.container_config['images']['os']
-        update, install, clean = package_info(image)
-        Packages = collections.namedtuple(
-            'Packages', ['update', 'install', 'list', 'clean']
-        )
-        return Packages(update=update, install=install,
-                        list=package_list, clean=clean)
 
     @tengine.context_property
     def extra_instructions(self):
