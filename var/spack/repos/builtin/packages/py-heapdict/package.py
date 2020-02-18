@@ -10,10 +10,9 @@ class PyHeapdict(PythonPackage):
     """A heap with decrease-key and increase-key operations"""
 
     homepage = "http://stutzbachenterprises.com/"
-    url      = "https://files.pythonhosted.org/packages/source/h/heapdict/HeapDict-1.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/H/HeapDict/HeapDict-1.0.1.tar.gz"
 
     version('1.0.1', sha256='8495f57b3e03d8e46d5f1b2cc62ca881aca392fd5cc048dc0aa2e1a6d23ecdb6')
 
     depends_on('python@2.6:2.7.999,3.0:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
