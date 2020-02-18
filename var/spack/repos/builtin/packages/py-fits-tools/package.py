@@ -43,10 +43,10 @@ class PyFitsTools(PythonPackage):
     version('0.2',   sha256='04c4b6eeb09298bca79b228175fcd209d4ca895ce5675f6684120e75928d2d97')
     version('0.1',   sha256='d128e49ff4ecc6a9bf9a050f8605bc457e028e10e48bb8d6fda4ca358298ec17')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-astropy')
+    depends_on('py-scipy')
+    depends_on('py-numpy')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
