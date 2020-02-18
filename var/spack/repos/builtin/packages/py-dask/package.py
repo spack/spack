@@ -33,7 +33,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.array
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='+array')
-    depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='@1.2.2: +array')
+    depends_on('py-numpy@1.13.0:',      type=('build', 'run'), when='@1.2.2: +array')
     depends_on('py-toolz@0.7.3:',       type=('build', 'run'), when='+array')
 
     # Requirements for dask.bag
