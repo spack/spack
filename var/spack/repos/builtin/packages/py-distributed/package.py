@@ -23,7 +23,7 @@ class PyDistributed(PythonPackage):
     depends_on('py-cloudpickle@0.2.2:', type=('build', 'run'))
     depends_on('py-msgpack', type=('build', 'run'))
     depends_on('py-psutil@5.0:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@:1')
     depends_on('py-sortedcontainers@:1.999,2.0.2:', type=('build', 'run'))
     depends_on('py-tblib', type=('build', 'run'))
     depends_on('py-toolz@0.7.4:', type=('build', 'run'))
