@@ -86,6 +86,10 @@ class Openblas(MakefilePackage):
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
 
+    # Fix https://github.com/xianyi/OpenBLAS/issues/2431
+    # Patch derived from https://github.com/xianyi/OpenBLAS/pull/2424
+    patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
+
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
 
