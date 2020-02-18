@@ -17,3 +17,4 @@ class PyPexpect(PythonPackage):
     version('3.3', sha256='dfea618d43e83cfff21504f18f98019ba520f330e4142e5185ef7c73527de5ba')
 
     depends_on('py-ptyprocess', type=('build', 'run'))
+    depends_on('py-ptyprocess@0.5:', type=('build', 'run'), when='@4.7.0:')
