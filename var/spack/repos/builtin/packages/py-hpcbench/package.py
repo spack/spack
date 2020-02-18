@@ -14,7 +14,7 @@ class PyHpcbench(PythonPackage):
     url      = "https://pypi.io/packages/source/h/hpcbench/hpcbench-0.8.tar.gz"
     git      = "https://github.com/BlueBrain/hpcbench.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('0.8', sha256='120f5b1e6ff05a944b34a910f3099b4b0f50e96c60cf550b8fc6c42f64194697')
 
     depends_on('py-setuptools', type='build')
