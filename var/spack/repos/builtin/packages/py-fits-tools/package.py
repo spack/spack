@@ -24,15 +24,10 @@ from spack import *
 
 
 class PyFitsTools(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Tools for manipulating FITS images using primarily scipy & native python routines"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/keflavich/FITS_tools"
     url      = "https://github.com/keflavich/FITS_tools/archive/v0.2.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('1.1.2', sha256='6c7596533ea66f5ca05e4326ae6db643edb03aca4b6b654dce091834155d03e8')
     version('1.1.1', sha256='5b79ef24fadb43458388754381644712c05cd89da4f89c197e3bd80ca158c525')
