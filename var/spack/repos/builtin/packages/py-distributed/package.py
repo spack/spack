@@ -20,7 +20,7 @@ class PyDistributed(PythonPackage):
     depends_on('py-msgpack')
     depends_on('py-psutil@5.0:')
     depends_on('py-six')
-    depends_on('py-sortedcontainers')
+    depends_on('py-sortedcontainers@:1.999,2.0.2:')
     conflicts('py-sortedcontainers@2.0.0,2.0.1')
     depends_on('py-tblib')
     depends_on('py-toolz@0.7.4:')
