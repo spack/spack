@@ -26,12 +26,23 @@ class Hepmc(CMakePackage):
     version('2.06.06', sha256='8cdff26c10783ed4248220a84a43b7e1f9b59cc2c9a29bd634d024ca469db125')
     version('2.06.05', sha256='4c411077cc97522c03b74f973264b8d9fd2b6ccec0efc7ceced2645371c73618')
 
-    depends_on('cmake@2.6:', type='build')
+    variant('python', default=False, description='Enable Python bindings')
+    variant('rootio', default=False, description='Enable ROOT I/O')
+
+    depends_on('cmake@2.8.9:', type='build')
+    # FIXME: HepMC3 officially supports Python3, but its build system doesn't find it
+    depends_on('python@:2.99.99', when='+python')
+    depends_on('root', when='+rootio')
+
+    conflicts('+python', when='@:3.1.99')
+    conflicts('+rootio', when='@:2.99.99')
 
     def cmake_args(self):
         return [
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
+            '-DHEPMC3_ENABLE_PYTHON={0}'.format(self.spec.satisfies('+python')),
+            '-DHEPMC3_ENABLE_ROOTIO={0}'.format(self.spec.satisfies('+rootio'))
         ]
 
     def url_for_version(self, version):
