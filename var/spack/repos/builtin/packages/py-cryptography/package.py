@@ -27,7 +27,7 @@ class PyCryptography(PythonPackage):
     depends_on('py-setuptools@20.5:',   type='build')
     
     depends_on('py-cffi@1.4.1:',        type=('build', 'run'))
-    depends_on('py-cffi@1.8:',          type=('build', 'run'), when='@2.7:')
+    depends_on('py-cffi@1.8:1.11.2,1.11.4:', type=('build', 'run'), when='@2.7:')
     conflicts('py-cffi@1.11.3')
     
     depends_on('py-asn1crypto@0.21.0:', type=('build', 'run'))
