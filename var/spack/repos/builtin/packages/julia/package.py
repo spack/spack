@@ -178,7 +178,7 @@ class Julia(Package):
         make('install')
 
         # Julia's package manager needs a certificate
-        if '@:0.6' in spec:
+        if '@:0.5.0' in spec:
             cacert_dir = join_path(prefix, 'etc', 'curl')
             mkdirp(cacert_dir)
             cacert_file = join_path(cacert_dir, 'cacert.pem')
