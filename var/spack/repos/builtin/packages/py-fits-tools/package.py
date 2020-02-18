@@ -23,6 +23,7 @@ class PyFitsTools(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-astropy')
+    depends_on('py-astropy-helpers')
     depends_on('py-scipy')
     depends_on('py-numpy')
 
