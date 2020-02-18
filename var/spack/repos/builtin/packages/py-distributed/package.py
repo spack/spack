@@ -15,7 +15,7 @@ class PyDistributed(PythonPackage):
     version('2.10.0', '300e5495d0306f472c1aa34a522273e3066b9f50d3eb25cee17cd3b6177eea54')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')
 
-    depends_on('python@2.7:2.8,3.5:', when='@:1')
+    depends_on('python@2.7:2.8,3.5:', when='@:1', type=('build', 'run'))
     depends_on('python@3.5:', when='@2:')
     depends_on('py-setuptools', type='build')
 
