@@ -22,13 +22,13 @@ class PyCryptography(PythonPackage):
     conflicts('+idna', when='@:2.4')
 
     # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
-    depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.4:',                 type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@2.3.1:', type=('build', 'run'))
+    
     depends_on('py-setuptools@20.5:',   type='build')
     
-    depends_on('py-cffi@1.4.1:',        type=('build', 'run'))
+    depends_on('py-cffi@1.4.1:',             type=('build', 'run'))
     depends_on('py-cffi@1.8:1.11.2,1.11.4:', type=('build', 'run'), when='@2.7:')
-    conflicts('py-cffi@1.11.3')
     
     depends_on('py-asn1crypto@0.21.0:', type=('build', 'run'))
     depends_on('py-six@1.4.1:',         type=('build', 'run'))
