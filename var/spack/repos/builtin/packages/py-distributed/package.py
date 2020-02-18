@@ -10,7 +10,7 @@ class PyDistributed(PythonPackage):
     """Distributed scheduler for Dask"""
 
     homepage = "https://distributed.dask.org/"
-    url      = "py-distributed"
+    url      = "https://pypi.io/packages/source/d/distributed/distributed-2.10.0.tar.gz"
 
     version('2.10.0', '300e5495d0306f472c1aa34a522273e3066b9f50d3eb25cee17cd3b6177eea54')
 
@@ -29,4 +29,3 @@ class PyDistributed(PythonPackage):
     depends_on('py-pyyaml')
     depends_on('py-futures', when='@:2.9.999')
     depends_on('py-singledispatch', when='@:3.3.999')
-
