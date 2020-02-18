@@ -20,3 +20,4 @@ class PyMultiprocess(PythonPackage):
 
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-dill@0.2.6:', type=('build', 'run'))
+    depends_on('py-dill@0.2.9:', type=('build', 'run'), when='@0.70.7:')
