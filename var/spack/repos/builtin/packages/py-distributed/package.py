@@ -16,7 +16,7 @@ class PyDistributed(PythonPackage):
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')
 
     depends_on('python@2.7:2.8,3.5:', when='@:1', type=('build', 'run'))
-    depends_on('python@3.5:', when='@2:')
+    depends_on('python@3.6:', when='@2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     depends_on('py-click@6.6:', type=('build', 'run'))
