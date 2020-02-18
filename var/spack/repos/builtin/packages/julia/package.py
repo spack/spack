@@ -51,10 +51,9 @@ class Julia(Package):
     # Combined build-time and run-time dependencies:
     # (Yes, these are run-time dependencies used by Julia's package manager.)
     depends_on('cmake @2.8:', type=('build', 'run'), when='@:0.6')
-    depends_on('curl', when='@:1')
-    depends_on('git', when='@:0.4')
+    depends_on('curl', when='@:0.5.0')
+    depends_on('git', type=('build', 'run'), when='@:0.4')
     depends_on('openssl@:1.0', when='@:0.5.0')
-    depends_on('openssl', when='@0.5.1:')
     depends_on('mkl', when='+mkl')
 
     # Run-time dependencies:
@@ -134,7 +133,7 @@ class Julia(Package):
         options = [
             'prefix={0}'.format(prefix)
         ]
-        if '@:1' in spec:
+        if '@:0.5.0' in spec:
             options += [
                 'override USE_SYSTEM_CURL=1'
             ]
