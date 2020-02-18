@@ -29,6 +29,7 @@ class PyGraphviz(PythonPackage):
     depends_on('py-twine', type=('build', 'run'), when='+dev')
     depends_on('py-mock@2:', type='test')
     depends_on('py-pytest@3.4:', type='test')
+    depends_on('py-pytest@3.4:3.9,3.11:', when='@0.11.1', type=test)
     depends_on('py-pytest-mock@1.8:', type='test')
     depends_on('py-pytest-cov', type='test')
     depends_on('py-sphinx@1.7:', type=('build', 'run'), when='+docs')
