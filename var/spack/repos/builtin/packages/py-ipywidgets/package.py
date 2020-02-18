@@ -21,7 +21,7 @@ class PyIpywidgets(PythonPackage):
     depends_on('py-ipykernel@4.2.2:', type=('build', 'run'))
     depends_on('py-ipykernel@4.5.1:', type=('build', 'run'), when='@6:')
     depends_on('py-traitlets@4.2.1:', type=('build', 'run'))
-    depends_on('py-traitlets@4.3.1:', type=('build', 'run'), when='@6.0.0:')
+    depends_on('py-traitlets@4.3.1:', type=('build', 'run'), when='@6:')
     depends_on('py-nbformat@4.2.0:', type=('build', 'run'), when='@6.0.0:')
     depends_on('py-widgetsnbextension@3.4.0:3.4.999', type=('build', 'run'), when='@6.0.0:')
     depends_on('py-mock', type='test', when='^python@2.7:2.8')
