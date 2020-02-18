@@ -17,7 +17,7 @@ class PyIpywidgets(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('py-ipython@4:', type=('build', 'run'))
-    depends_on('py-ipython@4.0.0:5.999.999', type=('build', 'run'), when='^python@:3.2.999')
+    depends_on('py-ipython@4:5', type=('build', 'run'), when='^python@:3.2')
     depends_on('py-ipykernel@4.2.2:', type=('build', 'run'))
     depends_on('py-ipykernel@4.5.1:', type=('build', 'run'), when='@6.0.0:')
     depends_on('py-traitlets@4.2.1:', type=('build', 'run'))
