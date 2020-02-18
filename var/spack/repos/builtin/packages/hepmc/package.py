@@ -30,7 +30,7 @@ class Hepmc(CMakePackage):
     variant('rootio', default=False, description='Enable ROOT I/O')
 
     depends_on('cmake@2.8.9:', type='build')
-    # FIXME: HepMC3 officially supports Python3, but its build system doesn't find it
+    # FIXME: Officially supports Python3, but the build system doesn't find it
     depends_on('python@:2.99.99', when='+python')
     depends_on('root', when='+rootio')
 
@@ -38,11 +38,12 @@ class Hepmc(CMakePackage):
     conflicts('+rootio', when='@:2.99.99')
 
     def cmake_args(self):
+        spec = self.spec
         return [
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
-            '-DHEPMC3_ENABLE_PYTHON={0}'.format(self.spec.satisfies('+python')),
-            '-DHEPMC3_ENABLE_ROOTIO={0}'.format(self.spec.satisfies('+rootio'))
+            '-DHEPMC3_ENABLE_PYTHON={0}'.format(spec.satisfies('+python')),
+            '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio'))
         ]
 
     def url_for_version(self, version):
