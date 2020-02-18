@@ -591,6 +591,10 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     spackfile_path = os.path.join(stagepath, spackfile_name)
     tarfile_name = tarball_name(spec, '.tar.bz2')
     tarfile_path = os.path.join(tmpdir, tarfile_name)
+    # older buildcache tarfiles use gzip compression
+    if not os.path.exists(tarfile_path):
+        tarfile_name = tarball_name(spec, '.tar.gz')
+        tarfile_path = os.path.join(tmpdir, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(tmpdir, specfile_name)
 
