@@ -23,7 +23,7 @@ class PyCryptography(PythonPackage):
 
     # dependencies taken from https://github.com/pyca/cryptography/blob/master/setup.py
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
-    depends_on('python@2.7:2.7.999,3.4:', when='@2.3.1:')
+    depends_on('python@2.7:2.8,3.4:', when='@2.3.1:', type=('build', 'run'))
     depends_on('py-setuptools@20.5:',   type='build')
     
     depends_on('py-cffi@1.4.1:',        type=('build', 'run'))
