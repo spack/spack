@@ -759,7 +759,8 @@ def test_failed_spec_path_error(database):
         spack.store.db._failed_spec_path(s)
 
 
-def test_clear_failure_keep(database, monkeypatch, capfd):
+@pytest.mark.db
+def test_clear_failure_keep(mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when to be retained."""
     def _is(db, spec):
         return True
@@ -773,7 +774,8 @@ def test_clear_failure_keep(database, monkeypatch, capfd):
     assert 'Retaining failure marking' in out
 
 
-def test_clear_failure_forced(database, monkeypatch, capfd):
+@pytest.mark.db
+def test_clear_failure_forced(mutable_database, monkeypatch, capfd):
     """Add test coverage for clear_failure operation when force."""
     def _is(db, spec):
         return True
@@ -790,6 +792,7 @@ def test_clear_failure_forced(database, monkeypatch, capfd):
     assert 'Unable to remove failure marking' in out
 
 
+@pytest.mark.db
 def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
     """Add coverage to mark_failed."""
     def _raise_exc(lock):
@@ -805,7 +808,12 @@ def test_mark_failed(mutable_database, monkeypatch, tmpdir, capsys):
         out = str(capsys.readouterr()[1])
         assert 'Unable to mark a as failed' in out
 
+        # Clean up the failure mark to ensure it does not interfere with other
+        # tests using the same spec.
+        del spack.store.db._prefix_failures[s.prefix]
 
+
+@pytest.mark.db
 def test_prefix_failed(mutable_database, monkeypatch):
     """Add coverage to prefix_failed operation."""
     def _is(db, spec):
