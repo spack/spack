@@ -1,0 +1,54 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+# ----------------------------------------------------------------------------
+# If you submit this package back to Spack as a pull request,
+# please first remove this boilerplate and all FIXME comments.
+#
+# This is a template package file for Spack.  We've put "FIXME"
+# next to all the things you'll want to change. Once you've handled
+# them, you can save this file and test your package like this:
+#
+#     spack install igv
+#
+# You can edit this file again by typing:
+#
+#     spack edit igv
+#
+# See the Spack documentation for more information on packaging.
+# ----------------------------------------------------------------------------
+
+from spack import *
+
+
+class Igv(Package):
+    """The Integrative Genomics Viewer (IGV) is a high-performance visualization
+    tool for interactive exploration of large, integrated genomic datasets.
+    It supports a wide variety of data types, including array-based and
+    next-generation sequence data, and genomic annotations."""
+
+    homepage = "https://software.broadinstitute.org/software/igv/home"
+    url      = "https://data.broadinstitute.org/igv/projects/downloads/2.8/IGV_Linux_2.8.0.zip"
+
+    maintainers = ['snehring']
+
+    version('2.8.0', sha256='897f683645b02c4da55424110b885071c2b9dd51bc180174e2a9b10788bf3257')
+
+    # They ship with 11, out of an abundance of caution I'm going to restrict
+    # it to just 11.
+
+    depends_on('java@11:11.99')
+
+    def install(self, spec, prefix):
+        # Binary dist, just copy what we need, which should be the lib
+        # directory, the two script, and the arg file
+        install_tree('lib', prefix + '/lib')
+        bin_dir = prefix + '/bin'
+        mkdirp(bin_dir)
+        filter_file('^prefix=.*$', 'prefix=' + prefix,
+                    'igv.sh', 'igv_hidpi.sh')
+        install('igv.sh', bin_dir)
+        install('igv_hidpi.sh', bin_dir)
+        install('igv.args', prefix)
