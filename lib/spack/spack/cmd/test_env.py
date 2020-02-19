@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
 import spack.cmd.common.arguments as arguments
-import spack.cmd,common.env_utility as env_utility
+import spack.cmd.common.env_utility as env_utility
 
 description = "run a command in a spec's test environment, " \
               "or dump its environment to screen or file"
