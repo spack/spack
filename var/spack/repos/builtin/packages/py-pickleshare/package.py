@@ -16,5 +16,5 @@ class PyPickleshare(PythonPackage):
     version('0.7.4', sha256='84a9257227dfdd6fe1b4be1319096c20eb85ff1e82c7932f36efccfe1b09737b')
 
     depends_on('python@2.7:2.8,3:', type=('build', 'run'))
-    depends_on('py-setuptools'    , type='build')
-    depends_on('py-pathlib2',     , type=('build', 'run'), when='^python@2.6:2.8,3.2:3.3')
+    depends_on('py-setuptools',     type='build')
+    depends_on('py-pathlib2',       type=('build', 'run'), when='^python@2.6:2.8,3.2:3.3')
