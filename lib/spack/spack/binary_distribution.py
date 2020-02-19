@@ -708,11 +708,6 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     bindist_file = glob.glob('%s/*/.spack/binary_distribution' % tmpdir)[0]
     workdir = re.sub('/.spack/binary_distribution$', '', bindist_file)
     tty.debug('workdir %s' % workdir)
-    install_tree(workdir, spec.prefix, symlinks=True)
-    # the base of the install prefix is used when creating the tarball
-    # so the pathname should be the same now that the directory layout
-    # is confirmed
-    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
     # install_tree copies hardlinks
     # create a temporary tarfile from prefix and exract it to workdir
     # tarfile preserves hardlinks
@@ -792,7 +787,7 @@ def get_spec(spec=None, force=False):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
-    if spec in _cached_specs:
+    if _cached_specs and spec in _cached_specs:
         return _cached_specs
 
     for mirror in spack.mirror.MirrorCollection().values():
