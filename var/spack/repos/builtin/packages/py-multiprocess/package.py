@@ -28,7 +28,6 @@ class PyMultiprocess(PythonPackage):
             url += '/multiprocess-{0}.tar.gz'
         else:
             url += '/multiprocess-{0}.zip'
-        
+
         url = url.format(version)
         return url
-
