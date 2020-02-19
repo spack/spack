@@ -915,6 +915,9 @@ class PackageInstaller(object):
                 self._add_bootstrap_compilers(self.pkg)
 
         if install_package and self.pkg_id not in self.build_tasks:
+            # Be sure to clear any previous failure
+            spack.store.db.clear_failure(self.pkg.spec, force=True)
+
             # Now add the package itself, if appropriate
             self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
 
