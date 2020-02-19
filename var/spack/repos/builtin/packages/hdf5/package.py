@@ -117,6 +117,22 @@ class Hdf5(AutotoolsPackage):
     patch('h5public-skip-mpicxx.patch', when='@:1.8.21,1.10.0:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
 
+    # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
+    # declared as intent(in) though it is modified by the invocation. As a
+    # result, aggressive compilers such as Fujitsu's may do a wrong
+    # optimization to cause an error.
+    def patch(self):
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff.F90',
+            string=True, ignore_absent=True)
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff_F03.f90',
+            string=True, ignore_absent=True)
+
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):

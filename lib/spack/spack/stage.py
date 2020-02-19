@@ -307,8 +307,9 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
+                tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1)
+                    stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
 

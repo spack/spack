@@ -269,6 +269,12 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--without-z")
 
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            config_args.append('F77_INTEGER_8_FLAG=-fdefault-integer-8')
+
         return config_args
 
     # ========================================================================

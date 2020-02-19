@@ -550,15 +550,24 @@ class SpackCommand(object):
             tty.debug(e)
             self.error = e
             if fail_on_error:
+                self._log_command_output(out)
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
+            self._log_command_output(out)
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
         return out.getvalue()
+
+    def _log_command_output(self, out):
+        if tty.is_verbose():
+            fmt = self.command_name + ': {0}'
+            for ln in out.getvalue().split('\n'):
+                if len(ln) > 0:
+                    tty.verbose(fmt.format(ln.replace('==> ', '')))
 
 
 def _profile_wrapper(command, parser, args, unknown_args):

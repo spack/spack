@@ -643,6 +643,10 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
+    # older buildcache tarfiles use gzip compression
+    if not os.path.exists(tarfile_path):
+        tarfile_name = tarball_name(spec, '.tar.gz')
+        tarfile_path = os.path.join(tmpdir, tarfile_name)
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
