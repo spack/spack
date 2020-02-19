@@ -30,6 +30,3 @@ class SimpleInheritance(BaseWithDirectives):
 
     depends_on('openblas', when='+openblas')
     provides('lapack', when='+openblas')
-
-    def install(self, spec, prefix):
-        pass

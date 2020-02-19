@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-import os
 from spack import *
-from llnl.util.filesystem import touch
 
 
 class NosourceInstall(BundlePackage):
@@ -24,8 +21,8 @@ class NosourceInstall(BundlePackage):
 
     # The install method must also be present.
     def install(self, spec, prefix):
-        touch(os.path.join(self.prefix, 'install.txt'))
+        touch(join_path(self.prefix, 'install.txt'))
 
     @run_after('install')
     def post_install(self):
-        touch(os.path.join(self.prefix, 'post-install.txt'))
+        touch(join_path(self.prefix, 'post-install.txt'))

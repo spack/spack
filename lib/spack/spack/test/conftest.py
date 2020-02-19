@@ -28,6 +28,7 @@ import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.package
 import spack.package_prefs
 import spack.paths
 import spack.platforms.test
@@ -38,7 +39,6 @@ import spack.util.gpg
 
 from spack.util.pattern import Bunch
 from spack.dependency import Dependency
-from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
@@ -329,8 +329,18 @@ def mock_repo_path():
     yield spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
+@pytest.fixture
+def mock_pkg_install(monkeypatch):
+    def _pkg_install_fn(pkg, spec, prefix):
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
+                        raising=False)
+
+
 @pytest.fixture(scope='function')
-def mock_packages(mock_repo_path):
+def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     with use_repo(mock_repo_path):
         yield mock_repo_path
@@ -599,10 +609,10 @@ def mock_fetch(mock_archive):
     def fake_fn(self):
         return fetcher
 
-    orig_fn = PackageBase.fetcher
-    PackageBase.fetcher = fake_fn
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
     yield
-    PackageBase.fetcher = orig_fn
+    spack.package.PackageBase.fetcher = orig_fn
 
 
 class MockLayout(object):

@@ -47,7 +47,7 @@ def update_kwargs_from_args(args, kwargs):
     })
 
     kwargs.update({
-        'install_dependencies': ('dependencies' in args.things_to_install),
+        'install_deps': ('dependencies' in args.things_to_install),
         'install_package': ('package' in args.things_to_install)
     })
 
