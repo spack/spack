@@ -7,8 +7,10 @@ from spack import *
 
 
 class PyParso(PythonPackage):
-    """Parso is a Python parser that supports error recovery and round-trip parsing for different Python versions (in multiple Python versions). 
-       Parso is also able to list multiple syntax errors in your python file."""
+    """Parso is a Python parser that supports error recovery and round-trip parsing
+       for different Python versions (in multiple Python versions).
+       Parso is also able to list multiple syntax errors
+       in your python file."""
 
     homepage = "https://pypi.org/project/parso/"
     url      = "https://pypi.io/packages/source/p/parso/parso-0.6.1.tar.gz"
@@ -19,4 +21,3 @@ class PyParso(PythonPackage):
     depends_on('py-setuptools',    type='build')
     depends_on('py-pytest@3.0.7:', type='test')
     depends_on('py-docopt',        type='test')
-
