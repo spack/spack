@@ -23,7 +23,7 @@ class PyDask(PythonPackage):
     variant('dataframe',   default=True, description='Install requirements for dask.dataframe')
     variant('delayed',     default=True, description='Install requirements for dask.delayed')
     variant('distributed', default=True, description='Install requirements for dask.distributed')
-    
+
     conflicts('+distributed', when='@:1.2.1')  # Only present in 1.2.2+
 
     depends_on('py-setuptools',         type='build')
@@ -52,7 +52,7 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.delayed
     depends_on('py-toolz@0.7.3:',       type=('build', 'run'), when='+delayed')
-    
+
     # Requirements for dask.distributed
     depends_on('py-distributed@1.22:',  type=('build', 'run'), when='+distributed')
 
