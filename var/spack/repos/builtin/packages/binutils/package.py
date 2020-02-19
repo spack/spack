@@ -5,6 +5,7 @@
 
 from spack import *
 import glob
+import sys
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
@@ -28,7 +29,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
     variant('plugins', default=False,
             description="enable plugins, needed for gold linker")
-    variant('gold', default=True, description="build the gold linker")
+    variant('gold', default=(sys.platform != 'darwin'),
+            description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
