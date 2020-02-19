@@ -366,7 +366,7 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
                                   unsigned, allow_root, signkey,
                                   not no_rebuild_index)
         except SpackError as e:
-            tty.die('%s' % e)
+            tty.warn('%s' % e)
             continue
 
 

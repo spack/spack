@@ -107,7 +107,7 @@ def get_existing_elf_rpaths(path_name):
     if path_name[-13:] == "/bin/patchelf":
         patchelf = Executable(path_name)
     else:
-        patchelf = Spec('patchelf').concretized()
+        patchelf = Executable(get_patchelf())
 
     rpaths = list()
     try:
@@ -228,7 +228,6 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
         if new_idpath and not idpath == new_idpath:
             install_name_tool('-id', new_idpath, str(cur_path))
     for dep in deps:
-        print(dep)
         new_dep = paths_to_paths.get(dep)
         if new_dep and dep != new_dep:
             install_name_tool('-change', dep, new_dep, str(cur_path))
@@ -451,6 +450,8 @@ def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix):
                     if orig_rpath.startswith(old_prefix):
                         new_rpaths.append(re.sub(re.escape(old_prefix),
                                                  new_prefix, orig_rpath))
+            else:
+                new_rpaths.append(orig_rpath)
         modify_elf_object(path_name, new_rpaths)
 
 
