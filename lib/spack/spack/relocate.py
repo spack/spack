@@ -99,7 +99,7 @@ def get_patchelf():
 def get_existing_elf_rpaths(path_name):
     """
     Return the RPATHS returned by patchelf --print-rpath path_name
-    as lists of strings.
+    as a list of strings.
     """
 
     # if we're relocating patchelf itself, use it
@@ -172,11 +172,15 @@ def macho_make_paths_relative(path_name, old_layout_root,
 def macho_find_paths(orig_rpaths, deps, idpath,
                      old_layout_root, prefix_to_prefix):
     """
-    Use the rpaths defined in the current build environment for the spec to
-    define the new install prefixes to be be passed to the function which
-    queries them for the location of dependency libraries and library ID for
-    a dylib. This library list is used to define the new dependecy library
-    path, new rpaths and the library ID for a dylib.
+    Inputs
+    original rpaths from mach-o binaries
+    dependency libraries for mach-o binaries
+    id path of mach-o libraries
+    old install directory layout root
+    prefix_to_prefix dictionary which maps prefixes in the old directory layout
+    to directories in the new directory layout
+    Output
+    paths_to_paths dictionary which maps all of the old paths to new paths
     """
     paths_to_paths = dict()
     for orig_rpath in orig_rpaths:
@@ -208,15 +212,14 @@ def macho_find_paths(orig_rpaths, deps, idpath,
 def modify_macho_object(cur_path, rpaths, deps, idpath,
                         paths_to_paths):
     """
-    This function is used to make machO buildcaches with relativized paths.
-    Modify MachO binary path_name by replacing old_dir with new_dir
-    or the relative path to spack install root.
-    The old install dir in LC_ID_DYLIB is replaced with the new install dir
-    using install_name_tool -id newid binary
-    The old install dir in LC_LOAD_DYLIB is replaced with the new install dir
-    using install_name_tool -change old new binary
-    The old install dir in LC_RPATH is replaced with the new install dir using
-    install_name_tool  -rpath old new binary
+    This function is used to make machO buildcaches on macOS by
+    replacing old paths with new paths using install_name_tool
+    Inputs
+      mach-o binary to be modified
+      original rpaths
+      original dependency paths
+      original id path if a mach-o library
+      dictionary mapping paths in old install layout to new install layout
     """
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path:
@@ -239,17 +242,15 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     return
 
 
-def modify_object_macholib(cur_path, rpaths, deps, idpath, old_prefix,
-                           paths_to_paths):
+def modify_object_macholib(cur_path, paths_to_paths):
     """
-    Modify MachO binary path names using py-macholib.
-    The old install path in LC_ID_DYLIB header is replaced with
-    new absolute install path.
-    The old install paths in LC_LOAD_DYLIB headers is replaced with
-    new absolute install paths.
-    The old install paths in LC_RPATH are not replaced because
-    the replacement dependency library path is an absolute path.
-    This is used when install machO buildcaches on linux or macOS.
+    This function is used when install machO buildcaches on linux by
+    rewriting mach-o loader commands for dependency library paths of
+    mach-o binaries and the id path for mach-o libraries.
+    Rewritting of rpaths is handled by replace_prefix_bin.
+    Inputs
+      mach-o binary to be modified
+      dictionary mapping paths in old install layout to new install layout
     """
 
     dll = MachO(cur_path)
@@ -428,18 +429,17 @@ def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix):
             modify_macho_object(path_name, rpaths, deps,
                                 idpath, paths_to_paths)
         else:
-            modify_object_macholib(path_name, rpaths, deps,
-                                   idpath, old_layout_root,
+            modify_object_macholib(path_name,
                                    paths_to_paths)
 
 
 def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix):
     """
-    Use the current build environment defined for the buildcache spec
-    to get the rpaths.
-    Use patchelf to get the original rpaths and needed libraries
-    from the ELF objects then modify them with the replacement rpaths
-    queried from the new build environment.
+    Use patchelf to get the original rpaths and then replace them with
+    rpaths in the new directory layout.
+    New rpaths are determined from a dictionary mapping the prefixes in the
+    old directory layout to the prefixes in the new directory layout if the
+    rpath was in the old layout root, i.e. system paths are not replaced.
     """
     for path_name in path_names:
         orig_rpaths = get_existing_elf_rpaths(path_name)
