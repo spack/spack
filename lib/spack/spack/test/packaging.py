@@ -30,6 +30,7 @@ from spack.relocate import macho_make_paths_relative
 from spack.relocate import set_placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
 
+
 def has_gpg():
     try:
         gpg = spack.util.gpg.Gpg.gpg()
