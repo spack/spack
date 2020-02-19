@@ -27,8 +27,8 @@ class Igv(Package):
     def install(self, spec, prefix):
         # Binary dist, just copy what we need, which should be the lib
         # directory, the two script, and the arg file
-        install_tree('lib', prefix + '/lib')
-        bin_dir = prefix + '/bin'
+        install_tree('lib', join_path(prefix, 'lib'))
+        bin_dir = join_path(prefix, 'bin')
         mkdirp(bin_dir)
         filter_file('^prefix=.*$', 'prefix=' + prefix,
                     'igv.sh', 'igv_hidpi.sh')
