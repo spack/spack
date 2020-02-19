@@ -13,7 +13,7 @@ properties = {
     'hardware': {
         'type': 'object',
         'additionalProperties': False,
-        'required': ['nodes'],
+        'required': ['hosts'],
         'properties': {
             'hosts': {
                 'type': 'array',
