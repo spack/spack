@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os.path
 from spack import *
 
 
@@ -47,7 +48,7 @@ class Libfabric(AutotoolsPackage):
                'shm')
 
     variant('fabrics',
-            default='sockets',
+            default='sockets,tcp,udp',
             description='A list of enabled fabrics',
             values=fabrics,
             multi=True)
@@ -80,6 +81,10 @@ class Libfabric(AutotoolsPackage):
              sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
              placement='fabtests', when='@1.9.0')
     resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/fabtests-1.8.0.tar.gz',
+             sha256='4b9af18c9c7c8b28eaeac4e6e9148bd2ea7dc6b6f00f8e31c90a6fc536c5bb6c',
+             placement='fabtests', when='@1.8.0')
+    resource(name='fabtests',
              url='https://github.com/ofiwg/libfabric/releases/download/v1.7.0/fabtests-1.7.0.tar.gz',
              sha256='ebb4129dc69dc0e1f48310ce1abb96673d8ddb18166bc595312ebcb96e803de9',
              placement='fabtests', when='@1.7.0')
@@ -102,7 +107,7 @@ class Libfabric(AutotoolsPackage):
     resource(name='fabtests',
              url='https://github.com/ofiwg/fabtests/releases/download/v1.4.2/fabtests-1.4.2.tar.gz',
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
-             placement='fabtests', when='@1.5.0')
+             placement='fabtests', when='@1.4.2')
 
     def setup_build_environment(self, env):
         if self.run_tests:
@@ -133,15 +138,29 @@ class Libfabric(AutotoolsPackage):
 
         return args
 
-    def installcheck(self):
-        fi_info = Executable(self.prefix.bin.fi_info)
-        fi_info()
+    def install(self, spec, prefix):
+        # Call main install method
+        super(Libfabric, self).install(spec, prefix)
 
-        # Build and run more extensive tests
+        # Build and install fabtests, if available
+        if not os.path.isdir('fabtests'):
+            return
         with working_dir('fabtests'):
             configure = Executable('./configure')
             configure('--prefix={0}'.format(self.prefix),
                       '--with-libfabric={0}'.format(self.prefix))
             make()
             make('install')
+
+    def installcheck(self):
+        fi_info = Executable(self.prefix.bin.fi_info)
+        fi_info()
+
+        # Run fabtests test suite if available
+        if not os.path.isdir('fabtests'):
+            return
+        if self.spec.satisfies('@1.8.0,1.9.0'):
+            # make test seems broken.
+            return
+        with working_dir('fabtests'):
             make('test')
