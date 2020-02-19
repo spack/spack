@@ -401,7 +401,7 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def create(path, specs):
+def create(path, specs, skip_unstable_versions):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
 
@@ -441,6 +441,7 @@ def create(path, specs):
                 "Cannot create directory '%s':" % mirror_root, str(e))
 
     mirror_cache = spack.caches.MirrorCache(mirror_root)
+    mirror_cache.skip_unstable_versions = skip_unstable_versions
     mirror_stats = MirrorStats()
     try:
         spack.caches.mirror_cache = mirror_cache

@@ -310,11 +310,9 @@ def mirror_create(args):
 
     existed = web_util.url_exists(directory)
 
-    if args.skip_unstable_versions:
-        spack.caches.mirror_cache.skip_unstable_versions = True
-
     # Actually do the work to create the mirror
-    present, mirrored, error = spack.mirror.create(directory, mirror_specs)
+    present, mirrored, error = spack.mirror.create(
+        directory, mirror_specs, args.skip_unstable_versions)
     p, m, e = len(present), len(mirrored), len(error)
 
     verb = "updated" if existed else "created"
