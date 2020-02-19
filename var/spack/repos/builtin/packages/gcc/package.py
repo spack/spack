@@ -197,6 +197,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # https://trac.macports.org/ticket/56502#no1
             # see also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83531
             patch('darwin/headers-10.13-fix.patch', when='@5.5.0')
+        if macos_version() >= Version('10.14'):
+            # Fix system headers for Mojave SDK:
+            # https://github.com/Homebrew/homebrew-core/pull/39041
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
+                  sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
+                  when='@6:8')
         if macos_version() >= Version('10.15'):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
