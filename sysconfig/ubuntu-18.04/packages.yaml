@@ -116,6 +116,10 @@ packages:
         paths:
             readline@7.0: /usr
         version: [7.0]
+    tar:
+        paths:
+            tar@1.32: /usr
+        version: [1.32]
     tcl:
         paths:
             tcl@8.6: /usr
@@ -128,6 +132,10 @@ packages:
         version: [8.6]
     trilinos:
         variants: ~hypre
+    xz:
+        paths:
+            xz@5.2.4: /usr
+        version: [5.2.4]
     all:
         providers:
             mpi: [openmpi]
