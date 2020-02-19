@@ -24,7 +24,7 @@ class PyMultiprocess(PythonPackage):
 
     def url_for_version(self, version):
         url = self.url.rsplit('/', 1)[0]
-        if version >= Version('0.70.0'):
+        if version >= Version('0.70.7'):
             url += '/multiprocess-{0}.tar.gz'
         else:
             url += '/multiprocess-{0}.zip'
