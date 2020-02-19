@@ -21,5 +21,3 @@ class PyIrpf90(PythonPackage):
 
     depends_on('python@2.7.0:2.8.999', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-
