@@ -44,6 +44,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     depends_on('m4', type='build', when='@:2.29.99 +gold')
     depends_on('bison', type='build', when='@:2.29.99 +gold')
 
+    conflicts('+gold', when='platform=darwin',
+              msg="Binutils cannot build linkers on macOS")
+
     def configure_args(self):
         spec = self.spec
 
