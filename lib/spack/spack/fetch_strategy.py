@@ -1166,6 +1166,15 @@ class S3FetchStrategy(URLFetchStrategy):
             raise FailedDownloadError(self.url)
 
 
+def stable_target(fetcher):
+    """Returns whether the fetcher target is expected to have a stable
+       checksum. This is only true if the target is a preexisting archive
+       file."""
+    if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
+        return True
+    return False
+
+
 def from_url(url):
     """Given a URL, find an appropriate fetch strategy for it.
        Currently just gives you a URLFetchStrategy that uses curl.
