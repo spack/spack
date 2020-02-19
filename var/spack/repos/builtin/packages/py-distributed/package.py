@@ -12,7 +12,7 @@ class PyDistributed(PythonPackage):
     homepage = "https://distributed.dask.org/"
     url      = "https://pypi.io/packages/source/d/distributed/distributed-2.10.0.tar.gz"
 
-    version('2.10.0', '300e5495d0306f472c1aa34a522273e3066b9f50d3eb25cee17cd3b6177eea54')
+    version('2.10.0', sha256='2f8cca741a20f776929cbad3545f2df64cf60207fb21f774ef24aad6f6589e8b')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')
 
     depends_on('python@2.7:2.8,3.5:', when='@:1', type=('build', 'run'))
@@ -32,3 +32,6 @@ class PyDistributed(PythonPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-futures', when='@:1 ^python@2.7:2.8', type=('build', 'run'))
     depends_on('py-singledispatch', when='@:1 ^python@2.7:2.8', type=('build', 'run'))
+
+    def patch(self):
+        filter_file('^dask .*', '', 'requirements.txt')
