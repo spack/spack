@@ -504,6 +504,10 @@ class Stage(object):
             # must examine the type of the fetcher.
             return
 
+        if (spack.caches.mirror_cache.skip_unstable_versions and
+            not self.default_fetcher.cachable):
+                return
+
         dst_root = spack.caches.mirror_cache.root
         absolute_storage_path = os.path.join(
             dst_root, self.mirror_paths.storage_path)
