@@ -1,27 +1,8 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 from spack.pkg.builtin.neurodamus_base import NeurodamusBase
 import os
@@ -79,8 +60,8 @@ class Neurodamus(NeurodamusBase):
     conflicts('^neuron~python', when='+coreneuron')
     conflicts('+sonata', when='~syntool')
 
-    # Note : to support neuron as external package where readline is not brought
-    # with correct library path
+    # Note : to support neuron as external package where readline is not
+    # brought with correct library path
     depends_on('readline')
 
     phases = ['build', 'install']
@@ -91,7 +72,8 @@ class Neurodamus(NeurodamusBase):
         self.stage.create()
         build_dir = os.path.join(self.stage.path, 'build')
         os.makedirs(build_dir)
-        os.symlink(self.spec['neurodamus-base'].prefix.lib.modlib, os.path.join(build_dir, 'm'))
+        os.symlink(self.spec['neurodamus-base'].prefix.lib.modlib,
+                   os.path.join(build_dir, 'm'))
 
     def build(self, spec, prefix):
         """ Build mod files from m dir
@@ -106,25 +88,32 @@ class Neurodamus(NeurodamusBase):
                                           spec['hdf5'].prefix.include,
                                           profile_flag)
         if '+syntool' in spec:
-            include_flag += ' -DENABLE_SYNTOOL -I ' + spec['synapsetool'].prefix.include
+            include_flag += ' -DENABLE_SYNTOOL -I '\
+                + spec['synapsetool'].prefix.include
             dep_libs.append('synapsetool')
         if '+coreneuron' in spec:
-            include_flag += ' -DENABLE_CORENEURON -I%s' % (spec['coreneuron'].prefix.include)
+            include_flag += ' -DENABLE_CORENEURON -I%s'\
+                % (spec['coreneuron'].prefix.include)
             dep_libs.append('coreneuron')
 
         # link_flag. If shared use -rpath, -L, -l, otherwise lib path
         for dep in dep_libs:
             if spec[dep].satisfies('+shared'):
-                link_flag += " %s %s" % (spec[dep].libs.rpath_flags, spec[dep].libs.ld_flags)
+                link_flag += " %s %s" % (spec[dep].libs.rpath_flags,
+                                         spec[dep].libs.ld_flags)
             else:
                 link_flag += " " + spec[dep].libs.joined()
-        if spec.satisfies('+syntool') and spec.satisfies('^synapsetool~shared'):
-            link_flag += ' ' + spec['synapsetool'].package.dependency_libs(spec).joined()
+        if spec.satisfies('+syntool')\
+           and spec.satisfies('^synapsetool~shared'):
+            link_flag +=\
+                ' ' +\
+                spec['synapsetool'].package.dependency_libs(spec).joined()
 
         nrnivmodl = which('nrnivmodl')
         with profiling_wrapper_on():
             nrnivmodl('-incflags', include_flag, '-loadflags', link_flag, 'm')
-        special = os.path.join(os.path.basename(self.neuron_archdir), 'special')
+        special = os.path.join(os.path.basename(self.neuron_archdir),
+                               'special')
         assert os.path.isfile(special)
 
     def install(self, spec, prefix):
@@ -152,7 +141,8 @@ class Neurodamus(NeurodamusBase):
         if os.path.exists(arch + "/.libs/libnrnmech.so"):
             shutil.move(arch + "/.libs/libnrnmech.so", prefix.lib)
             sed = which('sed')
-            sed('-i', 's#-dll .*#-dll %s "$@"#' % prefix.lib.join('libnrnmech.so'), prefix.bin.special)
+            sed('-i', 's#-dll .*#-dll %s "$@"#'
+                % prefix.lib.join('libnrnmech.so'), prefix.bin.special)
 
     def setup_environment(self, spack_env, run_env):
         spack_env.unset('LC_ALL')

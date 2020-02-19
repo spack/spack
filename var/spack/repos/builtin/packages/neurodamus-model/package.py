@@ -1,5 +1,8 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+##############################################################################
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 from spack.pkg.builtin.sim_model import SimModel
 import shutil
@@ -14,15 +17,16 @@ _LIB_SUFFIX = "_nd"
 
 class NeurodamusModel(SimModel):
     """An 'abstract' base package for Simulation Models. Therefore no version.
-       Eventually in the future Models are independent entities, not tied to neurodamus
+       Eventually in the future Models are independent entities,
+       not tied to neurodamus
     """
     # NOTE: Several variants / dependencies come from SimModel
     variant('synapsetool', default=True,  description="Enable SynapseTool reader (for edges)")
-    variant('mvdtool',     default=True , description="Enable MVDTool reader (for nodes)")
-    variant('common_mods', default='default', description="Source of common mods. '': no change,"
-                                                          " other string: alternate path")
+    variant('mvdtool',     default=True,  description="Enable MVDTool reader (for nodes)")
+    variant('common_mods', default='default', description="Source of common mods. '': no change, other string: alternate path")
     # Note: We dont request link to MPI so that mpicc can do what is best
-    # and dont rpath it so we stay dynamic. 'run' mode will load the same mpi module
+    # and dont rpath it so we stay dynamic.
+    # 'run' mode will load the same mpi module
     depends_on("mpi", type=('build', 'run'))
     depends_on('neurodamus-core', type='build')
     depends_on('neurodamus-core@develop', type='build', when='@develop')
@@ -34,7 +38,8 @@ class NeurodamusModel(SimModel):
 
     # NOTE: With Spack chain we no longer require support for external libs.
     # However, in some setups (notably tests) some libraries might still be
-    # specificed as external and, if static, and we must bring their dependencies.
+    # specificed as external and, if static,
+    # and we must bring their dependencies.
     depends_on('zlib')  # for hdf5
 
     phases = ['build_model', 'merge_hoc_mod', 'build', 'install']
@@ -60,10 +65,12 @@ class NeurodamusModel(SimModel):
             shutil.move('common', '_common_orig')
             force_symlink(spec.variants['common_mods'].value, 'common')
 
-        # If we shall build mods for coreneuron, only bring from core those specified
+        # If we shall build mods for coreneuron,
+        # only bring from core those specified
         if spec.satisfies("+coreneuron"):
             shutil.copytree('mod', 'mod_core', True)
-            with open(core_prefix.lib.mod.join(_CORENRN_MODLIST_FNAME)) as core_mods:
+            with open(core_prefix.lib.mod.join(_CORENRN_MODLIST_FNAME))\
+                    as core_mods:
                 for aux_mod in core_mods:
                     mod_fil = core_prefix.lib.mod.join(aux_mod.strip())
                     if os.path.isfile(mod_fil):
@@ -76,19 +83,27 @@ class NeurodamusModel(SimModel):
         """ Build mod files from with nrnivmodl / nrnivmodl-core.
             To support shared libs, nrnivmodl is also passed RPATH flags.
         """
-        # NOTE: sim-model now attempts to build all link and include flags from the dependencies
-        # link_flag += ' ' + spec['synapsetool'].package.dependency_libs(spec).joined()
+        # NOTE: sim-model now attempts to build all link and
+        # include flags from the dependencies
+        # link_flag += ' '
+        #         + spec['synapsetool'].package.dependency_libs(spec).joined()
 
         self.mech_name += _LIB_SUFFIX  # Final lib name
-        base_include_flag = "-DENABLE_SYNTOOL" if spec.satisfies('+synapsetool') else ""
+        if spec.satisfies('+synapsetool'):
+            base_include_flag = "-DENABLE_SYNTOOL"
+        else:
+            base_include_flag = ""
 
-        include_flag, link_flag = self._build_mods('mod', "", base_include_flag, 'mod_core')
+        include_flag, link_flag = self._build_mods('mod', "",
+                                                   base_include_flag,
+                                                   'mod_core')
 
         # Create rebuild script
         with open(_BUILD_NEURODAMUS_FNAME, "w") as f:
-            f.write(_BUILD_NEURODAMUS_TPL.format(nrnivmodl=str(which('nrnivmodl')),
-                                                 incflags=include_flag,
-                                                 loadflags=link_flag))
+            f.write(
+                _BUILD_NEURODAMUS_TPL.format(nrnivmodl=str(which('nrnivmodl')),
+                                             incflags=include_flag,
+                                             loadflags=link_flag))
         os.chmod(_BUILD_NEURODAMUS_FNAME, 0o770)
 
     def install(self, spec, prefix):
@@ -108,7 +123,8 @@ class NeurodamusModel(SimModel):
         shutil.move(_BUILD_NEURODAMUS_FNAME, prefix.bin)
 
         # Create mods links in share
-        force_symlink(spec['neurodamus-core'].prefix.lib.mod, prefix.share.mod_neurodamus)
+        force_symlink(spec['neurodamus-core'].prefix.lib.mod,
+                      prefix.share.mod_neurodamus)
         force_symlink(prefix.lib.mod, prefix.share.mod_full)
 
         filter_file(r'UNKNOWN_NEURODAMUS_MODEL', r'%s' % spec.name,
@@ -126,10 +142,12 @@ class NeurodamusModel(SimModel):
 
     def setup_environment(self, spack_env, run_env):
         self._setup_environment_common(spack_env, run_env)
-        for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so', recursive=False):
+        for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so',
+                                    recursive=False):
             # We have the two libs and must export them in different vars
             #  - NRNMECH_LIB_PATH the combined lib (used by neurodamus-py)
-            #  - BGLIBPY_MOD_LIBRARY_PATH is the pure mechanism (used by bglib-py)
+            #  - BGLIBPY_MOD_LIBRARY_PATH is the pure mechanism
+            #        (used by bglib-py)
             if '_nd.' in libnrnmech_name:
                 run_env.set('NRNMECH_LIB_PATH', libnrnmech_name)
             else:
@@ -143,10 +161,14 @@ if [ "$#" -eq 0 ]; then
     echo "Syntax:"
     echo "$(basename $0) <mods_dir> [add_include_flags] [add_link_flags]"
     echo
-    echo "NOTE: mods_dir is literally passed to nrnivmodl. If you only have the mechanism mods"
-    echo " and wish to build neurodamus you need to include the neurodamus-specific mods."
-    echo " Under \\$NEURODAMUS_ROOT/share you'll find the whole set of original mod files, as"
-    echo " well as the neurodamus-specific mods alone. You may copy/link them into your directory."
+    echo "NOTE: mods_dir is literally passed to nrnivmodl."
+    echo "If you only have the mechanism mods"
+    echo " and wish to build neurodamus you need to include"
+    echo " the neurodamus-specific mods."
+    echo " Under \\$NEURODAMUS_ROOT/share you'll find the whole set"
+    echo " of original mod files, as"
+    echo " well as the neurodamus-specific mods alone."
+    echo " You may copy/link them into your directory."
     exit 1
 fi
 

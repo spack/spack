@@ -1,9 +1,13 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+##############################################################################
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import shutil
 import os
+
 
 class Asciitoh5(Package):
     """Neurodamus Library necessary to convert from ASCII to H5"""
@@ -23,9 +27,11 @@ class Asciitoh5(Package):
         shutil.copytree('mod', prefix.lib.mod)
         shutil.copytree('bin', prefix.bin)
         with working_dir(prefix):
-            link_flag = spec['hdf5'].libs.rpath_flags + ' ' + spec['hdf5'].libs.ld_flags
+            link_flag = spec['hdf5'].libs.rpath_flags + ' ' +\
+                spec['hdf5'].libs.ld_flags
             include_flag = ' -I%s' % (spec['hdf5'].prefix.include)
-            which('nrnivmodl')('-incflags', include_flag, '-loadflags', link_flag, 'lib/mod')
+            which('nrnivmodl')('-incflags', include_flag, '-loadflags',
+                               link_flag, 'lib/mod')
             bindir = os.path.basename(self.neuron_archdir)
             special = join_path(bindir, 'special')
             shutil.copy(special, prefix.bin)

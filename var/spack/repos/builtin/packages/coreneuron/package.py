@@ -1,27 +1,8 @@
 ##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 import os
 
@@ -82,7 +63,7 @@ class Coreneuron(CMakePackage):
     depends_on('neurodamus-base@plasticity', when='@plasticity')
     depends_on('neurodamus-base@hippocampus', when='@hippocampus')
 
-   # sympy and ispc options are only usable with nmodl
+    # sympy and ispc options are only usable with nmodl
     conflicts('+sympyopt', when='~sympy')
     conflicts('+sympy', when='~nmodl')
     conflicts('+ispc', when='~nmodl')
@@ -95,7 +76,7 @@ class Coreneuron(CMakePackage):
         tau_opts += " -optTauSelectFile=%s" % tau_file
         os.environ["TAU_OPTIONS"] = tau_opts
 
-    @run_after ('install')
+    @run_after('install')
     def profiling_wrapper_off(self):
         del os.environ["USE_PROFILER_WRAPPER"]
         del os.environ["TAU_OPTIONS"]
@@ -108,7 +89,9 @@ class Coreneuron(CMakePackage):
             if '+knl' in spec:
                 flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
         if '+gpu' in spec:
-            flags = '-O2 -Minline=size:1000,levels:100,totalsize:40000,maxsize:4000'
+            flags = '-O2'
+            flags += '-Minline=size:1000,levels:100,'
+            flags += 'totalsize:40000,maxsize:4000'
             flags += ' -ta=tesla:cuda%s' % (spec['cuda'].version.up_to(2))
         if '+debug' in spec:
             flags = '-g -O0'
@@ -118,7 +101,6 @@ class Coreneuron(CMakePackage):
             flags += ' -DTAU -DR123_USE_GNU_UINT128=0'
         return flags
 
-
     def get_cmake_args(self):
         spec   = self.spec
         flags = self.get_flags()
@@ -127,30 +109,37 @@ class Coreneuron(CMakePackage):
             env['CC']  = 'tau_cc'
             env['CXX'] = 'tau_cxx'
 
-        options = ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
-                   '-DCMAKE_C_FLAGS=%s' % flags,
-                   '-DCMAKE_CXX_FLAGS=%s' % flags,
-                   '-DCMAKE_BUILD_TYPE=CUSTOM',
-                   '-DCORENRN_ENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_UNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DCORENRN_ENABLE_TIMEOUT=OFF'
-                   ]
+        options =\
+            ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
+             '-DCMAKE_C_FLAGS=%s' % flags,
+             '-DCMAKE_CXX_FLAGS=%s' % flags,
+             '-DCMAKE_BUILD_TYPE=CUSTOM',
+             '-DCORENRN_ENABLE_REPORTINGLIB=%s'
+             % ('ON' if '+report' in spec else 'OFF'),
+             '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+             '-DCORENRN_ENABLE_OPENMP=%s'
+             % ('ON' if '+openmp' in spec else 'OFF'),
+             '-DCORENRN_ENABLE_UNIT_TESTS=%s'
+             % ('ON' if '+tests' in spec else 'OFF'),
+             '-DCORENRN_ENABLE_TIMEOUT=OFF'
+             ]
 
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
             options.append('-DCORENRN_NMODL_ROOT=%s' % spec['nmodl'].prefix)
-            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include,
+                                     spec['eigen'].prefix.include.eigen3)
 
         nmodl_options = 'codegen --force passes --verbatim-rename --inline'
 
         if spec.satisfies('+ispc'):
             options.append('-DCORENRN_ENABLE_ISPC=ON')
             if '+knl' in spec:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
+                               '--target=avx512knl-i32x16')
             else:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
+                               '--target=host')
 
         if spec.satisfies('+sympy'):
             nmodl_options += ' sympy --analytic'
@@ -174,22 +163,23 @@ class Coreneuron(CMakePackage):
 
         return options
 
-
     @when('@0:0.16')
     def get_cmake_args(self):
         spec   = self.spec
         flags = self.get_flags()
 
-        options = ['-DENABLE_SPLAYTREE_QUEUING=ON',
-                   '-DCMAKE_BUILD_TYPE=CUSTOM',
-                   '-DENABLE_REPORTINGLIB=%s' % ('ON' if '+report' in spec else 'OFF'),
-                   '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
-                   '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-                   '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
-                   '-DENABLE_HEADER_INSTALL=ON',  # for compiling mods to corenrn-special
-                   '-DDISABLE_NRN_TIMEOUT=ON'
-                   ]
+        options =\
+            ['-DENABLE_SPLAYTREE_QUEUING=ON',
+             '-DCMAKE_BUILD_TYPE=CUSTOM',
+             '-DENABLE_REPORTINGLIB=%s'
+                % ('ON' if '+report' in spec else 'OFF'),
+             '-DENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+             '-DCORENEURON_OPENMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
+             '-DUNIT_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+             '-DFUNCTIONAL_TESTS=%s' % ('ON' if '+tests' in spec else 'OFF'),
+             '-DENABLE_HEADER_INSTALL=ON',  # for corenrn-special
+             '-DDISABLE_NRN_TIMEOUT=ON'
+             ]
 
         if spec.satisfies('+profile'):
             env['CC']  = 'tau_cc'
@@ -198,16 +188,19 @@ class Coreneuron(CMakePackage):
         if spec.satisfies('+nmodl'):
             options.append('-DCORENRN_ENABLE_NMODL=ON')
             options.append('-DCORENRN_NMODL_DIR=%s' % spec['nmodl'].prefix)
-            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include, spec['eigen'].prefix.include.eigen3)
+            flags += ' -I%s -I%s' % (spec['nmodl'].prefix.include,
+                                     spec['eigen'].prefix.include.eigen3)
 
         nmodl_options = 'codegen --force passes --verbatim-rename --inline'
 
         if spec.satisfies('+ispc'):
             options.append('-DENABLE_ISPC_TARGET=ON')
             if '+knl' in spec:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=avx512knl-i32x16')
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
+                               '--target=avx512knl-i32x16')
             else:
-                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic --target=host')
+                options.append('-DCMAKE_ISPC_FLAGS=-O2 -g --pic '
+                               '--target=host')
 
         if spec.satisfies('+sympy'):
             nmodl_options += ' sympy --analytic'
@@ -220,7 +213,8 @@ class Coreneuron(CMakePackage):
         options.extend(['-DCMAKE_C_FLAGS=%s' % flags,
                         '-DCMAKE_CXX_FLAGS=%s' % flags])
 
-        if spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture:
+        if spec.satisfies('~shared') or spec.satisfies('+gpu')\
+           or 'cray' in spec.architecture:
             options.append('-DCOMPILE_LIBRARY_TYPE=STATIC')
 
         if spec.satisfies('+gpu'):
@@ -243,17 +237,16 @@ class Coreneuron(CMakePackage):
 
         return options
 
-
     def cmake_args(self):
         return self.get_cmake_args()
-
 
     @run_after('install')
     def filter_compilers(self):
         """run after install to avoid spack compiler wrappers
         getting embded into nrnivmodl script"""
 
-        nrnmakefile = join_path(self.prefix, 'share/coreneuron/nrnivmodl_core_makefile')
+        nrnmakefile = join_path(self.prefix,
+                                'share/coreneuron/nrnivmodl_core_makefile')
 
         kwargs = {
             'backup': False,
@@ -271,10 +264,11 @@ class Coreneuron(CMakePackage):
         search_paths = [[self.prefix.lib, False], [self.prefix.lib64, False]]
         spec = self.spec
         # opposite of how static linkage is used
-        is_shared = not (spec.satisfies('~shared') or spec.satisfies('+gpu') or 'cray' in spec.architecture)
+        is_shared = not (spec.satisfies('~shared') or spec.satisfies('+gpu')
+                         or 'cray' in spec.architecture)
         for path, recursive in search_paths:
-            libs = find_libraries(['libcoreneuron', 'libcorenrnmech'], root=path,
-                                  shared=is_shared, recursive=False)
+            libs = find_libraries(['libcoreneuron', 'libcorenrnmech'],
+                                  root=path, shared=is_shared, recursive=False)
             if libs:
                 return libs
         return None
