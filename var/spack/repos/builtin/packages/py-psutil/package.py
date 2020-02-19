@@ -20,12 +20,12 @@ class PyPsutil(PythonPackage):
     version('5.4.5', sha256='ebe293be36bb24b95cdefc5131635496e88b17fabbcf1e4bc9b5c01f5e489cfe')
     version('5.0.1', sha256='9d8b7f8353a2b2eb6eb7271d42ec99d0d264a9338a37be46424d56b4e473b39e')
 
-    variant('enum', default=False)
-    conflicts('+enum', when='@:5.3.0')
+    # variant('enum', default=False) # doesn't seem to do anything...
+    # conflicts('+enum', when='@:5.3.0')
 
     depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-unittest2', when='^python@:2.6', type='test')
     depends_on('py-mock', when='^python@:2.7', type='test')
     depends_on('py-ipaddress', when='^python@:3.2', type='test')
-    depends_on('py-enum34', when='+enum ^python@:3.3', type=('build', 'run'))
+    # depends_on('py-enum34', when='+enum ^python@:3.3', type=('build', 'run'))
