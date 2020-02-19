@@ -16,6 +16,7 @@ class Npm(Package):
     # base http://www.npmjs.com/
     url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
+    version('6.13.7', sha256='6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494')
     version('6.13.4', sha256='a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7')
     version('3.10.9', sha256='fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6')
     version('3.10.5', sha256='ff019769e186152098841c1fa6325e5a79f7903a45f13bd0046a4dc8e63f845f')
@@ -37,8 +38,8 @@ class Npm(Package):
     def patch(self):
         shutil.rmtree('node_modules/node-gyp')
         install_tree('node-gyp/package', 'node_modules/node-gyp')
-        filter_file('"node-gyp": "^5.0.5"', '"node-gyp": "^6.0.1"',
-                    'package.json', string=True)
+        filter_file(r'"node-gyp": "\^5\..*"', '"node-gyp": "^6.0.1"',
+                    'package.json')
         install_tree('env-paths/package', 'node_modules/env-paths')
 
     def configure(self, spec, prefix):

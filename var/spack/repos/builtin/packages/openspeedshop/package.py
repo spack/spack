@@ -96,7 +96,7 @@ class Openspeedshop(CMakePackage):
 
     depends_on("libxml2")
 
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    depends_on("qt@3", when='gui=qt3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))

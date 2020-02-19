@@ -169,9 +169,11 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     e = ev.read('test')
     with capfd.disabled():
         with e:
+            # The first installation outputs the package prefix
             install('cmake-client')
+            # The second installation attempt will also update the view
             out = install('cmake-client')
-            assert 'is already installed in' in out
+            assert 'Updating view at' in out
 
 
 def test_remove_after_concretize():
