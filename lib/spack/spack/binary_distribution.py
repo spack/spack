@@ -594,6 +594,7 @@ def relocate_package(spec, allow_root):
                 spec.architecture.platform == 'test' and
                     platform.system().lower() == 'linux'):
                 relocate.relocate_elf_binaries(files_to_relocate,
+                                               old_layout_root,
                                                prefix_to_prefix)
         # Relocate links to the new install prefix
             link_names = [linkname
