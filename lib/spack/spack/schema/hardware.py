@@ -15,13 +15,13 @@ properties = {
         'additionalProperties': False,
         'required': ['nodes'],
         'properties': {
-            'nodes': {
+            'hosts': {
                 'type': 'array',
                 'items': [{
                     'type': 'object',
                     'additionalProperties': False,
                     'properties': {
-                        'node': {
+                        'host': {
                             'type': 'object',
                             'additionalProperties': False,
                             'required': ['name', 'target', 'operating_system'],
