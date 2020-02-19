@@ -21,3 +21,14 @@ class PyMultiprocess(PythonPackage):
     depends_on('py-setuptools@0.6:', type='build')
     depends_on('py-dill@0.2.6:', type=('build', 'run'))
     depends_on('py-dill@0.2.9:', type=('build', 'run'), when='@0.70.7:')
+
+    def url_for_version(self, version):
+        url = self.url.rsplit('/', 1)[0]
+        if version >= Version('0.70.0'):
+            url += '/multiprocess-{0}.tar.gz'
+        else:
+            url += '/multiprocess-{0}.zip'
+        
+        url = url.format(version)
+        return url
+
