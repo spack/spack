@@ -22,16 +22,15 @@ class Igv(Package):
     # They ship with 11, out of an abundance of caution I'm going to restrict
     # it to just 11.
 
-    depends_on('java@11:11.99')
+    depends_on('java@11:11.99', type='run')
 
     def install(self, spec, prefix):
         # Binary dist, just copy what we need, which should be the lib
         # directory, the two script, and the arg file
-        install_tree('lib', join_path(prefix, 'lib'))
-        bin_dir = join_path(prefix, 'bin')
-        mkdirp(bin_dir)
+        install_tree('lib', prefix.lib)
+        mkdirp(prefix.bin)
         filter_file('^prefix=.*$', 'prefix=' + prefix,
                     'igv.sh', 'igv_hidpi.sh')
-        install('igv.sh', bin_dir)
-        install('igv_hidpi.sh', bin_dir)
+        install('igv.sh', prefix.bin)
+        install('igv_hidpi.sh', prefix.bin)
         install('igv.args', prefix)
