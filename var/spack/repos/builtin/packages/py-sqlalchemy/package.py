@@ -29,4 +29,4 @@ class PySqlalchemy(PythonPackage):
 
     depends_on('py-mysqlclient', when='backend=mysqlclient', type=('build', 'run'))
     depends_on('py-pymysql',     when='backend=pymysql',     type=('build', 'run'))
-    depends_on('py-psycopg2',    when='backend=psycopg2',     type=('build', 'run'))
+    depends_on('py-psycopg2',    when='backend=psycopg2',    type=('build', 'run'))
