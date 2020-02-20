@@ -8,7 +8,7 @@ from spack import *
 
 class PyVersioneer(PythonPackage):
     """Versioneer is a tool to automatically update version strings (in
-    setup.py and the conventional ‘from PROJECT import _version’ pattern) by
+    setup.py and the conventional 'from PROJECT import _version' pattern) by
     asking your version-control system about the current tree."""
 
     homepage = "https://github.com/warner/python-versioneer"
