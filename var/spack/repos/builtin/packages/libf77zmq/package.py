@@ -34,8 +34,8 @@ class Libf77zmq(MakefilePackage):
         makefile.filter('PREFIX=.*', 'PREFIX={0}'.format(self.prefix))
         ZMQ_H = "{0}/include/zmq.h".format(self.spec['libzmq'].prefix)
         os.environ['ZMQ_H'] = ZMQ_H
-        os.mkdir("{0}/include".format(self.prefix))
-        os.mkdir("{0}/lib".format(self.prefix))
+        mkdirp(prefix.include)
+        mkdirp(prefix.lib)
 
     def install(self, spec, prefix):
         make()
