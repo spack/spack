@@ -187,6 +187,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     conflicts('languages=jit', when='+nvptx')
     conflicts('languages=objc', when='+nvptx')
     conflicts('languages=obj-c++', when='+nvptx')
+    # NVPTX build disables bootstrap
+    conflicts('+binutils', when='+nvptx')
+
+    # Binutils can't build ld on macOS
+    conflicts('+binutils', when='platform=darwin')
 
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
@@ -298,17 +303,20 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            static_bootstrap_flags = '-static-libstdc++ -static-libgcc'
+            stage1_ldflags = str(self.rpath_args)
+            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+            if '%gcc' in spec:
+                stage1_ldflags = boot_ldflags
+            binutils = spec['binutils'].prefix.bin
             options.extend([
                 '--with-sysroot=/',
-                '--with-stage1-ldflags={0} {1}'.format(
-                    self.rpath_args, static_bootstrap_flags),
-                '--with-boot-ldflags={0} {1}'.format(
-                    self.rpath_args, static_bootstrap_flags),
+                '--with-stage1-ldflags=' + stage1_ldflags,
+                '--with-boot-ldflags=' + boot_ldflags,
                 '--with-gnu-ld',
-                '--with-ld={0}/ld'.format(spec['binutils'].prefix.bin),
+                '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
-                '--with-as={0}/as'.format(spec['binutils'].prefix.bin),
+                '--with-as=' + binutils.join('as'),
+                '--enable-bootstrap',
             ])
 
         # MPC
