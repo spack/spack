@@ -7,7 +7,7 @@
 from spack import *
 
 
-class DecentralizedInternet(Package):
+class DecentralizedInternet(MakefilePackage):
     """A library for building decentralized and grid computing projects"""
     homepage = "https://lonero.readthedocs.io"
     url      = "https://github.com/Lonero-Team/Decentralized-Internet/releases/download/4.2.3/Decentralized.Internet.tar.gz"
