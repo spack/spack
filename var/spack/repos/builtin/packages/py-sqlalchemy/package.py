@@ -24,11 +24,9 @@ class PySqlalchemy(PythonPackage):
     depends_on('py-mock', type='test')
     depends_on('py-pytest-xdist', type='test')
 
-    variant('mysql', default='none', description='MySQL support',
-            values=('none', 'mysqlclient', 'pymysql'), multi=False)
-    depends_on('py-mysqlclient', when='mysql=mysqlclient', type=('build', 'run'))
-    depends_on('py-pymysql',     when='mysql=pymysql',     type=('build', 'run'))
+    variant('backend', default='none', description='Python modules for database access',
+            values=any_combination_of('mysqlclient', 'pymysql', 'psycopg2'))
 
-    variant('postgresql', default='none', description='PostgreSQL support',
-            values=('none', 'psycopg2'))
-    depends_on('py-psycopg2',    when='postgresql=psycopg2')
+    depends_on('py-mysqlclient', when='backend=mysqlclient', type=('build', 'run'))
+    depends_on('py-pymysql',     when='backend=pymysql',     type=('build', 'run'))
+    depends_on('py-psycopg2',    when='backend=psycopg2',     type=('build', 'run'))
