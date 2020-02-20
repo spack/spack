@@ -16,6 +16,6 @@ class PyMerlin(PythonPackage):
 
     depends_on('python@:2', type=('build', 'run'))
 
-    def test(self):
+    def buildtest(self):
         # Unit tests are missing from tarball
         pass

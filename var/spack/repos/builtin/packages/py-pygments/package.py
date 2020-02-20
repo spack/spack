@@ -27,6 +27,6 @@ class PyPygments(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    def test(self):
+    def buildtest(self):
         # Unit tests require sphinx, but that creates a circular dependency
         pass
