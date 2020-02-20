@@ -18,4 +18,4 @@ class PyTerminado(PythonPackage):
 
     depends_on('py-tornado@4:', type=('build', 'run'))
     depends_on('py-ptyprocess', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@0.8.2:')
+    depends_on('python@2.7:2.8,3.4:', when='@0.8.2:', type=('build', 'run'))
