@@ -23,7 +23,7 @@ class Vc(CMakePackage):
                     'RelWithDebInfo', 'MinSizeRel'))
     
     def cmake_args(self):
-        if "+test" in self.spec:
+        if self.run_tests:
             return ['-DBUILD_TESTING=ON']
         else:
             return ['-DBUILD_TESTING=OFF']
