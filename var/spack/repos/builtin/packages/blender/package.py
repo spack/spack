@@ -57,6 +57,7 @@ class Blender(CMakePackage):
     depends_on('freetype')
     depends_on('libuuid')
     depends_on('jemalloc', when='+jemalloc')
+    depends_on('ilmbase')
 
     def cmake_args(self):
         spec = self.spec
