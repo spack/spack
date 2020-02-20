@@ -18,12 +18,12 @@ class PyJsonschema(PythonPackage):
 
     depends_on('python@2.6:2.7.999,3.4:', type=('build', 'run'))
     depends_on('python@2.7:2.7.999,3.5:', when='@3.0.0:', type=('build', 'run'))
-    
+
     depends_on('py-setuptools', type='build', when='@:2.6.0')
     depends_on('py-setuptools', type=('build', 'run'), when='@3:')
     depends_on('py-vcversioner', type=('build', 'run'), when='@:2.6.0')
     depends_on('py-setuptools-scm', type='build', when='@3:')
-    
+
     depends_on('py-functools32', when="^python@:2", type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', when='@3.0.1:', type=('build', 'run'))
     depends_on('py-pyrsistent@0.14.0:', when='@3.0.1:', type=('build', 'run'))
