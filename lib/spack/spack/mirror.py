@@ -401,7 +401,7 @@ def get_matching_versions(specs, num_versions=1):
     return matching
 
 
-def create(path, specs, skip_unstable_versions):
+def create(path, specs, skip_unstable_versions=False):
     """Create a directory to be used as a spack mirror, and fill it with
     package archives.
 
