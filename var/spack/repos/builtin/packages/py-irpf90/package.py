@@ -13,7 +13,7 @@ class PyIrpf90(PythonPackage):
     performance computing."""
 
     homepage = "http://irpf90.ups-tlse.fr"
-    url = "https://files.pythonhosted.org/packages/f7/46/5b41a2a45bf3da8746c864ac60321b92b77dd707ed16264e6f9501cc2bf0/irpf90-1.7.7.tar.gz"
+    url = "https://pypi.io/packages/source/i/irpf90/irpf90-1.7.7.tar.gz"
 
     maintainers = ['scemama']
 
