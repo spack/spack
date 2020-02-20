@@ -19,5 +19,5 @@ class PyVersioneer(PythonPackage):
 
     version('0.18', sha256='cf895b67f5bc62d61c4837458069ded8f66b4e5764c19f7253c51ee27e8b3a99')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
