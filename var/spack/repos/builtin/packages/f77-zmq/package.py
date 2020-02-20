@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Libf77zmq(MakefilePackage):
+class F77Zmq(MakefilePackage):
     """Fortran binding for the ZeroMQ communication library"""
 
     homepage = "http://zguide.zeromq.org/"
@@ -28,7 +28,7 @@ class Libf77zmq(MakefilePackage):
         cflags = os.environ.get('CFLAGS')
         makefile = FileFilter('Makefile')
         makefile.filter('CC=.*',
-                        'CC={0} {1}'.format(self.compiler.cc,
+                        'CC={0} {1}'.format(spack_cc,
                                             self.compiler.pic_flag))
         makefile.filter('CFLAGS=.*', 'CFLAGS={0}'.format(cflags))
         makefile.filter('PREFIX=.*', 'PREFIX={0}'.format(self.prefix))
