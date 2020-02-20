@@ -20,6 +20,7 @@ class PyTornado(PythonPackage):
 
     # requirements from setup.py
     depends_on('python@3.5:', when='@6:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-backports-ssl-match-hostname', when='@:4 ^python@:2.7.8', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3', type=('build', 'run'))
     depends_on('py-certifi', when='@:4 ^python@:3.3', type=('build', 'run'))
