@@ -71,39 +71,70 @@ class Libxml2(AutotoolsPackage):
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
 
-    def _test_exec(self, exe):
-        tty.msg('test: Ensuring use of installed {0}'.format(exe))
+    def _run_test(self, runner, options, expected, status):
+        """Run the test and confirm obtain the expected results
+
+        Args:
+            runner (Executable): the executable version of the binary
+            options (list of str): list of options to pass to the runner
+            expected (list of str): list of expected output strings
+            status (int or None): the expected process status if int or None
+                if the test is expected to succeed
+        """
+        try:
+            output = runner(*options, output=str.split, error=str.split)
+            assert not status, 'Expected execution to fail'
+        except ProcessError as err:
+            output = str(err)
+            status_msg = 'exited with status {0}'.format(status)
+            expected_msg = 'Expected \'{0}\' in \'{1}\''.format(
+                status_msg, err.message)
+            assert status_msg in output, expected_msg
+
+        for check in expected:
+            assert check in output
+
+    def _test_bin(self, exe):
+        """Execute the test and confirm obtain the expected results
+
+        Args:
+            exe (str): the name of the executable
+        """
+        tty.msg('test: Ensuring use of the installed {0}'.format(exe))
         runner = which(exe)
         assert runner is not None
 
-        version_checks = {
-            'xml2-config': [str(self.spec.version)],
-            'xmllint': [
-                 'using libxml', str(self.spec.version).replace('.', '0')],
-        }
-        if exe in version_checks:
-            tty.msg('test: Checking its version')
-            output = runner('--version', output=str.split, error=str.split)
-            for check in version_checks[exe]:
-                assert check in output
-
+        dtd_path = './data/info.dtd'
         exec_checks = {
-            # TODO: 'xml2-config': (),
-            # TODO: 'xmllint': (),
-            'xmlcatalog': ('--create', ['<catalog xmlns', 'catalog"/>']),
+            'xml2-config': [
+                (['--version'], [str(self.spec.version)], None)],
+            'xmllint': [
+                (['--version'],
+                 ['using libxml', str(self.spec.version).replace('.', '0')],
+                 None),
+                (['--auto', '-o', 'test.xml'], [], None),
+                (['--postvalid', 'test.xml'],
+                 ['validity error', 'no DTD found', 'does not validate'], 3),
+                (['--dtdvalid', dtd_path, 'test.xml'],
+                 ['validity error', 'does not follow the DTD'], 3),
+                (['--dtdvalid', dtd_path, './data/info.xml'], [], None)],
+            'xmlcatalog': [
+                (['--create'], ['<catalog xmlns', 'catalog"/>'], None)],
         }
         if exe in exec_checks:
-            option, expected = exec_checks[exe]
-            output = runner(option, output=str.split, error=str.split)
-            for check in expected:
-                assert check in output
-
+            for options, expected, status in exec_checks[exe]:
+                result = 'fails with status {0}'.format(status) if status \
+                    else 'succeeds'
+                tty.msg('test: Ensuring \'{0} {1}\' {2}'
+                        .format(exe, ' '.join(options), result))
+                self._run_test(runner, options, expected, status)
 
     def test(self):
+        """Perform smoke tests on the installed package"""
+        # Start with what we already have post-install
         tty.msg('test: Performing simple import test')
         self.import_module_test()
 
+        # Now run tests for the available executables
         for exe in os.listdir(self.prefix.bin):
-            self._test_exec(exe)
-
-        # TODO: Add build and run tests
+            self._test_bin(exe)
