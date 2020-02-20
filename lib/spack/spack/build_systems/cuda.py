@@ -13,6 +13,8 @@ class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
     """
+    maintainers = ['ax3l']
+
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
     # https://developer.nvidia.com/cuda-gpus
     # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
@@ -57,9 +59,9 @@ class CudaPackage(PackageBase):
     depends_on('cuda@5.0:10.2', when='cuda_arch=30')
     depends_on('cuda@5.0:10.2', when='cuda_arch=32')
     depends_on('cuda@5.0:10.2', when='cuda_arch=35')
-    depends_on('cuda@6.5:10.2', when='cuda_arch=37')
+    depends_on('cuda@7.0:10.2', when='cuda_arch=37')
 
-    depends_on('cuda@6.5:',     when='cuda_arch=50')
+    depends_on('cuda@6.0:',     when='cuda_arch=50')
     depends_on('cuda@6.5:',     when='cuda_arch=52')
     depends_on('cuda@6.5:',     when='cuda_arch=53')
 
