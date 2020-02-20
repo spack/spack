@@ -32,7 +32,7 @@ class F77Zmq(MakefilePackage):
                                             self.compiler.pic_flag))
         makefile.filter('CFLAGS=.*', 'CFLAGS={0}'.format(cflags))
         makefile.filter('PREFIX=.*', 'PREFIX={0}'.format(self.prefix))
-        ZMQ_H = "{0}/include/zmq.h".format(self.spec['libzmq'].prefix)
-        os.environ['ZMQ_H'] = ZMQ_H
+        p = self.spec['libzmq'].prefix
+        os.environ['ZMQ_H'] = "{0}/include/zmq.h".format(p)
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
