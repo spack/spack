@@ -51,9 +51,10 @@ class QuantumEspresso(Package):
     variant('epw', default=False,
             description='Builds Electron-phonon Wannier executable')
 
-    # Apply upstream patches by default. May need to be set to to False
+    # Apply internal patches by default. May need to be set to to False
     # for 3rd party dependency patching
-    desc='Apply upstream QE patches. May need to be set to ~patch for dependency patching'
+    desc = 'Apply internal patches. May need to be set to False for'
+    desc = desc + ' dependency patching'
     variant('patch', default=True, description=desc)
 
     # Dependencies
