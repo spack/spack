@@ -12,6 +12,7 @@ class PyWidgetsnbextension(PythonPackage):
     homepage = "https://pypi.python.org/pypi/widgetsnbextension"
     url      = "https://pypi.io/packages/source/w/widgetsnbextension/widgetsnbextension-1.2.6.tar.gz"
 
+    version('3.3.0', sha256='c5280a62d293735cdadc7b8884e2affcfb0488420ee09963577f042359726392')
     version('1.2.6', sha256='c618cfb32978c9517caf0b4ef3aec312f8dd138577745e7b0d4abfcc7315ce51')
 
     depends_on('py-setuptools', type='build')
