@@ -162,11 +162,18 @@ class Llvm(CMakePackage):
                      llvm_check_file)
 
         except ProcessError:
-            explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://lldb.llvm'
-                           '.org/resources/build.html#code-signing-on-macos'
-                           'for details on how to create this identity.')
-            raise RuntimeError(explanation)
+            # Newer LLVM versions have a simple script that sets up
+            # automatically
+            setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+            try:
+                setup()
+            except Exception:
+                raise RuntimeError(
+                    'The "lldb_codesign" identity must be available to build '
+                    'LLVM with LLDB. See https://lldb.llvm.org/resources/'
+                    'build.html#code-signing-on-macos for details on how to '
+                    'create this identity.'
+                )
 
     def setup_build_environment(self, env):
         env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
