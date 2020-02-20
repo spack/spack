@@ -26,5 +26,5 @@ class PyBasisSetExchange(PythonPackage):
     version('0.8.3',  sha256='0721f3cf55f588f62d74a408bccdd44046ebeaab8ec802c02fae7983d8f0359f')
 
     depends_on('py-argcomplete', type=('build', 'run'))
-    depends_on('py-jsonschema')
+    depends_on('py-jsonschema', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
