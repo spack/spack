@@ -23,3 +23,13 @@ class PySqlalchemy(PythonPackage):
     depends_on('py-pytest@2.5.2:3.9.0,3.9.3:', type='test')
     depends_on('py-mock', type='test')
     depends_on('py-pytest-xdist', type='test')
+    
+    variant('mysql', default='none', description='MySQL support',
+           values=('none', 'mysqlclient', 'pymysql'), multi=False)
+    depends_on('py-mysqlclient', when='mysql=mysqlclient', type=('build', 'run'))
+    depends_on('py-pymysql',     when='mysql=pymysql',     type=('build', 'run'))
+    
+    variant('postgresql', default='none', description='PostgreSQL support',
+            values=('none', 'psycopg2'))
+    depends_on('py-psycopg2',    when='postgresql=psycopg2')
+    # Also supports psycopg2cffi, pg8000; mssql; oracle - but the packages are not in spack
