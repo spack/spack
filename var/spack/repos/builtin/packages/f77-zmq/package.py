@@ -36,4 +36,3 @@ class F77Zmq(MakefilePackage):
         os.environ['ZMQ_H'] = ZMQ_H
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
-
