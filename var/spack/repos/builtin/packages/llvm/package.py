@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
 
 
 class Llvm(CMakePackage):
@@ -71,7 +72,7 @@ class Llvm(CMakePackage):
             description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True,
             description="Build LLVM compiler runtime, including sanitizers")
-    variant('gold', default=True,
+    variant('gold', default=(sys.platform != 'darwin'),
             description="Add support for LTO with the gold linker plugin")
     variant('shared_libs', default=False,
             description="Build all components as shared libraries, faster, "
