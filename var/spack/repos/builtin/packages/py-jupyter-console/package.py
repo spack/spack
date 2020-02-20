@@ -28,4 +28,4 @@ class PyJupyterConsole(PythonPackage):
     depends_on('py-ipykernel', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-prompt-toolkit@1.0.0:1.9', type=('build', 'run'), when='@:5')
-    depends_on('py-prompt-toolkit@2.0.0:2.9,3.0.2:3.1.0', type=('build', 'run'), when='@6:')
+    depends_on('py-prompt-toolkit@2.0.0:2.999,3.0.2:3.0.999', type=('build', 'run'), when='@6:')
