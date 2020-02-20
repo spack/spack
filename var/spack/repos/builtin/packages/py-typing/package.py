@@ -20,5 +20,5 @@ class PyTyping(PythonPackage):
     version('3.6.4', sha256='d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2')
     version('3.6.1', sha256='c36dec260238e7464213dcd50d4b5ef63a507972f5780652e835d0228d0edace')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
