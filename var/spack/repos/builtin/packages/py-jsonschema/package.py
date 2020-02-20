@@ -21,7 +21,7 @@ class PyJsonschema(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-vcversioner', type=('build', 'run'), when='@:2.6.0')
     depends_on('py-setuptools-scm', type='build', when='@3:')
-    depends_on('py-functools32', when="^python@2.7.0:2.7.999", type=('build', 'run'))
+    depends_on('py-functools32', when="^python@:2", type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', when='@3.0.1:', type=('build', 'run'))
     depends_on('py-pyrsistent@0.14.0:', when='@3.0.1:', type=('build', 'run'))
     depends_on('py-six@1.11.0:', when='@3.0.1:', type=('build', 'run'))
