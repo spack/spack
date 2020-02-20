@@ -30,7 +30,7 @@ class PyUrllib3(PythonPackage):
     depends_on('py-cryptography@1.3.4:', when='+secure')
     depends_on('py-idna@2:', when='+secure')
     depends_on('py-certifi', when='+secure')
-    depedns_on('py-ipaddress', when='+secure ^python@2.7:2.8')
+    depends_on('py-ipaddress', when='+secure ^python@2.7:2.8')
 
     variant('socks', default=False, description='SOCKS and HTTP proxy support')
     depends_on('py-pysocks@1.5.6,1.5.7:1.9', when='+socks')
