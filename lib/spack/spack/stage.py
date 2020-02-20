@@ -506,7 +506,7 @@ class Stage(object):
 
         if (spack.caches.mirror_cache.skip_unstable_versions and
             not fs.stable_target(self.default_fetcher)):
-                return
+            return
 
         dst_root = spack.caches.mirror_cache.root
         absolute_storage_path = os.path.join(
