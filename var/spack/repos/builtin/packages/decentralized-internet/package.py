@@ -1,4 +1,3 @@
-##############################################################################
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
@@ -13,7 +12,3 @@ class DecentralizedInternet(MakefilePackage):
     url      = "https://github.com/Lonero-Team/Decentralized-Internet/releases/download/4.2.3/Decentralized.Internet.tar.gz"
     maintainers = ['Lonero-Team', 'Mentors4edu']
     version('4.2.3', sha256='2922b9128b411ece2f04d07942a453f1e772548aa27b3936c9f9bcfbc0737058')
-
-    def install(self, spec, prefix):
-        make()
-        make('install')
