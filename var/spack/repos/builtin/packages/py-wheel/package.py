@@ -18,3 +18,6 @@ class PyWheel(PythonPackage):
     version('0.26.0', sha256='eaad353805c180a47545a256e6508835b65a8e830ba1093ed8162f19a50a530c')
 
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('py-pytest@3.0.0:', type='test')
+    depends_on('py-pytest-cov', type='test')
