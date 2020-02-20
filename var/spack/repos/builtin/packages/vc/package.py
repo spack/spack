@@ -21,7 +21,6 @@ class Vc(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebug',
                     'RelWithDebInfo', 'MinSizeRel'))
-    variant('test', default=False, description='Build tests')
     
     def cmake_args(self):
         if "+test" in self.spec:
