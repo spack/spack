@@ -55,7 +55,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
-    variant('qe', default=True,
+    variant('qe', default=False,
             description='Install with patched Quantum Espresso 6.4.1')
 
     # cuda variant implies mixed precision variant by default, but there is
