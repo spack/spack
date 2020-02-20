@@ -25,26 +25,7 @@ def _spec_type(component):
 
 def get_packages_config():
     """Wrapper around get_packages_config() to validate semantics."""
-    config = spack.config.get('packages')
-
-    # Get a list of virtuals from packages.yaml.  Note that because we
-    # check spack.repo, this collects virtuals that are actually provided
-    # by sometihng, not just packages/names that don't exist.
-    # Only include a virtual if it specifies externals
-    # So, this won't include, e.g., 'all'.
-    virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                if spack.repo.path.is_virtual(pkg_name) and
-                any(config[pkg_name].get(key, None)
-                    for key in ('paths', 'modules'))]
-
-    # die if there are virtuals in `packages.py` specifying a path
-    if virtuals:
-        errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
-        raise VirtualInPackagesYAMLError(
-            "packages.yaml for virtual packages cannot specify a path:",
-            '\n'.join(errors))
-
-    return config
+    return spack.config.get('packages')
 
 
 class PackagePrefs(object):
@@ -185,32 +166,34 @@ def spec_externals(spec):
     from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
 
     allpkgs = get_packages_config()
-    name = spec.name
+    names = [spec.name]
+    names += [vspec.name for vspec in spec.package.virtuals_provided()]
 
     external_specs = []
-    pkg_paths = allpkgs.get(name, {}).get('paths', None)
-    pkg_modules = allpkgs.get(name, {}).get('modules', None)
-    if (not pkg_paths) and (not pkg_modules):
-        return []
-
-    for external_spec, path in iteritems(pkg_paths):
-        if not path:
-            # skip entries without paths (avoid creating extra Specs)
+    for name in names:
+        pkg_paths = allpkgs.get(name, {}).get('paths', None)
+        pkg_modules = allpkgs.get(name, {}).get('modules', None)
+        if (not pkg_paths) and (not pkg_modules):
             continue
 
-        external_spec = spack.spec.Spec(external_spec,
-                                        external_path=canonicalize_path(path))
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
+        for external_spec, path in iteritems(pkg_paths):
+            if not path:
+                # skip entries without paths (avoid creating extra Specs)
+                continue
 
-    for external_spec, module in iteritems(pkg_modules):
-        if not module:
-            continue
+            external_spec = spack.spec.Spec(
+                external_spec, external_path=canonicalize_path(path))
+            if external_spec.satisfies(spec):
+                external_specs.append(external_spec)
 
-        external_spec = spack.spec.Spec(
-            external_spec, external_module=module)
-        if external_spec.satisfies(spec):
-            external_specs.append(external_spec)
+        for external_spec, module in iteritems(pkg_modules):
+            if not module:
+                continue
+
+            external_spec = spack.spec.Spec(
+                external_spec, external_module=module)
+            if external_spec.satisfies(spec):
+                external_specs.append(external_spec)
 
     # defensively copy returned specs
     return [s.copy() for s in external_specs]

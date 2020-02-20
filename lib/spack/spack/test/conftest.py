@@ -1043,6 +1043,9 @@ class MockPackage(object):
     def provides(self, vname):
         return vname in self.provided
 
+    def virtuals_provided(self):
+        return [v.name for v, c in self.provided]
+
 
 class MockPackageMultiRepo(object):
     def __init__(self, packages):

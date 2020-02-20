@@ -185,23 +185,6 @@ class TestConcretizePreferences(object):
         spec.concretize()
         assert spec.version == Version('0.2.15.develop')
 
-    def test_no_virtuals_in_packages_yaml(self):
-        """Verify that virtuals are not allowed in packages.yaml."""
-
-        # set up a packages.yaml file with a vdep as a key.  We use
-        # syaml.load_config here to make sure source lines in the config are
-        # attached to parsed strings, as the error message uses them.
-        conf = syaml.load_config("""\
-mpi:
-    paths:
-      mpi-with-lapack@2.1: /path/to/lapack
-""")
-        spack.config.set('packages', conf, scope='concretize')
-
-        # now when we get the packages.yaml config, there should be an error
-        with pytest.raises(spack.package_prefs.VirtualInPackagesYAMLError):
-            spack.package_prefs.get_packages_config()
-
     def test_all_is_not_a_virtual(self):
         """Verify that `all` is allowed in packages.yaml."""
         conf = syaml.load_config("""\

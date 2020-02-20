@@ -1035,6 +1035,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             for s, constraints in self.provided.items() if s.name == vpkg_name
         )
 
+    def virtuals_provided(self):
+        """
+        virtual packages provided by this package with its spec
+        """
+        return [vspec for vspec, constraints in self.provided.items()
+                if any(self.spec.satisfies(c) for c in constraints)]
+
     @property
     def installed(self):
         """Installation status of a package.
