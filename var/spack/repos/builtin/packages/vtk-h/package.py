@@ -28,7 +28,7 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class Vtkh(Package, CudaPackage):
+class VtkH(Package, CudaPackage):
     """VTK-h is a toolkit of scientific visualization algorithms for emerging
     processor architectures. VTK-h brings together several projects like VTK-m
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
