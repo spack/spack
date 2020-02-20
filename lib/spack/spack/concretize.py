@@ -362,7 +362,16 @@ class Concretizer(object):
         # compiler_for_spec Should think whether this can be more
         # efficient
         def _proper_compiler_style(cspec, aspec):
-            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+            compilers = spack.compilers.compilers_for_spec(
+                cspec, arch_spec=aspec
+            )
+            # If the spec passed as argument is concrete we want to check
+            # the versions match exactly
+            if (cspec.concrete and compilers and
+                cspec.version not in [c.version for c in compilers]):
+                return []
+
+            return compilers
 
         if spec.compiler and spec.compiler.concrete:
             if (self.check_for_compiler_existence and not
@@ -403,7 +412,9 @@ class Concretizer(object):
                     return True
                 else:
                     # No compiler with a satisfactory spec was found
-                    raise UnavailableCompilerVersionError(other_compiler)
+                    raise UnavailableCompilerVersionError(
+                        other_compiler, spec.architecture
+                    )
         else:
             # We have no hints to go by, grab any compiler
             compiler_list = spack.compilers.all_compiler_specs()
