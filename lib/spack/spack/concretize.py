@@ -368,7 +368,7 @@ class Concretizer(object):
             # If the spec passed as argument is concrete we want to check
             # the versions match exactly
             if (cspec.concrete and compilers and
-                cspec.version != compilers[0].version):
+                cspec.version not in [c.version for c in compilers]):
                 return []
 
             return compilers
