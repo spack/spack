@@ -540,13 +540,27 @@ def relocate_package(spec, allow_root):
     buildinfo = read_buildinfo_file(workdir)
     new_layout_root = str(spack.store.layout.root)
     new_prefix = str(spec.prefix)
+    new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
     new_spack_prefix = str(spack.paths.prefix)
     old_layout_root = str(buildinfo['buildpath'])
     old_spack_prefix = str(buildinfo.get('spackprefix'))
     old_rel_prefix = buildinfo.get('relative_prefix')
     old_prefix = os.path.join(old_layout_root, old_rel_prefix)
     rel = buildinfo.get('relative_rpaths')
-    prefix_to_hash = buildinfo['prefix_to_hash']
+    prefix_to_hash = buildinfo.get('prefix_to_hash', None)
+    if (old_rel_prefix != new_rel_prefix and not prefix_to_hash):
+        msg = "Package tarball was created from an install "
+        msg += "prefix with a different directory layout and an older "
+        msg += "buildcache create implementation. It cannot be relocated "
+        msg += "because it does not contain the old dependency install prefix "
+        msg += "to hash map."
+        raise NewLayoutException(msg)
+    # older buildcaches do not have the prefix_to_hash dictionary
+    # need to set an empty dictionary and add one entry to
+    # prefix_to_prefix to reproduce the old behavior
+    if not prefix_to_hash:
+        prefix_to_hash = dict()
+
     hash_to_prefix = dict()
     hash_to_prefix[spec.format('{hash}')] = str(spec.package.prefix)
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
@@ -555,6 +569,8 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix = dict()
     for orig_prefix, hash in prefix_to_hash.items():
         prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
+    if not prefix_to_hash:
+        prefix_to_prefix[old_layout_root] = new_layout_root
 
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
