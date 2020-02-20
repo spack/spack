@@ -37,6 +37,3 @@ class Libf77zmq(MakefilePackage):
         mkdirp(prefix.include)
         mkdirp(prefix.lib)
 
-    def install(self, spec, prefix):
-        make()
-        make('install')
