@@ -33,4 +33,4 @@ class PyUrllib3(PythonPackage):
     depends_on('py-ipaddress', when='+secure ^python@2.7:2.8')
 
     variant('socks', default=False, description='SOCKS and HTTP proxy support')
-    depends_on('py-pysocks@1.5.6,1.5.7:1.9', when='+socks')
+    depends_on('py-pysocks@1.5.6,1.5.8:1.999', when='+socks')
