@@ -21,7 +21,7 @@ class Vc(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebug',
                     'RelWithDebInfo', 'MinSizeRel'))
-    
+
     def cmake_args(self):
         if self.run_tests:
             return ['-DBUILD_TESTING=ON']
