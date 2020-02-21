@@ -76,7 +76,7 @@ class Flecsi(CMakePackage):
     depends_on('llvm', when='+flecstan')
 
     conflicts('+tutorial', when='backend=hpx')
-    conflicts('+hdf5', when='backend=hpx')
+    # conflicts('+hdf5', when='backend=hpx')
 
     def cmake_args(self):
         spec = self.spec
