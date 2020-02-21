@@ -443,14 +443,11 @@ def create(path, specs, skip_unstable_versions=False):
     mirror_cache = spack.caches.MirrorCache(mirror_root)
     mirror_cache.skip_unstable_versions = skip_unstable_versions
     mirror_stats = MirrorStats()
-    try:
-        spack.caches.mirror_cache = mirror_cache
-        # Iterate through packages and download all safe tarballs for each
-        for spec in specs:
-            mirror_stats.next_spec(spec)
-            add_single_spec(spec, mirror_root, mirror_stats)
-    finally:
-        spack.caches.mirror_cache = None
+
+    # Iterate through packages and download all safe tarballs for each
+    for spec in specs:
+        mirror_stats.next_spec(spec)
+        add_single_spec(spec, mirror_cache, mirror_stats)
 
     return mirror_stats.stats()
 
@@ -496,7 +493,7 @@ class MirrorStats(object):
         self.errors.add(self.current_spec)
 
 
-def add_single_spec(spec, mirror_root, mirror_stats):
+def add_single_spec(spec, mirror, mirror_stats):
     tty.msg("Adding package {pkg} to mirror".format(
         pkg=spec.format("{name}{@version}")
     ))
@@ -504,10 +501,10 @@ def add_single_spec(spec, mirror_root, mirror_stats):
     while num_retries > 0:
         try:
             with spec.package.stage as pkg_stage:
-                pkg_stage.cache_mirror(mirror_stats)
+                pkg_stage.cache_mirror(mirror, mirror_stats)
                 for patch in spec.package.all_patches():
-                    if patch.cache():
-                        patch.cache().cache_mirror(mirror_stats)
+                    if patch.stage:
+                        patch.stage.cache_mirror(mirror, mirror_stats)
                     patch.clean()
             exception = None
             break

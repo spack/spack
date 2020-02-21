@@ -85,5 +85,3 @@ class MirrorCache(object):
 
 #: Spack's local cache for downloaded source archives
 fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
-
-mirror_cache = None
