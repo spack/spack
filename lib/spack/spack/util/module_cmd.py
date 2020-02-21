@@ -21,6 +21,7 @@ module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
 py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
 _cmd_template = "'module ' + ' '.join(args) + ' 2>&1'"
 
+
 def module(*args):
     module_cmd = eval(_cmd_template)  # So we can monkeypatch for testing
     if args[0] in module_change_commands:
