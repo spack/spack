@@ -55,7 +55,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
-    variant('qe', default=True,
+    variant('qe', default=False,
             description='Install with patched Quantum Espresso 6.4.1')
 
     # cuda variant implies mixed precision variant by default, but there is
@@ -145,11 +145,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Quantum Espresso 6.4.1 (see QMCPACK manual)
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
-    depends_on('quantum-espresso@6.4.1+mpi hdf5=parallel',
+    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum),
                when='+qe+phdf5', type='run')
 
-    depends_on('quantum-espresso@6.4.1+mpi hdf5=serial',
+    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum),
                when='+qe~phdf5', type='run')
 
