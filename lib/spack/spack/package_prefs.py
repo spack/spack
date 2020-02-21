@@ -171,25 +171,18 @@ def spec_externals(spec):
 
     external_specs = []
     for name in names:
-        pkg_paths = allpkgs.get(name, {}).get('paths', None)
-        pkg_modules = allpkgs.get(name, {}).get('modules', None)
+        pkg_paths = allpkgs.get(name, {}).get('paths', {})
+        pkg_modules = allpkgs.get(name, {}).get('modules', {})
         if (not pkg_paths) and (not pkg_modules):
             continue
 
         for external_spec, path in iteritems(pkg_paths):
-            if not path:
-                # skip entries without paths (avoid creating extra Specs)
-                continue
-
             external_spec = spack.spec.Spec(
                 external_spec, external_path=canonicalize_path(path))
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
         for external_spec, module in iteritems(pkg_modules):
-            if not module:
-                continue
-
             external_spec = spack.spec.Spec(
                 external_spec, external_module=module)
             if external_spec.satisfies(spec):
