@@ -359,9 +359,6 @@ class Qt(Package):
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
             '-release',
             '-confirm-license',
-            '-openssl-linked',
-            openssl.libs.search_flags,
-            openssl.headers.include_flags,
             '-optimized-qmake',
             '-no-pch',
         ]
@@ -380,7 +377,11 @@ class Qt(Package):
             config_args.append('-no-freetype')
 
         if '+ssl' in self.spec:
-            config_args.append('-openssl-linked')
+            config_args.extend([
+                '-openssl-linked',
+                openssl.libs.search_flags,
+                openssl.headers.include_flags,
+            ])
         else:
             config_args.append('-no-openssl')
 
@@ -568,6 +569,12 @@ class Qt(Package):
         if version >= Version('5.10') and '~opengl' in spec:
             config_args.extend([
                 '-skip', 'webglplugin',
+                '-skip', 'qt3d',
+            ])
+
+        if version >= Version('5.14') and '~opengl' in spec:
+            config_args.extend([
+                '-skip', 'qtquick3d',
             ])
 
         configure(*config_args)
