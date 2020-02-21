@@ -292,7 +292,7 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF',
                 '-DPARAVIEW_ENABLE_XDMF3:BOOL=%s' % variant_bool('+xdmf'),
                 '-DVTK_USE_SYSTEM_XDMF3:BOOL=%s' % variant_bool('+xdmf'),
-                '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'))]
+                '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5')])
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used

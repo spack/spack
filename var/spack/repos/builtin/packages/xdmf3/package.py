@@ -47,11 +47,8 @@ class Xdmf3(CMakePackage):
 
         return cmake_args
 
-    @run_after('install')
-    def post_install(self, spec, prefix):
-        # Check if we have a `lib64` library dir or a `lib`
-        dist, ver, dist_id = platform.dist()
-
+    @run_after("install")
+    def post_install(self):
         if os.path.exists(self.prefix.lib):
             cmake_prefix = join_path(self.prefix.lib, "cmake")
         else:
@@ -70,4 +67,4 @@ class Xdmf3(CMakePackage):
 
         # I also need to change the variables name in the folder "made for
         # Paraview" from 'XDMF_' to 'XDMF3_'Z
-        filter_file('set(XDMF_', 'set(XDMF3_', dst, string=True)
+        filter_file("set(XDMF_", "set(XDMF3_", dst, string=True)
