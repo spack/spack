@@ -417,7 +417,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
             # there's an error in the underlying configuration
             if llnl.util.cpu.targets[target].family == family:
                 msg = ('the "target" field in compilers.yaml accepts only '
-                       'target families [substitute "{0}" with "{1}"'
+                       'target families [replace "{0}" with "{1}"'
                        ' in "{2}" specification]')
                 msg = msg.format(str(target), family, items.get('spec', '??'))
                 raise ValueError(msg)
