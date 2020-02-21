@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Shtools(Package):
+class Shtools(MakefilePackage):
     """SHTOOLS - Spherical Harmonic Tools"""
 
     homepage = "https://shtools.github.io/SHTOOLS/"
@@ -26,11 +26,12 @@ class Shtools(Package):
     depends_on('fftw')
     depends_on('lapack')
 
-    def install(self, spec, prefix):
-        # Options for the Makefile
-        makeopts = [
-            "F95=f90",
-            "F95FLAGS=-fPIC -O3 -std=f2003 -ffast-math",
+    # Options for the Makefile
+    def makeopts(self, spec, prefix):
+        return [
+            "F95={0}".format(self.compiler.fc),
+            ("F95FLAGS={0} -O3 -std=f2003 -ffast-math".
+             format(self.compiler.pic_flag)),
             "OPENMPFLAGS={0}".format(self.compiler.openmp_flag),
             "BLAS={0}".format(spec['blas'].libs),
             "FFTW={0}".format(spec['fftw'].libs),
@@ -38,7 +39,9 @@ class Shtools(Package):
             "PREFIX={0}".format(prefix),
         ]
 
+    def build(self, spec, prefix):
         target = 'fortran-mp' if spec.satisfies('+openmp') else 'fortran'
-        make(target, *makeopts)
+        make(target, *makeopts(self, spec, prefix))
 
-        make('install', *makeopts)
+    def install(self, spec, prefix):
+        make('install', *makeopts(self, spec, prefix))
