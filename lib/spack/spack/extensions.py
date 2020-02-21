@@ -12,7 +12,7 @@ import types
 
 import llnl.util.lang
 import spack.config
-from spack.error import SpackError
+import spack.error
 
 _extension_regexp = re.compile(r'spack-(\w[-\w]*)$')
 
@@ -160,7 +160,7 @@ def get_template_dirs():
     return extensions
 
 
-class CommandNotFoundError(SpackError):
+class CommandNotFoundError(spack.error.SpackError):
     """Exception class thrown when a requested command is not recognized as
     such.
     """
@@ -170,7 +170,7 @@ class CommandNotFoundError(SpackError):
             ' check with `spack commands`.'.format(cmd_name))
 
 
-class ExtensionNamingError(SpackError):
+class ExtensionNamingError(spack.error.SpackError):
     """Exception class thrown when a configured extension does not follow
     the expected naming convention.
     """
