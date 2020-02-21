@@ -31,7 +31,6 @@ class Hepmc(CMakePackage):
     variant('interfaces', default=False, description='Install interfaces for some Monte-Carlo Event Gens')
 
     depends_on('cmake@2.8.9:', type='build')
-    # FIXME: Officially supports Python3, but the build system doesn't find it
     depends_on('python', when='+python')
     depends_on('root', when='+rootio')
 
