@@ -27,6 +27,6 @@ class PySqlalchemy(PythonPackage):
     variant('backend', default='none', description='Python modules for database access',
             values=any_combination_of('mysql', 'pymysql', 'postgresql'))
 
-    depends_on('py-mysqlclient', when='backend=mysql', type=('build', 'run'))
-    depends_on('py-pymysql',     when='backend=pymysql',     type=('build', 'run'))
-    depends_on('py-psycopg2',    when='backend=postgresql',    type=('build', 'run'))
+    depends_on('py-mysqlclient', when='backend=mysql',      type=('build', 'run'))
+    depends_on('py-pymysql',     when='backend=pymysql',    type=('build', 'run'))
+    depends_on('py-psycopg2',    when='backend=postgresql', type=('build', 'run'))
