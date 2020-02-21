@@ -183,8 +183,9 @@ class Lbann(CMakePackage):
             args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
-                spec['conduit'].prefix)])
+            args.extend([
+                '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
+                '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
