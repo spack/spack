@@ -783,8 +783,6 @@ def _merge_yaml(dest, source):
     Config file authors can optionally end any attribute in a dict
     with `::` instead of `:`, and the key will override that of the
     parent instead of merging.
-
-    If override is True, then source will be copied to dest unconditionally.
     """
     def they_are(t):
         return isinstance(dest, t) and isinstance(source, t)
