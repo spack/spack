@@ -40,6 +40,7 @@ class SimModel(Package):
     depends_on('neuron+profile', when='+profile', type=('build', 'run'))
     depends_on('coreneuron+profile', when='+coreneuron+profile', type=('build', 'run'))
     depends_on('tau', when='+profile')
+    depends_on('gettext', when='^neuron+binary')
 
     conflicts('^neuron~python', when='+coreneuron')
 
