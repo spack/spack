@@ -15,7 +15,17 @@ import spack.main
 
 
 class Extension:
+    """Helper class to simplify the creation of simple command extension
+    directory structures with a conventional format for testing.
+    """
     def __init__(self, name, root):
+        """Create a command extension.
+
+        Args:
+            name (str): The name of the command extension.
+            root (path object): The temporary root for the command extension
+                (e.g. from tmpdir.mkdir()).
+        """
         self.name = name
         self.pname = spack.cmd.python_name(name)
         self.root = root
@@ -23,6 +33,12 @@ class Extension:
         self.cmd = self.main.ensure('cmd', dir=True)
 
     def add_command(self, command_name, contents):
+        """Add a command to this command extension.
+
+        Args:
+            command_name (str): The name of the command.
+            contents (str): the desired contents of the new command module
+                file."""
         spack.cmd.require_cmd_name(command_name)
         python_name = spack.cmd.python_name(command_name)
         cmd = self.cmd.ensure(python_name + '.py')
