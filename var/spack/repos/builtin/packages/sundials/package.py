@@ -258,8 +258,7 @@ class Sundials(CMakePackage):
             '-DMPI_ENABLE=%s'     % on_off('+mpi'),
             '-DOPENMP_ENABLE=%s'  % on_off('+openmp'),
             '-DPTHREAD_ENABLE=%s' % on_off('+pthread'),
-            '-DCUDA_ENABLE=%s'    % on_off('+cuda'),
-            '-DRAJA_ENABLE=%s'    % on_off('+raja')
+            '-DCUDA_ENABLE=%s'    % on_off('+cuda')
         ])
 
         # MPI support
@@ -279,6 +278,10 @@ class Sundials(CMakePackage):
                 '-DHYPRE_INCLUDE_DIR=%s' % spec['hypre'].prefix.include,
                 '-DHYPRE_LIBRARY_DIR=%s' % spec['hypre'].prefix.lib
             ])
+        else:
+            args.extend([
+                '-DHYPRE_ENABLE=OFF'
+            ])
 
         # Building with KLU
         if '+klu' in spec:
@@ -287,6 +290,10 @@ class Sundials(CMakePackage):
                 '-DKLU_INCLUDE_DIR=%s' % spec['suite-sparse'].prefix.include,
                 '-DKLU_LIBRARY_DIR=%s' % spec['suite-sparse'].prefix.lib
             ])
+        else:
+            args.extend([
+                '-DKLU_ENABLE=OFF'
+            ])
 
         # Building with LAPACK
         if '+lapack' in spec:
@@ -294,6 +301,10 @@ class Sundials(CMakePackage):
                 '-DLAPACK_ENABLE=ON',
                 '-DLAPACK_LIBRARIES=%s'
                 % (spec['lapack'].libs + spec['blas'].libs).joined(';')
+            ])
+        else:
+            args.extend([
+                '-DLAPACK_ENABLE=OFF'
             ])
 
         # Building with PETSc
@@ -307,11 +318,20 @@ class Sundials(CMakePackage):
                 '-DPETSC_INCLUDE_DIR=%s' % spec['petsc'].prefix.include,
                 '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib
             ])
+        else:
+            args.extend([
+                '-DPETSC_ENABLE=OFF'
+            ])
 
         # Building with RAJA
         if '+raja' in spec:
             args.extend([
+                '-DRAJA_ENABLE=ON',
                 '-DRAJA_DIR=%s' % spec['raja'].prefix.share.raja.cmake
+            ])
+        else:
+            args.extend([
+                '-DRAJA_ENABLE=OFF'
             ])
 
         # Building with SuperLU_MT
@@ -332,6 +352,10 @@ class Sundials(CMakePackage):
                 args.append('-DSUPERLUMT_THREAD_TYPE=OpenMP')
             else:
                 args.append('-DSUPERLUMT_THREAD_TYPE=Pthread')
+        else:
+            args.extend([
+                '-DSUPERLUMT_ENABLE=OFF'
+            ])
 
         # Building with SuperLU_DIST
         if '+superlu-dist' in spec:
@@ -346,7 +370,10 @@ class Sundials(CMakePackage):
                 '-DSUPERLUDIST_OpenMP=%s'
                 % on_off('^superlu-dist+openmp')
             ])
-
+        else:
+            args.extend([
+                '-DSUPERLUDIST_ENABLE=OFF'
+            ])
 
         # Building with Trilinos
         if '+trilinos' in spec:
@@ -354,6 +381,10 @@ class Sundials(CMakePackage):
                 '-DTrilinos_ENABLE=ON',
                 '-DTrilinos_DIR=%s'
                 % spec['trilinos'].prefix
+            ])
+        else:
+            args.extend([
+                '-DTrilinos_ENABLE=OFF'
             ])
 
         # Examples
