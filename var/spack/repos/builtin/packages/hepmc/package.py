@@ -52,7 +52,7 @@ class Hepmc(CMakePackage):
             args.append('-DHEPMC3_PYTHON_VERSIONS={0}'.format(spec['python'].version.up_to(2)))
         
         if self.spec.satisfies('+rootio'):
-            args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix)
+            args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix))
 
         return args
 
