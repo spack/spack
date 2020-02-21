@@ -5,6 +5,7 @@
 
 from spack import *
 
+import re
 
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
@@ -131,6 +132,23 @@ class Cmake(Package):
               msg="Intel 14 has immature C++11 support")
 
     phases = ['bootstrap', 'build', 'install']
+
+    @staticmethod
+    def determine_spec_details(exes):
+        if 'cmake' not in exes:
+            return None
+
+        spec = spack.spec.Spec('cmake')
+
+        cmake = spack.util.executable.Executable('cmake')
+        output = cmake('--version', output=str)
+        if output:
+            match = re.search(r'version\s+(\S+)', output)
+            if match:
+                version_str = match.group(1)
+            spec.versions = Version(version_str)
+
+        return str(spec)
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
