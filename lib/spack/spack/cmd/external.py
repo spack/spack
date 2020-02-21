@@ -20,7 +20,7 @@ def setup_parser(subparser):
         metavar='SUBCOMMAND', dest='external_command')
 
     # Find
-    find_parser = sp.add_parser('find', help=external_find.__doc__)
+    sp.add_parser('find', help=external_find.__doc__)
 
 
 def _get_system_executables():

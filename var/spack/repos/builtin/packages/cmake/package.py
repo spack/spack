@@ -7,6 +7,7 @@ from spack import *
 
 import re
 
+
 class Cmake(Package):
     """A cross-platform, open-source build system. CMake is a family of
        tools designed to build, test and package software."""
