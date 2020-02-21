@@ -570,6 +570,10 @@ class Qt(Package):
             config_args.extend([
                 '-skip', 'webglplugin',
                 '-skip', 'qt3d',
+            ])
+
+        if version >= Version('5.14') and '~opengl' in spec:
+            config_args.extend([
                 '-skip', 'qtquick3d',
             ])
 
