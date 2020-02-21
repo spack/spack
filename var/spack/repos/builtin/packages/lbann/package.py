@@ -53,7 +53,6 @@ class Lbann(CMakePackage):
     conflicts('@:0.90,0.99:', when='~conduit')
 
     # It seems that there is a need for one statement per version bounds
-    depends_on('clara', when='@develop')
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
     depends_on('hydrogen +openmp_blas +shared +int64 +al', when='@:0.90,0.95: +al')
 
