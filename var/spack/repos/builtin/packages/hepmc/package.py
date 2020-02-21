@@ -45,9 +45,6 @@ class Hepmc(CMakePackage):
     @when('@3:')
     def cmake_args(self):
         spec = self.spec
-        py_ver = spec['python'].version.up_to(2)
-        py_sitepkg = '{0}/lib/python{1}/site-packages'.format(
-            spec.prefix, py_ver)
         args = [
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
@@ -58,6 +55,8 @@ class Hepmc(CMakePackage):
         ]
 
         if self.spec.satisfies('+python'):
+            py_ver = spec['python'].version.up_to(2)
+            py_sitepkg = join_path(self.prefix, site_packages_dir)
             args.extend([
                 '-DHEPMC3_PYTHON_VERSIONS={0}'.format(py_ver),
                 '-DHEPMC3_Python_SITEARCH{0}={1}'.format(
