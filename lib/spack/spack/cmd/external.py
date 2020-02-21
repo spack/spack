@@ -36,26 +36,30 @@ def _get_system_executables():
 
 
 def _pkg_yaml_template(name, spec, path):
-    template = """
-{name}
+    template = """\
+{name}:
   paths:
-    {spec}: {path}
-"""
+    {spec}: {path}"""
     return template.format(name=name, spec=spec, path=path)
 
 
 def external_find(args):
+    _get_external_packages(TestRepo())
+
+
+def _get_external_packages(repo):
     system_exe_to_path = _get_system_executables()
 
     exe_to_packages = defaultdict(list)
-    for package in spack.repo.path.all_packages():
+    for package in repo.all_packages():
         if hasattr(package, 'executables'):
             for exe in package.executables:
-                exe_to_package[exe].append(package.name)
+                exe_to_packages[exe].append(package.name)
 
-    look_for = set(exe_to_packages.keys())
-    found = look_for & set(system_exe_to_path)
+    found = set(exe_to_packages.keys()) & set(system_exe_to_path)
 
+    exe_to_usable_packages = defaultdict(list)
+    pkg_to_template = {}
     resolved_pkgs = set()
     for exe in found:
         associated_packages = exe_to_packages[exe]
@@ -64,32 +68,56 @@ def external_find(args):
                 continue
             resolved_pkgs.add(pkg_name)
 
-            pkg = spack.repo.path.get(pkg_name)
-            pkg_exes = set(pkg.executables) & found
+            pkg = repo.get(pkg_name)
+            found_pkg_exes = set(pkg.executables) & found
 
             if hasattr(pkg, 'determine_spec_details'):
-                spec_str = pkg.determine_spec_details(pkg_exes)
+                spec_str = pkg.determine_spec_details(found_pkg_exes)
             else:
                 spec_str = pkg_name
 
             if not spec_str:
                 tty.msg("{0} detected that the following executables are"
                         " associated with another package: {1}"
-                        .format(pkg_name, ", ".join(pkg_exes)))
+                        .format(pkg_name, ", ".join(found_pkg_exes)))
                 continue
 
-            paths = list(system_exe_to_path[x] for x in pkg_exes)
+            paths = list(system_exe_to_path[x] for x in found_pkg_exes)
             bin_dirs = set(os.path.dirname(x) for x in paths)
             if len(bin_dirs) > 1:
                 tty.warn("{0} has executables in separate locations: {1}"
                          .format(pkg_name, ", ".join(bin_dirs)))
-            bin_dir = next(bin_dirs)
+            bin_dir = list(bin_dirs)[0]
             base_dir = os.path.dirname(bin_dir)
 
-            print(_pkg_yaml_template(pkg_name, spec_str, base_dir))
+            for exe in found_pkg_exes:
+                exe_to_usable_packages[exe].append(pkg_name)
 
-    for exe, packages in exe_to_packages.items():
-        pass
+            pkg_to_template[pkg_name] = _pkg_yaml_template(
+                pkg_name, spec_str, base_dir)
+
+    used_packages = set()
+    for exe, pkg_names in exe_to_usable_packages.items():
+        if len(pkg_names) > 1:
+            tty.warn("The following packages all use {0}: {1}"
+                     .format(exe, ", ".join(pkg_names)))
+
+        if used_packages & set(pkg_names):
+            continue
+
+        used_packages.add(pkg_names[0])
+
+    for pkg_name in used_packages:
+        print(pkg_to_template[pkg_name])
+
+
+class TestRepo(object):
+    def all_packages(self):
+        test_pkgs = ['cmake']
+        return list(spack.repo.path.get(x) for x in test_pkgs)
+
+    def get(self, pkg_name):
+        return spack.repo.path.get(pkg_name)
 
 
 def external(parser, args):
