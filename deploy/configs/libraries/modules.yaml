@@ -31,7 +31,7 @@ modules:
       - gmsh
       - hdf5+mpi
       - highfive+mpi
-      - neuron+mpi%intel
+      - neuron+mpi~debug%intel
       - omega-h
       - petsc
       - py-mpi4py
