@@ -143,15 +143,17 @@ def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
     dirname of the original path name and then normalize the rpath.
     A dictionary mapping relativized rpaths to normalized rpaths is returned.
     """
-    norm_rpaths = dict()
+    norm_rpaths = list()
     for rpath in rel_rpaths:
         if rpath.startswith('$ORIGIN'):
-            norm = os.path.normpath(re.sub(re.escape('$ORIGIN'),
-                                           os.path.dirname(orig_path_name),
-                                           rpath))
-            norm_rpaths[rpath] = norm
+            sub = re.sub('\$ORIGIN',
+                         os.path.dirname(orig_path_name),
+                         rpath)
+            norm = os.path.normpath(sub)
+            norm_rpaths.append(norm)
         else:
-            norm_rpaths[rpath] = rpath
+            norm_rpaths.append(rpath)
+    print('orig_norm_rpaths %s ' % norm_rpaths)
     return norm_rpaths
 
 
@@ -363,9 +365,9 @@ def modify_elf_object(path_name, new_rpaths):
     new_joined = ':'.join(new_rpaths)
 
     # if we're relocating patchelf itself, use it
+    bak_path = path_name + ".bak"
 
     if path_name[-13:] == "/bin/patchelf":
-        bak_path = path_name + ".bak"
         shutil.copy(path_name, bak_path)
         patchelf = Executable(bak_path)
     else:
@@ -378,7 +380,8 @@ def modify_elf_object(path_name, new_rpaths):
         msg = 'patchelf --set-rpath %s failed with error %s' % (path_name, e)
         raise PatchelfError(msg)
         pass
-
+    if os.path.exists(bak_path):
+        os.remove(bak_path)
 
 def needs_binary_relocation(m_type, m_subtype):
     """
@@ -490,11 +493,11 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
             rpaths = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix,
                        orig_rpath) for orig_rpath in orig_rpaths]
                       for orig_prefix, new_prefix in prefix_to_prefix.items()
-                      if orig_idpath.startswith(orig_prefix)]
+                      if orig_rpath.startswith(orig_prefix)]
             deps = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix,
                             orig_dep) for orig_dep in orig_deps]
                     for orig_prefix, new_prefix in prefix_to_prefix.items()
-                    if orig_idpath.startswith(orig_prefix)]
+                    if orig_dep.startswith(orig_prefix)]
 
             paths_to_paths = macho_make_paths_relative(path_name,
                                                        new_layout_root,
@@ -528,9 +531,11 @@ def elf_find_paths(orig_rpaths, old_layout_root, prefix_to_prefix):
                                              new_prefix, orig_rpath))
         else:
             new_rpaths.append(orig_rpath)
+    return new_rpaths
 
 
-def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix, rel):
+def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
+                          prefix_to_prefix, rel, old_prefix, new_prefix):
     """
     Use patchelf to get the original rpaths and then replace them with
     rpaths in the new directory layout.
@@ -540,8 +545,18 @@ def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix, rel):
     """
     for path_name in path_names:
         orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
-                                    prefix_to_prefix)
+        new_rpaths = list()
+        if rel:
+            orig_path_name = re.sub(re.escape(new_prefix), old_prefix, path_name)
+            orig_norm_rpaths = get_normalized_elf_rpaths(orig_path_name,
+                                                         orig_rpaths)
+            norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,
+                                         prefix_to_prefix)
+            new_rpaths = get_relative_elf_rpaths(path_name, new_layout_root,
+                                                 norm_rpaths) 
+        else:
+            new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
+                                        prefix_to_prefix)
         modify_elf_object(path_name, new_rpaths)
 
 

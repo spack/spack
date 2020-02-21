@@ -599,19 +599,24 @@ def relocate_package(spec, allow_root):
 
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
-        if not rel:
-            if (spec.architecture.platform == 'darwin' or
-                spec.architecture.platform == 'test' and
-                    platform.system().lower() == 'darwin'):
-                relocate.relocate_macho_binaries(files_to_relocate,
-                                                 old_layout_root,
-                                                 prefix_to_prefix)
-            if (spec.architecture.platform == 'linux' or
-                spec.architecture.platform == 'test' and
-                    platform.system().lower() == 'linux'):
-                relocate.relocate_elf_binaries(files_to_relocate,
-                                               old_layout_root,
-                                               prefix_to_prefix)
+        if (spec.architecture.platform == 'darwin' or
+            spec.architecture.platform == 'test' and
+                platform.system().lower() == 'darwin'):
+            relocate.relocate_macho_binaries(files_to_relocate,
+                                             old_layout_root,
+                                             new_layout_root,
+                                             prefix_to_prefix, rel,
+                                             old_prefix,
+                                             new_prefix)
+        if (spec.architecture.platform == 'linux' or
+            spec.architecture.platform == 'test' and
+                platform.system().lower() == 'linux'):
+            relocate.relocate_elf_binaries(files_to_relocate,
+                                           old_layout_root,
+                                           new_layout_root,
+                                           prefix_to_prefix, rel,
+                                           old_prefix,
+                                           new_prefix)
         # Relocate links to the new install prefix
             link_names = [linkname
                           for linkname in buildinfo.get('relocate_links', [])]
@@ -619,7 +624,7 @@ def relocate_package(spec, allow_root):
                                     old_layout_root,
                                     new_layout_root,
                                     old_prefix,
-                                    spec.prefix,
+                                    new_prefix,
                                     prefix_to_prefix)
 
     # For all buildcaches
@@ -709,13 +714,13 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     info = 'old relative prefix %s\nnew relative prefix %s\nrelative rpaths %s'
     tty.debug(info %
               (old_relative_prefix, new_relative_prefix, rel))
-    if (old_relative_prefix != new_relative_prefix and (rel)):
-        shutil.rmtree(tmpdir)
-        msg = "Package tarball was created from an install "
-        msg += "prefix with a different directory layout. "
-        msg += "It cannot be relocated because it "
-        msg += "uses relative rpaths."
-        raise NewLayoutException(msg)
+#    if (old_relative_prefix != new_relative_prefix and (rel)):
+#        shutil.rmtree(tmpdir)
+#        msg = "Package tarball was created from an install "
+#        msg += "prefix with a different directory layout. "
+#        msg += "It cannot be relocated because it "
+#        msg += "uses relative rpaths."
+#        raise NewLayoutException(msg)
 
     # extract the tarball in a temp directory
     with closing(tarfile.open(tarfile_path, 'r')) as tar:
