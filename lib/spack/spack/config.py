@@ -843,12 +843,18 @@ def _process_config_path(path):
     if path.startswith(':'):
         raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".
                                    format(path), '')
+    seen_override_in_path = False
     while path:
         front, sep, path = path.partition(':')
         if (sep and not path) or path.startswith(':'):
+            if seen_override_in_path:
+                raise syaml.SpackYAMLError("Meaningless second override"
+                                           " indicator `::' in path `{0}'".
+                                           format(path), '')
             path = path.lstrip(':')
             front = syaml.syaml_str(front)
             front.override = True
+            seen_override_in_path = True
         result.append(front)
     return result
 

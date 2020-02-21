@@ -930,6 +930,13 @@ def test_set_dict_override(mock_low_high_config, write_config_file):
 
 
 def test_set_bad_path(config):
-    with pytest.raises(syaml.SpackYAMLError):
+    with pytest.raises(syaml.SpackYAMLError, match='Illegal leading'):
         with spack.config.override(':bad:path', ''):
+            pass
+
+
+def test_bad_path_double_override(config):
+    with pytest.raises(syaml.SpackYAMLError,
+                       match='Meaningless second override'):
+        with spack.config.override('bad::double:override::directive', ''):
             pass
