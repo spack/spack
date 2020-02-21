@@ -139,6 +139,12 @@ class PathContext(tengine.Context):
         """Additional system packages that are needed at build-time."""
         return self._os_packages_for_stage('build')
 
+    @tengine.context_property
+    def os_package_update(self):
+        """Whether or not to update the OS package manager cache."""
+        os_packages = self.container_config.get('os_packages', {})
+        return os_packages.get('update', True)
+
     def _os_packages_for_stage(self, stage):
         os_packages = self.container_config.get('os_packages', {})
         package_list = os_packages.get(stage, None)

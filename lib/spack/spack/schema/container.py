@@ -63,6 +63,7 @@ container_schema = {
             'type': 'object',
             'properties': {
                 'command': {'type': 'string', 'enum': ['apt', 'yum']},
+                'update': {'type': 'boolean'},
                 'build': _list_of_packages,
                 'final': _list_of_packages
             },

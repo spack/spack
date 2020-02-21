@@ -3,8 +3,8 @@ FROM {{ build.image }} as builder
 
 {% if os_packages_build %}
 # Install OS packages needed to build the software
-RUN {{ os_packages_build.update }} \
- && {{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }} \
+RUN {% if os_package_update %}{{ os_packages_build.update }} \
+ && {% endif %}{{ os_packages_build.install }} {{ os_packages_build.list | join | replace('\n', ' ') }} \
  && {{ os_packages_build.clean }}
 {% endif %}
 
@@ -42,15 +42,14 @@ COPY --from=builder {{ paths.view }} {{ paths.view }}
 COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
 
 {% if os_packages_final %}
-RUN {{ os_packages_final.update }} \
- && {{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
+RUN {% if os_package_update %}{{ os_packages_final.update }} \
+ && {% endif %}{{ os_packages_final.install }} {{ os_packages_final.list | join | replace('\n', ' ') }} \
  && {{ os_packages_final.clean }}
 {% endif %}
 
 {% if extra_instructions.final %}
 {{ extra_instructions.final }}
 {% endif %}
-
 {% for label, value in labels.items() %}
 LABEL "{{ label }}"="{{ value }}"
 {% endfor %}
