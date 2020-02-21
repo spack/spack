@@ -1,35 +1,25 @@
-diff -ru a/compiler-rt/cmake/config-ix.cmake b/compiler-rt/cmake/config-ix.cmake
---- a/compiler-rt/cmake/config-ix.cmake	2019-12-11 13:15:30.000000000 -0600
-+++ b/compiler-rt/cmake/config-ix.cmake	2020-02-11 21:48:47.046753452 -0600
-@@ -125,7 +125,7 @@
- 
- # Look for terminfo library, used in unittests that depend on LLVMSupport.
- if(LLVM_ENABLE_TERMINFO)
--  foreach(library terminfo tinfo curses ncurses ncursesw)
-+    foreach(library ${CURSES_TINFO} terminfo tinfo curses ncurses ncursesw)
-     string(TOUPPER ${library} library_suffix)
-     check_library_exists(
-       ${library} setupterm "" COMPILER_RT_HAS_TERMINFO_${library_suffix})
 diff -ru a/llvm/cmake/config-ix.cmake b/llvm/cmake/config-ix.cmake
---- a/llvm/cmake/config-ix.cmake	2019-12-11 13:15:30.000000000 -0600
-+++ b/llvm/cmake/config-ix.cmake	2020-02-11 21:48:07.371843873 -0600
-@@ -141,7 +141,7 @@
-     endif()
-     if(LLVM_ENABLE_TERMINFO)
-       set(HAVE_TERMINFO 0)
--      foreach(library terminfo tinfo curses ncurses ncursesw)
-+      foreach(library ${CURSES_TINFO} terminfo tinfo curses ncurses ncursesw)
-         string(TOUPPER ${library} library_suffix)
-         check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
-         if(HAVE_TERMINFO_${library_suffix})
+--- a/llvm/cmake/config-ix.cmake	2018-03-28 15:25:17.000000000 -0500
++++ b/llvm/cmake/config-ix.cmake	2020-02-21 12:42:22.947107749 -0600
+@@ -143,7 +143,7 @@
+   endif()
+   if(LLVM_ENABLE_TERMINFO)
+     set(HAVE_TERMINFO 0)
+-    foreach(library tinfo terminfo curses ncurses ncursesw)
++    foreach(library ${CURSES_TINFO} tinfo terminfo curses ncurses ncursesw)
+       string(TOUPPER ${library} library_suffix)
+       check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
+       if(HAVE_TERMINFO_${library_suffix})
+Only in b/llvm/cmake: config-ix.cmake.orig
+Only in b/llvm/cmake: config-ix.cmake.rej
 diff -ru a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
---- a/llvm/CMakeLists.txt	2019-12-11 13:15:30.000000000 -0600
-+++ b/llvm/CMakeLists.txt	2020-02-11 21:46:23.029080764 -0600
-@@ -327,6 +327,7 @@
+--- a/llvm/CMakeLists.txt	2018-03-28 15:25:17.000000000 -0500
++++ b/llvm/CMakeLists.txt	2020-02-21 12:41:09.577235055 -0600
+@@ -358,6 +358,7 @@
    CACHE STRING "Set target to use for LLVM JIT or use \"host\" for automatic detection.")
  
  option(LLVM_ENABLE_TERMINFO "Use terminfo database if available." ON)
 +set(CURSES_TINFO "" CACHE STRING "Set library where tinfo symbols are.")
  
- set(LLVM_ENABLE_LIBXML2 "ON" CACHE STRING "Use libxml2 if available. Can be ON, OFF, or FORCE_ON")
+ option(LLVM_ENABLE_LIBEDIT "Use libedit if available." ON)
  

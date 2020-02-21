@@ -148,7 +148,9 @@ class Llvm(CMakePackage):
     patch('thread-p9.patch', when='@develop+libcxx')
 
     # Change search order of tinfo symbols
-    patch('terminfo.patch')
+    patch('terminfo.patch', when='@:5')
+    patch('terminfo_6.patch', when='@6:7')
+    patch('terminfo_8.patch', when='@8:')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):

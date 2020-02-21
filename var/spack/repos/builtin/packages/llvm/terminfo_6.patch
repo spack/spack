@@ -1,0 +1,23 @@
+diff -ru a/llvm/cmake/config-ix.cmake b/llvm/cmake/config-ix.cmake
+--- a/llvm/cmake/config-ix.cmake	2019-02-08 15:00:26.000000000 -0600
++++ b/llvm/cmake/config-ix.cmake	2020-02-21 11:57:49.398238837 -0600
+@@ -128,7 +128,7 @@
+     endif()
+     if(LLVM_ENABLE_TERMINFO)
+       set(HAVE_TERMINFO 0)
+-      foreach(library tinfo terminfo curses ncurses ncursesw)
++      foreach(library ${CURSES_TINFO} tinfo terminfo curses ncurses ncursesw)
+         string(TOUPPER ${library} library_suffix)
+         check_library_exists(${library} setupterm "" HAVE_TERMINFO_${library_suffix})
+         if(HAVE_TERMINFO_${library_suffix})
+diff -ru a/llvm/CMakeLists.txt b/llvm/CMakeLists.txt
+--- a/llvm/CMakeLists.txt	2019-02-08 15:00:26.000000000 -0600
++++ b/llvm/CMakeLists.txt	2020-02-21 11:59:21.743038955 -0600
+@@ -354,6 +354,7 @@
+   CACHE STRING "Set target to use for LLVM JIT or use \"host\" for automatic detection.")
+ 
+ option(LLVM_ENABLE_TERMINFO "Use terminfo database if available." ON)
++set(CURSES_TINFO "" CACHE STRING "Set library where tinfo symbols are.")
+ 
+ set(LLVM_ENABLE_LIBXML2 "ON" CACHE STRING "Use libxml2 if available. Can be ON, OFF, or FORCE_ON")
+ 
