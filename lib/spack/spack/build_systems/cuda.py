@@ -13,7 +13,7 @@ class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
     """
-    maintainers = ['ax3l']
+    maintainers = ['ax3l', 'svenevs']
 
     # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
     # https://developer.nvidia.com/cuda-gpus
