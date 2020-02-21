@@ -21,6 +21,7 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('5.1.0', sha256='fb22d14fad42203809dc46d046b001149ec4e901b23882bd4a80619157fd9b21')
     version('5.0.0', sha256='345141ec01c641d0bdfb3476c478b7e74fd6a7192a478a27cafe75d9da2d7dd3')
     version('4.1.0', sha256='280de1c27b2360170a6f46cb3799b2aee9dff3bddbafc8b08c291a47ab258aa5')
     version('4.0.1', sha256='29e409c8620e803990edbda1ebf49e03a38c08b9187b90658d86bddae913aed4')
@@ -65,9 +66,9 @@ class Sundials(CMakePackage):
     variant('pthread', default=False,
             description='Enable Pthreads parallel vector')
     variant('cuda',    default=False,
-            description='Enable CUDA parallel vector')
+            description='Enable CUDA vector and solvers')
     variant('raja',    default=False,
-            description='Enable RAJA parallel vector')
+            description='Enable RAJA vector')
 
     # External libraries
     variant('hypre',        default=False,
@@ -77,11 +78,13 @@ class Sundials(CMakePackage):
     variant('klu',          default=False,
             description='Enable KLU sparse, direct solver')
     variant('petsc',        default=False,
-            description='Enable PETSc MPI parallel vector')
+            description='Enable PETSc interfaces')
     variant('superlu-mt',   default=False,
             description='Enable SuperLU_MT sparse, direct solver')
     variant('superlu-dist', default=False,
             description='Enable SuperLU_DIST sparse, direct solver')
+    variant('trilinos', default=False,
+            description='Enable Trilinos interfaces')
 
     # Library type
     variant('shared', default=True,
@@ -130,6 +133,7 @@ class Sundials(CMakePackage):
     conflicts('+examples-cuda', when='@:2.7.0')
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
+    conflicts('+trilinos',      when='@:4.1.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -173,6 +177,7 @@ class Sundials(CMakePackage):
     depends_on('petsc +mpi',          when='+petsc')
     depends_on('hypre +mpi',          when='+hypre')
     depends_on('superlu-dist@6.1.1:', when='+superlu-dist')
+    depends_on('trilinos+tpetra',     when='+trilinos')
 
     # Require that external libraries built with the same precision
     depends_on('petsc~double~complex', when='+petsc precision=single')
@@ -340,6 +345,15 @@ class Sundials(CMakePackage):
                 % spec['blas'].libs,
                 '-DSUPERLUDIST_OpenMP=%s'
                 % on_off('^superlu-dist+openmp')
+            ])
+
+
+        # Building with Trilinos
+        if '+trilinos' in spec:
+            args.extend([
+                '-DTrilinos_ENABLE=ON',
+                '-DTrilinos_DIR=%s'
+                % spec['trilinos'].prefix
             ])
 
         # Examples
