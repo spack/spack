@@ -45,7 +45,7 @@ class Blender(CMakePackage):
     depends_on('libpng')
     depends_on('libjpeg')
     depends_on('openjpeg')
-    depends_on('boost@1.49:')
+    depends_on('boost@1.49:1.69')
     depends_on('openimageio', when='+cycles')
     # Upper bound per: https://developer.blender.org/T54779
     depends_on('ffmpeg@3.2.1:3.999', when='@:2.79b+ffmpeg')
