@@ -128,7 +128,7 @@ def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
     """
     rel_rpaths = []
     for rpath in orig_rpaths:
-        if re.match(orig_dir, rpath):
+        if re.match(orig_layout_root, rpath):
             rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
             rel_rpaths.append(os.path.join('$ORIGIN', '%s' % rel))
         else:
@@ -144,7 +144,7 @@ def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
     A dictionary mapping relativized rpaths to normalized rpaths is returned.
     """
     norm_rpaths = dict()
-    for rpath in relitivized_rpaths:
+    for rpath in rel_rpaths:
         if rpath.startswith('$ORIGIN'):
             norm = os.path.normpath(re.sub(re.escape('$ORIGIN'),
                                            os.path.dirname(orig_path_name),
@@ -204,7 +204,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
         if re.match('@loader_path', rpath):
             norm = os.path.normpath(re.sub(re.escape('@loader_path'),
                                            os.path.dirname(orig_path_name),
-                                           rpath)
+                                           rpath))
             rel_to_orig[rpath] = norm
         else:
             rel_to_orig[rpath] = rpaths
@@ -212,7 +212,7 @@ def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
         if re.match('@loader_path', dep):
             norm = os.path.normpath(re.sub(re.escape('@loader_path'),
                                            os.path.dirname(orig_path_name),
-                                           dep)
+                                           dep))
             rel_to_orig[dep] = norm
         else:
             rel_to_orig[dep] = dep
@@ -458,8 +458,8 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         f.truncate()
 
 
-def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix,
-                            rel, old_prefix, new_prefix):
+def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
+                            prefix_to_prefix, rel, old_prefix, new_prefix):
     """
     Use macholib python package to get the rpaths, depedent libraries
     and library identity for libraries from the MachO object. Modify them
@@ -483,9 +483,18 @@ def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix,
             orig_idpath = rel_to_orig[idpath]
             orig_rpaths = [rel_to_orig[rpath] for rpath in rpaths]
             orig_deps = [rel_to_orig[dep] for dep in deps]
-            idpath = [re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_idpath) for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
-            rpaths = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_rpath) for orig_rpath in orig_rpaths] for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
-            deps = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_dep) for orig_dep in orig_deps] for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
+            idpath = [re.sub(prefix_to_prefix[orig_prefix], new_prefix,
+                             orig_idpath) for orig_prefix, new_prefix in
+                      prefix_to_prefix.items()
+                      if orig_idpath.startswith(orig_prefix)]
+            rpaths = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix,
+                       orig_rpath) for orig_rpath in orig_rpaths]
+                      for orig_prefix, new_prefix in prefix_to_prefix.items()
+                      if orig_idpath.startswith(orig_prefix)]
+            deps = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix,
+                            orig_dep) for orig_dep in orig_deps]
+                    for orig_prefix, new_prefix in prefix_to_prefix.items()
+                    if orig_idpath.startswith(orig_prefix)]
 
             paths_to_paths = macho_make_paths_relative(path_name,
                                                        new_layout_root,
@@ -520,6 +529,7 @@ def elf_find_paths(orig_rpaths, old_layout_root, prefix_to_prefix):
         else:
             new_rpaths.append(orig_rpath)
 
+
 def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix, rel):
     """
     Use patchelf to get the original rpaths and then replace them with
@@ -531,7 +541,7 @@ def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix, rel):
     for path_name in path_names:
         orig_rpaths = get_existing_elf_rpaths(path_name)
         new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
-                                   prefix_to_prefix)
+                                    prefix_to_prefix)
         modify_elf_object(path_name, new_rpaths)
 
 
