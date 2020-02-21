@@ -787,6 +787,7 @@ def _merge_yaml(dest, source):
     def they_are(t):
         return isinstance(dest, t) and isinstance(source, t)
 
+    # If source is None, overwrite with source.
     if source is None:
         return None
 
