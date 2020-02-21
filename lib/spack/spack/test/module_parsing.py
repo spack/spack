@@ -23,21 +23,12 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
 
 @pytest.fixture
 def module_function_test_mode():
-    old_mode = spack.util.module_cmd._test_mode
-    spack.util.module_cmd._test_mode = True
+    old_cmd = spack.util.module_cmd._cmd_template
+    spack.util.module_cmd._cmd_template = "'. %s 2>&1' % args[1]"
 
     yield
 
-    spack.util.module_cmd._test_mode = old_mode
-
-
-@pytest.fixture
-def save_module_func():
-    old_func = spack.util.module_cmd.module
-
-    yield
-
-    spack.util.module_cmd.module = old_func
+    spack.util.module_cmd._cmd_template = old_cmd
 
 
 def test_module_function_change_env(tmpdir, working_env,

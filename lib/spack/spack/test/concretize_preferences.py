@@ -219,6 +219,39 @@ mpich:
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
 
+
+    def test_external_module(self, save_module_func):
+        """Test that packages can find externals specified by module
+
+        The specific code for parsing the module is tested elsewhere.
+        This just tests that the preference is accounted for"""
+        # make sure this doesn't give us an external first.
+        def mock_module(cmd, module):
+            return 'prepend-path PATH /dummy/path'
+        spack.util.module_cmd.module = mock_module
+
+        spec = Spec('mpi')
+        spec.concretize()
+        assert not spec['mpi'].external
+
+        # load config
+        conf = syaml.load_config("""\
+all:
+    providers:
+        mpi: [mpich]
+mpi:
+    buildable: false
+    modules:
+        mpich@3.0.4: dummy
+""")
+        spack.config.set('packages', conf, scope='concretize')
+
+        # ensure that once config is in place, external is used
+        spec = Spec('mpi')
+        spec.concretize()
+        assert spec['mpich'].external_path == '/dummy/path'
+
+
     def test_config_permissions_from_all(self, configure_permissions):
         # Although these aren't strictly about concretization, they are
         # configured in the same file and therefore convenient to test here.
