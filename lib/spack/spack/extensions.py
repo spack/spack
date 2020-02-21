@@ -31,8 +31,11 @@ def extension_name(path):
         path (str): path where the extension resides
 
     Returns:
-        The extension name. An exception is raised if path doesn't match
-        the expected format for a Spack command extension.
+        The extension name.
+
+    Raises:
+         ExtensionNamingError: if path does not match the expected format
+             for a Spack command extension.
     """
     regexp_match = re.search(_extension_regexp,
                              os.path.basename(path.rstrip(os.sep)))
