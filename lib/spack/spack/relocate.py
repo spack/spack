@@ -120,10 +120,10 @@ def get_existing_elf_rpaths(path_name):
     return rpaths
 
 
-def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
+def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
     """
-    Replaces orig_dir with relative path from dirname(path_name) if an rpath
-    in orig_rpaths contains orig_path. Prefixes $ORIGIN
+    Replaces orig rpath with relative path from dirname(path_name) if an rpath
+    in orig_rpaths contains orig_layout_root. Prefixes $ORIGIN
     to relative paths and returns replacement rpaths.
     """
     rel_rpaths = []
@@ -136,6 +136,25 @@ def get_relative_rpaths(path_name, orig_dir, orig_rpaths):
     return rel_rpaths
 
 
+def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
+    """
+    Normalize the relative rpaths with respect to the original path name
+    of the file. If the rpath starts with $ORIGIN replace $ORIGIN with the
+    dirname of the original path name and then normalize the rpath.
+    A dictionary mapping relativized rpaths to normalized rpaths is returned.
+    """
+    norm_rpaths = dict()
+    for rpath in relitivized_rpaths:
+        if rpath.startswith('$ORIGIN'):
+            norm = os.path.normpath(re.sub(re.escape('$ORIGIN'),
+                                           os.path.dirname(orig_path_name),
+                                           rpath))
+            norm_rpaths[rpath] = norm
+        else:
+            norm_rpaths[rpath] = rpath
+    return norm_rpaths
+
+
 def set_placeholder(dirname):
     """
     return string of @'s with same length
@@ -146,9 +165,10 @@ def set_placeholder(dirname):
 def macho_make_paths_relative(path_name, old_layout_root,
                               rpaths, deps, idpath):
     """
-    Replace old_dir with relative path from dirname(path_name)
-    in rpaths and deps; idpaths are replaced with @rpath/libname as needed.
-    Used to make machO buildcaches with relatived paths.
+    Return a dictionary mapping the original rpaths to the relativized rpaths.
+    This dictionary is used to replace paths in mach-o binaries.
+    Replace old_dir with relative path from dirname of path name
+    in rpaths and deps; idpath is replaced with @rpath/libname.
     """
     paths_to_paths = dict()
     if idpath:
@@ -167,6 +187,36 @@ def macho_make_paths_relative(path_name, old_layout_root,
         else:
             paths_to_paths[dep] = dep
     return paths_to_paths
+
+
+def macho_make_paths_normal(orig_path_name, rpaths, deps, idpath):
+    """
+    Return a dictionary mapping the relativized rpaths to the original rpaths.
+    This dictionary is used to replace paths in mach-o binaries.
+    Replace '@loader_path' with the dirname of the originame path name
+    in rpaths and deps; idpath is replaced with the original path name
+    """
+    rel_to_orig = dict()
+    if idpath:
+        rel_to_orig[idpath] = orig_path_name
+
+    for rpath in rpaths:
+        if re.match('@loader_path', rpath):
+            norm = os.path.normpath(re.sub(re.escape('@loader_path'),
+                                           os.path.dirname(orig_path_name),
+                                           rpath)
+            rel_to_orig[rpath] = norm
+        else:
+            rel_to_orig[rpath] = rpaths
+    for dep in deps:
+        if re.match('@loader_path', dep):
+            norm = os.path.normpath(re.sub(re.escape('@loader_path'),
+                                           os.path.dirname(orig_path_name),
+                                           dep)
+            rel_to_orig[dep] = norm
+        else:
+            rel_to_orig[dep] = dep
+    return rel_to_orig
 
 
 def macho_find_paths(orig_rpaths, deps, idpath,
@@ -408,7 +458,8 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         f.truncate()
 
 
-def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix):
+def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix,
+                            rel, old_prefix, new_prefix):
     """
     Use macholib python package to get the rpaths, depedent libraries
     and library identity for libraries from the MachO object. Modify them
@@ -421,19 +472,55 @@ def relocate_macho_binaries(path_names, old_layout_root, prefix_to_prefix):
         # Corner case where macho object file ended up in the path name list
         if path_name.endswith('.o'):
             continue
-        rpaths, deps, idpath = macholib_get_paths(path_name)
-        paths_to_paths = macho_find_paths(rpaths, deps, idpath,
-                                          old_layout_root,
-                                          prefix_to_prefix)
-        if platform.system().lower() == 'darwin':
-            modify_macho_object(path_name, rpaths, deps,
-                                idpath, paths_to_paths)
+        if rel:
+            rpaths, deps, idpath = macholib_get_paths(path_name)
+            orig_path_name = re.sub(re.escape(old_prefix), new_prefix,
+                                    path_name)
+            rel_to_orig = macho_make_paths_normal(orig_path_name, rpaths, deps,
+                                                  idpath, old_layout_root,
+                                                  prefix_to_prefix)
+
+            orig_idpath = rel_to_orig[idpath]
+            orig_rpaths = [rel_to_orig[rpath] for rpath in rpaths]
+            orig_deps = [rel_to_orig[dep] for dep in deps]
+            idpath = [re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_idpath) for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
+            rpaths = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_rpath) for orig_rpath in orig_rpaths] for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
+            deps = [[re.sub(prefix_to_prefix[orig_prefix], new_prefix, orig_dep) for orig_dep in orig_deps] for orig_prefix, new_prefix in prefix_to_prefix.items() if orig_idpath.startswith(orig_prefix)]
+
+            paths_to_paths = macho_make_paths_relative(path_name,
+                                                       new_layout_root,
+                                                       rpaths, deps, idpath)
+            if platform.system().lower() == 'darwin':
+                modify_macho_object(path_name, rpaths, deps,
+                                    idpath, paths_to_paths)
+            else:
+                modify_object_macholib(path_name,
+                                       paths_to_paths)
         else:
-            modify_object_macholib(path_name,
-                                   paths_to_paths)
+            rpaths, deps, idpath = macholib_get_paths(path_name)
+            paths_to_paths = macho_find_paths(rpaths, deps, idpath,
+                                              old_layout_root,
+                                              prefix_to_prefix)
+            if platform.system().lower() == 'darwin':
+                modify_macho_object(path_name, rpaths, deps,
+                                    idpath, paths_to_paths)
+            else:
+                modify_object_macholib(path_name,
+                                       paths_to_paths)
 
 
-def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix):
+def elf_find_paths(orig_rpaths, old_layout_root, prefix_to_prefix):
+    new_rpaths = list()
+    for orig_rpath in orig_rpaths:
+        if orig_rpath.startswith(old_layout_root):
+            for old_prefix, new_prefix in prefix_to_prefix.items():
+                if orig_rpath.startswith(old_prefix):
+                    new_rpaths.append(re.sub(re.escape(old_prefix),
+                                             new_prefix, orig_rpath))
+        else:
+            new_rpaths.append(orig_rpath)
+
+def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix, rel):
     """
     Use patchelf to get the original rpaths and then replace them with
     rpaths in the new directory layout.
@@ -443,15 +530,8 @@ def relocate_elf_binaries(path_names, old_layout_root, prefix_to_prefix):
     """
     for path_name in path_names:
         orig_rpaths = get_existing_elf_rpaths(path_name)
-        new_rpaths = list()
-        for orig_rpath in orig_rpaths:
-            if orig_rpath.startswith(old_layout_root):
-                for old_prefix, new_prefix in prefix_to_prefix.items():
-                    if orig_rpath.startswith(old_prefix):
-                        new_rpaths.append(re.sub(re.escape(old_prefix),
-                                                 new_prefix, orig_rpath))
-            else:
-                new_rpaths.append(orig_rpath)
+        new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
+                                   prefix_to_prefix)
         modify_elf_object(path_name, new_rpaths)
 
 
@@ -486,15 +566,16 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
                                 paths_to_paths)
 
 
-def make_elf_binaries_relative(cur_path_names, orig_path_names, old_dir):
+def make_elf_binaries_relative(cur_path_names, orig_path_names,
+                               old_layout_root):
     """
     Replace old RPATHs with paths relative to old_dir in binary files
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
         orig_rpaths = get_existing_elf_rpaths(cur_path)
         if orig_rpaths:
-            new_rpaths = get_relative_rpaths(orig_path, old_dir,
-                                             orig_rpaths)
+            new_rpaths = get_relative_elf_rpaths(orig_path, old_layout_root,
+                                                 orig_rpaths)
             modify_elf_object(cur_path, new_rpaths)
 
 
