@@ -8,17 +8,13 @@ convenience functions.
 import collections
 import copy
 
-try:
-    from collections.abc import Sequence  # novm
-except ImportError:
-    from collections import Sequence
-
 import spack.environment
 import spack.schema.env
 import spack.tengine as tengine
 import spack.util.spack_yaml as syaml
 
-from spack.container.images import build_info, package_info
+from spack.container.images import build_info, commands_for
+from spack.container.images import os_package_manager_for
 
 #: Caches all the writers that are currently supported
 _writer_factory = {}
@@ -145,11 +141,6 @@ class PathContext(tengine.Context):
 
     def _os_packages_for_stage(self, stage):
         os_packages = self.container_config.get('os_packages', {})
-        # To simplify the configuration YAML it's possible to specify
-        # a list directly. In that case we assume the packages are for
-        # the final stage.
-        if isinstance(os_packages, Sequence):
-            os_packages = {stage: os_packages}
         package_list = os_packages.get(stage, None)
         return self._package_info_from(package_list)
 
@@ -167,8 +158,16 @@ class PathContext(tengine.Context):
         if not package_list:
             return package_list
 
-        image = self.container_config['images']['os']
-        update, install, clean = package_info(image)
+        image_config = self.container_config['images']
+        image = image_config.get('build', None)
+
+        if image is None:
+            os_pkg_manager = os_package_manager_for(image_config['os'])
+        else:
+            os_pkg_manager = self.container_config['os_packages']['command']
+
+        update, install, clean = commands_for(os_pkg_manager)
+
         Packages = collections.namedtuple(
             'Packages', ['update', 'install', 'list', 'clean']
         )

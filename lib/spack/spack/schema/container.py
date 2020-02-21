@@ -60,13 +60,13 @@ container_schema = {
         },
         # Additional system packages that are needed at runtime
         'os_packages': {
-            'anyOf': [
-                _list_of_packages,
-                {'type': 'object',
-                 'properties': {'build': _list_of_packages,
-                                'final': _list_of_packages},
-                 'additionalProperties': False}
-            ]
+            'type': 'object',
+            'properties': {
+                'command': {'type': 'string', 'enum': ['apt', 'yum']},
+                'build': _list_of_packages,
+                'final': _list_of_packages
+            },
+            'additionalProperties': False
         },
         # Add labels to the image
         'labels': {

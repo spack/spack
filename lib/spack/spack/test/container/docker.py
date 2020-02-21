@@ -33,7 +33,9 @@ def test_packages(minimal_configuration):
 
     # If we add them a list should be returned
     pkgs = ['libgomp1']
-    minimal_configuration['spack']['container']['os_packages'] = pkgs
+    minimal_configuration['spack']['container']['os_packages'] = {
+        'final': pkgs
+    }
     writer = writers.create(minimal_configuration)
     p = writer.os_packages_final
     assert p.update
