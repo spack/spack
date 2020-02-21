@@ -881,7 +881,7 @@ def test_internal_config_section_override(mock_low_high_config,
                                             'build_stage': wanted_list
                                         }
                                     }))
-    assert wanted_list == mock_low_high_config.get('config:build_stage')
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
 
 
 def test_internal_config_dict_override(mock_low_high_config,
@@ -890,7 +890,7 @@ def test_internal_config_dict_override(mock_low_high_config,
     wanted_dict = config_override_dict['config']['info:']
     mock_low_high_config.push_scope(spack.config.InternalConfigScope
                                     ('high', config_override_dict))
-    assert wanted_dict == mock_low_high_config.get('config:info')
+    assert mock_low_high_config.get('config:info') == wanted_dict
 
 
 def test_internal_config_list_override(mock_low_high_config,
@@ -899,14 +899,14 @@ def test_internal_config_list_override(mock_low_high_config,
     wanted_list = config_override_list['config']['build_stage:']
     mock_low_high_config.push_scope(spack.config.InternalConfigScope
                                     ('high', config_override_list))
-    assert wanted_list == mock_low_high_config.get('config:build_stage')
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
 
 
 def test_set_section_override(mock_low_high_config, write_config_file):
     write_config_file('config', config_merge_list, 'low')
     wanted_list = config_override_list['config']['build_stage:']
     with spack.config.override('config::build_stage', wanted_list):
-        assert wanted_list == mock_low_high_config.get('config:build_stage')
+        assert mock_low_high_config.get('config:build_stage') == wanted_list
     assert config_merge_list['config']['build_stage'] == \
         mock_low_high_config.get('config:build_stage')
 
