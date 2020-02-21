@@ -53,6 +53,7 @@ class Lbann(CMakePackage):
     conflicts('@:0.90,0.99:', when='~conduit')
 
     # It seems that there is a need for one statement per version bounds
+    depends_on('clara', when='@develop')
     depends_on('hydrogen +openmp_blas +shared +int64', when='@:0.90,0.95: ~al')
     depends_on('hydrogen +openmp_blas +shared +int64 +al', when='@:0.90,0.95: +al')
 
@@ -183,8 +184,8 @@ class Lbann(CMakePackage):
             args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
-                spec['conduit'].prefix)])
+            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
+                         '-DConduit_DIR={}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):
