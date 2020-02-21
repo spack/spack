@@ -28,10 +28,11 @@ class Hepmc(CMakePackage):
 
     variant('python', default=False, description='Enable Python bindings')
     variant('rootio', default=False, description='Enable ROOT I/O')
+    variant('interfaces', default=False, description='Install interfaces for some Monte-Carlo Event Gens')
 
     depends_on('cmake@2.8.9:', type='build')
     # FIXME: Officially supports Python3, but the build system doesn't find it
-    depends_on('python@:2.99.99', when='+python')
+    #depends_on('python@:2.99.99', when='+python')
     depends_on('root', when='+rootio')
 
     conflicts('+python', when='@:3.1.99')
@@ -39,12 +40,21 @@ class Hepmc(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        return [
+        args = [
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
             '-DHEPMC3_ENABLE_PYTHON={0}'.format(spec.satisfies('+python')),
-            '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio'))
+            '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio')),
+            '-DHEPMC3_INSTALL_INTERFACES={0}'.format(spec.satisfies('+interfaces')),
         ]
+
+        if self.spec.satisfies('+python'):
+            args.append('-DHEPMC3_PYTHON_VERSIONS={0}'.format(spec['python'].version.up_to(2)))
+        
+        if self.spec.satisfies('+rootio'):
+            args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix)
+
+        return args
 
     def url_for_version(self, version):
         if version > Version("3.0.0"):
