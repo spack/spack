@@ -32,25 +32,39 @@ class Hepmc(CMakePackage):
 
     depends_on('cmake@2.8.9:', type='build')
     # FIXME: Officially supports Python3, but the build system doesn't find it
-    #depends_on('python@:2.99.99', when='+python')
+    depends_on('python', when='+python')
     depends_on('root', when='+rootio')
 
     conflicts('+python', when='@:3.1.99')
     conflicts('+rootio', when='@:2.99.99')
+    conflicts('+interfaces', when='@:2.99.99')
 
+    @when('@:2')
+    def cmake_args(self):
+        return ['-Dmomentum:STRING=GEV', '-Dlength:STRING=MM']
+
+    @when('@3:')
     def cmake_args(self):
         spec = self.spec
+        py_ver = spec['python'].version.up_to(2)
+        py_sitepkg = '{0}/lib/python{1}/site-packages'.format(
+            spec.prefix, py_ver)
         args = [
             '-Dmomentum:STRING=GEV',
             '-Dlength:STRING=MM',
             '-DHEPMC3_ENABLE_PYTHON={0}'.format(spec.satisfies('+python')),
             '-DHEPMC3_ENABLE_ROOTIO={0}'.format(spec.satisfies('+rootio')),
-            '-DHEPMC3_INSTALL_INTERFACES={0}'.format(spec.satisfies('+interfaces')),
+            '-DHEPMC3_INSTALL_INTERFACES={0}'.format(
+                spec.satisfies('+interfaces')),
         ]
 
         if self.spec.satisfies('+python'):
-            args.append('-DHEPMC3_PYTHON_VERSIONS={0}'.format(spec['python'].version.up_to(2)))
-        
+            args.extend([
+                '-DHEPMC3_PYTHON_VERSIONS={0}'.format(py_ver),
+                '-DHEPMC3_Python_SITEARCH{0}={1}'.format(
+                    py_ver.joined, py_sitepkg)
+            ])
+
         if self.spec.satisfies('+rootio'):
             args.append('-DROOT_DIR={0}'.format(self.spec['root'].prefix))
 
