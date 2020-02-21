@@ -41,7 +41,7 @@ class Shtools(MakefilePackage):
 
     def build(self, spec, prefix):
         target = 'fortran-mp' if spec.satisfies('+openmp') else 'fortran'
-        make(target, *makeopts(self, spec, prefix))
+        make(target, *self.makeopts(self, spec, prefix))
 
     def install(self, spec, prefix):
-        make('install', *makeopts(self, spec, prefix))
+        make('install', *self.makeopts(self, spec, prefix))
