@@ -189,27 +189,27 @@ def test_missing_command():
         spack.cmd.get_module("no-such-command")
 
 
-@pytest.mark.parametrize('extension_data',
-                         [('/my/bad/extension', False),
-                          ('', False),
-                          ('/my/bad/spack--extra-hyphen', False),
-                          ('/my/good/spack-extension', True),
-                          ('/my/still/good/spack-extension/', True),
-                          ('/my/spack-hyphenated-extension', True)],
-                         ids=['no_stem', 'vacuous', 'leading_hyphen',
-                              'basic_good', 'trailing_slash', 'hyphenated'])
-def test_extension_naming(extension_data, config):
+@pytest.mark.\
+    parametrize('extension_path,expected_exception',
+                [('/my/bad/extension',
+                  spack.extensions.ExtensionNamingError),
+                 ('', spack.extensions.ExtensionNamingError),
+                 ('/my/bad/spack--extra-hyphen',
+                  spack.extensions.ExtensionNamingError),
+                 ('/my/good/spack-extension',
+                  spack.extensions.CommandNotFoundError),
+                 ('/my/still/good/spack-extension/',
+                  spack.extensions.CommandNotFoundError),
+                 ('/my/spack-hyphenated-extension',
+                  spack.extensions.CommandNotFoundError)],
+                ids=['no_stem', 'vacuous', 'leading_hyphen',
+                     'basic_good', 'trailing_slash', 'hyphenated'])
+def test_extension_naming(extension_path, expected_exception, config):
     """Ensure that we are correctly validating configured extension paths
     for conformity with the rules: the basename should match
-    ``spack-<name>``; name may have embedded extensions but not begin
-    with one.
+    ``spack-<name>``; <name> may have embedded hyphens but not begin with one.
     """
-    ext_path = extension_data[0]
-    expected_exception\
-        = spack.extensions.CommandNotFoundError if \
-        extension_data[1] else \
-        spack.extensions.ExtensionNamingError
-    with spack.config.override('config:extensions', [ext_path]):
+    with spack.config.override('config:extensions', [extension_path]):
         with pytest.raises(expected_exception):
             spack.cmd.get_module("no-such-command")
 
