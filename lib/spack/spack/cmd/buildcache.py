@@ -52,9 +52,11 @@ def setup_parser(subparser):
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
                         help="Key for signing.")
-    create.add_argument('-d', '--directory', metavar='directory',
-                        type=str, default='.',
-                        help="directory in which to save the tarballs.")
+    create.add_argument('-d', '--directory',
+                        metavar='directory',
+                        type=str, required=True,
+                        help="directory, mirror name or mirror url where " +
+                             "buildcaches will be written.")
     create.add_argument('--no-rebuild-index', action='store_true',
                         default=False, help="skip rebuilding index after " +
                                             "building package(s)")
@@ -299,8 +301,9 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
-                   rel, unsigned, allow_root, no_rebuild_index):
+def _createtarball(env, spec_yaml, packages, directory, key,
+                   no_deps, force, rel, unsigned, allow_root,
+                   no_rebuild_index):
     if spec_yaml:
         packages = set()
         with open(spec_yaml, 'r') as fd:
@@ -320,12 +323,11 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
     pkgs = set(packages)
     specs = set()
 
-    outdir = '.'
-    if directory:
-        outdir = directory
-
-    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    mirror = spack.mirror.MirrorCollection().lookup(directory)
     outdir = url_util.format(mirror.push_url)
+
+    msg = 'Buildcache files will be output to %s/build_cache' % outdir
+    tty.debug(msg)
 
     signkey = None
     if key:
@@ -356,8 +358,6 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
                 else:
                     tty.debug('adding dependency %s' % node.format())
                     specs.add(node)
-
-    tty.debug('writing tarballs to %s/build_cache' % outdir)
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
