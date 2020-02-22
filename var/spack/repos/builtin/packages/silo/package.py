@@ -31,7 +31,7 @@ class Silo(AutotoolsPackage):
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
-    depends_on('qt', when='+silex')
+    depends_on('qt@4.8:4.9', when='+silex')
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
