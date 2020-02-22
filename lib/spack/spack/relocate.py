@@ -153,7 +153,6 @@ def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
             norm_rpaths.append(norm)
         else:
             norm_rpaths.append(rpath)
-    print('orig_norm_rpaths %s ' % norm_rpaths)
     return norm_rpaths
 
 
@@ -266,12 +265,12 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     """
     This function is used to make machO buildcaches on macOS by
     replacing old paths with new paths using install_name_tool
-    Inputs
-      mach-o binary to be modified
-      original rpaths
-      original dependency paths
-      original id path if a mach-o library
-      dictionary mapping paths in old install layout to new install layout
+    Inputs:
+    mach-o binary to be modified
+    original rpaths
+    original dependency paths
+    original id path if a mach-o library
+    dictionary mapping paths in old install layout to new install layout
     """
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path:
