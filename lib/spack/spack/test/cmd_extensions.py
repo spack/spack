@@ -5,6 +5,7 @@
 
 import pytest
 
+import contextlib
 import os
 import sys
 
@@ -45,16 +46,18 @@ class Extension:
         cmd.write(contents)
 
 
-@pytest.fixture(params=['testcommand'], scope='function')
-def extension(request, tmpdir, config):
+@pytest.fixture(scope='function')
+def extension_creator(tmpdir, config):
     """Create a basic extension command directory structure"""
-    extension_name = request.param
-    root = tmpdir.mkdir('spack-' + extension_name)
-    extension = Extension(extension_name, root)
-
+    @contextlib.contextmanager
+    def _ce(extension_name='testcommand'):
+        root = tmpdir.mkdir('spack-' + extension_name)
+        extension = Extension(extension_name, root)
+        with spack.config.override('config:extensions',
+                                   [str(extension.root)]):
+            yield extension
     list_of_modules = list(sys.modules.keys())
-    with spack.config.override('config:extensions', [str(extension.root)]):
-        yield extension
+    yield _ce
 
     to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
     for module_name in to_be_deleted:
@@ -62,9 +65,10 @@ def extension(request, tmpdir, config):
 
 
 @pytest.fixture(scope='function')
-def hello_world_extension(extension):
+def hello_world_extension(extension_creator):
     """Create an extension with a hello-world command."""
-    extension.add_command('hello-world', """
+    with extension_creator() as extension:
+        extension.add_command('hello-world', """
 description = "hello world extension command"
 section = "test command"
 level = "long"
@@ -76,7 +80,7 @@ def setup_parser(subparser):
 def hello_world(parser, args):
     print('Hello world!')
 """)
-    yield extension
+        yield extension
 
 
 @pytest.fixture(scope='function')
@@ -86,14 +90,18 @@ def hello_world_cmd(hello_world_extension):
 
 
 @pytest.fixture(scope='function')
-def hello_world_with_module_in_root(extension):
+def hello_world_with_module_in_root(extension_creator):
     """Create a "hello-world" extension command with additional code in the
     root folder.
     """
-
-    # Note that the namespace of the extension is derived from the
-    # fixture.
-    extension.add_command('hello', """
+    @contextlib.contextmanager
+    def _hwwmir(extension_name=None):
+        with extension_creator(extension_name) \
+            if extension_name else \
+                extension_creator() as extension:
+            # Note that the namespace of the extension is derived from the
+            # fixture.
+            extension.add_command('hello', """
 # Test an absolute import
 from spack.extensions.{ext_pname}.implementation import hello_world
 
@@ -125,17 +133,19 @@ def hello(parser, args):
         print(global_message)
 """.format(ext_pname=extension.pname))
 
-    extension.main.ensure('__init__.py')
-    implementation \
-        = extension.main.ensure('implementation.py')
-    implementation.write("""
+            extension.main.ensure('__init__.py')
+            implementation \
+                = extension.main.ensure('implementation.py')
+            implementation.write("""
 def hello_world():
     print('Hello world!')
 
 def hello_folks():
     print('Hello folks!')
 """)
-    yield spack.main.SpackCommand('hello')
+            yield spack.main.SpackCommand('hello')
+
+    yield _hwwmir
 
 
 def test_simple_command_extension(hello_world_cmd):
@@ -165,20 +175,20 @@ def test_duplicate_module_load(hello_world_cmd):
     assert ('Hello world') in spack.main.SpackCommand('hello-world')()
 
 
-@pytest.mark.parametrize('extension',
-                         ['testcommand', 'hyphenated-extension'],
-                         ids=['simple', 'hyphenated_extension_name'],
-                         indirect=True)
-def test_command_with_import(hello_world_with_module_in_root):
+@pytest.mark.parametrize('extension_name',
+                         [None, 'hyphenated-extension'],
+                         ids=['simple', 'hyphenated_extension_name'])
+def test_command_with_import(extension_name, hello_world_with_module_in_root):
     """Ensure we can write a functioning command with multiple imported
     subcommands, including where the extension name contains a hyphen.
     """
-    output = hello_world_with_module_in_root('world')
-    assert 'Hello world!' in output
-    output = hello_world_with_module_in_root('folks')
-    assert 'Hello folks!' in output
-    output = hello_world_with_module_in_root('global')
-    assert 'bar' in output
+    with hello_world_with_module_in_root(extension_name) as hello_world:
+        output = hello_world('world')
+        assert 'Hello world!' in output
+        output = hello_world('folks')
+        assert 'Hello folks!' in output
+        output = hello_world('global')
+        assert 'bar' in output
 
 
 def test_missing_command():
@@ -214,16 +224,18 @@ def test_extension_naming(extension_path, expected_exception, config):
             spack.cmd.get_module("no-such-command")
 
 
-def test_missing_command_function(extension, capsys):
+def test_missing_command_function(extension_creator, capsys):
     """Ensure we die as expected if a command module does not have the
     expected command function defined.
     """
-    extension.add_command('bad-cmd', """
-description = "Empty command implementation"\n""")
-    with pytest.raises(SystemExit):
-        spack.cmd.get_module('bad-cmd')
-    capture = capsys.readouterr()
-    assert "must define function 'bad_cmd'." in capture[1]
+    with extension_creator() as extension:
+        extension.\
+            add_command('bad-cmd',
+                        """\ndescription = "Empty command implementation"\n""")
+        with pytest.raises(SystemExit):
+            spack.cmd.get_module('bad-cmd')
+        capture = capsys.readouterr()
+        assert "must define function 'bad_cmd'." in capture[1]
 
 
 def test_get_command_paths(config):
@@ -242,31 +254,18 @@ def test_get_command_paths(config):
         assert spack.extensions.get_command_paths() == expected_cmd_paths
 
 
-@pytest.fixture(scope='function')
-def failing_command(extension):
+@pytest.mark.parametrize('command_name,contents,exception',
+                         [('bad-cmd', 'from oopsie.daisy import bad\n',
+                           ImportError),
+                          ('bad-cmd', """var = bad_function_call('blech')\n""",
+                           NameError),
+                          ('bad-cmd', ')\n', SyntaxError)],
+                         ids=['ImportError', 'NameError', 'SyntaxError'])
+def test_failing_command(command_name, contents, exception, extension_creator):
     """Ensure that the configured command fails to import with the specified
     error.
     """
-    def _fc(command_name, contents, exception):
+    with extension_creator() as extension:
         extension.add_command(command_name, contents)
         with pytest.raises(exception):
             spack.extensions.get_module(command_name)
-
-    return _fc
-
-
-# The following tests---test_failed_command_import_X---ensure that the
-# import system passes through the exception caused by attempting to
-# import the failed command.
-def test_failed_command_import_importerror(failing_command):
-    failing_command('bad-cmd', 'from oopsie.daisy import bad\n', ImportError)
-
-
-def test_failed_command_import_nameerror(failing_command):
-    failing_command('bad-cmd',
-                    """var = bad_function_call('blech')\n""",
-                    NameError)
-
-
-def test_failed_command_import_syntaxerror(failing_command):
-    failing_command('bad-cmd', ')\n', SyntaxError)
