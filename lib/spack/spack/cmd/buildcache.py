@@ -52,10 +52,21 @@ def setup_parser(subparser):
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
                         help="Key for signing.")
-    create.add_argument('-d', '--directory',
+    output = create.add_mutually_exclusive_group(required=True)
+    output.add_argument('-d', '--directory',
                         metavar='directory',
-                        type=str, required=True,
-                        help="directory, mirror name or mirror url where " +
+                        type=str,
+                        help="directory where " +
+                             "buildcaches will be written.")
+    output.add_argument('-m', '--mirror_name',
+                        metavar='mirror_name',
+                        type=str,
+                        help="mirror name where " +
+                             "buildcaches will be written.")
+    output.add_argument('--mirror_url',
+                        metavar='mirror_url',
+                        type=str,
+                        help="mirror url where " +
                              "buildcaches will be written.")
     create.add_argument('--no-rebuild-index', action='store_true',
                         default=False, help="skip rebuilding index after " +
@@ -301,7 +312,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, directory, key,
+def _createtarball(env, spec_yaml, packages, output_location, key,
                    no_deps, force, rel, unsigned, allow_root,
                    no_rebuild_index):
     if spec_yaml:
@@ -323,7 +334,7 @@ def _createtarball(env, spec_yaml, packages, directory, key,
     pkgs = set(packages)
     specs = set()
 
-    mirror = spack.mirror.MirrorCollection().lookup(directory)
+    mirror = spack.mirror.MirrorCollection().lookup(output_location)
     outdir = url_util.format(mirror.push_url)
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
@@ -376,7 +387,15 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
-    _createtarball(env, args.spec_yaml, args.specs, args.directory,
+    output_location = None
+    if args.directory:
+        output_location = args.directory
+    elif args.mirror_name:
+        output_location = args.mirror_name
+    elif args.mirror_url:
+        output_location = args.mirror_url
+
+    _createtarball(env, args.spec_yaml, args.specs, output_location,
                    args.key, args.no_deps, args.force, args.rel, args.unsigned,
                    args.allow_root, args.no_rebuild_index)
 
