@@ -62,9 +62,9 @@ class Umpire(CMakePackage):
             
          # shared vs static libs
         if "+shared" in spec:
-            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+            options.append('-DBUILD_SHARED_LIBS=On')
         else:
-            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+            options.append('-DBUILD_SHARED_LIBS=Off')
 
 
         return options
