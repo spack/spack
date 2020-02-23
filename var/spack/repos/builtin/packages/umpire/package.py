@@ -34,6 +34,7 @@ class Umpire(CMakePackage):
     variant('cuda', default=False, description='Build with CUDA support')
     variant('fortran', default=False, description='Build C/Fortran API')
     variant('numa', default=False, description='Enable NUMA support')
+    variant('shared', default=True, description='Enable NUMA support')
 
     depends_on('cuda', when='+cuda')
     depends_on('cmake@3.8:', type='build')
@@ -58,5 +59,12 @@ class Umpire(CMakePackage):
 
         if '+numa' in spec:
             options.append('-DENABLE_NUMA=On')
+            
+         # shared vs static libs
+        if "+shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
 
         return options
