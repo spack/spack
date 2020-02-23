@@ -31,7 +31,8 @@ class Silo(AutotoolsPackage):
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
-    depends_on('qt@4.8:4.9', when='+silex')
+    depends_on('qt~framework@4.8:4.9', when='+silex')
+    depends_on('libx11', when='+silex')
     depends_on('readline')
     depends_on('zlib')
 
@@ -88,7 +89,13 @@ class Silo(AutotoolsPackage):
         ]
 
         if '+silex' in spec:
-            config_args.append('--with-Qt-dir=%s' % spec['qt'].prefix)
+            x = spec['libx11']
+            config_args.extend([
+                '--with-Qt-dir=' + spec['qt'].prefix,
+                '--with-Qt-lib=QtGui -lQtCore',
+                '--x-includes=' + x.prefix.include,
+                '--x-libraries=' + x.prefix.lib,
+            ])
 
         if '+mpi' in spec:
             config_args.append('CC=%s' % spec['mpi'].mpicc)
