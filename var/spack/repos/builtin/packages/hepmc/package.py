@@ -34,9 +34,9 @@ class Hepmc(CMakePackage):
     depends_on('python', when='+python')
     depends_on('root', when='+rootio')
 
-    conflicts('+python', when='@:3.1.99')
-    conflicts('+rootio', when='@:2.99.99')
-    conflicts('+interfaces', when='@:2.99.99')
+    conflicts('+python', when='@:3.1')
+    conflicts('+rootio', when='@:2')
+    conflicts('+interfaces', when='@:2')
 
     @when('@:2')
     def cmake_args(self):
