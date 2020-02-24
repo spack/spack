@@ -3,7 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import platform
+import os
 
 import pytest
 
@@ -41,3 +43,12 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
         output = buildcache('list', 'mpileaks', '@2.3')
 
     assert output.count('mpileaks') == 3
+
+
+def test_buildcache_create_fail_on_perm_denied(tmpdir_factory):
+    """Ensure that buildcache create fails on permission denied error."""
+    tmpdir = str(tmpdir_factory.mktemp('mock_buildcache'))
+    os.chmod(tmpdir, 0)
+    with pytest.raises(OSError) as error:
+        buildcache('create', '-d', tmpdir, '--unsigned', 'zlib')
+    assert error.value.errno == errno.EACCES

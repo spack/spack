@@ -205,6 +205,8 @@ def push_to_url(
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
                     os.remove(local_file_path)
+                else:
+                    raise
 
     elif remote_url.scheme == 's3':
         if extra_args is None:
