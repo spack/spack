@@ -300,8 +300,8 @@ def modify_object_macholib(cur_path, paths_to_paths):
     mach-o binaries and the id path for mach-o libraries.
     Rewritting of rpaths is handled by replace_prefix_bin.
     Inputs
-      mach-o binary to be modified
-      dictionary mapping paths in old install layout to new install layout
+    mach-o binary to be modified
+    dictionary mapping paths in old install layout to new install layout
     """
 
     dll = MachO(cur_path)
