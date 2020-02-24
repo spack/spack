@@ -17,7 +17,6 @@ from contextlib import closing
 import ruamel.yaml as yaml
 
 import json
-from jsonschema import validate
 
 from six.moves.urllib.error import URLError
 
@@ -26,6 +25,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config as config
+import spack.database as spack_db
 import spack.fetch_strategy as fs
 import spack.util.gpg
 import spack.relocate as relocate
@@ -33,7 +33,6 @@ import spack.util.spack_yaml as syaml
 import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.schema.buildcache_index import schema
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
@@ -283,77 +282,40 @@ def sign_tarball(key, force, specfile_path):
 def generate_package_index(cache_prefix):
     """Create the build cache index page.
 
-    Creates (or replaces) the "index.html" page at the location given in
-    cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and public key (*.key) under cache_prefix.
-    """
-    tmpdir = tempfile.mkdtemp()
-    try:
-        index_html_path = os.path.join(tmpdir, 'index.html')
-        file_list = (
-            entry
-            for entry in web_util.list_url(cache_prefix)
-            if (entry.endswith('.yaml')
-                or entry.endswith('.key')))
-
-        with open(index_html_path, 'w') as f:
-            f.write(BUILD_CACHE_INDEX_TEMPLATE.format(
-                title='Spack Package Index',
-                path_list='\n'.join(
-                    BUILD_CACHE_INDEX_ENTRY_TEMPLATE.format(path=path)
-                    for path in file_list)))
-
-        web_util.push_to_url(
-            index_html_path,
-            url_util.join(cache_prefix, 'index.html'),
-            keep_original=False,
-            extra_args={'ContentType': 'text/html'})
-    finally:
-        shutil.rmtree(tmpdir)
-
-
-def generate_package_index_json(cache_prefix):
-    """Create the build cache index page.
-
     Creates (or replaces) the "index.json" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
     and public key (*.key) under cache_prefix.
     """
-    index_object = {}
+    tmpdir = tempfile.mkdtemp()
+    db_root_dir = os.path.join(tmpdir, 'db_root')
+    db = spack_db.Database(None, db_dir=db_root_dir)
+    db.enable_buildcache_index_mode()
 
     file_list = (
         entry
         for entry in web_util.list_url(cache_prefix)
         if entry.endswith('.yaml'))
 
+    tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
+        cache_prefix))
     for file_path in file_list:
         try:
             yaml_url = url_util.join(cache_prefix, file_path)
+            tty.debug('fetching {0}'.format(yaml_url))
             _, _, yaml_file = web_util.read_from_url(yaml_url)
             yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
             # yaml_obj = syaml.load(yaml_contents)
             # s = Spec.from_yaml(yaml_obj)
             s = Spec.from_yaml(yaml_contents)
-            entry = {
-                'name': s.name,
-                'version': '{0}'.format(s.version),
-                'compiler': '{0}'.format(s.compiler),
-                'os_arch': '{0}'.format(s.architecture),
-                'full_hash': s.full_hash(),
-            }
-            index_object[s.dag_hash()] = entry
+            db.add(s, None)
         except (URLError, web_util.SpackWebError) as url_err:
             tty.error('Error reading spec.yaml: {0}'.format(file_path))
             tty.error(url_err)
 
-    validate(index_object, schema)
-
-    tmpdir = tempfile.mkdtemp()
-
     try:
-        index_json_path = os.path.join(tmpdir, 'index.json')
+        index_json_path = os.path.join(db_root_dir, 'index.json')
         with open(index_json_path, 'w') as f:
-            f.write(json.dumps(index_object))
+            db._write_to_file(f)
 
         web_util.push_to_url(
             index_json_path,
