@@ -36,6 +36,12 @@ class Opam(AutotoolsPackage):
 
     @when('@:1.2.2')
     def setup_build_environment(self, env):
+        ''' In OCaml <4.06.1, the default was -safe-string=0, and this has
+        changed in OCaml >=4.06.1. OPAM version 1 was written before 4.06.1
+        was released, so OPAM <2.0 assumes mutable strings and requires the
+        safe-string=0 flag. This is not true with OPAM >=2.0, so the flag
+        should not be set.'''
+
         # Environment variable setting taken from
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/opam.rb
         env.set('OCAMLPARAM', 'safe-string=0,_')  # OCaml 4.06.0 compat
