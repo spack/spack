@@ -5,7 +5,6 @@
 
 import errno
 import platform
-import os
 
 import pytest
 
@@ -13,6 +12,7 @@ import spack.main
 import spack.binary_distribution
 
 buildcache = spack.main.SpackCommand('buildcache')
+install = spack.main.SpackCommand('install')
 
 
 @pytest.fixture()
@@ -45,10 +45,14 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
     assert output.count('mpileaks') == 3
 
 
-def test_buildcache_create_fail_on_perm_denied(tmpdir_factory):
+def test_buildcache_create_fail_on_perm_denied(
+        install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
-    tmpdir = str(tmpdir_factory.mktemp('mock_buildcache'))
-    os.chmod(tmpdir, 0)
+    install('trivial-install-test-package')
+
+    tmpdir.chmod(0)
     with pytest.raises(OSError) as error:
-        buildcache('create', '-d', tmpdir, '--unsigned', 'zlib')
+        buildcache('create', '-d', str(tmpdir),
+                   '--unsigned', 'trivial-install-test-package')
     assert error.value.errno == errno.EACCES
+    tmpdir.chmod(0o700)
