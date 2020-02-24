@@ -72,9 +72,11 @@ class Legion(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
         if self.spec.variants['build_type'].value == 'Debug':
-            cmake_cxx_flags.append('-DDEBUG_REALM')
-            cmake_cxx_flags.append('-DDEBUG_LEGION')
-            cmake_cxx_flags.append('-ggdb')
+            cmake_cxx_flags.extend([
+                '-DDEBUG_REALM',
+                '-DDEBUG_LEGION',
+                '-ggdb',
+            ])
 
         options.append('-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)))
 
