@@ -18,8 +18,11 @@ class PyBxPython(PythonPackage):
             sha256='1066d1e56d062d0661f23c19942eb757bd7ab7cb8bc7d89a72fdc3931c995cb4',
             url="https://github.com/bxlab/bx-python/archive/v0.7.4.tar.gz")
 
+    depends_on('python@2.4:2.7', type=('build', 'run'), when='@:0.7')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-python-lzo', type=('build', 'run'), when='@:0.7')
     depends_on('py-cython', type='build', when='@0.8:')
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@:1.16', type=('build', 'run'), when='@:0.7')
     depends_on('py-six', type=('build', 'run'))
