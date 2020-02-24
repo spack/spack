@@ -65,6 +65,7 @@ class Charmpp(Package):
         "ucx-pmi",
         default="simplePMI",
         values=("simplePMI", "slrumPMI", "slurmPMI2", "PMIx")
+        description="The ucx backend needs PMI to run!"
     )
 
     # Other options
