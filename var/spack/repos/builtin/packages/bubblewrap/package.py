@@ -9,7 +9,6 @@ from spack import *
 class Bubblewrap(AutotoolsPackage):
     """Unprivileged sandboxing tool"""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/containers/bubblewrap"
     url      = "https://github.com/containers/bubblewrap/archive/v0.4.0.tar.gz"
 
