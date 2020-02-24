@@ -463,6 +463,10 @@ def log(pkg):
     # Archive the environment used for the build
     install(pkg.env_path, pkg.install_env_path)
 
+    if os.path.exists(pkg.configure_args_path):
+        # Archive the args used for the build
+        install(pkg.configure_args_path, pkg.install_configure_args_path)
+
     # Finally, archive files that are specific to each package
     with working_dir(pkg.stage.path):
         errors = six.StringIO()
@@ -1012,6 +1016,18 @@ class PackageInstaller(object):
                     with working_dir(pkg.stage.source_path):
                         # Save the build environment in a file before building.
                         dump_environment(pkg.env_path)
+
+                        for attr in ('configure_args', 'cmake_args'):
+                            try:
+                                configure_args = getattr(pkg, attr)()
+                                configure_args = ' '.join(configure_args)
+
+                                with open(pkg.configure_args_path, 'w') as args_file:
+                                    args_file.write(configure_args)
+
+                                break
+                            except Exception:
+                                pass
 
                         # cache debug settings
                         debug_enabled = tty.is_debug()
