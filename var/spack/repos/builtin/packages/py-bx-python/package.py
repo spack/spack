@@ -24,5 +24,4 @@ class PyBxPython(PythonPackage):
     depends_on('py-python-lzo', type=('build', 'run'), when='@:0.7')
     depends_on('py-cython', type='build', when='@0.8:')
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-numpy@:1.16', type=('build', 'run'), when='@:0.7')
     depends_on('py-six', type=('build', 'run'), when='@0.8:')
