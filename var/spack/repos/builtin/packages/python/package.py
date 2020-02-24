@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,8 +31,11 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-    version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3', preferred=True)
+    version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114', preferred=True)
+    version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
+    version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
     version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
@@ -66,6 +69,15 @@ class Python(AutotoolsPackage):
     version('2.7.8',  sha256='74d70b914da4487aa1d97222b29e9554d042f825f26cb2b93abd20fdda56b557')
 
     extendable = True
+
+    # Variants to avoid cyclical dependencies for concretizer
+    variant('libxml2', default=True,
+            description='Use a gettext library build with libxml2')
+
+    variant(
+        'debug', default=False,
+        description="debug build with extra checks (this is high overhead)"
+    )
 
     # --enable-shared is known to cause problems for some users on macOS
     # See http://bugs.python.org/issue29846
@@ -108,7 +120,8 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext')
+    depends_on('gettext +libxml2', when='+libxml2')
+    depends_on('gettext ~libxml2', when='~libxml2')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
@@ -147,7 +160,7 @@ class Python(AutotoolsPackage):
 
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
-    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1: %intel')
+    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -199,6 +212,9 @@ class Python(AutotoolsPackage):
         # Need this to allow python build to find the Python installation.
         env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
+        env.unset('PYTHONPATH')
+        env.unset('PYTHONHOME')
+
     def configure_args(self):
         spec = self.spec
         config_args = []
@@ -238,6 +254,11 @@ class Python(AutotoolsPackage):
         if spec.satisfies('%intel', strict=True) and \
                 spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
             config_args.append('--with-icc')
+
+        if '+debug' in spec:
+            config_args.append('--with-pydebug')
+        else:
+            config_args.append('--without-pydebug')
 
         if '+shared' in spec:
             config_args.append('--enable-shared')
@@ -288,6 +309,10 @@ class Python(AutotoolsPackage):
                 '--with-tcltk-libs={0} {1}'.format(
                     spec['tcl'].libs.ld_flags, spec['tk'].libs.ld_flags)
             ])
+
+        # https://docs.python.org/3.8/library/sqlite3.html#f1
+        if spec.satisfies('@3.2: +sqlite3'):
+            config_args.append('--enable-loadable-sqlite-extensions')
 
         return config_args
 
@@ -391,7 +416,8 @@ class Python(AutotoolsPackage):
         ]
 
         filter_file(spack_cc,  self.compiler.cc,  *filenames, **kwargs)
-        filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        if spack_cxx and self.compiler.cxx:
+            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
 
     @run_after('install')
     def symlink(self):
@@ -623,11 +649,15 @@ class Python(AutotoolsPackage):
         and symlinks it to ``/usr/local``. Users may not know the actual
         installation directory and add ``/usr/local`` to their
         ``packages.yaml`` unknowingly. Query the python executable to
-        determine exactly where it is installed."""
+        determine exactly where it is installed. Fall back on
+        ``spec['python'].prefix`` if that doesn't work."""
 
         dag_hash = self.spec.dag_hash()
         if dag_hash not in self._homes:
-            prefix = self.get_config_var('prefix')
+            try:
+                prefix = self.get_config_var('prefix')
+            except ProcessError:
+                prefix = self.prefix
             self._homes[dag_hash] = Prefix(prefix)
         return self._homes[dag_hash]
 
@@ -666,14 +696,20 @@ class Python(AutotoolsPackage):
 
     @property
     def headers(self):
-        config_h = self.get_config_h_filename()
+        try:
+            config_h = self.get_config_h_filename()
 
-        if not os.path.exists(config_h):
-            includepy = self.get_config_var('INCLUDEPY')
-            msg = 'Unable to locate {0} headers in {1}'
-            raise RuntimeError(msg.format(self.name, includepy))
+            if not os.path.exists(config_h):
+                includepy = self.get_config_var('INCLUDEPY')
+                msg = 'Unable to locate {0} headers in {1}'
+                raise RuntimeError(msg.format(self.name, includepy))
 
-        headers = HeaderList(config_h)
+            headers = HeaderList(config_h)
+        except ProcessError:
+            headers = find_headers(
+                'pyconfig', self.prefix.include, recursive=True)
+            config_h = headers[0]
+
         headers.directories = [os.path.dirname(config_h)]
         return headers
 
@@ -692,6 +728,9 @@ class Python(AutotoolsPackage):
     @property
     def easy_install_file(self):
         return join_path(self.site_packages_dir, "easy-install.pth")
+
+    def setup_run_environment(self, env):
+        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the

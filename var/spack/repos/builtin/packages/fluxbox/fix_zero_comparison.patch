@@ -1,0 +1,11 @@
+--- spack-src/util/fluxbox-remote.cc.org	2019-11-08 16:22:55.647747144 +0900
++++ spack-src/util/fluxbox-remote.cc	2019-11-08 16:23:15.709859444 +0900
+@@ -73,7 +73,7 @@
+     if (strcmp(cmd, "result") == 0) {
+         XTextProperty text_prop;
+         if (XGetTextProperty(disp, root, &text_prop, atom_result) != 0
+-            && text_prop.value > 0
++            && text_prop.value != 0
+             && text_prop.nitems > 0) {
+ 
+             printf("%s", text_prop.value);

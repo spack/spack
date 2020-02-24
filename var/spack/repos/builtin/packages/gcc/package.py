@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,12 @@ import os
 import sys
 
 
-class Gcc(AutotoolsPackage):
+class Gcc(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Compiler Collection includes front ends for C, C++, Objective-C,
     Fortran, Ada, and Go, as well as libraries for these languages."""
 
     homepage = 'https://gcc.gnu.org'
-    url      = 'https://ftpmirror.gnu.org/gcc/gcc-7.1.0/gcc-7.1.0.tar.bz2'
+    gnu_mirror_path = 'gcc/gcc-9.2.0/gcc-9.2.0.tar.xz'
     svn      = 'svn://gcc.gnu.org/svn/gcc/'
     list_url = 'http://ftp.gnu.org/gnu/gcc/'
     list_depth = 1
@@ -96,11 +96,12 @@ class Gcc(AutotoolsPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.15', when='@5:5.9')
+    depends_on('isl@0.14', when='@5.0:5.2')
+    depends_on('isl@0.15', when='@5.3:5.9')
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
-    depends_on('libiconv')
+    depends_on('libiconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
@@ -186,6 +187,11 @@ class Gcc(AutotoolsPackage):
     conflicts('languages=jit', when='+nvptx')
     conflicts('languages=objc', when='+nvptx')
     conflicts('languages=obj-c++', when='+nvptx')
+    # NVPTX build disables bootstrap
+    conflicts('+binutils', when='+nvptx')
+
+    # Binutils can't build ld on macOS
+    conflicts('+binutils', when='platform=darwin')
 
     if sys.platform == 'darwin':
         # Fix parallel build on APFS filesystem
@@ -196,6 +202,12 @@ class Gcc(AutotoolsPackage):
             # https://trac.macports.org/ticket/56502#no1
             # see also: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83531
             patch('darwin/headers-10.13-fix.patch', when='@5.5.0')
+        if macos_version() >= Version('10.14'):
+            # Fix system headers for Mojave SDK:
+            # https://github.com/Homebrew/homebrew-core/pull/39041
+            patch('https://raw.githubusercontent.com/Homebrew/formula-patches/master/gcc/8.3.0-xcode-bug-_Atomic-fix.patch',
+                  sha256='33ee92bf678586357ee8ab9d2faddf807e671ad37b97afdd102d5d153d03ca84',
+                  when='@6:8')
         if macos_version() >= Version('10.15'):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
@@ -228,16 +240,14 @@ class Gcc(AutotoolsPackage):
     build_directory = 'spack-build'
 
     def url_for_version(self, version):
-        url = 'https://ftpmirror.gnu.org/gcc/gcc-{0}/gcc-{0}.tar.{1}'
-        suffix = 'xz'
-
-        if version < Version('6.4.0') or version == Version('7.1.0'):
-            suffix = 'bz2'
-
-        if version == Version('5.5.0'):
-            suffix = 'xz'
-
-        return url.format(version, suffix)
+        # This function will be called when trying to fetch from url, before
+        # mirrors are tried. It takes care of modifying the suffix of gnu
+        # mirror path so that Spack will also look for the correct file in
+        # the mirrors
+        if (version < Version('6.4.0')and version != Version('5.5.0')) \
+                or version == Version('7.1.0'):
+            self.gnu_mirror_path = self.gnu_mirror_path.replace('xz', 'bz2')
+        return super(Gcc, self).url_for_version(version)
 
     def patch(self):
         spec = self.spec
@@ -279,7 +289,6 @@ class Gcc(AutotoolsPackage):
                 ','.join(spec.variants['languages'].value)),
             # Drop gettext dependency
             '--disable-nls',
-            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
             '--with-mpfr={0}'.format(spec['mpfr'].prefix),
             '--with-gmp={0}'.format(spec['gmp'].prefix),
         ]
@@ -294,17 +303,20 @@ class Gcc(AutotoolsPackage):
 
         # Binutils
         if spec.satisfies('+binutils'):
-            static_bootstrap_flags = '-static-libstdc++ -static-libgcc'
+            stage1_ldflags = str(self.rpath_args)
+            boot_ldflags = stage1_ldflags + ' -static-libstdc++ -static-libgcc'
+            if '%gcc' in spec:
+                stage1_ldflags = boot_ldflags
+            binutils = spec['binutils'].prefix.bin
             options.extend([
                 '--with-sysroot=/',
-                '--with-stage1-ldflags={0} {1}'.format(
-                    self.rpath_args, static_bootstrap_flags),
-                '--with-boot-ldflags={0} {1}'.format(
-                    self.rpath_args, static_bootstrap_flags),
+                '--with-stage1-ldflags=' + stage1_ldflags,
+                '--with-boot-ldflags=' + boot_ldflags,
                 '--with-gnu-ld',
-                '--with-ld={0}/ld'.format(spec['binutils'].prefix.bin),
+                '--with-ld=' + binutils.ld,
                 '--with-gnu-as',
-                '--with-as={0}/as'.format(spec['binutils'].prefix.bin),
+                '--with-as=' + binutils.join('as'),
+                '--enable-bootstrap',
             ])
 
         # MPC
@@ -328,7 +340,8 @@ class Gcc(AutotoolsPackage):
         if sys.platform == 'darwin':
             options.extend([
                 '--with-native-system-header-dir=/usr/include',
-                '--with-sysroot={0}'.format(macos_sdk_path())
+                '--with-sysroot={0}'.format(macos_sdk_path()),
+                '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix)
             ])
 
         return options
@@ -424,7 +437,7 @@ class Gcc(AutotoolsPackage):
                               self.prefix.lib, self.prefix.lib64))
         set_install_permissions(specs_file)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Search prefix directory for possibly modified compiler names
         from spack.compilers.gcc import Gcc as Compiler
 
@@ -450,6 +463,6 @@ class Gcc(AutotoolsPackage):
                     continue
 
                 # Set the proper environment variable
-                run_env.set(lang.upper(), abspath)
+                env.set(lang.upper(), abspath)
                 # Stop searching filename/regex combos for this language
                 break

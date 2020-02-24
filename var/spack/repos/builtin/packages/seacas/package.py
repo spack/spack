@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2019-12-18', sha256='f82cfa276ebc5fe6054852383da16eba7a51c81e6640c73b5f01fc3109487c6f')
+    version('2019-10-14', sha256='ca4cf585cdbc15c25f302140fe1f61ee1a30d72921e032b9a854492b6c61fb91')
     version('2019-08-20', sha256='a82c1910c2b37427616dc3716ca0b3c1c77410db6723aefb5bea9f47429666e5')
     version('2019-07-26', sha256='651dac832b0cfee0f63527f563415c8a65b8e4d79242735c1e2aec606f6b2e17')
 
@@ -71,8 +73,8 @@ class Seacas(CMakePackage):
 
     # Everything should be compiled position independent (-fpic)
 
-    depends_on('netcdf@4.6.2:+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf@4.6.2:~mpi', when='~mpi')
+    depends_on('netcdf-c@4.6.2:+mpi+parallel-netcdf', when='+mpi')
+    depends_on('netcdf-c@4.6.2:~mpi', when='~mpi')
     depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
     depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
     depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
@@ -198,10 +200,10 @@ class Seacas(CMakePackage):
                 ])
 
         # ##################### Dependencies ##########################
-        # Always need NetCDF
+        # Always need NetCDF-C
         options.extend([
             '-DTPL_ENABLE_Netcdf:BOOL=ON',
-            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf'].prefix,
+            '-DNetCDF_ROOT:PATH=%s' % spec['netcdf-c'].prefix,
         ])
 
         if '+metis' in spec:

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,7 +38,7 @@ class Pvm(MakefilePackage):
         install_tree(join_path('lib', pvm_arch), prefix.lib)
         install_tree('man', prefix.man)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # Before running PVM, you must set the environment
         # variable "PVM_ROOT" to the path where PVM resides
-        run_env.set('PVM_ROOT', self.prefix)
+        env.set('PVM_ROOT', self.prefix)

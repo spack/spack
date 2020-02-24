@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Groff(AutotoolsPackage):
+class Groff(AutotoolsPackage, GNUMirrorPackage):
     """Groff (GNU troff) is a typesetting system that reads
     plain text mixed with formatting commands and produces
     formatted output. Output may be PostScript or PDF, html, or
     ASCII/UTF8 for display at the terminal."""
 
     homepage = "https://www.gnu.org/software/groff/"
-    url      = "https://ftpmirror.gnu.org/groff/groff-1.22.3.tar.gz"
+    gnu_mirror_path = "groff/groff-1.22.3.tar.gz"
 
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.

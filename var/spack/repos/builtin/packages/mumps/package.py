@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,11 +55,6 @@ class Mumps(Package):
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
     patch('gfortran8.patch', when='@5.1.2')
 
-    # this function is not a patch function because in case scalapack
-    # is needed it uses self.spec['scalapack'].fc_link set by the
-    # setup_dependent_environment in scalapck. This happen after patch
-    # end before install
-    # def patch(self):
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
                 '+mpi' not in self.spec):
@@ -119,6 +114,7 @@ class Mumps(Package):
         using_pgi = self.compiler.name == "pgi"
         using_intel = self.compiler.name == "intel"
         using_xl = self.compiler.name in ['xl', 'xl_r']
+        using_fj = self.compiler.name == "fj"
 
         # The llvm compiler suite does not contain a Fortran compiler by
         # default.  Its possible that a Spack user may have configured
@@ -176,17 +172,18 @@ class Mumps(Package):
                  "MUMPS_TYPE = par"])
         else:
             makefile_conf.extend(
-                ["CC = cc",
-                 "FC = fc",
-                 "FL = fc",
+                ["CC = {0}".format(spack_cc),
+                 "FC = {0}".format(spack_fc),
+                 "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if using_intel or using_pgi:
-            # Intel & PGI Fortran compiler provides the main() function so
-            # C examples linked with the Fortran compiler require a
-            # hack defined by _DMAIN_COMP (see examples/c_example.c)
+        if using_intel or using_pgi or using_fj:
+            # Intel, PGI, and Fujitsu Fortran compiler provides
+            # the main() function so C examples linked with the Fortran
+            # compiler require a hack defined by _DMAIN_COMP
+            # (see examples/c_example.c)
             makefile_conf.append("CDEFS   = -DAdd_ -DMAIN_COMP")
         else:
             if not using_xlf:

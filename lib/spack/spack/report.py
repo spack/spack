@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,8 @@ def fetch_package_log(pkg):
 
 
 class InfoCollector(object):
-    """Decorates PackageBase.do_install to collect information
+    """Decorates PackageInstaller._install_task, which is called by
+    PackageBase.do_install for each spec, to collect information
     on the installation of certain specs.
 
     When exiting the context this change will be rolled-back.
@@ -57,8 +58,8 @@ class InfoCollector(object):
         specs (list of Spec): specs whose install information will
            be recorded
     """
-    #: Backup of PackageBase.do_install
-    _backup_do_install = spack.package.PackageBase.do_install
+    #: Backup of PackageInstaller._install_task
+    _backup__install_task = spack.package.PackageInstaller._install_task
 
     def __init__(self, specs):
         #: Specs that will be installed
@@ -108,15 +109,16 @@ class InfoCollector(object):
                 }
                 spec['packages'].append(package)
 
-        def gather_info(do_install):
-            """Decorates do_install to gather useful information for
-            a CI report.
+        def gather_info(_install_task):
+            """Decorates PackageInstaller._install_task to gather useful
+            information on PackageBase.do_install for a CI report.
 
             It's defined here to capture the environment and build
             this context as the installations proceed.
             """
-            @functools.wraps(do_install)
-            def wrapper(pkg, *args, **kwargs):
+            @functools.wraps(_install_task)
+            def wrapper(installer, task, *args, **kwargs):
+                pkg = task.pkg
 
                 # We accounted before for what is already installed
                 installed_on_entry = pkg.installed
@@ -134,7 +136,7 @@ class InfoCollector(object):
                 value = None
                 try:
 
-                    value = do_install(pkg, *args, **kwargs)
+                    value = _install_task(installer, task, *args, **kwargs)
                     package['result'] = 'success'
                     package['stdout'] = fetch_package_log(pkg)
                     package['installed_from_binary_cache'] = \
@@ -146,8 +148,9 @@ class InfoCollector(object):
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     package['result'] = 'failure'
-                    package['stdout'] = fetch_package_log(pkg)
                     package['message'] = e.message or 'Installation failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:
@@ -181,14 +184,15 @@ class InfoCollector(object):
 
             return wrapper
 
-        spack.package.PackageBase.do_install = gather_info(
-            spack.package.PackageBase.do_install
+        spack.package.PackageInstaller._install_task = gather_info(
+            spack.package.PackageInstaller._install_task
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        # Restore the original method in PackageBase
-        spack.package.PackageBase.do_install = InfoCollector._backup_do_install
+        # Restore the original method in PackageInstaller
+        spack.package.PackageInstaller._install_task = \
+            InfoCollector._backup__install_task
 
         for spec in self.specs:
             spec['npackages'] = len(spec['packages'])
@@ -207,9 +211,9 @@ class collect_info(object):
     """Collects information to build a report while installing
     and dumps it on exit.
 
-    If the format name is not ``None``, this context manager
-    decorates PackageBase.do_install when entering the context
-    and unrolls the change when exiting.
+    If the format name is not ``None``, this context manager decorates
+    PackageInstaller._install_task when entering the context for a
+    PackageBase.do_install operation and unrolls the change when exiting.
 
     Within the context, only the specs that are passed to it
     on initialization will be recorded for the report. Data from
@@ -254,14 +258,14 @@ class collect_info(object):
 
     def __enter__(self):
         if self.format_name:
-            # Start the collector and patch PackageBase.do_install
+            # Start the collector and patch PackageInstaller._install_task
             self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
             # Close the collector and restore the
-            # original PackageBase.do_install
+            # original PackageInstaller._install_task
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
             report_data = {'specs': self.collector.specs}

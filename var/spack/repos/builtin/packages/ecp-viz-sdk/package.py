@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,7 @@ class EcpVizSdk(CMakePackage):
     depends_on('paraview', when='+paraview')
     depends_on('sz', when='+sz')
     depends_on('visit', when='+visit')
-    depends_on('vtkm', when='+vtkm')
+    depends_on('vtk-m', when='+vtkm')
     depends_on('zfp', when='+zfp')
 
     def cmake_args(self):

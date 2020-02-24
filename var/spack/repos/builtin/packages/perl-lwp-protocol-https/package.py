@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,4 +18,4 @@ class PerlLwpProtocolHttps(PerlPackage):
     depends_on('perl-io-socket-ssl', type=('build', 'run'))
     depends_on('perl-net-http', type=('build', 'run'))
     depends_on('perl-mozilla-ca', type=('build', 'run'))
-    depends_on('perl-lwp', type=('build', 'run'))
+    depends_on('perl-libwww-perl', type=('build', 'run'))

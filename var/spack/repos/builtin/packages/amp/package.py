@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -110,7 +110,7 @@ class Amp(CMakePackage):
         if '+netcdf' in spec:
             tpl_list = tpl_list + ";NETCDF"
             options.extend(['-DTPL_NETCDF_INSTALL_DIR=%s' %
-                            spec['netcdf'].prefix, ])
+                            spec['netcdf-c'].prefix, ])
         if '+hypre' in spec:
             tpl_list = tpl_list + ";HYPRE"
             options.extend(['-DTPL_HYPRE_INSTALL_DIR=%s' %

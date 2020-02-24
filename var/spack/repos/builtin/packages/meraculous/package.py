@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,6 @@ class Meraculous(CMakePackage):
         edit = FileFilter('CMakeLists.txt')
         edit.filter(r"-static-libstdc\+\+", "")
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('MERACULOUS_ROOT', self.prefix)
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.set('MERACULOUS_ROOT', self.prefix)
+        env.prepend_path('PERL5LIB', self.prefix.lib)

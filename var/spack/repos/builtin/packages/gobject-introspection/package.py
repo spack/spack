@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,9 +57,11 @@ class GobjectIntrospection(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
@@ -69,5 +71,5 @@ class GobjectIntrospection(Package):
         make()
         make("install")
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('SPACK_SBANG', "%s/bin/sbang" % spack_root)
+    def setup_build_environment(self, env):
+        env.set('SPACK_SBANG', "%s/bin/sbang" % spack_root)

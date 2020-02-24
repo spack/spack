@@ -1,18 +1,17 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 import os
-import argparse
 
 import llnl.util.tty as tty
 
 import spack.config
 import spack.cmd
-import spack.repo
 import spack.cmd.common.arguments as arguments
+import spack.repo
 from spack.stage import DIYStage
 
 description = "developer build: build from code in current working directory"
@@ -41,9 +40,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
+    arguments.add_common_arguments(subparser, ['spec'])
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])

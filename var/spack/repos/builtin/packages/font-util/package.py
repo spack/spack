@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,10 +77,9 @@ class FontUtil(AutotoolsPackage):
             default=','.join(fonts),
             multi=True)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.prepend_path('PATH', self.prefix.bin)
-        spack_env.prepend_path('PKG_CONFIG_PATH',
-                               join_path(self.prefix.lib, 'pkgconfig'))
+    def setup_build_environment(self, env):
+        env.prepend_path('PATH', self.prefix.bin)
+        env.prepend_path('PKG_CONFIG_PATH', self.prefix.lib.pkgconfig)
 
     @run_after('install')
     def font_install(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,4 +27,4 @@ class RPbdzmq(RPackage):
     depends_on('r@3.0.0:', when='@:0.2-5', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@0.2-6:', type=('build', 'run'))
     depends_on('r-r6', when='@:0.2-6', type=('build', 'run'))
-    depends_on('zeromq@4.0.4:')
+    depends_on('libzmq@4.0.4:')

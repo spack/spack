@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Mercurial(PythonPackage):
     """Mercurial is a free, distributed source control management tool."""
 
     homepage = "https://www.mercurial-scm.org"
-    url      = "https://www.mercurial-scm.org/release/mercurial-5.1.2.tar.gz"
+    url      = "https://www.mercurial-scm.org/release/mercurial-5.3.tar.gz"
 
     import_modules = [
         'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
@@ -20,6 +20,7 @@ class Mercurial(PythonPackage):
         'mercurial.httpclient', 'mercurial.pure'
     ]
 
+    version('5.3',   sha256='e57ff61d6b67695149dd451922b40aa455ab02e01711806a131a1e95c544f9b9')
     version('5.1.2', sha256='15af0b090b23649e0e53621a88dde97b55a734d7cb08b77d3df284db70d44e2e')
     version('5.1.1', sha256='35fc8ba5e0379c1b3affa2757e83fb0509e8ac314cbd9f1fd133cf265d16e49f')
     version('4.9.1', sha256='1bdd21bb87d1e05fb5cd395d488d0e0cc2f2f90ce0fd248e31a03595da5ccb47')
@@ -39,12 +40,12 @@ class Mercurial(PythonPackage):
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-certifi',  type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # Python 3 support is still experimental, explicitly allow
-        spack_env.set('HGALLOWPYTHON3', True)
-        spack_env.set('HGPYTHON3', True)
+        env.set('HGALLOWPYTHON3', True)
+        env.set('HGPYTHON3', True)
         # Setuptools is still opt-in, explicitly enable
-        spack_env.set('FORCE_SETUPTOOLS', True)
+        env.set('FORCE_SETUPTOOLS', True)
 
     @run_after('install')
     def post_install(self):
@@ -61,42 +62,42 @@ class Mercurial(PythonPackage):
             install('hg-ssh.8', prefix.man.man8)
 
         # Install completion scripts
-        contrib = join_path(prefix, 'contrib')
+        contrib = prefix.contrib
         mkdir(contrib)
         with working_dir('contrib'):
-            install('bash_completion', join_path(contrib, 'bash_completion'))
-            install('zsh_completion',  join_path(contrib, 'zsh_completion'))
+            install('bash_completion', contrib.bash_completion)
+            install('zsh_completion',  contrib.zsh_completion)
 
     @run_after('install')
     def configure_certificates(self):
         """Configuration of HTTPS certificate authorities
         https://www.mercurial-scm.org/wiki/CACertificates"""
 
-        etc_dir = join_path(self.prefix.etc, 'mercurial')
+        etc_dir = self.prefix.etc.mercurial
         mkdirp(etc_dir)
 
-        hgrc_filename = join_path(etc_dir, 'hgrc')
+        hgrc_filename = etc_dir.hgrc
 
         # Use certifi to find the location of the CA certificate
         print_str = self.spec['python'].package.print_string('certifi.where()')
-        certificate = python('-c', 'import certifi; ' + print_str)
+        certificate = python('-c', 'import certifi; ' + print_str, output=str)
 
         if not certificate:
             tty.warn('CA certificate not found. You may not be able to '
                      'connect to an HTTPS server. If your CA certificate '
                      'is in a non-standard location, you should add it to '
                      '{0}.'.format(hgrc_filename))
-
-        # Write the global mercurial configuration file
-        with open(hgrc_filename, 'w') as hgrc:
-            hgrc.write('[web]\ncacerts = {0}'.format(certificate))
+        else:
+            # Write the global mercurial configuration file
+            with open(hgrc_filename, 'w') as hgrc:
+                hgrc.write('[web]\ncacerts = {0}'.format(certificate))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
         """Sanity-check setup."""
 
-        hg = Executable(join_path(self.prefix.bin, 'hg'))
+        hg = Executable(self.prefix.bin.hg)
 
         hg('debuginstall')
         hg('version')

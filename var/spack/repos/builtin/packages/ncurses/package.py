@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from os.path import exists, join
 from os import makedirs
 
 
-class Ncurses(AutotoolsPackage):
+class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     """The ncurses (new curses) library is a free software emulation of
     curses in System V Release 4.0, and more. It uses terminfo format,
     supports pads and color and multiple highlights and forms
@@ -18,7 +18,7 @@ class Ncurses(AutotoolsPackage):
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
+    gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
     version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
     version('6.0', sha256='f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260')
@@ -34,8 +34,8 @@ class Ncurses(AutotoolsPackage):
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.unset('TERMINFO')
+    def setup_build_environment(self, env):
+        env.unset('TERMINFO')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' or name == 'cxxflags':
@@ -45,6 +45,7 @@ class Ncurses(AutotoolsPackage):
 
     def configure(self, spec, prefix):
         opts = [
+            '--disable-stripping',
             '--with-shared',
             '--with-cxx-shared',
             '--enable-overwrite',

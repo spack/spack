@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Bmi(AutotoolsPackage):
     version('develop', branch='master')
 
     depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
 
     # need to override 'autoreconf' so we can run BMI's 'prepare' script
     def autoreconf(self, spec, prefix):

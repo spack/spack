@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ from llnl.util.cpu import Microarchitecture  # noqa
     'linux-scientific7-piledriver',
     'linux-rhel6-piledriver',
     'linux-centos7-power8le',
+    'linux-centos7-thunderx2',
+    'linux-centos7-cascadelake',
     'darwin-mojave-ivybridge',
     'darwin-mojave-haswell',
     'darwin-mojave-skylake',
@@ -86,6 +88,7 @@ def supported_target(request):
     return request.param
 
 
+@pytest.mark.regression('13803')
 def test_target_detection(expected_target):
     detected_target = llnl.util.cpu.host()
     assert detected_target == expected_target
@@ -121,6 +124,8 @@ def test_equality(supported_target):
     ('piledriver <= steamroller', True),
     ('zen2 >= zen', True),
     ('zen >= zen', True),
+    ('aarch64 <= thunderx2', True),
+    ('aarch64 <= a64fx', True),
     # Test unrelated microarchitectures
     ('power8 < skylake', False),
     ('power8 <= skylake', False),
@@ -205,12 +210,16 @@ def test_target_json_schema():
     ('nehalem', 'gcc', '4.9.3', '-march=nehalem -mtune=nehalem'),
     ('nehalem', 'gcc', '4.8.5', '-march=corei7 -mtune=corei7'),
     ('sandybridge', 'gcc', '4.8.5', '-march=corei7-avx -mtune=corei7-avx'),
+    ('thunderx2', 'gcc', '4.8.5', '-march=armv8-a'),
+    ('thunderx2', 'gcc', '4.9.3', '-march=armv8-a+crc+crypto'),
     # Test Clang / LLVM
-    ('sandybridge', 'clang', '3.9.0', '-march=x86-64 -mcpu=sandybridge'),
-    ('icelake', 'clang', '6.0.0', '-march=x86-64 -mcpu=icelake'),
-    ('icelake', 'clang', '8.0.0', '-march=x86-64 -mcpu=icelake-client'),
-    ('zen2', 'clang', '9.0.0', '-march=x86-64 -mcpu=znver2'),
-    ('power9le', 'clang', '8.0.0', '-march=ppc64le -mcpu=pwr9'),
+    ('sandybridge', 'clang', '3.9.0', '-march=sandybridge -mtune=sandybridge'),
+    ('icelake', 'clang', '6.0.0', '-march=icelake -mtune=icelake'),
+    ('icelake', 'clang', '8.0.0',
+     '-march=icelake-client -mtune=icelake-client'),
+    ('zen2', 'clang', '9.0.0', '-march=znver2 -mtune=znver2'),
+    ('power9le', 'clang', '8.0.0', '-mcpu=power9 -mtune=power9'),
+    ('thunderx2', 'clang', '6.0.0', '-mcpu=thunderx2t99'),
     # Test Intel on Intel CPUs
     ('sandybridge', 'intel', '17.0.2', '-march=corei7-avx -mtune=corei7-avx'),
     ('sandybridge', 'intel', '18.0.5',
@@ -236,7 +245,7 @@ def test_unsupported_optimization_flags(target_name, compiler, version):
     target = llnl.util.cpu.targets[target_name]
     with pytest.raises(
             llnl.util.cpu.UnsupportedMicroarchitecture,
-            matches='cannot produce optimized binary'
+            match='cannot produce optimized binary'
     ):
         target.optimization_flags(compiler, version)
 
@@ -269,3 +278,14 @@ def test_version_components(version, expected_number, expected_suffix):
     number, suffix = llnl.util.cpu.version_components(version)
     assert number == expected_number
     assert suffix == expected_suffix
+
+
+def test_invalid_family():
+    targets = llnl.util.cpu.targets
+    multi_parents = Microarchitecture(
+        name='chimera', parents=[targets['pentium4'], targets['power7']],
+        vendor='Imagination', features=[], compilers={}, generation=0
+    )
+    with pytest.raises(AssertionError,
+                       match='a target is expected to belong'):
+        multi_parents.family

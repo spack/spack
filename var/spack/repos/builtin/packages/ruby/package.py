@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,7 +63,7 @@ class Ruby(AutotoolsPackage):
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
         return args
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
@@ -71,10 +71,10 @@ class Ruby(AutotoolsPackage):
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
 
-        spack_env.set_path('GEM_PATH', ruby_paths)
+        env.set_path('GEM_PATH', ruby_paths)
 
         # The actual installation path for this gem
-        spack_env.set('GEM_HOME', dependent_spec.prefix)
+        env.set('GEM_HOME', dependent_spec.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

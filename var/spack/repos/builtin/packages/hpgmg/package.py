@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Hpgmg(Package):
     """
 
     homepage = "https://bitbucket.org/hpgmg/hpgmg"
-    url      = "https://hpgmg.org/static/hpgmg-0.tar.gz"
+    url      = "https://hpgmg.org/static/hpgmg-0.4.tar.gz"
     git      = "https://bitbucket.org/hpgmg/hpgmg.git"
 
     tags = ['proxy-app']

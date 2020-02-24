@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Kaldi(Package):    # Does not use Autotools
     git      = "https://github.com/kaldi-asr/kaldi.git"
 
     version('master')
+    version('2019-09-29', commit='6ffde4b41c58de778245149690927d592cd5956a')
     version('2019-07-29', commit='7637de77e0a77bf280bef9bf484e4f37c4eb9475')
     version('2018-07-11', commit='6f2140b032b0108bc313eefdca65151289642773')
     version('2015-10-07', commit='c024e8aa0a727bf76c91a318f76a1f8b0b59249e')
@@ -37,10 +38,14 @@ class Kaldi(Package):    # Does not use Autotools
     depends_on('openfst@1.4.1-patch', when='@2015-10-07')
     depends_on('openfst@1.6.0:', when='@2018-07-11')
     depends_on('openfst@1.6.0:', when='@2019-07-29')
+    depends_on('openfst@1.6.7:', when='@2019-09-29')
     depends_on('cub', when='@2019-07-29:')
     depends_on('openfst')
 
     patch('openfst-1.4.1.patch', when='@2015-10-07')
+
+    # Change process of version analysis when using Fujitsu compiler.
+    patch('fujitsu_fix_version_analysis.patch', when='@2018-07-11:%fj')
 
     def install(self, spec, prefix):
         configure_args = ['--fst-root=' + spec['openfst'].prefix]

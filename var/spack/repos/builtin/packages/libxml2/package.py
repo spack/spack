@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,14 +27,15 @@ class Libxml2(AutotoolsPackage):
     depends_on('zlib')
     depends_on('xz')
 
-    depends_on('python+shared', when='+python')
+    # avoid cycle dependency for concretizer
+    depends_on('python+shared~libxml2', when='+python')
     extends('python', when='+python',
             ignore=r'(bin.*$)|(include.*$)|(share.*$)|(lib/libxml2.*$)|'
             '(lib/xml2.*$)|(lib/cmake.*$)')
 
     # XML Conformance Test Suites
     # See http://www.w3.org/XML/Test/ for information
-    resource(name='xmlts', url='http://www.w3.org/XML/Test/xmlts20080827.tar.gz',
+    resource(name='xmlts', url='https://www.w3.org/XML/Test/xmlts20080827.tar.gz',
              sha256='96151685cec997e1f9f3387e3626d61e6284d4d6e66e0e440c209286c03e9cc7')
 
     @property

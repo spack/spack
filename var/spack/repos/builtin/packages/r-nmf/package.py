@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RNmf(RPackage):
     computations on multicore machines.."""
 
     homepage = "http://renozao.github.io/NMF"
-    url      = "https://cloud.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
+    url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 
     version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')

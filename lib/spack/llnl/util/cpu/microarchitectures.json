@@ -64,13 +64,13 @@
         "clang": [
           {
             "versions": "0.0.0-apple:",
-            "family": "x86-64",
-            "flags": "-march={family}"
+            "name": "x86-64",
+            "flags": "-march={name}"
           },
           {
             "versions": ":",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu=generic"
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
           }
         ],
         "intel": {
@@ -96,8 +96,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -122,8 +121,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -157,8 +155,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -188,8 +185,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -227,8 +223,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -274,8 +269,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -326,8 +320,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": [
           {
@@ -373,8 +366,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -416,8 +408,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -463,8 +454,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "knl",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -515,8 +505,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "skylake-avx512",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -568,8 +557,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "18.0:",
@@ -609,7 +597,7 @@
         "avx512bw",
         "avx512dq",
         "avx512cd",
-        "avx512vnni"
+        "avx512_vnni"
       ],
       "compilers": {
         "gcc": {
@@ -618,8 +606,7 @@
         },
         "clang": {
           "versions": "8.0:",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "19.0:",
@@ -685,13 +672,11 @@
           {
             "versions": "7.0:",
             "name": "icelake-client",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu={name}"
+            "flags": "-march={name} -mtune={name}"
           },
           {
             "versions": "6.0:6.9",
-            "family": "x86-64",
-            "flags": "-march={family} -mcpu={name}"
+            "flags": "-march={name} -mtune={name}"
           }
         ],
         "intel": {
@@ -723,8 +708,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "amdfam10",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -761,8 +745,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver1",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -803,8 +786,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver2",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -846,8 +828,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver3",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -892,8 +873,7 @@
         "clang": {
           "versions": "3.9:",
           "name": "bdver4",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -942,8 +922,7 @@
         "clang": {
           "versions": "4.0:",
           "name": "znver1",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -993,8 +972,7 @@
         "clang": {
           "versions": "9.0:",
           "name": "znver2",
-          "family": "x86-64",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-march={name} -mtune={name}"
         },
         "intel": {
           "versions": "16.0:",
@@ -1016,8 +994,7 @@
         },
         "clang": {
           "versions": ":",
-          "family": "ppc64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1033,9 +1010,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr7",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1058,9 +1033,7 @@
         ],
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr8",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1076,9 +1049,7 @@
         },
         "clang": {
           "versions": "3.9:",
-          "family": "ppc64",
-          "name": "pwr9",
-          "flags": "-march={family} -mcpu={name}"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1094,8 +1065,7 @@
         },
         "clang": {
           "versions": ":",
-          "family": "ppc64le",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1121,8 +1091,8 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "pwr8",
-          "flags": "-march={family} -mcpu={name}"
+          "name": "power8",
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1140,8 +1110,8 @@
         "clang": {
           "versions": "3.9:",
           "family": "ppc64le",
-          "name": "pwr9",
-          "flags": "-march={family} -mcpu={name}"
+          "name": "power9",
+          "flags": "-mcpu={name} -mtune={name}"
         }
       }
     },
@@ -1156,9 +1126,111 @@
         },
         "clang": {
           "versions": ":",
-          "family": "aarch64",
-          "flags": "-march={family} -mcpu=generic"
+          "flags": "-march=armv8-a -mtune=generic"
         }
+      }
+    },
+    "thunderx2": {
+      "from": "aarch64",
+      "vendor": "Cavium",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a+crc+crypto"
+          },
+          {
+            "versions": "7:",
+            "flags": "-mcpu=thunderx2t99"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "3.9:4.9",
+            "flags": "-march=armv8.1-a+crc+crypto"
+          },
+          {
+            "versions": "5:",
+            "flags": "-mcpu=thunderx2t99"
+          }
+        ]
+      }
+    },
+    "a64fx": {
+      "from": "aarch64",
+      "vendor": "Fujitsu",
+      "features": [
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "cpuid",
+        "asimdrdm",
+        "fphp",
+        "asimdhp",
+        "fcma",
+        "dcpop",
+        "sve"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a+crc+crypto"
+          },
+          {
+            "versions": "7:7.9",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
+          },
+          {
+            "versions": "8:",
+            "flags": "-march=armv8.2-a+crc+aes+sha2+fp16+sve -msve-vector-bits=512"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "3.9:4.9",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16"
+          },
+          {
+            "versions": "5:",
+            "flags": "-march=armv8.2-a+crc+crypto+fp16+sve"
+          }
+        ]
       }
     },
     "arm": {
@@ -1226,6 +1298,20 @@
         "ppc64"
       ]
     },
+    "vsx": {
+      "reason": "VSX alitvec extensions are supported by PowerISA from v2.06 (Power7+), but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "fma": {
+      "reason": "FMA has been supported by PowerISA since Power1, but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
     "sse4.1": {
       "reason": "permits to refer to sse4_1 also as sse4.1",
       "any_of": [
@@ -1243,6 +1329,35 @@
       "families": [
         "aarch64"
       ]
+    }
+  },
+  "conversions": {
+    "description": "Conversions that map some platform specific values to canonical values",
+    "arm_vendors": {
+      "0x41": "ARM",
+      "0x42": "Broadcom",
+      "0x43": "Cavium",
+      "0x44": "DEC",
+      "0x46": "Fujitsu",
+      "0x48": "HiSilicon",
+      "0x49": "Infineon Technologies AG",
+      "0x4d": "Motorola",
+      "0x4e": "Nvidia",
+      "0x50": "APM",
+      "0x51": "Qualcomm",
+      "0x53": "Samsung",
+      "0x56": "Marvell",
+      "0x61": "Apple",
+      "0x66": "Faraday",
+      "0x68": "HXT",
+      "0x69": "Intel"
+    },
+    "darwin_flags": {
+      "sse4.1": "sse4_1",
+      "sse4.2": "sse4_2",
+      "avx1.0": "avx",
+      "clfsopt": "clflushopt",
+      "xsave": "xsavec xsaveopt"
     }
   }
 }

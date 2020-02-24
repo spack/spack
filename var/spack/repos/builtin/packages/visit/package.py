@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,19 +30,21 @@ class Visit(CMakePackage):
 
     patch('spack-changes.patch')
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
+    patch('parallel-hdf5.patch', when='+hdf5+mpi')
 
     depends_on('cmake@3.0:', type='build')
     depends_on('vtk@8.1.0:+opengl2', when='@3.0:3.0.1')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
     depends_on('vtk+python', when='+python @3.0:')
-    depends_on('vtk~mpi')
+    depends_on('vtk~mpi', when='~mpi')
     depends_on('vtk+qt', when='+gui')
     depends_on('qt@4.8.6:4.999', when='+gui @:2.999')
     depends_on('qt@5.10:', when='+gui @3.0:')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
     depends_on('silo+shared', when='+silo')
-    depends_on('hdf5', when='+hdf5')
+    depends_on('hdf5~mpi', when='+hdf5~mpi')
+    depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('adios2', when='+adios2')
 
@@ -91,7 +93,7 @@ class Visit(CMakePackage):
         if '+hdf5' in spec:
             args.append(
                 '-DVISIT_HDF5_DIR:PATH={0}'.format(spec['hdf5'].prefix))
-            if spec.satisfies('^hdf5+mpi', strict=True):
+            if '+mpi' in spec:
                 args.append('-DVISIT_HDF5_MPI_DIR:PATH={0}'.format(
                     spec['hdf5'].prefix))
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Mysql(CMakePackage):
     homepage = "https://www.mysql.com/"
     url      = "https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.15.tar.gz"
 
+    version('8.0.19', sha256='a62786d67b5e267eef928003967b4ccfe362d604b80f4523578e0688f5b9f834')
+    version('8.0.18', sha256='4cb39a315298eb243c25c53c184b3682b49c2a907a1d8432ba0620534806ade8')
+    version('8.0.17', sha256='c6e3f38199a77bfd8a4925ca00b252d3b6159b90e4980c7232f1c58d6ca759d6')
     version('8.0.16', sha256='8d9fe89920dc8bbbde2857b7b877ad2fa5ec2f231c68e941d484f3b72735eaea')
     version('8.0.15', sha256='bb1bca2dc2f23ee9dd395cc4db93b64561d4ac20b53be5d1dae563f7be64825e')
     version('8.0.14', sha256='bc53f4c914fb39650289700d144529121d71f38399d2d24a0f5c76e5a8abd204')
@@ -122,7 +125,7 @@ class Mysql(CMakePackage):
             options.append('-DWITHOUT_SERVER:BOOL=ON')
         return options
 
-    def _fix_dtrace_shebang(self, build_env):
+    def _fix_dtrace_shebang(self, env):
         # dtrace may cause build to fail because it uses
         # '/usr/bin/python' in the shebang. To work around that we copy
         # the original script into a temporary folder, and change the
@@ -141,13 +144,7 @@ class Mysql(CMakePackage):
         )
         # To have our own copy of dtrace in PATH, we need to
         # prepend to PATH the temporary folder where it resides.
-        build_env.prepend_path('PATH', dtrace_copy_path)
-
-    @run_before('cmake')
-    def _maybe_fix_dtrace_shebang(self):
-        if 'python' in self.spec.flat_dependencies() and \
-           self.spec.satisfies('@:7.99.99'):
-            self._fix_dtrace_shebang(build_env)
+        env.prepend_path('PATH', dtrace_copy_path)
 
     def setup_build_environment(self, env):
         cxxstd = self.spec.variants['cxxstd'].value
@@ -160,3 +157,7 @@ class Mysql(CMakePackage):
                                  '-Wno-deprecated-declarations')
             if int(cxxstd) > 14:
                 env.append_flags('CXXFLAGS', '-Wno-error=register')
+
+        if 'python' in self.spec.flat_dependencies() and \
+           self.spec.satisfies('@:7.99.99'):
+            self._fix_dtrace_shebang(env)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,9 @@ class SuperluDist(CMakePackage):
     depends_on('parmetis')
     depends_on('metis@5:')
 
+    patch('xl-611.patch', when='@:6.1.1 %xl')
+    patch('xl-611.patch', when='@:6.1.1 %xl_r')
+
     def cmake_args(self):
         spec = self.spec
         args = [
@@ -51,8 +54,14 @@ class SuperluDist(CMakePackage):
             '-DUSE_XSDK_DEFAULTS=YES',
             '-DTPL_PARMETIS_LIBRARIES=%s' % spec['parmetis'].libs.ld_flags +
             ';' + spec['metis'].libs.ld_flags,
-            '-DTPL_PARMETIS_INCLUDE_DIRS=%s' % spec['parmetis'].prefix.include
+            '-DTPL_PARMETIS_INCLUDE_DIRS=%s' %
+            spec['parmetis'].prefix.include +
+            ';' + spec['metis'].prefix.include
         ]
+
+        if (spec.satisfies('%xl') or spec.satisfies('%xl_r')) and \
+           spec.satisfies('@:6.1.1'):
+            args.append('-DCMAKE_C_FLAGS=-DNoChange')
 
         if '+int64' in spec:
             args.append('-DXSDK_INDEX_SIZE=64')
@@ -63,6 +72,7 @@ class SuperluDist(CMakePackage):
             args.append('-Denable_openmp=ON')
         else:
             args.append('-Denable_openmp=OFF')
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

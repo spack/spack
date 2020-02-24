@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,4 +28,4 @@ class PyPygpu(PythonPackage):
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mako', type=('build', 'run'))
-    depends_on('libcheck')
+    depends_on('check')

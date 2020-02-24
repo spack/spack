@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Opencv(CMakePackage):
+class Opencv(CMakePackage, CudaPackage):
     """OpenCV is released under a BSD license and hence it's free for both
     academic and commercial use. It has C++, C, Python and Java interfaces and
     supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
@@ -25,8 +25,11 @@ class Opencv(CMakePackage):
     git      = 'https://github.com/opencv/opencv.git'
 
     version('master', branch='master')
+    version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
+    version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
+    version('4.1.1', sha256='5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217')
     version('4.1.0-openvino', sha256='58764d2487c6fb4cd950fb46483696ae7ae28e257223d6e44e162caa22ee9e5c')
-    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7', preferred=True)
+    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7')
     version('4.0.1-openvino', sha256='8cbe32d12a70decad7a8327eb4fba46016a9c47ff3ba6e114d27b450f020716f')
     version('4.0.1',          sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
     version('4.0.0-openvino', sha256='aa910078ed0b7e17bd10067e04995c131584a6ed6d0dcc9ca44a292aa8e296fc')
@@ -60,6 +63,7 @@ class Opencv(CMakePackage):
     # OpenCV modules
     variant('calib3d', default=True, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
+    variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
     variant('dnn', default=True, description='Build DNN support')
     variant('features2d', default=True, description='features2d module')
     variant('flann', default=True, description='flann module')
@@ -78,9 +82,6 @@ class Opencv(CMakePackage):
     variant('videoio', default=True, description='videoio module')
 
     # Optional 3rd party components
-    variant('cuda', default=True, description='Activates support for CUDA')
-    # Cuda@10.0.130 does not support gcc > 7
-    conflicts('%gcc@7:', when='+cuda')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
@@ -124,6 +125,11 @@ class Opencv(CMakePackage):
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
 
+    # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
+    # exists, otherwise build will fail
+    # See https://github.com/opencv/opencv_contrib/issues/1786
+    conflicts('cuda@10:', when='+cudacodec')
+
     extends('python', when='+python')
 
     def cmake_args(self):
@@ -150,6 +156,8 @@ class Opencv(CMakePackage):
                 'ON' if '+calib3d' in spec else 'OFF')),
             '-DBUILD_opencv_core:BOOL={0}'.format((
                 'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_cudacodec={0}'.format((
+                'ON' if '+cudacodec' in spec else 'OFF')),
             '-DBUILD_opencv_dnn:BOOL={0}'.format((
                 'ON' if '+dnn' in spec else 'OFF')),
             '-DBUILD_opencv_features2d={0}'.format((

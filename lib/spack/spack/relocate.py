@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 
 import os
 import re
+import shutil
 import platform
 import spack.repo
 import spack.cmd
@@ -86,7 +87,14 @@ def get_existing_elf_rpaths(path_name):
     Return the RPATHS returned by patchelf --print-rpath path_name
     as a list of strings.
     """
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        patchelf = Executable(path_name)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         output = patchelf('--print-rpath', '%s' %
                           path_name, output=str, error=str)
@@ -326,8 +334,18 @@ def modify_elf_object(path_name, new_rpaths):
     """
     Replace orig_rpath with new_rpath in RPATH of elf object path_name
     """
+
     new_joined = ':'.join(new_rpaths)
-    patchelf = Executable(get_patchelf())
+
+    # if we're relocating patchelf itself, use it
+
+    if path_name[-13:] == "/bin/patchelf":
+        bak_path = path_name + ".bak"
+        shutil.copy(path_name, bak_path)
+        patchelf = Executable(bak_path)
+    else:
+        patchelf = Executable(get_patchelf())
+
     try:
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                  '%s' % path_name, output=str, error=str)
@@ -665,7 +683,6 @@ def file_is_relocatable(file, paths_to_relocate=None):
         raise ValueError('{0} is not an absolute path'.format(file))
 
     strings = Executable('strings')
-    patchelf = Executable(get_patchelf())
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
@@ -676,8 +693,8 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = patchelf('--print-rpath', file, output=str).strip()
-            set_of_strings.discard(rpaths.strip())
+            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macho_get_paths(file)
@@ -732,4 +749,5 @@ def mime_type(file):
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))

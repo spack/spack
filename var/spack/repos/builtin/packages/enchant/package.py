@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Enchant(AutotoolsPackage):
     homepage = "https://abiword.github.io/enchant/"
     url      = "https://github.com/AbiWord/enchant/releases/download/v2.2.5/enchant-2.2.5.tar.gz"
 
+    version('2.2.7', sha256='1b22976135812b35cb5b8d21a53ad11d5e7c1426c93f51e7a314a2a42cab3a09')
+    version('2.2.6', sha256='8048c5bd26190b21279745cfecd05808c635bc14912e630340cd44a49b87d46d')
     version('2.2.5', sha256='ffce4ea00dbda1478d91c3e1538cadfe5761d9d6c0ceb27bc3dba51882fe1c47')
     version('2.2.4', sha256='f5d6b689d23c0d488671f34b02d07b84e408544b2f9f6e74fb7221982b1ecadc')
     version('2.2.3', sha256='abd8e915675cff54c0d4da5029d95c528362266557c61c7149d53fa069b8076d')

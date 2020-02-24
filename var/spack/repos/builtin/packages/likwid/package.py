@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,10 @@ class Likwid(Package):
     for information."""
 
     homepage = "https://github.com/RRZE-HPC/likwid"
-    url      = "https://github.com/RRZE-HPC/likwid/archive/4.1.2.tar.gz"
+    url      = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
+    git      = "https://github.com/RRZE-HPC/likwid.git"
 
+    version('5.0.0', sha256='26623f5a1a5fec19d798f0114774a5293d1c93a148538b9591a13e50930fa41e')
     version('4.3.4', sha256='5c0d1c66b25dac8292a02232f06454067f031a238f010c62f40ef913c6609a83')
     version('4.3.3', sha256='a681378cd66c1679ca840fb5fac3136bfec93c01b3d78cc1d00a641db325a9a3')
     version('4.3.2', sha256='fd39529854b8952e7530da1684835aa43ac6ce2169f5ebd1fb2a481f6fb288ac')

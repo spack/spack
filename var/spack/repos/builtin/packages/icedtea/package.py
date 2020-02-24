@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,13 @@ class Icedtea(AutotoolsPackage):
     homepage = "http://icedtea.classpath.org/wiki/Main_Page"
     url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
 
-    version('3.4.0',  sha256='2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b')
+    version('3.9.0', sha256='84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88')
+    version('3.8.0', sha256='ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0')
+    version('3.7.0', sha256='936302694e193791885e81cf72097eeadee5b68ba220889228b0aafbfb2cb654')
+    version('3.6.0', sha256='74a43c4e027c72bb1c324f8f73af21565404326c9998f534f234ec2a36ca1cdb')
+    version('3.5.1', sha256='b229f2aa5d743ff850fa695e61f65139bb6eca1a9d10af5306ad3766fcea2eb2')
+    version('3.5.0', sha256='2c92e18fa70edaf73517fcf91bc2a7cc2ec2aa8ffdf22bb974fa6f9bc3065f30')
+    version('3.4.0', sha256='2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b')
 
     variant('X', default=False, description="Build with GUI support.")
     variant('shenandoah', default=False,
@@ -62,7 +68,6 @@ class Icedtea(AutotoolsPackage):
     depends_on('zlib')
     depends_on('alsa-lib')
 
-    provides('java')
     provides('java@8', when='@3.4.0:3.99.99')
 
     force_autoreconf = True
@@ -153,18 +158,18 @@ class Icedtea(AutotoolsPackage):
         ]
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set JAVA_HOME."""
 
-        run_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
         other Java extensions it depends on."""
 
-        spack_env.set('JAVA_HOME', self.home)
+        env.set('JAVA_HOME', self.home)
 
         class_paths = []
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
@@ -172,14 +177,19 @@ class Icedtea(AutotoolsPackage):
                 class_paths.extend(find(d.prefix, '*.jar'))
 
         classpath = os.pathsep.join(class_paths)
-        spack_env.set('CLASSPATH', classpath)
+        env.set('CLASSPATH', classpath)
 
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Set CLASSPATH.
+
+        CLASSPATH contains the installation prefix for the extension and any
+        other Java extensions it depends on."""
         # For runtime environment set only the path for
         # dependent_spec and prepend it to CLASSPATH
         if dependent_spec.package.extends(self.spec):
             class_paths = find(dependent_spec.prefix, '*.jar')
             classpath = os.pathsep.join(class_paths)
-            run_env.prepend_path('CLASSPATH', classpath)
+            env.prepend_path('CLASSPATH', classpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Allows spec['java'].home to work."""

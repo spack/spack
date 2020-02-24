@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,9 @@ class Dbcsr(CMakePackage):
     """Distributed Block Compressed Sparse Row matrix library."""
 
     homepage = "https://github.com/cp2k/dbcsr"
-    url      = "https://github.com/cp2k/dbcsr/archive/v1.0.0-rc.0.tar.gz"
+    git      = "https://github.com/cp2k/dbcsr.git"
 
-    version('develop', git='https://github.com/cp2k/dbcsr.git', branch='develop')
+    version('develop', branch='develop')
 
     variant('mpi',    default=True,  description='Compile with MPI')
     variant('openmp', default=False, description='Build with OpenMP support')

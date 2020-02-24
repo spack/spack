@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Gmp(AutotoolsPackage):
+class Gmp(AutotoolsPackage, GNUMirrorPackage):
     """GMP is a free library for arbitrary precision arithmetic, operating
     on signed integers, rational numbers, and floating-point numbers."""
 
     homepage = "https://gmplib.org"
-    url      = "https://ftpmirror.gnu.org/gmp/gmp-6.1.2.tar.bz2"
+    gnu_mirror_path = "gmp/gmp-6.1.2.tar.bz2"
 
     version('6.1.2',  sha256='5275bb04f4863a13516b2f39392ac5e272f5e1bb8057b18aec1c9b79d73d8fb2')
     version('6.1.1',  sha256='a8109865f2893f1373b0a8ed5ff7429de8db696fc451b1036bd7bdf95bbeffd6')

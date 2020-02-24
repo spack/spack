@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,6 @@ class CBlosc2(CMakePackage):
        other bells and whistles"""
 
     homepage = "http://www.blosc.org"
-    url      = "https://github.com/Blosc/c-blosc2/archive/v2.0.0-beta.1.tar.gz"
     git      = "https://github.com/Blosc/c-blosc2.git"
 
     maintainers = ['ax3l']
@@ -32,12 +31,11 @@ class CBlosc2(CMakePackage):
             description='support for ZSTD')
 
     depends_on('cmake@2.8.10:', type='build')
-    # TODO https://github.com/inikep/lizard/issues/21
-    # depends_on('lizard')
-    depends_on('lz4')
-    depends_on('snappy')
-    depends_on('zlib')
-    depends_on('zstd')
+    depends_on('lizard', when='+lizard')
+    depends_on('lz4', when='+lz4')
+    depends_on('snappy', when='+snappy')
+    depends_on('zlib', when='+zlib')
+    depends_on('zstd', when='+zstd')
 
     def cmake_args(self):
         spec = self.spec
@@ -53,8 +51,7 @@ class CBlosc2(CMakePackage):
                 'ON' if '~zlib' in spec else 'OFF'),
             '-DDEACTIVATE_ZSTD={0}'.format(
                 'ON' if '~zstd' in spec else 'OFF'),
-            # TODO https://github.com/inikep/lizard/issues/21
-            '-DPREFER_EXTERNAL_LIZARD=OFF',
+            '-DPREFER_EXTERNAL_LIZARD=ON',
             '-DPREFER_EXTERNAL_LZ4=ON',
             # snappy is supported via external install only
             '-DPREFER_EXTERNAL_ZLIB=ON',

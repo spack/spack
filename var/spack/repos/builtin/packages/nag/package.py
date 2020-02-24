@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ import os
 class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
+    maintainers = ['ThemosTsikas']
 
-    version('6.2', sha256='e22f70f52949c4eb5526229c13920c924af5254d07a584cf54fefecd130fd29c')
+    version('7.0', sha256='fafd97ebb58753ab5b9f13822d2e3d24c2f488ea25928c4c3a13e4e2e350ab3e')
+    version('6.2', sha256='9b60f6ffa4f4be631079676963e74eea25e8824512e5c864eb06758b2a3cdd2d')
     version('6.1', sha256='32580e0004e6798abf1fa52f0070281b28abeb0da2387530a4cc41218e813c7c')
-    version('6.0', sha256='d5a326777a20303626b121da58522a122fcb1e3b4f2fcd657d9848e7b39fe7f8')
 
     # Licensing
     license_required = True
@@ -37,6 +38,6 @@ class Nag(Package):
         # Run install script
         os.system('./INSTALLU.sh')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('F77', join_path(self.prefix.bin, 'nagfor'))
-        run_env.set('FC',  join_path(self.prefix.bin, 'nagfor'))
+    def setup_run_environment(self, env):
+        env.set('F77', self.prefix.bin.nagfor)
+        env.set('FC',  self.prefix.bin.nagfor)

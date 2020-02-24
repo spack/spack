@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,12 +18,12 @@ import json
 from six.moves.urllib.error import URLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config as config
 import spack.fetch_strategy as fs
-import spack.util.gpg as gpg_util
+import spack.util.gpg
 import spack.relocate as relocate
 import spack.util.spack_yaml as syaml
 import spack.mirror
@@ -33,7 +33,7 @@ import spack.util.web as web_util
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.util.gpg import Gpg
-from spack.util.executable import ProcessError
+import spack.architecture as architecture
 
 _build_cache_relative_path = 'build_cache'
 
@@ -108,14 +108,6 @@ class NewLayoutException(spack.error.SpackError):
     Raised if directory layout is different from buildcache.
     """
     pass
-
-
-def has_gnupg2():
-    try:
-        gpg_util.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except ProcessError:
-        return False
 
 
 def build_cache_relative_path():
@@ -243,27 +235,31 @@ def checksum_tarball(file):
 
 def sign_tarball(key, force, specfile_path):
     # Sign the packages if keys available
-    if not has_gnupg2():
+    if spack.util.gpg.Gpg.gpg() is None:
         raise NoGpgException(
             "gpg2 is not available in $PATH .\n"
             "Use spack install gnupg and spack load gnupg.")
-    else:
-        if key is None:
-            keys = Gpg.signing_keys()
-            if len(keys) == 1:
-                key = keys[0]
-            if len(keys) > 1:
-                raise PickKeyException(str(keys))
-            if len(keys) == 0:
-                msg = "No default key available for signing.\n"
-                msg += "Use spack gpg init and spack gpg create"
-                msg += " to create a default key."
-                raise NoKeyException(msg)
+
+    if key is None:
+        keys = Gpg.signing_keys()
+        if len(keys) == 1:
+            key = keys[0]
+
+        if len(keys) > 1:
+            raise PickKeyException(str(keys))
+
+        if len(keys) == 0:
+            msg = "No default key available for signing.\n"
+            msg += "Use spack gpg init and spack gpg create"
+            msg += " to create a default key."
+            raise NoKeyException(msg)
+
     if os.path.exists('%s.asc' % specfile_path):
         if force:
             os.remove('%s.asc' % specfile_path)
         else:
             raise NoOverwriteException('%s.asc' % specfile_path)
+
     Gpg.sign(key, specfile_path, '%s.asc' % specfile_path)
 
 
@@ -272,7 +268,7 @@ def generate_package_index(cache_prefix):
 
     Creates (or replaces) the "index.html" page at the location given in
     cache_prefix.  This page contains a link for each binary package (*.yaml)
-    and signing key (*.key) under cache_prefix.
+    and public key (*.key) under cache_prefix.
     """
     tmpdir = tempfile.mkdtemp()
     try:
@@ -312,7 +308,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     tmpdir = tempfile.mkdtemp()
     cache_prefix = build_cache_prefix(tmpdir)
 
-    tarfile_name = tarball_name(spec, '.tar.gz')
+    tarfile_name = tarball_name(spec, '.tar.bz2')
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(
@@ -346,8 +342,18 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    install_tree(spec.prefix, workdir, symlinks=True)
+    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, '.tar')
+    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
+        tar.add(name='%s' % spec.prefix,
+                arcname='.')
+    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
+        tar.extractall(workdir)
+    os.remove(temp_tarfile_path)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -372,7 +378,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             tty.die(e)
 
     # create compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
+    with closing(tarfile.open(tarfile_path, 'w:bz2')) as tar:
         tar.add(name='%s' % workdir,
                 arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
@@ -411,8 +417,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         sign_tarball(key, force, specfile_path)
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
-        tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
-        tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
+        tar.add(name=tarfile_path, arcname='%s' % tarfile_name)
+        tar.add(name=specfile_path, arcname='%s' % specfile_name)
         if not unsigned:
             tar.add(name='%s.asc' % specfile_path,
                     arcname='%s.asc' % specfile_name)
@@ -583,13 +589,17 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
-    tarfile_name = tarball_name(spec, '.tar.gz')
+    tarfile_name = tarball_name(spec, '.tar.bz2')
     tarfile_path = os.path.join(tmpdir, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(tmpdir, specfile_name)
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
+    # older buildcache tarfiles use gzip compression
+    if not os.path.exists(tarfile_path):
+        tarfile_name = tarball_name(spec, '.tar.gz')
+        tarfile_path = os.path.join(tmpdir, tarfile_name)
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
@@ -642,7 +652,17 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # so the pathname should be the same now that the directory layout
     # is confirmed
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
-    install_tree(workdir, spec.prefix, symlinks=True)
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, '.tar')
+    temp_tarfile_path = os.path.join(tmpdir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
+        tar.add(name='%s' % workdir,
+                arcname='.')
+    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
+        tar.extractall(spec.prefix)
+    os.remove(temp_tarfile_path)
 
     # cleanup
     os.remove(tarfile_path)
@@ -664,48 +684,17 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
         shutil.rmtree(tmpdir)
 
 
-#: Internal cache for get_specs
-_cached_specs = None
+# Internal cache for downloaded specs
+_cached_specs = set()
 
 
-def get_specs(force=False):
-    """
-    Get spec.yaml's for build caches available on mirror
-    """
+def try_download_specs(urls=None, force=False):
+    '''
+    Try to download the urls and cache them
+    '''
     global _cached_specs
-
-    if _cached_specs:
-        tty.debug("Using previously-retrieved specs")
-        return _cached_specs
-
-    if not spack.mirror.MirrorCollection():
-        tty.warn("No Spack mirrors are currently configured")
+    if urls is None:
         return {}
-
-    urls = set()
-    for mirror in spack.mirror.MirrorCollection().values():
-        fetch_url_build_cache = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path)
-
-        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
-        if mirror_dir:
-            tty.msg("Finding buildcaches in %s" % mirror_dir)
-            if os.path.exists(mirror_dir):
-                files = os.listdir(mirror_dir)
-                for file in files:
-                    if re.search('spec.yaml', file):
-                        link = url_util.join(fetch_url_build_cache, file)
-                        urls.add(link)
-        else:
-            tty.msg("Finding buildcaches at %s" %
-                    url_util.format(fetch_url_build_cache))
-            p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'))
-            for link in links:
-                if re.search("spec.yaml", link):
-                    urls.add(link)
-
-    _cached_specs = []
     for link in urls:
         with Stage(link, name="build_cache", keep=True) as stage:
             if force and os.path.exists(stage.save_filename):
@@ -721,9 +710,90 @@ def get_specs(force=False):
                 # we need to mark this spec concrete on read-in.
                 spec = Spec.from_yaml(f)
                 spec._mark_concrete()
-                _cached_specs.append(spec)
+                _cached_specs.add(spec)
 
     return _cached_specs
+
+
+def get_spec(spec=None, force=False):
+    """
+    Check if spec.yaml exists on mirrors and return it if it does
+    """
+    global _cached_specs
+    urls = set()
+    if spec is None:
+        return {}
+    specfile_name = tarball_name(spec, '.spec.yaml')
+
+    if not spack.mirror.MirrorCollection():
+        tty.debug("No Spack mirrors are currently configured")
+        return {}
+
+    if spec in _cached_specs:
+        return _cached_specs
+
+    for mirror in spack.mirror.MirrorCollection().values():
+        fetch_url_build_cache = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path)
+
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
+        if mirror_dir:
+            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            link = url_util.join(fetch_url_build_cache, specfile_name)
+            urls.add(link)
+
+        else:
+            tty.msg("Finding buildcaches at %s" %
+                    url_util.format(fetch_url_build_cache))
+            link = url_util.join(fetch_url_build_cache, specfile_name)
+            urls.add(link)
+
+    return try_download_specs(urls=urls, force=force)
+
+
+def get_specs(force=False, allarch=False):
+    """
+    Get spec.yaml's for build caches available on mirror
+    """
+    arch = architecture.Arch(architecture.platform(),
+                             'default_os', 'default_target')
+    arch_pattern = ('([^-]*-[^-]*-[^-]*)')
+    if not allarch:
+        arch_pattern = '(%s-%s-[^-]*)' % (arch.platform, arch.os)
+
+    regex_pattern = '%s(.*)(spec.yaml$)' % (arch_pattern)
+    arch_re = re.compile(regex_pattern)
+
+    if not spack.mirror.MirrorCollection():
+        tty.debug("No Spack mirrors are currently configured")
+        return {}
+
+    urls = set()
+    for mirror in spack.mirror.MirrorCollection().values():
+        fetch_url_build_cache = url_util.join(
+            mirror.fetch_url, _build_cache_relative_path)
+
+        mirror_dir = url_util.local_file_path(fetch_url_build_cache)
+        if mirror_dir:
+            tty.msg("Finding buildcaches in %s" % mirror_dir)
+            if os.path.exists(mirror_dir):
+                files = os.listdir(mirror_dir)
+                for file in files:
+                    m = arch_re.search(file)
+                    if m:
+                        link = url_util.join(fetch_url_build_cache, file)
+                        urls.add(link)
+        else:
+            tty.msg("Finding buildcaches at %s" %
+                    url_util.format(fetch_url_build_cache))
+            p, links = web_util.spider(
+                url_util.join(fetch_url_build_cache, 'index.html'))
+            for link in links:
+                m = arch_re.search(link)
+                if m:
+                    urls.add(link)
+
+    return try_download_specs(urls=urls, force=force)
 
 
 def get_keys(install=False, trust=False, force=False):
@@ -803,10 +873,10 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     try:
         _, _, yaml_file = web_util.read_from_url(file_path)
         yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
-    except URLError as url_err:
+    except (URLError, web_util.SpackWebError) as url_err:
         err_msg = [
             'Unable to determine whether {0} needs rebuilding,',
-            ' caught URLError attempting to read from {1}.',
+            ' caught exception attempting to read from {1}.',
         ]
         tty.error(''.join(err_msg).format(spec.short_spec, file_path))
         tty.debug(url_err)
@@ -908,10 +978,15 @@ def _download_buildcache_entry(mirror_root, descriptions):
     return True
 
 
-def download_buildcache_entry(file_descriptions):
-    if not spack.mirror.MirrorCollection():
-        tty.die("Please add a spack mirror to allow " +
+def download_buildcache_entry(file_descriptions, mirror_url=None):
+    if not mirror_url and not spack.mirror.MirrorCollection():
+        tty.die("Please provide or add a spack mirror to allow " +
                 "download of buildcache entries.")
+
+    if mirror_url:
+        mirror_root = os.path.join(
+            mirror_url, _build_cache_relative_path)
+        return _download_buildcache_entry(mirror_root, file_descriptions)
 
     for mirror in spack.mirror.MirrorCollection().values():
         mirror_root = os.path.join(

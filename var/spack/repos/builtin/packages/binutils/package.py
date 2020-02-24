@@ -1,19 +1,21 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import glob
+import sys
 
 
-class Binutils(AutotoolsPackage):
+class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
+    gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
-    version('2.32', sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
+    version('2.33.1', sha256='0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2')
+    version('2.32',   sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
     version('2.31.1', sha256='ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
     version('2.29.1', sha256='1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc')
     version('2.28', sha256='6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72')
@@ -27,7 +29,8 @@ class Binutils(AutotoolsPackage):
 
     variant('plugins', default=False,
             description="enable plugins, needed for gold linker")
-    variant('gold', default=True, description="build the gold linker")
+    variant('gold', default=(sys.platform != 'darwin'),
+            description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
@@ -42,6 +45,9 @@ class Binutils(AutotoolsPackage):
     # thus needs bison, even for a one-time build.
     depends_on('m4', type='build', when='@:2.29.99 +gold')
     depends_on('bison', type='build', when='@:2.29.99 +gold')
+
+    conflicts('+gold', when='platform=darwin',
+              msg="Binutils cannot build linkers on macOS")
 
     def configure_args(self):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 import datetime as dt
 
 
-class Lammps(CMakePackage):
+class Lammps(CMakePackage, CudaPackage):
     """LAMMPS stands for Large-scale Atomic/Molecular Massively
     Parallel Simulator. This package uses patch releases, not
     stable release.
@@ -48,10 +48,10 @@ class Lammps(CMakePackage):
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace', 'latte',
                           'manybody', 'mc', 'meam', 'misc', 'molecule',
-                          'mpiio', 'peri', 'poems', 'python', 'qeq', 'reax',
-                          'replica', 'rigid', 'shock', 'snap', 'srd',
+                          'mpiio', 'peri', 'poems', 'python', 'qeq',
+                          'replica', 'rigid', 'shock', 'snap', 'spin', 'srd',
                           'user-atc', 'user-h5md', 'user-lb', 'user-misc',
-                          'user-netcdf', 'user-omp', 'voronoi']
+                          'user-netcdf', 'user-omp', 'user-reaxc', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -60,6 +60,8 @@ class Lammps(CMakePackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
+    variant('kokkos', default=False,
+            description='Build with Kokkos accelerated styles')
     variant('jpeg', default=True,
             description='Build with jpeg support')
     variant('png', default=True,
@@ -67,18 +69,24 @@ class Lammps(CMakePackage):
     variant('ffmpeg', default=True,
             description='Build with ffmpeg support')
     variant('openmp', default=True, description='Build with OpenMP')
+    variant('opencl', default=False, description='Build with OpenCL')
     variant('exceptions', default=False,
             description='Build with lammps exceptions')
+    variant('cuda_mps', default=False,
+            description='(CUDA only) Enable tweaks for running ' +
+                        'with Nvidia CUDA Multi-process services daemon')
 
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+mpiio')
     depends_on('fftw', when='+kspace')
     depends_on('voropp+pic', when='+voronoi')
-    depends_on('netcdf+mpi', when='+user-netcdf')
+    depends_on('netcdf-c+mpi', when='+user-netcdf')
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
     depends_on('latte@1.0.1', when='@:20180222+latte')
     depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
+    depends_on('opencl', when='+opencl')
+
     depends_on('latte@1.2.1:', when='@20180629:+latte')
     depends_on('blas', when='+latte')
     depends_on('lapack', when='+latte')
@@ -89,7 +97,9 @@ class Lammps(CMakePackage):
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
+    depends_on('kokkos', when='+kokkos')
 
+    conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
     conflicts('+latte', when='@:20170921')
     conflicts('+python', when='~lib')
@@ -125,6 +135,19 @@ class Lammps(CMakePackage):
             '-DBUILD_OMP={0}'.format(
                 'ON' if '+openmp' in spec else 'OFF'),
         ]
+        if spec.satisfies('+cuda'):
+            args.append('-DPKG_GPU=ON')
+            args.append('-DGPU_API=cuda')
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                args.append('-DGPU_ARCH=sm_{0}'.format(cuda_arch[0]))
+            args.append('-DCUDA_MPS_SUPPORT={0}'.format(
+                'ON' if '+cuda_mps' in spec else 'OFF'))
+        elif spec.satisfies('+opencl'):
+            args.append('-DPKG_GPU=ON')
+            args.append('-DGPU_API=opencl')
+        else:
+            args.append('-DPKG_GPU=OFF')
 
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')

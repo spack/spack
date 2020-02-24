@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Mpfr(AutotoolsPackage):
+class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     """The MPFR library is a C library for multiple-precision
        floating-point computations with correct rounding."""
 
     homepage = "https://www.mpfr.org/"
-    url      = "https://ftpmirror.gnu.org/mpfr/mpfr-4.0.2.tar.bz2"
+    gnu_mirror_path = "mpfr/mpfr-4.0.2.tar.bz2"
 
     version('4.0.2', sha256='c05e3f02d09e0e9019384cdd58e0f19c64e6db1fd6f5ecf77b4b1c61ca253acc')
     version('4.0.1', sha256='a4d97610ba8579d380b384b225187c250ef88cfe1d5e7226b89519374209b86b')

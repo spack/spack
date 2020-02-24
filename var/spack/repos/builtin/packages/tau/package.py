@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Tau(Package):
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
+    version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
     version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', sha256='b262e5c9977471e9f5a8d729b3db743012df9b0ab8244da2842039f8a3b98b34')
     version('2.28', sha256='68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
@@ -75,6 +76,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
+    depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
     depends_on('otf2@2.1:', when='+otf2')
@@ -130,6 +132,9 @@ class Tau(Package):
         useropt = "-useropt=%s" % useropt
         compiler_options.append(useropt)
         return compiler_options
+
+    def setup_build_environment(self, env):
+        env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
 
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
@@ -262,7 +267,7 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
         files = glob.glob(pattern)
 
@@ -272,4 +277,4 @@ class Tau(Package):
         # directory to inspect. The conditional below will set `TAU_MAKEFILE`
         # in the latter case.
         if files:
-            run_env.set('TAU_MAKEFILE', files[0])
+            env.set('TAU_MAKEFILE', files[0])
