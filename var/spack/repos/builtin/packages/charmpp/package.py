@@ -56,8 +56,15 @@ class Charmpp(Package):
         "backend",
         default="netlrts",
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
-                "ofi", "pami", "pamilrts"),
+                "ucx","ofi", "pami", "pamilrts"),
         description="Set the backend to use"
+    )
+
+    #https://github.com/UIUC-PPL/charm/issues/2477
+    variant(
+        "ucx-pmi",
+        defaults="simplePMI",
+        values=("simplePMI", "slrumPMI", "slurmPMI2", "PMIx")
     )
 
     # Other options
@@ -99,6 +106,11 @@ class Charmpp(Package):
     depends_on("papi", when="+papi")
     depends_on("cuda", when="+cuda")
 
+    depends_on("ucx", when="backend=ucx")
+    depends_on("slurm@:17-11-9-2", when="ucx-pmi=slurmPMI")
+    depends_on("slurm@17-11-9-2:", when="ucx-pmi=slurmPMI2")
+    depends_on("openmpi+pmi+ucx", when="ucx-pmi=PMIx")
+
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
     depends_on("autoconf", when="@develop")
@@ -106,6 +118,7 @@ class Charmpp(Package):
     conflicts("~tracing", "+papi")
 
     conflicts("backend=multicore", "+smp")
+    conflicts("backend=ucx", when="@:6.9.99")
 
     def install(self, spec, prefix):
         target = spec.variants["build-target"].value
@@ -143,6 +156,7 @@ class Charmpp(Package):
             ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
             ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
             ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
+            ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
             ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
             ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
             ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
@@ -188,6 +202,9 @@ class Charmpp(Package):
                 '--libdir={0}'.format(libdir)
                 for libdir in spec["mpi"].libs.directories
             ])
+
+        if "backend=ucx" in spec :
+            options.extend(["--basedir=%s" % spec["ucx"].prefix])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
         if "+smp" in spec:
@@ -206,6 +223,13 @@ class Charmpp(Package):
             options.append("pthreads")
         if "+cuda" in spec:
             options.append("cuda")
+
+        if "ucx-pmi=slurmPMI" in spec:
+            options.append("slurmpmi")
+        if "ucx-pmi=slurmPMI2" in spec:
+            options.append("slurmpmi2")
+        if "ucx-pmi=PMIX" in spec:
+            options.append("ompipmix")
 
         if "+shared" in spec:
             options.append("--build-shared")
