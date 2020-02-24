@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload url verify versions view"
     fi
 }
 
@@ -1476,23 +1476,6 @@ _spack_unload() {
     else
         _installed_packages
     fi
-}
-
-_spack_upload_s3() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help"
-    else
-        SPACK_COMPREPLY="spec index"
-    fi
-}
-
-_spack_upload_s3_spec() {
-    SPACK_COMPREPLY="-h --help -s --spec -y --spec-yaml -b --base-dir -e --endpoint-url"
-}
-
-_spack_upload_s3_index() {
-    SPACK_COMPREPLY="-h --help -e --endpoint-url"
 }
 
 _spack_url() {
