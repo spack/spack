@@ -22,3 +22,5 @@ class PyNeurotools(PythonPackage):
     depends_on('py-pytables', type='run')
     depends_on('py-pyaml', type='run')
     # depends_on('py-interval', type='run') py-interval is py2 only and most probably not used
+
+    patch('neurotools-0.3.1.patch', when='@0.3.1')
