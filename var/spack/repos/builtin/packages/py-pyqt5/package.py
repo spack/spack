@@ -36,7 +36,6 @@ class PyPyqt5(SIPPackage):
     depends_on('qt@5:+opengl')
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-sip', type=('build', 'run'))
 
     depends_on('qscintilla', when='+qsci')
 
@@ -53,7 +52,7 @@ class PyPyqt5(SIPPackage):
         args = [
             '--pyuic5-interpreter', self.spec['python'].command.path,
             '--sipdir', self.prefix.share.sip.PyQt5,
-            '--stubsdir', join_path(self.site_packages_dir, 'PyQt5'),
+            '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
         ]
         if '+qsci' in self.spec:
             args.extend(['--qsci-api-destdir', self.prefix.share.qsci])
@@ -67,10 +66,10 @@ class PyPyqt5(SIPPackage):
                 'spack-resource-qscintilla/QScintilla_gpl-' +
                 str(self.spec['qscintilla'].version), 'Python')
             with working_dir(rsrc_py_path):
-                pydir = join_path(self.site_packages_dir, 'PyQt5')
+                pydir = join_path(site_packages_dir, 'PyQt5')
                 python = self.spec['python'].command
                 python('configure.py', '--pyqt=PyQt5',
-                       '--sip=' + self.spec['py-sip'].prefix.bin.sip,
+                       '--sip=' + self.prefix.bin.sip,
                        '--qsci-incdir=' +
                        self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
@@ -78,7 +77,7 @@ class PyPyqt5(SIPPackage):
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--sip-incdir=' + self.spec['py-sip'].prefix.include,
+                       '--sip-incdir=' + python_include_dir,
                        '--stubsdir=' + pydir)
 
                 # Fix build errors
