@@ -15,7 +15,8 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.package import _spack_build_envfile, _spack_build_logfile
+from spack.package import (_spack_build_envfile, _spack_build_logfile,
+                           _spack_configure_argsfile)
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -410,6 +411,9 @@ def test_pkg_install_paths(install_mockery):
     env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
     assert spec.package.install_env_path == env_path
 
+    args_path = os.path.join(spec.prefix, '.spack', _spack_configure_argsfile)
+    assert spec.package.install_configure_args_path == args_path
+
     # Backward compatibility checks
     log_dir = os.path.dirname(log_path)
     mkdirp(log_dir)
@@ -448,6 +452,7 @@ def test_pkg_install_log(install_mockery):
     with working_dir(log_dir):
         touch(log_path)
         touch(spec.package.env_path)
+        touch(spec.package.configure_args_path)
 
     install_path = os.path.dirname(spec.package.install_log_path)
     mkdirp(install_path)
@@ -456,6 +461,7 @@ def test_pkg_install_log(install_mockery):
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
+    assert os.path.exists(spec.package.install_configure_args_path)
 
     # Cleanup
     shutil.rmtree(log_dir)
