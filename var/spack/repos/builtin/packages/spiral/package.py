@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Spiral(CMakePackage):
     """SPIRAL is a program generation system for linear transforms and other
     mathematical functions that produces very high performance code for a wide
@@ -18,7 +19,7 @@ class Spiral(CMakePackage):
     version('8.1.2', sha256='506f1dbf923aa1c9f19f05444fa947085715eef37c9d2494d133fcaaa1dd50bc')
 
     extendable = True
-    
+
     # No dependencies.
 
     def build(self, spec, prefix):
@@ -33,9 +34,9 @@ class Spiral(CMakePackage):
         gapfil = join_path(self.build_directory, 'gap/src/gap')
         dest = join_path(self.stage.source_path, 'gap/bin')
         install(gapfil, dest)
-        
+
     def install(self, spec, prefix):
-        ##  print("After build phase...install:")
+        #  print("After build phase...install:")
         print("prefix directory = " + prefix)
         mkdirp(prefix.gap.bin)
         gapfil = join_path(self.build_directory, 'gap/src/gap')
@@ -62,12 +63,13 @@ class Spiral(CMakePackage):
             install_tree('namespaces', prefix.namespaces)
             install_tree('profiler', prefix.profiler)
             install_tree('tests', prefix.tests)
-            
+
         with working_dir(join_path(self.stage.source_path, 'gap')):
             install_tree('lib', prefix.gap.lib)
             install_tree('grp', prefix.gap.grp)
 
         print("Run tests = " + ('ON' if self.run_tests else 'OFF'))
+
         @run_after('install')
         @on_package_attributes(run_tests=True)
         def test(self):

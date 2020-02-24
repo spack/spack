@@ -5,8 +5,10 @@
 
 from spack import *
 
+
 class Hcol(Package):
-    """This is the SPIRAL package for the Hybrid Control Operator Language (HCOL)."""
+    """This is the SPIRAL package for the Hybrid Control Operator Language
+    (HCOL)."""
 
     homepage = "https://https://spiral.net"
     url      = "https://github.com/spiral-software/spiral-package-hcol/archive/1.0.0.zip"
@@ -17,8 +19,8 @@ class Hcol(Package):
     version('1.0.0', sha256='9a95574e2b061d03d264c32dbf733e893017d1644b6486c7a8a55a3b24783f58')
 
     # HCOL package is a set of files to be installed in the
-    # "namespaces/packages" folder (subfolder hcol for this package).  No other
-    # operations are required to build" 
+    # "namespaces/packages" folder (subfolder hcol for this package).
+    # No other operations are required to build.
     def install(self, spec, prefix):
         source = self.stage.source_path
         print('install method: source = ' + source)
@@ -26,4 +28,3 @@ class Hcol(Package):
         print('spiral prefix = ' + dest)
         mkdirp(dest.namespaces.packages.hcol)
         install_tree(source, dest.namespaces.packages.hcol)
-
