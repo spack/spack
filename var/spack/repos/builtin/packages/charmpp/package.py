@@ -56,11 +56,11 @@ class Charmpp(Package):
         "backend",
         default="netlrts",
         values=("mpi", "multicore", "netlrts", "verbs", "gni",
-                "ucx","ofi", "pami", "pamilrts"),
+                "ucx", "ofi", "pami", "pamilrts"),
         description="Set the backend to use"
     )
 
-    #https://github.com/UIUC-PPL/charm/issues/2477
+    # https://github.com/UIUC-PPL/charm/issues/2477
     variant(
         "ucx-pmi",
         default="simplePMI",
@@ -204,7 +204,7 @@ class Charmpp(Package):
                 for libdir in spec["mpi"].libs.directories
             ])
 
-        if "backend=ucx" in spec :
+        if "backend=ucx" in spec:
             options.extend(["--basedir=%s" % spec["ucx"].prefix])
         if "+papi" in spec:
             options.extend(["papi", "--basedir=%s" % spec["papi"].prefix])
