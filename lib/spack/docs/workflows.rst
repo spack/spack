@@ -1442,8 +1442,7 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Pre-install the spack dependencies, including modules from the packages.
-   This avoids needing to build those from scratch via ``spack bootstrap``.
+#. Pre-install the spack dependencies.
    Package installs are followed by a clean-up of the system package index,
    to avoid outdated information and it saves space.
 
