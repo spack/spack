@@ -13,6 +13,8 @@ class Ocaml(Package):
     homepage = "http://ocaml.org/"
     url      = "https://caml.inria.fr/pub/distrib/ocaml-4.06/ocaml-4.06.0.tar.gz"
 
+    maintainers = ['scemama']
+
     version('4.10.0', sha256='58d431dde66f5750ebe9b15d5a1c4872f80d283dec23448689b0d1a498b7e4c7')
     version('4.09.0', sha256='2b728f8a0e90da14f22fdc04660f2ab33819cdbb12bff0ceae3fdbb0133cf7a6')
     version('4.08.1', sha256='ee50118ee88472fd4b64311fa560f8f8ab66a1899f0117815c69a16070980f78')
@@ -24,6 +26,8 @@ class Ocaml(Package):
     version('4.03.0', sha256='7fdf280cc6c0a2de4fc9891d0bf4633ea417046ece619f011fd44540fcfc8da2')
 
     depends_on('ncurses')
+
+    sanity_check_file = ['bin/ocaml']
 
     def url_for_version(self, version):
         url = "http://caml.inria.fr/pub/distrib/ocaml-{0}/ocaml-{1}.tar.gz"
