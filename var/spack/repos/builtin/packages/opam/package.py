@@ -40,13 +40,8 @@ class Opam(AutotoolsPackage):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/opam.rb
         env.set('OCAMLPARAM', 'safe-string=0,_')  # OCaml 4.06.0 compat
 
-    @when('@:1.2.2')
     def build(self, spec, prefix):
         make('lib-ext')
         make()
-        make('man')
-
-    @when('@2.0.0:')
-    def build(self, spec, prefix):
-        make('lib-ext')
-        make()
+        if spec.satisfies('@:1.2.2'):
+            make('man')
