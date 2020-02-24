@@ -20,4 +20,5 @@ class Batctl(MakefilePackage):
     depends_on('libnl')
 
     def install(self, spec, prefix):
-        install('batctl', prefix)
+        mkdirp(prefix.bin)
+        install('batctl', prefix.bin)
