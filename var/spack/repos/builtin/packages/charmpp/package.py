@@ -63,7 +63,7 @@ class Charmpp(Package):
     #https://github.com/UIUC-PPL/charm/issues/2477
     variant(
         "ucx-pmi",
-        defaults="simplePMI",
+        default="simplePMI",
         values=("simplePMI", "slrumPMI", "slurmPMI2", "PMIx")
     )
 
