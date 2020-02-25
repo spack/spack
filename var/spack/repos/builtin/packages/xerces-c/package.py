@@ -20,6 +20,7 @@ class XercesC(AutotoolsPackage):
     version('3.2.2', sha256='1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0')
     version('3.2.1', sha256='a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da')
     version('3.1.4', sha256='9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891')
+    version('3.1.3', sha256='fc5e5e0247b108b8d64d75aeb124cabdee9b7fcd725a89fe2242b4637b25c1fa')
 
     # Whilst still using Autotools, can use full cxxstd with 'default'
     # If build is moved to CMake, then will also need a patch to Xerces-C's

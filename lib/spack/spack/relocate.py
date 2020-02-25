@@ -574,10 +574,11 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
             # get the relativized rpaths in the new prefix
             new_rpaths = get_relative_elf_rpaths(path_name, new_layout_root,
                                                  norm_rpaths)
+            modify_elf_object(path_name, new_rpaths)
         else:
             new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
                                         prefix_to_prefix)
-        modify_elf_object(path_name, new_rpaths)
+            modify_elf_object(path_name, new_rpaths)
 
 
 def make_link_relative(cur_path_names, orig_path_names):
@@ -834,4 +835,5 @@ def mime_type(file):
     # In those cases add the / so the tuple can be formed.
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))

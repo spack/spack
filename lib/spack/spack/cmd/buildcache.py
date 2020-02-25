@@ -23,7 +23,7 @@ import spack.repo
 import spack.store
 import spack.util.url as url_util
 
-from spack.error import SpecError, SpackError
+from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 
 from spack.cmd import display_specs
@@ -76,6 +76,10 @@ def setup_parser(subparser):
     install.add_argument('-u', '--unsigned', action='store_true',
                          help="install unsigned buildcache" +
                               " tarballs for testing")
+    install.add_argument('-o', '--otherarch', action='store_true',
+                         help="install specs from other architectures" +
+                              " instead of default platform and OS")
+
     arguments.add_common_arguments(install, ['specs'])
     install.set_defaults(func=installtarball)
 
@@ -252,7 +256,8 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     return specs_from_cli
 
 
-def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
+def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
+                           other_arch=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -266,7 +271,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    allarch = False
+    allarch = other_arch
     specs = bindist.get_specs(force, allarch)
     for pkg in pkgs:
         matches = []
@@ -361,13 +366,9 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force, rel,
-                                  unsigned, allow_root, signkey,
-                                  not no_rebuild_index)
-        except SpackError as e:
-            tty.warn('%s' % e)
-            continue
+        bindist.build_tarball(spec, outdir, force, rel,
+                              unsigned, allow_root, signkey,
+                              not no_rebuild_index)
 
 
 def createtarball(args):
@@ -387,7 +388,8 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.force)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
+                                     args.otherarch)
 
     for match in matches:
         install_tarball(match, args)

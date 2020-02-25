@@ -14,6 +14,7 @@ class SuiteSparse(Package):
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
     version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
     version('5.5.0', sha256='63c73451734e2bab19d1915796c6776565ea6aea5da4063a9797ecec60da2e3d')
     version('5.4.0', sha256='d9d62d539410d66550d0b795503a556830831f50087723cb191a030525eda770')
