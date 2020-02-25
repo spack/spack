@@ -341,7 +341,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.extend([
                 '--with-native-system-header-dir=/usr/include',
                 '--with-sysroot={0}'.format(macos_sdk_path()),
-                '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix)
+                '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix)
             ])
 
         return options

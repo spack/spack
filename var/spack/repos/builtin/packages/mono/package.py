@@ -50,6 +50,6 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec['libiconv'].prefix
+        li = self.spec['iconv'].prefix
         args.append('--with-libiconv-prefix={p}'.format(p=li))
         return args

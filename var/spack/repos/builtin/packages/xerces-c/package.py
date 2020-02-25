@@ -61,7 +61,7 @@ class XercesC(AutotoolsPackage):
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
-            flags.append(spec['libiconv'].libs.ld_flags)
+            flags.append(spec['iconv'].libs.ld_flags)
 
         return (None, None, flags)
 

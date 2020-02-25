@@ -36,7 +36,7 @@ class Gnupg(AutotoolsPackage):
             '--with-ksba-prefix='         + self.spec['libksba'].prefix,
             '--with-npth-prefix='         + self.spec['npth'].prefix,
             '--without-ldap',
-            '--with-libiconv-prefix='     + self.spec['libiconv'].prefix,
+            '--with-libiconv-prefix='     + self.spec['iconv'].prefix,
             '--without-regex',
             '--with-zlib='                + self.spec['zlib'].prefix,
             '--without-bzip2',

@@ -29,5 +29,5 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
 
     def configure_args(self):
         return [
-            '--with-libiconv-prefix={0}'.format(self.spec['libiconv'].prefix),
+            '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
         ]

@@ -28,10 +28,9 @@ class Libc(Package):
 
     homepage = "https://en.wikipedia.org/wiki/C_standard_library"
     url      = ""
+    has_code = False
+    phases = []
 
     version('1.0')  # Dummy
     variant('iconv', default=False, description='Set to True if libc provides iconv')
     provides('iconv', when='+iconv')
-
-    def install(self, spec, prefix):
-        return

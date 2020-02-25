@@ -51,7 +51,7 @@ class Doxygen(CMakePackage):
         # symbol in libc, it does not look for libiconv, which leads to linker
         # errors. This makes sure that CMake always looks for the external
         # libconv instead.
-        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
-                    'set(ICONV_IN_GLIBC FALSE)',
-                    join_path('cmake', 'FindIconv.cmake'),
-                    string=True)
+#        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
+#                    'set(ICONV_IN_GLIBC FALSE)',
+#                    join_path('cmake', 'FindIconv.cmake'),
+#                    string=True)

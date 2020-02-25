@@ -27,7 +27,7 @@ class Lftp(AutotoolsPackage):
     def configure_args(self):
         return [
             '--with-expat={0}'.format(self.spec['expat'].prefix),
-            '--with-libiconv={0}'.format(self.spec['libiconv'].prefix),
+            '--with-libiconv={0}'.format(self.spec['iconv'].prefix),
             '--with-openssl={0}'.format(self.spec['openssl'].prefix),
             '--with-readline={0}'.format(self.spec['readline'].prefix),
             '--with-zlib={0}'.format(self.spec['zlib'].prefix),

@@ -35,7 +35,7 @@ class Procps(AutotoolsPackage):
 
     def configure_args(self):
         return [
-            '--with-libiconv-prefix={0}'.format(self.spec['libiconv'].prefix),
+            '--with-iconv-prefix={0}'.format(self.spec['libiconv'].prefix),
             '--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix),
             '--with-ncurses',
             # Required to avoid libintl linking errors

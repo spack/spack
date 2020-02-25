@@ -250,7 +250,7 @@ class Gdal(AutotoolsPackage):
 
         if '+libiconv' in spec:
             args.append('--with-libiconv-prefix={0}'.format(
-                spec['libiconv'].prefix))
+                spec['iconv'].prefix))
         else:
             args.append('--with-libiconv-prefix=no')
 

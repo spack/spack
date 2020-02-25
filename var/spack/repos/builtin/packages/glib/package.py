@@ -70,7 +70,10 @@ class Glib(AutotoolsPackage):
             args.append('--with-python={0}'.format(
                 os.path.basename(self.spec['python'].command.path))
             )
-        args.append('--with-libiconv=gnu')
+        if 'libc' in self.spec:
+            args.append('--with-libiconv=maybe')
+        else:
+            args.append('--with-libiconv=gnu')
         args.extend(self.enable_or_disable('tracing'))
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')

@@ -49,7 +49,7 @@ class Libxml2(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-lzma={0}'.format(spec['xz'].prefix),
-                '--with-iconv={0}'.format(spec['libiconv'].prefix)]
+                '--with-iconv={0}'.format(spec['iconv'].prefix)]
 
         if '+python' in spec:
             args.extend([

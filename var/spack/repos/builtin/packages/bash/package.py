@@ -49,7 +49,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             '--with-curses',
             '--enable-readline',
             '--with-installed-readline',
-            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
+            '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix),
         ]
 
     def check(self):

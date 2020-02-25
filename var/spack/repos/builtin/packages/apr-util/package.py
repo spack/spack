@@ -38,7 +38,7 @@ class AprUtil(AutotoolsPackage):
         args = [
             '--with-apr={0}'.format(spec['apr'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             # TODO: Add support for the following database managers
             '--without-ndbm',
             '--without-berkeley-db',

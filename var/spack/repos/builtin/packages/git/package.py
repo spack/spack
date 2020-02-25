@@ -221,7 +221,7 @@ class Git(AutotoolsPackage):
         configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
