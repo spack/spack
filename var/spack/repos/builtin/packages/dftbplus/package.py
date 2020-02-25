@@ -135,9 +135,9 @@ class Dftbplus(MakefilePackage):
                 spec['dftd3-lib'].prefix.include
             ))
 
-            march.filter('DFTD3_LIBS = .*', 'DFTD3_LIBS = -L{0} -ldftd3'.format(
-                spec['dftd3-lib'].prefix
-            ))
+            march.filter('DFTD3_LIBS = .*',
+                         'DFTD3_LIBS = -L{0} -ldftd3'.format(
+                             spec['dftd3-lib'].prefix))
 
             mconfig.filter('WITH_DFTD3 := .*', 'WITH_DFTD3 := 1')
 
