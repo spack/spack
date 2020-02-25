@@ -45,13 +45,13 @@ class Doxygen(CMakePackage):
     patch('shared_ptr.patch', when='@1.8.14')
 
     def patch(self):
-        if self.spec.satisfies('libc+iconv'):
+        if self.spec['iconv'].name == 'libc':
             return
         # On Linux systems, iconv is provided by libc. Since CMake finds the
         # symbol in libc, it does not look for libiconv, which leads to linker
         # errors. This makes sure that CMake always looks for the external
         # libconv instead.
-#        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
-#                    'set(ICONV_IN_GLIBC FALSE)',
-#                    join_path('cmake', 'FindIconv.cmake'),
-#                    string=True)
+        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
+                    'set(ICONV_IN_GLIBC FALSE)',
+                    join_path('cmake', 'FindIconv.cmake'),
+                    string=True)
