@@ -33,6 +33,7 @@ class Interproscan(Package):
     depends_on('maven', type='build', when='@5:')
     depends_on('perl@5:', type=('build', 'run'))
     depends_on('python@3:', when='@5:', type=('build', 'run'))
+    depends_on('perl-db-file', type=('build', 'run'))
     depends_on('perl-cgi', when='@:4.8', type=('build', 'run'))
     depends_on('perl-mailtools', when='@:4.8', type=('build', 'run'))
     depends_on('perl-xml-quote', when='@:4.8', type=('build', 'run'))
