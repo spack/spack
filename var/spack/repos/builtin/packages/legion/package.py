@@ -27,6 +27,8 @@ class Legion(CMakePackage):
 
     version('master', branch='master')
     version('ctrl-rep', branch='control_replication')
+    version('ctrl-rep-4', commit='b66083076016c63ea8398fdb89c237880fcb0173')
+    version('ctrl-rep-3', commit='572576b312509e666f2d72fafdbe9d968b1a6ac3')
     version('ctrl-rep-2', commit='96682fd8aae071ecd30a3ed5f481a9d84457a4b6')
     version('ctrl-rep-1', commit='a03671b21851d5f0d3f63210343cb61a630f4405')
     version('ctrl-rep-0', commit='177584e77036c9913d8a62e33b55fa784748759c')
@@ -46,14 +48,15 @@ class Legion(CMakePackage):
             description='Build on top of ibv conduit for InfiniBand support')
     variant('shared', default=True, description='Build shared libraries')
     variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('build_type', default='Release', values=('Debug', 'Release'),
-            description='The build type to build')
+    variant('build_type', default='Release',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
+            description='The build type to build', multi=False)
 
     depends_on("cmake@3.1:", type='build')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB'", when='~mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +mpi", when='+mpi')
     depends_on("gasnet~aligned-segments~pshm segment-mmap-max='16GB' +ibv", when='+ibv')
-    depends_on("hdf5~mpi", when='+hdf5')
+    depends_on("hdf5", when='+hdf5')
 
     def cmake_args(self):
         cmake_cxx_flags = [
@@ -69,7 +72,11 @@ class Legion(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec)]
 
         if self.spec.variants['build_type'].value == 'Debug':
-            cmake_cxx_flags.append('-DDEBUG_REALM', '-DDEBUG_LEGION', '-ggdb')
+            cmake_cxx_flags.extend([
+                '-DDEBUG_REALM',
+                '-DDEBUG_LEGION',
+                '-ggdb',
+            ])
 
         options.append('-DCMAKE_CXX_FLAGS=%s' % (" ".join(cmake_cxx_flags)))
 

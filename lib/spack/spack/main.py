@@ -13,6 +13,7 @@ from __future__ import print_function
 import sys
 import re
 import os
+import os.path
 import inspect
 import pstats
 import argparse
@@ -21,6 +22,7 @@ import warnings
 from six import StringIO
 
 import llnl.util.cpu
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
@@ -35,6 +37,7 @@ import spack.repo
 import spack.store
 import spack.util.debug
 import spack.util.path
+import spack.util.executable as exe
 from spack.error import SpackError
 
 
@@ -105,6 +108,35 @@ def add_all_commands(parser):
     """Add all spack subcommands to the parser."""
     for cmd in spack.cmd.all_commands():
         parser.add_command(cmd)
+
+
+def get_version():
+    """Get a descriptive version of this instance of Spack.
+
+    If this is a git repository, and if it is not on a release tag,
+    return a string like:
+
+        release_version-commits_since_release-commit
+
+    If we *are* at a release tag, or if this is not a git repo, return
+    the real spack release number (e.g., 0.13.3).
+
+    """
+    git_path = os.path.join(spack.paths.prefix, ".git")
+    if os.path.exists(git_path):
+        git = exe.which("git")
+        if git:
+            with fs.working_dir(spack.paths.prefix):
+                desc = git(
+                    "describe", "--tags", output=str, fail_on_error=False)
+
+            if git.returncode == 0:
+                match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
+                if match:
+                    v, n, commit = match.groups()
+                    return "%s-%s-%s" % (v, n, commit)
+
+    return spack.spack_version
 
 
 def index_commands():
@@ -518,15 +550,24 @@ class SpackCommand(object):
             tty.debug(e)
             self.error = e
             if fail_on_error:
+                self._log_command_output(out)
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
+            self._log_command_output(out)
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
         return out.getvalue()
+
+    def _log_command_output(self, out):
+        if tty.is_verbose():
+            fmt = self.command_name + ': {0}'
+            for ln in out.getvalue().split('\n'):
+                if len(ln) > 0:
+                    tty.verbose(fmt.format(ln.replace('==> ', '')))
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
@@ -645,6 +686,17 @@ def main(argv=None):
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args, unknown = parser.parse_known_args(argv)
 
+    # Recover stored LD_LIBRARY_PATH variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # (DY?)LD_LIBRARY_PATH variables on process start.
+    # Spack clears these variables before building and installing packages,
+    # but needs to know the prior state for commands like `spack load` and
+    # `spack env activate that modify the user environment.
+    for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
+        stored_var_name = 'SPACK_%s' % var
+        if stored_var_name in os.environ:
+            os.environ[var] = os.environ[stored_var_name]
+
     # activate an environment if one was specified on the command line
     if not args.no_env:
         env = ev.find_environment(args)
@@ -668,7 +720,7 @@ def main(argv=None):
     # -h, -H, and -V are special as they do not require a command, but
     # all the other options do nothing without a command.
     if args.version:
-        print(spack.spack_version)
+        print(get_version())
         return 0
     elif args.help:
         sys.stdout.write(parser.format_help(level=args.help))

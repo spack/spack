@@ -15,7 +15,8 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.package import _spack_build_envfile, _spack_build_logfile
+from spack.package import (_spack_build_envfile, _spack_build_logfile,
+                           _spack_configure_argsfile)
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -99,6 +100,9 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+
+        # must clear failure markings for the package before re-installing it
+        spack.store.db.clear_failure(spec, True)
 
         pkg.succeed = True
         pkg.stage = MockStage(pkg.stage)
@@ -264,6 +268,9 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch):
             pkg.do_install(keep_prefix=True)
         assert os.path.exists(pkg.prefix)
 
+        # must clear failure markings for the package before re-installing it
+        spack.store.db.clear_failure(spec, True)
+
         pkg.succeed = True   # make the build succeed
         pkg.stage = MockStage(pkg.stage)
         pkg.do_install(keep_prefix=True)
@@ -300,12 +307,13 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch):
+def test_failing_build(install_mockery, mock_fetch, capfd):
     spec = Spec('failing-build').concretized()
     pkg = spec.package
 
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
+        assert 'InstallError: Expected Failure' in capfd.readouterr()[0]
 
 
 class MockInstallError(spack.error.SpackError):
@@ -316,14 +324,14 @@ def test_uninstall_by_spec_errors(mutable_database):
     """Test exceptional cases with the uninstall command."""
 
     # Try to uninstall a spec that has not been installed
-    rec = mutable_database.get_record('zmpi')
-    with pytest.raises(InstallError, matches="not installed"):
-        PackageBase.uninstall_by_spec(rec.spec)
+    spec = Spec('dependent-install')
+    spec.concretize()
+    with pytest.raises(InstallError, match="is not installed"):
+        PackageBase.uninstall_by_spec(spec)
 
     # Try an unforced uninstall of a spec with dependencies
     rec = mutable_database.get_record('mpich')
-
-    with pytest.raises(PackageStillNeededError, matches="cannot uninstall"):
+    with pytest.raises(PackageStillNeededError, match="Cannot uninstall"):
         PackageBase.uninstall_by_spec(rec.spec)
 
 
@@ -403,6 +411,9 @@ def test_pkg_install_paths(install_mockery):
     env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
     assert spec.package.install_env_path == env_path
 
+    args_path = os.path.join(spec.prefix, '.spack', _spack_configure_argsfile)
+    assert spec.package.install_configure_args_path == args_path
+
     # Backward compatibility checks
     log_dir = os.path.dirname(log_path)
     mkdirp(log_dir)
@@ -432,7 +443,7 @@ def test_pkg_install_log(install_mockery):
 
     # Attempt installing log without the build log file
     with pytest.raises(IOError, match="No such file or directory"):
-        spec.package.log()
+        spack.installer.log(spec.package)
 
     # Set up mock build files and try again
     log_path = spec.package.log_path
@@ -441,14 +452,16 @@ def test_pkg_install_log(install_mockery):
     with working_dir(log_dir):
         touch(log_path)
         touch(spec.package.env_path)
+        touch(spec.package.configure_args_path)
 
     install_path = os.path.dirname(spec.package.install_log_path)
     mkdirp(install_path)
 
-    spec.package.log()
+    spack.installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
+    assert os.path.exists(spec.package.install_configure_args_path)
 
     # Cleanup
     shutil.rmtree(log_dir)
@@ -469,3 +482,14 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()
+
+
+def test_install_error():
+    try:
+        msg = 'test install error'
+        long_msg = 'this is the long version of test install error'
+        raise InstallError(msg, long_msg=long_msg)
+    except Exception as exc:
+        assert exc.__class__.__name__ == 'InstallError'
+        assert exc.message == msg
+        assert exc.long_message == long_msg

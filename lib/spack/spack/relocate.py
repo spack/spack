@@ -684,13 +684,6 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     strings = Executable('strings')
 
-    # if we're relocating patchelf itself, use it
-
-    if file[-13:] == "/bin/patchelf":
-        patchelf = Executable(file)
-    else:
-        patchelf = Executable(get_patchelf())
-
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
 
@@ -700,8 +693,8 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = patchelf('--print-rpath', file, output=str).strip()
-            set_of_strings.discard(rpaths.strip())
+            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macho_get_paths(file)
@@ -756,4 +749,5 @@ def mime_type(file):
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))

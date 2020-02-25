@@ -190,6 +190,20 @@ def disambiguate_spec(spec, env, local=False, installed=True):
             database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed)
+
+
+def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True):
+    """Given a spec and a list of hashes, get concrete spec the spec refers to.
+
+    Arguments:
+        spec (spack.spec.Spec): a spec to disambiguate
+        hashes (iterable): a set of hashes of specs among which to disambiguate
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
+    """
     if local:
         matching_specs = spack.store.db.query_local(spec, hashes=hashes,
                                                     installed=installed)

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
 
 
 class Llvm(CMakePackage):
@@ -22,6 +23,7 @@ class Llvm(CMakePackage):
     family = 'compiler'  # Used by lmod
 
     version('master', branch='master')
+    version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
     version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
     version('8.0.0', sha256='d81238b4a69e93e29f74ce56f8107cbfcf0c7d7b40510b7879e98cc031e25167')
     version('7.1.0', sha256='71c93979f20e01f1a1cc839a247945f556fa5e63abf2084e8468b238080fd839')
@@ -70,7 +72,7 @@ class Llvm(CMakePackage):
             description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True,
             description="Build LLVM compiler runtime, including sanitizers")
-    variant('gold', default=True,
+    variant('gold', default=(sys.platform != 'darwin'),
             description="Add support for LTO with the gold linker plugin")
     variant('shared_libs', default=False,
             description="Build all components as shared libraries, faster, "
@@ -87,27 +89,25 @@ class Llvm(CMakePackage):
     variant('omp_tsan', default=False,
             description="Build with OpenMP capable thread sanitizer")
     variant('python', default=False, description="Install python bindings")
-    variant('flang', default=False,
-            description='Build flang branch version instead')
 
     extends('python', when='+python')
 
     # Build dependency
     depends_on('cmake@3.4.3:', type='build')
     depends_on('python@2.7:2.8', when='@:4.999 ~python', type='build')
-    depends_on('python@2.7:2.8', when='@5: ~python +flang', type='build')
     depends_on('python', when='@5: ~python', type='build')
 
     # Universal dependency
     depends_on('python@2.7:2.8', when='@:4.999+python')
-    depends_on('python@2.7:2.8', when='@5:+python+flang')
     depends_on('python', when='@5:+python')
 
     # openmp dependencies
     depends_on('perl-data-dumper', type=('build'))
 
+    # ncurses dependency
+    depends_on('ncurses+termlib')
+
     # lldb dependencies
-    depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
     depends_on('py-six', when='@5.0.0: +lldb +python')
@@ -119,61 +119,11 @@ class Llvm(CMakePackage):
     depends_on('gmp', when='@:3.6.999 +polly')
     depends_on('isl', when='@:3.6.999 +polly')
 
-    resource(name='flang-llvm',
-             git='https://github.com/flang-compiler/llvm.git',
-             branch='release_60',
-             placement='llvm-flang',
-             when='llvm@develop+flang')
-
-    resource(name='flang-llvm',
-             git='https://github.com/flang-compiler/llvm.git',
-             commit='d8b30082648dc869eba68f9e539605f437d7760c',
-             placement='llvm-flang',
-             when='@7.0.1+flang')
-
-    resource(name='flang-llvm',
-             git='https://github.com/flang-compiler/llvm.git',
-             commit='f26a3ece4ccd68a52f5aa970ec42837ee0743296',
-             placement='llvm-flang',
-             when='@6.0.0+flang')
-
-    resource(name='flang-driver',
-             git='https://github.com/flang-compiler/flang-driver.git',
-             branch='release_60',
-             destination='llvm-flang/tools',
-             placement='clang',
-             when='llvm@develop+flang')
-
-    resource(name='flang-driver',
-             git='https://github.com/flang-compiler/flang-driver.git',
-             commit='dd7587310ae498c22514a33e1a2546b86af9cf25',
-             destination='llvm-flang/tools',
-             placement='clang',
-             when='@7.0.1+flang')
-
-    resource(name='flang-driver',
-             git='https://github.com/flang-compiler/flang-driver.git',
-             commit='e079fa68cb35a53c88c41a1939f90b94d539e984',
-             destination='llvm-flang/tools',
-             placement='clang',
-             when='@6.0.0+flang')
-
-    resource(name='openmp',
-             git='https://github.com/llvm-mirror/openmp.git',
-             branch='release_60',
-             destination='llvm-flang/projects',
-             placement='openmp',
-             when='@develop+flang')
-
-    resource(name='openmp',
-             git='https://github.com/llvm-mirror/openmp.git',
-             commit='d5aa29cb3bcf51289d326b4e565613db8aff65ef',
-             destination='llvm-flang/projects',
-             placement='openmp',
-             when='@6:7.0.1+flang')
-
-    conflicts('+clang_extra', when='~clang')
-    conflicts('+lldb',        when='~clang')
+    conflicts('+clang_extra',     when='~clang')
+    conflicts('+lldb',            when='~clang')
+    conflicts('+libcxx',          when='~clang')
+    conflicts('+internal_unwind', when='~clang')
+    conflicts('+compiler-rt',     when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
     conflicts('%gcc@8:',       when='@:5')
@@ -181,15 +131,6 @@ class Llvm(CMakePackage):
 
     # OMP TSAN exists in > 5.x
     conflicts('+omp_tsan', when='@:5.99')
-
-    # +flang conflicts other variants
-    conflicts('+gold', when='+flang')
-    conflicts('+lldb', when='+flang')
-    conflicts('+lld', when='+flang')
-    conflicts('+copiler-rt', when='+flang')
-    conflicts('+libcxx', when='+flang')
-    conflicts('+polly', when='+flang')
-    conflicts('+internal_unwind', when='+flang')
 
     # Github issue #4986
     patch('llvm_gcc7.patch', when='@4.0.0:4.0.1+lldb %gcc@7.0:')
@@ -221,11 +162,18 @@ class Llvm(CMakePackage):
                      llvm_check_file)
 
         except ProcessError:
-            explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://lldb.llvm'
-                           '.org/resources/build.html#code-signing-on-macos'
-                           'for details on how to create this identity.')
-            raise RuntimeError(explanation)
+            # Newer LLVM versions have a simple script that sets up
+            # automatically
+            setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+            try:
+                setup()
+            except Exception:
+                raise RuntimeError(
+                    'The "lldb_codesign" identity must be available to build '
+                    'LLVM with LLDB. See https://lldb.llvm.org/resources/'
+                    'build.html#code-signing-on-macos for details on how to '
+                    'create this identity.'
+                )
 
     def setup_build_environment(self, env):
         env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
@@ -235,13 +183,7 @@ class Llvm(CMakePackage):
             env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
             env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
 
-    # When building flang we do not use the mono repo
-    @property
-    def root_cmakelists_dir(self):
-        if '+flang' in self.spec:
-            return 'llvm-flang'
-        else:
-            return 'llvm'
+    root_cmakelists_dir = 'llvm'
 
     def cmake_args(self):
         spec = self.spec
@@ -266,6 +208,9 @@ class Llvm(CMakePackage):
         if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
             cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
 
+        if '~python' in spec and '+lldb' in spec:
+            cmake_args.append('-DLLDB_DISABLE_PYTHON:Bool=TRUE')
+
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
                               spec['binutils'].prefix.include)
@@ -283,7 +228,7 @@ class Llvm(CMakePackage):
         if '+libcxx' in spec:
             projects.append('libcxx')
             projects.append('libcxxabi')
-            if spec.satisfies('@3.9.0:') and '+flang' not in spec:
+            if spec.satisfies('@3.9.0:'):
                 cmake_args.append('-DCLANG_DEFAULT_CXX_STDLIB=libc++')
         if '+internal_unwind' in spec:
             projects.append('libunwind')
@@ -300,14 +245,10 @@ class Llvm(CMakePackage):
         if '+all_targets' not in spec:  # all is default on cmake
 
             targets = ['NVPTX', 'AMDGPU']
-            if (spec.version < Version('3.9.0')
-                and '+flang' not in spec):
+            if (spec.version < Version('3.9.0')):
                 # Starting in 3.9.0 CppBackend is no longer a target (see
                 # LLVM_ALL_TARGETS in llvm's top-level CMakeLists.txt for
                 # the complete list of targets)
-
-                # This also applies to the version of llvm used by flang
-                # hence the test to see if the version starts with "flang".
                 targets.append('CppBackend')
 
             if spec.target.family == 'x86' or spec.target.family == 'x86_64':
@@ -340,10 +281,9 @@ class Llvm(CMakePackage):
                spec.satisfies('platform=linux'):
                 cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
 
-        if '+flang' not in spec:
-            # Semicolon seperated list of projects to enable
-            cmake_args.append(
-                '-DLLVM_ENABLE_PROJECTS:STRING={0}'.format(';'.join(projects)))
+        # Semicolon seperated list of projects to enable
+        cmake_args.append(
+            '-DLLVM_ENABLE_PROJECTS:STRING={0}'.format(';'.join(projects)))
 
         return cmake_args
 
@@ -359,10 +299,11 @@ class Llvm(CMakePackage):
 
     @run_after('install')
     def post_install(self):
-        if '+clang' in self.spec and '+python' in self.spec:
-            install_tree(
-                'tools/clang/bindings/python/clang',
-                join_path(site_packages_dir, 'clang'))
+        if '+python' in self.spec:
+            install_tree('llvm/bindings/python', site_packages_dir)
+
+            if '+clang' in self.spec:
+                install_tree('clang/bindings/python', site_packages_dir)
 
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))

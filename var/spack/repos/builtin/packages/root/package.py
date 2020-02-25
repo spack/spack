@@ -5,6 +5,7 @@
 
 
 from spack import *
+from spack.util.environment import is_system_path
 import sys
 
 
@@ -116,6 +117,8 @@ class Root(CMakePackage):
             description='Enable postgres support')
     variant('pythia6', default=False,
             description='Enable pythia6 support')
+    variant('pythia8', default=False,
+            description='Enable pythia8 support')
     variant('python', default=True,
             description='Enable Python ROOT bindings')
     variant('qt4', default=False,
@@ -191,7 +194,7 @@ class Root(CMakePackage):
     depends_on('libsm',   when="+x")
 
     # OpenGL
-    depends_on('ftgl@2.1.3-rc5',  when="+x+opengl")
+    depends_on('ftgl@2.4.0:',  when="+x+opengl")
     depends_on('glew',  when="+x+opengl")
     depends_on('gl',    when="+x+opengl")
     depends_on('glu',   when="+x+opengl")
@@ -204,7 +207,7 @@ class Root(CMakePackage):
     depends_on('py-numpy', when='+tmva')
 
     # Optional dependencies
-    depends_on('davix',     when='+davix')
+    depends_on('davix @0.7.1:', when='+davix')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
@@ -215,6 +218,7 @@ class Root(CMakePackage):
     depends_on('openssl',   when='+davix')  # Also with davix
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
+    depends_on('pythia8',   when='+pythia8')
     depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
@@ -360,8 +364,8 @@ class Root(CMakePackage):
                 ['oracle', False],
                 ['pgsql', 'postgres'],
                 ['pythia6'],
-                ['pythia8', False],
-                ['python', self.spec.satisfies('+python')],
+                ['pythia8'],
+                ['python'],
                 ['qt', 'qt4'],  # See conflicts
                 ['qtgsi', 'qt4'],  # See conflicts
                 ['r', 'R'],
@@ -427,7 +431,35 @@ class Root(CMakePackage):
         if 'lz4' in self.spec:
             env.append_path('CMAKE_PREFIX_PATH',
                             self.spec['lz4'].prefix)
+
+        # This hack is made necessary by a header name collision between
+        # asimage's "import.h" and Python's "import.h" headers...
         env.set('SPACK_INCLUDE_DIRS', '', force=True)
+
+        # ...but it breaks header search for any ROOT dependency which does not
+        # use CMake. To resolve this, we must bring back those dependencies's
+        # include paths into SPACK_INCLUDE_DIRS.
+        #
+        # But in doing so, we must be careful not to inject system header paths
+        # into SPACK_INCLUDE_DIRS, even in a deprioritized form, because some
+        # system/compiler combinations don't like having -I/usr/include around.
+        def add_include_path(dep_name):
+            include_path = self.spec[dep_name].prefix.include
+            if not is_system_path(include_path):
+                env.append_path('SPACK_INCLUDE_DIRS', include_path)
+
+        # With that done, let's go fixing those deps
+        if self.spec.satisfies('+x @:6.08.99'):
+            add_include_path('xextproto')
+        if self.spec.satisfies('@:6.12.99'):
+            add_include_path('zlib')
+        if '+x' in self.spec:
+            add_include_path('fontconfig')
+            add_include_path('libx11')
+            add_include_path('xproto')
+        if '+opengl' in self.spec:
+            add_include_path('glew')
+            add_include_path('mesa-glu')
 
     def setup_run_environment(self, env):
         env.set('ROOTSYS', self.prefix)

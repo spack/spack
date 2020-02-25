@@ -11,6 +11,7 @@ import itertools
 import os
 import os.path
 import shutil
+import tempfile
 import xml.etree.ElementTree
 
 import ordereddict_backport
@@ -27,15 +28,17 @@ import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.package
 import spack.package_prefs
 import spack.paths
 import spack.platforms.test
 import spack.repo
 import spack.stage
 import spack.util.executable
+import spack.util.gpg
+
 from spack.util.pattern import Bunch
 from spack.dependency import Dependency
-from spack.package import PackageBase
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
 from spack.spec import Spec
@@ -167,7 +170,7 @@ def ignore_stage_files():
     Used to track which leftover files in the stage have been seen.
     """
     # to start with, ignore the .lock file at the stage root.
-    return set(['.lock', spack.stage._source_path_subdir])
+    return set(['.lock', spack.stage._source_path_subdir, 'build_cache'])
 
 
 def remove_whatever_it_is(path):
@@ -326,8 +329,18 @@ def mock_repo_path():
     yield spack.repo.RepoPath(spack.paths.mock_packages_path)
 
 
+@pytest.fixture
+def mock_pkg_install(monkeypatch):
+    def _pkg_install_fn(pkg, spec, prefix):
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'install', _pkg_install_fn,
+                        raising=False)
+
+
 @pytest.fixture(scope='function')
-def mock_packages(mock_repo_path):
+def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     with use_repo(mock_repo_path):
         yield mock_repo_path
@@ -596,10 +609,10 @@ def mock_fetch(mock_archive):
     def fake_fn(self):
         return fetcher
 
-    orig_fn = PackageBase.fetcher
-    PackageBase.fetcher = fake_fn
+    orig_fn = spack.package.PackageBase.fetcher
+    spack.package.PackageBase.fetcher = fake_fn
     yield
-    PackageBase.fetcher = orig_fn
+    spack.package.PackageBase.fetcher = orig_fn
 
 
 class MockLayout(object):
@@ -670,6 +683,22 @@ def module_configuration(monkeypatch, request):
         )
     return _impl
 
+
+@pytest.fixture()
+def mock_gnupghome(monkeypatch):
+    # GNU PGP can't handle paths longer than 108 characters (wtf!@#$) so we
+    # have to make our own tmpdir with a shorter name than pytest's.
+    # This comes up because tmp paths on macOS are already long-ish, and
+    # pytest makes them longer.
+    short_name_tmpdir = tempfile.mkdtemp()
+    monkeypatch.setattr(spack.util.gpg, 'GNUPGHOME', short_name_tmpdir)
+    monkeypatch.setattr(spack.util.gpg.Gpg, '_gpg', None)
+
+    yield
+
+    # clean up, since we are doing this manually
+    shutil.rmtree(short_name_tmpdir)
+
 ##########
 # Fake archives and repositories
 ##########
@@ -725,10 +754,30 @@ def mock_archive(request, tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
-    """Creates a very simple git repository with two branches and
-    two commits.
+    """Creates a simple git repository with two branches,
+    two commits and two submodules. Each submodule has one commit.
     """
     git = spack.util.executable.which('git', required=True)
+
+    suburls = []
+    for submodule_count in range(2):
+        tmpdir = tmpdir_factory.mktemp('mock-git-repo-submodule-dir-{0}'
+                                       .format(submodule_count))
+        tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+        repodir = tmpdir.join(spack.stage._source_path_subdir)
+        suburls.append((submodule_count, 'file://' + str(repodir)))
+
+        # Initialize the repository
+        with repodir.as_cwd():
+            git('init')
+            git('config', 'user.name', 'Spack')
+            git('config', 'user.email', 'spack@spack.io')
+
+            # r0 is just the first commit
+            submodule_file = 'r0_file_{0}'.format(submodule_count)
+            repodir.ensure(submodule_file)
+            git('add', submodule_file)
+            git('commit', '-m', 'mock-git-repo r0 {0}'.format(submodule_count))
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
@@ -740,6 +789,9 @@ def mock_git_repository(tmpdir_factory):
         git('config', 'user.name', 'Spack')
         git('config', 'user.email', 'spack@spack.io')
         url = 'file://' + str(repodir)
+        for number, suburl in suburls:
+            git('submodule', 'add', suburl,
+                'third_party/submodule{0}'.format(number))
 
         # r0 is just the first commit
         r0_file = 'r0_file'

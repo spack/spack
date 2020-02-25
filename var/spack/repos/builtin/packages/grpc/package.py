@@ -9,8 +9,11 @@ class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
     homepage = "https://grpc.io"
-    url      = "https://github.com/grpc/grpc/archive/v1.24.3.tar.gz"
+    url      = "https://github.com/grpc/grpc/archive/v1.27.0.tar.gz"
 
+    version('1.27.0', sha256='3ccc4e5ae8c1ce844456e39cc11f1c991a7da74396faabe83d779836ef449bce')
+    version('1.26.0', sha256='2fcb7f1ab160d6fd3aaade64520be3e5446fc4c6fa7ba6581afdc4e26094bd81')
+    version('1.25.0', sha256='ffbe61269160ea745e487f79b0fd06b6edd3d50c6d9123f053b5634737cf2f69')
     version('1.24.3', sha256='c84b3fa140fcd6cce79b3f9de6357c5733a0071e04ca4e65ba5f8d306f10f033')
     version('1.23.1', sha256='dd7da002b15641e4841f20a1f3eb1e359edb69d5ccf8ac64c362823b05f523d9')
 

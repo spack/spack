@@ -15,6 +15,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gdb"
     gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
+    version('9.1', sha256='fcda54d4f35bc53fb24b50009a71ca98410d71ff2620942e3c829a7f5d614252')
     version('8.3.1', sha256='26ce655216cd03f4611518a7a1c31d80ec8e884c16715e9ba8b436822e51434b')
     version('8.3', sha256='b2266ec592440d0eec18ee1790f8558b3b8a2845b76cc83a872e39b501ce8a28')
     version('8.2.1', sha256='0107985f1edb8dddef6cdd68a4f4e419f5fec0f488cc204f0b7d482c0c6c9282')
@@ -39,6 +40,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
+
+    build_directory = 'spack-build'
 
     def configure_args(self):
         args = []

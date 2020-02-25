@@ -929,6 +929,9 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``submodules_delete``: A list of submodules to forcibly delete from the repository
+  after fetching. Useful if a version in the repository has submodules that
+  have disappeared/are no longer accessible.
 * ``get_full_repo``: Ensure the full git history is checked out with all remote
   branch information. Normally (``get_full_repo=False``, the default), the git
   option ``--depth 1`` will be used if the version of git and the specified
@@ -1988,6 +1991,28 @@ Non-compiled packages like Python modules commonly use
 inject the dependency's ``prefix/lib`` directory, but the package needs to
 be in ``PATH`` and ``PYTHONPATH`` during the build process and later when
 a user wants to run the package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Conditional dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+You may have a package that only requires a dependency under certain
+conditions. For example, you may have a package that has optional MPI support,
+- MPI is only a dependency when you want to enable MPI support for the
+package. In that case, you could say something like:
+
+.. code-block:: python
+
+   variant('mpi', default=False)
+   depends_on('mpi', when='+mpi')
+
+``when`` can include constraints on the variant, version, compiler, etc. and
+the :mod:`syntax<spack.spec>` is the same as for Specs written on the command
+line.
+
+If a dependency/feature of a package isn't typically used, you can save time
+by making it conditional (since Spack will not build the dependency unless it
+is required for the Spec).
 
 .. _dependency_dependency_patching:
 
@@ -4429,7 +4454,7 @@ translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
 
-   def configure_args(self):
+   def cmake_args(self):
        spec = self.spec
        return [
            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),

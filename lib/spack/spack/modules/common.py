@@ -28,26 +28,24 @@ and is divided among four classes:
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
+import collections
 import copy
 import datetime
 import inspect
 import os.path
 import re
-import collections
 
-import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-
-import spack.paths
 import spack.build_environment as build_environment
-import spack.util.environment
-import spack.tengine as tengine
-import spack.util.path
-import spack.util.environment
 import spack.error
-import spack.util.spack_yaml as syaml
+import spack.paths
+import spack.schema.environment
+import spack.tengine as tengine
+import spack.util.environment
 import spack.util.file_permissions as fp
+import spack.util.path
+import spack.util.spack_yaml as syaml
 
 
 #: config section for this file
@@ -415,22 +413,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.util.environment.EnvironmentModifications()
-        actions = self.conf.get('environment', {})
-
-        def process_arglist(arglist):
-            if method == 'unset':
-                for x in arglist:
-                    yield (x,)
-            else:
-                for x in six.iteritems(arglist):
-                    yield x
-
-        for method, arglist in actions.items():
-            for args in process_arglist(arglist):
-                getattr(env_mods, method)(*args)
-
-        return env_mods
+        return spack.schema.environment.parse(self.conf.get('environment', {}))
 
     @property
     def suffixes(self):
@@ -640,16 +623,9 @@ class BaseContext(tengine.Context):
             msg = 'unknown, software installed outside of Spack'
             return msg
 
-        # This is quite simple right now, but contains information on how
-        # to call different build system classes.
-        for attr in ('configure_args', 'cmake_args'):
-            try:
-                configure_args = getattr(pkg, attr)()
-                return ' '.join(configure_args)
-            except (AttributeError, IOError, KeyError):
-                # The method doesn't exist in the current spec,
-                # or it's not usable
-                pass
+        if os.path.exists(pkg.install_configure_args_path):
+            with open(pkg.install_configure_args_path, 'r') as args_file:
+                return args_file.read()
 
         # Returning a false-like value makes the default templates skip
         # the configure option section

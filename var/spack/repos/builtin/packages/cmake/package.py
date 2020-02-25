@@ -77,7 +77,7 @@ class Cmake(Package):
 
     # Fix builds with XLF + Ninja generator
     # https://gitlab.kitware.com/cmake/cmake/merge_requests/4075
-    patch('https://gitlab.kitware.com/cmake/cmake/merge_requests/4075.patch', sha256="001736d791957225aadfc416b0cef915e8c8dcc04765b8e0fcbebf6058a05560", when="@3.15.5")
+    patch('fix-xlf-ninja-mr-4075.patch', sha256="42d8b2163a2f37a745800ec13a96c08a3a20d5e67af51031e51f63313d0dedd1", when="@3.15.5")
 
     # We default ownlibs to true because it greatly speeds up the CMake
     # build, and CMake is built frequently. Also, CMake is almost always
@@ -101,7 +101,8 @@ class Cmake(Package):
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive',     when='~ownlibs')
+    depends_on('libarchive@3.1.0:', when='~ownlibs')
+    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
     depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
     depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
@@ -173,6 +174,10 @@ class Cmake(Package):
 
         # Make sure to create an optimized release build
         args.append('-DCMAKE_BUILD_TYPE=Release')
+
+        # Install CMake correctly, even if `spack install` runs
+        # inside a ctest environment
+        args.append('-DCMake_TEST_INSTALL=OFF')
 
         # When building our own private copy of curl then we need to properly
         # enable / disable oepnssl

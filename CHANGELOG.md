@@ -1,3 +1,109 @@
+# v0.14.0 (2020-02-23)
+
+`v0.14.0` is a major feature release, with 3 highlighted features:
+
+1. **Distributed builds.** Multiple Spack instances will now coordinate
+   properly with each other through locks. This works on a single node
+   (where you've called `spack` several times) or across multiple nodes
+   with a shared filesystem. For example, with SLURM, you could build
+   `trilinos` and its dependencies on 2 24-core nodes, with 3 Spack
+   instances per node and 8 build jobs per instance, with `srun -N 2 -n 6
+   spack install -j 8 trilinos`. This requires a filesystem with locking
+   enabled, but not MPI or any other library for parallelism.
+
+2.  **Build pipelines.** You can also build in parallel through Gitlab
+   CI. Simply create a Spack environment and push it to Gitlab to build
+   on Gitlab runners. Pipeline support is now integreated into a single
+   `spack ci` command, so setting it up is easier than ever.  See the
+   [Pipelines section](https://spack.readthedocs.io/en/v0.14.0/pipelines.html)
+   in the docs.
+
+3. **Container builds.** The new `spack containerize` command allows you
+   to create a Docker or Singularity recipe from any Spack environment.
+   There are options to customize the build if you need them. See the
+   [Container Images section](https://spack.readthedocs.io/en/latest/containers.html)
+   in the docs.
+
+In addition, there are several other new commands, many bugfixes and
+improvements, and `spack load` no longer requires modules, so you can use
+it the same way on your laptop or on your supercomputer.
+
+Spack grew by over 300 packages since our last release in November 2019,
+and the project grew to over 500 contributors.  Thanks to all of you for
+making yet another great release possible. Detailed notes below.
+
+## Major new core features
+* Distributed builds: spack instances coordinate and build in parallel (#13100)
+* New `spack ci` command to manage CI pipelines (#12854)
+* Generate container recipes from environments: `spack containerize` (#14202)
+* `spack load` now works without using modules (#14062, #14628)
+* Garbage collect old/unused installations with `spack gc` (#13534)
+* Configuration files all set environment modifications the same way (#14372,
+  [docs](https://spack.readthedocs.io/en/v0.14.0/configuration.html#environment-modifications))
+* `spack commands --format=bash` auto-generates completion (#14393, #14607)
+* Packages can specify alternate fetch URLs in case one fails (#13881)
+
+## Improvements
+* Improved locking for concurrency with environments (#14676, #14621, #14692)
+* `spack test` sends args to `pytest`, supports better listing (#14319)
+* Better support for aarch64 and cascadelake microarch (#13825, #13780, #13820)
+* Archspec is now a separate library (see https://github.com/archspec/archspec)
+* Many improvements to the `spack buildcache` command (#14237, #14346,
+  #14466, #14467, #14639, #14642, #14659, #14696, #14698, #14714, #14732,
+  #14929, #15003, #15086, #15134)
+
+## Selected Bugfixes
+* Compilers now require an exact match on version (#8735, #14730, #14752)
+* Bugfix for patches that specified specific versions (#13989)
+* `spack find -p` now works in environments (#10019, #13972)
+* Dependency queries work correctly in `spack find` (#14757)
+* Bugfixes for locking upstream Spack instances chains (#13364)
+* Fixes for PowerPC clang optimization flags (#14196)
+* Fix for issue with compilers and specific microarchitectures (#13733, #14798)
+
+## New commands and options
+* `spack ci` (#12854)
+* `spack containerize` (#14202)
+* `spack gc` (#13534)
+* `spack load` accepts `--only package`, `--only dependencies` (#14062, #14628)
+* `spack commands --format=bash` (#14393)
+* `spack commands --update-completion` (#14607)
+* `spack install --with-cache` has new option: `--no-check-signature` (#11107)
+* `spack test` now has `--list`, `--list-long`, and `--list-names` (#14319)
+* `spack install --help-cdash` moves CDash help out of the main help (#13704)
+
+## Deprecations
+* `spack release-jobs` has been rolled into `spack ci`
+* `spack bootstrap` will be removed in a future version, as it is no longer
+  needed to set up modules (see `spack load` improvements above)
+
+## Documentation
+* New section on building container images with Spack (see
+  [docs](https://spack.readthedocs.io/en/latest/containers.html))
+* New section on using `spack ci` command to build pipelines (see
+  [docs](https://spack.readthedocs.io/en/latest/pipelines.html))
+* Document how to add conditional dependencies (#14694)
+* Document how to use Spack to replace Homebrew/Conda (#13083, see
+  [docs](https://spack.readthedocs.io/en/latest/workflows.html#using-spack-to-replace-homebrew-conda))
+
+## Important package changes
+* 3,908 total packages (345 added since 0.13.0)
+* Added first cut at a TensorFlow package (#13112)
+* We now build R without "recommended" packages, manage them w/Spack (#12015)
+* Elpa and OpenBLAS now leverage microarchitecture support (#13655, #14380)
+* Fix `octave` compiler wrapper usage (#14726)
+* Enforce that packages in `builtin` aren't missing dependencies (#13949)
+
+
+# v0.13.4 (2020-02-07)
+
+This release contains several bugfixes:
+
+* bugfixes for invoking python in various environments (#14349, #14496, #14569)
+* brought tab completion up to date (#14392)
+* bugfix for removing extensions from views in order (#12961)
+* bugfix for nondeterministic hashing for specs with externals (#14390)
+
 # v0.13.3 (2019-12-23)
 
 This release contains more major performance improvements for Spack
