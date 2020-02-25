@@ -698,8 +698,8 @@ class PackageInstaller(object):
 
             # Flag external and upstream packages as being installed
             if dep_pkg.spec.external or dep_pkg.installed_upstream:
-                tty.debug('Flagging external or upstream {0} as installed'
-                          .format(dep_id))
+                form = 'external' if dep_pkg.spec.external else 'upstream'
+                tty.debug('Flagging {0} {1} as installed'.format(form, dep_id))
                 self.installed.add(dep_id)
                 continue
 
