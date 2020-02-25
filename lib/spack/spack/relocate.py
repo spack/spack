@@ -834,4 +834,5 @@ def mime_type(file):
     # In those cases add the / so the tuple can be formed.
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))

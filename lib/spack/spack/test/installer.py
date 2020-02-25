@@ -87,7 +87,7 @@ def test_install_from_cache_errors(install_mockery, capsys):
 
     # Check with cache-only
     with pytest.raises(SystemExit):
-        inst._install_from_cache(spec.package, True, True)
+        inst._install_from_cache(spec.package, True, True, False)
 
     captured = str(capsys.readouterr())
     assert 'No binary' in captured
@@ -95,7 +95,7 @@ def test_install_from_cache_errors(install_mockery, capsys):
     assert not spec.package.installed_from_binary_cache
 
     # Check when don't expect to install only from binary cache
-    assert not inst._install_from_cache(spec.package, False, True)
+    assert not inst._install_from_cache(spec.package, False, True, False)
     assert not spec.package.installed_from_binary_cache
 
 
@@ -106,7 +106,7 @@ def test_install_from_cache_ok(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, '_try_install_from_binary_cache', _true)
     monkeypatch.setattr(spack.hooks, 'post_install', _noop)
 
-    assert inst._install_from_cache(spec.package, True, True)
+    assert inst._install_from_cache(spec.package, True, True, False)
 
 
 def test_process_external_package_module(install_mockery, monkeypatch, capfd):
@@ -133,7 +133,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
     monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _none)
 
     pkg = spack.repo.get('trivial-install-test-package')
-    assert not inst._process_binary_cache_tarball(pkg, None, False)
+    assert not inst._process_binary_cache_tarball(pkg, None, False, False)
 
     assert 'exists in binary cache but' in capfd.readouterr()[0]
 
@@ -151,7 +151,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     monkeypatch.setattr(spack.database.Database, 'add', _noop)
 
     spec = spack.spec.Spec('a').concretized()
-    assert inst._process_binary_cache_tarball(spec.package, spec, False)
+    assert inst._process_binary_cache_tarball(spec.package, spec, False, False)
 
     assert 'Installing a from binary cache' in capfd.readouterr()[0]
 

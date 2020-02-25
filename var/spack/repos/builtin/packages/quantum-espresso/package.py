@@ -51,6 +51,12 @@ class QuantumEspresso(Package):
     variant('epw', default=False,
             description='Builds Electron-phonon Wannier executable')
 
+    # Apply internal patches by default. May need to be set to to False
+    # for 3rd party dependency patching
+    desc = 'Apply internal patches. May need to be set to False for'
+    desc = desc + ' dependency patching'
+    variant('patch', default=True, description=desc)
+
     # Dependencies
     depends_on('blas')
     depends_on('lapack')
@@ -66,8 +72,8 @@ class QuantumEspresso(Package):
     # TODO: enable building EPW when ~mpi
     depends_on('mpi', when='+epw')
 
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.004')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
 
     # Conflicts
     # MKL with 64-bit integers not supported.
@@ -149,19 +155,19 @@ class QuantumEspresso(Package):
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
           sha256='bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b',
-          when='@6.3:6.3.0')
+          when='+patch@6.3:6.3.0')
 
     # QE 6.3 `make install` broken and a patch must be applied
     patch('https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff',
           sha256='b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca',
-          when='@6.3:6.3.0')
+          when='+patch@6.3:6.3.0')
 
     # QE 6.4.1 patch to work around configure issues that only appear in the
     # Spack environment. We now are able to support:
     # `spack install qe~mpi~scalapack hdf5=serial`
     patch('https://gitlab.com/QEF/q-e/commit/5fb1195b0844e1052b7601f18ab5c700f9cbe648.diff',
           sha256='b1aa3179ee1c069964fb9c21f3b832aebeae54947ce8d3cc1a74e7b154c3c10f',
-          when='@6.4.1:6.5.0')
+          when='+patch@6.4.1:6.5.0')
 
     def install(self, spec, prefix):
 
