@@ -7,6 +7,7 @@
 """
 from __future__ import unicode_literals
 
+import codecs
 import multiprocessing
 import os
 import re
@@ -261,7 +262,7 @@ class log_output(object):
         self.close_log_in_parent = True
         self.write_log_in_parent = False
         if isinstance(self.file_like, string_types):
-            self.log_file = open(self.file_like, 'w')
+            self.log_file = codecs.open(self.file_like, 'w', 'utf-8')
 
         elif _file_descriptors_work(self.file_like):
             self.log_file = self.file_like
@@ -416,7 +417,7 @@ class log_output(object):
         """Daemon that writes output to the log file and stdout."""
         # Use line buffering (3rd param = 1) since Python 3 has a bug
         # that prevents unbuffered text I/O.
-        in_pipe = os.fdopen(self.read_fd, 'r', 1)
+        in_pipe = os.fdopen(self.read_fd, 'rb', 1)
         os.close(self.write_fd)
 
         echo = self.echo        # initial echo setting, user-controllable
@@ -444,7 +445,7 @@ class log_output(object):
                         # If we arrive here it means that in_pipe was
                         # ready for reading : it should never happen that
                         # line is false-ish
-                        line = in_pipe.readline()
+                        line = codecs.decode(in_pipe.readline(), 'utf-8', 'replace')
                         if not line:
                             break  # EOF
 
