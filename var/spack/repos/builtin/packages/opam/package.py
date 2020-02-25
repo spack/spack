@@ -28,7 +28,7 @@ class Opam(AutotoolsPackage):
     version('1.2.2', sha256='15e617179251041f4bf3910257bbb8398db987d863dd3cfc288bdd958de58f00')
     version('1.2.1', sha256='f210ece7a2def34b486c9ccfb75de8febd64487b2ea4a14a7fa0358f37eacc3b')
 
-    depends_on('ocaml', type='build') 
+    depends_on('ocaml', type='build')
 
     parallel = False
 
