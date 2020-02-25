@@ -68,6 +68,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack configure args file.
+_spack_configure_argsfile = 'spack-configure-args.txt'
+
 
 class InstallPhase(object):
     """Manages a single phase of the installation.
@@ -895,6 +898,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Otherwise, return the current install log path name.
         return os.path.join(install_path, _spack_build_logfile)
+
+    @property
+    def configure_args_path(self):
+        """Return the configure args file path associated with staging."""
+        return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def install_configure_args_path(self):
+        """Return the configure args file path on successful installation."""
+        install_path = spack.store.layout.metadata_path(self.spec)
+
+        return os.path.join(install_path, _spack_configure_argsfile)
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
