@@ -77,22 +77,22 @@ class Dftbplus(MakefilePackage):
 
         mconfig = FileFilter(join_path(dircwd, 'make.config'))
 
-        mconfig.filter('INSTALLDIR := .*', 'INSTALLDIR := {}'.format(prefix))
+        mconfig.filter('INSTALLDIR := .*', 'INSTALLDIR := {0}'.format(prefix))
 
         if '+gpu' in self.spec:
             march.filter('MAGMADIR = .*',
-                         'MAGMADIR = {}'.format(spec['magma'].prefix))
+                         'MAGMADIR = {0}'.format(spec['magma'].prefix))
 
             mconfig.filter('WITH_GPU := .*', 'WITH_GPU := 1')
 
         if '+mpi' in self.spec:
             march.filter('SCALAPACKDIR = .*',
-                         'SCALAPACKDIR = {}'.format(spec['scalapack'].prefix))
+                         'SCALAPACKDIR = {0}'.format(spec['scalapack'].prefix))
 
             march.filter('LIB_LAPACK = -l.*',
-                         'LIB_LAPACK = {}'.format(spec['blas'].libs.ld_flags))
+                         'LIB_LAPACK = {0}'.format(spec['blas'].libs.ld_flags))
 
-            march.filter('mpifort', '{}'.format(spec['mpi'].mpifc))
+            march.filter('mpifort', '{0}'.format(spec['mpi'].mpifc))
 
             mconfig.filter('WITH_MPI := .*', 'WITH_MPI := 1')
 
@@ -101,20 +101,20 @@ class Dftbplus(MakefilePackage):
 
                 has_pexsi = 'enable_pexsi' in spec['elsi']
 
-                mconfig.filter('WITH_PEXSI := .*', 'WITH_PEXSI := {}'.format(
+                mconfig.filter('WITH_PEXSI := .*', 'WITH_PEXSI := {0}'.format(
                     '1' if has_pexsi is True else '0'
                 ))
 
-                march.filter("ELSIINCDIR .*", "ELSIINCDIR = {}".format(
+                march.filter("ELSIINCDIR .*", "ELSIINCDIR = {0}".format(
                     spec['elsi'].prefix.include
                 ))
 
                 march.filter("ELSIDIR .*",
-                             "ELSIDIR = {}".format(spec['elsi'].prefix))
+                             "ELSIDIR = {0}".format(spec['elsi'].prefix))
 
         else:
-            march.filter('LIB_LAPACK += -l.*',
-                         'LIB_LAPACK += {}'.format(spec['blas'].libs.ld_flags))
+            march.filter('LIB_LAPACK += -l.*', 'LIB_LAPACK += {0}'.format(
+                spec['blas'].libs.ld_flags))
 
         if '+sockets' in self.spec:
             mconfig.filter('WITH_SOCKETS := .*', 'WITH_SOCKETS := 1')
@@ -123,7 +123,7 @@ class Dftbplus(MakefilePackage):
             mconfig.filter('WITH_TRANSPORT := .*', 'WITH_TRANSPORT := 1')
 
         if '+arpack' in self.spec:
-            march.filter('ARPACK_LIBS = .*', 'ARPACK_LIBS = {}'.format(
+            march.filter('ARPACK_LIBS = .*', 'ARPACK_LIBS = {0}'.format(
                 spec['arpack-ng'].libs.ld_flags
             ))
 
@@ -131,11 +131,11 @@ class Dftbplus(MakefilePackage):
 
         if '+dftd3' in self.spec:
             march.filter('COMPILE_DFTD3 = .*', 'COMPILE_DFTD3 = 0')
-            march.filter('DFTD3_INCS = .*', 'DFTD3_INCS = -I{}'.format(
+            march.filter('DFTD3_INCS = .*', 'DFTD3_INCS = -I{0}'.format(
                 spec['dftd3-lib'].prefix.include
             ))
 
-            march.filter('DFTD3_LIBS = .*', 'DFTD3_LIBS = -L{} -ldftd3'.format(
+            march.filter('DFTD3_LIBS = .*', 'DFTD3_LIBS = -L{0} -ldftd3'.format(
                 spec['dftd3-lib'].prefix
             ))
 
