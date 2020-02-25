@@ -15,8 +15,7 @@ class F77Zmq(MakefilePackage):
 
     maintainers = ['scemama']
 
-    version('4.3.2', url="https://github.com/scemama/f77_zmq/archive/4.3.2.tar.gz", 
-    sha256='f6a87113065782d6399bfa517ec33bb945eb2fa4c62b3ce7678b88ad7becfdef')
+    version('4.3.2', sha256='15c0de2b5cf06b426937dde56764b379bcbf5d58cd4f15029d6ee1447d64d260')
     version('4.3.1', sha256='a15d72d93022d3e095528d2808c7767cece974a2dc0e2dd95e4c122f60fcf0a8')
 
     depends_on('libzmq')

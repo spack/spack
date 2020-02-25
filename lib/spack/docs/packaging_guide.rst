@@ -4454,7 +4454,7 @@ translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
 
-   def configure_args(self):
+   def cmake_args(self):
        spec = self.spec
        return [
            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
