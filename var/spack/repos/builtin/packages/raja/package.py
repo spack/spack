@@ -14,6 +14,9 @@ class Raja(CMakePackage):
 
     version('develop', branch='develop', submodules='True')
     version('master',  branch='master',  submodules='True')
+    version('0.11.0', tag='v0.11.0', submodules="True")
+    version('0.10.0', tag='v0.10.0', submodules="True")
+    version('0.9.0', tag='v0.9.0', submodules="True")
     version('0.8.0', tag='v0.8.0', submodules="True")
     version('0.7.0', tag='v0.7.0', submodules="True")
     version('0.6.0', tag='v0.6.0', submodules="True")

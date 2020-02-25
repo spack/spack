@@ -16,6 +16,7 @@ class PyTyping(PythonPackage):
     import_modules = ['typing']
 
     version('3.7.4.1', sha256='91dfe6f3f706ee8cc32d38edbbf304e9b7583fb37108fef38229617f8b3eba23')
+    version('3.6.6', sha256='4027c5f6127a6267a435201981ba156de91ad0d1d98e9ddc2aa173453453492d')
     version('3.6.4', sha256='d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2')
     version('3.6.1', sha256='c36dec260238e7464213dcd50d4b5ef63a507972f5780652e835d0228d0edace')
 
