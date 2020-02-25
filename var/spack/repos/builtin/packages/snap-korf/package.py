@@ -21,7 +21,10 @@ class SnapKorf(MakefilePackage):
     depends_on('sqlite')
     depends_on('sparsehash')
 
-    conflicts('%gcc@5:', when='@2013-11-29')
+    patch('snap-korf_2013-11-29_gcc8.patch', when='%gcc@8:', working_dir='./Zoe')
+    patch('snap-korf_2013-11-29_gcc8.patch2', when='%gcc@8:')
+    
+    conflicts('%gcc@5', when='@2013-11-29')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
