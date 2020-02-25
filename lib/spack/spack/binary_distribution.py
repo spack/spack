@@ -551,16 +551,13 @@ def relocate_package(spec, allow_root):
     if (old_rel_prefix != new_rel_prefix and not prefix_to_hash):
         msg = "Package tarball was created from an install "
         msg += "prefix with a different directory layout and an older "
-        msg += "buildcache create implementation. It cannot be relocated "
-        msg += "because it does not contain the old dependency install prefix "
-        msg += "to hash map."
+        msg += "buildcache create implementation. It cannot be relocated."
         raise NewLayoutException(msg)
     # older buildcaches do not have the prefix_to_hash dictionary
     # need to set an empty dictionary and add one entry to
     # prefix_to_prefix to reproduce the old behavior
     if not prefix_to_hash:
         prefix_to_hash = dict()
-
     hash_to_prefix = dict()
     hash_to_prefix[spec.format('{hash}')] = str(spec.package.prefix)
     new_deps = spack.build_environment.get_rpath_deps(spec.package)
@@ -569,8 +566,8 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix = dict()
     for orig_prefix, hash in prefix_to_hash.items():
         prefix_to_prefix[orig_prefix] = hash_to_prefix.get(hash, None)
-    if not prefix_to_hash:
-        prefix_to_prefix[old_layout_root] = new_layout_root
+    prefix_to_prefix[old_prefix] = new_prefix
+    prefix_to_prefix[old_layout_root] = new_layout_root
 
     tty.debug("Relocating package from",
               "%s to %s." % (old_layout_root, new_layout_root))
@@ -588,15 +585,13 @@ def relocate_package(spec, allow_root):
 
 # If we are installing back to the same location don't replace anything
     if old_layout_root != new_layout_root:
-        paths_to_relocate = [old_layout_root, old_prefix,
-                             old_spack_prefix]
-        paths_to_relocate.extend(prefix_to_prefix.keys())
+        paths_to_relocate = [old_spack_prefix, old_layout_root]
+        paths_to_relocate.extend(prefix_to_hash.keys())
         files_to_relocate = list(filter(
             lambda pathname: not relocate.file_is_relocatable(
                 pathname, paths_to_relocate=paths_to_relocate),
             map(lambda filename: os.path.join(workdir, filename),
                 buildinfo['relocate_binaries'])))
-
         # If the buildcache was not created with relativized rpaths
         # do the relocation of path in binaries
         if (spec.architecture.platform == 'darwin' or
