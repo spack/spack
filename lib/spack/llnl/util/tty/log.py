@@ -445,7 +445,8 @@ class log_output(object):
                         # If we arrive here it means that in_pipe was
                         # ready for reading : it should never happen that
                         # line is false-ish
-                        line = codecs.decode(in_pipe.readline(), 'utf-8', 'replace')
+                        line = codecs.decode(in_pipe.readline(),
+                                             'utf-8', 'replace')
                         if not line:
                             break  # EOF
 
