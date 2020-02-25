@@ -67,7 +67,7 @@ class Augustus(MakefilePackage):
                             'INCLUDES = -I$(BAMTOOLS)/include/bamtools ')
             if 'bamtools@2.5:' in spec:
                 makefile.filter('LIBS = -lbamtools -lz',
-                                'LIBS = $(BAMTOOLS)/lib64/'
+                                'LIBS = $(BAMTOOLS)/lib'
                                 '/libbamtools.a -lz')
             if 'bamtools@:2.4' in spec:
                 makefile.filter('LIBS = -lbamtools -lz',
@@ -81,7 +81,7 @@ class Augustus(MakefilePackage):
                             'INCLUDES = $(BAMTOOLS)/include/bamtools')
             if 'bamtools@2.5:' in spec:
                 makefile.filter('LIBS = -lbamtools -lz',
-                                'LIBS = $(BAMTOOLS)/lib64/'
+                                'LIBS = $(BAMTOOLS)/lib'
                                 '/libbamtools.a -lz')
             if 'bamtools@:2.4' in spec:
                 makefile.filter('LIBS = -lbamtools -lz',
