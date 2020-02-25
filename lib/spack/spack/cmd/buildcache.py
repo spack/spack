@@ -366,13 +366,9 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force, rel,
-                                  unsigned, allow_root, signkey,
-                                  not no_rebuild_index)
-        except Exception as e:
-            tty.warn('%s' % e)
-            pass
+        bindist.build_tarball(spec, outdir, force, rel,
+                              unsigned, allow_root, signkey,
+                              not no_rebuild_index)
 
 
 def createtarball(args):
