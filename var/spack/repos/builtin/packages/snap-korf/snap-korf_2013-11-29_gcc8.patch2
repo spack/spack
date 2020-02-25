@@ -1,0 +1,19 @@
+--- ./Makefile	2013-11-30 08:54:00.000000000 +0100
++++ ./Makefile	2020-02-25 15:44:52.729282935 +0100
+@@ -94,11 +94,11 @@
+ 
+ gcc:
+ 	cd Zoe; make;
+-	make $(APP)  CC="gcc" CFLAGS="-O2 -Wall -Werror"
+-	make $(APP2) CC="gcc" CFLAGS="-O2 -Wall -Werror"
+-	make $(APP3) CC="gcc" CFLAGS="-O2 -Wall -Werror"
+-	make $(APP4) CC="gcc" CFLAGS="-O2 -Wall -Werror"
+-	make $(APP5) CC="gcc" CFLAGS="-O2 -Wall -Werror"
++	make $(APP)  CC="gcc" CFLAGS="-O2 -Wall "
++	make $(APP2) CC="gcc" CFLAGS="-O2 -Wall "
++	make $(APP3) CC="gcc" CFLAGS="-O2 -Wall "
++	make $(APP4) CC="gcc" CFLAGS="-O2 -Wall "
++	make $(APP5) CC="gcc" CFLAGS="-O2 -Wall "
+ 
+ 
+ ###################
