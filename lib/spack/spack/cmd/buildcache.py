@@ -23,7 +23,7 @@ import spack.repo
 import spack.store
 import spack.util.url as url_util
 
-from spack.error import SpecError, SpackError
+from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
 
 from spack.cmd import display_specs
@@ -366,13 +366,9 @@ def _createtarball(env, spec_yaml, packages, directory, key, no_deps, force,
 
     for spec in specs:
         tty.msg('creating binary cache file for package %s ' % spec.format())
-        try:
-            bindist.build_tarball(spec, outdir, force, rel,
-                                  unsigned, allow_root, signkey,
-                                  not no_rebuild_index)
-        except SpackError as e:
-            tty.warn('%s' % e)
-            continue
+        bindist.build_tarball(spec, outdir, force, rel,
+                              unsigned, allow_root, signkey,
+                              not no_rebuild_index)
 
 
 def createtarball(args):
