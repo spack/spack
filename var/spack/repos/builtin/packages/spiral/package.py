@@ -23,8 +23,6 @@ class Spiral(CMakePackage):
     # No dependencies.
 
     def build(self, spec, prefix):
-        print("starting build phase, working dir = " + self.build_directory)
-        print("Now run 'make all'")
         with working_dir(self.build_directory):
             make('all')
             make('install/local')
@@ -35,9 +33,11 @@ class Spiral(CMakePackage):
         dest = join_path(self.stage.source_path, 'gap/bin')
         install(gapfil, dest)
 
+        @on_package_attributes(run_tests=True)
+        def test(self):
+            make('test')
+
     def install(self, spec, prefix):
-        #  print("After build phase...install:")
-        print("prefix directory = " + prefix)
         mkdirp(prefix.gap.bin)
         gapfil = join_path(self.build_directory, 'gap/src/gap')
         install(gapfil, prefix.gap.bin)
@@ -67,10 +67,3 @@ class Spiral(CMakePackage):
         with working_dir(join_path(self.stage.source_path, 'gap')):
             install_tree('lib', prefix.gap.lib)
             install_tree('grp', prefix.gap.grp)
-
-        print("Run tests = " + ('ON' if self.run_tests else 'OFF'))
-
-        @run_after('install')
-        @on_package_attributes(run_tests=True)
-        def test(self):
-            make('test')
