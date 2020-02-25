@@ -1,3 +1,8 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 import os
@@ -21,24 +26,24 @@ class Dftbplus(MakefilePackage):
             for GPU accelerated computation""")
 
     variant('elsi', default=False,
-            description="""Use the ELSI library for large scale systems.
-            Only has any effect if you build with '+mpi'""")
+            description="Use the ELSI library for large scale systems. "
+            "Only has any effect if you build with '+mpi'")
 
     variant('sockets', default=False,
-            description="""Whether the socket library
-            (external control) should be linked""")
+            description="Whether the socket library "
+            "(external control) should be linked")
 
     variant('arpack', default=False,
             description="Use ARPACK for excited state DFTB functionality")
 
     variant('transport', default=False,
-            description="""Whether transport via libNEGF should be included.
-            Only affects parallel build.
-            (serial version is built without libNEGF/transport)""")
+            description="Whether transport via libNEGF should be included. "
+            "Only affects parallel build. "
+            "(serial version is built without libNEGF/transport)")
 
     variant('dftd3', default=False,
-            description="""Use DftD3 dispersion library
-            (if you need this dispersion model)""")
+            description="Use DftD3 dispersion library "
+            "(if you need this dispersion model)")
 
     depends_on('lapack')
     depends_on('blas')
@@ -63,7 +68,7 @@ class Dftbplus(MakefilePackage):
         """
         dircwd = os.getcwd()
         makefile = FileFilter("makefile")
-        makefile.filter("ROOT := .*", "ROOT := {}".format(dircwd))
+        makefile.filter("ROOT := .*", "ROOT := {0}".format(dircwd))
 
         archmake = join_path(".", "sys", "make.x86_64-linux-gnu")
         copy(archmake, join_path(dircwd, "make.arch"))
@@ -137,4 +142,4 @@ class Dftbplus(MakefilePackage):
             mconfig.filter('WITH_DFTD3 := .*', 'WITH_DFTD3 := 1')
 
         # Download some data needed for the tests
-        Executable('./utils/get_opt_externals')
+        Executable('./utils/get_opt_externals')()

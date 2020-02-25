@@ -1,3 +1,8 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -12,7 +17,7 @@ class Dftd3Lib(MakefilePackage):
 
     # This fixes a concurrency bug, where make would try to start compiling
     # the dftd3 target before the lib target ended.
-    # Since the library is small, disabling causes no much harm
+    # Since the library is small, disabling causes not much harm
     parallel = False
 
     def edit(self, spec, prefix):
