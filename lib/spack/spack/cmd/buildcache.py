@@ -338,7 +338,7 @@ def _createtarball(env, spec_yaml, packages, output_location, key,
     outdir = url_util.format(mirror.push_url)
 
     msg = 'Buildcache files will be output to %s/build_cache' % outdir
-    tty.debug(msg)
+    tty.msg(msg)
 
     signkey = None
     if key:
@@ -371,7 +371,7 @@ def _createtarball(env, spec_yaml, packages, output_location, key,
                     specs.add(node)
 
     for spec in specs:
-        tty.msg('creating binary cache file for package %s ' % spec.format())
+        tty.debug('creating binary cache file for package %s ' % spec.format())
         try:
             bindist.build_tarball(spec, outdir, force, rel,
                                   unsigned, allow_root, signkey,
