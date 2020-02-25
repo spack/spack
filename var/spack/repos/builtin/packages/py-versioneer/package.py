@@ -14,7 +14,7 @@ class PyVersioneer(PythonPackage):
     url      = "https://github.com/warner/python-versioneer/archive/0.18.tar.gz"
     git      = "https://github.com/warner/python-versioneer.git"
 
-    maintainers = ['scemama', 'warner']
+    maintainers = ['scemama']
 
     version('0.18', sha256='cf895b67f5bc62d61c4837458069ded8f66b4e5764c19f7253c51ee27e8b3a99')
 
