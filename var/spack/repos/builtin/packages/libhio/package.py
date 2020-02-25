@@ -59,5 +59,4 @@ class Libhio(AutotoolsPackage):
             
         args.append('--with-external-json={0}'.format(spec['json-c'].prefix))
 
-
         return args
