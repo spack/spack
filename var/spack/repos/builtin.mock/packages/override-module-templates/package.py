@@ -14,6 +14,3 @@ class OverrideModuleTemplates(Package):
 
     tcl_template = 'override.txt'
     lmod_template = 'override.txt'
-
-    def install(self, spec, prefix):
-        pass

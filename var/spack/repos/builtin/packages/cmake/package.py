@@ -175,6 +175,10 @@ class Cmake(Package):
         # Make sure to create an optimized release build
         args.append('-DCMAKE_BUILD_TYPE=Release')
 
+        # Install CMake correctly, even if `spack install` runs
+        # inside a ctest environment
+        args.append('-DCMake_TEST_INSTALL=OFF')
+
         # When building our own private copy of curl then we need to properly
         # enable / disable oepnssl
         if '+ownlibs' in spec:

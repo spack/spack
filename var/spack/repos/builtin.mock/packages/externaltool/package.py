@@ -14,6 +14,3 @@ class Externaltool(Package):
     version('0.9', '1234567890abcdef1234567890abcdef')
 
     depends_on('externalprereq')
-
-    def install(self, spec, prefix):
-        pass

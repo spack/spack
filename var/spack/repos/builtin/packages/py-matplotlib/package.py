@@ -34,6 +34,7 @@ class PyMatplotlib(PythonPackage):
     version('3.0.2', sha256='c94b792af431f6adb6859eb218137acd9a35f4f7442cea57e4a59c54751c36af')
     version('3.0.0', sha256='b4e2333c98a7c2c1ff6eb930cd2b57d4b818de5437c5048802096b32f66e65f9')
     version('2.2.5', sha256='a3037a840cd9dfdc2df9fee8af8f76ca82bfab173c0f9468193ca7a89a2b60ea')
+    version('2.2.4', sha256='029620799e581802961ac1dcff5cb5d3ee2f602e0db9c0f202a90495b37d2126')
     version('2.2.3', sha256='7355bf757ecacd5f0ac9dd9523c8e1a1103faadf8d33c22664178e17533f8ce5')
     version('2.2.2', sha256='4dc7ef528aad21f22be85e95725234c5178c0f938e2228ca76640e5e84d8cde8')
     version('2.0.2', sha256='0ffbc44faa34a8b1704bc108c451ecf87988f900ef7ce757b8e2e84383121ff1')
@@ -82,14 +83,15 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))  # See #3813
     depends_on('py-cycler@0.10:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
-    depends_on('py-kiwisolver@1:', type=('build', 'run'), when='@2.2.0:')
+    depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')
     depends_on('py-backports-functools-lru-cache', type=('build', 'run'),
                when='@2.1.0:2.999.999 ^python@:2')
-    depends_on('py-six@1.9.0:', type=('build', 'run'), when='@:2')
+    depends_on('py-six@1.10.0:', type=('build', 'run'), when='@2.0:2.999')
+    depends_on('py-six@1.9.0:',  type=('build', 'run'), when='@:1')
 
     # Optional backend dependencies
     depends_on('tk@8.3:8.5,8.6.2:', when='backend=tkagg', type='run')

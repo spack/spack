@@ -22,6 +22,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.9.1', tag='v3.9.1')
+    version('3.9.0', tag='v3.9.0')
     version('3.8.0', tag='v3.8.0')
     version('3.7.0', tag='v3.7.0')
     version('3.6.0', tag='v3.6.0')
@@ -53,7 +55,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with support for basic data analysis tools')
     variant('gui', default=False,
             description='Install with Matplotlib (long installation time)')
-    variant('qe', default=True,
+    variant('qe', default=False,
             description='Install with patched Quantum Espresso 6.4.1')
 
     # cuda variant implies mixed precision variant by default, but there is
@@ -115,6 +117,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
     depends_on('mpi', when='+mpi')
+    depends_on('python@3:', when='@3.9:')
 
     # HDF5
     depends_on('hdf5~mpi', when='~phdf5')
@@ -142,11 +145,11 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Quantum Espresso 6.4.1 (see QMCPACK manual)
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
-    depends_on('quantum-espresso@6.4.1+mpi hdf5=parallel',
+    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=parallel',
                patches=patch(patch_url, sha256=patch_checksum),
                when='+qe+phdf5', type='run')
 
-    depends_on('quantum-espresso@6.4.1+mpi hdf5=serial',
+    depends_on('quantum-espresso~patch@6.4.1+mpi hdf5=serial',
                patches=patch(patch_url, sha256=patch_checksum),
                when='+qe~phdf5', type='run')
 

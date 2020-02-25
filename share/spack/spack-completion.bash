@@ -226,7 +226,7 @@ _config_sections() {
 _extensions() {
     if [[ -z "${SPACK_EXTENSIONS:-}" ]]
     then
-        SPACK_EXTENSIONS="aspell go-bootstrap go icedtea jdk kim-api lua matlab mofem-cephas octave openjdk perl python r ruby rust tcl yorick"
+        SPACK_EXTENSIONS="$(spack extensions)"
     fi
     SPACK_COMPREPLY="$SPACK_EXTENSIONS"
 }
@@ -1272,7 +1272,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c"
+        SPACK_COMPREPLY="-h --help -c -m"
     else
         SPACK_COMPREPLY=""
     fi

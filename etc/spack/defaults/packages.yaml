@@ -43,6 +43,7 @@ packages:
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
+      sycl: [hipsycl]
     permissions:
       read: world
       write: user

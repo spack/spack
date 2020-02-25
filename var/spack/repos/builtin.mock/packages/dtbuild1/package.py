@@ -18,6 +18,3 @@ class Dtbuild1(Package):
     depends_on('dtbuild2', type='build')
     depends_on('dtlink2')
     depends_on('dtrun2', type='run')
-
-    def install(self, spec, prefix):
-        pass

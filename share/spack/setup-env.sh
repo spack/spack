@@ -212,7 +212,8 @@ _spack_determine_shell() {
         # If procfs is present this seems a more reliable
         # way to detect the current shell
         _sp_exe=$(readlink /proc/$$/exe)
-        basename ${_sp_exe}
+        # Shell may contain number, like zsh5 instead of zsh
+        basename ${_sp_exe} | tr -d '0123456789'
     elif [ -n "${BASH:-}" ]; then
         echo bash
     elif [ -n "${ZSH_NAME:-}" ]; then

@@ -37,6 +37,7 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
+    variant('consistentFPCSR', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
 
     variant(
         'threads', default='none',
@@ -84,6 +85,10 @@ class Openblas(MakefilePackage):
     patch('https://github.com/xianyi/OpenBLAS/commit/79ea839b635d1fd84b6ce8a47e086f01d64198e6.patch',
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
+
+    # Fix https://github.com/xianyi/OpenBLAS/issues/2431
+    # Patch derived from https://github.com/xianyi/OpenBLAS/pull/2424
+    patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
 
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
@@ -233,6 +238,11 @@ class Openblas(MakefilePackage):
         # 64bit ints
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
+
+        # Synchronize floating-point control and status register (FPCSR)
+        # between threads (x86/x86_64 only).
+        if '+consistentFPCSR' in self.spec:
+            make_defs += ['CONSISTENT_FPCSR=1']
 
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
