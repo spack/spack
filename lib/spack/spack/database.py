@@ -328,6 +328,19 @@ class Database(object):
 
         self.is_upstream = is_upstream
 
+        # initialize rest of state.
+        self.db_lock_timeout = (
+            spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
+        self.package_lock_timeout = (
+            spack.config.get('config:package_lock_timeout') or
+            _pkg_lock_timeout)
+        tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
+                  str(self.db_lock_timeout)))
+        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
+                              if self.package_lock_timeout else 'No timeout')
+        tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
+                  str(timeout_format_str)))
+
         # Create .spack-db/index.json for global upstream it doesn't exist
         global_install_tree = spack.config.get(
             'upstreams')['global']['install_tree']
@@ -348,25 +361,6 @@ class Database(object):
                     except YAMLError as e:
                         raise syaml.SpackYAMLError(
                             "error writing YAML database:", str(e))
-
-            self.lock = ForbiddenLock()
-        else:
-            self.lock = Lock(self._lock_path)
-
-        # initialize rest of state.
-        self.db_lock_timeout = (
-            spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
-        self.package_lock_timeout = (
-            spack.config.get('config:package_lock_timeout') or
-            _pkg_lock_timeout)
-        tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
-                  str(self.db_lock_timeout)))
-        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
-                              if self.package_lock_timeout else 'No timeout')
-        tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
-                  str(timeout_format_str)))
-
-        if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(self._lock_path,
