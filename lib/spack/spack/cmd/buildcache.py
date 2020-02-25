@@ -52,9 +52,22 @@ def setup_parser(subparser):
     create.add_argument('-k', '--key', metavar='key',
                         type=str, default=None,
                         help="Key for signing.")
-    create.add_argument('-d', '--directory', metavar='directory',
-                        type=str, default='.',
-                        help="directory in which to save the tarballs.")
+    output = create.add_mutually_exclusive_group(required=True)
+    output.add_argument('-d', '--directory',
+                        metavar='directory',
+                        type=str,
+                        help="local directory where " +
+                             "buildcaches will be written.")
+    output.add_argument('-m', '--mirror-name',
+                        metavar='mirror-name',
+                        type=str,
+                        help="name of the mirror where " +
+                             "buildcaches will be written.")
+    output.add_argument('--mirror-url',
+                        metavar='mirror-url',
+                        type=str,
+                        help="URL of the mirror where " +
+                             "buildcaches will be written.")
     create.add_argument('--no-rebuild-index', action='store_true',
                         default=False, help="skip rebuilding index after " +
                                             "building package(s)")
@@ -310,8 +323,9 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     return specs_from_cli
 
 
-def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory,
-                   key, force, rel, unsigned, allow_root, no_rebuild_index):
+def _createtarball(env, spec_yaml, packages, add_spec, add_deps,
+                   output_location, key, force, rel, unsigned, allow_root,
+                   no_rebuild_index):
     if spec_yaml:
         packages = set()
         with open(spec_yaml, 'r') as fd:
@@ -331,12 +345,11 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory,
     pkgs = set(packages)
     specs = set()
 
-    outdir = '.'
-    if directory:
-        outdir = directory
-
-    mirror = spack.mirror.MirrorCollection().lookup(outdir)
+    mirror = spack.mirror.MirrorCollection().lookup(output_location)
     outdir = url_util.format(mirror.push_url)
+
+    msg = 'Buildcache files will be output to %s/build_cache' % outdir
+    tty.msg(msg)
 
     signkey = None
     if key:
@@ -380,7 +393,7 @@ def _createtarball(env, spec_yaml, packages, add_spec, add_deps, directory,
     tty.debug('writing tarballs to %s/build_cache' % outdir)
 
     for spec in specs:
-        tty.msg('creating binary cache file for package %s ' % spec.format())
+        tty.debug('creating binary cache file for package %s ' % spec.format())
         bindist.build_tarball(spec, outdir, force, rel,
                               unsigned, allow_root, signkey,
                               not no_rebuild_index)
@@ -392,11 +405,46 @@ def createtarball(args):
     # restrict matching to current environment if one is active
     env = ev.get_env(args, 'buildcache create')
 
+    output_location = None
+    if args.directory:
+        output_location = args.directory
+
+        # User meant to provide a path to a local directory.
+        # Ensure that they did not accidentally pass a URL.
+        scheme = url_util.parse(output_location, scheme='<missing>').scheme
+        if scheme != '<missing>':
+            raise ValueError(
+                '"--directory" expected a local path; got a URL, instead')
+
+        # User meant to provide a path to a local directory.
+        # Ensure that the mirror lookup does not mistake it for a named mirror.
+        output_location = 'file://' + output_location
+
+    elif args.mirror_name:
+        output_location = args.mirror_name
+
+        # User meant to provide the name of a preconfigured mirror.
+        # Ensure that the mirror lookup actually returns a named mirror.
+        result = spack.mirror.MirrorCollection().lookup(output_location)
+        if result.name == "<unnamed>":
+            raise ValueError(
+                'no configured mirror named "{name}"'.format(
+                    name=output_location))
+
+    elif args.mirror_url:
+        output_location = args.mirror_url
+
+        # User meant to provide a URL for an anonymous mirror.
+        # Ensure that they actually provided a URL.
+        scheme = url_util.parse(output_location, scheme='<missing>').scheme
+        if scheme == '<missing>':
+            raise ValueError(
+                '"{url}" is not a valid URL'.format(url=output_location))
     add_spec = ('package' in args.things_to_install)
     add_deps = ('dependencies' in args.things_to_install)
 
     _createtarball(env, args.spec_yaml, args.specs, add_spec, add_deps,
-                   args.directory, args.key, args.force, args.rel,
+                   output_location, args.key, args.force, args.rel,
                    args.unsigned, args.allow_root, args.no_rebuild_index)
 
 
