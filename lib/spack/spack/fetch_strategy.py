@@ -326,10 +326,14 @@ class URLFetchStrategy(FetchStrategy):
             '-D',
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
-            # Timeout if can't establish a connection after 10 sec.
-            '--connect-timeout', '10',
             url,
         ]
+
+        connect_timeout = spack.config.get('config:connect_timeout')
+
+        if connect_timeout > 0:
+            # Timeout if can't establish a connection after n sec.
+            curl_args.extend(['--connect-timeout', str(connect_timeout)])
 
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
