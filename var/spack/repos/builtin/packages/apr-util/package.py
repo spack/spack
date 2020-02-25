@@ -24,7 +24,7 @@ class AprUtil(AutotoolsPackage):
 
     depends_on('apr')
     depends_on('expat')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     depends_on('openssl', when='+crypto')
     depends_on('gdbm', when='+gdbm')

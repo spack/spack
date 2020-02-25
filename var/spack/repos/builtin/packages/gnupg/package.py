@@ -25,7 +25,7 @@ class Gnupg(AutotoolsPackage):
     depends_on('libgpg-error@1.24:')
     depends_on('npth@1.2:')
     depends_on('zlib')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def configure_args(self):
         return [

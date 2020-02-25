@@ -23,7 +23,7 @@ class Libxml2(AutotoolsPackage):
     variant('python', default=False, description='Enable Python support')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('zlib')
     depends_on('xz')
 

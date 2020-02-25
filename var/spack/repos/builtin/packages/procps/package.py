@@ -23,7 +23,7 @@ class Procps(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('pkgconfig@0.9.0:', type='build')
     depends_on('dejagnu',  type='test')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('gettext')
     depends_on('ncurses')
 

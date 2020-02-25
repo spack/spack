@@ -58,7 +58,7 @@ class Grass(AutotoolsPackage):
     # http://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
     # General requirements
     depends_on('gmake@3.81:', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('zlib')
     depends_on('flex', type='build')
     depends_on('bison', type='build')

@@ -101,7 +101,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
-    depends_on('libiconv', when='platform=darwin')
+    depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')

@@ -107,7 +107,7 @@ class Gdal(AutotoolsPackage):
     # Optional dependencies
     depends_on('libtool', type='build', when='+libtool')
     depends_on('zlib', when='+libz')
-    depends_on('libiconv', when='+libiconv')
+    depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
     depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')

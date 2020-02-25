@@ -19,7 +19,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on('ncurses')
     depends_on('readline@5.0:')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     patches = [
         ('5.0', '001', 'f2fe9e1f0faddf14ab9bfa88d450a75e5d028fedafad23b88716bd657c737289'),
