@@ -15,7 +15,7 @@ class PyH5py(PythonPackage):
 
     import_modules = ['h5py', 'h5py._hl']
 
-    version('2.10.0', sha256='97f3d9940bfaa025c4357ff5f8d76b43931368f5')
+    version('2.10.0', sha256='84412798925dc870ffd7107f045d7659e60f5d46d1c70c700375248bf6bf512d')
     version('2.9.0', sha256='9d41ca62daf36d6b6515ab8765e4c8c4388ee18e2a665701fef2b41563821002')
     version('2.8.0', sha256='e626c65a8587921ebc7fb8d31a49addfdd0b9a9aa96315ea484c09803337b955')
     version('2.7.1', sha256='180a688311e826ff6ae6d3bda9b5c292b90b28787525ddfcb10a29d5ddcae2cc')

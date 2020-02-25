@@ -19,7 +19,7 @@ class Cubegui(AutotoolsPackage):
     homepage = "http://www.scalasca.org/software/cube-4.x/download.html"
     url = "http://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubegui-4.4.tar.gz"
 
-    version('4.4', '0ade1cd54636e6c85efba1a4a6af0068')
+    version('4.4', sha256='0620bae3ac357d0486ce7f5f97e448eeb2494c9a31865b679380ee08c6750e70')
 
     depends_on('cubelib@4.4:')
     depends_on('qt@4.6:')
@@ -29,8 +29,8 @@ class Cubegui(AutotoolsPackage):
 
         return 'http://apps.fz-juelich.de/scalasca/releases/cube/{0}/dist/{1}'.format(version.up_to(2), filename)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('QT_PATH', '$QTDIR')
+    def setup_build_environment(self, env):
+        env.set('QT_PATH', '$QTDIR')
 
     def configure_args(self):
         spec = self.spec

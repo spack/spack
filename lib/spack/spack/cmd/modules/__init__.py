@@ -78,11 +78,6 @@ def setup_parser(subparser):
         'loads',
         help='prompt the list of modules associated with a constraint'
     )
-    loads_parser.add_argument(
-        '--latest',
-        help='use the last installed package when multiple ones match',
-        action='store_true'
-    )
     add_loads_arguments(loads_parser)
     arguments.add_common_arguments(loads_parser, ['constraint'])
 
@@ -101,6 +96,11 @@ def add_loads_arguments(subparser):
     subparser.add_argument(
         '-x', '--exclude', dest='exclude', action='append', default=[],
         help="exclude package from output; may be specified multiple times"
+    )
+    subparser.add_argument(
+        '--latest',
+        help='use the last installed package when multiple ones match',
+        action='store_true'
     )
     arguments.add_common_arguments(
         subparser, ['recurse_dependencies']

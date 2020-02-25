@@ -34,7 +34,7 @@ class ParquetConverters(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+            '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx),
             '-DNEURONPARQUET_USE_MPI=ON'
         ]

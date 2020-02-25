@@ -3250,7 +3250,6 @@ class Spec(object):
         """Comparison key for just *this node* and not its deps."""
         return (self.name,
                 self.namespace,
-                self.prefix if self._concrete else "",
                 tuple(self.versions),
                 self.variants,
                 self.architecture,

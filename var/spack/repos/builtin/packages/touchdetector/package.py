@@ -56,8 +56,8 @@ class Touchdetector(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DUSE_OPENMP:BOOL={}'.format('+openmp' in self.spec),
-            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx)
+            '-DUSE_OPENMP:BOOL={0}'.format('+openmp' in self.spec),
+            '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
         ]
         return args

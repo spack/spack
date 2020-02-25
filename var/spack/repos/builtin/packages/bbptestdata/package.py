@@ -9,6 +9,8 @@ from spack import *
 
 class Bbptestdata(CMakePackage):
     """Blue Brain Project scientific test data"""
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/common/TestData"
     git = "ssh://bbpcode.epfl.ch/common/TestData"
+    url = "ssh://bbpcode.epfl.ch/common/TestData"
 
     version('2.0.0', tag='2.0.0')

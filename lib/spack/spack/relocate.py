@@ -372,11 +372,11 @@ def replace_prefix_text(path_name, old_dir, new_dir):
         # characters not legal in a path, but not if it's preceeded by other
         # components of a path.
         pat = (
-            '(?<![\\w\\-_/])([\\w\\-_]*?){}([\\w\\-_/]*)'
+            '(?<![\\w\\-_/])([\\w\\-_]*?){0}([\\w\\-_/]*)'
             .format(old_dir)
             .encode('utf-8')
         )
-        repl = '\\1{}\\2'.format(new_dir).encode('utf-8')
+        repl = '\\1{0}\\2'.format(new_dir).encode('utf-8')
         ndata = re.sub(pat, repl, data)
         f.write(ndata)
         f.truncate()

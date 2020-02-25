@@ -7,14 +7,13 @@ from spack import *
 
 
 class PySparqlwrapper(PythonPackage):
-    """SPARQLWrapper is a simple Python wrapper around a SPARQL service to remotelly execute your
-    queries. It helps in creating the query invokation and, possibly, convert the result into a
-    more manageable format."""
+    """SPARQLWrapper is a simple Python wrapper around a SPARQL service to
+    remotelly execute your queries."""
 
     homepage = "https://rdflib.github.io/sparqlwrapper/"
     url      = "https://pypi.io/packages/source/s/sparqlwrapper/SPARQLWrapper-1.8.4.tar.gz"
 
-    version('1.8.4', '66f03ea95b75cb6dd652b110f395658c')
+    version('1.8.4', sha256='21928e7a97f565e772cdeeb0abad428960f4307e3a13dbdd8f6d3da8a6a506c9')
 
     depends_on('py-setuptools', type='build')
 

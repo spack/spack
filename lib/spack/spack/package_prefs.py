@@ -6,7 +6,6 @@
 import stat
 
 from six import string_types
-from six import iteritems
 
 from llnl.util.lang import classproperty
 
@@ -25,57 +24,25 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-class _PackagesConfig:
-    def __init__(self):
-        self.__config = None
+def get_packages_config():
+    """Wrapper around get_packages_config() to validate semantics."""
+    config = spack.config.get('packages')
 
-    def __call__(self):
-        if self.__config:
-            return self.__config
+    # Get a list of virtuals from packages.yaml.  Note that because we
+    # check spack.repo, this collects virtuals that are actually provided
+    # by sometihng, not just packages/names that don't exist.
+    # So, this won't include, e.g., 'all'.
+    virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
+                if spack.repo.path.is_virtual(pkg_name)]
 
-        config = spack.config.get('packages')
+    # die if there are virtuals in `packages.py`
+    if virtuals:
+        errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
+        raise VirtualInPackagesYAMLError(
+            "packages.yaml entries cannot be virtual packages:",
+            '\n'.join(errors))
 
-        # Get a list of virtuals from packages.yaml.  Note that because we
-        # check spack.repo, this collects virtuals that are actually provided
-        # by sometihng, not just packages/names that don't exist.
-        # So, this won't include, e.g., 'all'.
-        virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-                    if spack.repo.path.is_virtual(pkg_name)]
-
-        # die if there are virtuals in `packages.py`
-        if virtuals:
-            errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
-            raise VirtualInPackagesYAMLError(
-                "packages.yaml entries cannot be virtual packages:",
-                '\n'.join(errors))
-
-        self.__config = config
-
-        return self.__config
-
-
-get_packages_config = _PackagesConfig()
-
-
-# def get_packages_config():
-#     """Wrapper around get_packages_config() to validate semantics."""
-#     config = spack.config.get('packages')
-
-#     # Get a list of virtuals from packages.yaml.  Note that because we
-#     # check spack.repo, this collects virtuals that are actually provided
-#     # by sometihng, not just packages/names that don't exist.
-#     # So, this won't include, e.g., 'all'.
-#     virtuals = [(pkg_name, pkg_name._start_mark) for pkg_name in config
-#                 if spack.repo.path.is_virtual(pkg_name)]
-
-#     # die if there are virtuals in `packages.py`
-#     if virtuals:
-#         errors = ["%s: %s" % (line_info, name) for name, line_info in virtuals]
-#         raise VirtualInPackagesYAMLError(
-#             "packages.yaml entries cannot be virtual packages:",
-#             '\n'.join(errors))
-
-#     return config
+    return config
 
 
 class PackagePrefs(object):

@@ -81,7 +81,7 @@ class Openmpi(AutotoolsPackage):
     version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
 
     # hpe-ddn specific external versions for ime
-    version('ime', 'nonexistenthash')
+    version('ime', sha256='deadbeef000deadbeef000deadbeef000deadbeef000deadbeef000deadbeef0')
 
     # Still supported
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
@@ -314,24 +314,24 @@ class Openmpi(AutotoolsPackage):
             libraries, root=self.prefix, shared=True, recursive=True
         )
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
-        spack_env.set('OMPI_CC', spack_cc)
-        spack_env.set('OMPI_CXX', spack_cxx)
-        spack_env.set('OMPI_FC', spack_fc)
-        spack_env.set('OMPI_F77', spack_f77)
+        env.set('OMPI_CC', spack_cc)
+        env.set('OMPI_CXX', spack_cxx)
+        env.set('OMPI_FC', spack_fc)
+        env.set('OMPI_F77', spack_f77)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         ''' often we use external mpich/openmpi
             packages and by defualt they are using system clang.
             we need to set compiler here to avoid link errors
         '''
-        run_env.set('OMPI_CC', self.compiler.cc)
-        run_env.set('OMPI_CXX', self.compiler.cxx)
+        env.set('OMPI_CC', self.compiler.cc)
+        env.set('OMPI_CXX', self.compiler.cxx)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')

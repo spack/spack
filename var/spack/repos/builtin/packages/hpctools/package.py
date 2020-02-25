@@ -26,8 +26,8 @@ class Hpctools(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DUSE_OPENMP:BOOL={}'.format('+openmp' in self.spec),
-            '-DMPI_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DMPI_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx),
+            '-DUSE_OPENMP:BOOL={0}'.format('+openmp' in self.spec),
+            '-DMPI_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            '-DMPI_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx),
         ]
         return args

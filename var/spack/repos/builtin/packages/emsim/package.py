@@ -9,6 +9,7 @@ from spack import *
 class Emsim(CMakePackage):
     """ EMSim is a tool for computing VSD and LFP """
 
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/viz/EMSim"
     git = "ssh://bbpcode.epfl.ch/viz/EMSim"
 
     generator = 'Ninja'

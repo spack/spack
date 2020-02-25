@@ -10,6 +10,7 @@ class BraynsMolecularsystems(CMakePackage):
     """Brayns use-case plugin for interactive visualization of
      molecular systems"""
 
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/viz/Brayns-UC-MolecularSystems"
     git = "ssh://bbpcode.epfl.ch/viz/Brayns-UC-MolecularSystems.git"
 
     generator = 'Ninja'

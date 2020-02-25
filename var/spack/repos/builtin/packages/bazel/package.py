@@ -17,7 +17,7 @@ class Bazel(Package):
     homepage = "https://www.bazel.io"
     url = "https://github.com/bazelbuild/bazel/releases/download/0.11.1/bazel-0.11.1-dist.zip"
 
-    version('0.19.2', '2f2d14a1f879a9ca17abdf9d9e5eee78')
+    version('0.19.2', sha256='11234cce4f6bdc62c3ac688f41c7b5c178eecb6f7e2c4ba0bcf00ba8565b1d19')
     version('0.17.2', sha256='b6e87acfa0a405bb8b3417c58477b66d5bc27dc0d31ba6fa12bc255b9278d33b')
     version('0.16.1', sha256='09c66b94356c82c52f212af52a81ac28eb06de1313755a2f23eeef84d167b36c')
     version('0.15.0', sha256='c3b716e6625e6b8c323350c95cd3ae0f56aeb00458dddd10544d5bead8a7b602')

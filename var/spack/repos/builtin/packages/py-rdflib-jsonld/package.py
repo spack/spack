@@ -12,7 +12,7 @@ class PyRdflibJsonld(PythonPackage):
     homepage = "https://github.com/RDFLib/rdflib-jsonld"
     url      = "https://pypi.io/packages/source/r/rdflib-jsonld/rdflib-jsonld-0.4.0.tar.gz"
 
-    version('0.4.0', '69097f57d302791a2959c07e110c47cf')
+    version('0.4.0', sha256='144774786a2fc7de09b24a9309cbcccc78bc48b152536d2ea1c1df2ad715bc2d')
 
     depends_on('py-setuptools', type='build')
 

@@ -16,7 +16,7 @@ class Hadoop(Package):
     url      = "http://mirror.easyname.ch/apache/hadoop/common/hadoop-3.1.3/hadoop-3.1.3.tar.gz"
 
     version('3.1.3', sha256='1e8b7ca4e3911f8ec999595f71921390e9ad7a27255fbd36af1f3a1628b67e2b')
-    version('2.9.2', '82db6a62febd8c2976d75b8bd5513315')
+    version('2.9.2', sha256='3d2023c46b1156c1b102461ad08cbc17c8cc53004eae95dab40a1f659839f28a')
 
     depends_on('java', type='run')
 

@@ -12,7 +12,7 @@ class PyIsodate(PythonPackage):
     homepage = "https://github.com/gweis/isodate"
     url      = "https://pypi.io/packages/source/i/isodate/isodate-0.6.0.tar.gz"
 
-    version('0.6.0', '0e1203fce27ce65e2d01c5f21c4d428f')
+    version('0.6.0', sha256='2e364a3d5759479cdb2d37cce6b9376ea504db2ff90252a2e5b7cc89cc9ff2d8')
 
     depends_on('py-setuptools', type='build')
 

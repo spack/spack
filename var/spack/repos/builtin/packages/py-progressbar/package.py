@@ -12,6 +12,6 @@ class PyProgressbar(PythonPackage):
     homepage = "https://github.com/niltonvolpato/python-progressbar"
     url      = "https://pypi.org/packages/source/p/progressbar/progressbar-2.5.tar.gz"
 
-    version('2.5', '4aaf51533764d520c89b366a45ada248')
+    version('2.5', sha256='5d81cb529da2e223b53962afd6c8ca0f05c6670e40309a7219eacc36af9b6c63')
 
     depends_on('py-setuptools', type='build')

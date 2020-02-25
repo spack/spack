@@ -13,9 +13,9 @@ class Ffmpeg(AutotoolsPackage):
     homepage = "https://ffmpeg.org"
     url      = "http://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
-    version('4.2', '41b4ade83439fafe635001127f1056d4')
-    version('4.1.1',   sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
-    version('4.1',   sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
+    version('4.2', sha256='306bde5f411e9ee04352d1d3de41bd3de986e42e2af2a4c44052dce1ada26fb8')
+    version('4.1.1', sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
+    version('4.1', sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
     version('3.2.4', sha256='c0fa3593a2e9e96ace3c1757900094437ad96d1d6ca19f057c378b5f394496a4')
 
     variant('shared', default=True,

@@ -12,7 +12,7 @@ class PyPythonKeycloak(PythonPackage):
     homepage = "https://python-keycloak.readthedocs.io/en/latest"
     url      = "https://pypi.io/packages/source/p/python-keycloak/python-keycloak-0.17.2.tar.gz"
 
-    version('0.17.2', 'a7dd430dea215d420cb0e3b97e638c3d')
+    version('0.17.2', sha256='56300a3ede3732b8a8f5a9936e6d1ddac5e704bd64af876c99eb34bb8c50eebc')
 
     depends_on('py-setuptools', type='build')
 

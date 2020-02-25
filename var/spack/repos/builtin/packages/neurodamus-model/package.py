@@ -140,8 +140,8 @@ class NeurodamusModel(SimModel):
             filter_file(r'UNKNOWN_NEURODAMUS_HASH', r"'%s'" % commit_hash[:8],
                         prefix.lib.hoc.join('defvar.hoc'))
 
-    def setup_environment(self, spack_env, run_env):
-        self._setup_environment_common(spack_env, run_env)
+    def setup_run_environment(self, env):
+        self._setup_run_environment_common(env)
         for libnrnmech_name in find(self.prefix.lib, 'libnrnmech*.so',
                                     recursive=False):
             # We have the two libs and must export them in different vars
@@ -149,9 +149,9 @@ class NeurodamusModel(SimModel):
             #  - BGLIBPY_MOD_LIBRARY_PATH is the pure mechanism
             #        (used by bglib-py)
             if '_nd.' in libnrnmech_name:
-                run_env.set('NRNMECH_LIB_PATH', libnrnmech_name)
+                env.set('NRNMECH_LIB_PATH', libnrnmech_name)
             else:
-                run_env.set('BGLIBPY_MOD_LIBRARY_PATH', libnrnmech_name)
+                env.set('BGLIBPY_MOD_LIBRARY_PATH', libnrnmech_name)
 
 
 _BUILD_NEURODAMUS_TPL = """#!/bin/sh

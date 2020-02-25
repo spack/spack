@@ -5,31 +5,33 @@
 
 from spack import *
 
+
 class Ospray(CMakePackage):
     """A Ray Tracing Based Rendering Engine for High-Fidelity Visualization"""
 
     homepage = "https://www.ospray.org/"
     git = "https://github.com/ospray/ospray.git"
-    generator = 'Ninja'
+    generator = "Ninja"
 
-    version('1.8.5', tag='v1.8.5')
-    version('1.7.3', tag='v1.7.3')
+    version("1.8.5", tag="v1.8.5")
+    version("1.7.3", tag="v1.7.3")
 
-    variant('apps', default=False, description='Build example applications')
+    variant("apps", default=False, description="Build example applications")
 
-    depends_on('cmake@3.1:', type='build')
-    depends_on('ispc', type='build')
-    depends_on('ninja', type='build')
-    depends_on('embree')
-    depends_on('mpi')
-    depends_on('tbb')
+    depends_on("cmake@3.1:", type="build")
+    depends_on("ispc", type="build")
+    depends_on("ninja", type="build")
+    depends_on("embree")
+    depends_on("mpi")
+    depends_on("tbb")
 
-    conflicts('^gcc')
+    conflicts("^gcc")
 
     def cmake_args(self):
         return [
-            '-DOSPRAY_ENABLE_TUTORIALS=OFF',
-            '-DOSPRAY_ENABLE_APPS:BOOL={}'.format('ON' if '+apps' in self.spec else 'OFF'),
-            '-DOSPRAY_MODULE_MPI=ON'
+            "-DOSPRAY_ENABLE_TUTORIALS=OFF",
+            "-DOSPRAY_ENABLE_APPS:BOOL={0}".format(
+                "ON" if "+apps" in self.spec else "OFF"
+            ),
+            "-DOSPRAY_MODULE_MPI=ON",
         ]
-

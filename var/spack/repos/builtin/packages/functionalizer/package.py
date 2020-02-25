@@ -45,7 +45,7 @@ class Functionalizer(CMakePackage):
 
     def cmake_args(self):
         args = [
-            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx)
+            '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
         ]
         return args

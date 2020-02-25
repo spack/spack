@@ -78,8 +78,8 @@ class Synapsetool(CMakePackage):
         spec = self.spec
         if spec.satisfies('+mpi'):
             args.extend([
-                '-DCMAKE_C_COMPILER:STRING={}'.format(spec['mpi'].mpicc),
-                '-DCMAKE_CXX_COMPILER:STRING={}'.format(spec['mpi'].mpicxx),
+                '-DCMAKE_C_COMPILER:STRING={0}'.format(spec['mpi'].mpicc),
+                '-DCMAKE_CXX_COMPILER:STRING={0}'.format(spec['mpi'].mpicxx),
                 '-DSYNTOOL_WITH_MPI:BOOL=ON',
             ])
 

@@ -8,6 +8,7 @@ from spack import *
 
 class BraynsGraphs(CMakePackage):
     """Brayns plugin"""
+    homepage = "https://github.com/favreau/Brayns-UC-Graphs.git"
     git = "https://github.com/favreau/Brayns-UC-Graphs.git"
 
     generator = 'Ninja'

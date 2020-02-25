@@ -15,7 +15,7 @@ class Blender(Package):
 
     homepage = "https://www.blender.org"
 
-    version('2.81a-217', sha256='bb6e03ef79d2d7273336f8cfcd5a3b3f')
+    version('2.81a-217', sha256='08d718505d1eb1d261efba96b0787220a76d357ce5b94aca108fc9e0c339d6c6')
 
     conflicts("python")
     conflicts('platform=darwin', msg='this binary release of blender requires Linux')
@@ -30,15 +30,15 @@ class Blender(Package):
             else:
                 shutil.copy2(src, dst)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         blender_python_path = os.path.join(prefix, self.version.string[:4],
                                            'python/lib/python3.7')
-        run_env.set('PYTHONPATH', blender_python_path)
+        env.set('PYTHONPATH', blender_python_path)
 
     def url_for_version(self, version):
         (blender_version_full, glibc_version) = version.string.split('-')
         blender_version_minor = version.up_to(2)
         base_url = "https://ftp.nluug.nl/pub/graphics/blender/release/"
-        return "{}Blender{}/blender-{}-linux-glibc{}-x86_64.tar.bz2"\
+        return "{0}Blender{1}/blender-{2}-linux-glibc{3}-x86_64.tar.bz2"\
             .format(base_url, blender_version_minor, blender_version_full,
                     glibc_version)

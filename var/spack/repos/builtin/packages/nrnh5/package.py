@@ -30,8 +30,8 @@ class Nrnh5(CMakePackage):
             options.append('-DUNIT_TESTS=OFF')
 
         options.extend([
-            '-DCMAKE_C_COMPILER={}'.format(self.spec['mpi'].mpicc),
-            '-DCMAKE_CXX_COMPILER={}'.format(self.spec['mpi'].mpicxx)
+            '-DCMAKE_C_COMPILER={0}'.format(self.spec['mpi'].mpicc),
+            '-DCMAKE_CXX_COMPILER={0}'.format(self.spec['mpi'].mpicxx)
         ])
 
         return options
