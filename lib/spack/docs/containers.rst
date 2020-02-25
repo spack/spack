@@ -18,8 +18,9 @@ boilerplate to:
 - Get Spack working within the image, possibly running as root
 - Minimize the physical size of the software installed
 - Properly update the system software in the base image
+- Setup the installed software to be directly available on image run
 
-To facilitate users with these tedious tasks, Spack provides a command
+To facilitate users with these tasks, Spack provides a command
 to automatically generate recipes for container images based on
 Environments:
 
@@ -88,15 +89,15 @@ In order to build and run the image, execute:
    $ docker run -it myimage
 
 The bits that make this automation possible are discussed in details
-below. All the images generated in this way will be based on
+below. All the images generated in this way are based on
 multi-stage builds with:
 
 - A fat ``build`` stage containing common build tools and Spack itself
 - A minimal ``final`` stage containing only the software requested by the user
 
------------------
-Spack Base Images
------------------
+--------------------------
+Spack Images on Docker Hub
+--------------------------
 
 Docker images with Spack preinstalled and ready to be used are
 built on `Docker Hub <https://hub.docker.com/u/spack>`_
@@ -132,19 +133,36 @@ with the exception of the ``latest`` tag that points to the HEAD
 of the ``develop`` branch. These images are available for anyone
 to use and take care of all the repetitive tasks that are necessary
 to setup Spack within a container. The container recipes generated
-by Spack use them as default base images for their ``build`` stage
-though expert users can provide their own custom image as a
-substitute.
+by Spack use them as default base images for their ``build`` stage,
+even though handles to use custom base images provided by users are
+available to accommodate complex use cases.
 
--------------------------
-Environment Configuration
--------------------------
+---------------------------------
+Creating Images From Environments
+---------------------------------
 
 Any Spack Environment can be used for the automatic generation of container
 recipes. Sensible defaults are provided for things like the base image or the
-version of Spack used in the image. If a finer tuning is needed it can be
-obtained by adding the relevant metadata under the ``container`` attribute
-of environments:
+version of Spack used in the image. The workflow is in general as simple as
+calling ``spack containerize`` from the directory where the environment
+resides:
+
+.. code-block:: console
+
+   $ cat spack.yaml
+   spack:
+     specs:
+     - gromacs+mpi
+     - mpich
+
+   $ # Create a Dockerfile from this environment
+   $ spack containerize > Dockerfile
+
+   $ # Build an image from the Dockerfile
+   $ docker build .
+
+If a finer tuning is needed it can be obtained by adding the relevant metadata
+under the ``container`` attribute of environments:
 
 .. code-block:: yaml
 
@@ -181,8 +199,13 @@ of environments:
          app: "gromacs"
          mpi: "mpich"
 
-To select a proper base image for both the ``build`` and ``final`` stage the ``images`` attribute
-provides two different modes of operation.
+------------------------
+Using Custom Base Images
+------------------------
+
+The ``images`` attribute in the ``container`` section has two modes of
+operation to select a proper base image for both the ``build`` and
+``final`` stage.
 
 The one shown in the example ``spack.yaml`` above requires the user to specify an ``os``
 and a ``spack`` version from a list of possible ones. Spack will then select one of the
@@ -198,11 +221,43 @@ Alternatively a user might specify explicitly both images:
       build: spack/ubuntu-bionic:latest
       final: ubuntu:18.04
 
-In this case there's no consistency check performed by Spack, but users are allowed to prepare
-their base images to satisfy custom use cases that cannot be handled with the general purpose
-Spack images distributed on Docker Hub.
+In this case the base images are not restricted to the general purpose
+Spack images distributed on Docker Hub but can be customized to user's
+needs, provided that:
 
-The tables below describe the configuration options that are currently supported:
+1. Spack is available in the ``build`` stage and set up to install the required software
+2. The artifacts produced in the ``build`` stage can be executed in the ``final`` stage
+
+----------------------------
+Singularity Definition Files
+----------------------------
+
+In addition to producing recipes in ``Dockerfile`` format Spack can produce
+Singularity Definition Files by just changing the value of the ``format``
+attribute:
+
+.. code-block:: console
+
+   $ cat spack.yaml
+   spack:
+     specs:
+     - hdf5~mpi
+     container:
+       format: singularity
+
+   $ spack containerize > hdf5.def
+   $ sudo singularity build hdf5.sif hdf5.def
+
+.. note::
+   The minimum version of Singularity required to build a SIF (Singularity Image Format)
+   image from the recipes generated by Spack is ``3.5.3``.
+
+---------------------
+Configuration Options
+---------------------
+
+The tables below describe all the configuration options that are currently supported
+to customize the generation of container recipes:
 
 .. list-table:: General configuration options for the ``container`` section of ``spack.yaml``
    :header-rows: 1
@@ -235,15 +290,19 @@ The tables below describe the configuration options that are currently supported
      - Whether to strip binaries
      - ``true`` (default) or ``false``
      - No
-   * - ``os_packages``
-     - Equivalent to specifying the same packages for ``build`` and ``final``
-     - Valid packages for the current OS
+   * - ``os_packages:command``
+     - Tool used to manage system packages
+     - ``apt``, ``yum``
+     - Only with custom base images
+   * - ``os_packages:update``
+     - Whether or not to update the list of available packages
+     - True or False (default: True)
      - No
-   * - ``os_packages.build``
+   * - ``os_packages:build``
      - System packages needed at build-time
      - Valid packages for the current OS
      - No
-   * - ``os_packages.final``
+   * - ``os_packages:final``
      - System packages needed at run-time
      - Valid packages for the current OS
      - No
@@ -283,74 +342,6 @@ The tables below describe the configuration options that are currently supported
      - Description of the image
      - Description string
      - No
-
-Once the Environment is properly configured a recipe for a container
-image can be printed to standard output by issuing the following
-command from the directory where the ``spack.yaml`` resides:
-
-.. code-block:: console
-
-   $ spack containerize
-
-The example ``spack.yaml`` above would produce for instance the
-following ``Dockerfile``:
-
-.. code-block:: docker
-
-   # Build stage with Spack pre-installed and ready to be used
-   FROM spack/centos7:latest as builder
-
-   # What we want to install and how we want to install it
-   # is specified in a manifest file (spack.yaml)
-   RUN mkdir /opt/spack-environment \
-   &&  (echo "spack:" \
-   &&   echo "  specs:" \
-   &&   echo "  - gromacs+mpi" \
-   &&   echo "  - mpich" \
-   &&   echo "  concretization: together" \
-   &&   echo "  config:" \
-   &&   echo "    install_tree: /opt/software" \
-   &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
-
-   # Install the software, remove unnecessary deps
-   RUN cd /opt/spack-environment && spack env activate . && spack install && spack gc -y
-
-   # Strip all the binaries
-   RUN find -L /opt/view/* -type f -exec readlink -f '{}' \; | \
-       xargs file -i | \
-       grep 'charset=binary' | \
-       grep 'x-executable\|x-archive\|x-sharedlib' | \
-       awk -F: '{print $1}' | xargs strip -s
-
-   # Modifications to the environment that are necessary to run
-   RUN cd /opt/spack-environment && \
-       spack env activate --sh -d . >> /etc/profile.d/z10_spack_environment.sh
-
-
-   # Bare OS image to run the installed executables
-   FROM centos:7
-
-   COPY --from=builder /opt/spack-environment /opt/spack-environment
-   COPY --from=builder /opt/software /opt/software
-   COPY --from=builder /opt/view /opt/view
-   COPY --from=builder /etc/profile.d/z10_spack_environment.sh /etc/profile.d/z10_spack_environment.sh
-
-   RUN yum update -y && yum install -y epel-release && yum update -y                                   \
-    && yum install -y libgomp \
-    && rm -rf /var/cache/yum  && yum clean all
-
-   RUN echo 'export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][gromacs]\[$(tput setaf 2)\]\u\[$(tput sgr0)\]:\w $ "' >> ~/.bashrc
-
-
-   LABEL "app"="gromacs"
-   LABEL "mpi"="mpich"
-
-   ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
-
-.. note::
-   Spack can also produce Singularity definition files to build the image. The
-   minimum version of Singularity required to build a SIF (Singularity Image Format)
-   from them is ``3.5.3``.
 
 --------------
 Best Practices
