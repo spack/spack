@@ -329,12 +329,6 @@ class URLFetchStrategy(FetchStrategy):
             url,
         ]
 
-        connect_timeout = spack.config.get('config:connect_timeout')
-
-        if connect_timeout > 0:
-            # Timeout if can't establish a connection after n sec.
-            curl_args.extend(['--connect-timeout', str(connect_timeout)])
-
         if not spack.config.get('config:verify_ssl'):
             curl_args.append('-k')
 
@@ -343,12 +337,22 @@ class URLFetchStrategy(FetchStrategy):
         else:
             curl_args.append('-sS')  # just errors when not.
 
+        connect_timeout = spack.config.get('config:connect_timeout')
+
         if self.extra_options:
             cookie = self.extra_options.get('cookie')
             if cookie:
                 curl_args.append('-j')  # junk cookies
                 curl_args.append('-b')  # specify cookie
                 curl_args.append(cookie)
+
+            timeout = self.extra_options.get('timeout')
+            if timeout:
+                connect_timeout = max(connect_timeout, int(timeout))
+
+        if connect_timeout > 0:
+            # Timeout if can't establish a connection after n sec.
+            curl_args.extend(['--connect-timeout', str(connect_timeout)])
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
