@@ -63,6 +63,9 @@ spack package at this time.''',
     )
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
+    variant('libxml2', default=True,
+            description='Use libxml2 for XML support instead of the custom '
+                        'minimalistic implementation')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -96,8 +99,14 @@ spack package at this time.''',
 
     depends_on('ucx', when='netmod=ucx')
 
-    depends_on('libpciaccess', when="+pci")
-    depends_on('libxml2')
+    # The dependencies on libpciaccess and libxml2 come from the embedded
+    # hwloc, which, before version 3.3, was used only for Hydra.
+    depends_on('libpciaccess', when="@:3.2+hydra+pci")
+    depends_on('libxml2', when='@:3.2+hydra+libxml2')
+
+    # Starting with version 3.3, MPICH uses hwloc directly.
+    depends_on('libpciaccess', when="@3.3:+pci")
+    depends_on('libxml2', when='@3.3:+libxml2')
 
     # Starting with version 3.3, Hydra can use libslurm for nodelist parsing
     depends_on('slurm', when='+slurm')
@@ -118,6 +127,10 @@ spack package at this time.''',
     conflicts('netmod=tcp', when='device=ch4')
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
+
+    # Avoid identical installations with different specs.
+    conflicts('+pci', when='@:3.2~hydra')
+    conflicts('+libxml2', when='@:3.2~hydra')
 
     def setup_build_environment(self, env):
         env.unset('F90')
@@ -233,5 +246,12 @@ spack package at this time.''',
         if 'netmod=ucx' in spec:
             config_args.append('--with-ucx={0}'.format(
                 spec['ucx'].prefix))
+
+        # In other cases the argument is redundant.
+        if '@:3.2+hydra' in spec or '@3.3:' in spec:
+            # The root configure script passes the argument to the configure
+            # scripts of all instances of hwloc (there are three copies of it:
+            # for hydra, for hydra2, and for MPICH itself).
+            config_args += self.enable_or_disable('libxml2')
 
         return config_args
