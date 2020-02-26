@@ -29,7 +29,8 @@ class Umpire(CMakePackage):
     version('0.1.3', tag='v0.1.3', submodules='True')
 
     variant('cuda', default=False, description='Build with CUDA support')
-    variant('fortran', default=False, description='Build C/Fortran API')
+    variant('fortran', default=False, description='Build Fortran API')
+    variant('c', default=False, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
 
     depends_on('cuda', when='+cuda')
@@ -49,6 +50,9 @@ class Umpire(CMakePackage):
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
         else:
             options.append('-DENABLE_CUDA=Off')
+
+        if '+c' in spec:
+            options.append('-DENABLE_C=On')
 
         if '+fortran' in spec:
             options.append('-DENABLE_FORTRAN=On')
