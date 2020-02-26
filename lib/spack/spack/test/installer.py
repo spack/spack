@@ -156,6 +156,25 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     assert 'Installing a from binary cache' in capfd.readouterr()[0]
 
 
+def test_try_install_from_binary_cache(install_mockery, mock_packages,
+                                       monkeypatch, capsys):
+    """Tests to add coverage to _try_install_from_binary_cache."""
+    def _spec(spec, force):
+        spec = spack.spec.Spec('mpi').concretized()
+        return {spec: None}
+
+    spec = spack.spec.Spec('mpich')
+    spec.concretize()
+
+    monkeypatch.setattr(spack.binary_distribution, 'get_spec', _spec)
+
+    with pytest.raises(SystemExit):
+        inst._try_install_from_binary_cache(spec.package, False, False)
+
+    captured = capsys.readouterr()
+    assert 'add a spack mirror to allow download' in str(captured)
+
+
 def test_installer_init_errors(install_mockery):
     """Test to ensure cover installer constructor errors."""
     with pytest.raises(ValueError, match='must be a package'):
