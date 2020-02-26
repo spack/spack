@@ -20,6 +20,7 @@ from spack.util.module_cmd import module
 _craype_name_to_target_name = {
     'x86_cascadelake': 'cascadelake',
     'x86_naples': 'zen',
+    'x86_rome': 'zen',  # Cheating because we have the wrong modules on rzcrayz
     'x86_skylake': 'skylake-avx512'
 }
 
