@@ -16,6 +16,13 @@ class Umpire(CMakePackage):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2.1.0', tag='v2.1.0', submodules='True')
+    version('2.0.0', tag='v2.0.0', submodules='True')
+    version('1.1.0', tag='v1.1.0', submodules='True')
+    version('1.0.1', tag='v1.0.1', submodules='True')
+    version('1.0.0', tag='v1.0.0', submodules='True')
+    version('0.3.5', tag='v0.3.5', submodules='True')
+    version('0.3.4', tag='v0.3.4', submodules='True')
     version('0.3.3', tag='v0.3.3', submodules='True')
     version('0.3.2', tag='v0.3.2', submodules='True')
     version('0.3.1', tag='v0.3.1', submodules='True')
