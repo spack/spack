@@ -257,7 +257,7 @@ class URLFetchStrategy(FetchStrategy):
                 self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
-        self.extra_curl_options = kwargs.get('curl_options', [])
+        self.extra_options = kwargs.get('fetch_options', [])
         self._curl = None
 
         self.extension = kwargs.get('extension', None)
@@ -343,7 +343,12 @@ class URLFetchStrategy(FetchStrategy):
         else:
             curl_args.append('-sS')  # just errors when not.
 
-        curl_args += self.extra_curl_options
+        if self.extra_options:
+            cookie = self.extra_options.get('cookie')
+            if cookie:
+                curl_args.append('-j')  # junk cookies
+                curl_args.append('-b')  # specify cookie
+                curl_args.append(cookie)
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
