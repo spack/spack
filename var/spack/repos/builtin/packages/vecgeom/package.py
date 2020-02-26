@@ -15,8 +15,9 @@ class Vecgeom(CMakePackage):
     homepage = "https://gitlab.cern.ch/VecGeom/VecGeom"
     url = "https://gitlab.cern.ch/api/v4/projects/VecGeom%2FVecGeom/repository/archive.tar.gz?sha=v0.3.rc"
 
+    version('01.01.03', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v01.01.03', preferred=True)
     version('01.00.00', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v01.00.00')
-    version('00.05.00', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v00.05.00', preferred=True)
+    version('00.05.00', git='https://gitlab.cern.ch/VecGeom/VecGeom.git', tag='v00.05.00')
     version('0.3.rc', sha256='a87a9ea4ab126b59ff9c79182bc0911ead3d76dd197194742e2a35ccd341299d')
 
     variant('cxxstd',

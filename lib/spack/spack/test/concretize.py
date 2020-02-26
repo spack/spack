@@ -620,3 +620,16 @@ class TestConcretize(object):
         with spack.concretize.disable_compiler_existence_check():
             s = Spec(spec).concretized()
             assert str(s.architecture.target) == str(expected)
+
+    @pytest.mark.regression('8735,14730')
+    def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
+        # Ensure that a concrete compiler with different compiler version
+        # doesn't match (here it's 4.5 vs. 4.5.0)
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s = Spec('mpileaks %gcc@4.5')
+            s.concretize()
+
+        # An abstract compiler with a version list could resolve to 4.5.0
+        s = Spec('mpileaks %gcc@4.5:')
+        s.concretize()
+        assert str(s.compiler.version) == '4.5.0'

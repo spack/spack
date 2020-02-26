@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -211,7 +211,7 @@ def _hms(seconds):
     return ' '.join(parts)
 
 
-def _install_from_cache(pkg, cache_only, explicit):
+def _install_from_cache(pkg, cache_only, explicit, unsigned=False):
     """
     Install the package from binary cache
 
@@ -220,12 +220,15 @@ def _install_from_cache(pkg, cache_only, explicit):
         cache_only (bool): only install from binary cache
         explicit (bool): ``True`` if installing the package was explicitly
             requested by the user, otherwise, ``False``
+        unsigned (bool): ``True`` if binary package signatures to be checked,
+            otherwise, ``False``
 
     Return:
         (bool) ``True`` if the package was installed from binary cache,
             ``False`` otherwise
     """
-    installed_from_cache = _try_install_from_binary_cache(pkg, explicit)
+    installed_from_cache = _try_install_from_binary_cache(pkg, explicit,
+                                                          unsigned)
     pkg_id = package_id(pkg)
     if not installed_from_cache:
         pre = 'No binary for {0} found'.format(pkg_id)
@@ -298,7 +301,7 @@ def _process_external_package(pkg, explicit):
         spack.store.db.add(spec, None, explicit=explicit)
 
 
-def _process_binary_cache_tarball(pkg, binary_spec, explicit):
+def _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned):
     """
     Process the binary cache tarball.
 
@@ -306,6 +309,8 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit):
         pkg (PackageBase): the package being installed
         binary_spec (Spec): the spec  whose cache has been confirmed
         explicit (bool): the package was explicitly requested by the user
+        unsigned (bool): ``True`` if binary package signatures to be checked,
+            otherwise, ``False``
 
     Return:
         (bool) ``True`` if the package was installed from binary cache,
@@ -321,29 +326,31 @@ def _process_binary_cache_tarball(pkg, binary_spec, explicit):
     pkg_id = package_id(pkg)
     tty.msg('Installing {0} from binary cache'.format(pkg_id))
     binary_distribution.extract_tarball(binary_spec, tarball, allow_root=False,
-                                        unsigned=False, force=False)
+                                        unsigned=unsigned, force=False)
     pkg.installed_from_binary_cache = True
     spack.store.db.add(pkg.spec, spack.store.layout, explicit=explicit)
     return True
 
 
-def _try_install_from_binary_cache(pkg, explicit):
+def _try_install_from_binary_cache(pkg, explicit, unsigned=False):
     """
     Try to install the package from binary cache.
 
     Args:
         pkg (PackageBase): the package to be installed from binary cache
         explicit (bool): the package was explicitly requested by the user
+        unsigned (bool): ``True`` if binary package signatures to be checked,
+            otherwise, ``False``
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    specs = binary_distribution.get_specs()
+    specs = binary_distribution.get_spec(pkg.spec, force=False)
     binary_spec = spack.spec.Spec.from_dict(pkg.spec.to_dict())
     binary_spec._mark_concrete()
     if binary_spec not in specs:
         return False
 
-    return _process_binary_cache_tarball(pkg, binary_spec, explicit)
+    return _process_binary_cache_tarball(pkg, binary_spec, explicit, unsigned)
 
 
 def _update_explicit_entry_in_db(pkg, rec, explicit):
@@ -455,6 +462,10 @@ def log(pkg):
 
     # Archive the environment used for the build
     install(pkg.env_path, pkg.install_env_path)
+
+    if os.path.exists(pkg.configure_args_path):
+        # Archive the args used for the build
+        install(pkg.configure_args_path, pkg.install_configure_args_path)
 
     # Finally, archive files that are specific to each package
     with working_dir(pkg.stage.path):
@@ -936,6 +947,7 @@ class PackageInstaller(object):
         keep_stage = kwargs.get('keep_stage', False)
         skip_patch = kwargs.get('skip_patch', False)
         tests = kwargs.get('tests', False)
+        unsigned = kwargs.get('unsigned', False)
         use_cache = kwargs.get('use_cache', True)
         verbose = kwargs.get('verbose', False)
 
@@ -948,7 +960,8 @@ class PackageInstaller(object):
         task.status = STATUS_INSTALLING
 
         # Use the binary cache if requested
-        if use_cache and _install_from_cache(pkg, cache_only, explicit):
+        if use_cache and \
+                _install_from_cache(pkg, cache_only, explicit, unsigned):
             self._update_installed(task)
             return
 
@@ -1003,6 +1016,18 @@ class PackageInstaller(object):
                     with working_dir(pkg.stage.source_path):
                         # Save the build environment in a file before building.
                         dump_environment(pkg.env_path)
+
+                        for attr in ('configure_args', 'cmake_args'):
+                            try:
+                                configure_args = getattr(pkg, attr)()
+                                configure_args = ' '.join(configure_args)
+
+                                with open(pkg.configure_args_path, 'w') as args_file:
+                                    args_file.write(configure_args)
+
+                                break
+                            except Exception:
+                                pass
 
                         # cache debug settings
                         debug_enabled = tty.is_debug()
