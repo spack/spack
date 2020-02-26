@@ -15,15 +15,15 @@ from spack.version import Version
 
 
 @pytest.fixture()
-def concretize_scope(config, tmpdir):
+def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
-    config.push_scope(
+    mutable_config.push_scope(
         ConfigScope('concretize', str(tmpdir.join('concretize'))))
 
     yield
 
-    config.pop_scope()
+    mutable_config.pop_scope()
     spack.repo.path._provider_index = None
 
 
