@@ -1,0 +1,74 @@
+# disable openmp on non-Linux platforms
+UNAME = $(shell uname)
+ifeq ($(UNAME), Linux)
+COMPILE_OPTIONS = -fopenmp
+else
+COMPILE_OPTIONS = -Wno-unknown-pragmas
+endif
+
+# use only for CUDA support (see example below)
+TASMANIAN_CUDA_KERNELS =
+NVCC =
+NVCC_OPT =
+
+# Default C++ compiler
+CC = g++
+OPTC = -O3 -std=c++11 $(COMPILE_OPTIONS) -fPIC -Wstrict-aliasing
+OPTL = $(OPTC)
+
+# Default Fortran compiler
+FF = gfortran
+OPTF = -O3 -fno-f2c -mtune=native $(COMPILE_OPTIONS) -fPIC
+OPTLFF = $(OPTF)
+
+# Default common libraries
+CommonIADD =
+CommonLADD =
+CommonLIBS = -lm
+
+
+########################################################################
+# ADVANCED OPTIONS
+########################################################################
+#
+# NOTE: advanced options for Tasmanian are not supported or tested in the simple GNU-Make engine
+#       cmake (or the install script) is the correct way to enable those options
+#       the instructions below are for reference purposes only
+#
+# To Enable/Disable advanced options:
+# set the compiler in the CC variable
+# edit Config/AltBuildSystems/TasmanianConfig.hpp to define the corresponding pre-precessor variable
+# set the -I directives to the CommonIADD variables
+# set the -L directives to the CommonLADD variables
+# set the -l directives to the CommonLIBS variables
+#
+# The #define directives are:
+#
+# BLAS:   #define Tasmanian_ENABLE_BLAS
+# CUDA:   #define Tasmanian_ENABLE_CUDA
+# MAGMA:  #define Tasmanian_ENABLE_MAGMA
+# MPI:    #define Tasmanian_ENABLE_MPI
+#
+#
+# Example that enables BLAS, uncomment "#define Tasmanian_ENABLE_BLAS" in Config/AltBuildSystems/TasmanianConfig.hpp
+#CXXFLAGS = -O3 -ffast-math -mtune=native $(COMPILE_OPTIONS) -fPIC
+#OPTC = $(CXXFLAGS)
+#CommonLIBS = -lblas -lm
+#
+#
+# Example that enables cuBlas and cuSparse and CUDA, uncomment #define TASMANIAN_CUDA in Config/AltBuildSystems/TasmanianConfig.hpp
+# in this case, nvcc is required for the tsgCudaKernels.cu file
+#CC = nvcc
+#NVCC = nvcc
+#CXXFLAGS = -O3 -ffast-math -mtune=native $(COMPILE_OPTIONS) -fPIC
+#OPTC = --compiler-options "$(CXXFLAGS)"
+#NVCC_OPT = --compiler-options "$(CXXFLAGS)"
+#CommonLIBS = -lcublas -lcusparse -lcudart
+#TASMANIAN_CUDA_KERNELS = tsgCudaKernels.cu.o
+#
+#
+# Example that enables MPI, uncomment #define Tasmanian_ENABLE_MPI in Config/AltBuildSystems/TasmanianConfig.hpp
+#CC = mpic++
+#CXXFLAGS = -O3 -ffast-math -mtune=native $(COMPILE_OPTIONS) -fPIC
+#OPTC = -std=c++11 $(CXXFLAGS)
+#CommonLIBS = -lm

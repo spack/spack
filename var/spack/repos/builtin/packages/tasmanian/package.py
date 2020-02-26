@@ -133,3 +133,12 @@ class Tasmanian(CMakePackage):
                         'ON' if '+cuda' in spec else 'OFF'))
 
         return args
+
+    test_requires_compiler = True
+    def test(self):
+        bash = Executable('/bin/bash')
+        os.chdir('data')
+        filter_file("\$\(TASMANIAN_ROOT\)", self.spec.prefix, 'Makefile')
+        bash('./compile.sh')
+        bash('./run.sh')
+
