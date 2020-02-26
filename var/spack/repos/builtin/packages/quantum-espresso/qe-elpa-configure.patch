@@ -1,0 +1,15 @@
+--- a/install/configure	2019-12-09 14:02:55.000000000 +0100
++++ b/install/configure	2020-02-26 21:49:15.969506125 +0100
+@@ -8132,6 +8132,12 @@
+         try_dflags="$try_dflags -D__ELPA_2015"
+       elif test "$with_elpa_version" = "2016"; then
+         try_dflags="$try_dflags -D__ELPA_2016"
++      elif test "$with_elpa_version" = "2017"; then
++        try_dflags="$try_dflags -D__ELPA_2017"
++      elif test "$with_elpa_version" = "2018"; then
++        try_dflags="$try_dflags -D__ELPA_2018"
++      elif test "$with_elpa_version" = "2019"; then
++        try_dflags="$try_dflags -D__ELPA_2019"
+       else
+         { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: *** Invalid ELPA version, defaulting to 2016" >&5
+ $as_echo "$as_me: WARNING: *** Invalid ELPA version, defaulting to 2016" >&2;}
