@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import errno
 import platform
 
 import pytest
@@ -11,6 +12,7 @@ import spack.main
 import spack.binary_distribution
 
 buildcache = spack.main.SpackCommand('buildcache')
+install = spack.main.SpackCommand('install')
 
 
 @pytest.fixture()
@@ -41,3 +43,16 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
         output = buildcache('list', 'mpileaks', '@2.3')
 
     assert output.count('mpileaks') == 3
+
+
+def test_buildcache_create_fail_on_perm_denied(
+        install_mockery, mock_fetch, monkeypatch, tmpdir):
+    """Ensure that buildcache create fails on permission denied error."""
+    install('trivial-install-test-package')
+
+    tmpdir.chmod(0)
+    with pytest.raises(OSError) as error:
+        buildcache('create', '-d', str(tmpdir),
+                   '--unsigned', 'trivial-install-test-package')
+    assert error.value.errno == errno.EACCES
+    tmpdir.chmod(0o700)
