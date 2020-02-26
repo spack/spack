@@ -259,4 +259,3 @@ class Grass(AutotoolsPackage):
 
         makefile = FileFilter('include/Make/Platform.make')
         makefile.filter(r'^ICONVLIB\s*=.*', 'ICONVLIB = -liconv')
-
