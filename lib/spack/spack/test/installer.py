@@ -261,9 +261,8 @@ def test_fake_install(install_mockery):
 
 def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
     """Test to cover most of _packages_needed_to_boostrap_compiler."""
-    # TODO: More work is needed to go beyond the dependency check
-    def _no_compilers(pkg, arch_spec):
-        return []
+    def _conc_spec(compiler):
+        return spack.spec.Spec('a').concretized()
 
     # Test path where no compiler packages returned
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -272,10 +271,12 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
     packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
     assert not packages
 
-    # Test up to the dependency check
-    monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
-    with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
-        inst._packages_needed_to_bootstrap_compiler(spec.package)
+    # Test to return packages
+    monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _none)
+    monkeypatch.setattr(spack.compilers, 'pkg_spec_for_compiler', _conc_spec)
+    monkeypatch.setattr(spack.spec.Spec, 'concretize', _noop)
+    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    assert packages
 
 
 def test_dump_packages_deps(install_mockery, tmpdir):
