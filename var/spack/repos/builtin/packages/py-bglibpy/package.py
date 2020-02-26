@@ -14,6 +14,7 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='master')
     version('4.1.4', commit='e54d294460e5bdf6b9990bc10a4606b412b76d90')
+    version('4.2', tag='4.2')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
@@ -22,6 +23,6 @@ class PyBglibpy(PythonPackage):
     depends_on('py-bluepy@0.13.2:', type='run')
     depends_on('py-libsonata', type='run')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('NEURON_INIT_MPI', "0")
-        run_env.unset('PMI_RANK')
+    def setup_run_environment(self, env):
+        env.set('NEURON_INIT_MPI', "0")
+        env.unset('PMI_RANK')
