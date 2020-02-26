@@ -428,6 +428,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
+        suffixes = sorted(set(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes
