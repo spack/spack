@@ -27,8 +27,7 @@ class PyBasisSetExchange(PythonPackage):
 
     depends_on('py-argcomplete', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build','run'))
-    depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('py-versioneer', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('python@3:', type=('build', 'run'))
     depends_on('py-pytest@4.0:', type='test')
     depends_on('py-pytest-cov', type='test')
