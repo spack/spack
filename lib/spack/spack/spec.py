@@ -1919,13 +1919,7 @@ class Spec(object):
 
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                dspec = DependencySpec(deps[name], deps[dname], dtypes)
-
-                # Fill in dependencies by looking them up by name in deps dict
-                deps[name]._dependencies[dname] = dspec
-
-                # Fill in dependents by looking them up by dname in deps dict
-                deps[dname]._dependents[name] = dspec
+                deps[name]._add_dependency(deps[dname], dtypes)
 
         return spec
 
