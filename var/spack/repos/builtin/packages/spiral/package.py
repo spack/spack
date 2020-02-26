@@ -33,10 +33,6 @@ class Spiral(CMakePackage):
         dest = join_path(self.stage.source_path, 'gap/bin')
         install(gapfil, dest)
 
-        @on_package_attributes(run_tests=True)
-        def test(self):
-            make('test')
-
     def install(self, spec, prefix):
         mkdirp(prefix.gap.bin)
         gapfil = join_path(self.build_directory, 'gap/src/gap')
