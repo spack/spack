@@ -5,6 +5,7 @@
 
 import os
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 from spack import *
@@ -105,6 +106,7 @@ class Libxml2(AutotoolsPackage):
         assert runner is not None
 
         dtd_path = './data/info.dtd'
+        test_fn = 'test.xml'
         exec_checks = {
             'xml2-config': [
                 (['--version'], [str(self.spec.version)], None)],
@@ -112,10 +114,10 @@ class Libxml2(AutotoolsPackage):
                 (['--version'],
                  ['using libxml', str(self.spec.version).replace('.', '0')],
                  None),
-                (['--auto', '-o', 'test.xml'], [], None),
-                (['--postvalid', 'test.xml'],
+                (['--auto', '-o', test_fn], [], None),
+                (['--postvalid', test_fn],
                  ['validity error', 'no DTD found', 'does not validate'], 3),
-                (['--dtdvalid', dtd_path, 'test.xml'],
+                (['--dtdvalid', dtd_path, test_fn],
                  ['validity error', 'does not follow the DTD'], 3),
                 (['--dtdvalid', dtd_path, './data/info.xml'], [], None)],
             'xmlcatalog': [
@@ -128,6 +130,9 @@ class Libxml2(AutotoolsPackage):
                 tty.msg('test: Ensuring \'{0} {1}\' {2}'
                         .format(exe, ' '.join(options), result))
                 self._run_test(runner, options, expected, status)
+
+        # Perform some cleanup
+        fs.force_remove(test_fn)
 
     def test(self):
         """Perform smoke tests on the installed package"""
