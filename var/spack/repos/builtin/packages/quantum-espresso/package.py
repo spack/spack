@@ -74,6 +74,9 @@ class QuantumEspresso(Package):
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
+    
+    patch('qe-elpa.patch-v1', when='@6.5^elpa@2018:2019')
+    patch('qe-elpa-configure.patch', when='@6.5^elpa@2017:2019')
 
     # Conflicts
     # MKL with 64-bit integers not supported.
@@ -216,6 +219,8 @@ class QuantumEspresso(Package):
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
                                                     'include/fftw')))
+            options.append('LIBDIRS={0}'.format(join_path(env['MKLROOT'], 'lib/intel64')))
+
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
             options.append('FFTW_INCLUDE={0}'.format(fftw_prefix.include))
@@ -230,7 +235,9 @@ class QuantumEspresso(Package):
         # appear twice in in link line but this is harmless
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
 
-        options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
+        if not (spec.satisfies('@6.5') and '^intel-mkl' in spec):
+            # qe-6.5 fails to detect MKL if BLAS_LIBS is set
+            options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
             scalapack_option = 'intel' if '^intel-mkl' in spec else 'yes'
@@ -253,6 +260,11 @@ class QuantumEspresso(Package):
                 '--with-elpa-include={0}'.format(elpa_include),
                 '--with-elpa-lib={0}'.format(elpa.libs[0])
             ])
+        
+            if spec.satisfies('^elpa@2018'):
+                options.extend(['--with-elpa-version=2018'])
+            if spec.satisfies('^elpa@2019'):
+                options.extend(['--with-elpa-version=2019'])
 
         if spec.variants['hdf5'].value != 'none':
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
