@@ -119,3 +119,8 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         return config_args
+
+    @when('@:4.4.5')
+    def check(self):
+        with working_dir(self.build_directory):
+            make('check', parallel=False)
