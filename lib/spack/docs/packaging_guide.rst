@@ -4334,9 +4334,9 @@ the main python source directory of your spack install.
 
 .. _cmd-spack-build-env:
 
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 ``spack build-env``
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 ``spack build-env`` functions much like the standard unix ``build-env``
 command, but it takes a spec as an argument.  You can use it to see the
