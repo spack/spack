@@ -219,8 +219,9 @@ class QuantumEspresso(Package):
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
                                                     'include/fftw')))
-            options.append('LIBDIRS={0}'.format(join_path(env['MKLROOT'],
-                                                    'lib/intel64')))
+            options.append(
+                'LIBDIRS={0}'.format(join_path(env['MKLROOT'],
+                                     'lib/intel64')))
 
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
