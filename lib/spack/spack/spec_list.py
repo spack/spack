@@ -135,6 +135,8 @@ class SpecList(object):
                         ret = [self._expand_references(i) for i in yaml[:idx]]
                         ret += self._reference[name].specs_as_yaml_list
                         ret += self._expand_references(yaml[idx + 1:])
+
+                        # Add the sigil if we're mapping a sigil to a ref
                         def sigilify(arg):
                             if isinstance(arg, dict):
                                 if sigil:
@@ -172,9 +174,9 @@ def _expand_matrix_constraints(object, specify=True):
         new_row = []
         for r in row:
             if isinstance(r, dict):
-                new_row.extend([[' '.join(c)]
-                                for c in _expand_matrix_constraints(
-                            r, specify=False)])
+                new_row.extend(
+                    [[' '.join(c)]
+                     for c in _expand_matrix_constraints(r, specify=False)])
             else:
                 new_row.append([r])
         expanded_rows.append(new_row)

@@ -1037,9 +1037,6 @@ env:
         env('create', 'test', './spack.yaml')
         test = ev.read('test')
 
-        for spec in test.user_specs:
-            print spec
-
         assert Spec('mpileaks^mpich@3.0.4') in test.user_specs
         assert Spec('callpath^mpich@3.0.4') in test.user_specs
         assert Spec('mpileaks^mpich@3.0.3') in test.user_specs
