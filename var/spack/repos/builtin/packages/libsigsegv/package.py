@@ -39,7 +39,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
                 if the test is expected to succeed
         """
         result = 'fail with status {0}'.format(status) if status else 'succeed'
-        tty.msg('test: {0}: expect to {1}' .format(exe, result))
+        tty.msg('test: {0}: expect to {1}'.format(exe, result))
         runner = which(exe)
         assert runner is not None
 
