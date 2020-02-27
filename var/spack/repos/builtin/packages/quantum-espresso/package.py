@@ -74,7 +74,7 @@ class QuantumEspresso(Package):
 
     patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.004')
     patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
-    
+
     patch('qe-elpa.patch-v1', when='@6.5^elpa@2018:2019')
     patch('qe-elpa-configure.patch', when='@6.5^elpa@2017:2019')
 
@@ -219,7 +219,8 @@ class QuantumEspresso(Package):
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
                                                     'include/fftw')))
-            options.append('LIBDIRS={0}'.format(join_path(env['MKLROOT'], 'lib/intel64')))
+            options.append('LIBDIRS={0}'.format(join_path(env['MKLROOT'],
+                'lib/intel64')))
 
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
@@ -260,7 +261,7 @@ class QuantumEspresso(Package):
                 '--with-elpa-include={0}'.format(elpa_include),
                 '--with-elpa-lib={0}'.format(elpa.libs[0])
             ])
-        
+
             if spec.satisfies('^elpa@2018'):
                 options.extend(['--with-elpa-version=2018'])
             if spec.satisfies('^elpa@2019'):
