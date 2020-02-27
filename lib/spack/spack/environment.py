@@ -1265,10 +1265,16 @@ class Environment(object):
 
         dev_builds = config_dict(self.yaml).get('dev-build', {})
         if spec.name in dev_builds:
-            # Check that we got a version
-            # This can probably be removed later
             dev_info = dev_builds[spec.name]
-            assert spec.satisfies(dev_info['version'])
+            # Check that the version matches the dev-build version
+            # if the user provides a dev-build version
+            version = dev_info['version']
+            version_prefix = '' if version[0] == '@' else '@'
+            version = version_prefix + version
+            if not spec.satisfies(version):
+                raise SpackEnvironmentError(
+                    "Spec for '%s' must match dev-build version '%s'" %
+                    (spec.name, version))
 
             # Get source from specified path instead of downloading
             source_path = os.path.abspath(dev_info['source'])

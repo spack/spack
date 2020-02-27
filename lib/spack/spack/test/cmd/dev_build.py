@@ -2,12 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import pytest
 import os
 import pytest
 import spack.spec
+import spack.environment as ev
 from spack.main import SpackCommand, SpackCommandError
 
 dev_build = SpackCommand('dev-build')
+install = SpackCommand('install')
+env = SpackCommand('env')
 
 
 def test_dev_build_basics(tmpdir, mock_packages, install_mockery):
@@ -147,3 +151,111 @@ def test_dev_build_fails_nonexistent_package_name(mock_packages):
 def test_dev_build_fails_no_version(mock_packages):
     output = dev_build('dev-build-test-install', fail_on_error=False)
     assert 'dev-build spec must have a single, concrete version' in output
+
+
+def test_dev_build_env(tmpdir, mock_packages, install_mockery,
+                       mutable_mock_env_path):
+    # setup dev-build-test-install package for dev build
+    build_dir = tmpdir.mkdir('build')
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    with build_dir.as_cwd():
+        with open(spec.package.filename, 'w') as f:
+            f.write(spec.package.original_string)
+
+    # setup environment
+    envdir = tmpdir.mkdir('env')
+    with envdir.as_cwd():
+        with open('spack.yaml', 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - dev-build-test-install@0.0.0
+
+  dev-build:
+    dev-build-test-install:
+      source: %s
+      version: 0.0.0
+""" % build_dir)
+
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+    assert spec.package.filename in os.listdir(spec.prefix)
+    with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
+        assert f.read() == spec.package.replacement_string
+
+
+def test_dev_build_env_version_mismatch(tmpdir, mock_packages, install_mockery,
+                                        mutable_mock_env_path):
+    # setup dev-build-test-install package for dev build
+    build_dir = tmpdir.mkdir('build')
+    spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    with build_dir.as_cwd():
+        with open(spec.package.filename, 'w') as f:
+            f.write(spec.package.original_string)
+
+    # setup environment
+    envdir = tmpdir.mkdir('env')
+    with envdir.as_cwd():
+        with open('spack.yaml', 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - dev-build-test-install@0.0.0
+
+  dev-build:
+    dev-build-test-install:
+      source: %s
+      version: 1.1.1
+""" % build_dir)
+
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            with pytest.raises(ev.SpackEnvironmentError):
+                install()
+
+
+def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
+                            mutable_mock_env_path, mock_fetch):
+    # setup dev-build-test-install package for dev build
+    leaf_dir = tmpdir.mkdir('leaf')
+    leaf_spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
+    with leaf_dir.as_cwd():
+        with open(leaf_spec.package.filename, 'w') as f:
+            f.write(leaf_spec.package.original_string)
+
+    # setup dev-build-test-dependent package for dev build
+    root_dir = tmpdir.mkdir('root')
+    root_spec = spack.spec.Spec('dev-build-test-dependent@0.0.0').concretized()
+    with root_dir.as_cwd():
+        with open(root_spec.package.filename, 'w') as f:
+            f.write(root_spec.package.original_string)
+
+    # setup environment
+    envdir = tmpdir.mkdir('env')
+    with envdir.as_cwd():
+        with open('spack.yaml', 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - dev-build-test-install@0.0.0
+  - dev-build-test-dependent@0.0.0
+
+  dev-build:
+    dev-build-test-install:
+      source: %s
+      version: 0.0.0
+    dev-build-test-dependent:
+      source: %s
+      version: 0.0.0
+""" % (leaf_dir, root_dir))
+
+        env('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            install()
+
+    for spec in (leaf_spec, root_spec):
+        assert spec.package.filename in os.listdir(spec.prefix)
+        with open(os.path.join(spec.prefix, spec.package.filename), 'r') as f:
+            assert f.read() == spec.package.replacement_string

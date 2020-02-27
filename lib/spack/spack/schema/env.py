@@ -80,8 +80,10 @@ schema = {
                         'patternProperties': {
                             r'\w[\w-]*': {
                                 'type': 'object',
+                                'required': ['source', 'version'],
+                                'additionalProperties': False,
                                 'properties': {
-                                    'source_path': {
+                                    'source': {
                                         'type': 'string',
                                     },
                                     'version': {
