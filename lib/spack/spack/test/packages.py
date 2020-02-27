@@ -98,6 +98,10 @@ class TestPackage(object):
         assert spec1.package.content_hash(content=content1) != \
             spec2.package.content_hash(content=content2)
 
+    def test_parse_dynamic_function_call(self):
+        spec = Spec("hash-test4").concretized()
+        spec.package.content_hash()
+
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):

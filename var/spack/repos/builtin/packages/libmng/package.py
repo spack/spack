@@ -16,7 +16,6 @@ class Libmng(CMakePackage):
     version('2.0.3', sha256='cf112a1fb02f5b1c0fce5cab11ea8243852c139e669c44014125874b14b7dfaa')
     version('2.0.2', sha256='4908797bb3541fb5cd8fffbe0b1513ed163509f2a4d57a78b26a96f8d1dd05a2')
 
-    depends_on("gzip")
     depends_on("jpeg")
     depends_on("zlib")
     depends_on("lcms")

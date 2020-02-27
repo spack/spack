@@ -212,6 +212,9 @@ class Python(AutotoolsPackage):
         # Need this to allow python build to find the Python installation.
         env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
 
+        env.unset('PYTHONPATH')
+        env.unset('PYTHONHOME')
+
     def configure_args(self):
         spec = self.spec
         config_args = []

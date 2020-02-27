@@ -24,5 +24,5 @@ class RReadbitmap(RPackage):
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-tiff', type=('build', 'run'))
 
-    depends_on('libjpeg')
+    depends_on('jpeg')
     depends_on('libpng')

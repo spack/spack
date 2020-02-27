@@ -108,7 +108,11 @@ class ArpackNg(Package):
         if '+mpi' in spec:
             options.append('-DMPI=ON')
 
-        # TODO: -DINTERFACE64=ON
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DINTERFACE64=1')
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')

@@ -21,6 +21,7 @@ from spack.spec import Spec
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.util.executable as exe
 import spack.util.spack_yaml as syaml
+import spack.util.gpg
 
 
 ci_cmd = SpackCommand('ci')
@@ -30,6 +31,14 @@ gpg_cmd = SpackCommand('gpg')
 install_cmd = SpackCommand('install')
 buildcache_cmd = SpackCommand('buildcache')
 git = exe.which('git', required=True)
+
+
+def has_gpg():
+    try:
+        gpg = spack.util.gpg.Gpg.gpg()
+    except spack.util.gpg.SpackGPGError:
+        gpg = None
+    return bool(gpg)
 
 
 @pytest.fixture()
@@ -494,6 +503,7 @@ def test_ci_pushyaml(tmpdir):
 
 
 @pytest.mark.disable_clean_stage_check
+@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
                               mock_stage, mock_gnupghome):
