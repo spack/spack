@@ -72,16 +72,23 @@ class Libxml2(AutotoolsPackage):
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
 
-    def _run_test(self, runner, options, expected, status):
+    def _run_test(self, exe, options, expected, status):
         """Run the test and confirm obtain the expected results
 
         Args:
-            runner (Executable): the executable version of the binary
+            exe (str): the name of the executable
             options (list of str): list of options to pass to the runner
             expected (list of str): list of expected output strings
             status (int or None): the expected process status if int or None
                 if the test is expected to succeed
         """
+        result = 'fail with status {0}'.format(status) if status else 'succeed'
+        tty.msg('test: {0} {1}: expect to {2}'
+                .format(exe, ' '.join(options), result))
+        runner = which(exe)
+        assert runner is not None
+        assert runner.path == join_path(self.prefix.bin, exe)
+
         try:
             output = runner(*options, output=str.split, error=str.split)
             assert not status, 'Expected execution to fail'
@@ -95,16 +102,13 @@ class Libxml2(AutotoolsPackage):
         for check in expected:
             assert check in output
 
-    def _test_bin(self, exe):
-        """Execute the test and confirm obtain the expected results
+    def test(self):
+        """Perform smoke tests on the installed package"""
+        # Start with what we already have post-install
+        tty.msg('test: Performing simple import test')
+        self.import_module_test()
 
-        Args:
-            exe (str): the name of the executable
-        """
-        tty.msg('test: Ensuring use of the installed {0}'.format(exe))
-        runner = which(exe)
-        assert runner is not None
-
+        # Now run defined tests based on expected executables
         dtd_path = './data/info.dtd'
         test_fn = 'test.xml'
         exec_checks = {
@@ -123,23 +127,9 @@ class Libxml2(AutotoolsPackage):
             'xmlcatalog': [
                 (['--create'], ['<catalog xmlns', 'catalog"/>'], None)],
         }
-        if exe in exec_checks:
+        for exe in exec_checks:
             for options, expected, status in exec_checks[exe]:
-                result = 'fails with status {0}'.format(status) if status \
-                    else 'succeeds'
-                tty.msg('test: Ensuring \'{0} {1}\' {2}'
-                        .format(exe, ' '.join(options), result))
-                self._run_test(runner, options, expected, status)
+                self._run_test(exe, options, expected, status)
 
         # Perform some cleanup
         fs.force_remove(test_fn)
-
-    def test(self):
-        """Perform smoke tests on the installed package"""
-        # Start with what we already have post-install
-        tty.msg('test: Performing simple import test')
-        self.import_module_test()
-
-        # Now run tests for the available executables
-        for exe in os.listdir(self.prefix.bin):
-            self._test_bin(exe)
