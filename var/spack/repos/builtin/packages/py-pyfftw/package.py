@@ -23,4 +23,5 @@ class PyPyfftw(PythonPackage):
     depends_on('py-numpy@1.10:1.999,   type=('build', 'run'))
     depends_on('py-numpy@1.6:',        type=('build', 'run'), when='@0.10.4')
     depends_on('py-numpy@1.10:',       type=('build', 'run'), when='@0.11.1')
-    depends_on('py-scipy@0.12.0:',     type=('build', 'run'))
+
+    variant('py-scipy', default=False, description='Scipy dependency is optional')
