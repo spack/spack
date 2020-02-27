@@ -45,6 +45,8 @@ class Pdt(AutotoolsPackage):
             options.append('-pgCC')
         elif self.compiler.name == 'gcc':
             options.append('-GNU')
+        elif self.compiler.name == 'clang':
+            options.append('-clang')
         else:
             raise InstallError('Unknown/unsupported compiler family')
 

@@ -26,7 +26,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
-    variant('termlib', default=False,
+    variant('termlib', default=True,
             description='Enables termlib needs for gnutls in emacs.')
 
     depends_on('pkgconfig', type='build')

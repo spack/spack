@@ -108,7 +108,7 @@ are currently supported are summarized in the table below:
      - ``ubuntu:16.04``
      - ``spack/ubuntu-xenial``
    * - Ubuntu 18.04
-     - ``ubuntu:16.04``
+     - ``ubuntu:18.04``
      - ``spack/ubuntu-bionic``
    * - CentOS 6
      - ``centos:6``
