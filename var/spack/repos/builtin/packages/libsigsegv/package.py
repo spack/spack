@@ -27,84 +27,78 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         return ['--enable-shared']
 
-    def _do_smoke_test(self, cc):
-        prog = './data/smoke_test'
+    # TODO: Remove once this function is lifted to the package level
+    def _run_test(self, exe, options, expected, status):
+        """Run the test and confirm obtain the expected results
 
-        tty.msg("  ..compiling smoke_test.c")
-        output = cc(
+        Args:
+            exe (str): the name of the executable
+            options (list of str): list of options to pass to the runner
+            expected (list of str): list of expected output strings
+            status (int or None): the expected process status if int or None
+                if the test is expected to succeed
+        """
+        result = 'fail with status {0}'.format(status) if status else 'succeed'
+        tty.msg('test: {0}: expect to {1}' .format(exe, result))
+        runner = which(exe)
+        assert runner is not None
+
+        try:
+            output = runner(*options, output=str.split, error=str.split)
+            assert not status, 'Expected execution to fail'
+        except ProcessError as err:
+            output = str(err)
+            status_msg = 'exited with status {0}'.format(status)
+            expected_msg = 'Expected \'{0}\' in \'{1}\''.format(
+                status_msg, err.message)
+            assert status_msg in output, expected_msg
+
+        for check in expected:
+            assert check in output
+
+    def _do_smoke_test(self, cc):
+        prog = 'data/smoke_test'
+
+        options = [
             '-I{0}'.format(self.prefix.include),
             '{0}.c'.format(prog),
             '-o',
             prog,
             '-L{0}'.format(self.prefix.lib),
             '-lsigsegv',
-            '-Wl,-R{0}'.format(self.prefix.lib),
-            output=str.split,
-            error=str.split)
-        assert len(output) == 0
+            '-Wl,-R{0}'.format(self.prefix.lib)]
+        self._run_test('cc', options, [], None)
 
-        tty.msg("  running smoke_test")
-        smoke_test = Executable(prog)
-        assert smoke_test is not None
-        output = smoke_test(output=str.split, error=str.split)
         with open('./data/smoke_test.out', 'r') as fd:
-            assert output == fd.read()
+            expected = fd.read()
+        self._run_test(prog, options, expected, None)
 
     def _do_sigsegv1(self, cc):
         # Note the compilation options and order are from an actual install
         # on a specific linux machine, which used gcc.
-        # TODO: Are relative paths acceptable?
-        prog = './data/sigsegv1'
-        includes = '-I./data'
-        opts = '-g -O2'
+        prog = 'data/sigsegv1'
 
-        # <comp> -DHAVE_CONFIG_H -I./data -g -O2 -c -o sigsegv1.o sigsegv1.c
-        tty.msg('  compiling sigsegv1')
-        output = cc(
+        options = [
             '-DHAVE_CONFIG_H',
             '-I./data',
             '-I{0}'.format(self.prefix.include),
-            '-g',
-            '-O2',
-            '-c',
-            '-o',
-            '{0}.o'.format(prog),
-            '{0}.c'.format(prog),
-            output=str.split,
-            error=str.split)
-        assert len(output) == 0
-
-
-        # <comp> -g -O2 -o sigsegv1 sigsegv1.o  <install>/lib/libsigsegv.so \
-        #    -lc -Wl,-rpath -Wl,<install>/lib
-        tty.msg('  linking sigsegv1')
-        output = cc(
-            '-g',
-            '-O2',
             '-o',
             prog,
-            '{0}.o'.format(prog),
-            '{0}/libsigsegv.so'.format(self.prefix.lib),
             '-lc',
-            '-Wl,-rpath',
-            '-Wl,{0}'.format(self.prefix.lib),
-            output=str.split,
-            error=str.split)
-        assert len(output) == 0
+            '-L{0}'.format(self.prefix.lib),
+            '-lsigsegv',
+            '{0}.c'.format(prog)]
+        self._run_test('cc', options, [], None)
 
-        tty.msg("  running sigsegv1")
-        sigsegv1 = Executable(prog)
-        assert sigsegv1 is not None
-        output = sigsegv1(output=str.split, error=str.split)
-        assert output == "Test passed.\n"
+        self._run_test(prog, [], ["Test passed."], None)
 
     def test(self):
         tty.msg('test: Ensuring use of installed cc')
         cc = which('cc')
         assert cc is not None
 
-        tty.msg('test: Building and running smoke test')
+        # Run the basic smoke test
         self._do_smoke_test(cc)
 
-        tty.msg('test: Building and running sigsegv1')
+        # Run the sigsegv1 test taken from the test suite
         self._do_sigsegv1(cc)
