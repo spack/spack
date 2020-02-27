@@ -26,6 +26,7 @@ import spack.repo
 import spack.schema.env
 import spack.spec
 import spack.store
+import spack.stage
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
@@ -1260,7 +1261,23 @@ class Environment(object):
 
     def _install(self, spec, **install_args):
         # "spec" must be concrete
-        spec.package.do_install(**install_args)
+        package = spec.package
+
+        dev_builds = config_dict(self.yaml).get('dev-build', {})
+        if spec.name in dev_builds:
+            # Check that we got a version
+            # This can probably be removed later
+            dev_info = dev_builds[spec.name]
+            assert spec.satisfies(dev_info['version'])
+
+            # Get source from specified path instead of downloading
+            source_path = os.path.abspath(dev_info['source'])
+            package.stage = spack.stage.DIYStage(source_path)
+
+            # Don't delete dev-build stages
+            install_args['keep_stage'] = True
+
+        package.do_install(**install_args)
 
         if not spec.external:
             # Make sure log directory exists
@@ -1295,7 +1312,10 @@ class Environment(object):
                 if not spec.package.installed:
                     uninstalled_specs.append(spec)
 
-        for spec in uninstalled_specs:
+        # Sort by total deps so specs have to be installed after dependencies
+        # This ensures dev-builds done in appropriate order
+        for spec in sorted(uninstalled_specs,
+                           key=lambda spec: len(list(spec.traverse()))):
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
             kwargs = dict()

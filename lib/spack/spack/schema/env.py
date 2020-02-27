@@ -73,6 +73,24 @@ schema = {
                             'type': 'string'
                         },
                     },
+                    'dev-build': {
+                        'type': 'object',
+                        'default': {},
+                        'additionalProperties': False,
+                        'patternProperties': {
+                            r'\w[\w-]*': {
+                                'type': 'object',
+                                'properties': {
+                                    'source_path': {
+                                        'type': 'string',
+                                    },
+                                    'version': {
+                                        'type': 'string',
+                                    },
+                                },
+                            },
+                        },
+                    },
                     'definitions': {
                         'type': 'array',
                         'default': [],
