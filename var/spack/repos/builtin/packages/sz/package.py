@@ -15,6 +15,7 @@ class Sz(CMakePackage):
     maintainers = ['disheng222']
 
     version('develop', branch='master')
+    version('2.1.8.3', sha256='be94f3c8ab03d6849c59a98e0ebf80816a6b8d07a1d762a4b285498acb2f3871')
     version('2.1.8.1', sha256='a27c9c9da16c9c4232c54813ba79178945f47609043f11501d49a171e47d3f46')
     version('2.1.8.0', sha256='8d6bceb59a03d52e601e29d9b35c21b146c248abae352f9a4828e91d8d26aa24')
     version('2.0.2.0',  sha256='176c65b421bdec8e91010ffbc9c7bf7852c799972101d6b66d2a30d9702e59b0')
