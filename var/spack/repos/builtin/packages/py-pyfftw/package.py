@@ -18,7 +18,9 @@ class PyPyfftw(PythonPackage):
     version('0.10.4', sha256='739b436b7c0aeddf99a48749380260364d2dc027cf1d5f63dafb5f50068ede1a')
 
     depends_on('fftw')
-    depends_on('py-setuptools',    type='build')
-    depends_on('py-cython',        type='build')
-    depends_on('py-numpy@1.6:',    type=('build', 'run'))
-    depends_on('py-scipy@0.12.0:', type=('build', 'run'))
+    depends_on('py-setuptools',        type='build')
+    depends_on('py-cython@0.29:0.999', type='build')
+    depends_on('py-numpy@1.10:1.999,   type=('build', 'run'))
+    depends_on('py-numpy@1.6:',        type=('build', 'run'), when='@0.10.4')
+    depends_on('py-numpy@1.10:',       type=('build', 'run'), when='@0.11.1')
+    depends_on('py-scipy@0.12.0:',     type=('build', 'run'))
