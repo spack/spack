@@ -126,7 +126,7 @@ packages:
       - python
     specs:
       - nest@2.18.0
-      - py-bluepy@0.14.5
+      - py-bluepy@0.14.6
       - py-bluepymm@0.6.38
       - py-bluepyopt@1.6.56
       - py-efel@3.0.70

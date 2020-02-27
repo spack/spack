@@ -13,7 +13,8 @@ class PyBluepyConfigfile(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy-configfile"
 
     version('develop', branch='master')
-    version('0.1.7', tag='bluepy-configfile-v0.1.7', preferred=True)
+    version('0.1.11', tag='bluepy-configfile-v0.1.11')
+    version('0.1.7', tag='bluepy-configfile-v0.1.7')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
