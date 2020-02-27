@@ -13,39 +13,65 @@ class CudaPackage(PackageBase):
     """Auxiliary class which contains CUDA variant, dependencies and conflicts
     and is meant to unify and facilitate its usage.
     """
+    maintainers = ['ax3l', 'svenevs']
 
-    # FIXME: keep cuda and cuda_arch separate to make usage easier untill
+    # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
+    # https://developer.nvidia.com/cuda-gpus
+    # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
+    cuda_arch_values = [
+        '10', '11', '12', '13',
+        '20', '21',
+        '30', '32', '35', '37',
+        '50', '52', '53',
+        '60', '61', '62',
+        '70', '72', '75',
+    ]
+
+    # FIXME: keep cuda and cuda_arch separate to make usage easier until
     # Spack has depends_on(cuda, when='cuda_arch!=None') or alike
     variant('cuda', default=False,
             description='Build with CUDA')
-    # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#gpu-feature-list
-    # https://developer.nvidia.com/cuda-gpus
+
     variant('cuda_arch',
             description='CUDA architecture',
-            values=spack.variant.any_combination_of(
-                '20', '30', '32', '35', '50', '52', '53', '60', '61',
-                '62', '70', '72', '75'
-            ))
+            values=spack.variant.any_combination_of(*cuda_arch_values))
 
-    # see http://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
-    # and http://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
+    # https://docs.nvidia.com/cuda/cuda-compiler-driver-nvcc/index.html#nvcc-examples
+    # https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code
     @staticmethod
     def cuda_flags(arch_list):
         return [('--generate-code arch=compute_{0},code=sm_{0} '
                  '--generate-code arch=compute_{0},code=compute_{0}').format(s)
                 for s in arch_list]
 
-    depends_on("cuda@7:", when='+cuda')
+    depends_on('cuda', when='+cuda')
 
     # CUDA version vs Architecture
-    depends_on("cuda@8:", when='cuda_arch=60')
-    depends_on("cuda@8:", when='cuda_arch=61')
-    depends_on("cuda@8:", when='cuda_arch=62')
-    depends_on("cuda@9:", when='cuda_arch=70')
-    depends_on("cuda@9:", when='cuda_arch=72')
-    depends_on("cuda@10:", when='cuda_arch=75')
+    # https://en.wikipedia.org/wiki/CUDA#GPUs_supported
+    depends_on('cuda@:6.0',     when='cuda_arch=10')
+    depends_on('cuda@:6.5',     when='cuda_arch=11')
+    depends_on('cuda@2.1:6.5',  when='cuda_arch=12')
+    depends_on('cuda@2.1:6.5',  when='cuda_arch=13')
 
-    depends_on('cuda@:8', when='cuda_arch=20')
+    depends_on('cuda@3.0:8.0',  when='cuda_arch=20')
+    depends_on('cuda@3.2:8.0',  when='cuda_arch=21')
+
+    depends_on('cuda@5.0:10.2', when='cuda_arch=30')
+    depends_on('cuda@5.0:10.2', when='cuda_arch=32')
+    depends_on('cuda@5.0:10.2', when='cuda_arch=35')
+    depends_on('cuda@6.5:10.2', when='cuda_arch=37')
+
+    depends_on('cuda@6.0:',     when='cuda_arch=50')
+    depends_on('cuda@6.5:',     when='cuda_arch=52')
+    depends_on('cuda@6.5:',     when='cuda_arch=53')
+
+    depends_on('cuda@8.0:',     when='cuda_arch=60')
+    depends_on('cuda@8.0:',     when='cuda_arch=61')
+    depends_on('cuda@8.0:',     when='cuda_arch=62')
+
+    depends_on('cuda@9.0:',     when='cuda_arch=70')
+    depends_on('cuda@9.0:',     when='cuda_arch=72')
+    depends_on('cuda@10.0:',    when='cuda_arch=75')
 
     # There are at least three cases to be aware of for compiler conflicts
     # 1. Linux x86_64
@@ -130,18 +156,8 @@ class CudaPackage(PackageBase):
     # `clang-apple@x.y.z as a possible fix.
     # Compiler conflicts will be eventual taken from here:
     # https://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/index.html#abstract
+    conflicts('platform=darwin', when='+cuda ^cuda@11.0:')
 
     # Make sure cuda_arch can not be used without +cuda
-    conflicts('~cuda', when='cuda_arch=20')
-    conflicts('~cuda', when='cuda_arch=30')
-    conflicts('~cuda', when='cuda_arch=32')
-    conflicts('~cuda', when='cuda_arch=35')
-    conflicts('~cuda', when='cuda_arch=50')
-    conflicts('~cuda', when='cuda_arch=52')
-    conflicts('~cuda', when='cuda_arch=53')
-    conflicts('~cuda', when='cuda_arch=60')
-    conflicts('~cuda', when='cuda_arch=61')
-    conflicts('~cuda', when='cuda_arch=62')
-    conflicts('~cuda', when='cuda_arch=70')
-    conflicts('~cuda', when='cuda_arch=72')
-    conflicts('~cuda', when='cuda_arch=75')
+    for value in cuda_arch_values:
+        conflicts('~cuda', when='cuda_arch=' + value)
