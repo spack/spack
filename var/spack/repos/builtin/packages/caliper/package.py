@@ -8,6 +8,7 @@ from spack import *
 import sys
 import os
 
+
 class Caliper(CMakePackage):
     """Caliper is a program instrumentation and performance measurement
     framework. It is designed as a performance analysis toolbox in a
