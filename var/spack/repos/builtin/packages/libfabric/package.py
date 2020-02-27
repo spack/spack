@@ -12,16 +12,13 @@ class Libfabric(AutotoolsPackage):
        fabric communication services to applications."""
 
     homepage = "https://libfabric.org/"
-    url      = "https://github.com/ofiwg/libfabric/releases/download/v1.6.1/libfabric-1.6.1.tar.gz"
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('develop', branch='master')
-    version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c',
-       url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/libfabric-1.9.0.tar.bz2')
-    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88',
-       url='https://github.com/ofiwg/libfabric/releases/download/v1.8.1/libfabric-1.8.1.tar.bz2')
-    version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37',
-       url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2')
+    version('1.9.1rc1', sha256='fdf89a0797f0d923aaef2c41cc70be45716e4d07dc5d318365b9c17795eb49ab')
+    version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c')
+    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88')
+    version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37')
     version('1.7.1', sha256='312e62c57f79b7274f89c41823932c00b15f1cc8de9c1f8dce17cd7fdae66fa1')
     version('1.7.0', sha256='9d7059e2ef48341f967f2a20ee215bc50f9079b32aad485f654098f83040e4be')
     version('1.6.2', sha256='b1a9cf8c47189a1c918f8b5710d05cb50df6b47a1c9b2ba51d927e97503b4df0')
@@ -108,6 +105,16 @@ class Libfabric(AutotoolsPackage):
              url='https://github.com/ofiwg/fabtests/releases/download/v1.4.2/fabtests-1.4.2.tar.gz',
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
              placement='fabtests', when='@1.4.2')
+
+    conflicts('@1.9.0', when='platform=darwin',
+              msg='This distribution is missing critical files')
+
+    def url_for_version(self, version):
+        return '{base}/v{version}/libfabric-{version}.tar.{ext}'.format(
+            base='https://github.com/ofiwg/libfabric/releases/download',
+            version=str(version),
+            ext=('bz2' if version >= Version('1.8') else 'gz')
+        )
 
     def setup_build_environment(self, env):
         if self.run_tests:
