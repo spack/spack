@@ -35,7 +35,7 @@ class PyBluepy(PythonPackage):
 
     depends_on('py-bluepy-configfile@0.1.11:', type='run')
     depends_on('py-libsonata@0.0.2:', type='run')
-    depends_on('py-bluepysnap@0.1.2:', type='run')
+    depends_on('py-bluepysnap@0.1.2', type='run')
 
     # TODO: remove once legacy dependencies are removed from BluePy
     def patch(self):

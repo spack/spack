@@ -34,6 +34,7 @@ packages:
       - py-entity-management@1.1.0
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.41
+      - py-simwriter@1.0.0
       - py-morph-tool@0.1.14
       - py-neurodamus
 
@@ -46,18 +47,6 @@ packages:
     specs:
       - emsim
       - meshball
-
-  gnu-stable-outdated:
-    target_matrix:
-      - gnu-stable-py2
-    requires:
-      - architecture
-      - compiler
-      - python
-    specs:
-      - py-bbp-analysis-framework@0.6.39
-      - py-simwriter@0.4.3
-      - py-entity-management@1.0.20
 
   gnu-stable-parallel:
     target_matrix:
