@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
 import os
 
 
@@ -14,16 +13,16 @@ class Dftbplus(MakefilePackage):
     containing many extensions to the original method."""
 
     homepage = "https://www.dftbplus.org"
-    url      = "https://www.dftbplus.org/fileadmin/DFTBPLUS/public/dftbplus/19.1/dftbplus-19.1.tar.xz"
+    url      = "https://github.com/dftbplus/dftbplus/archive/19.1.tar.gz"
 
-    version('19.1', sha256='78f45ef0571c78cf732a5493d32830455a832fa05ebcad43098895e46ad8d220')
+    version('19.1', sha256='4d07f5c6102f06999d8cfdb1d17f5b59f9f2b804697f14b3bc562e3ea094b8a8')
 
     variant('mpi', default=True,
             description="Build an MPI-paralelised version of the code.")
 
     variant('gpu', default=False,
-            description="""Use the MAGMA library
-            for GPU accelerated computation""")
+            description="Use the MAGMA library "
+            "for GPU accelerated computation")
 
     variant('elsi', default=False,
             description="Use the ELSI library for large scale systems. "
@@ -99,7 +98,7 @@ class Dftbplus(MakefilePackage):
             if '+elsi' in self.spec:
                 mconfig.filter('WITH_ELSI := .*', 'WITH_ELSI := 1')
 
-                has_pexsi = 'enable_pexsi' in spec['elsi']
+                has_pexsi = '+enable_pexsi' in spec['elsi']
 
                 mconfig.filter('WITH_PEXSI := .*', 'WITH_PEXSI := {0}'.format(
                     '1' if has_pexsi is True else '0'
