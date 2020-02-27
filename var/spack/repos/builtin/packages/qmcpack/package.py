@@ -127,8 +127,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     depends_on('mpi', when='+mpi')
     depends_on('python@3:', when='@3.9:')
 
-    depends_on('nccl', when='+nccl')
-
     # HDF5
     depends_on('hdf5~mpi', when='~phdf5')
     depends_on('hdf5+mpi', when='+phdf5')
