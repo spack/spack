@@ -99,15 +99,12 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         assert output == "Test passed.\n"
 
     def test(self):
-        compilers = spack.compilers.compilers_for_spec(
-            self.spec.compiler, self.spec.architecture)
-        compiler = compilers[0].cc
-        cc = Executable(compilers[0].cc)
+        tty.msg('test: Ensuring use of installed cc')
+        cc = which('cc')
         assert cc is not None
-        assert os.path.dirname(cc.path) == os.path.dirname(compiler)
 
         tty.msg('test: Building and running smoke test')
         self._do_smoke_test(cc)
 
-        # TODO: Compile and run sigsegv1
+        tty.msg('test: Building and running sigsegv1')
         self._do_sigsegv1(cc)
