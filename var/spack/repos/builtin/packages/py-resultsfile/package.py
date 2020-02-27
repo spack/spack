@@ -20,5 +20,3 @@ class PyResultsfile(PythonPackage):
 
     depends_on('python@2.7:2.8.999', type=('build', 'run'), when='@1.0:1.999')
     depends_on('python@3:', type=('build', 'run'), when='@2.0:')
-
-    depends_on('py-setuptools', type='run')
