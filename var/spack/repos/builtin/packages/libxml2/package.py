@@ -83,11 +83,9 @@ class Libxml2(AutotoolsPackage):
                 if the test is expected to succeed
         """
         result = 'fail with status {0}'.format(status) if status else 'succeed'
-        tty.msg('test: {0} {1}: expect to {2}'
-                .format(exe, ' '.join(options), result))
+        tty.msg('test: {0}: expect to {1}'.format(exe, result))
         runner = which(exe)
         assert runner is not None
-        assert runner.path == join_path(self.prefix.bin, exe)
 
         try:
             output = runner(*options, output=str.split, error=str.split)
