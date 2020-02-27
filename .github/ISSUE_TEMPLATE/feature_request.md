@@ -1,7 +1,7 @@
 ---
 name: "\U0001F38A Feature request" 
 about: Suggest adding a feature that is not yet in Spack  
-labels: feature,triage
+labels: feature
 
 ---
 
