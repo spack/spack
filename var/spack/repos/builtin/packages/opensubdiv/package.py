@@ -24,10 +24,12 @@ from spack import *
 
 
 class Opensubdiv(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """OpenSubdiv is a set of open source libraries that implement high 
+    performance subdivision surface (subdiv) evaluation on massively parallel CPU
+    and GPU architectures. This code path is optimized for drawing deforming
+    surfaces with static topology at interactive framerates."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
