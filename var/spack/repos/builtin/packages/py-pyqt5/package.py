@@ -36,7 +36,7 @@ class PyPyqt5(SIPPackage):
     depends_on('qt@5:+opengl')
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-    depends_on('py-sip module=PyQt5', type=('build', 'run'))
+    depends_on('py-sip module=PyQt5.sip', type=('build', 'run'))
 
     depends_on('qscintilla', when='+qsci')
 
