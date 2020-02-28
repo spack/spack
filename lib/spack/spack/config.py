@@ -97,6 +97,7 @@ configuration_paths = (
 config_defaults = {
     'config': {
         'debug': False,
+        'connect_timeout': 10,
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,

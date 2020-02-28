@@ -257,7 +257,7 @@ class URLFetchStrategy(FetchStrategy):
                 self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
-        self.extra_curl_options = kwargs.get('curl_options', [])
+        self.extra_options = kwargs.get('fetch_options', [])
         self._curl = None
 
         self.extension = kwargs.get('extension', None)
@@ -326,8 +326,6 @@ class URLFetchStrategy(FetchStrategy):
             '-D',
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
-            # Timeout if can't establish a connection after 10 sec.
-            '--connect-timeout', '10',
             url,
         ]
 
@@ -339,7 +337,22 @@ class URLFetchStrategy(FetchStrategy):
         else:
             curl_args.append('-sS')  # just errors when not.
 
-        curl_args += self.extra_curl_options
+        connect_timeout = spack.config.get('config:connect_timeout')
+
+        if self.extra_options:
+            cookie = self.extra_options.get('cookie')
+            if cookie:
+                curl_args.append('-j')  # junk cookies
+                curl_args.append('-b')  # specify cookie
+                curl_args.append(cookie)
+
+            timeout = self.extra_options.get('timeout')
+            if timeout:
+                connect_timeout = max(connect_timeout, int(timeout))
+
+        if connect_timeout > 0:
+            # Timeout if can't establish a connection after n sec.
+            curl_args.extend(['--connect-timeout', str(connect_timeout)])
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
