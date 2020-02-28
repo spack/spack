@@ -56,7 +56,7 @@ class PySip(Package):
 
     @run_after('install')
     def extend_path_setup(self):
-        if 'module=PyQt5.sip' in spec:
+        if 'module=PyQt5.sip' in self.spec:
             with working_dir(site_packages_dir):
 #                mkdirp('PyQt5')
 #                ln = which('ln')
