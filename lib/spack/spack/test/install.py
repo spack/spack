@@ -7,7 +7,7 @@ import os
 import pytest
 import shutil
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
+from llnl.util.filesystem import mkdirp, touch, touchp, working_dir
 
 from spack.package import InstallError, PackageBase, PackageStillNeededError
 import spack.error
@@ -457,11 +457,30 @@ def test_pkg_install_log(install_mockery):
     install_path = os.path.dirname(spec.package.install_log_path)
     mkdirp(install_path)
 
+    source = spec.package.stage.source_path
+    config = os.path.join(source, 'config.log')
+    touchp(config)
+    spec.package.archive_files = [config, 'missing', '..']
+
     spack.installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
     assert os.path.exists(spec.package.install_configure_args_path)
+
+    # Also ensure expected results from file archiving
+    archive_dir = os.path.join(install_path, 'archived-files')
+    source_dir = os.path.dirname(source)
+
+    # .. Configuration file should've been copied
+    rel_config = os.path.relpath(config, source_dir)
+    assert os.path.exists(os.path.join(archive_dir, rel_config))
+
+    # .. there should be NO missing file
+    assert not os.path.exists(os.path.join(archive_dir, 'missing'))
+
+    # .. an error file should have been created for '..'
+    assert os.path.exists(os.path.join(archive_dir, 'errors.txt'))
 
     # Cleanup
     shutil.rmtree(log_dir)
