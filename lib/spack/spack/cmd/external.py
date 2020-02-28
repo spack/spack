@@ -6,6 +6,7 @@
 from __future__ import print_function
 from collections import defaultdict
 import os
+import re
 
 import spack
 import llnl.util.tty as tty
@@ -50,26 +51,32 @@ def external_find(args):
 def _get_external_packages(repo):
     system_exe_to_path = _get_system_executables()
 
-    exe_to_packages = defaultdict(list)
-    for package in repo.all_packages():
-        if hasattr(package, 'executables'):
-            for exe in package.executables:
-                exe_to_packages[exe].append(package.name)
+    exe_pattern_to_pkgs = defaultdict(list)
+    for pkg in repo.all_packages():
+        if hasattr(pkg, 'executables'):
+            for exe in pkg.executables:
+                exe_pattern_to_pkgs[exe].append(pkg)
 
-    found = set(exe_to_packages.keys()) & set(system_exe_to_path)
+    pkg_to_found_exes = defaultdict(list)
+    found_exe_to_pkgs = defaultdict(list)
+    for exe in system_exe_to_path:
+        for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
+            if re.search(exe_pattern, exe):
+                for pkg in pkgs:
+                    pkg_to_found_exes[pkg].append(exe)
+                found_exe_to_pkgs[exe].extend(pkgs)
 
     exe_to_usable_packages = defaultdict(list)
     pkg_to_template = {}
     resolved_pkgs = set()
-    for exe in found:
-        associated_packages = exe_to_packages[exe]
-        for pkg_name in associated_packages:
-            if pkg_name in resolved_pkgs:
+    for exe in found_exe_to_pkgs:
+        associated_packages = found_exe_to_pkgs[exe]
+        for pkg in associated_packages:
+            if pkg.name in resolved_pkgs:
                 continue
-            resolved_pkgs.add(pkg_name)
+            resolved_pkgs.add(pkg.name)
 
-            pkg = repo.get(pkg_name)
-            found_pkg_exes = set(pkg.executables) & found
+            found_pkg_exes = pkg_to_found_exes[pkg]
 
             if hasattr(pkg, 'determine_spec_details'):
                 spec_str = pkg.determine_spec_details(found_pkg_exes)
@@ -78,34 +85,36 @@ def _get_external_packages(repo):
 
             if not spec_str:
                 tty.msg("{0} detected that the following executables are"
-                        " associated with another package: {1}"
-                        .format(pkg_name, ", ".join(found_pkg_exes)))
+                        " associated with a different package: {1}"
+                        .format(pkg.name, ", ".join(found_pkg_exes)))
                 continue
 
             paths = list(system_exe_to_path[x] for x in found_pkg_exes)
             bin_dirs = set(os.path.dirname(x) for x in paths)
             if len(bin_dirs) > 1:
                 tty.warn("{0} has executables in separate locations: {1}"
-                         .format(pkg_name, ", ".join(bin_dirs)))
+                         .format(pkg.name, ", ".join(bin_dirs)))
             bin_dir = list(bin_dirs)[0]
             base_dir = os.path.dirname(bin_dir)
 
             for exe in found_pkg_exes:
-                exe_to_usable_packages[exe].append(pkg_name)
+                exe_to_usable_packages[exe].append(pkg)
 
-            pkg_to_template[pkg_name] = _pkg_yaml_template(
-                pkg_name, spec_str, base_dir)
+            pkg_to_template[pkg.name] = _pkg_yaml_template(
+                pkg.name, spec_str, base_dir)
 
     used_packages = set()
-    for exe, pkg_names in exe_to_usable_packages.items():
-        if len(pkg_names) > 1:
+    for exe, pkgs in exe_to_usable_packages.items():
+        if len(pkgs) > 1:
             tty.warn("The following packages all use {0}: {1}"
-                     .format(exe, ", ".join(pkg_names)))
+                     .format(exe, ", ".join(p.name for p in pkgs)))
 
-        if used_packages & set(pkg_names):
+        # If some package that uses this exe was already selected, then omit
+        # this executable from consideration
+        if used_packages & set(p.name for p in pkgs):
             continue
 
-        used_packages.add(pkg_names[0])
+        used_packages.add(pkgs[0].name)
 
     for pkg_name in used_packages:
         print(pkg_to_template[pkg_name])
