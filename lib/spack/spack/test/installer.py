@@ -563,13 +563,14 @@ def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
         assert msg in out
 
 
-def test_update_failed_no_mark(install_mockery):
-    """Test of _update_failed sans mark and dependent build tasks."""
+def test_update_failed_no_dependent_task(install_mockery):
+    """Test to cover _update_failed with missing dependent build tasks."""
     spec, installer = create_installer('dependent-install')
-    task = create_build_task(spec.package)
 
-    installer._update_failed(task)
-    assert installer.failed['dependent-install'] is None
+    for dep in spec.traverse(root=False):
+        task = create_build_task(dep.package)
+        installer._update_failed(task, mark=False)
+        assert installer.failed[task.pkg_id] is None
 
 
 def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
