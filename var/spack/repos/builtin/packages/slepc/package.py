@@ -11,7 +11,7 @@ from spack import *
 class Slepc(Package):
     """Scalable Library for Eigenvalue Problem Computations."""
 
-    homepage = "http://slepc.upv.es"
+    homepage = "https://slepc.upv.es"
     url      = "https://slepc.upv.es/download/distrib/slepc-3.6.2.tar.gz"
     git      = "https://gitlab.com/slepc/slepc.git"
 
