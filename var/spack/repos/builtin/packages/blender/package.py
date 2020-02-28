@@ -34,6 +34,7 @@ class Blender(CMakePackage):
     variant('headless', default=False, description='Build without graphical support (renderfarm, server mode only)')
     variant('llvm', default=False, description='Necessary for OSL.')
     variant('ocio', default=False, description='Currently broken due to conflicting python')
+    variant('opensubdiv', default=False, description='Build with opensubdiv support')
     variant('jemalloc', default=True)
 
     depends_on('python@3.5:', when="@:2.79b")
@@ -73,7 +74,6 @@ class Blender(CMakePackage):
         args.append('-DPYTHON_VERSION={0}'.format(spec['python'].version.up_to(2)))
 
         args.append('-DWITH_INSTALL_PORTABLE=NO')
-        args.append('-DWITH_OPENSUBDIV:BOOL=ON')
 
         args.append('-DCMAKE_CXX_FLAGS=-I{0}/include/OpenEXR'.format(spec['ilmbase'].prefix))
 
@@ -83,6 +83,10 @@ class Blender(CMakePackage):
                     spec['py-numpy'].prefix.lib,
                     spec['python'].version.up_to(2)))
 
+        if '+opensubdiv' in spec:
+            args.append('-DWITH_OPENSUBDIV:BOOL=ON')
+        else:
+            args.append('-DWITH_OPENSUBDIV:BOOL=OFF')
 
         if '~cycles' in spec:
             args.append('-DWITH_CYCLES:BOOL=OFF')
