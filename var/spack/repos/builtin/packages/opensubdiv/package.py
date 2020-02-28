@@ -15,7 +15,9 @@ class Opensubdiv(CMakePackage):
 
     homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
+    git      = "https://github.com/PixarAnimationStudios/OpenSubdiv"
 
+    version('dev', branch='dev')
     version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
 
     variant('cuda', default=False, description='Builds with cuda support')
