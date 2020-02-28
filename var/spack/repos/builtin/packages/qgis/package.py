@@ -110,6 +110,7 @@ class Qgis(CMakePackage):
 
     # v3.8.1, Qt >= 5.9.0 is required
     conflicts('qt@:5.8.99', when='@3.8.1:')
+    conflicts('qt@5.13.0:', when='@3.8.1')
 
     # conflicts for qgis@2, qt@4, python@2
     conflicts('qtkeychain@0.6.0:', when='^qt@4')
