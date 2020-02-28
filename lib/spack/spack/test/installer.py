@@ -316,9 +316,11 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
     assert packages
 
 
-def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch):
-    """Test to add coverage to dump_packages."""
+def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch, capsys):
+    """Test to add coverage to dump_packages with dependencies."""
     orig_bpp = spack.store.layout.build_packages_path
+    orig_dirname = spack.repo.Repo.dirname_for_package_name
+    repo_err_msg = "Mock dirname_for_package_name"
 
     def bpp_path(spec):
         # Perform the original function
@@ -328,7 +330,18 @@ def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch):
         _mock_repo(os.path.join(source, spec.namespace), spec.namespace)
         return source
 
+    def _repoerr(repo, name):
+        if name == 'cmake':
+            raise spack.repo.RepoError(repo_err_msg)
+        else:
+            return orig_dirname(repo, name)
+
+    # First the "happy" path of skipping "installed" dependent package
     spec = spack.spec.Spec('simple-inheritance').concretized()
+    inst.dump_packages(spec, str(tmpdir))
+
+    # Now mock the creation of the required directory structure to cover
+    # the try-except block
     monkeypatch.setattr(spack.store.layout, 'build_packages_path', bpp_path)
 
     # The call to install_tree will raise the exception since not mocking
@@ -336,6 +349,15 @@ def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch):
     with pytest.raises(IOError, matches='FileNotFoundError*' + str(tmpdir)):
         with tmpdir.as_cwd():
             inst.dump_packages(spec, str(tmpdir))
+
+    # Now try the error path, which requires the mock directory structure
+    # above
+    monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
+    with pytest.raises(spack.repo.RepoError, matches=repo_err_msg):
+        inst.dump_packages(spec, str(tmpdir))
+
+    out = str(capsys.readouterr()[1])
+    assert "Couldn't copy in provenance for cmake" in out
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
