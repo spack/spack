@@ -1,5 +1,3 @@
-diff --git a/nf_test/ftst_rengrps.F b/nf_test/ftst_rengrps.F
-index 6dd59ac..b40f6d2 100644
 --- a/nf_test/ftst_rengrps.F
 +++ b/nf_test/ftst_rengrps.F
 @@ -11,7 +11,7 @@ C      use typeSizes

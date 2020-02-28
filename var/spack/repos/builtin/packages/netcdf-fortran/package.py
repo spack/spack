@@ -33,15 +33,11 @@ class NetcdfFortran(AutotoolsPackage):
     depends_on('netcdf-c~mpi', when='~mpi')
     depends_on('netcdf-c+mpi', when='+mpi')
 
-    # See https://github.com/Unidata/netcdf-fortran/pull/221
-    conflicts('@4.5.0:4.5.2', when='+shared%nag',
-              msg='The shared version of the library is broken when built '
-                  'with NAG compiler')
-
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
-    # Moreover, it can't handle '-pthread' flag coming from libcurl and is
-    # unable to detect NAG when it is called with an MPI wrapper.
+    # Moreover, Libtool can't handle '-pthread' flag coming from libcurl,
+    # doesn't inject convenience libraries into the shared ones, and is unable
+    # to detect NAG when it is called with an MPI wrapper.
     patch('nag_libtool_2.4.2.patch', when='@:4.4.4%nag')
     patch('nag_libtool_2.4.6.patch', when='@4.4.5:%nag')
 

@@ -1,5 +1,3 @@
-diff --git a/configure b/configure
-index 92cae2c..fbffca0 100755
 --- a/configure
 +++ b/configure
 @@ -9034,6 +9034,12 @@ func_cc_basename ()
@@ -15,7 +13,34 @@ index 92cae2c..fbffca0 100755
  }
  
  # Check whether --enable-libtool-lock was given.
-@@ -26086,6 +26092,12 @@ func_cc_basename ()
+@@ -11811,6 +11817,8 @@ _LT_EOF
+ 	  whole_archive_flag_spec=
+ 	  tmp_sharedflag='--shared' ;;
+         nagfor*)                        # NAGFOR 5.3
++          whole_archive_flag_spec='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
++          compiler_needs_object=yes
+           tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+@@ -15663,6 +15671,8 @@ _LT_EOF
+ 	  whole_archive_flag_spec_F77=
+ 	  tmp_sharedflag='--shared' ;;
+         nagfor*)                        # NAGFOR 5.3
++          whole_archive_flag_spec_F77='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
++          compiler_needs_object_F77=yes
+           tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+@@ -18788,6 +18798,8 @@ _LT_EOF
+ 	  whole_archive_flag_spec_FC=
+ 	  tmp_sharedflag='--shared' ;;
+         nagfor*)                        # NAGFOR 5.3
++          whole_archive_flag_spec_FC='$wl--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` $wl--no-whole-archive'
++          compiler_needs_object_FC=yes
+           tmp_sharedflag='-Wl,-shared' ;;
+ 	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
+ 	  tmp_sharedflag='-qmkshrobj'
+@@ -26086,6 +26098,12 @@ func_cc_basename ()
        esac
      done
      func_cc_basename_result=`$ECHO "$cc_temp" | $SED "s%.*/%%; s%^$host_alias-%%"`
@@ -28,8 +53,6 @@ index 92cae2c..fbffca0 100755
  }
  
  
-diff --git a/ltmain.sh b/ltmain.sh
-index a736cf9..1543ec5 100644
 --- a/ltmain.sh
 +++ b/ltmain.sh
 @@ -7868,6 +7868,13 @@ func_mode_link ()

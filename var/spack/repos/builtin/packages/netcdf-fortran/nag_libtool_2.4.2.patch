@@ -1,5 +1,3 @@
-diff --git a/configure b/configure
-index 5dc5f7f..86873bb 100755
 --- a/configure
 +++ b/configure
 @@ -9584,6 +9584,10 @@ for cc_temp in $compiler""; do
@@ -13,16 +11,18 @@ index 5dc5f7f..86873bb 100755
  
  
  # Only perform the check for file, if the check method requires it
-@@ -10657,6 +10661,8 @@ _LT_EOF
+@@ -10657,6 +10661,10 @@ _LT_EOF
  	lf95*)				# Lahey Fortran 8.1
  	  whole_archive_flag_spec=
  	  tmp_sharedflag='--shared' ;;
 +	nagfor*)
++	  whole_archive_flag_spec='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
++	  compiler_needs_object=yes
 +	  tmp_sharedflag='-Wl,-shared' ;;
  	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
  	  tmp_sharedflag='-qmkshrobj'
  	  tmp_addflag= ;;
-@@ -13415,6 +13421,10 @@ $RM -r conftest*
+@@ -13415,6 +13423,10 @@ $RM -r conftest*
    esac
  done
  cc_basename=`$ECHO "$cc_temp" | $SED "s%.*/%%; s%^$host_alias-%%"`
@@ -33,16 +33,18 @@ index 5dc5f7f..86873bb 100755
  
    GCC=$G77
    if test -n "$compiler"; then
-@@ -14252,6 +14262,8 @@ _LT_EOF
+@@ -14252,6 +14264,10 @@ _LT_EOF
  	lf95*)				# Lahey Fortran 8.1
  	  whole_archive_flag_spec_F77=
  	  tmp_sharedflag='--shared' ;;
 +	nagfor*)
++	  whole_archive_flag_spec_F77='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
++	  compiler_needs_object_F77=yes
 +	  tmp_sharedflag='-Wl,-shared' ;;
  	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
  	  tmp_sharedflag='-qmkshrobj'
  	  tmp_addflag= ;;
-@@ -16142,6 +16154,10 @@ $RM -r conftest*
+@@ -16142,6 +16158,10 @@ $RM -r conftest*
    esac
  done
  cc_basename=`$ECHO "$cc_temp" | $SED "s%.*/%%; s%^$host_alias-%%"`
@@ -53,17 +55,17 @@ index 5dc5f7f..86873bb 100755
  
  
    if test -n "$compiler"; then
-@@ -17142,6 +17158,8 @@ _LT_EOF
+@@ -17142,6 +17162,10 @@ _LT_EOF
  	lf95*)				# Lahey Fortran 8.1
  	  whole_archive_flag_spec_FC=
  	  tmp_sharedflag='--shared' ;;
 +	nagfor*)
++	  whole_archive_flag_spec_FC='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
++	  compiler_needs_object_FC=yes
 +	  tmp_sharedflag='-Wl,-shared' ;;
  	xl[cC]* | bgxl[cC]* | mpixl[cC]*) # IBM XL C 8.0 on PPC (deal with xlf below)
  	  tmp_sharedflag='-qmkshrobj'
  	  tmp_addflag= ;;
-diff --git a/ltmain.sh b/ltmain.sh
-index a356aca..5238f33 100644
 --- a/ltmain.sh
 +++ b/ltmain.sh
 @@ -180,6 +180,24 @@ func_basename ()
