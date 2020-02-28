@@ -57,22 +57,31 @@ def _get_external_packages(repo):
             for exe in pkg.executables:
                 exe_pattern_to_pkgs[exe].append(pkg)
 
-    pkg_to_found_exes = defaultdict(list)
-    found_exe_to_pkgs = defaultdict(list)
+    pkg_to_found_exes = defaultdict(set)
+    found_exe_to_pkgs = defaultdict(set)
     for exe in system_exe_to_path:
         for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
             if re.search(exe_pattern, exe):
                 for pkg in pkgs:
-                    pkg_to_found_exes[pkg].append(exe)
-                found_exe_to_pkgs[exe].extend(pkgs)
+                    pkg_to_found_exes[pkg].add(exe)
+                found_exe_to_pkgs[exe].update(pkgs)
+    # Sort to get repeatable results
+    found_exe_to_pkgs = dict(
+        (x, list(sorted(y, key=lambda p: p.name)))
+        for x, y in found_exe_to_pkgs.items())
+    pkg_to_found_exes = dict(
+        (x, list(sorted(y)))
+        for x, y in pkg_to_found_exes.items())
 
     exe_to_usable_packages = defaultdict(list)
     pkg_to_template = {}
     resolved_pkgs = set()
-    for exe in found_exe_to_pkgs:
+    for exe in sorted(found_exe_to_pkgs):
         associated_packages = found_exe_to_pkgs[exe]
         for pkg in associated_packages:
             if pkg.name in resolved_pkgs:
+                # The package was already considered as part of examining a
+                # different exe. It does not need to be reexamined.
                 continue
             resolved_pkgs.add(pkg.name)
 
