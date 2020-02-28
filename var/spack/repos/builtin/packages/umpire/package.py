@@ -37,7 +37,7 @@ class Umpire(CMakePackage):
 
     variant('cuda', default=False, description='Build with CUDA support')
     variant('fortran', default=False, description='Build Fortran API')
-    variant('c', default=False, description='Build C API')
+    variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
 
     depends_on('cuda', when='+cuda')
@@ -45,6 +45,7 @@ class Umpire(CMakePackage):
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
     conflicts('+numa', when='@:0.3.2')
+    conflicts('~c', when='+fortran', msg='Fortran API requires C API')
 
     def cmake_args(self):
         spec = self.spec
