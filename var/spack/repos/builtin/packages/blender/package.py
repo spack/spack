@@ -73,6 +73,7 @@ class Blender(CMakePackage):
         args.append('-DPYTHON_VERSION={0}'.format(spec['python'].version.up_to(2)))
 
         args.append('-DWITH_INSTALL_PORTABLE=NO')
+        args.append('-DWITH_OPENSUBDIV:BOOL=ON')
 
         args.append('-DCMAKE_CXX_FLAGS=-I{0}/include/OpenEXR'.format(spec['ilmbase'].prefix))
 
