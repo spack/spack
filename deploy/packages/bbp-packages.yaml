@@ -34,6 +34,7 @@ packages:
       - py-entity-management@1.1.0
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.41
+      - py-bbp-morphology-workflow@1.0.1
       - py-simwriter@1.0.0
       - py-morph-tool@0.1.14
       - py-neurodamus
