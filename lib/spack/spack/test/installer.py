@@ -333,7 +333,7 @@ def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(FileNotFoundError, matches=str(tmpdir)):
+    with pytest.raises(IOError, matches='FileNotFoundError*' + str(tmpdir)):
         with tmpdir.as_cwd():
             inst.dump_packages(spec, str(tmpdir))
 
