@@ -81,7 +81,7 @@ class Caliper(CMakePackage):
 
         args = [
             ('-DPYTHON_EXECUTABLE=%s' % 
-                os.path.join(spec['python'].prefix.bin, 'python3')),
+                spec['python'].command.path),
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
             '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
