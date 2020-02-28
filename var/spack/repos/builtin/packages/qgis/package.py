@@ -29,7 +29,35 @@ class Qgis(CMakePackage):
     # Latest long term release
     version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
-    variant('grass7', default=False, description='Build with GRASS providers and plugin')
+    variant('3d',               default=False, description='')
+    variant('analysis',         default=True, description='')
+    variant('astyle',           default=False, description='')
+    variant('bindings',         default=True, description='')
+    variant('clang_tidy',       default=False, description='')
+    variant('core',             default=True, description='')
+    variant('custom_widgets',   default=False, description='')
+    variant('desktop',          default=True, description='')
+    variant('georeferencer',    default=True, description='')
+    variant('globe',            default=False, description='')
+    variant('grass7',           default=False, description='Build with GRASS providers and plugin')
+    variant('gui',              default=True, description='')
+    variant('internal_mdal',    default=True, description='')
+    variant('internal_o2',      default=True, description='')
+    variant('oauth2_plugin',    default=True, description='')
+    variant('oracle',           default=False, description='')
+    variant('postgresql',       default=True, description='')
+    variant('py_compile',       default=False, description='')
+    variant('qsciapi',          default=True, description='')
+    variant('qspatialite',      default=False, description='')
+    variant('qt5serialport',    default=True, description='')
+    variant('qtmobility',       default=False, description='')
+    variant('qtwebkit',         default=False, description='')
+    variant('quick',            default=False, description='')
+    variant('qwtpolar',         default=False, description='')
+    variant('server',           default=False, description='')
+    variant('staged_plugins',   default=True, description='')
+    variant('thread_local',     default=True, description='')
+    variant('txt2tags',         default=False, description='')
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
@@ -88,6 +116,37 @@ class Qgis(CMakePackage):
     conflicts('qt@5:', when='@2')
 
     # TODO: expose all cmake options available
+#    WITH_3D:BOOL=FALSE
+#    WITH_ANALYSIS:BOOL=TRUE
+#    WITH_APIDOC:BOOL=FALSE
+#    WITH_ASTYLE:BOOL=FALSE
+#    WITH_BINDINGS:BOOL=TRUE
+#    WITH_CLANG_TIDY:BOOL=FALSE
+#    WITH_CORE:BOOL=TRUE
+#    WITH_CUSTOM_WIDGETS:BOOL=FALSE
+#    WITH_DESKTOP:BOOL=TRUE
+#    WITH_GEOREFERENCER:BOOL=TRUE
+#    WITH_GLOBE:BOOL=FALSE
+#    WITH_GRASS7:BOOL=OFF
+#    WITH_GUI:BOOL=TRUE
+#    WITH_INTERNAL_MDAL:BOOL=TRUE
+#    WITH_INTERNAL_O2:BOOL=ON
+#    WITH_OAUTH2_PLUGIN:BOOL=TRUE
+#    WITH_ORACLE:BOOL=FALSE
+#    WITH_POSTGRESQL:BOOL=TRUE
+#    WITH_PY_COMPILE:BOOL=FALSE
+#    WITH_QSCIAPI:BOOL=TRUE
+#    WITH_QSPATIALITE:BOOL=OFF
+#    WITH_QT5SERIALPORT:BOOL=TRUE
+#    WITH_QTMOBILITY:BOOL=FALSE
+#    WITH_QTWEBKIT:BOOL=OFF
+#    WITH_QUICK:BOOL=FALSE
+#    WITH_QWTPOLAR:BOOL=FALSE
+#    WITH_SERVER:BOOL=FALSE
+#    WITH_STAGED_PLUGINS:BOOL=TRUE
+#    WITH_THREAD_LOCAL:BOOL=TRUE
+#    WITH_TXT2TAGS_PDF:BOOL=FALSE
+
     def cmake_args(self):
         args = []
         # qtwebkit module was removed from qt as of version 5.6
