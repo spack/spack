@@ -69,7 +69,7 @@ class Qgis(CMakePackage):
 
     # the below dependencies are shown in cmake config
     depends_on('hdf5')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
 
     # build
     depends_on('cmake@3.0.0:', type='build')
