@@ -29,6 +29,7 @@ class Opensubdiv(CMakePackage):
     depends_on('intel-tbb@4.0:', when='+tbb')
 
     def cmake_args(self):
+        spec = self.spec
         args = []
 
         args.append('-DNO_EXAMPLES=1')   # disable examples build
