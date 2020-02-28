@@ -90,7 +90,7 @@ def _get_external_packages(repo):
             if hasattr(pkg, 'determine_spec_details'):
                 spec_str = pkg.determine_spec_details(found_pkg_exes)
             else:
-                spec_str = pkg_name
+                spec_str = pkg.name
 
             if not spec_str:
                 tty.msg("{0} detected that the following executables are"
