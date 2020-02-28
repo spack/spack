@@ -8,6 +8,7 @@ import py
 import pytest
 
 import llnl.util.tty as tty
+import llnl.util.lock as ulk
 
 import spack.binary_distribution
 import spack.compilers
@@ -261,16 +262,94 @@ def test_installer_ensure_ready_errors(install_mockery):
         installer._ensure_install_ready(spec.package)
 
 
-def test_ensure_locked_have(install_mockery, tmpdir):
+def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
+    """Test to cover _ensure_locked when raise a non-lock exception."""
+    mock_err_msg = 'Mock exception error'
+
+    def _raise(lock, timeout):
+        raise RuntimeError(mock_err_msg)
+
+    spec, installer = create_installer('trivial-install-test-package')
+
+    monkeypatch.setattr(ulk.Lock, 'acquire_read', _raise)
+    with tmpdir.as_cwd():
+        with pytest.raises(RuntimeError):
+            installer._ensure_locked('read', spec.package)
+
+        out = str(capsys.readouterr()[1])
+        assert 'Failed to acquire a read lock' in out
+        assert mock_err_msg in out
+
+
+def test_ensure_locked_have(install_mockery, tmpdir, capsys):
     """Test to cover _ensure_locked when already have lock."""
     spec, installer = create_installer('trivial-install-test-package')
 
     with tmpdir.as_cwd():
+        # Test "downgrade" of a read lock (to a read lock)
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
         lock_type = 'read'
         tpl = (lock_type, lock)
         installer.locks[installer.pkg_id] = tpl
         assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+        # Test "upgrade" of a read lock without read count to a write
+        lock_type = 'write'
+        err = 'Cannot upgrade lock'
+        with pytest.raises(ulk.LockUpgradeError, matches=err):
+            installer._ensure_locked(lock_type, spec.package)
+
+        out = str(capsys.readouterr()[1])
+        assert 'Failed to upgrade to a write lock' in out
+        assert 'exception when releasing read lock' in out
+
+        # Test "upgrade" of the read lock *with* read count to a write
+        lock._reads = 1
+        tpl = (lock_type, lock)
+        assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+        # Test "downgrade" of the write lock to a read lock
+        lock_type = 'read'
+        tpl = (lock_type, lock)
+        assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+
+@pytest.mark.parametrize('lock_type,reads,writes', [
+    ('read', 1, 0),
+    ('write', 0, 1)])
+def test_ensure_locked_new_lock(
+        install_mockery, tmpdir, lock_type, reads, writes):
+    """Test to cover _ensure_locked with a new lock."""
+    pkg_id = 'a'
+    spec, installer = create_installer(pkg_id)
+    with tmpdir.as_cwd():
+        ltype, lock = installer._ensure_locked(lock_type, spec.package)
+        assert ltype == lock_type
+        assert lock is not None
+        assert lock._reads == reads
+        assert lock._writes == writes
+
+
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
+    orig_pl = spack.database.Database.prefix_lock
+
+    def _pl(db, spec, timeout):
+        lock = orig_pl(db, spec, timeout)
+        lock.default_timeout = 1e-9 if timeout is None else None
+        return lock
+
+    pkg_id = 'a'
+    spec, installer = create_installer(pkg_id)
+
+    monkeypatch.setattr(spack.database.Database, 'prefix_lock', _pl)
+
+    lock_type = 'read'
+    ltype, lock = installer._ensure_locked(lock_type, spec.package)
+    assert ltype == lock_type
+    assert lock is not None
+
+    out = str(capsys.readouterr()[1])
+    assert 'Expected prefix lock timeout' in out
 
 
 def test_package_id(install_mockery):
