@@ -43,12 +43,12 @@ class Opensubdiv(CMakePackage):
 
         if '+cuda' in spec:
             args.append('-DNO_CUDA=0')
-        else
+        else:
             args.append('-DNO_CUDA=1')
 
         if '+tbb' in spec:
             args.append('-DNO_TBB=0')
-        else
+        else:
             args.append('-DNO_TBB=1')
 
         return args
