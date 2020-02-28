@@ -67,6 +67,7 @@ class Expect(AutotoolsPackage):
                 join_path(self.prefix.lib, 'expect{0}'.format(self.version)))
 
             old = 'libexpect{0}.dylib'.format(self.version)
-            new = glob.glob(join_path(self.prefix.lib, 'expect*', 'libexpect*'))[0]
+            new = glob.glob(join_path(self.prefix.lib, 'expect*',
+                                      'libexpect*'))[0]
             install_name_tool = Executable('install_name_tool')
             install_name_tool('-change', old, new, self.prefix.bin.expect)
