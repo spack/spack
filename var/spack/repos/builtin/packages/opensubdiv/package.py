@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Opensubdiv(CMakePackage):
+class Opensubdiv(CMakePackage, CudaPackage):
     """OpenSubdiv is a set of open source libraries that implement high 
     performance subdivision surface (subdiv) evaluation on massively parallel CPU
     and GPU architectures. This code path is optimized for drawing deforming
@@ -20,14 +20,12 @@ class Opensubdiv(CMakePackage):
     version('dev', branch='dev')
     version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
 
-    variant('cuda', default=False, description='Builds with cuda support')
     variant('tbb', default=False, description='Builds with Intel TBB support')
 
     depends_on('cmake@2.8.6:', type='build')
     depends_on('graphviz', type='build')
     depends_on('doxygen', type='build')
     depends_on('glew@1.9.0:')
-    depends_on('cuda@4.0:', when='+cuda')
     depends_on('intel-tbb@4.0:', when='+tbb')
 
     def cmake_args(self):
