@@ -29,8 +29,7 @@ class PySonataNetworkReduction(PythonPackage):
     depends_on('py-morphio@2.3.4', type='run')
     depends_on('neuron+python', type='run')
     depends_on('py-aibs-circuit-converter@0.0.1', type='run')
-    depends_on('py-bluepysnap@0.1.2', type='run', when='@0.0.1')
-    depends_on('py-bluepysnap@0.2.0', type='run', when='@0.0.2:')
+    depends_on('py-bluepysnap@0.1.2:', type='run')
     depends_on('py-neuron-reduce@0.0.7:', type='run')
 
     def setup_run_environment(self, env):

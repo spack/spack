@@ -61,6 +61,7 @@ modules:
       - 'py-mvdtool%gcc'
       - py-neurodamus
       - py-simwriter
+      - py-sonata-network-reduction
       - py-pytouchreader
       - reportinglib
       - spatial-index
