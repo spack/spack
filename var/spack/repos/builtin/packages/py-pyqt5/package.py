@@ -36,6 +36,7 @@ class PyPyqt5(SIPPackage):
     depends_on('qt@5:+opengl')
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
+    depends_on('py-sip', type=('build', 'run'))
 
     depends_on('qscintilla', when='+qsci')
 
@@ -100,3 +101,13 @@ class PyPyqt5(SIPPackage):
                 makefile.filter(r'\$\(INSTALL_ROOT\)', '')
 
                 make('install')
+
+    @run_after('install')
+    def extend_path_setup(self):
+        with working_dir(site_packages_dir):
+
+            f = open('./PyQt5/__init__.py', 'a')
+            f.write('from pkgutil import extend_path\n')
+            f.write('__path__ = extend_path(__path__, __name__)\n')
+            f.close()
+
