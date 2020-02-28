@@ -18,9 +18,37 @@ class Opensubdiv(CMakePackage):
 
     version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    variant('cuda', default=False, description='Builds with cuda support')
+    variant('tbb', default=False, description='Builds with Intel TBB support')
+
+    depends_on('cmake@2.8.6:', type='build')
+    depends_on('graphviz', type='build')
+    depends_on('doxygen', type='build')
+    depends_on('glew@1.9.0:')
+    depends_on('cuda@4.0:', when='+cuda')
+    depends_on('intel-tbb@4.0:', when='+tbb')
 
     def cmake_args(self):
         args = []
+
+        args.append('-DNO_EXAMPLES=1')   # disable examples build
+        args.append('-DNO_TUTORIALS=1')  # disable tutorials build
+        args.append('-DNO_REGRESSION=1') # disable regression tests build
+        args.append('-DNO_PTEX=1')       # disable PTex support
+        args.append('-DNO_OMP=1')        # disable OpenMP
+        args.append('-DNO_OPENCL=1')     # disable OpenCL
+        args.append('-DNO_OPENGL=1')     # disable OpenGL
+        args.append('-DNO_CLEW=1')       # disable CLEW wrapper library
+        args.append('-DNO_METAL=1')      # disable Metal
+
+        if '+cuda' in spec:
+            args.append('-DNO_CUDA=0')
+        else
+            args.append('-DNO_CUDA=1')
+
+        if '+tbb' in spec:
+            args.append('-DNO_TBB=0')
+        else
+            args.append('-DNO_TBB=1')
+
         return args
