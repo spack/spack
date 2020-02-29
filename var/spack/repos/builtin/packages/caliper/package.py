@@ -79,7 +79,7 @@ class Caliper(CMakePackage):
         spec = self.spec
 
         args = [
-            ('-DPYTHON_EXECUTABLE=%s' % 
+            ('-DPYTHON_EXECUTABLE=%s' %
                 spec['python'].command.path),
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
