@@ -129,7 +129,7 @@ class Qgis(CMakePackage):
             '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
             '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
             '-DQSCINTILLA_INCLUDE_DIR=' +
-                str(self.spec['qscintilla'].prefix) + '/include',
+                self.spec['qscintilla'].prefix.include,
             '-DQSCINTILLA_LIBRARY=' + str(self.spec['qscintilla'].prefix) +
                 '/lib/libqscintilla2_qt5.so',
             '-DLIBZIP_INCLUDE_DIR=' +
