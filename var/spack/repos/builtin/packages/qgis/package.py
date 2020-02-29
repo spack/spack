@@ -62,6 +62,7 @@ class Qgis(CMakePackage):
 
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
+    # https://github.com/qgis/QGIS/blob/master/INSTALL
     depends_on('qt+dbus')
     depends_on('proj@4.4.0:')
     depends_on('geos@3.4.0:')
@@ -92,8 +93,8 @@ class Qgis(CMakePackage):
     depends_on('py-pygments', type='run')
 
     # optionals
-    depends_on('postgresql@8:') # for PostGIS support
-    depends_on('gsl') # for georeferencer
+    depends_on('postgresql@8:', when='+postgresql') # for PostGIS support
+    depends_on('gsl', when='+georeferencer') # for georeferencer
     depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7') # for georeferencer
 
     # the below dependencies are shown in cmake config
