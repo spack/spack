@@ -72,7 +72,7 @@ class Qgis(CMakePackage):
     depends_on('qwt@5:')
     depends_on('qwtpolar')
     depends_on('expat@1.95:')
-    depends_on('qca@2.2.1') # need to pass CMAKE_CXX_STANDARD=11 option
+    depends_on('qca@2.2.1')
     depends_on('py-pyqt4 +qsci', when='@2')
     depends_on('py-pyqt5@5.3: +qsci', when='@3')
     depends_on('qscintilla')
