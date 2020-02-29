@@ -135,7 +135,7 @@ class Qgis(CMakePackage):
             '-DLIBZIP_INCLUDE_DIR=' +
                 self.spec['libzip'].prefix.include,
             '-DLIBZIP_CONF_INCLUDE_DIR=' +
-                str(self.spec['libzip'].prefix) + '/lib/libzip/include',
+                self.spec['libzip'].prefix.lib.libzip.include,
             '-DGDAL_CONFIG_PREFER_PATH=' + str(self.spec['gdal'].prefix.bin),
             '-DGEOS_CONFIG_PREFER_PATH=' + str(self.spec['geos'].prefix.bin),
             '-DGSL_CONFIG_PREFER_PATH=' + str(self.spec['gsl'].prefix.bin),
