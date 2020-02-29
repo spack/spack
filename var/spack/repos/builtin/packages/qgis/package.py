@@ -116,45 +116,12 @@ class Qgis(CMakePackage):
     conflicts('qtkeychain@0.6.0:', when='^qt@4')
     conflicts('qt@5:', when='@2')
 
-    # TODO: expose all cmake options available
-#    WITH_3D:BOOL=FALSE
-#    WITH_ANALYSIS:BOOL=TRUE
-#    WITH_APIDOC:BOOL=FALSE
-#    WITH_ASTYLE:BOOL=FALSE
-#    WITH_BINDINGS:BOOL=TRUE
-#    WITH_CLANG_TIDY:BOOL=FALSE
-#    WITH_CORE:BOOL=TRUE
-#    WITH_CUSTOM_WIDGETS:BOOL=FALSE
-#    WITH_DESKTOP:BOOL=TRUE
-#    WITH_GEOREFERENCER:BOOL=TRUE
-#    WITH_GLOBE:BOOL=FALSE
-#    WITH_GRASS7:BOOL=OFF
-#    WITH_GUI:BOOL=TRUE
-#    WITH_INTERNAL_MDAL:BOOL=TRUE
-#    WITH_INTERNAL_O2:BOOL=ON
-#    WITH_OAUTH2_PLUGIN:BOOL=TRUE
-#    WITH_ORACLE:BOOL=FALSE
-#    WITH_POSTGRESQL:BOOL=TRUE
-#    WITH_PY_COMPILE:BOOL=FALSE
-#    WITH_QSCIAPI:BOOL=TRUE
-#    WITH_QSPATIALITE:BOOL=OFF
-#    WITH_QT5SERIALPORT:BOOL=TRUE
-#    WITH_QTMOBILITY:BOOL=FALSE
-#    WITH_QTWEBKIT:BOOL=OFF
-#    WITH_QUICK:BOOL=FALSE
-#    WITH_QWTPOLAR:BOOL=FALSE
-#    WITH_SERVER:BOOL=FALSE
-#    WITH_STAGED_PLUGINS:BOOL=TRUE
-#    WITH_THREAD_LOCAL:BOOL=TRUE
-#    WITH_TXT2TAGS_PDF:BOOL=FALSE
-
     def cmake_args(self):
+        spec = self.spec
         args = []
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
-        args.extend(['-DWITH_QTWEBKIT=OFF',
-            '-DWITH_QSPATIALITE=OFF',
-            '-DUSE_OPENCL=OFF',
+        args.extend(['-DUSE_OPENCL=OFF',
             # cmake couldn't determine the following paths
             '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
             '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
@@ -166,6 +133,38 @@ class Qgis(CMakePackage):
             '-DGEOS_CONFIG_PREFER_PATH='+str(self.spec['geos'].prefix.bin),
             '-DGSL_CONFIG_PREFER_PATH='+str(self.spec['gsl'].prefix.bin),
             '-DPOSTGRES_CONFIG_PREFER_PATH='+str(self.spec['postgresql'].prefix.bin)
+        ])
+
+    args.extend([
+            '-DWITH_3D={0}'.format('TRUE' if '+3d' in spec else 'FALSE'),
+            '-DWITH_ANALYSIS={0}'.format('TRUE' if '+analysis' in spec else 'FALSE'),
+            '-DWITH_APIDOC={0}'.format('TRUE' if '+apidoc' in spec else 'FALSE'),
+            '-DWITH_ASTYLE={0}'.format('TRUE' if '+astyle' in spec else 'FALSE'),
+            '-DWITH_BINDINGS={0}'.format('TRUE' if '+bindings' in spec else 'FALSE'),
+            '-DWITH_CLANG_TIDY={0}'.format('TRUE' if '+clang_tidy' in spec else 'FALSE'),
+            '-DWITH_CORE={0}'.format('TRUE' if '+core' in spec else 'FALSE'),
+            '-DWITH_CUSTOM_WIDGETS={0}'.format('TRUE' if '+custom_widgets' in spec else 'FALSE'),
+            '-DWITH_DESKTOP={0}'.format('TRUE' if '+desktop' in spec else 'FALSE'),
+            '-DWITH_GEOREFERENCER={0}'.format('TRUE' if '+georeferencer' in spec else 'FALSE'),
+            '-DWITH_GLOBE={0}'.format('TRUE' if '+globe' in spec else 'FALSE'),
+            '-DWITH_GUI={0}'.format('TRUE' if '+gui' in spec else 'FALSE'),
+            '-DWITH_INTERNAL_MDAL={0}'.format('TRUE' if '+internal_mdal' in spec else 'FALSE'),
+            '-DWITH_INTERNAL_O2={0}'.format('ON' if '+internal_o2' in spec else 'OFF'),
+            '-DWITH_OAUTH2_PLUGIN={0}'.format('TRUE' if '+oauth2_plugin' in spec else 'FALSE'),
+            '-DWITH_ORACLE={0}'.format('TRUE' if '+oracle' in spec else 'FALSE'),
+            '-DWITH_POSTGRESQL={0}'.format('TRUE' if '+postgresql' in spec else 'FALSE'),
+            '-DWITH_PY_COMPILE={0}'.format('TRUE' if '+py_compile' in spec else 'FALSE'),
+            '-DWITH_QSCIAPI={0}'.format('TRUE' if '+qsciapi' in spec else 'FALSE'),
+            '-DWITH_QSPATIALITE={0}'.format('ON' if '+qspatialite' in spec else 'OFF'),
+            '-DWITH_QT5SERIALPORT={0}'.format('TRUE' if '+qt5serialport' in spec else 'FALSE'),
+            '-DWITH_QTMOBILITY={0}'.format('TRUE' if '+qtmobility' in spec else 'FALSE'),
+            '-DWITH_QTWEBKIT={0}'.format('ON' if '+qtwebkit' in spec else 'OFF'),
+            '-DWITH_QUICK={0}'.format('TRUE' if '+quick' in spec else 'FALSE'),
+            '-DWITH_QWTPOLAR={0}'.format('TRUE' if '+qwtpolar' in spec else 'FALSE'),
+            '-DWITH_SERVER={0}'.format('TRUE' if '+server' in spec else 'FALSE'),
+            '-DWITH_STAGED_PLUGINS={0}'.format('TRUE' if '+staged_plugin' in spec else 'FALSE'),
+            '-DWITH_THREAD_LOCAL={0}'.format('TRUE' if '+thread_local' in spec else 'FALSE'),
+            '-DWITH_TXT2TAGS_PDF={0}'.format('TRUE' if '+txt2tags_pdf' in spec else 'FALSE'),
         ])
 
         if '+grass7' in self.spec:
