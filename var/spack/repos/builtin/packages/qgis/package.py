@@ -205,7 +205,8 @@ class Qgis(CMakePackage):
         ])
 
         if '+grass7' in self.spec:
-            args.extend(['-DWITH_GRASS7=ON',
+            args.extend([
+                '-DWITH_GRASS7=ON',
                 '-DGRASS_PREFIX7={0}'.format(self.spec['grass'].prefix),
                 '-DGRASS_INCLUDE_DIR7={0}'.format(
                     self.spec['grass'].prefix.include)
