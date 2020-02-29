@@ -57,4 +57,6 @@ class Libhio(AutotoolsPackage):
         if '+hdf5' in spec:
             args.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
 
+        args.append('--with-external-json={0}'.format(spec['json-c'].prefix))
+
         return args
