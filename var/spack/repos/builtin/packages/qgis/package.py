@@ -133,7 +133,7 @@ class Qgis(CMakePackage):
             '-DQSCINTILLA_LIBRARY=' + str(self.spec['qscintilla'].prefix) +
                 '/lib/libqscintilla2_qt5.so',
             '-DLIBZIP_INCLUDE_DIR=' +
-                str(self.spec['libzip'].prefix) + '/include',
+                self.spec['libzip'].prefix.include,
             '-DLIBZIP_CONF_INCLUDE_DIR=' +
                 str(self.spec['libzip'].prefix) + '/lib/libzip/include',
             '-DGDAL_CONFIG_PREFER_PATH=' + str(self.spec['gdal'].prefix.bin),
