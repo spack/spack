@@ -6,7 +6,6 @@
 from spack import *
 
 import sys
-import os
 
 
 class Caliper(CMakePackage):
