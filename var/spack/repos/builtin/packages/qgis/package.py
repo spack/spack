@@ -123,7 +123,8 @@ class Qgis(CMakePackage):
         args = []
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
-        args.extend(['-DUSE_OPENCL=OFF',
+        args.extend([
+            '-DUSE_OPENCL=OFF',
             # cmake couldn't determine the following paths
             '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
             '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
