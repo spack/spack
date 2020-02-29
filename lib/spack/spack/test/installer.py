@@ -490,6 +490,30 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     assert spec.package.name in installer.installed
 
 
+def test_install_task_compiler(install_mockery, monkeypatch, capfd):
+    """Test _install_task to cover adding the compiler to the config."""
+    config_msg = 'mock add_compilers_to_config'
+
+    def _add(_compilers):
+        tty.msg(config_msg)
+
+    spec, installer = create_installer('a')
+    task = create_build_task(spec.package)
+    task.compiler = True
+
+    # Preclude any meaningful side-effects
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
+    monkeypatch.setattr(spack.build_environment, 'fork', _noop)
+    monkeypatch.setattr(spack.database.Database, 'add', _noop)
+    monkeypatch.setattr(spack.compilers, 'add_compilers_to_config', _add)
+
+    installer._install_task(task)
+
+    out = capfd.readouterr()[0]
+    assert config_msg in out
+
+
 def test_install_task_stop_iter(install_mockery, monkeypatch, capfd):
     """Test _install_task to cover the StopIteration exception."""
     mock_err_msg = 'mock stop iteration'
