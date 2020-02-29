@@ -47,6 +47,7 @@ if [[ -n "$@" ]]; then
     extra_args="-k $@"
 fi
 $coverage_run bin/spack test -x --verbose "$extra_args"
+coverage combine
 
 #-----------------------------------------------------------
 # Run tests for setup-env.sh
