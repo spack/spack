@@ -607,8 +607,8 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
 
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
-    error_msg = 'NotADirectoryError*{0}'.format(metadatadir)
-    with pytest.raises(IOError, matches=error_msg):
+    # Should fail with a "not a directory" error
+    with pytest.raises(OSError, matches=metadatadir):
         installer._setup_install_dir(spec.package)
 
     out = str(capfd.readouterr()[0])
