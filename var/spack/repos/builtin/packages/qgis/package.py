@@ -78,8 +78,8 @@ class Qgis(CMakePackage):
     depends_on('py-pyqt5@5.3: +qsci', when='@3')
     depends_on('qscintilla')
     depends_on('qjson')
-    depends_on('py-requests', type=('build', 'run')) # TODO: is build dependency necessary?
-    depends_on('py-psycopg2', type=('build', 'run')) # TODO: is build dependency necessary?
+    depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
+    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('libzip')
     depends_on('exiv2')
@@ -93,9 +93,9 @@ class Qgis(CMakePackage):
     depends_on('py-pygments', type='run')
 
     # optionals
-    depends_on('postgresql@8:', when='+postgresql') # for PostGIS support
-    depends_on('gsl', when='+georeferencer') # for georeferencer
-    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7') # for georeferencer
+    depends_on('postgresql@8:', when='+postgresql')  # for PostGIS support
+    depends_on('gsl', when='+georeferencer')  # for georeferencer
+    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
 
     # the below dependencies are shown in cmake config
     depends_on('hdf5')
@@ -127,52 +127,87 @@ class Qgis(CMakePackage):
             # cmake couldn't determine the following paths
             '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
             '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
-            '-DQSCINTILLA_INCLUDE_DIR='+str(self.spec['qscintilla'].prefix)+'/include',
-            '-DQSCINTILLA_LIBRARY='+str(self.spec['qscintilla'].prefix)+'/lib/libqscintilla2_qt5.so',
-            '-DLIBZIP_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/include',
-            '-DLIBZIP_CONF_INCLUDE_DIR='+str(self.spec['libzip'].prefix)+'/lib/libzip/include',
-            '-DGDAL_CONFIG_PREFER_PATH='+str(self.spec['gdal'].prefix.bin),
-            '-DGEOS_CONFIG_PREFER_PATH='+str(self.spec['geos'].prefix.bin),
-            '-DGSL_CONFIG_PREFER_PATH='+str(self.spec['gsl'].prefix.bin),
-            '-DPOSTGRES_CONFIG_PREFER_PATH='+str(self.spec['postgresql'].prefix.bin)
+            '-DQSCINTILLA_INCLUDE_DIR=' +
+                str(self.spec['qscintilla'].prefix) + '/include',
+            '-DQSCINTILLA_LIBRARY=' + str(self.spec['qscintilla'].prefix) +
+                '/lib/libqscintilla2_qt5.so',
+            '-DLIBZIP_INCLUDE_DIR=' +
+                str(self.spec['libzip'].prefix) + '/include',
+            '-DLIBZIP_CONF_INCLUDE_DIR=' +
+                str(self.spec['libzip'].prefix) + '/lib/libzip/include',
+            '-DGDAL_CONFIG_PREFER_PATH=' + str(self.spec['gdal'].prefix.bin),
+            '-DGEOS_CONFIG_PREFER_PATH=' + str(self.spec['geos'].prefix.bin),
+            '-DGSL_CONFIG_PREFER_PATH=' + str(self.spec['gsl'].prefix.bin),
+            '-DPOSTGRES_CONFIG_PREFER_PATH=' +
+                str(self.spec['postgresql'].prefix.bin)
         ])
 
-    args.extend([
-            '-DWITH_3D={0}'.format('TRUE' if '+3d' in spec else 'FALSE'),
-            '-DWITH_ANALYSIS={0}'.format('TRUE' if '+analysis' in spec else 'FALSE'),
-            '-DWITH_APIDOC={0}'.format('TRUE' if '+apidoc' in spec else 'FALSE'),
-            '-DWITH_ASTYLE={0}'.format('TRUE' if '+astyle' in spec else 'FALSE'),
-            '-DWITH_BINDINGS={0}'.format('TRUE' if '+bindings' in spec else 'FALSE'),
-            '-DWITH_CLANG_TIDY={0}'.format('TRUE' if '+clang_tidy' in spec else 'FALSE'),
-            '-DWITH_CORE={0}'.format('TRUE' if '+core' in spec else 'FALSE'),
-            '-DWITH_CUSTOM_WIDGETS={0}'.format('TRUE' if '+custom_widgets' in spec else 'FALSE'),
-            '-DWITH_DESKTOP={0}'.format('TRUE' if '+desktop' in spec else 'FALSE'),
-            '-DWITH_GEOREFERENCER={0}'.format('TRUE' if '+georeferencer' in spec else 'FALSE'),
-            '-DWITH_GLOBE={0}'.format('TRUE' if '+globe' in spec else 'FALSE'),
-            '-DWITH_GUI={0}'.format('TRUE' if '+gui' in spec else 'FALSE'),
-            '-DWITH_INTERNAL_MDAL={0}'.format('TRUE' if '+internal_mdal' in spec else 'FALSE'),
-            '-DWITH_INTERNAL_O2={0}'.format('ON' if '+internal_o2' in spec else 'OFF'),
-            '-DWITH_OAUTH2_PLUGIN={0}'.format('TRUE' if '+oauth2_plugin' in spec else 'FALSE'),
-            '-DWITH_ORACLE={0}'.format('TRUE' if '+oracle' in spec else 'FALSE'),
-            '-DWITH_POSTGRESQL={0}'.format('TRUE' if '+postgresql' in spec else 'FALSE'),
-            '-DWITH_PY_COMPILE={0}'.format('TRUE' if '+py_compile' in spec else 'FALSE'),
-            '-DWITH_QSCIAPI={0}'.format('TRUE' if '+qsciapi' in spec else 'FALSE'),
-            '-DWITH_QSPATIALITE={0}'.format('ON' if '+qspatialite' in spec else 'OFF'),
-            '-DWITH_QT5SERIALPORT={0}'.format('TRUE' if '+qt5serialport' in spec else 'FALSE'),
-            '-DWITH_QTMOBILITY={0}'.format('TRUE' if '+qtmobility' in spec else 'FALSE'),
-            '-DWITH_QTWEBKIT={0}'.format('ON' if '+qtwebkit' in spec else 'OFF'),
-            '-DWITH_QUICK={0}'.format('TRUE' if '+quick' in spec else 'FALSE'),
-            '-DWITH_QWTPOLAR={0}'.format('TRUE' if '+qwtpolar' in spec else 'FALSE'),
-            '-DWITH_SERVER={0}'.format('TRUE' if '+server' in spec else 'FALSE'),
-            '-DWITH_STAGED_PLUGINS={0}'.format('TRUE' if '+staged_plugin' in spec else 'FALSE'),
-            '-DWITH_THREAD_LOCAL={0}'.format('TRUE' if '+thread_local' in spec else 'FALSE'),
-            '-DWITH_TXT2TAGS_PDF={0}'.format('TRUE' if '+txt2tags_pdf' in spec else 'FALSE'),
+        args.extend([
+            '-DWITH_3D={0}'.format(
+                'TRUE' if '+3d' in spec else 'FALSE'),
+            '-DWITH_ANALYSIS={0}'.format(
+                'TRUE' if '+analysis' in spec else 'FALSE'),
+            '-DWITH_APIDOC={0}'.format(
+                'TRUE' if '+apidoc' in spec else 'FALSE'),
+            '-DWITH_ASTYLE={0}'.format(
+                'TRUE' if '+astyle' in spec else 'FALSE'),
+            '-DWITH_BINDINGS={0}'.format(
+                'TRUE' if '+bindings' in spec else 'FALSE'),
+            '-DWITH_CLANG_TIDY={0}'.format(
+                'TRUE' if '+clang_tidy' in spec else 'FALSE'),
+            '-DWITH_CORE={0}'.format(
+                'TRUE' if '+core' in spec else 'FALSE'),
+            '-DWITH_CUSTOM_WIDGETS={0}'.format(
+                'TRUE' if '+custom_widgets' in spec else 'FALSE'),
+            '-DWITH_DESKTOP={0}'.format(
+                'TRUE' if '+desktop' in spec else 'FALSE'),
+            '-DWITH_GEOREFERENCER={0}'.format(
+                'TRUE' if '+georeferencer' in spec else 'FALSE'),
+            '-DWITH_GLOBE={0}'.format(
+                'TRUE' if '+globe' in spec else 'FALSE'),
+            '-DWITH_GUI={0}'.format(
+                'TRUE' if '+gui' in spec else 'FALSE'),
+            '-DWITH_INTERNAL_MDAL={0}'.format(
+                'TRUE' if '+internal_mdal' in spec else 'FALSE'),
+            '-DWITH_INTERNAL_O2={0}'.format(
+                'ON' if '+internal_o2' in spec else 'OFF'),
+            '-DWITH_OAUTH2_PLUGIN={0}'.format(
+                'TRUE' if '+oauth2_plugin' in spec else 'FALSE'),
+            '-DWITH_ORACLE={0}'.format(
+                'TRUE' if '+oracle' in spec else 'FALSE'),
+            '-DWITH_POSTGRESQL={0}'.format(
+                'TRUE' if '+postgresql' in spec else 'FALSE'),
+            '-DWITH_PY_COMPILE={0}'.format(
+                'TRUE' if '+py_compile' in spec else 'FALSE'),
+            '-DWITH_QSCIAPI={0}'.format(
+                'TRUE' if '+qsciapi' in spec else 'FALSE'),
+            '-DWITH_QSPATIALITE={0}'.format(
+                'ON' if '+qspatialite' in spec else 'OFF'),
+            '-DWITH_QT5SERIALPORT={0}'.format(
+                'TRUE' if '+qt5serialport' in spec else 'FALSE'),
+            '-DWITH_QTMOBILITY={0}'.format(
+                'TRUE' if '+qtmobility' in spec else 'FALSE'),
+            '-DWITH_QTWEBKIT={0}'.format(
+                'ON' if '+qtwebkit' in spec else 'OFF'),
+            '-DWITH_QUICK={0}'.format(
+                'TRUE' if '+quick' in spec else 'FALSE'),
+            '-DWITH_QWTPOLAR={0}'.format(
+                'TRUE' if '+qwtpolar' in spec else 'FALSE'),
+            '-DWITH_SERVER={0}'.format(
+                'TRUE' if '+server' in spec else 'FALSE'),
+            '-DWITH_STAGED_PLUGINS={0}'.format(
+                'TRUE' if '+staged_plugin' in spec else 'FALSE'),
+            '-DWITH_THREAD_LOCAL={0}'.format(
+                'TRUE' if '+thread_local' in spec else 'FALSE'),
+            '-DWITH_TXT2TAGS_PDF={0}'.format(
+                'TRUE' if '+txt2tags_pdf' in spec else 'FALSE'),
         ])
 
         if '+grass7' in self.spec:
             args.extend(['-DWITH_GRASS7=ON',
                 '-DGRASS_PREFIX7={0}'.format(self.spec['grass'].prefix),
-                '-DGRASS_INCLUDE_DIR7={0}'.format(self.spec['grass'].prefix.include)
+                '-DGRASS_INCLUDE_DIR7={0}'.format(
+                    self.spec['grass'].prefix.include)
             ])
         else:
             args.append('-DWITH_GRASS7=OFF')
