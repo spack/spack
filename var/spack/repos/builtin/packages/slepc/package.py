@@ -58,14 +58,22 @@ class Slepc(Package):
     patch('install_name_371.patch', when='@3.7.1')
 
     # Arpack can not be used with 64bit integers.
-    conflicts('+arpack', when='^petsc+int64')
+    conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
+    conflicts('+blopex', when='@:3.12.99 ^petsc+int64')
 
     resource(name='blopex',
              url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
              sha256='0081ee4c4242e635a8113b32f655910ada057c59043f29af4b613508a762f3ac',
              destination=join_path('installed-arch-' + sys.platform + '-c-opt',
                                    'externalpackages'),
-             when='+blopex')
+             when='@:3.12.99+blopex')
+
+    resource(name='blopex',
+             git='https://github.com/lobpcg/blopex',
+             commit='6eba31f0e071f134a6e4be8eccfb8d9d7bdd5ac7',
+             destination=join_path('installed-arch-' + sys.platform + '-c-opt',
+                                   'externalpackages'),
+             when='@3.13.0:+blopex')
 
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
@@ -79,13 +87,18 @@ class Slepc(Package):
             options.extend([
                 '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
             ])
+            if spec.satisfies('@:3.12.99'):
+                arpackopt='--with-arpack-flags'
+            else:
+                arpackopt='--with-arpack-lib'
+
             if 'arpack-ng~mpi' in spec:
                 options.extend([
-                    '--with-arpack-flags=-larpack'
+                    arpackopt + '=-larpack'
                 ])
             else:
                 options.extend([
-                    '--with-arpack-flags=-lparpack,-larpack'
+                    arpackopt + '=-lparpack,-larpack'
                 ])
 
         # It isn't possible to install BLOPEX separately and link to it;
