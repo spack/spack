@@ -18,14 +18,14 @@ class Qgis(CMakePackage):
     maintainers = ['adamjstewart', 'Sinan81']
 
     version('3.12.0', sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
-    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7')
+    # Prefer latest long term release
+    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7', preferred=True)
     version('3.10.2', sha256='381cb01a8ac2f5379a915b124e9c830d727d2c67775ec49609c7153fe765a6f7')
     version('3.10.1', sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
     version('3.10.0', sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
     version('3.8.3', sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
     version('3.8.2', sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
-    # Prefer v3.8.1 for now as we haven't checked if newer versions compile
-    version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99', preferred=True)
+    version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
     # Latest long term release
     version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
