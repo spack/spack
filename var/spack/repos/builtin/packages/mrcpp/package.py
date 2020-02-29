@@ -19,8 +19,6 @@ class Mrcpp(CMakePackage):
 
     version('1.2.0-alpha2',
             sha256='8f4df594751a5b7e76b09a62450c6c4956b1974876afa143cc9b5703156ccd40')
-    version('1.2.0-alpha1',
-            sha256='75797c3f6d24ec13e87e0413ecb7ff2b6caa8ed6941d58a97545331088c17f9b')
     version('1.1.0',
             sha256='e9ffb87eccbd45305f822a0b46b875788b70386b3c1d38add6540dc4e0327ab2',
             preferred=True)
