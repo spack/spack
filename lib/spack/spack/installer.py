@@ -44,12 +44,12 @@ import spack.compilers
 import spack.error
 import spack.hooks
 import spack.package
+import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 
 from llnl.util.tty.color import colorize, cwrite
 from llnl.util.tty.log import log_output
-from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
@@ -1226,7 +1226,7 @@ class PackageInstaller(object):
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
-            group = get_package_group(pkg.spec)
+            group = prefs.get_package_group(pkg.spec)
             if group:
                 fs.chgrp(pkg.spec.prefix, group)
 
@@ -1234,7 +1234,7 @@ class PackageInstaller(object):
             # This has to be done after group because changing groups blows
             # away the sticky group bit on the directory
             mode = os.stat(pkg.spec.prefix).st_mode
-            perms = get_package_dir_permissions(pkg.spec)
+            perms = prefs.get_package_dir_permissions(pkg.spec)
             if mode != perms:
                 os.chmod(pkg.spec.prefix, perms)
 

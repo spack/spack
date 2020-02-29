@@ -7,6 +7,7 @@ import os
 import py
 import pytest
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.lock as ulk
 
@@ -14,10 +15,11 @@ import spack.binary_distribution
 import spack.compilers
 import spack.directory_layout as dl
 import spack.installer as inst
-import spack.store
-import spack.util.lock as lk
+import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
+import spack.store
+import spack.util.lock as lk
 
 
 def _mock_repo(root, namespace):
@@ -540,6 +542,34 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     monkeypatch.setattr(inst.PackageInstaller, '_remove_task', _rmtask)
     installer._cleanup_all_tasks()
     assert len(installer.build_tasks) == 1
+
+
+def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
+    """Test to cover _setup_install_dir's group change."""
+    mock_group = 'mockgroup'
+    mock_chgrp_msg = 'Changing group for {0} to {1}'
+
+    def _get_group(spec):
+        return mock_group
+
+    def _chgrp(path, group):
+        tty.msg(mock_chgrp_msg.format(path, group))
+
+    monkeypatch.setattr(prefs, 'get_package_group', _get_group)
+    monkeypatch.setattr(fs, 'chgrp', _chgrp)
+
+    spec, installer = create_installer('trivial-install-test-package')
+
+    fs.touchp(spec.prefix)
+    metadatadir = spack.store.layout.metadata_path(spec)
+    error_msg = 'NotADirectoryError*{0}'.format(metadatadir)
+    with pytest.raises(IOError, matches=error_msg):
+        installer._setup_install_dir(spec.package)
+
+    out = str(capfd.readouterr()[0])
+
+    expected_msg = mock_chgrp_msg.format(spec.prefix, mock_group)
+    assert expected_msg in out
 
 
 def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
