@@ -107,16 +107,11 @@ class Qgis(CMakePackage):
     depends_on('bison@2.4:', type='build')
     depends_on('pkg-config', type='build')
 
-    # Conflicts for newer versions
-    conflicts('proj@:4.9.2', when='@3.8.2:')
-
-    # v3.8.1, Qt >= 5.9.0 is required
-    conflicts('qt@:5.8.99', when='@3.8.1:')
-    conflicts('qt@5.13.0:', when='@3.8.1')
-
-    # conflicts for qgis@2, qt@4, python@2
-    conflicts('qtkeychain@0.6.0:', when='^qt@4')
-    conflicts('qt@5:', when='@2')
+    # Take care of conflicts using depends_on
+    depends_on('proj@5:', when='@3.8.2:')
+    depends_on('qt@5.9.0:5.12.99', when='@3.8.1:')
+    depends_on('qtkeychain@:1.5.99', when='^qt@4')
+    depends_on('qt@:4', when='@2')
 
     def cmake_args(self):
         spec = self.spec
