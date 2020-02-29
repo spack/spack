@@ -69,7 +69,7 @@ class Caliper(CMakePackage):
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
 
     depends_on('cmake', type='build')
-    depends_on('python', type='build')
+    depends_on('python@3:', type='build')
 
     # sosflow support not yet in 2.0
     conflicts('+sosflow', '@2.0.0:2.2.99')
@@ -79,6 +79,8 @@ class Caliper(CMakePackage):
         spec = self.spec
 
         args = [
+            ('-DPYTHON_EXECUTABLE=%s' %
+                spec['python'].command.path),
             '-DBUILD_TESTING=Off',
             '-DBUILD_DOCS=Off',
             '-DBUILD_SHARED_LIBS=%s' % ('On' if '+shared'  in spec else 'Off'),
