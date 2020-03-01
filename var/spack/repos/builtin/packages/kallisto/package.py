@@ -20,12 +20,15 @@ class Kallisto(CMakePackage):
     depends_on('hdf5')
     depends_on('mpich')
 
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
     # htslib isn't built in time to be used....
     parallel = False
+
+    # v0.44.0 vendored a copy of htslib and uses auto* to build
+    # its configure script.
+    depends_on('autoconf', type='build', when='@0.44.0:')
+    depends_on('automake', type='build', when='@0.44.0:')
+    depends_on('libtool',  type='build', when='@0.44.0:')
+    depends_on('m4',       type='build', when='@0.44.0:')
 
     # Including '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' in the cmake args
     # causes bits of cmake's output to end up in the autoconf-generated
@@ -38,6 +41,9 @@ class Kallisto(CMakePackage):
         setting.
         """
         a = super(Kallisto, self).std_cmake_args
-        args = [i for i in a if i != '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
+        if (self.spec.version >= Version('0.44.0')):
+            args = [i for i in a if i != '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON']
+        else:
+            args = a
 
         return args
