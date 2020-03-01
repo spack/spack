@@ -125,18 +125,20 @@ class Qgis(CMakePackage):
             '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
             '-DQSCINTILLA_INCLUDE_DIR=' +
                     self.spec['qscintilla'].prefix.include,
-            '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
+                    '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
                     '/lib/libqscintilla2_qt5.so',
-            '-DLIBZIP_INCLUDE_DIR=' +
+                    '-DLIBZIP_INCLUDE_DIR=' +
                     self.spec['libzip'].prefix.include,
-            '-DLIBZIP_CONF_INCLUDE_DIR=' +
+                    '-DLIBZIP_CONF_INCLUDE_DIR=' +
                     self.spec['libzip'].prefix.lib.libzip.include,
-            '-DGDAL_CONFIG_PREFER_PATH=' + self.spec['gdal'].prefix.bin,
-            '-DGEOS_CONFIG_PREFER_PATH=' + self.spec['geos'].prefix.bin,
-            '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
-            '-DPOSTGRES_CONFIG_PREFER_PATH=' +
+                    '-DGDAL_CONFIG_PREFER_PATH=' +
+                    self.spec['gdal'].prefix.bin,
+                    '-DGEOS_CONFIG_PREFER_PATH=' +
+                    self.spec['geos'].prefix.bin,
+                    '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
+                    '-DPOSTGRES_CONFIG_PREFER_PATH=' +
                     self.spec['postgresql'].prefix.bin
-        ])
+                    ])
 
         args.extend([
             '-DWITH_3D={0}'.format(
