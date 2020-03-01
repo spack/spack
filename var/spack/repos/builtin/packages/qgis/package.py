@@ -26,7 +26,6 @@ class Qgis(CMakePackage):
     version('3.8.3', sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
     version('3.8.2', sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
-    # Latest long term release
     version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
     variant('3d',               default=False,  description='Build QGIS 3D library')
@@ -109,7 +108,8 @@ class Qgis(CMakePackage):
 
     # Take care of conflicts using depends_on
     depends_on('proj@5:', when='@3.8.2:')
-    depends_on('qt@5.9.0:5.12.99', when='@3.8.1:')
+    depends_on('qt@5.9.0:5.12.99', when='@3.8.1')
+    depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
     depends_on('qt@:4', when='@2')
 
@@ -195,7 +195,7 @@ class Qgis(CMakePackage):
             '-DWITH_SERVER={0}'.format(
                 'TRUE' if '+server' in spec else 'FALSE'),
             '-DWITH_STAGED_PLUGINS={0}'.format(
-                'TRUE' if '+staged_plugin' in spec else 'FALSE'),
+                'TRUE' if '+staged_plugins' in spec else 'FALSE'),
             '-DWITH_THREAD_LOCAL={0}'.format(
                 'TRUE' if '+thread_local' in spec else 'FALSE'),
             '-DWITH_TXT2TAGS_PDF={0}'.format(
