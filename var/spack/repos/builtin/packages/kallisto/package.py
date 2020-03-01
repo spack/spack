@@ -24,6 +24,8 @@ class Kallisto(CMakePackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    # htslib isn't built in time to be used....
+    parallel = False
 
     # Including '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON' in the cmake args
     # causes bits of cmake's output to end up in the autoconf-generated
