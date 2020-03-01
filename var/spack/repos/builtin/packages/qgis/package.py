@@ -26,6 +26,7 @@ class Qgis(CMakePackage):
     version('3.8.3', sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
     version('3.8.2', sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
     version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
+    version('3.4.15', sha256='81c93b72adbea41bd765294c0cdb09476a632d8b3f90101abc409ca9ea7fb04d')
     version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
     variant('3d',               default=False,  description='Build QGIS 3D library')
