@@ -78,7 +78,7 @@ class QuantumEspresso(Package):
     # Conflicts
     # MKL with 64-bit integers not supported.
     conflicts(
-        '^intel-mkl+ilp64',
+        '^mkl+ilp64',
         msg='Quantum ESPRESSO does not support MKL 64-bit integer variant'
     )
 
@@ -211,7 +211,7 @@ class QuantumEspresso(Package):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        if '^intel-mkl' in spec:
+        if '^mkl' in spec:
             # A seperate FFT library is not needed when linking against MKL
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
@@ -239,12 +239,12 @@ class QuantumEspresso(Package):
         # - qe-5.4 up to 6.4.1 had a different logic and worked fine with
         #   BLAS_LIBS being set
         # However, MKL is correctly picked up by qe-6.5 for BLAS and FFT if
-        # MKLROOT is set (which SPACK does automatically for ^intel-mkl)
-        if not ('quantum-espresso@6.5' in spec and '^intel-mkl' in spec):
+        # MKLROOT is set (which SPACK does automatically for ^mkl)
+        if not ('quantum-espresso@6.5' in spec and '^mkl' in spec):
             options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '^intel-mkl' in spec else 'yes'
+            scalapack_option = 'intel' if '^mkl' in spec else 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:
