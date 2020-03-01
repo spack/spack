@@ -30,13 +30,9 @@ class Tmux(AutotoolsPackage):
     version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
 
     depends_on('libevent')
-    # assumes that the default is ncurses+termlib, see configure_args below
-    depends_on('ncurses')
+    depends_on('ncurses+termlib')
 
     def flag_handler(self, name, flags):
         if name == 'cppflags':
             flags.append(self.spec['ncurses'].headers.include_flags)
         return (None, flags, None)
-
-    def configure_args(self):
-        return ['LIBTINFO_LIBS=-ltinfo']
