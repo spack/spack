@@ -119,11 +119,12 @@ class Qgis(CMakePackage):
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
         args.extend([
-            '-DUSE_OPENCL=OFF',
-            # cmake couldn't determine the following paths
-            '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
-            '-DPOSTGRESQL_PREFIX={0}'.format(self.spec['postgresql'].prefix),
-            '-DQSCINTILLA_INCLUDE_DIR=' +
+                    '-DUSE_OPENCL=OFF',
+                    # cmake couldn't determine the following paths
+                    '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
+                    '-DPOSTGRESQL_PREFIX={0}'.format(
+                        self.spec['postgresql'].prefix),
+                    '-DQSCINTILLA_INCLUDE_DIR=' +
                     self.spec['qscintilla'].prefix.include,
                     '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
                     '/lib/libqscintilla2_qt5.so',
