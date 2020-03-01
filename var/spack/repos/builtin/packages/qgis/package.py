@@ -108,7 +108,7 @@ class Qgis(CMakePackage):
 
     # Take care of conflicts using depends_on
     depends_on('proj@5:', when='@3.8.2:')
-    depends_on('qt@5.9.0:5.12.99', when='@3.8.1')
+    depends_on('qt@5.9.0:5.12.99', when='@3.8')
     depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
     depends_on('qt@:4', when='@2')
