@@ -30,6 +30,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('python@2.6:2.999', type='build', when='+doc')
     depends_on('gl')
     depends_on('glew@1.9.0:')
+    depends_on('glfw@3.0.0:')
     depends_on('intel-tbb@4.0:', when='+tbb')
     depends_on('libxrandr')
     depends_on('libxcursor')
