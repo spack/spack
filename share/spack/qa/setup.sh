@@ -36,6 +36,7 @@ if [[ "$COVERAGE" == "true" ]]; then
     # these set up coverage for Python
     coverage=coverage
     coverage_run="coverage run"
+    export COVERAGE_PROCESS_START=$SPACK_ROOT/.coveragerc
 
     if [ "$BASH_COVERAGE" = true ]; then
         mkdir -p coverage
