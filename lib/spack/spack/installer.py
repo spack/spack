@@ -651,6 +651,66 @@ class PackageInstaller(object):
             if package_id(comp_pkg) not in self.build_tasks:
                 self._push_task(comp_pkg, is_compiler, 0, 0, STATUS_ADDED)
 
+    def _check_db(self, spec):
+        """Determine if the spec is flagged as installed in the database
+
+        Args:
+            spec (Spec): spec whose database install status is being checked
+
+        Return:
+            (rec, installed_in_db) tuple where rec is the database record, or
+                None, if there is no matching spec, and installed_in_db is
+                ``True`` if the spec is considered installed and ``False``
+                otherwise
+        """
+        try:
+            rec = spack.store.db.get_record(spec)
+            installed_in_db = rec.installed if rec else False
+        except KeyError:
+            # KeyError is raised if there is no matching spec in the database
+            # (versus no matching specs that are installed).
+            rec = None
+            installed_in_db = False
+        return rec, installed_in_db
+
+    def _check_deps_status(self):
+        """Check the install status of the explicit spec's dependencies"""
+
+        err = 'Cannot proceed with {0}: {1}'
+        for dep in self.spec.traverse(order='post', root=False):
+            dep_pkg = dep.package
+            dep_id = package_id(dep_pkg)
+
+            # Check for failure since a prefix lock is not required
+            if spack.store.db.prefix_failed(dep):
+                action = "'spack install' the dependency"
+                msg = '{0} is marked as an install failure: {1}' \
+                    .format(dep_id, action)
+                raise InstallError(err.format(self.pkg_id, msg))
+
+            # Attempt to get a write lock to ensure another process does not
+            # uninstall the dependency while the requested spec is being
+            # installed
+            ltype, lock = self._ensure_locked('write', dep_pkg)
+            if lock is None:
+                msg = '{0} is write locked by another process'.format(dep_id)
+                raise InstallError(err.format(self.pkg_id, msg))
+
+            # Flag external and upstream packages as being installed
+            if dep_pkg.spec.external or dep_pkg.installed_upstream:
+                form = 'external' if dep_pkg.spec.external else 'upstream'
+                tty.debug('Flagging {0} {1} as installed'.format(form, dep_id))
+                self.installed.add(dep_id)
+                continue
+
+            # Check the database to see if the dependency has been installed
+            # and flag as such if appropriate
+            rec, installed_in_db = self._check_db(dep)
+            if installed_in_db:
+                tty.debug('Flagging {0} as installed per the database'
+                          .format(dep_id))
+                self.installed.add(dep_id)
+
     def _prepare_for_install(self, task, keep_prefix, keep_stage,
                              restage=False):
         """
@@ -680,14 +740,7 @@ class PackageInstaller(object):
             return
 
         # Determine if the spec is flagged as installed in the database
-        try:
-            rec = spack.store.db.get_record(task.pkg.spec)
-            installed_in_db = rec.installed if rec else False
-        except KeyError:
-            # KeyError is raised if there is no matching spec in the database
-            # (versus no matching specs that are installed).
-            rec = None
-            installed_in_db = False
+        rec, installed_in_db = self._check_db(task.pkg.spec)
 
         # Make sure the installation directory is in the desired state
         # for uninstalled specs.
@@ -929,6 +982,11 @@ class PackageInstaller(object):
             # Be sure to clear any previous failure
             spack.store.db.clear_failure(self.pkg.spec, force=True)
 
+            # If not installing dependencies, then determine their
+            # installation status before proceeding
+            if not install_deps:
+                self._check_deps_status()
+
             # Now add the package itself, if appropriate
             self._push_task(self.pkg, False, 0, 0, STATUS_ADDED)
 
@@ -1022,7 +1080,8 @@ class PackageInstaller(object):
                                 configure_args = getattr(pkg, attr)()
                                 configure_args = ' '.join(configure_args)
 
-                                with open(pkg.configure_args_path, 'w') as args_file:
+                                with open(pkg.configure_args_path, 'w') as \
+                                        args_file:
                                     args_file.write(configure_args)
 
                                 break
