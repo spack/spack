@@ -35,18 +35,18 @@ class KokkosKernels(Package):
     # Kokkos options
     variant('aggressive_vectorization', default=False,
             description="set aggressive_vectorization Kokkos option")
-    variant('disable_profiling', default=False,
-            description="set disable_profiling Kokkos option")
-    variant('disable_dualview_modify_check', default=False,
-            description="set disable_dualview_modify_check Kokkos option")
-    variant('enable_profile_load_print', default=False,
+    variant('profiling', default=True,
+            description="Enables Kokkos profiling")
+    variant('dualview_modify_check', default=True,
+            description="Enables dualview_modify_check Kokkos option")
+    variant('profile_load_print', default=False,
             description="set enable_profile_load_print Kokkos option")
     variant('compiler_warnings', default=False,
             description="set compiler_warnings Kokkos option")
-    variant('disable_deprecated_code', default=False,
-            description="set disable_deprecated_code Kokkos option")
-    variant('enable_eti', default=False,
-            description="set enable_eti Kokkos option")
+    variant('deprecated_code', default=True,
+            description="Includes deprecated code")
+    variant('eti', default=False,
+            description="Enables ETI")
 
     # CUDA options
     variant('force_uvm', default=False,
@@ -92,12 +92,12 @@ class KokkosKernels(Package):
 
     # Checks on Kokkos version and Kokkos options
     conflicts('+aggressive_vectorization', when='@:2.0.99',)
-    conflicts('+disable_profiling', when='@:2.0.99',)
-    conflicts('+disable_dualview_modify_check', when='@:2.03.04',)
-    conflicts('+enable_profile_load_print', when='@:2.03.04',)
+    conflicts('~profiling', when='@:2.0.99',)
+    conflicts('~dualview_modify_check', when='@:2.03.04',)
+    conflicts('+profile_load_print', when='@:2.03.04',)
     conflicts('+compiler_warnings', when='@:2.03.14',)
-    conflicts('+disable_deprecated_code', when='@:2.5.99',)
-    conflicts('+enable_eti', when='@:2.6.99',)
+    conflicts('~deprecated_code', when='@:2.5.99',)
+    conflicts('+eti', when='@:2.6.99',)
 
     # Check that we haven't specified a gpu architecture
     # without specifying CUDA
@@ -115,6 +115,8 @@ class KokkosKernels(Package):
               msg='Must enable CUDA to use rdc.')
     conflicts('+enable_lambda', when='~cuda',
               msg='Must enable CUDA to use enable_lambda.')
+
+    # spec target
 
     # Check that we haven't asked for a GPU architecture that
     # the revision of kokkos does not support
@@ -174,18 +176,13 @@ class KokkosKernels(Package):
                 '--prefix=%s' % prefix,
                 '--with-hwloc=%s' % spec['hwloc'].prefix,
                 '--kokkos-path=%s' % join_path(self.stage.source_path, 'kokkos-base'),
-                '--kokkoskernels-path=%s' % self.stage.source_path,
-                # This reduces compile times significantly
-                #
-                '--with-scalars="float,double"',
-                '--with-ordinals=""',
-                '--with-offsets=""',
-                '--with-layouts=""'
+                '--kokkoskernels-path=%s' % self.stage.source_path
             ]
             arch_args = []
-            kokkos_kernels_options_args = ['blas-mangle_']
             kokkos_options_args = []
             cuda_options_args = []
+
+            # ---- Kokkos options (almost the same as in the kokkos recipe)
 
             # PIC
             if '+pic' in spec:
@@ -219,6 +216,7 @@ class KokkosKernels(Package):
                 arch_args.append(host_arch)
             if gpu_arch != 'none':
                 arch_args.append(gpu_arch)
+
             # Combined architecture flags
             if arch_args:
                 g_args.append('--arch={0}'.format(','.join(arch_args)))
@@ -236,31 +234,23 @@ class KokkosKernels(Package):
                 g_args.append('--with-cuda-options={0}'
                               .format(','.join(cuda_options_args)))
 
-            # Kokkos-kernels options
-            #if '+enable_eti' in spec:
-            #    kokkos_kernels_options_args.append('enable_eti')
-            #g_args.append('--with-options={0}'
-            #              .format(','.join(kokkos_kernels_options_args)))
-
-            # Kokkos options
             if '+aggressive_vectorization' in spec:
                 kokkos_options_args.append('aggressive_vectorization')
-            if '+disable_profiling' in spec:
+            if '~profiling' in spec:
                 kokkos_options_args.append('disable_profiling')
-            if '+disable_dualview_modify_check' in spec:
+            if '~dualview_modify_check' in spec:
                 kokkos_options_args.append('disable_dualview_modify_check')
-            if '+enable_profile_load_print' in spec:
+            if '+profile_load_print' in spec:
                 kokkos_options_args.append('enable_profile_load_print')
             if '+compiler_warnings' in spec:
                 kokkos_options_args.append('compiler_warnings')
-            if '+disable_deprecated_code' in spec:
+            if '~deprecated_code' in spec:
                 kokkos_options_args.append('disable_deprecated_code')
-            if '+enable_eti' in spec:
+            if '+eti' in spec:
                 kokkos_options_args.append('enable_eti')
             if kokkos_options_args:
                 g_args.append('--with-kokkos-options={0}'
                               .format(','.join(kokkos_options_args)))
 
             generate(*g_args)
-            make()
             make('install-lib')
