@@ -17,5 +17,9 @@ class Lastz(MakefilePackage):
     # cast from char to signed char
     patch('cast_signed_char.patch')
 
+    # set compile commands for each compiler
+    def edit(self, spec, prefix):
+        filter_file('gcc', spack_cc, 'src/Makefile')
+
     def install(self, spec, prefix):
         make('install', 'LASTZ_INSTALL={0}'.format(prefix.bin))
