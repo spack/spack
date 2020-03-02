@@ -61,6 +61,9 @@ class Blender(CMakePackage):
     depends_on('ilmbase')
     depends_on('opensubdiv+openmp', when='+opensubdiv')
     depends_on('cuda@10.1.0:10.1.999', when='+cycles', type=('link','run'))
+    # FIXME: The version of GCC should probably be the version of GCC that is actually
+    # compiling blender, not hardcoding the version that the package creater is using. 
+    depends_on('gcc@7.4.0', when='+cycles', type=('run'))
 
     def cmake_args(self):
         spec = self.spec
