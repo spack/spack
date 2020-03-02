@@ -632,6 +632,30 @@ def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
     assert not os.path.exists(root.prefix)
 
 
+def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
+    with capfd.disabled():
+        try:
+            install('--only', 'package', 'dependent-install')
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    assert 'Cannot proceed with dependent-install'  in msg
+    assert '1 uninstalled dependency' in msg
+
+
+def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+    install('--only', 'package', 'dependent-install')
+    assert os.path.exists(root.prefix)
+
+
 @pytest.mark.regression('12002')
 def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
                                           mutable_mock_env_path):
