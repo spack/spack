@@ -25,6 +25,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('cmake@2.8.6:', type='build')
     depends_on('graphviz', type='build')
     depends_on('doxygen', type='build')
+    depends_on('gl')
     depends_on('glew@1.9.0:')
     depends_on('intel-tbb@4.0:', when='+tbb')
 
@@ -38,9 +39,10 @@ class Opensubdiv(CMakePackage, CudaPackage):
         args.append('-DNO_PTEX=1')       # disable PTex support
         args.append('-DNO_OMP=1')        # disable OpenMP
         args.append('-DNO_OPENCL=1')     # disable OpenCL
-        args.append('-DNO_OPENGL=1')     # disable OpenGL
         args.append('-DNO_CLEW=1')       # disable CLEW wrapper library
         args.append('-DNO_METAL=1')      # disable Metal
+
+        args.append('-DNO_OPENGL=0')     # OpenGL always on
 
         if '+cuda' in spec:
             args.append('-DNO_CUDA=0')
