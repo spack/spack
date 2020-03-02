@@ -32,4 +32,4 @@ class Tmux(AutotoolsPackage):
     # used by configure to e.g. find libtinfo
     depends_on('pkgconfig', type='build')
     depends_on('libevent')
-    depends_on('ncurses+termlib')
+    depends_on('ncurses')
