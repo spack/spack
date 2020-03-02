@@ -33,4 +33,3 @@ class Tmux(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('libevent')
     depends_on('ncurses+termlib')
-
