@@ -59,6 +59,7 @@ class Blender(CMakePackage):
     depends_on('libuuid')
     depends_on('jemalloc', when='+jemalloc')
     depends_on('ilmbase')
+    depends_on('opensubdiv', when='+opensubdiv')
 
     def cmake_args(self):
         spec = self.spec
