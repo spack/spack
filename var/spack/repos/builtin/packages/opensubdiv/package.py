@@ -50,6 +50,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
         args.append('-DNO_METAL=1')      # disable Metal
 
         args.append('-DNO_OPENGL=0')     # OpenGL always on
+        args.append('-DGLEW_LOCATION={0}'.format(spec['glew'].prefix))
 
         if '+cuda' in spec:
             args.append('-DNO_CUDA=0')
