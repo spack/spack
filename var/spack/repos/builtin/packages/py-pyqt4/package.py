@@ -34,6 +34,7 @@ class PyPyqt4(SIPPackage):
     # Supposedly can also be built with Qt 5 compatibility layer
     depends_on('qt@:4')
     depends_on('qscintilla', when='+qsci')
+    depends_on('py-sip module=PyQt4.sip')
 
     # For building Qscintilla python bindings
     resource(name='qscintilla',
@@ -99,3 +100,13 @@ class PyPyqt4(SIPPackage):
                 makefile.filter(r'\$\(INSTALL_ROOT\)', '')
 
                 make('install')
+
+    @run_after('install')
+    def extend_path_setup(self):
+        with working_dir(site_packages_dir):
+
+            f = open('./PyQt4/__init__.py', 'a')
+            f.write('from pkgutil import extend_path\n')
+            f.write('__path__ = extend_path(__path__, __name__)\n')
+            f.close()
+
