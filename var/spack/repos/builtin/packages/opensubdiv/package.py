@@ -21,6 +21,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
 
     variant('tbb', default=False, description='Builds with Intel TBB support')
+    variant('openmp', default=False, description='Builds with OpenMP support')
     variant('doc', default=False, description='Builds documentation. Requires python@@2.6')
 
     depends_on('cmake@2.8.6:', type='build')
@@ -35,6 +36,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     depends_on('libxrandr')
     depends_on('libxcursor')
     depends_on('libxinerama')
+    depends_on('llvm-openmp', when='+openmp')
 
     def cmake_args(self):
         spec = self.spec
@@ -44,7 +46,6 @@ class Opensubdiv(CMakePackage, CudaPackage):
         args.append('-DNO_TUTORIALS=1')  # disable tutorials build
         args.append('-DNO_REGRESSION=1') # disable regression tests build
         args.append('-DNO_PTEX=1')       # disable PTex support
-        args.append('-DNO_OMP=1')        # disable OpenMP
         args.append('-DNO_OPENCL=1')     # disable OpenCL
         args.append('-DNO_CLEW=1')       # disable CLEW wrapper library
         args.append('-DNO_METAL=1')      # disable Metal
@@ -74,5 +75,10 @@ class Opensubdiv(CMakePackage, CudaPackage):
             args.append('-DNO_DOC=0')
         else:
             args.append('-DNO_DOC=1')
+
+        if '+openmp' in spec:
+            args.append('-DNO_OMP=0')
+        else:
+            args.append('-DNO_OMP=1')
 
         return args
