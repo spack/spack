@@ -1,0 +1,70 @@
+--- spack-src/src/sequences.c.org	2020-02-27 16:51:13.380985769 +0900
++++ spack-src/src/sequences.c	2020-02-27 16:55:38.641465062 +0900
+@@ -5086,14 +5086,14 @@
+ 		// find the next header
+ 
+ 		ch = seq_getc (_seq);
+-		if (ch == EOF) goto failure;
++		if ((signed char)ch == EOF) goto failure;
+ 
+ 		if ((allowComments) && (ch == '#'))
+ 			{ // comment, skip to end-of-line and go back and try again
+ 			while (ch != '\n')
+ 				{
+ 				ch = seq_getc (_seq);
+-				if (ch == EOF) goto failure;
++				if ((signed char)ch == EOF) goto failure;
+ 				}
+ 			continue;
+ 			}
+@@ -5117,12 +5117,12 @@
+ 		leadingWhite = 0;
+ 
+ 		ch = seq_getc (_seq);
+-		if (ch == EOF) goto failure;
++		if ((signed char)ch == EOF) goto failure;
+ 		while ((ch != '\n') && (isspace (ch)))
+ 			{
+ 			leadingWhite++;
+ 			ch = seq_getc (_seq);
+-			if (ch == EOF) goto failure;
++			if ((signed char)ch == EOF) goto failure;
+ 			}
+ 
+ 		if (ch == '\n')
+@@ -5137,7 +5137,7 @@
+ 				break;								//  .. truncate the header)
+ 			*(s++) = ch;
+ 			ch = seq_getc (_seq);
+-			if (ch == EOF) goto failure;
++			if ((signed char)ch == EOF) goto failure;
+ 			}
+ 		*s = 0;
+ 
+@@ -5231,7 +5231,7 @@
+ 		debugNamesFile_14;
+ 
+ 		ch = seq_getc (_seq);
+-		if (ch == EOF) goto failure;
++		if ((signed char)ch == EOF) goto failure;
+ 
+ 		if (ch != '@')
+ 			suicidef ("internal error in find_next_fastq_coi\n"
+@@ -5241,7 +5241,7 @@
+ 		// read the header
+ 
+ 		ch = seq_getc (_seq);
+-		if (ch == EOF) goto failure;
++		if ((signed char)ch == EOF) goto failure;
+ 
+ 		s = buffer;
+ 		while ((ch != '\n') && (ch != '\r'))
+@@ -5250,7 +5250,7 @@
+ 				break;								//  .. truncate the header)
+ 			*(s++) = ch;
+ 			ch = seq_getc (_seq);
+-			if (ch == EOF) goto failure;
++			if ((signed char)ch == EOF) goto failure;
+ 			}
+ 		*s = 0;
+ 

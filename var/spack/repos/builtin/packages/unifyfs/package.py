@@ -28,6 +28,7 @@ class Unifyfs(AutotoolsPackage):
     variant('pmi', default='False', description='Enable PMI2 build options')
     variant('pmix', default='False', description='Enable PMIx build options')
 
+    depends_on('openssl')
     depends_on('autoconf',  type='build')
     depends_on('automake',  type='build')
     depends_on('libtool',   type='build')

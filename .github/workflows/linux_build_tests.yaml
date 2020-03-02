@@ -28,7 +28,7 @@ jobs:
       matrix:
         package: [lz4, mpich, tut, py-setuptools, openjpeg, r-rcpp]
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Cache ccache's store
       uses: actions/cache@v1
       with:
