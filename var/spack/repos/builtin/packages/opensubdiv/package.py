@@ -21,10 +21,13 @@ class Opensubdiv(CMakePackage, CudaPackage):
     version('3_4_0',     sha256='d932b292f83371c7518960b2135c7a5b931efb43cdd8720e0b27268a698973e4')
 
     variant('tbb', default=False, description='Builds with Intel TBB support')
+    variant('doc', default=False, description='Builds documentation. Requires python@@2.6')
 
     depends_on('cmake@2.8.6:', type='build')
-    depends_on('graphviz', type='build')
-    depends_on('doxygen', type='build')
+    depends_on('graphviz', type='build', when='+doc')
+    depends_on('doxygen', type='build', when='+doc')
+    depends_on('py-docutils', type='build', when='+doc')
+    depends_on('python@2.6:2.999', type='build', when='+doc')
     depends_on('gl')
     depends_on('glew@1.9.0:')
     depends_on('intel-tbb@4.0:', when='+tbb')
@@ -61,5 +64,10 @@ class Opensubdiv(CMakePackage, CudaPackage):
             args.append('-DNO_TBB=0')
         else:
             args.append('-DNO_TBB=1')
+
+        if '+doc' in spec:
+            args.append('-DNO_DOC=0')
+        else:
+            args.append('-DNO_DOC=1')
 
         return args
