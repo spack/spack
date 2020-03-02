@@ -298,7 +298,7 @@ def test_ensure_locked_have(install_mockery, tmpdir, capsys):
         # Test "upgrade" of a read lock without read count to a write
         lock_type = 'write'
         err = 'Cannot upgrade lock'
-        with pytest.raises(ulk.LockUpgradeError, matches=err):
+        with pytest.raises(ulk.LockUpgradeError, match=err):
             installer._ensure_locked(lock_type, spec.package)
 
         out = str(capsys.readouterr()[1])
@@ -357,7 +357,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 def test_package_id(install_mockery):
     """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, matches='spec is not concretized'):
+    with pytest.raises(ValueError, match='spec is not concretized'):
         inst.package_id(pkg)
 
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -427,14 +427,14 @@ def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch, capsys):
 
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, matches='FileNotFoundError*' + str(tmpdir)):
+    with pytest.raises(IOError, match=str(tmpdir)):
         with tmpdir.as_cwd():
             inst.dump_packages(spec, str(tmpdir))
 
     # Now try the error path, which requires the mock directory structure
     # above
     monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
-    with pytest.raises(spack.repo.RepoError, matches=repo_err_msg):
+    with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
         inst.dump_packages(spec, str(tmpdir))
 
     out = str(capsys.readouterr()[1])
@@ -608,7 +608,7 @@ def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
     fs.touchp(spec.prefix)
     metadatadir = spack.store.layout.metadata_path(spec)
     # Should fail with a "not a directory" error
-    with pytest.raises(OSError, matches=metadatadir):
+    with pytest.raises(OSError, match=metadatadir):
         installer._setup_install_dir(spec.package)
 
     out = str(capfd.readouterr()[0])
@@ -658,7 +658,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -676,7 +676,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -803,7 +803,7 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
     spec, installer = create_installer('b')
 
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
         installer.install()
 
     assert 'b' in installer.installed
