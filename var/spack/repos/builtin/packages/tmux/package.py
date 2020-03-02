@@ -29,6 +29,8 @@ class Tmux(AutotoolsPackage):
     version('2.1', sha256='31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176')
     version('1.9a', sha256='c5e3b22b901cf109b20dab54a4a651f0471abd1f79f6039d79b250d21c2733f5')
 
+    # used by configure to e.g. find libtinfo
+    depends_on('pkgconfig', type='build')
     depends_on('libevent')
     depends_on('ncurses+termlib')
 
