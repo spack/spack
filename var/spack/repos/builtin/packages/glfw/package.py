@@ -36,4 +36,4 @@ class Glfw(CMakePackage):
     depends_on('freetype')
     depends_on('fontconfig')
     depends_on('doxygen', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
