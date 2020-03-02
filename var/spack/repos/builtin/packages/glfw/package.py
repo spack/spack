@@ -47,8 +47,17 @@ class Glfw(CMakePackage):
     version('3.0.4', sha256='a4e7c57db2086803de4fc853bd472ff8b6d2639b9aa16e6ac6b19ffb53958caf')
     version('3.0.3', sha256='7a182047ba6b1fdcda778b79aac249bb2328b6d141188cb5df29560715d01693')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('libxrandr')
+    depends_on('libxinerama')
+    depends_on('libxcursor')
+    depends_on('libxdamage')
+    depends_on('libxft')
+    depends_on('libxi')
+    depends_on('libxmu')
+    depends_on('freetype')
+    depends_on('fontconfig')
+    depends_on('doxygen', type='build')
+    depends_on('pkg-config', type='build')
 
     def cmake_args(self):
         # FIXME: Add arguments other than
