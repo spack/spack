@@ -60,6 +60,7 @@ class Blender(CMakePackage):
     depends_on('jemalloc', when='+jemalloc')
     depends_on('ilmbase')
     depends_on('opensubdiv+openmp', when='+opensubdiv')
+    depends_on('cuda@10.1.0:10.1.999', when='+cycles')
 
     def cmake_args(self):
         spec = self.spec
