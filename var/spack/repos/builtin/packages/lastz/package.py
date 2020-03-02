@@ -14,5 +14,8 @@ class Lastz(MakefilePackage):
 
     version('1.04.00', sha256='a4c2c7a77430387e96dbc9f5bdc75874334c672be90f5720956c0f211abf9f5a')
 
+    # cast from char to signed char
+    patch('cast_signed_char.patch')
+
     def install(self, spec, prefix):
         make('install', 'LASTZ_INSTALL={0}'.format(prefix.bin))
