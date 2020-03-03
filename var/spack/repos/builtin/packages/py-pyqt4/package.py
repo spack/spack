@@ -104,7 +104,6 @@ class PyPyqt4(SIPPackage):
     @run_after('install')
     def extend_path_setup(self):
         with working_dir(site_packages_dir):
-
             with open('./PyQt4/__init__.py', 'a') as f:
                 f.write('from pkgutil import extend_path\n')
                 f.write('__path__ = extend_path(__path__, __name__)\n')
