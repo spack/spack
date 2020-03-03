@@ -5,7 +5,7 @@
 
 import inspect
 
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
@@ -55,13 +55,14 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
+        python_inc_dir_suffix = 'python' + str(spec['python'].version.up_to(2))
+
         args.extend([
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
-#            '--sip-incdir', spec['py-sip'].prefix.include + '/python3.7',
-            '--sip-incdir', join_path(spec['py-sip'].prefix, python_include_dir),
+            '--sip-incdir', join_path(spec['py-sip'].prefix.include, python_include_dir),
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).site_packages_dir,
         ])
