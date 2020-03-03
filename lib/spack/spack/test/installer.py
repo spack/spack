@@ -6,6 +6,7 @@
 import os
 import pytest
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.binary_distribution
@@ -284,6 +285,58 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
 
 
+def test_clear_failures_success(install_mockery):
+    """Test the clear_failures happy path."""
+
+    # Set up a test prefix failure lock
+    lock = lk.Lock(spack.store.db.prefix_fail_path, start=1, length=1,
+                   default_timeout=1e-9, desc='test')
+    try:
+        lock.acquire_write()
+    except lk.LockTimeoutError:
+        tty.warn('Failed to write lock the test install failure')
+    spack.store.db._prefix_failures['test'] = lock
+
+    # Set up a fake failure mark (or file)
+    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+
+    # Now clear failure tracking
+    inst.clear_failures()
+
+    # Ensure there are no cached failure locks or failure marks
+    assert len(spack.store.db._prefix_failures) == 0
+    assert len(os.listdir(spack.store.db._failure_dir)) == 0
+
+    # Ensure the core directory and failure lock file still exist
+    assert os.path.isdir(spack.store.db._failure_dir)
+    assert os.path.isfile(spack.store.db.prefix_fail_path)
+
+
+def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
+    """Test the clear_failures exception paths."""
+    orig_fn = os.remove
+    err_msg = 'Mock os remove'
+
+    def _raise_except(path):
+        raise RuntimeError(err_msg)
+
+    # Set up a fake failure mark (or file)
+    fs.touch(os.path.join(spack.store.db._failure_dir, 'test'))
+
+    monkeypatch.setattr(os, 'remove', _raise_except)
+
+    # Clear failure tracking
+    inst.clear_failures()
+
+    # Ensure expected warning generated
+    out = str(capsys.readouterr()[1])
+    assert 'Unable to remove failure' in out
+    assert err_msg in out
+
+    # Restore remove for teardown
+    monkeypatch.setattr(os, 'remove', orig_fn)
+
+
 def test_dump_packages_deps(install_mockery, tmpdir):
     """Test to add coverage to dump_packages."""
     spec = spack.spec.Spec('simple-inheritance').concretized()
@@ -291,7 +344,6 @@ def test_dump_packages_deps(install_mockery, tmpdir):
         inst.dump_packages(spec, '.')
 
 
-@pytest.mark.tld
 def test_check_deps_status_errs(install_mockery, monkeypatch):
     """Test to cover _check_deps_status failures."""
     spec, installer = create_installer('a')
@@ -312,7 +364,6 @@ def test_check_deps_status_errs(install_mockery, monkeypatch):
         installer._check_deps_status()
 
 
-@pytest.mark.tld
 def test_check_deps_status_external(install_mockery, monkeypatch):
     """Test to cover _check_deps_status for external."""
     spec, installer = create_installer('a')
@@ -327,7 +378,6 @@ def test_check_deps_status_external(install_mockery, monkeypatch):
     assert dep_id in installer.installed
 
 
-@pytest.mark.tld
 def test_check_deps_status_upstream(install_mockery, monkeypatch):
     """Test to cover _check_deps_status for upstream."""
     spec, installer = create_installer('a')
@@ -462,7 +512,7 @@ def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
 
         installer._cleanup_failed(pkg_id)
         out = str(capsys.readouterr()[1])
-        assert 'exception when removing failure mark' in out
+        assert 'exception when removing failure tracking' in out
         assert msg in out
 
 
