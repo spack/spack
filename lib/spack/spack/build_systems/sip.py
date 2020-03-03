@@ -60,7 +60,8 @@ class SIPPackage(PackageBase):
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
-            '--sip-incdir', spec['py-sip'].prefix.include + '/python3.7',
+#            '--sip-incdir', spec['py-sip'].prefix.include + '/python3.7',
+            '--sip-incdir', join_path(spec['py-sip'].prefix, python_include_dir),
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).site_packages_dir,
         ])
