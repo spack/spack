@@ -638,19 +638,15 @@ class Database(object):
 
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_file(self, stream):
-        """
-        Fill database from file, do not maintain old data
-        Translate the spec portions from node-dict form to spec form
+    def _read_from_file(self, filename):
+        """Fill database from file, do not maintain old data.
+        Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
         try:
-            if isinstance(stream, string_types):
-                with open(stream, 'r') as f:
-                    fdata = sjson.load(f)
-            else:
-                fdata = sjson.load(stream)
+            with open(filename, 'r') as f:
+                fdata = sjson.load(f)
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
