@@ -16,6 +16,9 @@ class PySip(Package):
     hg       = "https://www.riverbankcomputing.com/hg/sip"
 
     version('develop', hg=hg)  # wasn't actually able to clone this
+    version('4.19.21', sha256='6af9979ab41590e8311b8cc94356718429ef96ba0e3592bdd630da01211200ae')
+    version('4.19.20', sha256='04cc2f87ac97e8718d8e1ef036e3ec26050ab44c21f9277618d5b67432fcbfd6')
+    version('4.19.19', sha256='5436b61a78f48c7e8078e93a6b59453ad33780f80c644e5f3af39f94be1ede44')
     version('4.19.18', sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e')
     version('4.19.15', sha256='2b5c0b2c0266b467b365c21376d50dde61a3236722ab87ff1e8dacec283eb610')
     version('4.19.13', sha256='e353a7056599bf5fbd5d3ff9842a6ab2ea3cf4e0304a0f925ec5862907c0d15e')
