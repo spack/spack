@@ -62,8 +62,6 @@ class PySip(Package):
 #                ln = which('ln')
 #                ln('sip.so','./PyQt5/sip.so')
 
-                f = open('./PyQt5/__init__.py', 'w')
-                f.write('from pkgutil import extend_path\n')
-                f.write('__path__ = extend_path(__path__, __name__)\n')
-                f.close()
-
+                with open('./PyQt5/__init__.py', 'w') as f:
+                    f.write('from pkgutil import extend_path\n')
+                    f.write('__path__ = extend_path(__path__, __name__)\n')
