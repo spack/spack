@@ -154,15 +154,12 @@ def test_simple_command_extension(hello_world_cmd):
     assert 'Hello world!' in output
 
 
-def test_multi_extension_search(hello_world_extension, tmpdir):
+def test_multi_extension_search(hello_world_extension, extension_creator):
     """Ensure we can find an extension command even if it's not in the first
     place we look.
     """
 
-    extra_ext_name = 'testcommand2'
-    extra_ext = Extension(extra_ext_name,
-                          tmpdir.mkdir('spack-' + extra_ext_name))
-    with spack.config.override('config:extensions', [str(extra_ext.root)]):
+    with extension_creator('testcommand2'):
         assert ('Hello world') in spack.main.SpackCommand('hello-world')()
 
 
