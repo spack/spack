@@ -203,6 +203,13 @@ class Openmpi(AutotoolsPackage):
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
 
+    # Reported upstream: https://github.com/open-mpi/ompi/pull/6378
+    # We support only versions based on Libtool 2.4.6.
+    patch('nag_ltmain_1.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_ltmain_2.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_ltmain_3.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_ltmain_4.patch', when='@1.10.4:1.10.999%nag')
+
     variant(
         'fabrics',
         values=disjoint_sets(
@@ -398,6 +405,7 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
         config_args = [
             '--enable-shared',
+            '--disable-silent-rules'
         ]
 
         # Add extra_rpaths dirs from compilers.yaml into link wrapper
