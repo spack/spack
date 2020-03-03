@@ -151,6 +151,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('trilinos gotype=int', when='+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
