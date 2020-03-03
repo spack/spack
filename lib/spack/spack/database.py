@@ -20,27 +20,25 @@ provides a cache and a sanity checking mechanism for what is in the
 filesystem.
 """
 
-import datetime
-import time
-import os
-import sys
-import socket
 import contextlib
-from six import string_types
-from six import iteritems
+import datetime
+import os
+import socket
+import sys
+import time
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
-import spack.store
+import six
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.filesystem_view import YamlFilesystemView
-from spack.util.crypto import bit_length
+from llnl.util.filesystem import mkdirp
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
+from spack.filesystem_view import YamlFilesystemView
+from spack.util.crypto import bit_length
 from spack.version import Version
 
 # TODO: Provide an API automatically retyring a build after detecting and
@@ -926,23 +924,24 @@ class Database(object):
         """Re-read Database from the data in the set location.
 
         This does no locking, with one exception: it will automatically
-        migrate an index.yaml to an index.json if possible. This requires
-        taking a write lock.
-
+        try to regenerate a missing DB if local. This requires taking a
+        write lock.
         """
         if os.path.isfile(self._index_path):
             # Read from file if a database exists
             self._read_from_file(self._index_path)
-        else:
-            if self.is_upstream:
-                raise UpstreamDatabaseLockingError(
-                    "No database index file is present, and upstream"
-                    " databases cannot generate an index file")
-            # The file doesn't exist, try to traverse the directory.
-            # reindex() takes its own write lock, so no lock here.
-            with lk.WriteTransaction(self.lock):
-                self._write(None, None, None)
-            self.reindex(spack.store.layout)
+            return
+
+        if self.is_upstream and not os.path.isfile(self._index_path):
+            raise UpstreamDatabaseLockingError(
+                "No database index file is present, and upstream"
+                " databases cannot generate an index file")
+
+        # The file doesn't exist, try to traverse the directory.
+        # reindex() takes its own write lock, so no lock here.
+        with lk.WriteTransaction(self.lock):
+            self._write(None, None, None)
+        self.reindex(spack.store.layout)
 
     def _add(
             self,
@@ -1022,7 +1021,9 @@ class Database(object):
             )
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
+            for name, dep in six.iteritems(
+                    spec.dependencies_dict(_tracked_deps)
+            ):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
