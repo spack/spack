@@ -16,3 +16,5 @@ class Uqtk(CMakePackage):
 
     version('master', branch='master')
     version('3.0.4', sha256='0a72856438134bb571fd328d1d30ce3d0d7aead32eda9b7fb6e436a27d546d2e')
+
+    depends_on('expat')
