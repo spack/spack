@@ -8,10 +8,11 @@ from spack import *
 
 
 class Opensubdiv(CMakePackage, CudaPackage):
-    """OpenSubdiv is a set of open source libraries that implement high 
-    performance subdivision surface (subdiv) evaluation on massively parallel CPU
-    and GPU architectures. This code path is optimized for drawing deforming
-    surfaces with static topology at interactive framerates."""
+    """OpenSubdiv is a set of open source libraries that
+    implement high performance subdivision surface (subdiv)
+    evaluation on massively parallel CPU and GPU architectures.
+    This code path is optimized for drawing deforming surfaces
+    with static topology at interactive framerates."""
 
     homepage = "http://graphics.pixar.com/opensubdiv/docs/intro.html"
     url      = "https://github.com/PixarAnimationStudios/OpenSubdiv/archive/v3_4_0.tar.gz"
@@ -42,21 +43,21 @@ class Opensubdiv(CMakePackage, CudaPackage):
         spec = self.spec
         args = []
 
-        args.append('-DNO_EXAMPLES=1')   # disable examples build
-        args.append('-DNO_TUTORIALS=1')  # disable tutorials build
-        args.append('-DNO_REGRESSION=1') # disable regression tests build
-        args.append('-DNO_PTEX=1')       # disable PTex support
-        args.append('-DNO_OPENCL=1')     # disable OpenCL
-        args.append('-DNO_CLEW=1')       # disable CLEW wrapper library
-        args.append('-DNO_METAL=1')      # disable Metal
+        args.append('-DNO_EXAMPLES=1')    # disable examples build
+        args.append('-DNO_TUTORIALS=1')   # disable tutorials build
+        args.append('-DNO_REGRESSION=1')  # disable regression tests build
+        args.append('-DNO_PTEX=1')        # disable PTex support
+        args.append('-DNO_OPENCL=1')      # disable OpenCL
+        args.append('-DNO_CLEW=1')        # disable CLEW wrapper library
+        args.append('-DNO_METAL=1')       # disable Metal
 
-        args.append('-DNO_OPENGL=0')     # OpenGL always on
+        args.append('-DNO_OPENGL=0')      # OpenGL always on
         args.append('-DGLEW_LOCATION={0}'.format(spec['glew'].prefix))
 
         if '+cuda' in spec:
             args.append('-DNO_CUDA=0')
 
-            cuda_arch = [ x for x in spec.variants['cuda_arch'].value if x]
+            cuda_arch = [x for x in spec.variants['cuda_arch'].value if x]
             if cuda_arch:
                 args.append('-DOSD_CUDA_NVCC_FLAGS={0}'.format(
                     ' '.join(self.cuda_flags(cuda_arch))))
