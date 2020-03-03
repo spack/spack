@@ -131,7 +131,7 @@ class SuiteSparse(Package):
         # In those SuiteSparse versions calling "make install" in one go is
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
-        if (self.spec.version >= Version('5.4.0')):
+        if '@5.4.0:' in self.spec:
             make('default', *make_args)
 
         make('install', *make_args)
