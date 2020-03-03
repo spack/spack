@@ -57,11 +57,12 @@ def extension_creator(tmpdir, config):
                                    [str(extension.root)]):
             yield extension
     list_of_modules = list(sys.modules.keys())
-    yield _ce
-
-    to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
-    for module_name in to_be_deleted:
-        del sys.modules[module_name]
+    try:
+        yield _ce
+    finally:
+        to_be_deleted = [x for x in sys.modules if x not in list_of_modules]
+        for module_name in to_be_deleted:
+            del sys.modules[module_name]
 
 
 @pytest.fixture(scope='function')
