@@ -38,7 +38,7 @@ def extension_name(path):
              for a Spack command extension.
     """
     regexp_match = re.search(_extension_regexp,
-                             os.path.basename(os.path.normpath(path))
+                             os.path.basename(os.path.normpath(path)))
     if not regexp_match:
         raise ExtensionNamingError(path)
     return regexp_match.group(1)
