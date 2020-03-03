@@ -55,7 +55,7 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
-        python_inc_dir_suffix = 'python' + str(spec['python'].version.up_to(2))
+        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
 
         args.extend([
             '--verbose',
@@ -63,7 +63,7 @@ class SIPPackage(PackageBase):
             '--qmake', spec['qt'].prefix.bin.qmake,
             '--sip', spec['py-sip'].prefix.bin.sip,
             '--sip-incdir', join_path(spec['py-sip'].prefix.include,
-                                      python_inc_dir_suffix),
+                                      python_include_dir),
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).site_packages_dir,
         ])
