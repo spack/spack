@@ -27,7 +27,7 @@ class Blender(CMakePackage):
     version('2.77',  sha256='d6200123fc2de35ad3ab42cdd4421a1602ce01e9e95258a0a936bf9e88a8d62b')
     version('2.76b', sha256='bd852a8592ec2eca596a63244152506c406d8fc1d845244a8e11c84d24ad605d')
 
-    variant('cycles', default=False, description='Currently broken')
+    variant('cycles', default=False, description='Build with cycles support')
     variant('blender', default=True, description='disable to build only the blender player')
     variant('player', default=True, description='Build Player')
     variant('ffmpeg', default=False, description='Enable FFMPeg Support')
