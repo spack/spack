@@ -412,7 +412,7 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         if padding < 0:
             return data
         return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8')) + b'\0' * padding
+                                     new_dir.encode('utf-8')) + os.sep * padding
 
     with open(path_name, 'rb+') as f:
         data = f.read()
