@@ -185,6 +185,8 @@ class Trilinos(CMakePackage):
             description='Enable DataTransferKit')
     variant('fortrilinos',  default=False,
             description='Enable ForTrilinos')
+    variant('mesquite',     default=False,
+            description='Enable Mesquite')
 
     resource(name='dtk',
              git='https://github.com/ornl-cees/DataTransferKit.git',
@@ -208,6 +210,21 @@ class Trilinos(CMakePackage):
              tag='develop',
              placement='packages/ForTrilinos',
              when='+fortrilinos')
+    resource(name='mesquite',
+             url='https://github.com/trilinos/mesquite/archive/trilinos-release-12-12-1.tar.gz',
+             sha256='e0d09b0939dbd461822477449dca611417316e8e8d8268fd795debb068edcbb5',
+             placement='packages/mesquite',
+             when='+mesquite @12.12.1:12.16.99')
+    resource(name='mesquite',
+             git='https://github.com/trilinos/mesquite.git',
+             commit='20a679679b5cdf15bf573d66c5dc2b016e8b9ca1',  # branch trilinos-release-12-12-1
+             placement='packages/mesquite',
+             when='+mesquite @12.18.1:12.18.99')
+    resource(name='mesquite',
+             git='https://github.com/trilinos/mesquite.git',
+             tag='develop',
+             placement='packages/mesquite',
+             when='+mesquite @develop')
 
     conflicts('+amesos2', when='~teuchos')
     conflicts('+amesos2', when='~tpetra')
@@ -266,6 +283,8 @@ class Trilinos(CMakePackage):
     conflicts('+fortrilinos', when='~fortran')
     conflicts('+fortrilinos', when='@:99')
     conflicts('+fortrilinos', when='@master')
+    # Only allow Mesquite with Trilinos 12.12 and up, and develop
+    conflicts('+mesquite', when='@0:12.10.99,master')
     # Can only use one type of SuperLU
     conflicts('+superlu-dist', when='+superlu')
     # For Trilinos v11 we need to force SuperLUDist=OFF, since only the
@@ -342,6 +361,7 @@ class Trilinos(CMakePackage):
     patch('xlf_tpetra.patch', when='@12.12.1%xl')
     patch('xlf_tpetra.patch', when='@12.12.1%xl_r')
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
+    patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"
@@ -417,6 +437,8 @@ class Trilinos(CMakePackage):
                 'ON' if '+kokkos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_MiniTensor=%s' % (
                 'ON' if '+minitensor' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Mesquite:BOOL=%s' % (
+                'ON' if '+mesquite' in spec else 'OFF'),
             '-DTrilinos_ENABLE_ML:BOOL=%s' % (
                 'ON' if '+ml' in spec else 'OFF'),
             '-DTrilinos_ENABLE_MueLu:BOOL=%s' % (

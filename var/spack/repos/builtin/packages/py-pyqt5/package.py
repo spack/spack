@@ -52,7 +52,10 @@ class PyPyqt5(SIPPackage):
         args = [
             '--pyuic5-interpreter', self.spec['python'].command.path,
             '--sipdir', self.prefix.share.sip.PyQt5,
-            '--stubsdir', join_path(site_packages_dir, 'PyQt5'),
+            '--stubsdir', join_path(
+                self.prefix,
+                self.spec['python'].package.site_packages_dir,
+                'PyQt5'),
         ]
         if '+qsci' in self.spec:
             args.extend(['--qsci-api-destdir', self.prefix.share.qsci])
@@ -66,7 +69,10 @@ class PyPyqt5(SIPPackage):
                 'spack-resource-qscintilla/QScintilla_gpl-' +
                 str(self.spec['qscintilla'].version), 'Python')
             with working_dir(rsrc_py_path):
-                pydir = join_path(site_packages_dir, 'PyQt5')
+                pydir = join_path(
+                    self.prefix,
+                    self.spec['python'].package.site_packages_dir,
+                    'PyQt5')
                 python = self.spec['python'].command
                 python('configure.py', '--pyqt=PyQt5',
                        '--sip=' + self.prefix.bin.sip,
