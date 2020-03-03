@@ -30,7 +30,7 @@ class Sgpp(SConsPackage):
     patch('ocl.patch', when='@:3.2.0+opencl')
 
     variant('simd',
-            default='avx2',
+            default='sse3',
             values=('sse3', 'sse42', 'avx', 'fma4', 'avx2', 'avx512'),
             description='Specifies the SIMD extension to be used')
     variant('python', default=False,
@@ -82,9 +82,14 @@ class Sgpp(SConsPackage):
     # Solver python bindings are actually using the pde module at one point:
     conflicts('-pde', when='+python+solver')
     # some modules depend on each other (notably datadriven and misc)
+    conflicts('+pde', when='-solver')
+    conflicts('+datadriven', when='-solver')
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
     conflicts('+misc', when='-datadriven')
+    conflicts('+misc', when='-solver')
+    conflicts('+misc', when='-optimization')
+    conflicts('+misc', when='-pde')
     # Misc did not exist in older versions
     conflicts('+misc', when='@:3.1.0')
     # Datadriven requires at least avx
@@ -121,14 +126,15 @@ class Sgpp(SConsPackage):
             '1' if '+combigrid' in spec else '0'))
         self.args.append('SG_SOLVER={0}'.format(
             '1' if '+solver' in spec else '0'))
+        # Misc flag did not exist in older versions
+        if all(x not in spec for x in ['@3.1.0', '@3.0.0']):
+            self.args.append('SG_MISC={0}'.format(
+                '1' if '+misc' in spec else '0'))
+        # SIMD and OpenCL Flags:
         self.args.append('ARCH={0}'.format(
             spec.variants['simd'].value))
         self.args.append('USE_OCL={0}'.format(
             '1' if '+opencl' in spec else '0'))
-        # Misc did not exist in older versions
-        if all(x not in spec for x in ['@3.1.0', '@3.0.0']):
-            self.args.append('SG_MISC={0}'.format(
-                '1' if '+misc' in spec else '0'))
         # Get the mpicxx compiler from the Spack spec
         # (makes certain we use the one from spack):
         if ('+mpi' in spec):
