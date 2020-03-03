@@ -11,7 +11,7 @@ class Sgpp(SConsPackage):
 
     homepage = "https://sgpp.sparsegrids.org"
     url = "https://github.com/SGpp/SGpp/archive/v3.2.0.tar.gz"
-    maintainers = ['G-071', 'leiterrl', 'pfluegdk']
+    maintainers = ['G-071', 'leiterrl']
 
     # Versions with Python 3 bindings:
     version('master', git='https://github.com/SGpp/SGpp.git', branch='master')
@@ -26,8 +26,8 @@ class Sgpp(SConsPackage):
     patch('directory.patch')
     # Fix faulty setup.py in 3.2.0
     patch('fix-setup-py.patch', when='@3.2.0')
-    # Fix opencl example
-    patch('ocl.patch', when='+opencl')
+    # Backport opencl fix from master
+    patch('ocl.patch', when='@:3.2.0+opencl')
 
     variant('simd',
             default='avx2',
@@ -130,7 +130,7 @@ class Sgpp(SConsPackage):
             self.args.append('SG_MISC={0}'.format(
                 '1' if '+misc' in spec else '0'))
         # Get the mpicxx compiler from the Spack spec
-        # (makes certain we use the from spack):
+        # (makes certain we use the one from spack):
         if ('+mpi' in spec):
             self.args.append('CXX={0}'.format(
                 self.spec['mpi'].mpicxx))
