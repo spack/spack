@@ -558,7 +558,7 @@ def relocate_package(workdir, spec, allow_root):
                           (new_path, old_path))
             else:
                 for path_name in files_to_relocate:
-                    relocate.replace_prefix_bin(path_name, old_path, new_path)
+                    relocate.replace_prefix_text(path_name, old_path, new_path)
     else:
         path_names = set()
         for filename in buildinfo['relocate_binaries']:
