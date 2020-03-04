@@ -89,7 +89,7 @@ properties = {
                             'type': 'object',
                             'additionalProperties': False,
                             'properties': {
-                                'node': {
+                                'host': {
                                     'type': 'object',
                                     'additionalProperties': False,
                                     'require': ['name', 'compiler'],
