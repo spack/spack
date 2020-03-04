@@ -10,6 +10,7 @@ import glob
 import platform
 import sys
 from llnl.util.filesystem import join_path
+import re
 
 
 class Tau(Package):
@@ -103,8 +104,6 @@ class Tau(Package):
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
     conflicts('+sqlite', when='@:2.29.1')
-
-    filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
     def set_compiler_options(self, spec):
 
@@ -271,11 +270,15 @@ class Tau(Package):
         compiler_specific_options = self.set_compiler_options(spec)
         options.extend(compiler_specific_options)
         configure(*options)
+
         make("install")
 
         # Link arch-specific directories into prefix since there is
         # only one arch per prefix the way spack installs.
         self.link_tau_arch_dirs()
+        # TAU may capture Spack's internal compiler wrapper. Replace
+        # it with the correct compiler.
+        self.fix_tau_compilers()
 
     def link_tau_arch_dirs(self):
         for subdir in os.listdir(self.prefix):
@@ -284,6 +287,21 @@ class Tau(Package):
                 dest = join_path(self.prefix, d)
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
+
+    def fix_tau_compilers(self):
+        filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
+                    self.prefix + '/include/Makefile', backup=False)
+        filter_file('FULL_CXX=' + re.escape(spack_cxx), 'FULL_CXX=' +
+                    self.compiler.cxx, self.prefix + '/include/Makefile',
+                    backup=False)
+        for makefile in os.listdir(self.prefix + '/lib'):
+            if makefile.startswith('Makefile.tau'):
+                filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
+                            self.compiler.cc, self.prefix + '/lib/' + makefile,
+                            backup=False)
+                filter_file('FULL_CXX=' + re.escape(spack_cxx), 'FULL_CXX=' +
+                            self.compiler.cxx, self.prefix + '/lib/' +
+                            makefile, backup=False)
 
     def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
