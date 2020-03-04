@@ -755,7 +755,7 @@ def test_query_spec_with_non_conditional_virtual_dependency(database):
 def test_failed_spec_path_error(database):
     """Ensure spec not concrete check is covered."""
     s = spack.spec.Spec('a')
-    with pytest.raises(ValueError, match='Concrete spec required'):
+    with pytest.raises(ValueError, matches='Concrete spec required'):
         spack.store.db._failed_spec_path(s)
 
 

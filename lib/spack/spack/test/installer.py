@@ -340,7 +340,7 @@ def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
 def test_package_id(install_mockery):
     """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, match='spec is not concretized'):
+    with pytest.raises(ValueError, matches='spec is not concretized'):
         inst.package_id(pkg)
 
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -583,7 +583,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, match=msg):
+    with pytest.raises(spack.installer.InstallError, matches=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -601,7 +601,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, match=msg):
+    with pytest.raises(spack.installer.InstallError, matches=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -728,7 +728,7 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
     spec, installer = create_installer('b')
 
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
         installer.install()
 
     assert 'b' in installer.installed
