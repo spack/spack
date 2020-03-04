@@ -69,7 +69,7 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit')
     depends_on('libmonitor+bgq', when='+bgq')
-    depends_on('libunwind@1.4: +xz')
+    depends_on('libunwind@1.4:,stable +xz')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
     depends_on('xz', type='link')
