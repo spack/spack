@@ -26,6 +26,7 @@ class PyPyqt5(SIPPackage):
         'PyQt5.QtXmlPatterns'
     ]
 
+    version('5.13.1', sha256='54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af')
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
     version('5.12.3', sha256='0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110')
 
@@ -37,8 +38,10 @@ class PyPyqt5(SIPPackage):
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-sip module=PyQt5.sip', type=('build', 'run'))
-
     depends_on('qscintilla', when='+qsci')
+
+    # Take care of version constraints using depends_on
+    depends_on('py-sip@:4.19.18 module=PyQt5.sip', type=('build', 'run'), when='@:5.13.0')
 
     # For building Qscintilla python bindings
     resource(name='qscintilla',
