@@ -26,7 +26,8 @@ class Libunwind(AutotoolsPackage):
             description='Support xz (lzma) compressed symbol tables.')
 
     variant('zlib', default=False,
-            description='Support zlib compressed symbol tables (develop branch only).')
+            description='Support zlib compressed symbol tables (develop '
+            'branch only).')
 
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.
