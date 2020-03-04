@@ -143,7 +143,7 @@ class Adios2(CMakePackage):
                 'ON' if '+endian_reverse' in spec else 'OFF'),
         ]
 
-        if self.spec.version >= Version('2.4.0'):
+        if spec.version >= Version('2.4.0'):
             args.append('-DADIOS2_USE_Blosc={0}'.format(
                 'ON' if '+blosc' in spec else 'OFF'))
             args.append('-DADIOS2_USE_BZip2={0}'.format(
@@ -153,7 +153,7 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_SSC={0}'.format(
                 'ON' if '+ssc' in spec else 'OFF'))
 
-        if self.spec.version >= Version('2.5.0'):
+        if spec.version >= Version('2.5.0'):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
@@ -175,6 +175,6 @@ class Adios2(CMakePackage):
 
         if spec.satisfies('+python'):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
-                        % self.spec['python'].command.path)
+                        % spec['python'].command.path)
 
         return args
