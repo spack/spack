@@ -107,12 +107,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
+    # The server is sometimes a bit slow to respond
+    timeout = {'timeout': 60}
+
     resource(
              name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
-             when='+nvptx'
+             when='+nvptx',
+             fetch_options=timeout
             )
 
     # nvptx-tools does not seem to work as a dependency,
