@@ -931,8 +931,7 @@ class Database(object):
             # Read from file if a database exists
             self._read_from_file(self._index_path)
             return
-
-        if self.is_upstream and not os.path.isfile(self._index_path):
+        elif self.is_upstream:
             raise UpstreamDatabaseLockingError(
                 "No database index file is present, and upstream"
                 " databases cannot generate an index file")
