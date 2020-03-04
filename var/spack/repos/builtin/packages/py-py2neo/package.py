@@ -20,3 +20,12 @@ class PyPy2neo(PythonPackage):
     version('2.0.4', sha256='19074b7b892f2e989f39eae21fc59b26a05e1a820adad8aa58bc470b70d9056d')
 
     depends_on("py-setuptools", type='build')
+
+    def url_for_version(self, version):
+        if version >= Version('2.0.9'):
+            url = 'https://github.com/technige/py2neo'
+        else:
+            url = 'ttps://github.com/nigelsmall/py2neo'
+
+        url = url + 'archive/py2neo-{0}.tar.gz'.format(version)
+        return url
