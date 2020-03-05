@@ -10,6 +10,7 @@ class Cscope(AutotoolsPackage):
     """Cscope is a developer's tool for browsing source code."""
 
     homepage = "http://cscope.sourceforge.net/"
+    url = "https://sourceforge.net/projects/cscope/files/cscope/v15.9/cscope-15.9.tar.gz"
 
     def url_for_version(self, version):
         url = "https://sourceforge.net/projects/cscope/files/cscope/{0}{1}/cscope-{1}.tar.gz"
