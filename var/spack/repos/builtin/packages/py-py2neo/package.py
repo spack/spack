@@ -11,9 +11,9 @@ class PyPy2neo(PythonPackage):
     within Python applications and from the command line."""
 
     homepage = "http://py2neo.org/"
-    # url      = "https://github.com/nigelsmall/py2neo/archive/py2neo-2.0.8.tar.gz"
     url      = "https://pypi.io/packages/source/p/py2neo/py2neo-2.0.8.tar.gz"
 
+    version('4.3.0', sha256='a218ccb4b636e3850faa6b74ebad80f00600217172a57f745cf223d38a219222')
     version('2.0.8', sha256='06167f5a91a0d9b9b73431baacd876f2d507650a681fdce1fcf3b383a9b991c1')
     version('2.0.7', sha256='9b154053eb93c7f5fb3ebd48b6a5b99df450d3f2e9c6682153c6f8d59369378c')
     version('2.0.6', sha256='6bb828d6d3e48b4d095b3f7d79dbb690a47633f0a9812eb62f141b042bab3186')
