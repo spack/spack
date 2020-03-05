@@ -16,6 +16,7 @@ class Libhio(AutotoolsPackage):
 
     homepage = "https://github.com/hpc/libhio"
     url      = "https://github.com/hpc/libhio/releases/download/hio.1.4.1.0/libhio-1.4.1.0.tar.bz2"
+    git      = "https://github.com/hpc/libhio.git"
     maintainers = ['plamborn']
 
     #
