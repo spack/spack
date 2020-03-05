@@ -391,6 +391,27 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     assert spec.package.name in installer.installed
 
 
+def test_install_task_stop_iter(install_mockery, monkeypatch, capfd):
+    """Test _install_task to cover the StopIteration exception."""
+    mock_err_msg = 'mock stop iteration'
+
+    def _raise(installer, pkg):
+        raise StopIteration(mock_err_msg)
+
+    spec, installer = create_installer('a')
+    task = create_build_task(spec.package)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _raise)
+
+    installer._install_task(task)
+    out = capfd.readouterr()[0]
+
+    assert mock_err_msg in out
+    assert 'Package stage directory' in out
+    assert spec.package.stage.source_path in out
+
+
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     """Test _release_lock for supposed write lock with exception."""
     spec, installer = create_installer('trivial-install-test-package')
