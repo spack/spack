@@ -18,32 +18,27 @@ Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
-
 """
-import datetime
-import time
-import os
-import sys
-import socket
-import contextlib
-from six import string_types
-from six import iteritems
 
-from ruamel.yaml.error import MarkedYAMLError, YAMLError
+import contextlib
+import datetime
+import os
+import socket
+import sys
+import time
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
-
-import spack.store
+import six
 import spack.repo
 import spack.spec
+import spack.store
 import spack.util.lock as lk
-import spack.util.spack_yaml as syaml
 import spack.util.spack_json as sjson
-from spack.filesystem_view import YamlFilesystemView
-from spack.util.crypto import bit_length
+from llnl.util.filesystem import mkdirp
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
+from spack.filesystem_view import YamlFilesystemView
+from spack.util.crypto import bit_length
 from spack.version import Version
 
 # TODO: Provide an API automatically retyring a build after detecting and
@@ -284,28 +279,20 @@ class Database(object):
         exist.  This is the ``db_dir``.
 
         The Database will attempt to read an ``index.json`` file in
-        ``db_dir``.  If it does not find one, it will fall back to read
-        an ``index.yaml`` if one is present.  If that does not exist, it
-        will create a database when needed by scanning the entire
-        Database root for ``spec.yaml`` files according to Spack's
-        ``DirectoryLayout``.
+        ``db_dir``.  If that does not exist, it will create a database
+        when needed by scanning the entire Database root for ``spec.yaml``
+        files according to Spack's ``DirectoryLayout``.
 
         Caller may optionally provide a custom ``db_dir`` parameter
-        where data will be stored.  This is intended to be used for
+        where data will be stored. This is intended to be used for
         testing the Database class.
-
         """
         self.root = root
 
-        if db_dir is None:
-            # If the db_dir is not provided, default to within the db root.
-            self._db_dir = os.path.join(self.root, _db_dirname)
-        else:
-            # Allow customizing the database directory location for testing.
-            self._db_dir = db_dir
+        # If the db_dir is not provided, default to within the db root.
+        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
 
         # Set up layout of database files within the db dir
-        self._old_yaml_index_path = os.path.join(self._db_dir, 'index.yaml')
         self._index_path = os.path.join(self._db_dir, 'index.json')
         self._lock_path = os.path.join(self._db_dir, 'lock')
 
@@ -554,7 +541,8 @@ class Database(object):
             prefix_lock.release_write()
 
     def _write_to_file(self, stream):
-        """Write out the databsae to a JSON file.
+        """Write out the database in JSON format to the stream passed
+        as argument.
 
         This function does not do any locking or transactions.
         """
@@ -576,9 +564,8 @@ class Database(object):
 
         try:
             sjson.dump(database, stream)
-        except YAMLError as e:
-            raise syaml.SpackYAMLError(
-                "error writing YAML database:", str(e))
+        except (TypeError, ValueError) as e:
+            raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
     def _read_spec_from_dict(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
@@ -649,28 +636,15 @@ class Database(object):
 
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_file(self, stream, format='json'):
-        """
-        Fill database from file, do not maintain old data
-        Translate the spec portions from node-dict form to spec form
+    def _read_from_file(self, filename):
+        """Fill database from file, do not maintain old data.
+        Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
-        if format.lower() == 'json':
-            load = sjson.load
-        elif format.lower() == 'yaml':
-            load = syaml.load
-        else:
-            raise ValueError("Invalid database format: %s" % format)
-
         try:
-            if isinstance(stream, string_types):
-                with open(stream, 'r') as f:
-                    fdata = load(f)
-            else:
-                fdata = load(stream)
-        except MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML database:", str(e))
+            with open(filename, 'r') as f:
+                fdata = sjson.load(f)
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
@@ -682,12 +656,12 @@ class Database(object):
                 raise CorruptDatabaseError(
                     "Spack database is corrupt: %s" % msg, self._index_path)
 
-        check('database' in fdata, "No 'database' attribute in YAML.")
+        check('database' in fdata, "no 'database' attribute in JSON DB.")
 
         # High-level file checks
         db = fdata['database']
-        check('installs' in db, "No 'installs' in YAML DB.")
-        check('version' in db, "No 'version' in YAML DB.")
+        check('installs' in db, "no 'installs' in JSON DB.")
+        check('version' in db, "no 'version' in JSON DB.")
 
         installs = db['installs']
 
@@ -763,7 +737,6 @@ class Database(object):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
-
         """
         if self.is_upstream:
             raise UpstreamDatabaseLockingError(
@@ -927,7 +900,6 @@ class Database(object):
         after the start of the next transaction, when it read from disk again.
 
         This routine does no locking.
-
         """
         # Do not write if exceptions were raised
         if type is not None:
@@ -952,35 +924,23 @@ class Database(object):
         """Re-read Database from the data in the set location.
 
         This does no locking, with one exception: it will automatically
-        migrate an index.yaml to an index.json if possible. This requires
-        taking a write lock.
-
+        try to regenerate a missing DB if local. This requires taking a
+        write lock.
         """
         if os.path.isfile(self._index_path):
-            # Read from JSON file if a JSON database exists
-            self._read_from_file(self._index_path, format='json')
+            # Read from file if a database exists
+            self._read_from_file(self._index_path)
+            return
+        elif self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "No database index file is present, and upstream"
+                " databases cannot generate an index file")
 
-        elif os.path.isfile(self._old_yaml_index_path):
-            if (not self.is_upstream) and os.access(
-                    self._db_dir, os.R_OK | os.W_OK):
-                # if we can write, then read AND write a JSON file.
-                self._read_from_file(self._old_yaml_index_path, format='yaml')
-                with lk.WriteTransaction(self.lock):
-                    self._write(None, None, None)
-            else:
-                # Read chck for a YAML file if we can't find JSON.
-                self._read_from_file(self._old_yaml_index_path, format='yaml')
-
-        else:
-            if self.is_upstream:
-                raise UpstreamDatabaseLockingError(
-                    "No database index file is present, and upstream"
-                    " databases cannot generate an index file")
-            # The file doesn't exist, try to traverse the directory.
-            # reindex() takes its own write lock, so no lock here.
-            with lk.WriteTransaction(self.lock):
-                self._write(None, None, None)
-            self.reindex(spack.store.layout)
+        # The file doesn't exist, try to traverse the directory.
+        # reindex() takes its own write lock, so no lock here.
+        with lk.WriteTransaction(self.lock):
+            self._write(None, None, None)
+        self.reindex(spack.store.layout)
 
     def _add(
             self,
@@ -1060,7 +1020,9 @@ class Database(object):
             )
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
+            for name, dep in six.iteritems(
+                    spec.dependencies_dict(_tracked_deps)
+            ):
                 dkey = dep.spec.dag_hash()
                 upstream, record = self.query_by_spec_hash(dkey)
                 new_spec._add_dependency(record.spec, dep.deptypes)
@@ -1133,8 +1095,7 @@ class Database(object):
         rec.ref_count += 1
 
     def _remove(self, spec):
-        """Non-locking version of remove(); does real work.
-        """
+        """Non-locking version of remove(); does real work."""
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
 
