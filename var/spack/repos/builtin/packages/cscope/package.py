@@ -18,7 +18,7 @@ class Cscope(AutotoolsPackage):
             return url.format('v', version)
         else:
             return url.format('', version)
-    
+
     version('15.9', sha256='c5505ae075a871a9cd8d9801859b0ff1c09782075df281c72c23e72115d9f159')
     version('15.8b', sha256='4889d091f05aa0845384b1e4965aa31d2b20911fb2c001b2cdcffbcb7212d3af')
 
