@@ -30,12 +30,13 @@ class Pfunit(CMakePackage):
     variant('shared', default=True,
             description='Build shared library in addition to static')
     variant('mpi', default=False, description='Enable MPI')
-    variant('use_comm_world', default=False, description='Enable MPI_COMM_WORLD for testing')
+    variant('use_comm_world', default=False,
+            description='Enable MPI_COMM_WORLD for testing')
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
     variant('max_array_rank', values=int, default=5,
-            description='Maximum number of Fortran dimensions of array asserts')
+            description='Max number of Fortran dimensions of array asserts')
 
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
