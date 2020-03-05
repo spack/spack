@@ -20,4 +20,4 @@ class Cscope(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('pkgconfig', type='build')
 
-    build_targets = ['CURSES_LIBS=-lncursesw']
+    build_targets = ['CURSES_LIBS=-lncursesw -ltinfo']
