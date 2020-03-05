@@ -34,6 +34,9 @@ class Pfunit(CMakePackage):
     variant('openmp', default=False, description='Enable OpenMP')
     variant('docs', default=False, description='Build docs')
 
+    variant('max_array_rank', values=int, default=5,
+            description='Maximum number of Fortran dimensions of array asserts')
+
     depends_on('python@2.7:', type=('build', 'run'))  # python3 too!
     depends_on('mpi', when='+mpi')
 
@@ -53,7 +56,8 @@ class Pfunit(CMakePackage):
             '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
             '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
             '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
-            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO')]
+            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+            '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
