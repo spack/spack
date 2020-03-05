@@ -27,29 +27,12 @@ class Eigen(CMakePackage):
     version('3.2.6', sha256='e097b8dcc5ad30d40af4ad72d7052e3f78639469baf83cffaadc045459cda21f')
     version('3.2.5', sha256='8068bd528a2ff3885eb55225c27237cf5cda834355599f05c2c85345db8338b4')
 
-    variant('metis', default=False,
-            description='Enables metis permutations in sparse algebra')
-    variant('scotch', default=False,
-            description='Enables scotch/pastix sparse factorization methods')
-    variant('fftw', default=False,
-            description='Enables FFTW backend for the FFT plugin')
-    variant('suitesparse', default=False,
-            description='Enables SuiteSparse sparse factorization methods')
-    variant('mpfr', default=False,
-            description='Enables the multi-precisions floating-point plugin')
+    # From http://eigen.tuxfamily.org/index.php?title=Main_Page#Requirements
+    # "Eigen doesn't have any dependencies other than the C++ standard
+    # library."
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
-
-    # TODO : dependency on googlehash, superlu, adolc missing
-    depends_on('metis@5:', when='+metis')
-    depends_on('scotch', when='+scotch')
-    depends_on('fftw', when='+fftw')
-    depends_on('suite-sparse', when='+suitesparse')
-    depends_on('mpfr@2.3.0:', when='+mpfr')
-    depends_on('gmp', when='+mpfr')
-
-    patch('find-ptscotch.patch', when='@3.3.4')
 
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
