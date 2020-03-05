@@ -83,18 +83,25 @@ class Sgpp(SConsPackage):
     conflicts('-pde', when='+python+solver')
     # some modules depend on each other (notably datadriven and misc)
     conflicts('+pde', when='-solver')
+    # Datadriven requirements
     conflicts('+datadriven', when='-solver')
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
+    conflicts('+datadriven', when='simd=sse3')
+    conflicts('+datadriven', when='simd=sse42')
+    # Misc requirements
     conflicts('+misc', when='-datadriven')
     conflicts('+misc', when='-solver')
     conflicts('+misc', when='-optimization')
     conflicts('+misc', when='-pde')
     # Misc did not exist in older versions
     conflicts('+misc', when='@:3.1.0')
-    # Datadriven requires at least avx
-    conflicts('+datadriven', when='simd=sse3')
-    conflicts('+datadriven', when='simd=sse42')
+    # Combigrid reuqirements (for 3.2.0 or older)
+    # newer combigrids have no dependencies
+    conflicts('+combigrid', when='@:3.2.0-optimization')
+    conflicts('+combigrid', when='@:3.2.0-pde')
+    conflicts('+combigrid', when='@:3.2.0-solver')
+    conflicts('+combigrid', when='@:3.2.0-quadrature')
 
     def build_args(self, spec, prefix):
         # No need for unit tests anymore -> saves installation time
