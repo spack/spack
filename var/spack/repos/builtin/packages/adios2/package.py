@@ -16,7 +16,7 @@ class Adios2(CMakePackage):
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
     version('2.3.1', sha256='3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893')
@@ -149,7 +149,7 @@ class Adios2(CMakePackage):
                 'ON' if self.run_tests else 'OFF'),
         ]
 
-        if self.spec.version >= Version('2.4.0'):
+        if spec.version >= Version('2.4.0'):
             args.append('-DADIOS2_USE_Blosc={0}'.format(
                 'ON' if '+blosc' in spec else 'OFF'))
             args.append('-DADIOS2_USE_BZip2={0}'.format(
@@ -159,7 +159,7 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_SSC={0}'.format(
                 'ON' if '+ssc' in spec else 'OFF'))
 
-        if self.spec.version >= Version('2.5.0'):
+        if spec.version >= Version('2.5.0'):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
@@ -181,6 +181,6 @@ class Adios2(CMakePackage):
 
         if spec.satisfies('+python') or self.run_tests:
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
-                        % self.spec['python'].command.path)
+                        % spec['python'].command.path)
 
         return args
