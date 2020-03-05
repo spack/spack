@@ -428,9 +428,42 @@ def replace_prefix_text(path_name, old_dir, new_dir):
 def replace_prefix_bin(path_name, old_dir, new_dir):
     """
     Attempt to replace old install prefix with new install prefix
+    in binary files by prefixing new install prefix with os.sep
+    until the lengths of the prefixes are the same.
+    """
+
+    def replace(match):
+        occurances = match.group().count(old_dir.encode('utf-8'))
+        olen = len(old_dir.encode('utf-8'))
+        nlen = len(new_dir.encode('utf-8'))
+        padding = (olen - nlen) * occurances
+        if padding < 0:
+            return data
+        return match.group().replace(old_dir.encode('utf-8'),
+                                     os.sep.encode('utf-8') * padding +
+                                     new_dir.encode('utf-8'))
+
+    with open(path_name, 'rb+') as f:
+        data = f.read()
+        f.seek(0)
+        original_data_len = len(data)
+        pat = re.compile(old_dir.encode('utf-8') + b'([^\0]*?)\0')
+        if not pat.search(data):
+            return
+        ndata = pat.sub(replace, data)
+        if not len(ndata) == original_data_len:
+            raise BinaryStringReplacementException(
+                path_name, original_data_len, len(ndata))
+        f.write(ndata)
+        f.truncate()
+
+
+def replace_prefix_nullterm(path_name, old_dir, new_dir):
+    """
+    Attempt to replace old install prefix with new install prefix
     in binary files by replacing with null terminated string
-    that is the same length. If the old path is shorter then the new_path
-    raise an exception because this replacement would break the binary.
+    that is the same length unless the old path is shorter
+    Used on linux to replace mach-o rpaths
     """
 
     def replace(match):
