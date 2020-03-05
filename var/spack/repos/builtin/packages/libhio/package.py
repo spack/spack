@@ -22,7 +22,7 @@ class Libhio(AutotoolsPackage):
     # We don't include older versions since they are missing features
     # needed by current and future consumers of libhio
     #
-    version('develop', git=url, branch='master')
+    version('master', branch='master')
     version('1.4.1.4', sha256='6998a424cff97be9a207032b3addd19f292d8ebda72043be92a8f942ae3b4da1')
     version('1.4.1.3', sha256='b6ad2354f1bc597e7e55fc989ff50944835d64149f4925c2f45df950919e4d08')
     version('1.4.1.2', sha256='87a0f9b72b7aa69485c40d9bd36f02af653b70e8eed3eb0b50eaeb02ff0a9049')
