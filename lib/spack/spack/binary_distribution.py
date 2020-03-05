@@ -878,6 +878,7 @@ def get_specs(force=False, allarch=False):
 def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
+    with suffix .key or .pub
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
@@ -894,16 +895,18 @@ def get_keys(install=False, trust=False, force=False):
             tty.msg("Finding public keys in %s" % mirror_dir)
             files = os.listdir(str(mirror_dir))
             for file in files:
-                if re.search(r'\.key', file):
+                if re.search(r'\.key', file) or re.search(r'\.pub', file):
                     link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
             tty.msg("Finding public keys at %s" %
                     url_util.format(fetch_url_build_cache))
-            p, links = web_util.spider(fetch_url_build_cache, depth=1)
+            # For s3 mirror need to request index.html directly
+            p, links = web_util.spider(
+                url_util.join(fetch_url_build_cache, 'index.html'), depth=1)
 
             for link in links:
-                if re.search(r'\.key', link):
+                if re.search(r'\.key', link) or re.search(r'\.pub', link):
                     keys.add(link)
 
         for link in keys:
