@@ -1154,7 +1154,7 @@ class PackageInstaller(object):
         except StopIteration as e:
             # A StopIteration exception means that do_install was asked to
             # stop early from clients.
-            tty.msg('{0} {1}'.format(self.pid, e.message))
+            tty.msg('{0} {1}'.format(self.pid, str(e)))
             tty.msg('Package stage directory : {0}'
                     .format(pkg.stage.source_path))
 
