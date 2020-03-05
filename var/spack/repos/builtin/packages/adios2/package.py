@@ -100,8 +100,12 @@ class Adios2(CMakePackage):
 
     extends('python', when='+python')
     depends_on('python@2.7:2.8,3.5:',
-               when='@:2.4.0 +python', type=('build', 'run'))
-    depends_on('python@3.5:', when='@2.5.0: +python', type=('build', 'run'))
+               when='@:2.4.0 +python',
+               type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.5.0: +python',
+               type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:2.4.0', type='test')
+    depends_on('python@3.5:', when='@2.5.0:', type='test')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi +python')
 
@@ -141,6 +145,8 @@ class Adios2(CMakePackage):
                 'ON' if '+fortran' in spec else 'OFF'),
             '-DADIOS2_USE_Endian_Reverse={0}'.format(
                 'ON' if '+endian_reverse' in spec else 'OFF'),
+            '-DBUILD_TESTING:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
         ]
 
         if self.spec.version >= Version('2.4.0'):
@@ -173,7 +179,7 @@ class Adios2(CMakePackage):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
                 'ON' if '+pic' in spec else 'OFF'))
 
-        if spec.satisfies('+python'):
+        if spec.satisfies('+python') or self.run_tests:
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
                         % self.spec['python'].command.path)
 
