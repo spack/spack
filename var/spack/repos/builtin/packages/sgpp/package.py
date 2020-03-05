@@ -11,7 +11,7 @@ class Sgpp(SConsPackage):
 
     homepage = "https://sgpp.sparsegrids.org"
     url = "https://github.com/SGpp/SGpp/archive/v3.2.0.tar.gz"
-    maintainers = ['G-071', 'leiterrl']
+    maintainers = ['G-071', 'leiterrl', 'freifrauvonbleifrei']
 
     # Versions with Python 3 bindings:
     version('master', git='https://github.com/SGpp/SGpp.git', branch='master')
