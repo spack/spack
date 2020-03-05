@@ -245,7 +245,7 @@ def test_ensure_locked_have(install_mockery, tmpdir):
 def test_package_id(install_mockery):
     """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, matches='spec is not concretized'):
+    with pytest.raises(ValueError, match='spec is not concretized'):
         inst.package_id(pkg)
 
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -280,7 +280,7 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
 
     # Test up to the dependency check
     monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
-    with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
+    with pytest.raises(spack.repo.UnknownPackageError, match='not found'):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
 
 
@@ -300,7 +300,7 @@ def test_check_deps_status_errs(install_mockery, monkeypatch):
     orig_fn = spack.database.Database.prefix_failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    with pytest.raises(inst.InstallError, matches='install failure'):
+    with pytest.raises(inst.InstallError, match='install failure'):
         installer._check_deps_status()
 
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', orig_fn)
@@ -308,7 +308,7 @@ def test_check_deps_status_errs(install_mockery, monkeypatch):
     # Ensure do not acquire the lock
     monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
 
-    with pytest.raises(inst.InstallError, matches='write locked by another'):
+    with pytest.raises(inst.InstallError, match='write locked by another'):
         installer._check_deps_status()
 
 
@@ -485,7 +485,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -503,7 +503,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -622,7 +622,7 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
     spec, installer = create_installer('b')
 
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
         installer.install()
 
     assert 'b' in installer.installed
