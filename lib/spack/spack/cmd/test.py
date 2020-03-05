@@ -154,7 +154,7 @@ def test(parser, args, unknown_args):
 
     # The default is to test the core of Spack. If the option `--extension`
     # has been used, then test that extension.
-    pytest_root = spack.paths.test_path
+    pytest_root = spack.paths.spack_root
     if args.extension:
         target = args.extension
         extensions = spack.config.get('config:extensions')

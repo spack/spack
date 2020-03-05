@@ -6,6 +6,7 @@
 from spack.main import SpackCommand
 
 spack_test = SpackCommand('test')
+cmd_test_py = 'lib/spack/spack/test/cmd/test.py'
 
 
 def test_list():
@@ -16,13 +17,13 @@ def test_list():
 
 
 def test_list_with_pytest_arg():
-    output = spack_test('--list', 'cmd/test.py')
-    assert output.strip() == "cmd/test.py"
+    output = spack_test('--list', cmd_test_py)
+    assert output.strip() == cmd_test_py
 
 
 def test_list_with_keywords():
     output = spack_test('--list', '-k', 'cmd/test.py')
-    assert output.strip() == "cmd/test.py"
+    assert output.strip() == cmd_test_py
 
 
 def test_list_long(capsys):
@@ -44,7 +45,7 @@ def test_list_long(capsys):
 
 def test_list_long_with_pytest_arg(capsys):
     with capsys.disabled():
-        output = spack_test('--list-long', 'cmd/test.py')
+        output = spack_test('--list-long', cmd_test_py)
     assert "test.py::\n" in output
     assert "test_list" in output
     assert "test_list_with_pytest_arg" in output
@@ -74,7 +75,7 @@ def test_list_names():
 
 
 def test_list_names_with_pytest_arg():
-    output = spack_test('--list-names', 'cmd/test.py')
+    output = spack_test('--list-names', cmd_test_py)
     assert "test.py::test_list\n" in output
     assert "test.py::test_list_with_pytest_arg\n" in output
     assert "test.py::test_list_with_keywords\n" in output
