@@ -34,6 +34,9 @@ class Eigen(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
 
+    # TODO: latex and doxygen needed to produce docs with make doc
+    # TODO: Other dependencies might be needed to test this package
+
     def setup_run_environment(self, env):
         env.prepend_path('CPATH', self.prefix.include.eigen3)
 
