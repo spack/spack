@@ -55,22 +55,3 @@ class PyDask(PythonPackage):
 
     # Requirements for dask.distributed
     depends_on('py-distributed@1.22:',  type=('build', 'run'), when='+distributed')
-
-    @property
-    def import_modules(self):
-        modules = [
-            'dask', 'dask.bytes', 'dask.diagnostics', 'dask.store'
-        ]
-
-        if '+array' in self.spec:
-            modules.append('dask.array')
-
-        if '+bag' in self.spec:
-            modules.append('dask.bag')
-
-        if '+dataframe' in self.spec:
-            modules.extend([
-                'dask.dataframe', 'dask.dataframe.io', 'dask.dataframe.tseries'
-            ])
-
-        return modules

@@ -12,8 +12,6 @@ class PySphinxcontribBibtex(PythonPackage):
     homepage = "https://pypi.python.org/pypi/sphinxcontrib-bibtex"
     url      = "https://pypi.io/packages/source/s/sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
-    import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
-
     version('0.3.5', sha256='c93e2b4a0d14f0ab726f95f0a33c1675965e9df3ed04839635577b8f978206cd')
 
     depends_on('py-setuptools', type='build')

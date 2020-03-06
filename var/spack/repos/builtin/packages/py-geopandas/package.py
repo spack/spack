@@ -17,9 +17,6 @@ class PyGeopandas(PythonPackage):
     url      = "https://pypi.io/packages/source/g/geopandas/geopandas-0.5.0.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'geopandas', 'geopandas.io', 'geopandas.tools', 'geopandas.datasets'
-    ]
 
     version('0.5.0', sha256='d075d2ab61a502ab92ec6b72aaf9610a1340ec24ed07264fcbdbe944b9e68954')
     version('0.4.0', sha256='9f5d24d23f33e6d3267a633025e4d9e050b3a1e86d41a96d3ccc5ad95afec3db')

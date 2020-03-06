@@ -16,39 +16,6 @@ class PyTorch(PythonPackage, CudaPackage):
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'tools', 'caffe2', 'torch', 'tools.cwrap', 'tools.autograd',
-        'tools.setup_helpers', 'tools.shared', 'tools.jit', 'tools.pyi',
-        'tools.nnwrap', 'tools.cwrap.plugins', 'caffe2.core', 'caffe2.proto',
-        'caffe2.python', 'caffe2.distributed', 'caffe2.perfkernels',
-        'caffe2.experiments', 'caffe2.contrib', 'caffe2.quantization',
-        'caffe2.core.nomnigraph', 'caffe2.python.ideep', 'caffe2.python.mint',
-        'caffe2.python.layers', 'caffe2.python.onnx', 'caffe2.python.trt',
-        'caffe2.python.models', 'caffe2.python.docs', 'caffe2.python.modeling',
-        'caffe2.python.mkl', 'caffe2.python.examples',
-        'caffe2.python.predictor', 'caffe2.python.helpers',
-        'caffe2.python.rnn', 'caffe2.python.onnx.bin',
-        'caffe2.python.models.seq2seq', 'caffe2.experiments.python',
-        'caffe2.contrib.nnpack', 'caffe2.contrib.warpctc',
-        'caffe2.contrib.nccl', 'caffe2.contrib.playground',
-        'caffe2.contrib.gloo', 'caffe2.contrib.script', 'caffe2.contrib.prof',
-        'caffe2.contrib.tensorboard', 'caffe2.contrib.aten',
-        'caffe2.contrib.playground.resnetdemo',
-        'caffe2.contrib.script.examples', 'caffe2.contrib.aten.docs',
-        'caffe2.quantization.server', 'torch.nn', 'torch.onnx',
-        'torch.distributed', 'torch.autograd', 'torch.multiprocessing',
-        'torch.cuda', 'torch.backends', 'torch.optim', 'torch.utils',
-        'torch.contrib', 'torch.jit', 'torch.sparse',
-        'torch.for_onnx', 'torch._thnn', 'torch.distributions',
-        'torch.nn.parallel', 'torch.nn._functions', 'torch.nn.backends',
-        'torch.nn.utils', 'torch.nn.modules', 'torch.nn.parallel.deprecated',
-        'torch.nn._functions.thnn', 'torch.distributed.deprecated',
-        'torch.autograd._functions', 'torch.backends.cuda',
-        'torch.backends.mkl', 'torch.backends.mkldnn', 'torch.backends.openmp',
-        'torch.backends.cudnn', 'torch.utils.backcompat',
-        'torch.utils.bottleneck', 'torch.utils.ffi', 'torch.utils.tensorboard',
-        'torch.utils.data', 'torch.utils.data._utils'
-    ]
 
     version('master', branch='master', submodules=True)
     version('1.4.0', tag='v1.4.0', submodules=True)

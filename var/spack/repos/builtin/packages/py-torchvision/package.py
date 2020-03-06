@@ -14,12 +14,6 @@ class PyTorchvision(PythonPackage):
     url      = "https://github.com/pytorch/vision/archive/v0.5.0.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'torchvision', 'torchvision.datasets', 'torchvision.models',
-        'torchvision.transforms', 'torchvision.ops',
-        'torchvision.models.segmentation',
-        'torchvision.models.detection'
-    ]
 
     version('0.5.0', sha256='eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d')
     version('0.4.2', sha256='1184a27eab85c9e784bacc6f9d6fec99e168ab4eda6047ef9f709e7fdb22d8f9')

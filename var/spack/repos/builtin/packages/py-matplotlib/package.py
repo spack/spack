@@ -17,16 +17,6 @@ class PyMatplotlib(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    import_modules = [
-        'mpl_toolkits', 'matplotlib', 'mpl_toolkits.axes_grid1',
-        'mpl_toolkits.axes_grid', 'mpl_toolkits.mplot3d',
-        'mpl_toolkits.axisartist', 'matplotlib.compat', 'matplotlib.tri',
-        'matplotlib.axes', 'matplotlib.sphinxext', 'matplotlib.cbook',
-        'matplotlib.backends', 'matplotlib.style', 'matplotlib.projections',
-        'matplotlib.testing', 'matplotlib.backends.qt_editor',
-        'matplotlib.testing.jpl_units'
-    ]
-
     version('3.2.0', sha256='651d76daf9168250370d4befb09f79875daa2224a9096d97dfc3ed764c842be4')
     version('3.1.3', sha256='db3121f12fb9b99f105d1413aebaeb3d943f269f3d262b45586d12765866f0c6')
     version('3.1.2', sha256='8e8e2c2fe3d873108735c6ee9884e6f36f467df4a143136209cff303b183bada')

@@ -13,8 +13,6 @@ class PyFreezegun(PythonPackage):
     homepage = "https://github.com/spulec/freezegun"
     url      = "https://pypi.io/packages/source/f/freezegun/freezegun-0.3.12.tar.gz"
 
-    import_modules = ['freezegun']
-
     version('0.3.12', sha256='2a4d9c8cd3c04a201e20c313caf8b6338f1cfa4cda43f46a94cc4a9fd13ea5e7')
 
     depends_on('py-setuptools', type='build')

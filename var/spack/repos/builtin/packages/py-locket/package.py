@@ -12,6 +12,4 @@ class PyLocket(PythonPackage):
     homepage = "http://github.com/mwilliamson/locket.py"
     url      = "https://pypi.io/packages/source/l/locket/locket-0.2.0.tar.gz"
 
-    import_modules = ['locket']
-
     version('0.2.0', sha256='1fee63c1153db602b50154684f5725564e63a0f6d09366a1cb13dffcec179fb4')

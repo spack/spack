@@ -12,8 +12,6 @@ class PyPluggy(PythonPackage):
     homepage = "https://github.com/pytest-dev/pluggy"
     url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.13.0.tar.gz"
 
-    import_modules = ['pluggy']
-
     version('0.13.0', sha256='fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34')
     version('0.12.0', sha256='0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc')
     version('0.7.1', sha256='95eb8364a4708392bae89035f45341871286a333f749c3141c20573d2b3876e1')

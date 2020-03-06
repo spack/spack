@@ -12,8 +12,6 @@ class PyVermin(PythonPackage):
     homepage = "https://github.com/netromdk/vermin"
     url      = "https://github.com/netromdk/vermin/archive/v0.10.0.tar.gz"
 
-    import_modules = ['vermin']
-
     version('0.10.0', sha256='3458a4d084bba5c95fd7208888aaf0e324a07ee092786ee4e5529f539ab4951f')
 
     depends_on('python@2.7:', type=('build', 'run'))

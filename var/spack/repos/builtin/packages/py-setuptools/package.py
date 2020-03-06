@@ -13,14 +13,6 @@ class PySetuptools(PythonPackage):
     homepage = "https://github.com/pypa/setuptools"
     url      = "https://pypi.io/packages/source/s/setuptools/setuptools-41.0.1.zip"
 
-    import_modules = [
-        'setuptools', 'pkg_resources', 'setuptools._vendor',
-        'setuptools.command', 'setuptools.extern',
-        'setuptools._vendor.packaging', 'pkg_resources._vendor',
-        'pkg_resources.extern', 'pkg_resources._vendor.packaging',
-        'easy_install'
-    ]
-
     version('41.4.0', sha256='7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d')
     version('41.0.1', sha256='a222d126f5471598053c9a77f4b5d4f26eaa1f150ad6e01dcf1a42e185d05613')
     version('41.0.0', sha256='79d30254b6fe7a8e672e43cd85f13a9f3f2a50080bc81d851143e2219ef0dcb1')

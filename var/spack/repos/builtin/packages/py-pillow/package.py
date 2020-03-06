@@ -16,7 +16,6 @@ class PyPillow(PythonPackage):
     url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.0.0.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = ['PIL']
 
     version('7.0.0', sha256='4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946')
     version('6.2.2', sha256='db9ff0c251ed066d367f53b64827cc9e18ccea001b986d08c265e53625dab950')

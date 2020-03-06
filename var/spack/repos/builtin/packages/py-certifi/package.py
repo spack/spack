@@ -14,8 +14,6 @@ class PyCertifi(PythonPackage):
     homepage = "http://certifi.io/"
     url      = "https://pypi.io/packages/source/c/certifi/certifi-2019.6.16.tar.gz"
 
-    import_modules = ['certifi']
-
     version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')
     version('2019.6.16', sha256='945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695')
     version('2019.3.9',  sha256='b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae')

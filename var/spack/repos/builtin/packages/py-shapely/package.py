@@ -14,10 +14,6 @@ class PyShapely(PythonPackage):
     url      = "https://pypi.io/packages/source/S/Shapely/Shapely-1.6.4.post2.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'shapely', 'shapely.geometry', 'shapely.algorithms',
-        'shapely.examples', 'shapely.speedups', 'shapely.vectorized',
-    ]
 
     version('1.6.4.post2', sha256='c4b87bb61fc3de59fc1f85e71a79b0c709dc68364d9584473697aad4aa13240f')
     version('1.6.4', sha256='b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655')

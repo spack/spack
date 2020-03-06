@@ -12,8 +12,6 @@ class PyS3transfer(PythonPackage):
     homepage = "https://github.com/boto/s3transfer"
     url      = "https://pypi.io/packages/source/s/s3transfer/s3transfer-0.2.1.tar.gz"
 
-    import_modules = ['s3transfer']
-
     version('0.2.1', sha256='6efc926738a3cd576c2a79725fed9afde92378aa5c6a957e3af010cb019fac9d')
 
     depends_on('py-setuptools', type='build')

@@ -15,10 +15,6 @@ class PyZopeInterface(PythonPackage):
     homepage = "https://github.com/zopefoundation/zope.interface"
     url      = "https://pypi.io/packages/source/z/zope.interface/zope.interface-4.5.0.tar.gz"
 
-    # FIXME: No idea why these import tests fail.
-    # Maybe some kind of namespace issue?
-    # import_modules = ['zope.interface', 'zope.interface.common']
-
     version('4.5.0', sha256='57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))

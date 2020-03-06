@@ -16,22 +16,6 @@ class PyScikitLearn(PythonPackage):
     maintainers = ['adamjstewart']
     install_time_test_callbacks = ['install_test', 'import_module_test']
 
-    import_modules = [
-        'sklearn', 'sklearn.tree', 'sklearn.metrics', 'sklearn.ensemble',
-        'sklearn.experimental', 'sklearn.cluster',
-        'sklearn.feature_extraction', 'sklearn.__check_build',
-        'sklearn.semi_supervised', 'sklearn.gaussian_process',
-        'sklearn.compose', 'sklearn.datasets', 'sklearn.externals',
-        'sklearn.linear_model', 'sklearn.impute', 'sklearn.utils',
-        'sklearn.covariance', 'sklearn.neural_network',
-        'sklearn.feature_selection', 'sklearn.inspection', 'sklearn.svm',
-        'sklearn.manifold', 'sklearn.mixture', 'sklearn.preprocessing',
-        'sklearn.model_selection', 'sklearn._build_utils',
-        'sklearn.decomposition', 'sklearn.cross_decomposition',
-        'sklearn.neighbors', 'sklearn.metrics.cluster',
-        'sklearn.ensemble._hist_gradient_boosting'
-    ]
-
     version('master', branch='master')
     version('0.22.1', sha256='51ee25330fc244107588545c70e2f3570cfc4017cff09eed69d6e1d82a212b7d')
     version('0.22',   sha256='314abf60c073c48a1e95feaae9f3ca47a2139bd77cebb5b877c23a45c9e03012')

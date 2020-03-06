@@ -12,11 +12,6 @@ class PyPygments(PythonPackage):
     homepage = "http://pygments.org/"
     url      = "https://pypi.io/packages/source/P/Pygments/Pygments-2.4.2.tar.gz"
 
-    import_modules = [
-        'pygments', 'pygments.filters', 'pygments.formatters',
-        'pygments.lexers', 'pygments.styles'
-    ]
-
     version('2.4.2', sha256='881c4c157e45f30af185c1ffe8d549d48ac9127433f2c380c24b84572ad66297')
     version('2.3.1', sha256='5ffada19f6203563680669ee7f53b64dabbeb100eb51b61996085e99c03b284a')
     version('2.2.0', sha256='dbae1046def0efb574852fab9e90209b23f556367b5a320c0bcb871c77c3e8cc')

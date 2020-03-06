@@ -20,19 +20,6 @@ class PyPandas(PythonPackage):
     url = "https://pypi.io/packages/source/p/pandas/pandas-0.25.1.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'pandas', 'pandas.compat', 'pandas.core', 'pandas.util', 'pandas.io',
-        'pandas.tseries', 'pandas._libs', 'pandas.plotting', 'pandas.arrays',
-        'pandas.api', 'pandas.errors', 'pandas._config', 'pandas.compat.numpy',
-        'pandas.core.reshape', 'pandas.core.tools', 'pandas.core.util',
-        'pandas.core.dtypes', 'pandas.core.groupby', 'pandas.core.internals',
-        'pandas.core.computation', 'pandas.core.arrays', 'pandas.core.ops',
-        'pandas.core.sparse', 'pandas.core.indexes', 'pandas.io.msgpack',
-        'pandas.io.formats', 'pandas.io.excel', 'pandas.io.json',
-        'pandas.io.sas', 'pandas.io.clipboard', 'pandas._libs.tslibs',
-        'pandas.plotting._matplotlib', 'pandas.api.types',
-        'pandas.api.extensions'
-    ]
 
     version('0.25.1', sha256='cb2e197b7b0687becb026b84d3c242482f20cbb29a9981e43604eb67576da9f6')
     version('0.25.0', sha256='914341ad2d5b1ea522798efa4016430b66107d05781dbfe7cf05eba8f37df995')

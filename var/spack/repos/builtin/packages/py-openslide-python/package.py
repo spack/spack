@@ -14,8 +14,6 @@ class PyOpenslidePython(PythonPackage):
 
     version('1.1.1', sha256='33c390fe43e3d7d443fafdd66969392d3e9efd2ecd5d4af73c3dbac374485ed5')
 
-    import_modules = ['openslide']
-
     depends_on('openslide@3.4.0:')
     depends_on('python@2.6:2.8,3.3:')
     depends_on('py-setuptools', type='build')

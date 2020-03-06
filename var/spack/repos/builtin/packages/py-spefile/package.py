@@ -13,8 +13,6 @@ class PySpefile(PythonPackage):
     homepage = "https://github.com/conda-forge/spefile-feedstock"
     git      = "https://github.com/conda-forge/spefile-feedstock.git"
 
-    import_modules = ['spefile']
-
     version('1.6', commit='24394e066da8dee5e7608f556ca0203c9db217f9')
 
     depends_on('py-setuptools', type='build')

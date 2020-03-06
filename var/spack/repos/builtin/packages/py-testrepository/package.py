@@ -12,14 +12,6 @@ class PyTestrepository(PythonPackage):
     homepage = "https://launchpad.net/testrepository"
     url      = "https://pypi.io/packages/source/t/testrepository/testrepository-0.0.20.tar.gz"
 
-    import_modules = [
-        'testrepository', 'testrepository.arguments',
-        'testrepository.commands', 'testrepository.repository',
-        'testrepository.tests', 'testrepository.tests.arguments',
-        'testrepository.tests.commands', 'testrepository.tests.repository',
-        'testrepository.tests.ui', 'testrepository.ui',
-    ]
-
     version('0.0.20', sha256='752449bc98c20253ec4611c40564aea93d435a5bf3ff672208e01cc10e5858eb')
 
     depends_on('py-setuptools', type='build')
