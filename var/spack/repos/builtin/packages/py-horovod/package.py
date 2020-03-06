@@ -12,7 +12,7 @@ class PyHorovod(PythonPackage):
     """Horovod is a distributed deep learning training framework for
     TensorFlow, Keras, PyTorch, and Apache MXNet."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/horovod"
     git      = "https://github.com/horovod/horovod.git"
     url      = "https://github.com/horovod/horovod/archive/v0.19.0.tar.gz"
 
