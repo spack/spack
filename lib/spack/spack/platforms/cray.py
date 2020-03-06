@@ -61,7 +61,7 @@ class Cray(Platform):
                 _target = os.environ.get('SPACK_' + name.upper())
             if _target is None and name == 'back_end':
                 _target = self._default_target_from_env()
-            if _target is not None:
+            if _target:
                 safe_name = _target.replace('-', '_')
                 setattr(self, name, safe_name)
                 self.add_target(name, self.targets[safe_name])
@@ -118,7 +118,8 @@ class Cray(Platform):
         # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
             env = which('env')
-            output = env("-i", "/bin/bash", "-lc", "echo $CRAY_CPU_TARGET",
+            output = env("-i", "TERM=%s" % os.environ['TERM'],
+                         "/bin/bash", "-lc", "echo $CRAY_CPU_TARGET",
                          output=str, error=os.devnull)
             self.default = output.strip()
             tty.debug("Found default module:%s" % self.default)
