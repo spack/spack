@@ -301,7 +301,19 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
 
 
-def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch, capsys):
+def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
+    """Test to add coverage to dump_packages with dependencies happy path."""
+
+    spec_name = 'simple-inheritance'
+    spec = spack.spec.Spec(spec_name).concretized()
+    inst.dump_packages(spec, str(tmpdir))
+
+    repo = mock_repo_path.repos[0]
+    dest_pkg = repo.filename_for_package_name(spec_name)
+    assert os.path.isfile(dest_pkg)
+
+
+def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
     """Test to add coverage to dump_packages with dependencies."""
     orig_bpp = spack.store.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
@@ -320,25 +332,23 @@ def test_dump_packages_deps(install_mockery, tmpdir, monkeypatch, capsys):
         else:
             return orig_dirname(repo, name)
 
-    # First the "happy" path of skipping "installed" dependent package
-    spec = spack.spec.Spec('simple-inheritance').concretized()
-    inst.dump_packages(spec, str(tmpdir))
-
     # Now mock the creation of the required directory structure to cover
     # the try-except block
     monkeypatch.setattr(spack.store.layout, 'build_packages_path', bpp_path)
 
+    spec = spack.spec.Spec('simple-inheritance').concretized()
+    path = str(tmpdir)
+
     # The call to install_tree will raise the exception since not mocking
     # creation of dependency package files within *install* directories.
-    with pytest.raises(IOError, match=str(tmpdir)):
-        with tmpdir.as_cwd():
-            inst.dump_packages(spec, str(tmpdir))
+    with pytest.raises(IOError, match=path):
+        inst.dump_packages(spec, path)
 
     # Now try the error path, which requires the mock directory structure
     # above
     monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
     with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
-        inst.dump_packages(spec, str(tmpdir))
+        inst.dump_packages(spec, path)
 
     out = str(capsys.readouterr()[1])
     assert "Couldn't copy in provenance for cmake" in out
