@@ -2048,13 +2048,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return
 
         for name in self.build_time_test_callbacks:
-            try:
-                fn = getattr(self, name)
-                tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
-                fn()
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
+            fn = getattr(self, name)
+            tty.msg('RUN-TESTS: build-time tests [{0}]'.format(name))
+            fn()
 
     @on_package_attributes(run_tests=True)
     def _run_default_install_time_test_callbacks(self):
@@ -2067,13 +2063,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             return
 
         for name in self.install_time_test_callbacks:
-            try:
-                fn = getattr(self, name)
-                tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
-                fn()
-            except AttributeError:
-                msg = 'RUN-TESTS: method not implemented [{0}]'
-                tty.warn(msg.format(name))
+            fn = getattr(self, name)
+            tty.msg('RUN-TESTS: install-time tests [{0}]'.format(name))
+            fn()
 
 
 inject_flags = PackageBase.inject_flags

@@ -8,6 +8,8 @@ import inspect
 import os
 import shutil
 
+import setuptools
+
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 
@@ -76,16 +78,6 @@ class PythonPackage(PackageBase):
     # Default phases
     phases = ['build', 'install']
 
-    # Name of modules that the Python package provides
-    # This is used to test whether or not the installation succeeded
-    # These names generally come from running:
-    #
-    # >>> import setuptools
-    # >>> setuptools.find_packages()
-    #
-    # in the source tarball directory
-    import_modules = []
-
     # To be used in UI queries that require to know which
     # build-system class we are using
     build_system_class = 'PythonPackage'
@@ -101,6 +93,49 @@ class PythonPackage(PackageBase):
     depends_on('python', type=('build', 'run'))
 
     py_namespace = None
+
+    @property
+    def import_modules(self):
+        """Name of modules that the Python package provides.
+
+        During test time, Spack tries to import these modules to determine
+        whether or not the installation succeeded.
+
+        Returns:
+            list: list of Python modules provided by the package
+        """
+        # NOTE: In the Python ecosystem, a distinction is made between
+        # 'packages' and 'modules'. 'packages' are directories containing
+        # `__init__.py` files, while 'modules' are standalone `*.py` files.
+
+        # First, we try using `setuptools.find_packages` to get a list of
+        # 'packages' provided by this Spack package.
+        packages = setuptools.find_packages(os.path.join(
+            inspect.getmodule(self).prefix,
+            inspect.getmodule(self).site_packages_dir))
+
+        if packages:
+            return packages
+
+        # If the package only contains Python 'modules', we guess using
+        # the name of the package.
+        module = self.name
+
+        # Spack often prepends `py-` to the name of the package.
+        if module.startswith('py-'):
+            module = module[3:]
+
+        # Many libraries with Python bindings add `python-` to the beginning
+        # or `-python` to the end of the name of the package.
+        if module.startswith('python-'):
+            module = module[7:]
+        if module.endswith('-python'):
+            module = module[:-7]
+
+        # Python imports either use foo.bar or foo_bar, never foo-bar.
+        module = module.replace('-', '.')
+
+        return [module]
 
     def setup_file(self):
         """Returns the name of the setup file to use."""
@@ -374,10 +409,10 @@ class PythonPackage(PackageBase):
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
     def import_module_test(self):
-        """Attempts to import the module that was just installed.
+        """Attempts to import the modules that were just installed.
 
-        This test is only run if the package overrides
-        :py:attr:`import_modules` with a list of module names."""
+        Override :py:attr:`import_modules` if auto-detection of
+        module names fails."""
 
         # Make sure we are importing the installed modules,
         # not the ones in the current directory
