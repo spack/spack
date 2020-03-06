@@ -19,7 +19,7 @@ class PyPycairo(PythonPackage):
     depends_on('cairo@1.13.1:')
     depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.8,3.3:', when=':1.17.1',  type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:', when='@:1.17.1',  type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', when='@1.18.1:', type=('build', 'run'))
 
     @run_after('install')
