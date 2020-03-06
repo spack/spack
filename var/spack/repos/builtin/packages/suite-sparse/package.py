@@ -34,6 +34,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('m4', type='build', when='@5.0.0:')
     depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
@@ -64,7 +65,6 @@ class SuiteSparse(Package):
         pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
 
         make_args = [
-            'INSTALL=%s' % prefix,
             # By default, the Makefile uses the Intel compilers if
             # they are found. The AUTOCC flag disables this behavior,
             # forcing it to use Spack's compiler wrappers.
@@ -131,10 +131,10 @@ class SuiteSparse(Package):
         # In those SuiteSparse versions calling "make install" in one go is
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
-        if (self.spec.version >= Version('5.4.0') and
-            self.spec.version <= Version('5.6.0')):
+        if '@5.4.0:' in self.spec:
             make('default', *make_args)
 
+        make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
 
     @property
