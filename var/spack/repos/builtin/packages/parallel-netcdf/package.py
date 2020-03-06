@@ -46,11 +46,18 @@ class ParallelNetcdf(AutotoolsPackage):
     depends_on('mpi')
 
     depends_on('m4', type='build')
+    depends_on('autoconf', when='@develop', type='build')
+    depends_on('automake', when='@develop', type='build')
+    depends_on('libtool', when='@develop', type='build')
 
     conflicts('+shared', when='@:1.9%nag+fortran')
     conflicts('+shared', when='@:1.8')
 
     patch('nag_libtool.patch', when='@1.10:999%nag')
+
+    # TODO: remove when/if merged upstream:
+    #  https://github.com/Parallel-NetCDF/PnetCDF/pull/59
+    patch('nag_libtool_develop.patch', when='@develop')
 
     @property
     def libs(self):
@@ -77,6 +84,13 @@ class ParallelNetcdf(AutotoolsPackage):
             msg.format('shared' if shared else 'static',
                        self.spec.name,
                        self.spec.prefix))
+
+    @when('@develop')
+    def autoreconf(self, spec, prefix):
+        with working_dir(self.configure_directory):
+            # We do not specify '-f' because we need to use libtool files from
+            # the repository.
+            autoreconf('-iv')
 
     def configure_args(self):
         args = ['--with-mpi=%s' % self.spec['mpi'].prefix,
