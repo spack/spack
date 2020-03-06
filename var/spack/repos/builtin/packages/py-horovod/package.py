@@ -7,6 +7,7 @@ from spack import *
 import fnmatch
 import os
 
+
 class PyHorovod(PythonPackage):
     """Horovod is a distributed deep learning training framework for
     TensorFlow, Keras, PyTorch, and Apache MXNet."""
@@ -34,7 +35,7 @@ class PyHorovod(PythonPackage):
     depends_on('py-torch', type=('build', 'run'))
     depends_on('py-pip', type=('build'))
 
-    phases = ['clean', 'sdist', 'install']    
+    phases = ['clean', 'sdist', 'install']
 
     def install(self, spec, prefix):
         pip = which('pip')
