@@ -64,7 +64,7 @@ class Caliper(CMakePackage):
     depends_on('libpfm4@4.8:4.99', when='+libpfm')
 
     depends_on('mpi', when='+mpi')
-    depends_on('unwind@2018.10.12,1.2:1.99', when='+callpath')
+    depends_on('unwind@1.2:1.99', when='+callpath')
 
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
 
