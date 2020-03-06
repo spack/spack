@@ -8,6 +8,7 @@ import tarfile
 import fnmatch
 import os
 
+
 class Minigan(PythonPackage):
     """miniGAN is a generative adversarial network code developed as part of the
     Exascale Computing Project's (ECP) ExaLearn project at
