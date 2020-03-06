@@ -125,6 +125,7 @@ setuptools
 * Homepage: https://github.com/pypa/setuptools
 * Usage: Dependency of jinja2 and pytest.
 * Version: 36.8.0 (last version supporting Python 2.6)
+* Note: pkg_resources is part of setuptools and has been vendored too
 
 six
 ---
