@@ -6,6 +6,13 @@
 """This module contains the following external, potentially separately
 licensed, packages that are included in Spack:
 
+altgraph
+--------
+
+* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
+* Usage: dependency of macholib
+* Version: 0.16.1
+
 argparse
 --------
 
@@ -59,6 +66,13 @@ jsonschema
   Also, jsonschema/validators.py has been modified NOT to try to import
   requests (see 7a1dd517b8).
 
+macholib
+--------
+
+* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
+* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
+* Version: 1.12
+
 markupsafe
 ----------
 
@@ -94,7 +108,7 @@ pytest
   https://github.com/spack/spack/pull/6801/commits/ff513c39f2c67ff615de5cbc581dd69a8ec96526
 
 ruamel.yaml
-------
+-----------
 
 * Homepage: https://yaml.readthedocs.io/
 * Usage: Used for config files. Ruamel is based on PyYAML but is more
@@ -105,24 +119,17 @@ ruamel.yaml
   compatibility -- some ``{}`` format strings were replaced, and the
   import for ``OrderedDict`` was tweaked.
 
+setuptools
+----------
+
+* Homepage: https://github.com/pypa/setuptools
+* Usage: Dependency of jinja2 and pytest.
+* Version: 36.8.0 (last version supporting Python 2.6)
+
 six
 ---
 
 * Homepage: https://pypi.python.org/pypi/six
 * Usage: Python 2 and 3 compatibility utilities.
 * Version: 1.11.0
-
-macholib
---------
-
-* Homepage: https://macholib.readthedocs.io/en/latest/index.html#
-* Usage: Manipulation of Mach-o binaries for relocating macOS buildcaches on Linux
-* Version: 1.12
-
-altgraph
---------
-
-* Homepage: https://altgraph.readthedocs.io/en/latest/index.html
-* Usage: dependency of macholib
-* Version: 0.16.1
 """
