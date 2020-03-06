@@ -20,7 +20,8 @@ class Bat(Package):
         cargo = which('cargo')
         cargo('install', '--root', prefix, '--path', '.')
 
-    # needed for onig_sys
+    # cargo seems to need these to be set so that when it's building
+    # onig_sys it can run llvm-config and link against libclang.
     def setup_build_environment(self, env):
         env.append_flags('LLVM_CONFIG_PATH',
                          join_path(self.spec['llvm'].prefix.libexec.llvm,
