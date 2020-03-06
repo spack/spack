@@ -50,9 +50,9 @@ def _fetch_cache():
 
 
 class MirrorCache(object):
-    def __init__(self, root):
+    def __init__(self, root, skip_unstable_versions):
         self.root = os.path.abspath(root)
-        self.skip_unstable_versions = False
+        self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
         """Fetch and relocate the fetcher's target into our mirror cache."""

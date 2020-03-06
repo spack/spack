@@ -493,7 +493,13 @@ class Stage(object):
             self.fetcher, self.mirror_paths.storage_path)
 
     def cache_mirror(self, mirror, stats):
-        """Perform a fetch if the resource is not already cached"""
+        """Perform a fetch if the resource is not already cached
+
+        Arguments:
+            mirror (MirrorCache): the mirror to cache this Stage's resource in
+            stats (MirrorStats): this is updated depending on whether the
+                caching operation succeeded or failed
+        """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
             # BundleFetchStrategy has no source to fetch. The associated
             # fetcher does nothing but the associated stage may still exist.
