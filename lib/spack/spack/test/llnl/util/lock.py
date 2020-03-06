@@ -1272,7 +1272,7 @@ def test_downgrade_write_fails(tmpdir):
         lock = lk.Lock('lockfile')
         lock.acquire_read()
         msg = 'Cannot downgrade lock from write to read on file: lockfile'
-        with pytest.raises(lk.LockDowngradeError, match=msg):
+        with pytest.raises(lk.LockDowngradeError, matches=msg):
             lock.downgrade_write_to_read()
 
 
@@ -1292,5 +1292,5 @@ def test_upgrade_read_fails(tmpdir):
         lock = lk.Lock('lockfile')
         lock.acquire_write()
         msg = 'Cannot upgrade lock from read to write on file: lockfile'
-        with pytest.raises(lk.LockUpgradeError, match=msg):
+        with pytest.raises(lk.LockUpgradeError, matches=msg):
             lock.upgrade_read_to_write()
