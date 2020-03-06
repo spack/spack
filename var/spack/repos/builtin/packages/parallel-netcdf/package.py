@@ -25,7 +25,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
         return url.format(version.dotted)
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('1.12.1', sha256='56f5afaa0ddc256791c405719b6436a83b92dcd5be37fe860dea103aee8250a2')
     version('1.11.2', sha256='d2c18601b364c35b5acb0a0b46cd6e14cae456e0eb854e5c789cf65f3cd6a2a7')
     version('1.11.1', sha256='0c587b707835255126a23c104c66c9614be174843b85b897b3772a590be45779')
@@ -46,9 +46,9 @@ class ParallelNetcdf(AutotoolsPackage):
     depends_on('mpi')
 
     depends_on('m4', type='build')
-    depends_on('autoconf', when='@develop', type='build')
-    depends_on('automake', when='@develop', type='build')
-    depends_on('libtool', when='@develop', type='build')
+    depends_on('autoconf', when='@master', type='build')
+    depends_on('automake', when='@master', type='build')
+    depends_on('libtool', when='@master', type='build')
 
     conflicts('+shared', when='@:1.9%nag+fortran')
     conflicts('+shared', when='@:1.8')
@@ -57,7 +57,7 @@ class ParallelNetcdf(AutotoolsPackage):
 
     # TODO: remove when/if merged upstream:
     #  https://github.com/Parallel-NetCDF/PnetCDF/pull/59
-    patch('nag_libtool_develop.patch', when='@develop')
+    patch('nag_libtool_master.patch', when='@master')
 
     @property
     def libs(self):
@@ -85,7 +85,7 @@ class ParallelNetcdf(AutotoolsPackage):
                        self.spec.name,
                        self.spec.prefix))
 
-    @when('@develop')
+    @when('@master')
     def autoreconf(self, spec, prefix):
         with working_dir(self.configure_directory):
             # We do not specify '-f' because we need to use libtool files from
