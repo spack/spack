@@ -10,6 +10,7 @@ class Gengetopt(AutotoolsPackage):
     """Tool to write command line option parsing code for C programs"""
 
     homepage = "https://www.gnu.org/software/gengetopt/gengetopt.html"
+    url = "ftp://ftp.gnu.org/gnu/gengetopt/gengetopt-2.23.tar.xz"
 
     maintainers = ['rblake-llnl']
 
