@@ -13,7 +13,7 @@ class Gunrock(CMakePackage, CudaPackage):
     url      = "https://github.com/gunrock/gunrock/archive/v1.1.tar.gz"
     git      = "https://github.com/gunrock/gunrock.git"
 
-    version('develop', git=git, submodules=True)
+    version('master', submodules=True)
     version('1.1', git=git, submodules=True, tag='v1.1', preferred=True)
     version('1.0', git=git, submodules=True, tag='v1.0')
     version('0.5.1', git=git, submodules=True, tag='v0.5.1')
