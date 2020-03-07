@@ -10,19 +10,18 @@ class Gunrock(CMakePackage, CudaPackage):
     """High-Performance Graph Primitives on GPUs"""
 
     homepage = "https://gunrock.github.io/docs/"
-    url      = "https://github.com/gunrock/gunrock/archive/v1.1.tar.gz"
     git      = "https://github.com/gunrock/gunrock.git"
 
-    version('master', submodules=True)
-    version('1.1', git=git, submodules=True, tag='v1.1', preferred=True)
-    version('1.0', git=git, submodules=True, tag='v1.0')
-    version('0.5.1', git=git, submodules=True, tag='v0.5.1')
-    version('0.5', git=git, submodules=True, tag='v0.5')
-    version('0.4', git=git, submodules=True, tag='v0.4')
-    version('0.3.1', git=git, submodules=True, tag='v0.3.1')
-    version('0.3', git=git, submodules=True, tag='v0.3')
-    version('0.2', git=git, submodules=True, tag='v0.2')
-    version('0.1', git=git, submodules=True, tag='v0.1')
+    version('master',   submodules=True)
+    version('1.1',      submodules=True, tag='v1.1')
+    version('1.0',      submodules=True, tag='v1.0')
+    version('0.5.1',    submodules=True, tag='v0.5.1')
+    version('0.5',      submodules=True, tag='v0.5')
+    version('0.4',      submodules=True, tag='v0.4')
+    version('0.3.1',    submodules=True, tag='v0.3.1')
+    version('0.3',      submodules=True, tag='v0.3')
+    version('0.2',      submodules=True, tag='v0.2')
+    version('0.1',      submodules=True, tag='v0.1')
 
     depends_on('cuda')
 
