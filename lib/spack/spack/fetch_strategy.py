@@ -946,7 +946,7 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def get_source_id(self):
         try:
             import xml.etree.ElementTree
-        except:
+        except ImportError:
             # This python install doesn't have xml support
             output = self.svn('info', self.url, output=str)
             if not output:
