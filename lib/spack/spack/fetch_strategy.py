@@ -29,7 +29,6 @@ import os.path
 import re
 import shutil
 import sys
-import xml.etree.ElementTree
 
 import llnl.util.tty as tty
 import six
@@ -945,9 +944,21 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self.revision
 
     def get_source_id(self):
-        output = self.svn('info', '--xml', self.url, output=str)
-        info = xml.etree.ElementTree.fromstring(output)
-        return info.find('entry/commit').get('revision')
+        try:
+            import xml.etree.ElementTree
+        except:
+            # This python install doesn't have xml support
+            output = self.svn('info', self.url, output=str)
+            if not output:
+                return None
+            lines = output.split('\n')
+            for line in lines:
+                if line.startswith('Revision:'):
+                    return line.split()[-1]
+        else:
+            output = self.svn('info', '--xml', self.url, output=str)
+            info = xml.etree.ElementTree.fromstring(output)
+            return info.find('entry/commit').get('revision')
 
     def mirror_id(self):
         if self.revision:
