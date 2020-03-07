@@ -19,6 +19,8 @@ class Sirius(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc')
+    version('6.4.4', sha256='1c5de9565781847658c3cc11edcb404e6e6d1c5a9dfc81e977de7a9a7a162c8a')
     version('6.4.3', sha256='4d1effeadb84b3e1efd7d9ac88018ef567aa2e0aa72e1112f0abf2e493e2a189')
     version('6.4.2', sha256='40b9b66deebb6538fc0f4cd802554d0d763ea6426b9b2f0e8db8dc617e494479')
     version('6.4.1', sha256='86f25c71517952a63e92e0a9bcf66d27e4afb2b0d67cf84af480f116b8e7f53c')
@@ -59,7 +61,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('py-pybind11', when='+python', type=('build', 'run'))
     depends_on('magma', when='+magma')
 
-    depends_on('spfft', when='@6.4.0:~cuda')
+    depends_on('spfft', when='@6.4.0:')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
