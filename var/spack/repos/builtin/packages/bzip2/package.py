@@ -14,7 +14,7 @@ class Bzip2(Package):
     and six times faster at decompression."""
 
     homepage = "https://sourceware.org/bzip2/"
-    url      = "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
+    url      = "ftp://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
 
     # The server is sometimes a bit slow to respond
     fetch_options = {'timeout': 60}
