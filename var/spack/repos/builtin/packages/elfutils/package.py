@@ -17,8 +17,8 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-    url      = "ftp://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
-    list_url = "ftp://sourceware.org/elfutils/ftp"
+    url      = "ftp://sourceware.org/pub/elfutils/0.178/elfutils-0.178.tar.bz2"
+    list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
     # Sourceware is often slow to respond.
