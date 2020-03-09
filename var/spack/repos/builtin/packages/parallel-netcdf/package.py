@@ -53,11 +53,7 @@ class ParallelNetcdf(AutotoolsPackage):
     conflicts('+shared', when='@:1.9%nag+fortran')
     conflicts('+shared', when='@:1.8')
 
-    patch('nag_libtool.patch', when='@1.10:999%nag')
-
-    # TODO: remove when/if merged upstream:
-    #  https://github.com/Parallel-NetCDF/PnetCDF/pull/59
-    patch('nag_libtool_master.patch', when='@master')
+    patch('nag_libtool.patch', when='@1.9:1.12.1%nag')
 
     @property
     def libs(self):
