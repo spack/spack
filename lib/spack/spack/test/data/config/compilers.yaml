@@ -1,0 +1,155 @@
+compilers:
+- compiler:
+    spec: clang@3.3
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: gcc@4.5.0
+    operating_system: {0.name}{0.version}
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: CNL
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: SuSE11
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: yosemite
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: CNL
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: SuSE11
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: yosemite
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    operating_system: elcapitan
+    spec: gcc@4.5.0
+    modules: 'None'
+- compiler:
+    spec: clang@3.3
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: gcc@4.7.2
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc472
+      cxx: /path/to/g++472
+      f77: /path/to/gfortran472
+      fc: /path/to/gfortran472
+    flags:
+      cflags: -O0 -g
+      cxxflags: -O0 -g
+      fflags: -O0 -g
+    modules: 'None'
+- compiler:
+    spec: clang@3.5
+    operating_system: redhat6
+    paths:
+      cc: /path/to/clang35
+      cxx: /path/to/clang++35
+      f77: None
+      fc: None
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
+- compiler:
+    spec: clang@8.0.0
+    operating_system: redhat7
+    paths:
+      cc: /path/to/clang-8
+      cxx: /path/to/clang++-8
+      f77: /path/to/gfortran-9
+      fc: /path/to/gfortran-9
+    flags:
+      cflags: -O3
+      cxxflags: -O3
+    modules: 'None'
+- compiler:
+    spec: clang@9.1.0-apple
+    operating_system: elcapitan
+    paths:
+      cc: /path/to/clang
+      cxx: /path/to/clang++
+      f77: None
+      fc: None
+    modules: 'None'
+- compiler:
+    spec: gcc@foo
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    modules: 'None'
+- compiler:
+    spec: gcc@4.4.0-special
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc
+      cxx: /path/to/g++
+      f77: /path/to/gfortran
+      fc: /path/to/gfortran
+    modules: 'None'

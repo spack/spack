@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Bucky(MakefilePackage):
     homepage = "http://www.stat.wisc.edu/~ane/bucky/index.html"
     url      = "http://dstats.net/download/http://www.stat.wisc.edu/~ane/bucky/v1.4/bucky-1.4.4.tgz"
 
-    version('1.4.4', 'f0c910dd1d411d112637826519943a6d')
+    version('1.4.4', sha256='1621fee0d42314d9aa45d0082b358d4531e7d1d1a0089c807c1b21fbdc4e4592')
 
     # Compilation requires gcc
     conflicts('%cce')

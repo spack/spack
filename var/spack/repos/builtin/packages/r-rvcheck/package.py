@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RRvcheck(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rvcheck"
 
     version('0.1.3', sha256='0b59986c1ccc5b89f8aca8fa7cf62d0b875719addb40e08dbda1791cfd334fc4')
-    version('0.0.9', '7e9821de754577f94fdcbf7b02a20edc')
+    version('0.0.9', sha256='6e7be7b029d28181a1b57ebd4d25978f3459722ffdb45a3698157a7f943bea92')
 
     depends_on('r@3.3.0:', when='@:0.1.1', type=('build', 'run'))
     depends_on('r@3.4.0:', when='@0.1.3:', type=('build', 'run'))

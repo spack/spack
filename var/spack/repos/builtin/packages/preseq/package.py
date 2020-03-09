@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,10 @@ class Preseq(MakefilePackage):
     homepage = "https://github.com/smithlabcode/preseq"
     url      = "https://github.com/smithlabcode/preseq/releases/download/v2.0.2/preseq_v2.0.2.tar.bz2"
 
-    version('2.0.2', '9f2a7b597c9f08b821db6ee55e2ea39c')
+    version('2.0.2', sha256='1d7ea249bf4e5826e09697256643e6a2473bc302cd455f31d4eb34c23c10b97c')
 
     depends_on('samtools')
     depends_on('gsl')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PREFIX', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('PREFIX', self.prefix)

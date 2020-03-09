@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyVirtualenvwrapper(PythonPackage):
     homepage = "https://bitbucket.org/virtualenvwrapper/virtualenvwrapper.git"
     url      = "https://pypi.io/packages/source/v/virtualenvwrapper/virtualenvwrapper-4.8.2.tar.gz"
 
-    version('4.8.2', '8e3af0e0d42733f15c5e36df484a952e')
+    version('4.8.2', sha256='18d8e4c500c4c4ee794f704e050cf2bbb492537532a4521d1047e7dd1ee4e374')
 
     depends_on('python@2.6:')
     depends_on('py-virtualenv', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xlsclients(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xlsclients"
     url      = "https://www.x.org/archive/individual/app/xlsclients-1.1.3.tar.gz"
 
-    version('1.1.3', '093c748d98b61dbddcaf3de1740fbd26')
+    version('1.1.3', sha256='4670a4003aae01e9172efb969246c3d8f33481f290aa8726ff50398c838e6994')
 
     depends_on('libxcb@1.6:', when='@1.1:')
     depends_on('libx11', when='@:1.0')

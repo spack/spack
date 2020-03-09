@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,6 @@ class RInline(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/inline"
 
     version('0.3.15', sha256='ff043fe13c1991a3b285bed256ff4a9c0ba10bee764225a34b285875b7d69c68')
-    version('0.3.14', '9fe304a6ebf0e3889c4c6a7ad1c50bca')
+    version('0.3.14', sha256='fd34d6bf965148d26d983a022a0ff7bc1a5831f6ca066deee3f6139894dfc931')
 
     depends_on('r@2.4.0:', type=('build', 'run'))

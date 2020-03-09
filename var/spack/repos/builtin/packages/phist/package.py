@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,8 @@ class Phist(CMakePackage):
     version('1.7.3', sha256='ab2d853c9ba13bcd3069fcc61c359cb412466a2e4b22ebbd2f5263cffa685126')
     version('1.7.2', sha256='29b504d78b5efd57b87d2ca6e20bc8a32b1ba55b40f5a5b7189cc0d28e43bcc0')
     version('1.6.1', sha256='4ed4869f24f920a494aeae0f7d1d94fe9efce55ebe0d298a5948c9603e07994d')
-    version('1.6.0', '751f855230d6227b972b5ab7bce2c65f')
-    version('1.4.3', 'af3300378d4282366d148e38c3a3199a')
+    version('1.6.0', sha256='667a967b37d248242c275226c96efc447ef73a2b15f241c6a588d570d7fac07b')
+    version('1.4.3', sha256='9cc1c7ba7f7a04e94f4497da14199e4631a0d02d0e4187f3e16f4c242dc777c1')
 
     variant(name='kernel_lib', default='builtin',
             description='select the kernel library (backend) for phist',

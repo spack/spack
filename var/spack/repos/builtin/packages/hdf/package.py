@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class Hdf(AutotoolsPackage):
     list_depth = 2
 
     version('4.2.14', sha256='2d383e87c8a0ca6a5352adbd1d5546e6cc43dc21ff7d90f93efa644d85c0b14a')
-    version('4.2.13', 'a6aa950b3fce5162b96496d8ea0b82bf')
-    version('4.2.12', '79fd1454c899c05e34a3da0456ab0c1c')
-    version('4.2.11', '063f9928f3a19cc21367b71c3b8bbf19')
+    version('4.2.13', sha256='be9813c1dc3712c2df977d4960e1f13f20f447dfa8c3ce53331d610c1f470483')
+    version('4.2.12', sha256='dd419c55e85d1a0e13f3ea5ed35d00710033ccb16c85df088eb7925d486e040c')
+    version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
 

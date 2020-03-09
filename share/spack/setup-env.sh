@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@
 ########################################################################
 #
 # This file is part of Spack and sets up the spack environment for bash,
-# zsh, and dash (sh).  This includes dotkit support, module support, and
-# it also puts spack in your path.  The script also checks that at least
+# zsh, and dash (sh).  This includes environment modules and lmod support,
+# and it also puts spack in your path. The script also checks that at least
 # module support exists, and provides suggestions if it doesn't. Source
 # it like this:
 #
@@ -16,30 +16,40 @@
 #
 ########################################################################
 # This is a wrapper around the spack command that forwards calls to
-# 'spack use' and 'spack unuse' to shell functions.  This in turn
-# allows them to be used to invoke dotkit functions.
+# 'spack load' and 'spack unload' to shell functions.  This in turn
+# allows them to be used to invoke environment modules functions.
 #
-# 'spack use' is smarter than just 'use' because it converts its
-# arguments into a unique spack spec that is then passed to dotkit
+# 'spack load' is smarter than just 'load' because it converts its
+# arguments into a unique Spack spec that is then passed to module
 # commands.  This allows the user to use packages without knowing all
 # their installation details.
 #
 # e.g., rather than requiring a full spec for libelf, the user can type:
 #
-#     spack use libelf
+#     spack load libelf
 #
-# This will first find the available libelf dotkits and use a
+# This will first find the available libelf module file and use a
 # matching one.  If there are two versions of libelf, the user would
 # need to be more specific, e.g.:
 #
-#     spack use libelf@0.8.13
+#     spack load libelf@0.8.13
 #
 # This is very similar to how regular spack commands work and it
 # avoids the need to come up with a user-friendly naming scheme for
-# spack dotfiles.
+# spack module files.
 ########################################################################
 
 spack() {
+    # Store LD_LIBRARY_PATH variables from spack shell function
+    # This is necessary because MacOS System Integrity Protection clears
+    # (DY?)LD_LIBRARY_PATH variables on process start.
+    if [ -n "${LD_LIBRARY_PATH-}" ]; then
+        export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
+    fi
+    if [ -n "${DYLD_LIBRARY_PATH-}" ]; then
+        export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+    fi
+
     # Zsh does not do word splitting by default, this enables it for this
     # function only
     if [ -n "${ZSH_VERSION:-}" ]; then
@@ -140,56 +150,23 @@ spack() {
             fi
             return
             ;;
-        "use"|"unuse"|"load"|"unload")
-            # Shift any other args for use off before parsing spec.
-            _sp_subcommand_args=""
-            _sp_module_args=""
-            while [ "${1#-}" != "${1}" ]; do
-                if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
-                    command spack $_sp_flags $_sp_subcommand $_sp_subcommand_args "$@"
-                    return
-                elif [ "$1" = "-r" ] || [ "$1" = "--dependencies" ]; then
-                    _sp_subcommand_args="$_sp_subcommand_args $1"
-                else
-                    _sp_module_args="$_sp_module_args $1"
-                fi
-                shift
-            done
-
-            # Here the user has run use or unuse with a spec.  Find a matching
-            # spec using 'spack module find', then use the appropriate module
-            # tool's commands to add/remove the result from the environment.
-            # If spack module command comes back with an error, do nothing.
-            case $_sp_subcommand in
-                "use")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "$@"); then
-                        use $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-                "unuse")
-                    if _sp_full_spec=$(command spack $_sp_flags module dotkit find $_sp_subcommand_args "$@"); then
-                        unuse $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-                "load")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "$@"); then
-                        module load $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-                "unload")
-                    if _sp_full_spec=$(command spack $_sp_flags module tcl find $_sp_subcommand_args "$@"); then
-                        module unload $_sp_module_args $_sp_full_spec
-                    else
-                        $(exit 1)
-                    fi
-                    ;;
-            esac
+        "load"|"unload")
+            # get --sh, --csh, --help, or -h arguments
+            # space is important for -h case to differentiate between `-h`
+            # argument and specs with "-h" in package name or variant settings
+            _a=" $@"
+            if [ "${_a#* --sh}" != "$_a" ] || \
+                [ "${_a#* --csh}" != "$_a" ] || \
+                [ "${_a#* -h}" != "$_a" ] || \
+                [ "${_a#* --help}" != "$_a" ];
+            then
+                # just  execute the command if --sh or --csh are provided
+                # or if the -h or --help arguments are provided
+                command spack $_sp_flags $_sp_subcommand "$@"
+            else
+                eval $(command spack $_sp_flags $_sp_subcommand --sh "$@" || \
+                    echo "return 1")  # return 1 if spack command fails
+            fi
             ;;
         *)
             command spack $_sp_flags $_sp_subcommand "$@"
@@ -229,11 +206,15 @@ _spack_pathadd() {
 }
 
 
-#
 # Determine which shell is being used
-#
 _spack_determine_shell() {
-    if [ -n "${BASH:-}" ]; then
+    if [ -f "/proc/$$/exe" ]; then
+        # If procfs is present this seems a more reliable
+        # way to detect the current shell
+        _sp_exe=$(readlink /proc/$$/exe)
+        # Shell may contain number, like zsh5 instead of zsh
+        basename ${_sp_exe} | tr -d '0123456789'
+    elif [ -n "${BASH:-}" ]; then
         echo bash
     elif [ -n "${ZSH_NAME:-}" ]; then
         echo zsh
@@ -347,14 +328,15 @@ fi;
 _sp_multi_pathadd() {
     local IFS=':'
     if [ "$_sp_shell" = zsh ]; then
-        setopt sh_word_split
+        emulate -L sh
     fi
     for pth in $2; do
-        _spack_pathadd "$1" "${pth}/${_sp_sys_type}"
+        for systype in ${_sp_compatible_sys_types}; do
+            _spack_pathadd "$1" "${pth}/${systype}"
+        done
     done
 }
 _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
-_sp_multi_pathadd DK_NODE "$_sp_dotkit_roots"
 
 # Add programmable tab completion for Bash
 #

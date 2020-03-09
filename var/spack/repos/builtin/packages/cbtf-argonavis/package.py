@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,38 +41,38 @@ class CbtfArgonavis(CMakePackage):
     depends_on("boost@1.66.0:1.69.0")
 
     # For MRNet
-    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti')
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop~cti')
-    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti')
-    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999~cti')
+    depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop~cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3+lwthreads", when='@1.9.1.0:9999~cti', type=('build', 'link', 'run'))
 
     # For CBTF
-    depends_on("cbtf@develop", when='@develop')
-    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999')
+    depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
     # For CBTF with cti
-    depends_on("cbtf@develop+cti", when='@develop+cti')
-    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti')
+    depends_on("cbtf@develop+cti", when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+cti", when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
 
     # For CBTF with runtime
-    depends_on("cbtf@develop+runtime", when='@develop+runtime')
-    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime')
+    depends_on("cbtf@develop+runtime", when='@develop+runtime', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.1.0:9999+runtime", when='@1.9.1.0:9999+runtime', type=('build', 'link', 'run'))
 
     # For libmonitor
-    depends_on("libmonitor@2013.02.18+krellpatch")
+    depends_on("libmonitor@2013.02.18+krellpatch", type=('build', 'link', 'run'))
 
     # For PAPI
-    depends_on("papi@5.4.1:")
+    depends_on("papi@5.4.1:", type=('build', 'link', 'run'))
 
     # For CBTF-KRELL
-    depends_on("cbtf-krell@develop", when='@develop')
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@1.9.1.0:9999')
+    depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.1.0:9999", when='@1.9.1.0:9999', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+cti', when='@develop+cti')
-    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@1.9.1.0:9999+cti')
+    depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@1.9.1.0:9999+cti', type=('build', 'link', 'run'))
 
-    depends_on('cbtf-krell@develop+runtime', when='@develop+runtime')
-    depends_on('cbtf-krell@1.9.1.0:9999+runtime', when='@1.9.1.0:9999+runtime')
+    depends_on('cbtf-krell@develop+runtime', when='@develop+runtime', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.1.0:9999+runtime', when='@1.9.1.0:9999+runtime', type=('build', 'link', 'run'))
 
     # For CUDA
     depends_on("cuda")
@@ -105,12 +105,16 @@ class CbtfArgonavis(CMakePackage):
 
         return cmake_args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Set up the compile and runtime environments for a package."""
 
-        run_env.prepend_path(
+        env.prepend_path(
             'LD_LIBRARY_PATH',
             self.spec['cuda'].prefix + '/extras/CUPTI/lib64')
-        spack_env.prepend_path(
+
+    def setup_build_environment(self, env):
+        """Set up the compile and runtime environments for a package."""
+
+        env.prepend_path(
             'LD_LIBRARY_PATH',
             self.spec['cuda'].prefix + '/extras/CUPTI/lib64')

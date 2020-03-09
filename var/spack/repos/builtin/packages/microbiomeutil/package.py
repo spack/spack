@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Microbiomeutil(MakefilePackage):
     homepage = "http://microbiomeutil.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/microbiomeutil/microbiomeutil-r20110519.tgz"
 
-    version('20110519', '11eaac4b0468c05297ba88ec27bd4b56')
+    version('20110519', sha256='9233de80ea57bfb9e9371cbe7e3bfad2d4a51168fddaf60fa144c4046c80d823')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('blast-plus')
@@ -27,8 +27,8 @@ class Microbiomeutil(MakefilePackage):
         install_tree('RESOURCES', prefix.resources)
         install_tree('AmosCmp16Spipeline', prefix.AmosCmp16Spipeline)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.ChimeraSlayer)
-        run_env.prepend_path('PATH', join_path(self.prefix, 'NAST-iEr'))
-        run_env.prepend_path('PATH', self.prefix.TreeChopper)
-        run_env.prepend_path('PATH', self.prefix.WigeoN)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.ChimeraSlayer)
+        env.prepend_path('PATH', join_path(self.prefix, 'NAST-iEr'))
+        env.prepend_path('PATH', self.prefix.TreeChopper)
+        env.prepend_path('PATH', self.prefix.WigeoN)

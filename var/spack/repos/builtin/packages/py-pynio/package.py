@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class PyPynio(PythonPackage):
     # Spack does not currently have netcdf below 4.x, and 3.x is a
     # fundamentally different format. So, currently this is only providing
     # support for netcdf4.
-    depends_on('netcdf@3.6.0:')
+    depends_on('netcdf-c@3.6.0:')
 
     # Turning on the hdf (i.e. hdf4) dependency causes it not to build, with
     # compile errors that (weirdly) relate to the declarations of HDF5.
@@ -50,22 +50,22 @@ class PyPynio(PythonPackage):
 
     depends_on('py-numpy', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         """
         These environment variables are how the setup.py knows which options
         to turn on, and how to find them.
         """
-        spack_env.set('F2CLIBS', 'gfortran')
-        spack_env.set('HAS_NETCDF4', '1')
-        spack_env.set('NETCDF4_PREFIX', self.spec['netcdf'].prefix)
+        env.set('F2CLIBS', 'gfortran')
+        env.set('HAS_NETCDF4', '1')
+        env.set('NETCDF4_PREFIX', self.spec['netcdf-c'].prefix)
         if '+hdf5' in self.spec:
-            spack_env.set('HAS_HDF5', '1')
-            spack_env.set('HDF5_PREFIX', self.spec['hdf5'].prefix)
+            env.set('HAS_HDF5', '1')
+            env.set('HDF5_PREFIX', self.spec['hdf5'].prefix)
         if '+gdal' in self.spec:
-            spack_env.set('HAS_GDAL', '1')
-            spack_env.set('GDAL_PREFIX', self.spec['gdal'].prefix)
+            env.set('HAS_GDAL', '1')
+            env.set('GDAL_PREFIX', self.spec['gdal'].prefix)
 
 #        This one is trouble - see comments above.
 #        if '+hdf4' in self.spec:
-#            spack_env.set('HAS_HDF4', '1')
-#            spack_env.set('HDF4_PREFIX', self.spec['hdf'].prefix)
+#            env.set('HAS_HDF4', '1')
+#            env.set('HDF4_PREFIX', self.spec['hdf'].prefix)

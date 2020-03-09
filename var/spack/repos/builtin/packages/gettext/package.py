@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,14 +6,15 @@
 from spack import *
 
 
-class Gettext(AutotoolsPackage):
+class Gettext(AutotoolsPackage, GNUMirrorPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "https://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
 
-    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
-    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
+    version('0.20.1', sha256='53f02fbbec9e798b0faaf7c73272f83608e835c6288dd58be6c9bb54624a3800')
+    version('0.19.8.1', sha256='105556dbc5c3fbbc2aa0edb46d22d055748b6f5c7cd7a8d99f8e7eb84e938be4')
+    version('0.19.7',   sha256='378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934')
 
     # Recommended variants
     variant('curses',   default=True, description='Use libncurses')

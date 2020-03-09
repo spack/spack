@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class RCluster(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/cluster"
 
     version('2.1.0', sha256='eaf955bef8f616ea563351ec7f597c445aec43e65991ca975e382ef1fd70aa14')
-    version('2.0.7-1', 'a37add21b91d3e4f3883d005331e0d45')
-    version('2.0.5', '7330f209ebce960bdee1a6d6679cb85a')
-    version('2.0.4', 'bb4deceaafb1c42bb1278d5d0dc11e59')
+    version('2.0.7-1', sha256='b10141090cf3c2b62260611a0ea822eb2f7bab9f4fd656c48bdc12b65c5c3dbf')
+    version('2.0.5', sha256='4b309133bc2ad7b8fe4fa538dd69635bc8a4cd724a3c95f01084098876c57bae')
+    version('2.0.4', sha256='d4d925c4fc1fc4f2e2e3c9208e518507aad6c28bb143b4358a05a8a8944ac6e4')
 
     depends_on('r@3.0.1:', when='@:2.0.6', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@2.0.7:2.0.7-1', type=('build', 'run'))

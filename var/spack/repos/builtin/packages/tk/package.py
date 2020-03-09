@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,11 +17,11 @@ class Tk(AutotoolsPackage):
     homepage = "http://www.tcl.tk"
     url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
 
-    version('8.6.8', '5e0faecba458ee1386078fb228d008ba')
-    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
-    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
-    version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
-    version('8.5.19', 'e89df710447cce0fc0bde65667c12f85')
+    version('8.6.8', sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
+    version('8.6.6', sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
+    version('8.6.5', sha256='fbbd93541b4cd467841208643b4014c4543a54c3597586727f0ab128220d7946')
+    version('8.6.3', sha256='ba15d56ac27d8c0a7b1a983915a47e0f635199b9473cf6e10fbce1fc73fd8333')
+    version('8.5.19', sha256='407af1de167477d598bd6166d84459a3bdccc2fb349360706154e646a9620ffa')
 
     variant('xft', default=True,
             description='Enable X FreeType')
@@ -60,14 +60,14 @@ class Tk(AutotoolsPackage):
         return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
                               root=self.prefix, recursive=True)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
     def configure_args(self):

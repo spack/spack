@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xbraid(MakefilePackage):
     homepage = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/software"
     url      = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/download/braid_2.2.0.tar.gz"
 
-    version('2.2.0', '0a9c2fc3eb8f605f73cce78ab0d8a7d9')
+    version('2.2.0', sha256='082623b2ddcd2150b3ace65b96c1e00be637876ec6c94dc8fefda88743b35ba3')
 
     depends_on('mpi')
 

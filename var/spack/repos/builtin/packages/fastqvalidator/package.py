@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class Fastqvalidator(MakefilePackage):
         git='https://github.com/statgen/libStatGen.git',
         commit='9db9c23e176a6ce6f421a3c21ccadedca892ac0c'
     )
+
+    depends_on('zlib', type='link')
+    patch('chromosome.patch', when='@2017-01-10', working_dir='libStatGen')
 
     @property
     def build_targets(self):

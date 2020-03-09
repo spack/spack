@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,9 @@ class Meep(AutotoolsPackage):
     url      = "http://ab-initio.mit.edu/meep/meep-1.3.tar.gz"
     list_url = "http://ab-initio.mit.edu/meep/old"
 
-    version('1.3',   '18a5b9e18008627a0411087e0bb60db5')
-    version('1.2.1', '9be2e743c3a832ae922de9d955d016c5')
-    version('1.1.1', '415e0cd312b6caa22b5dd612490e1ccf')
+    version('1.3',   sha256='564c1ff1b413a3487cf81048a45deabfdac4243a1a37ce743f4fcf0c055fd438')
+    version('1.2.1', sha256='f1f0683e5688d231f7dd1863939677148fc27a6744c03510e030c85d6c518ea5')
+    version('1.1.1', sha256='7a97b5555da1f9ea2ec6eed5c45bd97bcd6ddbd54bdfc181f46c696dffc169f2')
 
     variant('blas',    default=True, description='Enable BLAS support')
     variant('lapack',  default=True, description='Enable LAPACK support')

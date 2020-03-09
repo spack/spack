@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RBlob(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/blob"
 
     version('1.2.0', sha256='1af1cfa28607bc0e2f1f01598a00a7d5d1385ef160a9e79e568f30f56538e023')
-    version('1.1.0', '1c729aca36fd5193d81b1cd5ed9d8a00')
+    version('1.1.0', sha256='16d6603df3ddba177f0ac4d9469c938f89131c4bf8834345db838defd9ffea16')
 
     depends_on('r-tibble', when='@:1.1.0', type=('build', 'run'))
     depends_on('r-prettyunits', when='@1.2.0:', type=('build', 'run'))

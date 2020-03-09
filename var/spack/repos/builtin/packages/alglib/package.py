@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,10 +16,7 @@ class Alglib(MakefilePackage):
     homepage = "http://www.alglib.net"
     url      = "http://www.alglib.net/translator/re/alglib-3.11.0.cpp.gpl.tgz"
 
-    version('3.11.0', 'f87bb05349924d486e8809590dee9f80')
-
-    def url_for_version(self, version):
-        return 'http://www.alglib.net/translator/re/alglib-{0}.cpp.gpl.tgz'.format(version.dotted)
+    version('3.11.0', sha256='34e391594aac89fb354bdaf58c42849489cd1199197398ba98bb69961f42bdb0')
 
     build_directory = 'src'
 

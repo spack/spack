@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,14 @@ class LibjpegTurbo(Package):
        transcoding."""
     # https://github.com/libjpeg-turbo/libjpeg-turbo/blob/master/BUILDING.md
     homepage = "https://libjpeg-turbo.org/"
-    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.2.tar.gz"
+    url      = "https://github.com/libjpeg-turbo/libjpeg-turbo/archive/2.0.3.tar.gz"
 
+    version('2.0.3', sha256='a69598bf079463b34d45ca7268462a18b6507fdaa62bb1dfd212f02041499b5d')
     version('2.0.2', sha256='b45255bd476c19c7c6b198c07c0487e8b8536373b82f2b38346b32b4fa7bb942')
-    version('1.5.90', '85f7f9c377b70cbf48e61726097d4efa')
-    version('1.5.3', '5b7549d440b86c98a517355c102d155e')
-    version('1.5.0', 'eff98ac84de05eafc65ae96caa6e23e9')
-    version('1.3.1', '5e4bc19c3cb602bcab1296b9bee5124c')
+    version('1.5.90', sha256='cb948ade92561d8626fd7866a4a7ba3b952f9759ea3dd642927bc687470f60b7')
+    version('1.5.3', sha256='1a17020f859cb12711175a67eab5c71fc1904e04b587046218e36106e07eabde')
+    version('1.5.0', sha256='232280e1c9c3e6a1de95fe99be2f7f9c0362ee08f3e3e48d50ee83b9a2ed955b')
+    version('1.3.1', sha256='5008aeeac303ea9159a0ec3ccff295434f4e63b05aed4a684c9964d497304524')
 
     provides('jpeg')
 
@@ -27,16 +28,16 @@ class LibjpegTurbo(Package):
     # only nasm is used. In order to use yasm an environmental variable
     # NASM must be set.
     # TODO: Implement the selection between two supported assemblers.
-    # depends_on("yasm", type='build')
-    depends_on("nasm", type='build')
-    depends_on('autoconf', type='build', when="@1.3.1:1.5.3")
-    depends_on('automake', type='build', when="@1.3.1:1.5.3")
-    depends_on('libtool', type='build', when="@1.3.1:1.5.3")
-    depends_on('cmake', type='build', when="@1.5.90:")
+    # depends_on('yasm', type='build')
+    depends_on('nasm', type='build')
+    depends_on('autoconf', type='build', when='@1.3.1:1.5.3')
+    depends_on('automake', type='build', when='@1.3.1:1.5.3')
+    depends_on('libtool', type='build', when='@1.3.1:1.5.3')
+    depends_on('cmake', type='build', when='@1.5.90:')
 
     @property
     def libs(self):
-        return find_libraries("libjpeg*", root=self.prefix, recursive=True)
+        return find_libraries('libjpeg*', root=self.prefix, recursive=True)
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies('@1.5.90:'):

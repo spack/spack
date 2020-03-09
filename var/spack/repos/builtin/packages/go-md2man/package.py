@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,7 @@ class GoMd2man(Package):
 
         with working_dir('src'):
             env['GOPATH'] = self.stage.source_path
+            env['GO111MODULE'] = 'off'
             go = which('go')
             go('build', '-v', join_path(
                'github.com', 'cpuguy83', 'go-md2man'))

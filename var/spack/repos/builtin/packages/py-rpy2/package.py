@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,11 @@ class PyRpy2(PythonPackage):
     homepage = "https://pypi.python.org/pypi/rpy2"
     url = "https://pypi.io/packages/source/r/rpy2/rpy2-2.5.4.tar.gz"
 
-    version('3.0.0', '4ea39c4ff42f5bc611e338ff66d18c9f')
-    version('2.9.4', '7df2562cdf43a0ccdd1e44ee1c16614f')
-    version('2.8.6', '85046aa58ba586622f67271fbca05933')
-    version('2.5.6', 'a36e758b633ce6aec6a5f450bfee980f')
-    version('2.5.4', '115a20ac30883f096da2bdfcab55196d')
+    version('3.0.0', sha256='34efc2935d9015527837d6b1de29641863d184b19d39ad415d5384be8a015bce')
+    version('2.9.4', sha256='be57f741d0c284b5d8785ab03dff0e829303e5ac30e548d5ceb46e05b168812e')
+    version('2.8.6', sha256='004d13734a7b9a85cbc1e7a93ec87df741e28db1273ab5b0d9efaac04a9c5f98')
+    version('2.5.6', sha256='d0d584c435b5ed376925a95a4525dbe87de7fa9260117e9f208029e0c919ad06')
+    version('2.5.4', sha256='d521ecdd05cd0c31ab017cb63e9f63c29b524e46ec9063a920f640b5875f8a90')
 
     # FIXME: Missing dependencies:
     # ld: cannot find -licuuc

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Xrx(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xrx"
     url      = "https://www.x.org/archive/individual/app/xrx-1.0.4.tar.gz"
 
-    version('1.0.4', 'dd4b8bf6eca5fc5be5df30c14050074c')
+    version('1.0.4', sha256='1ffa1c2af28587c6ed7ded3af2e62e93bad8f9900423d09c45b1d59449d15134')
 
     depends_on('libx11')
     depends_on('libxt')

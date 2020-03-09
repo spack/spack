@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,8 @@ class RKnitr(RPackage):
 
     version('1.24', sha256='e80c2043b445a7e576b62ae8510cce89322660fe388881d799a706d35cd27b89')
     version('1.23', sha256='063bfb3300fc9f3e7d223c346e19b93beced0e6784470b9bef2524868a206a99')
-    version('1.17', '4407ccf8f2a51629800d6d5243cf3e70')
-    version('1.14', 'ef0fbeaa9372f99ffbc57212a7781511')
-    version('0.6',  'c67d6db84cd55594a9e870c90651a3db')
+    version('1.17', sha256='9484a2b2c7b0c2aae24ab7f4eec6db48affbceb0e42bd3d69e34d953fe92f401')
+    version('1.14', sha256='ba6d301482d020a911390d5eff181e1771f0e02ac3f3d9853a9724b1ec041aec')
 
     depends_on('r@2.14.1:', when='@:1.9', type=('build', 'run'))
     depends_on('r@3.0.2:', when='@1.10:1.14', type=('build', 'run'))

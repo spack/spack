@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,5 +14,5 @@ class RBindr(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/bindr_0.1.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bindr"
 
-    version('0.1.1', 'cfa02c563196a79bf8bb4db2e66585fd')
-    version('0.1', 'f3897a70cbad2d2981272772fa30bb59')
+    version('0.1.1', sha256='7c785ca77ceb3ab9282148bcecf64d1857d35f5b800531d49483622fe67505d0')
+    version('0.1', sha256='cca166612eeafd6e1c961b34aaf177f9b47f8b4bc37520e277b9920eaa8b2535')

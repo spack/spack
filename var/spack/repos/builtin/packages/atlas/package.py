@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,18 +20,18 @@ class Atlas(Package):
 
     # Developer (unstable)
     version('3.11.41', sha256='477d567a8d683e891d786e9e8bb6ad6659daa9ba18e8dd0e2f70b7a54095f8de')
-    version('3.11.39', '5f3252fa980f5f060f93edd4669321e2')
-    version('3.11.34', '0b6c5389c095c4c8785fd0f724ec6825')
+    version('3.11.39', sha256='584bd44572746142bf19348139530c18f4538ce41d94330ff86ede38c36eddc9')
+    version('3.11.34', sha256='b6d42af3afd4fe54ef3a04a070fc7e75f6d8ac9f7d4886b636fe27ebfcbdf91f')
 
     # Stable
-    version('3.10.3', 'd6ce4f16c2ad301837cfb3dade2f7cef', preferred=True)
-    version('3.10.2', 'a4e21f343dec8f22e7415e339f09f6da')
+    version('3.10.3', sha256='2688eb733a6c5f78a18ef32144039adcd62fabce66f2eb51dd59dde806a6d2b7', preferred=True)
+    version('3.10.2', sha256='3aab139b118bf3fcdb4956fbd71676158d713ab0d3bccb2ae1dc3769db22102f')
 
     # not all packages (e.g. Trilinos@12.6.3) stopped using deprecated in 3.6.0
     # Lapack routines. Stick with 3.5.0 until this is fixed.
     resource(name='lapack',
              url='http://www.netlib.org/lapack/lapack-3.5.0.tgz',
-             md5='b1d3e3e425b2e44a06760ff173104bdf',
+             sha256='9ad8f0d3f3fb5521db49f2dd716463b8fb2b6bc9dc386a9956b8c6144f726352',
              destination='spack-resource-lapack',
              when='@3:')
 

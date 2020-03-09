@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Qca(CMakePackage):
     url      = "https://github.com/KDE/qca/archive/v2.1.3.tar.gz"
 
     version('2.2.1', sha256='c67fc0fa8ae6cb3d0ba0fbd8fca8ee8e4c5061b99f1fd685fd7d9800cef17f6b')
-    version('2.1.3', 'bd646d08fdc1d9be63331a836ecd528f')
+    version('2.1.3', sha256='a5135ffb0250a40e9c361eb10cd3fe28293f0cf4e5c69d3761481eafd7968067')
 
     depends_on('qt@4.2:')
 

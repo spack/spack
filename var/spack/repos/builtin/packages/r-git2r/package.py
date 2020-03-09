@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class RGit2r(RPackage):
 
     version('0.26.1', sha256='13d609286a0af4ef75ba76f2c2f856593603b8014e311b88896243a50b417435')
     version('0.26.0', sha256='56671389c3a50591e1dae3be8c3b0112d06d291f897d7fe14db17aea175616cf')
-    version('0.18.0', 'fb5741eb490c3d6e23a751a72336f24d')
-    version('0.15.0', '57658b3298f9b9aadc0dd77b4ef6a1e1')
+    version('0.18.0', sha256='91b32e49afb859c0c4f6f77988343645e9499e5046ef08d945d4d8149b6eff2d')
+    version('0.15.0', sha256='682ab9e7f71b2ed13a9ef95840df3c6b429eeea070edeb4d21d725cf0b72ede6')
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('zlib')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,8 @@ class RGdata(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/gdata_2.18.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gdata"
 
-    version('2.18.0', 'f831019aa743fe11dcf0a051e4280921')
-    version('2.17.0', 'c716b663b9dc16ad8cafe6acc781a75f')
+    version('2.18.0', sha256='4b287f59f5bbf5fcbf18db16477852faac4a605b10c5284c46b93fa6e9918d7f')
+    version('2.17.0', sha256='8097ec0e4868f6bf746f821cff7842f696e874bb3a84f1b2aa977ecd961c3e4e')
 
     depends_on('r@2.3.0:', type=('build', 'run'))
     depends_on('r-gtools', type=('build', 'run'))

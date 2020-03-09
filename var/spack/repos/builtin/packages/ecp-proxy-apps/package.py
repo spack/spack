@@ -1,33 +1,35 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
-class EcpProxyApps(Package):
+class EcpProxyApps(BundlePackage):
     """This is a collection of packages that represents the official suite of
        DOE/ECP proxy applications. This is a Spack bundle package that
        installs the ECP proxy application suite.
     """
 
     tags = ['proxy-app', 'ecp-proxy-app']
-    maintainers = ['bhatele']
+    maintainers = ['rspavel']
 
     homepage = "https://proxyapps.exascaleproject.org"
-    # Dummy url
-    url = 'https://github.com/exascaleproject/proxy-apps/archive/v1.0.tar.gz'
 
-    version('2.1', sha256='604da008fc4ef3bdbc25505088d610333249e3e9745eac7dbfd05b91e33e218d')
-    version('2.0', sha256='5f3cb3a772224e738c1dab42fb34d40f6b313af51ab1c575fb334e573e41e09a')
-    version('1.1', '15825c318acd3726fd8e72803b1c1090')
-    version('1.0', '8b3f00f05e6cde88d8d913da4293ee62')
+    version('3.0')
+    version('2.1')
+    version('2.0')
+    version('1.1')
+    version('1.0')
 
     variant('candle', default=False,
             description='Also build CANDLE Benchmarks')
+
+    # Added with release 3.0
+    depends_on('miniamr@1.4.4', when='@3.0:')
+    depends_on('xsbench@19', when='@3.0:')
 
     # Added with release 2.1
     depends_on('amg@1.2', when='@2.1:')
@@ -40,15 +42,15 @@ class EcpProxyApps(Package):
     depends_on('picsarlite@0.1', when='@2.0:')
     depends_on('thornado-mini@1.0', when='@2.0:')
 
-    depends_on('candle-benchmarks@0.1', when='+candle @2.0:')
+    depends_on('candle-benchmarks@0.1', when='+candle @2.0:2.1')
     depends_on('laghos@2.0', when='@2.0:')
     depends_on('macsio@1.1', when='@2.0:')
     depends_on('sw4lite@1.1', when='@2.0:')
-    depends_on('xsbench@18', when='@2.0:')
+    depends_on('xsbench@18', when='@2.0:2.1')
 
     # Dependencies for version 2.0
     depends_on('amg@1.1', when='@2.0')
-    depends_on('miniamr@1.4.1', when='@2.0')
+    depends_on('miniamr@1.4.1', when='@2.0:2.1')
 
     # Added with release 1.1
     depends_on('examinimd@1.0', when='@1.1:')
@@ -71,12 +73,3 @@ class EcpProxyApps(Package):
 
     # Removed after release 1.0
     depends_on('comd@1.1', when='@1.0')
-
-    # Dummy install for now,  will be removed when metapackage is available
-    def install(self, spec, prefix):
-        with open(os.path.join(spec.prefix, 'package-list.txt'), 'w') as out:
-            for dep in spec.dependencies(deptype='build'):
-                out.write("%s\n" % dep.format(
-                    format_string='${PACKAGE} ${VERSION}'))
-                os.symlink(dep.prefix, os.path.join(spec.prefix, dep.name))
-            out.close()

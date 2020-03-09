@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import sys
 import llnl.util.filesystem as fs
 
 import spack.util.executable as ex
+from spack.hooks.sbang import filter_shebangs_in_directory
 
 
 def test_read_unicode(tmpdir):
@@ -28,6 +29,7 @@ print(u'\\xc3')
 
         # make it executable
         fs.set_executable(script_name)
+        filter_shebangs_in_directory('.', [script_name])
 
         # read the unicode back in and see whether things work
         script = ex.Executable('./%s' % script_name)

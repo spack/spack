@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ class Fj(spack.compiler.Compiler):
 
     version_argument = '--version'
     version_regex = r'\((?:FCC|FRT)\) ([\d.]+)'
+
+    required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 
     @classmethod
     def verbose_flag(cls):
@@ -59,3 +61,7 @@ class Fj(spack.compiler.Compiler):
     @property
     def pic_flag(self):
         return "-KPIC"
+
+    def setup_custom_environment(self, pkg, env):
+        env.append_flags('fcc_ENV', '-Nclang')
+        env.append_flags('FCC_ENV', '-Nclang')

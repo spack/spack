@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,12 +12,12 @@ class Libxpm(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXpm"
     url      = "https://www.x.org/archive//individual/lib/libXpm-3.5.12.tar.gz"
 
-    version('3.5.12', 'b286c884b11b5a0b4371175c5327141f')
-    version('3.5.11', '7c67c878ee048206b070bc0b24154f04')
-    version('3.5.10', 'a70507638d74541bf30a771f1e5938bb')
-    version('3.5.9', 'd6d4b0f76248a6b346eb42dfcdaa72a6')
-    version('3.5.8', '2d81d6633e67ac5562e2fbee126b2897')
-    version('3.5.7', '7bbc8f112f7143ed6961a58ce4e14558')
+    version('3.5.12', sha256='2523acc780eac01db5163267b36f5b94374bfb0de26fc0b5a7bee76649fd8501')
+    version('3.5.11', sha256='53ddf924441b7ed2de994d4934358c13d9abf4828b1b16e1255ade5032b31df7')
+    version('3.5.10', sha256='f73f06928a140fd2090c439d1d55c6682095044495af6bf886f8e66cf21baee5')
+    version('3.5.9', sha256='23beb930e27bc7df33cb0f6dbffc703852297c311b7e20146ff82e9a51f3e358')
+    version('3.5.8', sha256='06472c7fdd175ea54c84162a428be19c154e7dda03d8bf91beee7f1d104669a6')
+    version('3.5.7', sha256='422fbb311c4fe6ef337e937eb3adc8617a4320bd3e00fce06850d4360829b3ae')
 
     depends_on('gettext')
     depends_on('libx11')
@@ -26,10 +26,10 @@ class Libxpm(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # If libxpm is installed as an external package, gettext won't
         # be available in the spec. See
         # https://github.com/spack/spack/issues/9149 for details.
         if 'gettext' in self.spec:
-            spack_env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
+            env.append_flags('LDFLAGS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))

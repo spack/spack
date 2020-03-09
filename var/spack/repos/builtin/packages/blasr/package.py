@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Blasr(Package):
     homepage = "https://github.com/PacificBiosciences/blasr/wiki"
     url      = "https://github.com/PacificBiosciences/blasr/archive/5.3.1.tar.gz"
 
-    version('5.3.1', '53c93f499aa4bc10781c87bafc33df2a')
+    version('5.3.1', sha256='ff7da5a03096294572e6c64340354da5c5ee1c86c277e7b899f2c170c1ac4049')
 
     depends_on('ncurses')
     depends_on('hdf5+cxx@1.8.12:1.8.99')
@@ -26,19 +26,19 @@ class Blasr(Package):
 
     phases = ['configure', 'build', 'install']
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix.utils)
-        spack_env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix)
-        spack_env.prepend_path('CPATH', self.spec[
-                               'blasr-libcpp'].prefix.pbdata)
-        spack_env.prepend_path('CPATH', self.spec[
-                               'blasr-libcpp'].prefix.alignment)
-        spack_env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix.hdf)
+    def setup_build_environment(self, env):
+        env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix)
+        env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix.pbdata)
+        env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix.alignment)
+        env.prepend_path('CPATH', self.spec['blasr-libcpp'].prefix.hdf)
 
         # hdf has +mpi by default, so handle that possibility
         if ('+mpi' in self.spec['hdf5']):
-            spack_env.set('CC', self.spec['mpi'].mpicc)
-            spack_env.set('CXX', self.spec['mpi'].mpicxx)
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('CXX', self.spec['mpi'].mpicxx)
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix.utils)
 
     def configure(self, spec, prefix):
         configure_args = [

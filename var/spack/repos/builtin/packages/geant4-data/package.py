@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,10 @@ class Geant4Data(Package):
     homepage = "http://geant4.cern.ch"
     url      = "http://geant4-data.web.cern.ch/geant4-data/ReleaseNotes/ReleaseNotes4.10.3.html"
 
-    version('10.03.p03', '2248ad436613897d9fad93bdb99d9446', expand=False)
-    version('10.04', 'c49194b96e65ed4527d34d22a9860972', expand=False)
+    maintainers = ['drbenmorgan']
+
+    version('10.03.p03', sha256='3e0d4d4e6854c8667d930fd5beaec09b7e6ec41f4847935e5d6a2720d0094b30', expand=False)
+    version('10.04', sha256='f67fb899b99348a1a7e471a05f249f972e7e303c78238fc5f693b99968642255', expand=False)
 
     # geant4@10.03.p03
     depends_on("g4abla@3.0", when='@10.03.p03 ')

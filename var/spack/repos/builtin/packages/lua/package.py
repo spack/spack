@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,18 +14,18 @@ class Lua(Package):
     url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
 
     version('5.3.5', sha256='0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac')
-    version('5.3.4', '53a9c68bcc0eda58bdc2095ad5cdfc63')
-    version('5.3.2', '33278c2ab5ee3c1a875be8d55c1ca2a1')
-    version('5.3.1', '797adacada8d85761c079390ff1d9961')
-    version('5.3.0', 'a1b0a7e92d0c85bbff7a8d27bf29f8af')
-    version('5.2.4', '913fdb32207046b273fdb17aad70be13')
-    version('5.2.3', 'dc7f94ec6ff15c985d2d6ad0f1b35654')
-    version('5.2.2', 'efbb645e897eae37cad4344ce8b0a614')
-    version('5.2.1', 'ae08f641b45d737d12d30291a5e5f6e3')
-    version('5.2.0', 'f1ea831f397214bae8a265995ab1a93e')
-    version('5.1.5', '2e115fe26e435e33b0d5c022e4490567')
-    version('5.1.4', 'd0870f2de55d59c1c8419f36e8fac150')
-    version('5.1.3', 'a70a8dfaa150e047866dc01a46272599')
+    version('5.3.4', sha256='f681aa518233bc407e23acf0f5887c884f17436f000d453b2491a9f11a52400c')
+    version('5.3.2', sha256='c740c7bb23a936944e1cc63b7c3c5351a8976d7867c5252c8854f7b2af9da68f')
+    version('5.3.1', sha256='072767aad6cc2e62044a66e8562f51770d941e972dc1e4068ba719cd8bffac17')
+    version('5.3.0', sha256='ae4a5eb2d660515eb191bfe3e061f2b8ffe94dce73d32cfd0de090ddcc0ddb01')
+    version('5.2.4', sha256='b9e2e4aad6789b3b63a056d442f7b39f0ecfca3ae0f1fc0ae4e9614401b69f4b')
+    version('5.2.3', sha256='13c2fb97961381f7d06d5b5cea55b743c163800896fd5c5e2356201d3619002d')
+    version('5.2.2', sha256='3fd67de3f5ed133bf312906082fa524545c6b9e1b952e8215ffbd27113f49f00')
+    version('5.2.1', sha256='64304da87976133196f9e4c15250b70f444467b6ed80d7cfd7b3b982b5177be5')
+    version('5.2.0', sha256='cabe379465aa8e388988073d59b69e76ba0025429d2c1da80821a252cdf6be0d')
+    version('5.1.5', sha256='2640fc56a795f29d28ef15e13c34a47e223960b0240e8cb0a82d9b0738695333')
+    version('5.1.4', sha256='b038e225eaf2a5b57c9bcc35cd13aa8c6c8288ef493d52970c9545074098af3a')
+    version('5.1.3', sha256='6b5df2edaa5e02bf1a2d85e1442b2e329493b30b0c0780f77199d24f087d296d')
 
     extendable = True
 
@@ -38,7 +38,7 @@ class Lua(Package):
         name="luarocks",
         url="https://keplerproject.github.io/luarocks/releases/"
         "luarocks-2.3.0.tar.gz",
-        md5="a38126684cf42b7d0e7a3c7cf485defb",
+        sha256="68e38feeb66052e29ad1935a71b875194ed8b9c67c2223af5f4d4e3e2464ed97",
         destination="luarocks",
         placement='luarocks')
 
@@ -94,7 +94,7 @@ class Lua(Package):
         paths.append(os.path.join(path, '?', 'init.lua'))
         cpaths.append(os.path.join(path, '?.so'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def _setup_dependent_env_helper(self, env, dependent_spec):
         lua_paths = []
         for d in dependent_spec.traverse(
                 deptypes=('build', 'run'), deptype_query='run'):
@@ -115,38 +115,44 @@ class Lua(Package):
                   os.path.join(self.spec.prefix, self.lua_share_dir)):
             self.append_paths(lua_patterns, lua_cpatterns, p)
 
-        spack_env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
-        spack_env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+        return lua_patterns, lua_cpatterns
 
-        # Add LUA to PATH for dependent packages
-        spack_env.prepend_path('PATH', self.prefix.bin)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(
+            env, dependent_spec)
 
+        env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
+        env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
         # prepend it to LUAPATH
-        if dependent_spec.package.extends(self.spec):
-            run_env.prepend_path('LUA_PATH', ';'.join(lua_patterns),
-                                 separator=';')
-            run_env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
-                                 separator=';')
+        lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(
+            env, dependent_spec)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path(
+        if dependent_spec.package.extends(self.spec):
+            env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
+            env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
+                             separator=';')
+
+    def setup_run_environment(self, env):
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_share_dir, '?.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_PATH', os.path.join(self.spec.prefix, self.lua_share_dir, '?',
                                      'init.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?', 'init.lua'),
             separator=';')
-        run_env.prepend_path(
+        env.prepend_path(
             'LUA_CPATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
             separator=';')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Nektools(Package):
             'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
 
     version('develop', branch='master')
-    version('17.0', '6a13bfad2ce023897010dd88f54a0a87')
+    version('17.0', sha256='298d83ffd9f695ee7cf565cb445be33b02775eb9c2e9f0f74d91d89fe722e114')
 
     # Variant for MAXNEL, we need to read this from user
     variant(

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class XplorNih(Package):
        http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://nmr.cit.nih.gov/xplor-nih/"
+    manual_download = True
 
     version('2.45', 'ab3e046604beb0effc89a1adb7bab438')
 

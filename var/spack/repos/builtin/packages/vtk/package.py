@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,14 +20,15 @@ class Vtk(CMakePackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    version('8.2.0', sha256='34c3dc775261be5e45a8049155f7228b6bd668106c72a3c435d95730d17d57bb')
     version('8.1.2', sha256='0995fb36857dd76ccfb8bb07350c214d9f9099e80b1e66b4a8909311f24ff0db')
     version('8.1.1', sha256='71a09b4340f0a9c58559fe946dc745ab68a866cf20636a41d97b6046cb736324')
     version('8.1.0', sha256='6e269f07b64fb13774f5925161fb4e1f379f4e6a0131c8408c555f6b58ef3cb7')
-    version('8.0.1', '692d09ae8fadc97b59d35cab429b261a')
-    version('7.1.0', 'a7e814c1db503d896af72458c2d0228f')
-    version('7.0.0', '5fe35312db5fb2341139b8e4955c367d')
-    version('6.3.0', '0231ca4840408e9dd60af48b314c5b6d')
-    version('6.1.0', '25e4dfb3bad778722dcaec80cd5dab7d')
+    version('8.0.1', sha256='49107352923dea6de05a7b4c3906aaf98ef39c91ad81c383136e768dcf304069')
+    version('7.1.0', sha256='5f3ea001204d4f714be972a810a62c0f2277fbb9d8d2f8df39562988ca37497a')
+    version('7.0.0', sha256='78a990a15ead79cdc752e86b83cfab7dbf5b7ef51ba409db02570dbdd9ec32c3')
+    version('6.3.0', sha256='92a493354c5fa66bea73b5fc014154af5d9f3f6cee8d20a826f4cd5d4b0e8a5e')
+    version('6.1.0', sha256='bd7df10a479606d529a8b71f466c44a2bdd11fd534c62ce0aa44fad91883fa34')
 
     # VTK7 defaults to OpenGL2 rendering backend
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
@@ -61,6 +62,7 @@ class Vtk(CMakePackage):
 
     if sys.platform != 'darwin':
         depends_on('glx', when='~osmesa')
+        depends_on('libxt', when='~osmesa')
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
@@ -69,37 +71,38 @@ class Vtk(CMakePackage):
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
 
-    depends_on('mpi', when='+mpi')
-
     depends_on('boost', when='+xdmf')
     depends_on('boost+mpi', when='+xdmf +mpi')
-
-    depends_on('mpi', when='+mpi')
-
     depends_on('ffmpeg', when='+ffmpeg')
+    depends_on('mpi', when='+mpi')
 
     depends_on('expat')
     depends_on('freetype')
     depends_on('glew')
-    depends_on('hdf5')
+    # set hl variant explicitly, similar to issue #7145
+    depends_on('hdf5+hl')
     depends_on('jpeg')
     depends_on('jsoncpp')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('netcdf')
+    depends_on('netcdf-c~mpi', when='~mpi')
+    depends_on('netcdf-c+mpi', when='+mpi')
     depends_on('netcdf-cxx')
     depends_on('libpng')
     depends_on('libtiff')
     depends_on('zlib')
+    depends_on('eigen', when='@8.2.0:')
+    depends_on('double-conversion', when='@8.2.0:')
+    depends_on('sqlite', when='@8.2.0:')
 
     def url_for_version(self, version):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # VTK has some trouble finding freetype unless it is set in
         # the environment
-        spack_env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
+        env.set('FREETYPE_DIR', self.spec['freetype'].prefix)
 
     def cmake_args(self):
         spec = self.spec
@@ -117,11 +120,9 @@ class Vtk(CMakePackage):
             # However, in a few cases we can't do without them yet
             '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
             '-DVTK_USE_SYSTEM_LIBHARU=OFF',
-            '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
-            '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
 
-            '-DNETCDF_DIR={0}'.format(spec['netcdf'].prefix),
-            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf'].prefix),
+            '-DNETCDF_DIR={0}'.format(spec['netcdf-c'].prefix),
+            '-DNETCDF_C_ROOT={0}'.format(spec['netcdf-c'].prefix),
             '-DNETCDF_CXX_ROOT={0}'.format(spec['netcdf-cxx'].prefix),
 
             # Allow downstream codes (e.g. VisIt) to override VTK's classes
@@ -131,6 +132,20 @@ class Vtk(CMakePackage):
             '-DVTK_WRAP_JAVA=OFF',
             '-DVTK_WRAP_TCL=OFF',
         ]
+
+        # Some variable names have changed
+        if spec.satisfies('@8.2.0:'):
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_OGG:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_THEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_PUGIXML:BOOL=OFF',
+            ])
+        else:
+            cmake_args.extend([
+                '-DVTK_USE_SYSTEM_OGGTHEORA:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBPROJ4:BOOL=OFF',
+            ])
 
         if '+mpi' in spec:
             cmake_args.extend([

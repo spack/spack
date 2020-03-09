@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,8 @@ from spack.version import Version
     ('cppad-20170114.gpl', 'cppad-20170114'),
     # Arch
     ('pcraster-4.1.0_x86-64', 'pcraster-4.1.0'),
+    ('dislin-11.0.linux.i586_64', 'dislin-11.0'),
+    ('PAGIT.V1.01.64bit', 'PAGIT.V1.01'),
     # OS - linux
     ('astyle_2.04_linux', 'astyle_2.04'),
     # OS - unix
@@ -72,6 +74,8 @@ from spack.version import Version
     ('numpy-1.12.0-cp27-cp27m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl', 'numpy-1.12.0'),  # noqa
     # PyPI - exe
     ('PyYAML-3.12.win-amd64-py3.5.exe', 'PyYAML-3.12'),
+    # Combinations of multiple patterns - bin, release
+    ('rocketmq-all-4.5.2-bin-release', 'rocketmq-all-4.5.2'),
     # Combinations of multiple patterns - all
     ('p7zip_9.04_src_all', 'p7zip_9.04'),
     # Combinations of multiple patterns - run
@@ -85,20 +89,31 @@ from spack.version import Version
     # Combinations of multiple patterns - darwin
     ('ghc-7.0.4-x86_64-apple-darwin', 'ghc-7.0.4'),
     ('ghc-7.0.4-i386-apple-darwin', 'ghc-7.0.4'),
+    # Combinations of multiple patterns - centos
+    ('sratoolkit.2.8.2-1-centos_linux64', 'sratoolkit.2.8.2-1'),
     # Combinations of multiple patterns - arch
     ('VizGlow_v2.2alpha17-R21November2016-Linux-x86_64-Install',
      'VizGlow_v2.2alpha17-R21November2016'),
     ('jdk-8u92-linux-x64', 'jdk-8u92'),
     ('cuda_6.5.14_linux_64.run', 'cuda_6.5.14'),
+    ('Mathematica_12.0.0_LINUX.sh', 'Mathematica_12.0.0'),
+    ('trf407b.linux64', 'trf407b'),
     # Combinations of multiple patterns - with
     ('mafft-7.221-with-extensions-src', 'mafft-7.221'),
     ('spark-2.0.0-bin-without-hadoop', 'spark-2.0.0'),
+    ('conduit-v0.3.0-src-with-blt', 'conduit-v0.3.0'),
+    # Combinations of multiple patterns - rock
+    ('bitlib-23-2.src.rock', 'bitlib-23-2'),
     # Combinations of multiple patterns - public
     ('dakota-6.3-public.src', 'dakota-6.3'),
     # Combinations of multiple patterns - universal
     ('synergy-1.3.6p2-MacOSX-Universal', 'synergy-1.3.6p2'),
     # Combinations of multiple patterns - dynamic
     ('snptest_v2.5.2_linux_x86_64_dynamic', 'snptest_v2.5.2'),
+    # Combinations of multiple patterns - other
+    ('alglib-3.11.0.cpp.gpl', 'alglib-3.11.0'),
+    ('hpcviewer-2019.08-linux.gtk.x86_64', 'hpcviewer-2019.08'),
+    ('apache-mxnet-src-1.3.0-incubating', 'apache-mxnet-src-1.3.0'),
 ])
 def test_url_strip_version_suffixes(url, expected):
     stripped = strip_version_suffixes(url)
@@ -109,24 +124,40 @@ def test_url_strip_version_suffixes(url, expected):
     # No suffix
     ('rgb-1.0.6', '1.0.6', 'rgb'),
     ('nauty26r7', '26r7', 'nauty'),
+    ('PAGIT.V1.01', '1.01', 'PAGIT'),
+    ('AmpliconNoiseV1.29', '1.29', 'AmpliconNoise'),
     # Download type - install
     ('converge_install_2.3.16', '2.3.16', 'converge'),
     # Download type - src
     ('jpegsrc.v9b', '9b', 'jpeg'),
+    ('blatSrc35', '35', 'blat'),
+    # Download type - open
+    ('RepeatMasker-open-4-0-7', '4-0-7', 'RepeatMasker'),
     # Download type - archive
     ('coinhsl-archive-2014.01.17', '2014.01.17', 'coinhsl'),
     # Download type - std
     ('ghostscript-fonts-std-8.11', '8.11', 'ghostscript-fonts'),
+    # Download type - bin
+    ('GapCloser-bin-v1.12-r6', '1.12-r6', 'GapCloser'),
+    # Download type - software
+    ('orthomclSoftware-v2.0.9', '2.0.9', 'orthomcl'),
     # Download version - release
     ('cbench_release_1.3.0.tar.gz', '1.3.0', 'cbench'),
     # Download version - snapshot
     ('gts-snapshot-121130', '121130', 'gts'),
     # Download version - distrib
     ('zoltan_distrib_v3.83', '3.83', 'zoltan'),
+    # Download version - latest
+    ('Platypus-latest', 'N/A', 'Platypus'),
+    # Download version - complex
+    ('qt-everywhere-opensource-src-5.7.0', '5.7.0', 'qt'),
+    # Arch
+    ('VESTA-x86_64', '3.4.6', 'VESTA'),
     # VCS - bazaar
     ('libvterm-0+bzr681', '681', 'libvterm'),
     # License - gpl
-    ('PyQt-x11-gpl-4.11.3', '4.11.3', 'PyQt-x11')
+    ('PyQt-x11-gpl-4.11.3', '4.11.3', 'PyQt'),
+    ('PyQt4_gpl_x11-4.12.3', '4.12.3', 'PyQt4'),
 ])
 def test_url_strip_name_suffixes(url, version, expected):
     stripped = strip_name_suffixes(url, version)
@@ -182,6 +213,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
 @pytest.mark.parametrize('name,version,url', [
     # Common Repositories - github downloads
 
+    # name/archive/ver.ver
     ('nco', '4.6.2', 'https://github.com/nco/nco/archive/4.6.2.tar.gz'),
     # name/archive/vver.ver
     ('vim', '8.0.0134', 'https://github.com/vim/vim/archive/v8.0.0134.tar.gz'),
@@ -257,6 +289,15 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
 
     # Common Tarball Formats
 
+    # 1st Pass: Simplest case
+    # Assume name contains no digits and version contains no letters
+
+    # name-ver.ver
+    ('libpng', '1.6.37', 'http://download.sourceforge.net/libpng/libpng-1.6.37.tar.gz'),
+
+    # 2nd Pass: Version only
+    # Assume version contains no letters
+
     # ver.ver
     ('eigen', '3.2.7', 'https://bitbucket.org/eigen/eigen/get/3.2.7.tar.bz2'),
     # ver.ver-ver
@@ -266,10 +307,17 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # vver_ver
     ('luafilesystem', '1_6_3', 'https://github.com/keplerproject/luafilesystem/archive/v1_6_3.tar.gz'),
 
-    # No separators
+    # 3rd Pass: No separator characters are used
+    # Assume name contains no digits
+
+    # namever
     ('turbolinux', '702', 'file://{0}/turbolinux702.tar.gz'.format(os.getcwd())),
     ('nauty', '26r7', 'http://pallini.di.uniroma1.it/nauty26r7.tar.gz'),
-    # Dashes only
+
+    # 4th Pass: A single separator character is used
+    # Assume name contains no digits
+
+    # name-name-ver-ver
     ('Trilinos', '12-10-1',
      'https://github.com/trilinos/Trilinos/archive/trilinos-release-12-10-1.tar.gz'),
     ('panda', '2016-03-07',
@@ -278,7 +326,7 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
      'http://gts.sourceforge.net/tarballs/gts-snapshot-121130.tar.gz'),
     ('cdd', '061a',
      'http://www.cs.mcgill.ca/~fukuda/download/cdd/cdd-061a.tar.gz'),
-    # Only underscores
+    # name_name_ver_ver
     ('tinyxml', '2_6_2',
      'https://sourceforge.net/projects/tinyxml/files/tinyxml/2.6.2/tinyxml_2_6_2.tar.gz'),
     ('boost', '1_55_0',
@@ -287,9 +335,6 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
      'https://github.com/dhmunro/yorick/archive/y_2_2_04.tar.gz'),
     ('tbb', '44_20160413',
      'https://www.threadingbuildingblocks.org/sites/default/files/software_releases/source/tbb44_20160413oss_src.tgz'),
-
-    # Only dots
-
     # name.name.ver.ver
     ('prank', '150803', 'http://wasabiapp.org/download/prank/prank.source.150803.tgz'),
     ('jpeg', '9b', 'http://www.ijg.org/files/jpegsrc.v9b.tar.gz'),
@@ -302,61 +347,51 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     ('geant', '4.10.01.p03', 'http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz'),
     ('tcl', '8.6.5', 'http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz'),
 
-    # Dash and dots
+    # 5th Pass: Two separator characters are used
+    # Name may contain digits, version may contain letters
 
     # name-name-ver.ver
-    # digit in name
     ('m4', '1.4.17', 'https://ftp.gnu.org/gnu/m4/m4-1.4.17.tar.gz'),
-    # letter in version
     ('gmp', '6.0.0a', 'https://gmplib.org/download/gmp/gmp-6.0.0a.tar.bz2'),
-    # version starts with 'v'
     ('LaunchMON', '1.0.2',
      'https://github.com/LLNL/LaunchMON/releases/download/v1.0.2/launchmon-v1.0.2.tar.gz'),
     # name-ver-ver.ver
     ('libedit', '20150325-3.1', 'http://thrysoee.dk/editline/libedit-20150325-3.1.tar.gz'),
-
-    # Dash and unserscores
-
     # name-name-ver_ver
     ('icu4c', '57_1', 'http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz'),
-
-    # Underscores and dots
-
     # name_name_ver.ver
     ('superlu_dist', '4.1', 'http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_4.1.tar.gz'),
     ('pexsi', '0.9.0', 'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz'),
     # name_name.ver.ver
     ('fer', '696', 'ftp://ftp.pmel.noaa.gov/ferret/pub/source/fer_source.v696.tar.gz'),
-
-    # Dash dot dah dot
-
+    # name_name_ver-ver
+    ('Bridger', '2014-12-01',
+     'https://downloads.sourceforge.net/project/rnaseqassembly/Bridger_r2014-12-01.tar.gz'),
     # name-name-ver.ver-ver.ver
     ('sowing', '1.1.23-p1', 'http://ftp.mcs.anl.gov/pub/petsc/externalpackages/sowing-1.1.23-p1.tar.gz'),
     ('bib2xhtml', '3.0-15-gf506', 'http://www.spinellis.gr/sw/textproc/bib2xhtml/bib2xhtml-v3.0-15-gf506.tar.gz'),
     # namever.ver-ver.ver
     ('go', '1.4-bootstrap-20161024', 'https://storage.googleapis.com/golang/go1.4-bootstrap-20161024.tar.gz'),
 
-    # Underscore dash dot
+    # 6th Pass: All three separator characters are used
+    # Name may contain digits, version may contain letters
 
     # name_name-ver.ver
     ('the_silver_searcher', '0.32.0', 'http://geoff.greer.fm/ag/releases/the_silver_searcher-0.32.0.tar.gz'),
     ('sphinx_rtd_theme', '0.1.10a0',
      'https://pypi.python.org/packages/source/s/sphinx_rtd_theme/sphinx_rtd_theme-0.1.10a0.tar.gz'),
-
-    # Dot underscore dot dash dot
-
     # name.name_ver.ver-ver.ver
     ('TH.data', '1.0-8', 'https://cran.r-project.org/src/contrib/TH.data_1.0-8.tar.gz'),
     ('XML', '3.98-1.4', 'https://cran.r-project.org/src/contrib/XML_3.98-1.4.tar.gz'),
-
-    # Dash dot underscore dot
-
     # name-name-ver.ver_ver.ver
     ('pypar', '2.1.5_108',
      'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/pypar/pypar-2.1.5_108.tgz'),
     # name-namever.ver_ver.ver
     ('STAR-CCM+', '11.06.010_02',
      'file://{0}/STAR-CCM+11.06.010_02_linux-x86_64.tar.gz'.format(os.getcwd())),
+    # name-name_name-ver.ver
+    ('PerlIO-utf8_strict', '0.002',
+     'http://search.cpan.org/CPAN/authors/id/L/LE/LEONT/PerlIO-utf8_strict-0.002.tar.gz'),
 
     # Various extensions
     # .tar.gz
@@ -399,18 +434,61 @@ def test_url_parse_offset(name, noffset, ver, voffset, path):
     # .txz
     ('kim-api', '2.1.0', 'https://s3.openkim.org/kim-api/kim-api-2.1.0.txz'),
 
-    # Weird URLS
+    # 8th Pass: Query strings
 
-    # github.com/repo/name/releases/download/name-vver/name
-    ('nextflow', '0.20.1', 'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow'),
     # suffix queries
     ('swiftsim', '0.3.0', 'http://gitlab.cosma.dur.ac.uk/swift/swiftsim/repository/archive.tar.gz?ref=v0.3.0'),
-    ('swiftsim', '0.3.0', 'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
+    ('swiftsim', '0.3.0',
+     'https://gitlab.cosma.dur.ac.uk/api/v4/projects/swift%2Fswiftsim/repository/archive.tar.gz?sha=v0.3.0'),
     ('sionlib', '1.7.1', 'http://apps.fz-juelich.de/jsc/sionlib/download.php?version=1.7.1'),
+    ('jube2', '2.2.2', 'https://apps.fz-juelich.de/jsc/jube/jube2/download.php?version=2.2.2'),
+    ('archive', '1.0.0', 'https://code.ornl.gov/eck/papyrus/repository/archive.tar.bz2?ref=v1.0.0'),
+    ('VecGeom', '0.3.rc',
+     'https://gitlab.cern.ch/api/v4/projects/VecGeom%2FVecGeom/repository/archive.tar.gz?sha=v0.3.rc'),
+    ('parsplice', '1.1',
+     'https://gitlab.com/api/v4/projects/exaalt%2Fparsplice/repository/archive.tar.gz?sha=v1.1'),
+    ('busco', '2.0.1', 'https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1'),
+    ('libaec', '1.0.2',
+     'https://gitlab.dkrz.de/api/v4/projects/k202009%2Flibaec/repository/archive.tar.gz?sha=v1.0.2'),
+    ('icet', '2.1.1',
+     'https://gitlab.kitware.com/api/v4/projects/icet%2Ficet/repository/archive.tar.bz2?sha=IceT-2.1.1'),
+    ('vtk-m', '1.3.0',
+     'https://gitlab.kitware.com/api/v4/projects/vtk%2Fvtk-m/repository/archive.tar.gz?sha=v1.3.0'),
+    ('GATK', '3.8-1-0-gf15c1c3ef',
+     'https://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.8-1-0-gf15c1c3ef'),
     # stem queries
     ('slepc', '3.6.2', 'http://slepc.upv.es/download/download.php?filename=slepc-3.6.2.tar.gz'),
     ('otf', '1.12.5salmon',
      'http://wwwpub.zih.tu-dresden.de/%7Emlieber/dcount/dcount.php?package=otf&get=OTF-1.12.5salmon.tar.gz'),
+    ('eospac', '6.4.0beta.1',
+     'http://laws-green.lanl.gov/projects/data/eos/get_file.php?package=eospac&filename=eospac_v6.4.0beta.1_r20171213193219.tgz'),
+    ('vampirtrace', '5.14.4',
+     'http://wwwpub.zih.tu-dresden.de/~mlieber/dcount/dcount.php?package=vampirtrace&get=VampirTrace-5.14.4.tar.gz'),
+    # (we don't actually look for these, they are picked up
+    #  during the preliminary stem parsing)
+    ('octopus', '6.0', 'http://octopus-code.org/down.php?file=6.0/octopus-6.0.tar.gz'),
+    ('cloog', '0.18.1', 'http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.1.tar.gz'),
+    ('libxc', '2.2.2', 'http://www.tddft.org/programs/octopus/down.php?file=libxc/libxc-2.2.2.tar.gz'),
+    ('cistem', '1.0.0-beta',
+     'https://cistem.org/system/tdf/upload3/cistem-1.0.0-beta-source-code.tar.gz?file=1&type=cistem_details&id=37&force=0'),
+    ('Magics', '4.1.0',
+     'https://confluence.ecmwf.int/download/attachments/3473464/Magics-4.1.0-Source.tar.gz?api=v2'),
+    ('grib_api', '1.17.0',
+     'https://software.ecmwf.int/wiki/download/attachments/3473437/grib_api-1.17.0-Source.tar.gz?api=v2'),
+    ('eccodes', '2.2.0',
+     'https://software.ecmwf.int/wiki/download/attachments/45757960/eccodes-2.2.0-Source.tar.gz?api=v2'),
+    ('SWFFT', '1.0',
+     'https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FSWFFT/repository/archive.tar.gz?sha=v1.0'),
+
+    # 9th Pass: Version in path
+
+    # github.com/repo/name/releases/download/name-vver/name
+    ('nextflow', '0.20.1', 'https://github.com/nextflow-io/nextflow/releases/download/v0.20.1/nextflow'),
+    # ver/name
+    ('ncbi', '2.2.26', 'ftp://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/ncbi.tar.gz'),
+
+    # Other tests for corner cases
+
     # single character name
     ('R', '3.3.2', 'https://cloud.r-project.org/src/base/R-3/R-3.3.2.tar.gz'),
     # name starts with digit

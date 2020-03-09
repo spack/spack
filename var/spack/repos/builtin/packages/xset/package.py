@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xset(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xset"
     url      = "https://www.x.org/archive/individual/app/xset-1.2.3.tar.gz"
 
-    version('1.2.3', '1a76965ed0e8cb51d3fa04d458cb3d8f')
+    version('1.2.3', sha256='5ecb2bb2cbf3c9349b735080b155a08c97b314dacedfc558c7f5a611ee1297f7')
 
     depends_on('libxmu')
     depends_on('libx11')

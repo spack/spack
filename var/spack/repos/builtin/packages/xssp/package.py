@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,16 +13,16 @@ class Xssp(AutotoolsPackage):
     homepage = "https://github.com/cmbi/xssp"
     url      = "https://github.com/cmbi/xssp/archive/3.0.10.tar.gz"
 
-    version('3.0.10', '01df63c3672eec95662651da45f8c29e')
-    version('3.0.9',  '5e47e531095c874f665b83a0a05e8e87')
-    version('3.0.8',  '2f95aa39977a4675c7a2810c8d55a2e0')
-    version('3.0.7',  '1fe4357628a493664cd67d6b87f701c1')
-    version('3.0.6',  '80e3bb3ffb0e6e675e6ecc2a4226b03b')
-    version('3.0.5',  '1da38d5a8119c50d49045dab211ee391')
-    version('3.0.4',  '92d7fe70a1086d33220959e846ff7052')
-    version('3.0.3',  '96632417270259b0549348dfead1fd0d')
-    version('3.0.2',  '5a06fb81d7c1ed3d64b79f2cc0f78bb9')
-    version('3.0.1',  '2a347ea8ed91583d01026e44035950de')
+    version('3.0.10', sha256='b475d6fa62098df0e54c8dbdaa0b32de93bf5a393335f73f9b5a7e95f3090d2a')
+    version('3.0.9',  sha256='42a9a93c48d22478212dcaf6ceb3feb64443e4cb2e8cccdd402b47a595d16658')
+    version('3.0.8',  sha256='45e316ff2c700f09971027f9e813cf3139d36ab5951d337948fafab53e00d821')
+    version('3.0.7',  sha256='eb6c3276eeb1261c55568ebfae301033904fe619d84b380313dbf137a2b06cd1')
+    version('3.0.6',  sha256='b868e0077270361276c1c256e2f137ad95f7e84deeb61ae267f7559ebaab7d59')
+    version('3.0.5',  sha256='fded09f08cfb12e578e4823295dc0d0aaeff6559d5e099df23c5bcc911597ccd')
+    version('3.0.4',  sha256='fe786c3a75dafe93bb6a97c2840c3edb0d0e81446874082dc053e136dd3b7f68')
+    version('3.0.3',  sha256='c4826ed74a74e3238f45104cb21ca4ad9e5b49498891e991a3a3a7a3b9bdbe1d')
+    version('3.0.2',  sha256='edb43dc7407a5e91d68d27b732887c6e70a1988e8ddbba03d430713c40c40139')
+    version('3.0.1',  sha256='8f56bc51d7b5f035442c189dd7096f0dd25528303722507365f5e746d5ad9a73')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')

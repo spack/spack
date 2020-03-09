@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Namd(MakefilePackage):
 
     homepage = "http://www.ks.uiuc.edu/Research/namd/"
     url      = "file://{0}/NAMD_2.12_Source.tar.gz".format(os.getcwd())
+    manual_download = True
 
     version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')

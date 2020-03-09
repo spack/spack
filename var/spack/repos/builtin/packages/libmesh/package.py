@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class Libmesh(AutotoolsPackage):
     version('1.3.1', sha256='638cf30d05c249315760f16cbae4804964db8857a04d5e640f37617bef17ab0f')
     version('1.3.0', sha256='a8cc2cd44f42b960989dba10fa438b04af5798c46db0b4ec3ed29591b8359786')
     version('1.2.1', sha256='11c22c7d96874a17de6b8c74caa45d6745d40bf3610e88b2bd28fd3381f5ba70')
-    version('1.0.0', 'cb464fc63ea0b71b1e69fa3f5d4f93a4')
+    version('1.0.0', sha256='8909b0354e147fa50d176caa63ef22b02326d49250e964be23532d89432e727f')
 
     # support for libraries that are only available through the bundled copies:
     # TODO libMesh 1.2.1 gained the ability to specify a path to capnproto
@@ -79,10 +79,7 @@ class Libmesh(AutotoolsPackage):
               'variant.')
 
     depends_on('boost', when='+boost')
-    # The Scotch dependency of Eigen is not used by libMesh. Since Scotch can
-    # only be used with certain versions of flex it conflicts with several
-    # versions of GCC, so explicitly disable it.
-    depends_on('eigen~scotch', when='+eigen')
+    depends_on('eigen', when='+eigen')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('mpi', when='+slepc')
@@ -245,5 +242,5 @@ class Libmesh(AutotoolsPackage):
 
         return options
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.append_flags('PERL', self.spec['perl'].command.path)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.append_flags('PERL', self.spec['perl'].command.path)

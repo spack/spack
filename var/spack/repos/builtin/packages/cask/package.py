@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,9 @@ class Cask(Package):
     homepage = "http://cask.readthedocs.io/en/latest/"
     url      = "https://github.com/cask/cask/archive/v0.7.4.tar.gz"
 
-    version('0.8.1', '25196468a7ce634cfff14733678be6ba')
+    version('0.8.1', sha256='8739ba608f23c79b3426faa8b068d5d1bc096c7305ce30b1163babd354be821c')
     # version 0.8.0 is broken
-    version('0.7.4', 'c973a7db43bc980dd83759a5864a1260')
+    version('0.7.4', sha256='b183ea1c50fc215c9040f402b758ecc335901fbc2c3afd4a7302386c888d437d')
 
     depends_on('emacs', type=('build', 'run'))
 

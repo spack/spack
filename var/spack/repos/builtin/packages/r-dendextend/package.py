@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RDendextend(RPackage):
 
     version('1.12.0', sha256='b487fed8c1878a23b9e28394ee11f16a1831b76c90793eb486e6963c7162fa55')
     version('1.10.0', sha256='88f0fb3362d69144daf4f35d0ea09f32c2df1adf614e040327a42552a8fd3224')
-    version('1.5.2', '1134869d94005727c63cf3037e2f1bbf')
+    version('1.5.2', sha256='8228cf9cfd31ec30038aaa61a35959179bad748582d796999cd9ad78152a5f12')
 
     depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.0.1:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,8 @@ class RGgplot2(RPackage):
 
     version('3.2.0', sha256='31b6897fb65acb37913ff6e2bdc1b57f652360098ae3aa660abdcf54f84d73b3')
     version('3.1.1', sha256='bfde297f3b4732e7f560078f4ce131812a70877e6b5b1d41a772c394939e0c79')
-    version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
-    version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
+    version('2.2.1', sha256='5fbc89fec3160ad14ba90bd545b151c7a2e7baad021c0ab4b950ecd6043a8314')
+    version('2.1.0', sha256='f2c323ae855d6c089e3a52138aa7bc25b9fe1429b8df9eae89d28ce3c0dd3969')
 
     depends_on('r@3.1:', when='@:3.1.1', type=('build', 'run'))
     depends_on('r@3.2:', when='@3.2.0:', type=('build', 'run'))

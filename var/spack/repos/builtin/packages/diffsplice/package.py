@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,8 +14,8 @@ class Diffsplice(MakefilePackage):
     homepage = "http://www.netlab.uky.edu/p/bioinfo/DiffSplice"
     url      = "http://protocols.netlab.uky.edu/~yin/download/diffsplice/diffsplice_0.1.1.tgz"
 
-    version('0.1.2beta', 'a1df6e0b50968f2c229d5d7f97327336')
-    version('0.1.1',     'be90e6c072402d5aae0b4e2cbb8c10ac')
+    version('0.1.2beta', sha256='cc06dcb9f8d98b2184f0dd5863b79bdd6a8cd33b9418e6549b7ea63e90ee1aa6')
+    version('0.1.1',     sha256='9740426692b0e5f92b943b127014c1d9815bed2938b5dd9e9d0c5b64abbb5da6')
 
     def edit(self, spec, prefix):
         if spec.target.family == 'aarch64':

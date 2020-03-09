@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,13 @@ class Opari2(AutotoolsPackage):
     homepage = "http://www.vi-hps.org/projects/score-p"
     url      = "https://www.vi-hps.org/cms/upload/packages/opari2/opari2-2.0.4.tar.gz"
 
-    version('2.0.5', '9034dd7596ac2176401090fd5ced45d0ab9a9404444ff767f093ccce68114ef5')
-    version('2.0.4', 'f69e324792f66780b473daf2b3c81f58ee8188adc72b6fe0dacf43d4c1a0a131')
-    version('2.0.3', 'f34674718ffdb098a48732a1eb9c1aa2')
-    version('2.0.1', '74af78f1f27b8caaa4271e0b97fb0fba')
-    version('2.0',   '72350dbdb6139f2e68a5055a4f0ba16c')
-    version('1.1.4', '245d3d11147a06de77909b0805f530c0')
-    version('1.1.2', '9a262c7ca05ff0ab5f7775ae96f3539e')
+    version('2.0.5', sha256='9034dd7596ac2176401090fd5ced45d0ab9a9404444ff767f093ccce68114ef5')
+    version('2.0.4', sha256='f69e324792f66780b473daf2b3c81f58ee8188adc72b6fe0dacf43d4c1a0a131')
+    version('2.0.3', sha256='7e2efcfbc99152ee6e31454ef4fb747f77165691539d5d2c1df2abc4612de86c')
+    version('2.0.1', sha256='f49d74d7533f428a4701cd561eba8a69f60615332e81b66f01ef1c9b7ee54666')
+    version('2.0',   sha256='0c4e575be05627cd001d692204f10caef37b2f3d1ec825f98cbe1bfa4232b0b7')
+    version('1.1.4', sha256='b80c04fe876faaa4ee9a0654486ecbeba516b27fc14a90d20c6384e81060cffe')
+    version('1.1.2', sha256='8405c2903730d94c828724b3a5f8889653553fb8567045a6c54ac0816237835d')
 
     def configure_args(self):
         return ["--enable-shared"]

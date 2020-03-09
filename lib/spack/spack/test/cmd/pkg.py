@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,8 @@ def mock_pkg_git_repo(tmpdir_factory):
 
         # initial commit with mock packages
         git('add', '.')
+        git('config', 'user.email', 'testing@spack.io')
+        git('config', 'user.name', 'Spack Testing')
         git('commit', '-m', 'initial mock repo commit')
 
         # add commit with pkg-a, pkg-b, pkg-c packages

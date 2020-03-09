@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PerlDataOptlist(PerlPackage):
     homepage = "http://search.cpan.org/~rjbs/Data-OptList-0.110/lib/Data/OptList.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RJ/RJBS/Data-OptList-0.110.tar.gz"
 
-    version('0.110', 'f9236c9ea5607134ad8a2b3dc901c4c5')
+    version('0.110', sha256='366117cb2966473f2559f2f4575ff6ae69e84c69a0f30a0773e1b51a457ef5c3')
 
     depends_on('perl-sub-install', type=('build', 'run'))

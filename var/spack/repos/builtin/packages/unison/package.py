@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Unison(Package):
     homepage = "https://www.cis.upenn.edu/~bcpierce/unison/"
     url      = "https://www.seas.upenn.edu/~bcpierce/unison//download/releases/stable/unison-2.48.4.tar.gz"
 
-    version('2.48.4', '5334b78c7e68169df7de95f4c6c4b60f')
+    version('2.48.4', sha256='30aa53cd671d673580104f04be3cf81ac1e20a2e8baaf7274498739d59e99de8')
 
     depends_on('ocaml', type='build')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class SnapKorf(MakefilePackage):
     homepage = "http://korflab.ucdavis.edu/software.html"
     url      = "http://korflab.ucdavis.edu/Software/snap-2013-11-29.tar.gz"
 
-    version('2013-11-29', 'dfdf48e37cdb32af4eecd9201506b6e3')
+    version('2013-11-29', sha256='e2a236392d718376356fa743aa49a987aeacd660c6979cee67121e23aeffc66a')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('boost')
@@ -38,6 +38,6 @@ class SnapKorf(MakefilePackage):
         install_tree('HMM', prefix.HMM)
         install_tree('DNA', prefix.DNA)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ZOE', self.prefix)
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('ZOE', self.prefix)
+        env.prepend_path('PATH', self.prefix)

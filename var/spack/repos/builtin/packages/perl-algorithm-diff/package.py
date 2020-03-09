@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,4 +12,4 @@ class PerlAlgorithmDiff(PerlPackage):
     homepage = "http://search.cpan.org/~tyemq/Algorithm-Diff-1.1903/lib/Algorithm/Diff.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/T/TY/TYEMQ/Algorithm-Diff-1.1903.tar.gz"
 
-    version('1.1903', '0e8add21a641b8d66436df0c2024bf3b')
+    version('1.1903', sha256='30e84ac4b31d40b66293f7b1221331c5a50561a39d580d85004d9c1fff991751')

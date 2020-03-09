@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,4 @@ class RWhisker(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/whisker_0.3-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/whisker"
 
-    version('0.3-2', 'c4b9bf9a22e69ce003fe68663ab5e8e6')
+    version('0.3-2', sha256='484836510fcf123a66ddd13cdc8f32eb98e814cad82ed30c0294f55742b08c7c')

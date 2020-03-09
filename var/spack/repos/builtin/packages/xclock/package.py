@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Xclock(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xclock"
     url      = "https://www.x.org/archive/individual/app/xclock-1.0.7.tar.gz"
 
-    version('1.0.7', 'bbade10e6234d8db276212014e8c77fa')
+    version('1.0.7', sha256='e730bd575938d5628ef47003a9d4d41b882621798227f5d0c12f4a26365ed1b5')
 
     depends_on('libxaw')
     depends_on('libxmu')

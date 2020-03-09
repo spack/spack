@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class SstDumpi(AutotoolsPackage):
     git      = "https://github.com/sstsimulator/sst-dumpi.git"
 
     version('master', branch='master')
-    version('6.1.0', '31c3f40a697dc85bf23dd34270982319')
+    version('6.1.0', sha256='d4f6afcff5ba67fcc3a29f461afbb59855053840f5f320552a77b4e14c687bb6')
 
     depends_on('autoconf@1.68:', type='build')
     depends_on('automake@1.11.1:', type='build')

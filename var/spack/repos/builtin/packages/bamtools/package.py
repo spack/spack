@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,12 +13,12 @@ class Bamtools(CMakePackage):
     homepage = "https://github.com/pezmaster31/bamtools"
     url      = "https://github.com/pezmaster31/bamtools/archive/v2.4.0.tar.gz"
 
-    version('2.5.1', '98e90632058f85bd5eed6088b3ff912e')
-    version('2.5.0', 'dd4185bdba6e3adf2c24b7f93a57233d')
-    version('2.4.1', '41cadf513f2744256851accac2bc7baa')
-    version('2.4.0', '6139d00c1b1fe88fe15d094d8a74d8b9')
-    version('2.3.0', 'd327df4ba037d6eb8beef65d7da75ebc')
-    version('2.2.3', '6eccd3e45e4ba12a68daa3298998e76d')
+    version('2.5.1', sha256='4abd76cbe1ca89d51abc26bf43a92359e5677f34a8258b901a01f38c897873fc')
+    version('2.5.0', sha256='85e02e04998a67cbda7ab68cdab36cee133db024e814b34e06bb617b627caf9c')
+    version('2.4.1', sha256='933a0c1a83c88c1dac8078c0c0e82f6794c75cb927265399404bc2cc2611204b')
+    version('2.4.0', sha256='f1fe82b8871719e0fb9ed7be73885f5d0815dd5c7277ee33bd8f67ace961e13e')
+    version('2.3.0', sha256='288046e6d5d41afdc5fce8608c5641cf2b8e670644587c1315b90bbe92f039af')
+    version('2.2.3', sha256='92ddef44801a1f8f01ce1a397f83e0f8b5e1ae8ad92c620f2dafaaf8d54cf178')
 
     depends_on('zlib', type='link')
 

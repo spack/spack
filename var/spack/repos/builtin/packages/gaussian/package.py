@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Gaussian(Package):
 
     homepage = "http://www.gaussian.com/"
     url = "file://{0}/g09.tgz".format(os.getcwd())
+    manual_download = True
 
     version('09', '7d4c95b535e68e48af183920df427e4e')
 
@@ -37,15 +38,14 @@ class Gaussian(Package):
                 filter_file('/usr/bin/linda', prefix.bin, join_path(prefix.bin,
                             filename), string='True')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('g09root', self.prefix)
-        run_env.set('GAUSSIANHOME', self.prefix)
-        run_env.set('GAUSS_EXEDIR', self.prefix.bin)
-        run_env.set('G09_BASIS', join_path(self.prefix.bin, 'basis'))
-        run_env.set('GAUSS_LEXEDIR', join_path(self.prefix.bin,
-                    'linda-exe'))
-        run_env.set('GAUSS_ARCHDIR', join_path(self.prefix.bin, 'arch'))
-        run_env.set('GAUSS_BSDDIR', join_path(self.prefix.bin, 'bsd'))
-        run_env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.bin,
-                             'linda8.2/opteron-linux/lib'))
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.bin)
+    def setup_run_environment(self, env):
+        env.set('g09root', self.prefix)
+        env.set('GAUSSIANHOME', self.prefix)
+        env.set('GAUSS_EXEDIR', self.prefix.bin)
+        env.set('G09_BASIS', self.prefix.bin.basis)
+        env.set('GAUSS_LEXEDIR', join_path(self.prefix.bin, 'linda-exe'))
+        env.set('GAUSS_ARCHDIR', self.prefix.bin.arch)
+        env.set('GAUSS_BSDDIR', self.prefix.bin.bsd)
+        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix.bin,
+                         'linda8.2', 'opteron-linux', 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.bin)

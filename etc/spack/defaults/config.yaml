@@ -32,7 +32,6 @@ config:
   module_roots:
     tcl:    $spack/share/spack/modules
     lmod:   $spack/share/spack/lmod
-    dotkit: $spack/share/spack/dotkit
 
 
   # Temporary locations Spack can try to use for builds.
@@ -76,9 +75,23 @@ config:
   misc_cache: ~/.spack/cache
 
 
+  # Timeout in seconds used for downloading sources etc. This only applies
+  # to the connection phase and can be increased for slow connections or
+  # servers. 0 means no timeout.
+  connect_timeout: 10
+
+
   # If this is false, tools like curl that use SSL will not verify
   # certifiates. (e.g., curl will use use the -k option)
   verify_ssl: true
+
+
+  # Suppress gpg warnings from binary package verification
+  # Only suppresses warnings, gpg failure will still fail the install
+  # Potential rationale to set True: users have already explicitly trusted the
+  # gpg key they are using, and may not want to see repeated warnings that it
+  # is self-signed or something of the sort.
+  suppress_gpg_warnings: false
 
 
   # If set to true, Spack will attempt to build any compiler on the spec
@@ -130,7 +143,7 @@ config:
   # when Spack needs to manage its own package metadata and all operations are
   # expected to complete within the default time limit. The timeout should
   # therefore generally be left untouched.
-  db_lock_timeout: 120
+  db_lock_timeout: 3
 
 
   # How long to wait when attempting to modify a package (e.g. to install it).
@@ -139,3 +152,8 @@ config:
   # anticipates that a significant delay indicates that the lock attempt will
   # never succeed.
   package_lock_timeout: null
+
+  # Control whether Spack embeds RPATH or RUNPATH attributes in ELF binaries.
+  # Has no effect on macOS. DO NOT MIX these within the same install tree.
+  # See the Spack documentation for details.
+  shared_linking: 'rpath'

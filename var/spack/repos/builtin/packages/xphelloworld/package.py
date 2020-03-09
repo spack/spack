@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xphelloworld(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xphelloworld"
     url      = "https://www.x.org/archive/individual/app/xphelloworld-1.0.1.tar.gz"
 
-    version('1.0.1', 'b1851337a8e850d5c8e5a5ca5e3033da')
+    version('1.0.1', sha256='ead6437c4dc9540698a41e174c9d1ac792de07baeead81935d72cb123196f866')
 
     depends_on('libx11')
     depends_on('libxaw')

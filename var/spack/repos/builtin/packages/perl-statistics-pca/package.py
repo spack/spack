@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlStatisticsPca(PerlPackage):
     homepage = "http://search.cpan.org/~dsth/Statistics-PCA/lib/Statistics/PCA.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/D/DS/DSTH/Statistics-PCA-0.0.1.tar.gz"
 
-    version('0.0.1', '6e0e05fe13f6becea525b973a0c29001')
+    version('0.0.1', sha256='f8adb10b00232123d103a5b49161ad46370f47fe0f752e5462a4dc15f9d46bc4')
 
     depends_on('perl-module-build', type='build')
     depends_on('perl-contextual-return', type=('build', 'run'))

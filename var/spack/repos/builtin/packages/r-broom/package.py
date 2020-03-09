@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@ class RBroom(RPackage):
 
     version('0.5.2', sha256='16af7b446b24bc14461efbda9bea1521cf738c778c5e48fcc7bad45660a4ac62')
     version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
-    version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
+    version('0.4.2', sha256='9f409413623cf25e7110452e6215353af5114f7044d73af182bd6c10971c5a44')
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-plyr', when='@:0.4.2', type=('build', 'run'))

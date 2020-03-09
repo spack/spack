@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Phast(MakefilePackage):
     homepage = "http://compgen.cshl.edu/phast/index.php"
     url      = "https://github.com/CshlSiepelLab/phast/archive/v1.4.tar.gz"
 
-    version('1.4', '2bc0412ba58ea1f08ba5e12fad43b4c7')
+    version('1.4', sha256='287c77599c51256a3adbd62ed217cb6d6a547fcec2c29262e9d61fa32ed92b99')
 
     # phast cannot build with clapack using external blas
     depends_on('clapack~external-blas')

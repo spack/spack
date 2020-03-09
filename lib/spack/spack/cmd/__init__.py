@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,13 @@ from llnl.util.tty.color import colorize
 from llnl.util.filesystem import working_dir
 
 import spack.config
+import spack.error
 import spack.extensions
 import spack.paths
 import spack.spec
 import spack.store
 import spack.util.spack_json as sjson
-from spack.error import SpackError
+import spack.util.string
 
 
 # cmd has a submodule called "list" so preserve the python list module
@@ -134,7 +135,9 @@ def parse_specs(args, **kwargs):
     tests = kwargs.get('tests', False)
 
     try:
-        sargs = args if isinstance(args, six.string_types) else ' '.join(args)
+        sargs = args
+        if not isinstance(args, six.string_types):
+            sargs = ' '.join(spack.util.string.quote(args))
         specs = spack.spec.parse(sargs)
         for spec in specs:
             if concretize:
@@ -147,15 +150,15 @@ def parse_specs(args, **kwargs):
     except spack.spec.SpecParseError as e:
         msg = e.message + "\n" + str(e.string) + "\n"
         msg += (e.pos + 2) * " " + "^"
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
-    except spack.spec.SpecError as e:
+    except spack.error.SpecError as e:
 
         msg = e.message
         if e.long_message:
             msg += e.long_message
 
-        raise SpackError(msg)
+        raise spack.error.SpackError(msg)
 
 
 def elide_list(line_list, max_num=10):
@@ -174,16 +177,39 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env):
+def disambiguate_spec(spec, env, local=False, installed=True):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
         spec (spack.spec.Spec): a spec to disambiguate
         env (spack.environment.Environment): a spack environment,
             if one is active, or None if no environment is active
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
-    matching_specs = spack.store.db.query(spec, hashes=hashes)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed)
+
+
+def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True):
+    """Given a spec and a list of hashes, get concrete spec the spec refers to.
+
+    Arguments:
+        spec (spack.spec.Spec): a spec to disambiguate
+        hashes (iterable): a set of hashes of specs among which to disambiguate
+        local (boolean, default False): do not search chained spack instances
+        installed (boolean or any, or spack.database.InstallStatus or iterable
+            of spack.database.InstallStatus): install status argument passed to
+            database query. See ``spack.database.Database._query`` for details.
+    """
+    if local:
+        matching_specs = spack.store.db.query_local(spec, hashes=hashes,
+                                                    installed=installed)
+    else:
+        matching_specs = spack.store.db.query(spec, hashes=hashes,
+                                              installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
 
@@ -200,6 +226,9 @@ def disambiguate_spec(spec, env):
 
 
 def gray_hash(spec, length):
+    if not length:
+        # default to maximum hash length
+        length = 32
     h = spec.dag_hash(length) if spec.concrete else '-' * length
     return colorize('@K{%s}' % h)
 
@@ -319,7 +348,7 @@ def display_specs(specs, args=None, **kwargs):
 
     format_string = get_arg('format', None)
     if format_string is None:
-        nfmt = '{namespace}.{name}' if namespace else '{name}'
+        nfmt = '{fullname}' if namespace else '{name}'
         ffmt = ''
         if full_compiler or flags:
             ffmt += '{%compiler.name}'

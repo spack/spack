@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Psm(MakefilePackage):
     url      = "https://github.com/intel/psm/archive/v3.3.tar.gz"
     git      = "https://github.com/intel/psm.git"
 
-    version('3.3', '031eb27688c932867d55054e76d00875', preferred=True)
+    version('3.3', sha256='034b10e24d9f2967ef0f8d0f828572295e89cdfa1ba30c35e288b9b23c3dab8f', preferred=True)
     version('2017-04-28', commit='604758e')
 
     conflicts('%gcc@6:', when='@3.3')

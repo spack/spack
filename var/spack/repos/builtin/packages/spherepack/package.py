@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Spherepack(Package):
     homepage = "https://www2.cisl.ucar.edu/resources/legacy/spherepack"
     url      = "https://www2.cisl.ucar.edu/sites/default/files/spherepack3.2.tar"
 
-    version('3.2', '283627744f36253b4260efd7dfb7c762')
+    version('3.2', sha256='d58ef8cbc45cf2ad24f73a9f73f5f9d4fbe03cd9e2e7722e526fffb68be581ba')
 
     def install(self, spec, prefix):
         if self.compiler.fc is None:

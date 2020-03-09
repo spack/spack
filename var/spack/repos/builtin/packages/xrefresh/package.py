@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xrefresh(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xrefresh"
     url      = "https://www.x.org/archive/individual/app/xrefresh-1.0.5.tar.gz"
 
-    version('1.0.5', 'e41c5148d894406484af59887257c465')
+    version('1.0.5', sha256='b373cc1ecd37c3d787e7074ce89a8a06ea173d7ba9e73fa48de973c759fbcf38')
 
     depends_on('libx11')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ from six.moves.urllib.request import build_opener, HTTPHandler, Request
 from six.moves.urllib.parse import urlencode
 
 from llnl.util.filesystem import working_dir
+import llnl.util.tty as tty
 from ordereddict_backport import OrderedDict
 import spack.build_environment
 import spack.fetch_strategy
@@ -58,6 +59,7 @@ class CDash(Reporter):
 
     def __init__(self, args):
         Reporter.__init__(self, args)
+        tty.set_verbose(args.verbose)
         self.template_dir = os.path.join('reports', 'cdash')
         self.cdash_upload_url = args.cdash_upload_url
 
@@ -65,8 +67,13 @@ class CDash(Reporter):
             self.buildid_regexp = re.compile("<buildId>([0-9]+)</buildId>")
         self.phase_regexp = re.compile(r"Executing phase: '(.*)'")
 
-        if args.package:
-            packages = args.package
+        self.authtoken = None
+        if 'SPACK_CDASH_AUTH_TOKEN' in os.environ:
+            tty.verbose("Using CDash auth token from environment")
+            self.authtoken = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
+
+        if args.spec:
+            packages = args.spec
         else:
             packages = []
             for file in args.specfiles:
@@ -225,7 +232,8 @@ class CDash(Reporter):
             # from the binary cache.
             spec['packages'] = [
                 x for x in spec['packages']
-                if not x['installed_from_binary_cache']
+                if 'installed_from_binary_cache' not in x or
+                   not x['installed_from_binary_cache']
             ]
             for package in spec['packages']:
                 if 'stdout' in package:
@@ -297,12 +305,18 @@ class CDash(Reporter):
             request = Request(url, data=f)
             request.add_header('Content-Type', 'text/xml')
             request.add_header('Content-Length', os.path.getsize(filename))
+            if self.authtoken:
+                request.add_header('Authorization',
+                                   'Bearer {0}'.format(self.authtoken))
             # By default, urllib2 only support GET and POST.
             # CDash needs expects this file to be uploaded via PUT.
             request.get_method = lambda: 'PUT'
             response = opener.open(request)
             if self.current_package_name not in self.buildIds:
-                match = self.buildid_regexp.search(response.read())
+                resp_value = response.read()
+                if isinstance(resp_value, bytes):
+                    resp_value = resp_value.decode('utf-8')
+                match = self.buildid_regexp.search(resp_value)
                 if match:
                     buildid = match.group(1)
                     self.buildIds[self.current_package_name] = buildid

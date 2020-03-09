@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,9 @@ class PyBackportsFunctoolsLruCache(PythonPackage):
 
     py_namespace = 'backports'
 
-    version('1.5', '20f53f54cd3f04b3346ce75a54959754')
-    version('1.4', 'b954e7d5e2ca0f0f66ad2ed12ba800e5')
-    version('1.0.1', 'c789ef439d189330b99872746a6d9e85',
+    version('1.5', sha256='9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a')
+    version('1.4', sha256='31f235852f88edc1558d428d890663c49eb4514ffec9f3650e7f3c9e4a12e36f')
+    version('1.0.1', sha256='593275768571eb2bcfe0795a30108f8a0e85e14e98c3a5e498e789f891d82f3d',
             url="https://pypi.io/packages/source/b/backports.functools_lru_cache/backports.functools_lru_cache-1.0.1.zip")
 
     depends_on('py-setuptools', type='build')

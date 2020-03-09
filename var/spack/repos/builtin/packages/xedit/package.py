@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xedit(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/xedit"
     url      = "https://www.x.org/archive/individual/app/xedit-1.2.2.tar.gz"
 
-    version('1.2.2', '9fb9d6f63b574e5a4937384fbe6579c1')
+    version('1.2.2', sha256='7e2dacbc2caed81d462ee028e108866893217d55e35e4b860b09be2b409ee18f')
 
     depends_on('libxaw')
     depends_on('libxmu')

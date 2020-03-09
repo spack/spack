@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,7 @@ class Esmf(MakefilePackage):
     homepage = "https://www.earthsystemcog.org/projects/esmf/"
     url      = "http://www.earthsystemmodeling.org/esmf_releases/public/ESMF_7_1_0r/esmf_7_1_0r_src.tar.gz"
 
-    version('7.1.0r', '9e455bc36a0aaa9b87e0bdedc78a47f5')
-    version('7.0.1', 'd3316ea79b032b8fb0cd40e5868a0261')
+    version('7.1.0r', sha256='ae9a5edb8d40ae97a35cbd4bd00b77061f995c77c43d36334dbb95c18b00a889')
 
     variant('mpi',     default=True,  description='Build with MPI support')
     variant('lapack',  default=True,  description='Build with LAPACK support')
@@ -35,7 +34,7 @@ class Esmf(MakefilePackage):
     # Optional dependencies
     depends_on('mpi', when='+mpi')
     depends_on('lapack@3:', when='+lapack')
-    depends_on('netcdf@3.6:', when='+netcdf')
+    depends_on('netcdf-c@3.6:', when='+netcdf')
     depends_on('netcdf-fortran@3.6:', when='+netcdf')
     depends_on('parallel-netcdf@1.2.0:', when='+pnetcdf')
     depends_on('xerces-c@3.1.0:', when='+xerces')
@@ -201,7 +200,7 @@ class Esmf(MakefilePackage):
         if '+netcdf' in spec:
             # ESMF provides the ability to read Grid and Mesh data in
             # NetCDF format.
-            if spec.satisfies('^netcdf@4.2:'):
+            if spec.satisfies('^netcdf-c@4.2:'):
                 # ESMF_NETCDF_LIBS will be set to "-lnetcdff -lnetcdf".
                 # This option is useful for systems which have the Fortran
                 # and C bindings archived in seperate library files.

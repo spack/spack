@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,5 +16,5 @@ class GtkorvoEnet(AutotoolsPackage):
     homepage = "http://www.github.com/GTkorvo/enet"
     url = "https://github.com/GTkorvo/enet/archive/v1.3.13.tar.gz"
 
-    version('1.3.14', '05272cac1a8cb0500995eeca310e7fac')
-    version('1.3.13', '3490f924a4d421e4832e45850e6ec142')
+    version('1.3.14', sha256='d1fda051bdee46ad8cce7c3bb36fb6b7a7a443945f27a280ac104753c29465b0')
+    version('1.3.13', sha256='ede6e4f03e4cb0c3d93044ace9e8c1818ef4d3ced4aaa70384155769b3c436dc')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,7 +55,7 @@ class Steps(CMakePackage):
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # This recipe exposes a Python package from a C++ CMake project.
         # This hook is required to reproduce what Spack PythonPackage does.
-        run_env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path('PYTHONPATH', self.prefix)

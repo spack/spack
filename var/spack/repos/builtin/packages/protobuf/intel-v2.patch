@@ -1,0 +1,55 @@
+From 22f4f5422eddaac94750b268b7e6e305bd9cce5b Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Tue, 11 Feb 2020 10:21:44 -0500
+Subject: [PATCH 1/2] Intel compiler: ifdef out an incorrectly evaluated is_pod
+ type trait
+
+---
+ src/google/protobuf/arena.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/google/protobuf/arena.h b/src/google/protobuf/arena.h
+index d73b53c79f..3ecfe23c09 100644
+--- a/src/google/protobuf/arena.h
++++ b/src/google/protobuf/arena.h
+@@ -338,8 +338,10 @@ class PROTOBUF_EXPORT alignas(8) Arena final {
+   template <typename T>
+   PROTOBUF_ALWAYS_INLINE static T* CreateArray(Arena* arena,
+                                                size_t num_elements) {
++#ifndef __INTEL_COMPILER // icc mis-evaluates some types as non-pod
+     static_assert(std::is_pod<T>::value,
+                   "CreateArray requires a trivially constructible type");
++#endif
+     static_assert(std::is_trivially_destructible<T>::value,
+                   "CreateArray requires a trivially destructible type");
+     GOOGLE_CHECK_LE(num_elements, std::numeric_limits<size_t>::max() / sizeof(T))
+
+From 9c2c9861d5490801503b51936d00320bba68d465 Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Tue, 11 Feb 2020 10:22:38 -0500
+Subject: [PATCH 2/2] Intel compiler: silence noisy warning for incorrectly
+ evaluated inlining
+
+---
+ cmake/CMakeLists.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/cmake/CMakeLists.txt b/cmake/CMakeLists.txt
+index 8e5e68073b..849679995a 100644
+--- a/cmake/CMakeLists.txt
++++ b/cmake/CMakeLists.txt
+@@ -28,6 +28,14 @@ else()
+   set(CMAKE_CXX_EXTENSIONS OFF)
+ endif()
+ 
++# The Intel compiler isn't able to deal with noinline member functions of
++# template classses defined in headers.  As such it spams the output with
++#   warning #2196: routine is both "inline" and "noinline"
++# This silences that warning.
++if (CMAKE_CXX_COMPILER_ID MATCHES Intel)
++  string(APPEND CMAKE_CXX_FLAGS " -diag-disable=2196")
++endif()
++
+ # Options
+ option(protobuf_BUILD_TESTS "Build tests" ON)
+ option(protobuf_BUILD_CONFORMANCE "Build conformance tests" OFF)

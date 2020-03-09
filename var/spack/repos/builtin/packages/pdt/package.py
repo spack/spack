@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,16 +19,16 @@ class Pdt(AutotoolsPackage):
     homepage = "https://www.cs.uoregon.edu/research/pdt/home.php"
     url      = "http://www.cs.uoregon.edu/research/paracomp/pdtoolkit/Download/pdtoolkit-3.25.1.tar.gz"
 
-    version('3.25.1', 'a248b1d6874390dcb30feea16a26e0ef')
-    version('3.25', '2cad41fcabf4c79cab8780d3b87f7bb4')
-    version('3.24', 'b8fa5189e5602276ce225ba497b617e4')
-    version('3.23', 'd61e7a631a27b00e58def52950230a2c')
-    version('3.22.1', 'b56b9b3e621161c7fd9e4908b944840d')
-    version('3.22',   '982d667617802962a1f7fe6c4c31184f')
-    version('3.21',   '3092ca0d8833b69992c17e63ae66c263')
-    version('3.20',   'c3edabe202926abe04552e33cd39672d')
-    version('3.19',   '5c5e1e6607086aa13bf4b1b9befc5864')
-    version('3.18.1', 'e401534f5c476c3e77f05b7f73b6c4f2')
+    version('3.25.1', sha256='0b6f8a6b8769c181b2ae6cae7298f04b8e3e3d68066f598ed24574e19500bc97')
+    version('3.25', sha256='1037628d854edfeded3d847150d3e8fbd3774e8146407ce32f5021c80f6299be')
+    version('3.24', sha256='4a2bb31f3f7f2e52ed49d9b7189ade05170a4386ef76771280a06e8b3ca97ab2')
+    version('3.23', sha256='c17fca2f9126e10b4922b54e737a39c081b2dcf99bf20062c203247e05ecb850')
+    version('3.22.1', sha256='215a3684bfe0df8ca673b09ee1efcdb5388ab5f45130dd67a00ef1041bfb5818')
+    version('3.22',   sha256='3a539c04b6d1b7b77b31999a7936717dfccda138b318756e306415e3af17dd8b')
+    version('3.21',   sha256='582f14347b4dd7a6f9bc2f41b3b62a6b40079c0a3127109c2c0c953e3c922401')
+    version('3.20',   sha256='561c3559fba7c3d053df3b98f75f3c2087c64a6d51204b40825a1737677f780b')
+    version('3.19',   sha256='d57234077e2e999f2acf9860ea84369a4694b50cc17fa6728e5255dc5f4a2160')
+    version('3.18.1', sha256='d06c2d1793fadebf169752511e5046d7e02cf3fead6135a35c34b1fee6d6d3b2')
 
     def patch(self):
         if self.spec.satisfies('%clang'):
@@ -43,6 +43,12 @@ class Pdt(AutotoolsPackage):
             options.append('-icpc')
         elif self.compiler.name == 'pgi':
             options.append('-pgCC')
+        elif self.compiler.name == 'gcc':
+            options.append('-GNU')
+        elif self.compiler.name == 'clang':
+            options.append('-clang')
+        else:
+            raise InstallError('Unknown/unsupported compiler family')
 
         configure(*options)
 

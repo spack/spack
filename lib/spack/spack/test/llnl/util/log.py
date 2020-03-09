@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,8 @@ def test_log_python_output_with_fd_stream(capfd, tmpdir):
         with open('foo.txt') as f:
             assert f.read() == 'logged\n'
 
-        assert capfd.readouterr() == ('', '')
+        # Coverage is cluttering stderr during tests
+        assert capfd.readouterr()[0] == ''
 
 
 def test_log_python_output_and_echo_output(capfd, tmpdir):
@@ -42,7 +43,8 @@ def test_log_python_output_and_echo_output(capfd, tmpdir):
                 print('echo')
             print('logged')
 
-        assert capfd.readouterr() == ('echo\n', '')
+        # Coverage is cluttering stderr during tests
+        assert capfd.readouterr()[0] == 'echo\n'
 
         with open('foo.txt') as f:
             assert f.read() == 'echo\nlogged\n'
@@ -75,7 +77,8 @@ def test_log_subproc_and_echo_output(capfd, tmpdir):
                 echo('echo')
             print('logged')
 
-        assert capfd.readouterr() == ('echo\n', '')
+        # Coverage is cluttering stderr during tests
+        assert capfd.readouterr()[0] == 'echo\n'
 
         with open('foo.txt') as f:
             assert f.read() == 'logged\n'

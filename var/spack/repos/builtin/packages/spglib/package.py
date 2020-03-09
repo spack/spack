@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,5 +16,5 @@ class Spglib(CMakePackage):
     # patch by Krishnendu Ghosh
     patch('fix_cpp.patch', when='@:1.10.3')
 
-    version('1.10.3', 'f6ef0554fa528ffa49d8eaee18a2b7b9')
-    version('1.10.0', '0ad9330ae8a511d25e2e26cb9bf02808')
+    version('1.10.3', sha256='43776b5fb220b746d53c1aa39d0230f304687ec05984671392bccaf850d9d696')
+    version('1.10.0', sha256='117fff308731784bea2ddaf3d076f0ecbf3981b31ea1c1bfd5ce4f057a5325b1')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,10 +23,10 @@ class PerlStarFusion(Package):
 
     depends_on('star', type=('build', 'run'))
     depends_on('perl', type=('build', 'run'))
-    depends_on('perl-intervaltree', type=('build', 'run'))
+    depends_on('perl-set-intervaltree', type=('build', 'run'))
     depends_on('perl-dbi', type=('build', 'run'))
-    depends_on('perl-dbfile', type=('build', 'run'))
-    depends_on('perl-uri-escape', type=('build', 'run'))
+    depends_on('perl-db-file', type=('build', 'run'))
+    depends_on('perl-uri', type=('build', 'run'))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

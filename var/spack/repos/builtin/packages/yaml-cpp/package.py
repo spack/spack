@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,9 @@ class YamlCpp(CMakePackage):
     git      = "https://github.com/jbeder/yaml-cpp.git"
 
     version('develop', branch='master')
-    version('0.6.2', '5b943e9af0060d0811148b037449ef82')
-    version('0.5.3', '2bba14e6a7f12c7272f87d044e4a7211')
+    version('0.6.3', sha256='77ea1b90b3718aa0c324207cb29418f5bced2354c2e483a9523d98c3460af1ed')
+    version('0.6.2', sha256='e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05')
+    version('0.5.3', sha256='decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2')
 
     variant('shared', default=True,
             description='Enable build of shared libraries')

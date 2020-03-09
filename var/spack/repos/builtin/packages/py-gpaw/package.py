@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyGpaw(PythonPackage):
     url      = "https://pypi.io/packages/source/g/gpaw/gpaw-1.3.0.tar.gz"
 
     version('19.8.1', sha256='79dee367d695d68409c4d69edcbad5c8679137d6715da403f6c2500cb2178c2a')
-    version('1.3.0', '82e8c80e637696248db00b5713cdffd1')
+    version('1.3.0', sha256='cf601c69ac496421e36111682bcc1d23da2dba2aabc96be51accf73dea30655c')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('scalapack', default=True,

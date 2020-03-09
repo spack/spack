@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,17 +17,17 @@ class NetlibLapack(CMakePackage):
     homepage = "http://www.netlib.org/lapack/"
     url = "http://www.netlib.org/lapack/lapack-3.5.0.tgz"
 
-    version('3.8.0', '96591affdbf58c450d45c1daa540dbd2',
+    version('3.8.0', sha256='deb22cc4a6120bff72621155a9917f485f96ef8319ac074a7afbc68aab88bcf6',
             url='http://www.netlib.org/lapack/lapack-3.8.0.tar.gz')
-    version('3.7.1', 'dcdeeed73de152c4643ccc5b1aeb453c')
-    version('3.7.0', '697bb8d67c7d336a0f339cc9dd0fa72f')
-    version('3.6.1', '421b2cb72e15f237e144428f9c460ee0')
-    version('3.6.0', 'f2f6c67134e851fe189bb3ca1fbb5101')
-    version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
-    version('3.4.2', '61bf1a8a4469d4bdb7604f5897179478')
-    version('3.4.1', '44c3869c38c8335c2b9c2a8bb276eb55')
-    version('3.4.0', '02d5706ec03ba885fc246e5fa10d8c70')
-    version('3.3.1', 'd0d533ec9a5b74933c2a1e84eedc58b4')
+    version('3.7.1', sha256='f6c53fd9f56932f3ddb3d5e24c1c07e4cd9b3b08e7f89de9c867125eecc9a1c8')
+    version('3.7.0', sha256='ed967e4307e986474ab02eb810eed1d1adc73f5e1e3bc78fb009f6fe766db3be')
+    version('3.6.1', sha256='888a50d787a9d828074db581c80b2d22bdb91435a673b1bf6cd6eb51aa50d1de')
+    version('3.6.0', sha256='a9a0082c918fe14e377bbd570057616768dca76cbdc713457d8199aaa233ffc3')
+    version('3.5.0', sha256='9ad8f0d3f3fb5521db49f2dd716463b8fb2b6bc9dc386a9956b8c6144f726352')
+    version('3.4.2', sha256='60a65daaf16ec315034675942618a2230521ea7adf85eea788ee54841072faf0')
+    version('3.4.1', sha256='93b910f94f6091a2e71b59809c4db4a14655db527cfc5821ade2e8c8ab75380f')
+    version('3.4.0', sha256='a7139ef97004d0e3c4c30f1c52d508fd7ae84b5fbaf0dd8e792c167dc306c3e9')
+    version('3.3.1', sha256='56821ab51c29369a34e5085728f92c549a9aa926f26acf7eeac87b61eed329e4')
 
     variant('shared', default=True, description="Build shared library version")
     variant('external-blas', default=False,

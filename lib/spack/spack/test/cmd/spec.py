@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ import pytest
 import spack.spec
 from spack.main import SpackCommand
 
-pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_packages')
+pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 
 spec = SpackCommand('spec')
 
@@ -29,6 +29,18 @@ def test_spec_yaml():
     output = spec('--yaml', 'mpileaks')
 
     mpileaks = spack.spec.Spec.from_yaml(output)
+    assert 'mpileaks' in mpileaks
+    assert 'callpath' in mpileaks
+    assert 'dyninst' in mpileaks
+    assert 'libdwarf' in mpileaks
+    assert 'libelf' in mpileaks
+    assert 'mpich' in mpileaks
+
+
+def test_spec_json():
+    output = spec('--json', 'mpileaks')
+
+    mpileaks = spack.spec.Spec.from_json(output)
     assert 'mpileaks' in mpileaks
     assert 'callpath' in mpileaks
     assert 'dyninst' in mpileaks

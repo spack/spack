@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Notmuch(AutotoolsPackage):
     homepage = "https://notmuchmail.org/"
     url      = "https://notmuchmail.org/releases/notmuch-0.23.7.tar.gz"
 
-    version('0.23.7', '1ad339b6d0c03548140434c7bcdf0624')
+    version('0.23.7', sha256='f11bb10d71945f6c3f16d23117afc70810aa485878e66bb4bf43cc3f08038913')
 
     depends_on('zlib')
     depends_on('talloc')

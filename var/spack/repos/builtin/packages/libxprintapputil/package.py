@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libxprintapputil(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/lib/libXprintAppUtil/"
     url      = "https://www.x.org/archive/individual/lib/libXprintAppUtil-1.0.1.tar.gz"
 
-    version('1.0.1', '3adb71fa34a2d4e75d8b840310318f76')
+    version('1.0.1', sha256='5af3939ffe15508b942bc1e325a29a95b1c85e8900a5f65a896101e63048bbf7')
 
     depends_on('libx11')
     depends_on('libxp')

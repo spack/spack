@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RTidyverse(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/tidyverse_1.2.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidyverse"
 
-    version('1.2.1', '7e2ca0b72ab668342c02fd0f52c082e1')
+    version('1.2.1', sha256='ad67a27bb4e89417a15338fe1a40251a7b5dedba60e9b72637963d3de574c37b')
 
     depends_on('r-broom@0.4.2:', type=('build', 'run'))
     depends_on('r-cli@1.0.0:', type=('build', 'run'))

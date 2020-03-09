@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,10 @@ class PyPetsc4py(PythonPackage):
     url      = "https://bitbucket.org/petsc/petsc4py/get/3.10.0.tar.gz"
     git      = "https://bitbucket.org/petsc/petsc4py.git"
 
-    maintainers = ['dalcin', 'balay']
+    maintainers = ['dalcinl', 'balay']
 
     version('develop', branch='master')
+    version('3.12.0', sha256='1ddffc35163ec81de50ca43b8a82fdbe73baf02d9e24d594685d5f4a6c17a8cb')
     version('3.11.0', sha256='50a7bbca76000da287d5b18969ddf4743b360bda1f6ee3b43b5829095569cc46')
     version('3.10.1', sha256='4eae5eaf459875b1329cae36fa1e5e185f603e8b01a4e05b59b0983c02b5a174')
     version('3.10.0', sha256='737e7812ccc54b1e0d6e8de4bdcd886c8ce287129297831f1f0e33089fa352f2')
@@ -34,6 +35,7 @@ class PyPetsc4py(PythonPackage):
 
     depends_on('petsc+mpi')
     depends_on('petsc@develop+mpi', when='@develop')
+    depends_on('petsc@3.12:3.12.99+mpi', when='@3.12:3.12.99')
     depends_on('petsc@3.11:3.11.99+mpi', when='@3.11:3.11.99')
     depends_on('petsc@3.10.3:3.10.99+mpi', when='@3.10.1:3.10.99')
     depends_on('petsc@3.10:3.10.2+mpi', when='@3.10.0')

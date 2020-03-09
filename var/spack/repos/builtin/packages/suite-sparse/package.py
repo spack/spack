@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,15 +11,21 @@ class SuiteSparse(Package):
     SuiteSparse is a suite of sparse matrix algorithms
     """
     homepage = 'http://faculty.cse.tamu.edu/davis/suitesparse.html'
-    url = 'http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.2.0.tar.gz'
+    url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
+    git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
-    version('5.3.0', sha256='90e69713d8c454da5a95a839aea5d97d8d03d00cc1f667c4bdfca03f640f963d')
-    version('5.2.0', '8e625539dbeed061cc62fbdfed9be7cf')
-    version('5.1.0', '9c34d7c07ad5ce1624b8187faa132046')
-    version('4.5.5', '0a5b38af0016f009409a9606d2f1b555')
-    version('4.5.4', 'f6ab689442e64a1624a47aa220072d1b')
-    version('4.5.3', '8ec57324585df3c6483ad7f556afccbd')
-    version('4.5.1', 'f0ea9aad8d2d1ffec66a5b6bfeff5319')
+    version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
+    version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
+    version('5.5.0', sha256='63c73451734e2bab19d1915796c6776565ea6aea5da4063a9797ecec60da2e3d')
+    version('5.4.0', sha256='d9d62d539410d66550d0b795503a556830831f50087723cb191a030525eda770')
+    version('5.3.0', sha256='d8ef4bee4394d2f07299d4688b83bbd98e9d3a2ebbe1c1632144b6f7095ce165')
+    version('5.2.0', sha256='68c431aef3d9a0b02e97803eb61671c5ecb9d36fd292a807db87067dadb36e53')
+    version('5.1.2', sha256='97dc5fdc7f78ff5018e6a1fcc841e17a9af4e5a35cebd62df6922349bf12959e')
+    version('5.1.0', sha256='0b0e03c63e67b04529bb6248808d2a8c82259d40b30fc5a7599f4b6f7bdd4dc6')
+    version('5.0.0', sha256='2f8694d9978033659f10ceb8bdb19147d3c519a0251b8de84be6ba8824d30517')
+    version('4.5.6', sha256='1c7b7a265a1d6c606095eb8aa3cb8e27821f1b7f5bc04f28df6d62906e02f4e4')
+    version('4.5.5', sha256='80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91')
+    version('4.5.3', sha256='b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4')
 
     variant('tbb',  default=False, description='Build with Intel TBB')
     variant('pic',  default=True,  description='Build position independent code (required to link with shared libraries)')
@@ -28,6 +34,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('m4', type='build', when='@5.0.0:')
     depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
@@ -58,7 +65,6 @@ class SuiteSparse(Package):
         pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
 
         make_args = [
-            'INSTALL=%s' % prefix,
             # By default, the Makefile uses the Intel compilers if
             # they are found. The AUTOCC flag disables this behavior,
             # forcing it to use Spack's compiler wrappers.
@@ -122,6 +128,13 @@ class SuiteSparse(Package):
                 'CMAKE_OPTIONS=-DCMAKE_INSTALL_PREFIX=%s' % prefix +
                 ' -DCMAKE_LIBRARY_PATH=%s' % prefix.lib]
 
+        # In those SuiteSparse versions calling "make install" in one go is
+        # not possible, mainly because of GraphBLAS.  Thus compile first and
+        # install in a second run.
+        if '@5.4.0:' in self.spec:
+            make('default', *make_args)
+
+        make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
 
     @property

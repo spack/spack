@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Beforelight(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/beforelight"
     url      = "https://www.x.org/archive/individual/app/beforelight-1.0.5.tar.gz"
 
-    version('1.0.5', 'f0433eb6df647f36bbb5b38fb2beb22a')
+    version('1.0.5', sha256='93bb3c457d6d5e8def3180fdee07bc84d1b7f0e5378a95812e2193cd51455cdc')
 
     depends_on('libx11')
     depends_on('libxscrnsaver')

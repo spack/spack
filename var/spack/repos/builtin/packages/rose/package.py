@@ -1,11 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# -----------------------------------------------------------------------------
-# Author: Justin Too
-# -----------------------------------------------------------------------------
 
 from spack import *
 
@@ -16,29 +12,49 @@ class Rose(AutotoolsPackage):
        (Developed at Lawrence Livermore National Lab)"""
 
     homepage = "http://rosecompiler.org/"
-    # url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.7.0.tar.gz"
-    url = "https://github.com/rose-compiler/rose-develop/archive/v0.9.9.104.zip"
+    url = "https://github.com/rose-compiler/rose/archive/v0.9.13.0.zip"
+    git = "https://github.com/rose-compiler/rose.git"
+
+    maintainers = ['pinnown']
 
     # --------------------------------------------------------------------------
     # ROSE Versions
     # --------------------------------------------------------------------------
-    version(
-        "0.9.10.0",
-        sha256="7b53b6913fd6ca0c5050b630dae380f3e6b0897cde6148172ba01095f71cbaca",
-    )
-    version("0.9.9.104", "b01cf9d2fd440fc0fe77a713c5f7831e")
-    version("0.9.9.0", "8f47fb8aa803d019657bd42c8b892cce")
-    version("0.9.7.0", "be0d0941ba4c0349a20d6394c20d16d7")
-    version(
-        "0.9.9.52",
-        commit="bd4fc0cc332ce62d9fa54db19879507d9e4f239b",
-        git="https://github.com/rose-compiler/rose-develop.git",
-    )
-    version(
-        "develop",
-        branch="master",
-        git="https://github.com/rose-compiler/rose-develop.git",
-    )
+
+    version("0.9.13.0", sha256="64092793dfd38d476152696721e29a410bb31dc3eeb6064c7520087aa8c904a6")
+
+    # Version for edg binary is found in src/frontend/CxxFrontend/EDG_VERSION
+    # EDG_VERSION may be different from ROSE_VERSION
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.13.0 %gcc@4.9.0:4.9.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-4.9-5.0.9.12.52.tar.gz",
+             sha256="fb4b50606bdc681b864bbece46d344d7775780ffe7883aa96305d732c9c04a1c")
+
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.13.0 %gcc@5.0:5.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-5-5.0.9.12.52.tar.gz",
+             sha256="584f8f721274f0f2d5c9a0c7701c045af99580ea7cd1d50999e20c2a897298fb")
+
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.13.0 %gcc@6.0:6.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-6-5.0.9.12.52.tar.gz",
+             sha256="561cd5a944d0dd01689aa0bea8eccf30fc994cd20c4c05da7943c6f36cec25b5")
+
+    resource(name="roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
+             expand=False,
+             placement="rose-build/src/frontend/CxxFrontend/",
+             when="@0.9.13.0 %gcc@7.0:7.99",
+             url="http://edg-binaries.rosecompiler.org/roseBinaryEDG-5-0-x86_64-pc-linux-gnu-gnu-7-5.0.9.12.52.tar.gz",
+             sha256="800a178804e8b5e936942b4eb036cc61e5d5ad43551cb4fd901ec42ba7e7a176")
+
+    # git versions depends on internet connection at build time
+    version("develop", branch="develop")
 
     # --------------------------------------------------------------------------
     # Dependencies
@@ -46,15 +62,10 @@ class Rose(AutotoolsPackage):
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4:", type="build")
-    depends_on("boost@1.56.0:", when="~cxx11")
 
     # C++11 compatible boost and gcc versions required for +cxx11 variant:
-    # https://github.com/spack/spack/wiki/Telcon%3A-2015-05-14
-    depends_on("boost@1.60.0: cxxstd=11", when="+cxx11")
-
-    # TODO: Doesn't seem to be a way to require a specific compiler: https://github.com/spack/spack/issues/896
-    # https://www.gnu.org/software/gcc/projects/cxx-status.html#cxx11
-    # depends_on("%gcc@4.8.1:", when="^boost@1.60.0: cxxstd=11")
+    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0 cxxstd=11", when="+cxx11")
+    depends_on("boost@1.60.0:1.64.0,1.65.1,1.66.0:1.67.0",           when="~cxx11")
 
     # --------------------------------------------------------------------------
     # Variants
@@ -64,6 +75,8 @@ class Rose(AutotoolsPackage):
 
     variant("tests", default=False, description="Build the tests directory")
     variant("tutorial", default=False, description="Build the tutorial directory")
+
+    variant("tools", default=False, description="Build a selection of ROSE based tools")
 
     variant(
         "mvapich2_backend",
@@ -80,12 +93,10 @@ class Rose(AutotoolsPackage):
     variant("cxx", default=True, description="Enable c++ language support")
 
     # Use spack install cxxflags=-std=c++11
-    variant("cxx11", default=False, description="Enable c++11 language support")
+    variant("cxx11", default=True, description="Enable c++11 language support")
 
     variant("fortran", default=False, description="Enable fortran language support")
-
-    variant("java", default=False, description="Enable java language support")
-    depends_on("jdk", when="+java")
+    depends_on("java@8", when="+fortran")
 
     variant("z3", default=False, description="Enable z3 theorem prover")
     depends_on("z3", when="+z3")
@@ -110,34 +121,7 @@ class Rose(AutotoolsPackage):
 
     build_directory = "rose-build"
 
-    def patch(self):
-        spec = self.spec
-
-        # ROSE needs its   to compute its EDG
-        # binary compatibility signature for C/C++ and for its
-        # --version information.
-        #
-        #       git rev-parse HEAD
-        #     git log -1 --format="%at"
-        #
-        with open("VERSION", "w") as f:
-            if "@0.9.9.104:" in spec:
-                # EDG: 27acd506c6b0e4b1c5f7573c642e3e407237eddd
-                f.write("66c87e9395126a7ab8663d81f0e0b99d6e09131e 1504924600")
-            elif "@0.9.9.0:" in spec:
-                # EDG: 46306e9f73d3ccd690be300aefdaf766a9ba3f70
-                f.write("14d3ebdd7f83cbcc295e6ed45b45d2e9ed32b5ff 1492716108")
-            elif "@0.9.7.0:" in spec:
-                # EDG: 8e63f421f9107ef6c7882b57f9c83e3878623ffa
-                f.write("992c21ad06893bc1e9e7688afe0562eee0fda021 1460595442")
-            elif "@0.9.10.0:" in spec:
-                # EDG: f4624773cb93dfcc67a00efb5e9e8affeb57fb73
-                f.write("277fea7e1e5305e5b3c86b550a0c1354e8285b96 1523991417")
-            else:
-                raise InstallError("Unknown ROSE version!")
-
     def autoreconf(self, spec, prefix):
-        #        if not spec.satisfies('@develop'):
         with working_dir(self.stage.source_path):
             bash = which("bash")
             bash("build")
@@ -157,7 +141,6 @@ class Rose(AutotoolsPackage):
             "binaries" if "+binanalysis" in spec else "",
             "c" if "+c" in spec else "",
             "c++" if "+cxx" in spec else "",
-            "java" if "+java" in spec else "",
             "fortran" if "+fortran" in spec else "",
         ]
         return list(filter(None, langs))
@@ -172,14 +155,8 @@ class Rose(AutotoolsPackage):
             cc = spack_cc
             cxx = spack_cxx
 
-        if spec.satisfies("@0.9.8:"):
-            edg = "4.12"
-        else:
-            edg = "4.9"
-
         args = [
             "--disable-boost-version-check",
-            "--enable-edg_version={0}".format(edg),
             "--with-alternate_backend_C_compiler={0}".format(cc),
             "--with-alternate_backend_Cxx_compiler={0}".format(cxx),
             "--with-boost={0}".format(spec["boost"].prefix),
@@ -201,7 +178,7 @@ class Rose(AutotoolsPackage):
         else:
             args.append("--disable-tutorial-directory")
 
-        if "+java" in spec:
+        if "+fortran" in spec:
             args.append("--with-java={0}".format(spec["java"].prefix))
         else:
             args.append("--without-java")
@@ -223,9 +200,9 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if "+codethorn" in self.spec:
-            spack_env.set("CXXFLAGS", "-std=c++11")
+            env.set("CXXFLAGS", "-std=c++11")
 
     def build(self, spec, prefix):
         # Spack will automatically pass ncpus as the number of make jobs.
@@ -235,45 +212,23 @@ class Rose(AutotoolsPackage):
         #   $ srun -n1 spack install rose
         #
         with working_dir(self.build_directory):
-            # ROSE needs the EDG version for C/C++
-            with open("src/frontend/CxxFrontend/EDG-submodule-sha1", "w") as f:
-                if "@0.9.9.104" in spec:
-                    f.write("27acd506c6b0e4b1c5f7573c642e3e407237eddd")
-                elif "@0.9.9.52" in spec:
-                    f.write("56a826126289414db5436e6c49879b99d046d26d")
-                elif "@0.9.9.0" in spec:
-                    f.write("46306e9f73d3ccd690be300aefdaf766a9ba3f70")
-                elif "@0.9.7.0" in spec:
-                    f.write("8e63f421f9107ef6c7882b57f9c83e3878623ffa")
-                elif "@0.9.10.0" in spec:
-                    f.write("f4624773cb93dfcc67a00efb5e9e8affeb57fb73")
-                else:
-                    raise InstallError("Unknown ROSE version for EDG!")
 
             # Compile librose
-            with working_dir("src"):
-                make()
+            make("core")
 
-            # Install librose
-            with working_dir("src"):
-                make("install")
-
-            # Install "official" ROSE-based tools
-            make("install-core")
-
-            with working_dir("tools"):
-                make("install")
+            if "+tools" in spec:
+                make("tools")
 
             # -----------------------------------------------------------------
             # ROSE-based Projects
             # -----------------------------------------------------------------
             if "+codethorn" in spec:
                 with working_dir("projects/CodeThorn"):
-                    make("install")
+                    make()
 
             if "+autopar" in spec:
                 with working_dir("projects/autoParallelization"):
-                    make("install")
+                    make()
 
             if "+polyopt" in spec:
                 mkdir = which("mkdir")
@@ -289,3 +244,23 @@ class Rose(AutotoolsPackage):
                             "projects/PolyOpt2/install.sh"
                         )
                     )
+
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+
+            # Compile and Install librose
+            make("install-core")
+
+            if "+tools" in spec:
+                make("install-tools")
+
+            # -----------------------------------------------------------------
+            # ROSE-based Projects
+            # -----------------------------------------------------------------
+            if "+codethorn" in spec:
+                with working_dir("projects/CodeThorn"):
+                    make("install")
+
+            if "+autopar" in spec:
+                with working_dir("projects/autoParallelization"):
+                    make("install")

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,13 @@ class Jmol(Package):
     homepage = "http://jmol.sourceforge.net/"
     url      = "https://sourceforge.net/projects/jmol/files/Jmol/Version%2014.8/Jmol%2014.8.0/Jmol-14.8.0-binary.tar.gz"
 
-    version('14.8.0', '3c9f4004b9e617ea3ea0b78ab32397ea')
+    version('14.8.0', sha256='8ec45e8d289aa0762194ca71848edc7d736121ddc72276031a253a3651e6d588')
 
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
         install_tree('jmol-{0}'.format(self.version), prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
-        run_env.set('JMOL_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.set('JMOL_HOME', self.prefix)

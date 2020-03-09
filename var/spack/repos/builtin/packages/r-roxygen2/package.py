@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RRoxygen2(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/roxygen2"
 
     version('6.1.1', sha256='ed46b7e062e0dfd8de671c7a5f6d120fb2b720982e918dbeb01e6985694c0273')
-    version('5.0.1', 'df5bdbc12fda372e427710ef1cd92ed7')
+    version('5.0.1', sha256='9f755ddd08358be436f08b02df398e50e7508b856131aeeed235099bb3a7eba5')
 
     depends_on('r@3.0.2:', when='@:6.0.1', type=('build', 'run'))
     depends_on('r@3.1:', when='@6.1.0:', type=('build', 'run'))

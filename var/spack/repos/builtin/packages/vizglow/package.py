@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Vizglow(Package):
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://esgeetech.com/products/vizglow-plasma-modeling/"
+    manual_download = True
 
     version('2.2alpha20', '2bef890c66f3a44aaf96f7c96788c89e', expand=False,
             url="file://{0}/VizGlow_v2.2alpha20-Linux-x86_64-R09December2016-Install".format(os.getcwd()))

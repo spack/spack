@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,15 @@ class Ccache(AutotoolsPackage):
     again."""
 
     homepage = "https://ccache.samba.org/"
-    url      = "https://www.samba.org/ftp/ccache/ccache-3.3.4.tar.gz"
+    url      = "https://github.com/ccache/ccache/releases/download/v3.7.1/ccache-3.7.1.tar.gz"
 
-    version('3.3.4', '61326f1edac7cd211a7018458dfe2d86')
-    version('3.3.3', 'ea1f95303749b9ac136c617d1b333eef')
-    version('3.3.2', 'b966d56603e1fad2bac22930e5f01830')
-    version('3.3.1', '7102ef024cff09d353b3f4c48379b40b')
-    version('3.3', 'b7ac8fdd556f93831618483325fbb1ef')
-    version('3.2.9', '8f3f6e15e75a0e6020166927d41bd0b3')
+    version('3.7.1', sha256='e562fcdbe766406b6fe4bf97ce5c001d2be8a17465f33bcddefc9499bbb057d8')
+    version('3.3.4', sha256='1348b54e7c35dd2f8d17923389e03c546e599cfbde6459d2f31cf6f1521ec538')
+    version('3.3.3', sha256='87a399a2267cfac3f36411fbc12ff8959f408cffd050ad15fe423df88e977e8f')
+    version('3.3.2', sha256='bf4a150dea611a206a933e122bd545dd6c5111d319505e0e30fef75f88651847')
+    version('3.3.1', sha256='4101f9937cd6e8f50d0a5882f7e9a7312ba42c01ff41e4f359c94ae2c9b87879')
+    version('3.3',   sha256='b220fce435fe3d86b8b90097e986a17f6c1f971e0841283dd816adb238c5fd6a')
+    version('3.2.9', sha256='1e13961b83a3d215c4013469c149414a79312a22d3c7bf9f946abac9ee33e63f')
 
     depends_on('gperf')
     depends_on('libxslt')

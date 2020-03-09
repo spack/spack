@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Bitmap(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/bitmap"
     url      = "https://www.x.org/archive/individual/app/bitmap-1.0.8.tar.gz"
 
-    version('1.0.8', '0ca600041bb0836ae7c9f5db5ce09091')
+    version('1.0.8', sha256='1a2fbd10a2ca5cd93f7b77bbb0555b86d8b35e0fc18d036b1607c761755006fc')
 
     depends_on('libx11')
     depends_on('libxmu')

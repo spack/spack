@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Editres(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/editres"
     url      = "https://www.x.org/archive/individual/app/editres-1.0.6.tar.gz"
 
-    version('1.0.6', '310c504347ca499874593ac96e935353')
+    version('1.0.6', sha256='85f4664ca582effb01ee972d006124569b757b9a08ae6608c3f45fc36b3b7b1a')
 
     depends_on('libxaw')
     depends_on('libx11')

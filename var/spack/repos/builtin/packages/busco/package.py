@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,11 @@ class Busco(PythonPackage):
 
     # TODO: check the installation procedure for version 3.0.2
     # and uncomment the following line
-    # version('3.0.2', '31d80042bb7e96422843fa43d0acbd21')
+    # version('3.0.2', sha256='dbea093315b766b0f7c4fe3cafbbdf51ade79ec84bde04f1f437b48333200f34')
 
     # There is no tag for version 3.0.1
     version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
-    version('2.0.1', '4dbcc8a0c18fa8f8312c103eb2fbb4e2')
+    version('2.0.1', sha256='bd72a79b880370e9b61b8c722e171818c7c85d46cc1e2f80595df2738a7e220c')
 
     depends_on('python', type=('build', 'run'))
     depends_on('blast-plus')

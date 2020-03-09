@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ from six import StringIO
 from llnl.util.filesystem import touch, mkdirp
 
 import pytest
-import ruamel.yaml as yaml
 
 import spack.paths
 import spack.config
+import spack.main
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -46,7 +46,19 @@ config_merge_list = {
 
 config_override_list = {
     'config': {
-        'build_stage:': ['patha', 'pathb']}}
+        'build_stage:': ['pathd', 'pathe']}}
+
+config_merge_dict = {
+    'config': {
+        'info': {
+            'a': 3,
+            'b': 4}}}
+
+config_override_dict = {
+    'config': {
+        'info:': {
+            'a': 7,
+            'c': 9}}}
 
 
 @pytest.fixture()
@@ -56,7 +68,7 @@ def write_config_file(tmpdir):
         config_yaml = tmpdir.join(scope, config + '.yaml')
         config_yaml.ensure()
         with config_yaml.open('w') as f:
-            yaml.dump(data, f)
+            syaml.dump_config(data, f)
     return _write
 
 
@@ -203,7 +215,7 @@ def compiler_specs():
     return CompilerSpecs(a=a, b=b)
 
 
-def test_write_key_in_memory(mock_config, compiler_specs):
+def test_write_key_in_memory(mock_low_high_config, compiler_specs):
     # Write b_comps "on top of" a_comps.
     spack.config.set('compilers', a_comps['compilers'], scope='low')
     spack.config.set('compilers', b_comps['compilers'], scope='high')
@@ -213,7 +225,7 @@ def test_write_key_in_memory(mock_config, compiler_specs):
     check_compiler_config(b_comps['compilers'], *compiler_specs.b)
 
 
-def test_write_key_to_disk(mock_config, compiler_specs):
+def test_write_key_to_disk(mock_low_high_config, compiler_specs):
     # Write b_comps "on top of" a_comps.
     spack.config.set('compilers', a_comps['compilers'], scope='low')
     spack.config.set('compilers', b_comps['compilers'], scope='high')
@@ -226,7 +238,7 @@ def test_write_key_to_disk(mock_config, compiler_specs):
     check_compiler_config(b_comps['compilers'], *compiler_specs.b)
 
 
-def test_write_to_same_priority_file(mock_config, compiler_specs):
+def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
     # Write b_comps in the same file as a_comps.
     spack.config.set('compilers', a_comps['compilers'], scope='low')
     spack.config.set('compilers', b_comps['compilers'], scope='low')
@@ -247,7 +259,7 @@ repos_high = {'repos': ["/some/other/path"]}
 
 
 # repos
-def test_write_list_in_memory(mock_config):
+def test_write_list_in_memory(mock_low_high_config):
     spack.config.set('repos', repos_low['repos'], scope='low')
     spack.config.set('repos', repos_high['repos'], scope='high')
 
@@ -255,7 +267,7 @@ def test_write_list_in_memory(mock_config):
     assert config == repos_high['repos'] + repos_low['repos']
 
 
-def test_substitute_config_variables(mock_config):
+def test_substitute_config_variables(mock_low_high_config):
     prefix = spack.paths.prefix.lstrip('/')
 
     assert os.path.join(
@@ -315,7 +327,7 @@ packages_merge_high = {
 
 
 @pytest.mark.regression('7924')
-def test_merge_with_defaults(mock_config, write_config_file):
+def test_merge_with_defaults(mock_low_high_config, write_config_file):
     """This ensures that specified preferences merge with defaults as
        expected. Originally all defaults were initialized with the
        exact same object, which led to aliasing problems. Therefore
@@ -331,14 +343,14 @@ def test_merge_with_defaults(mock_config, write_config_file):
     assert cfg['baz']['version'] == ['c']
 
 
-def test_substitute_user(mock_config):
+def test_substitute_user(mock_low_high_config):
     user = getpass.getuser()
     assert '/foo/bar/' + user + '/baz' == canonicalize_path(
         '/foo/bar/$user/baz'
     )
 
 
-def test_substitute_tempdir(mock_config):
+def test_substitute_tempdir(mock_low_high_config):
     tempdir = tempfile.gettempdir()
     assert tempdir == canonicalize_path('$tempdir')
     assert tempdir + '/foo/bar/baz' == canonicalize_path(
@@ -346,12 +358,12 @@ def test_substitute_tempdir(mock_config):
     )
 
 
-def test_read_config(mock_config, write_config_file):
+def test_read_config(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     assert spack.config.get('config') == config_low['config']
 
 
-def test_read_config_override_all(mock_config, write_config_file):
+def test_read_config_override_all(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_all, 'high')
     assert spack.config.get('config') == {
@@ -359,7 +371,7 @@ def test_read_config_override_all(mock_config, write_config_file):
     }
 
 
-def test_read_config_override_key(mock_config, write_config_file):
+def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
     assert spack.config.get('config') == {
@@ -368,7 +380,7 @@ def test_read_config_override_key(mock_config, write_config_file):
     }
 
 
-def test_read_config_merge_list(mock_config, write_config_file):
+def test_read_config_merge_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
     assert spack.config.get('config') == {
@@ -377,42 +389,43 @@ def test_read_config_merge_list(mock_config, write_config_file):
     }
 
 
-def test_read_config_override_list(mock_config, write_config_file):
+def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
     assert spack.config.get('config') == {
         'install_tree': 'install_tree_path',
-        'build_stage': ['patha', 'pathb']
+        'build_stage': config_override_list['config']['build_stage:']
     }
 
 
-def test_internal_config_update(mock_config, write_config_file):
+def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
-    before = mock_config.get('config')
+    before = mock_low_high_config.get('config')
     assert before['install_tree'] == 'install_tree_path'
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
     assert 'InternalConfigScope' in repr(scope)
 
-    mock_config.push_scope(scope)
+    mock_low_high_config.push_scope(scope)
 
-    command_config = mock_config.get('config', scope='command_line')
+    command_config = mock_low_high_config.get('config', scope='command_line')
     command_config['install_tree'] = 'foo/bar'
 
-    mock_config.set('config', command_config, scope='command_line')
+    mock_low_high_config.set('config', command_config, scope='command_line')
 
-    after = mock_config.get('config')
+    after = mock_low_high_config.get('config')
     assert after['install_tree'] == 'foo/bar'
 
 
-def test_internal_config_filename(mock_config, write_config_file):
+def test_internal_config_filename(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
-    mock_config.push_scope(spack.config.InternalConfigScope('command_line'))
+    mock_low_high_config.push_scope(
+        spack.config.InternalConfigScope('command_line'))
 
     with pytest.raises(NotImplementedError):
-        mock_config.get_config_filename('command_line', 'config')
+        mock_low_high_config.get_config_filename('command_line', 'config')
 
 
 def test_mark_internal():
@@ -506,6 +519,7 @@ def test_keys_are_ordered():
         'include',
         'lib/pkgconfig',
         'lib64/pkgconfig',
+        'share/pkgconfig',
         ''
     )
 
@@ -584,7 +598,7 @@ mirrors:
         assert "mirrors.yaml:5" in str(e)
 
 
-def test_bad_config_section(mock_config):
+def test_bad_config_section(mock_low_high_config):
     """Test that getting or setting a bad section gives an error."""
     with pytest.raises(spack.config.ConfigSectionError):
         spack.config.set('foobar', 'foobar')
@@ -593,7 +607,8 @@ def test_bad_config_section(mock_config):
         spack.config.get('foobar')
 
 
-def test_bad_command_line_scopes(tmpdir, mock_config):
+@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
     cfg = spack.config.Configuration()
 
     with tmpdir.as_cwd():
@@ -623,6 +638,51 @@ config:
 """)
 
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
+
+
+def test_nested_override():
+    """Ensure proper scope naming of nested overrides."""
+    base_name = spack.config.overrides_base_name
+
+    def _check_scopes(num_expected, debug_values):
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+
+        for i in range(num_expected):
+            name = '{0}{1}'.format(base_name, i)
+            assert name in scope_names
+
+            data = spack.config.config.get_config('config', name)
+            assert data['debug'] == debug_values[i]
+
+    # Check results from single and nested override
+    with spack.config.override('config:debug', True):
+        with spack.config.override('config:debug', False):
+            _check_scopes(2, [True, False])
+
+        _check_scopes(1, [True])
+
+
+def test_alternate_override(monkeypatch):
+    """Ensure proper scope naming of override when conflict present."""
+    base_name = spack.config.overrides_base_name
+
+    def _matching_scopes(regexpr):
+        return [spack.config.InternalConfigScope('{0}1'.format(base_name))]
+
+    # Check that the alternate naming works
+    monkeypatch.setattr(spack.config.config, 'matching_scopes',
+                        _matching_scopes)
+
+    with spack.config.override('config:debug', False):
+        name = '{0}2'.format(base_name)
+
+        scope_names = [s.name for s in spack.config.config.scopes.values() if
+                       s.name.startswith(base_name)]
+        assert name in scope_names
+
+        data = spack.config.config.get_config('config', name)
+        assert data['debug'] is False
 
 
 def test_immutable_scope(tmpdir):
@@ -673,10 +733,44 @@ env:
             '/x/y/z', '$spack/var/spack/repos/builtin']
 
 
+def test_single_file_scope_section_override(tmpdir, config):
+    """Check that individual config sections can be overridden in an
+    environment config. The config here primarily differs in that the
+    ``packages`` section is intended to override all other scopes (using the
+    "::" syntax).
+    """
+    env_yaml = str(tmpdir.join("env.yaml"))
+    with open(env_yaml, 'w') as f:
+        f.write("""\
+env:
+    config:
+        verify_ssl: False
+    packages::
+        libelf:
+            compiler: [ 'gcc@4.5.3' ]
+    repos:
+        - /x/y/z
+""")
+
+    scope = spack.config.SingleFileScope(
+        'env', env_yaml, spack.schema.env.schema, ['env'])
+
+    with spack.config.override(scope):
+        # from the single-file config
+        assert spack.config.get('config:verify_ssl') is False
+        assert spack.config.get('packages:libelf:compiler') == ['gcc@4.5.3']
+
+        # from the lower config scopes
+        assert spack.config.get('config:checksum') is True
+        assert not spack.config.get('packages:externalmodule')
+        assert spack.config.get('repos') == [
+            '/x/y/z', '$spack/var/spack/repos/builtin']
+
+
 def check_schema(name, file_contents):
     """Check a Spack YAML schema against some data"""
     f = StringIO(file_contents)
-    data = syaml.load(f)
+    data = syaml.load_config(f)
     spack.config.validate(data, name)
 
 
@@ -759,3 +853,90 @@ compilers:
     - compiler:
          fenfironfent: /bad/value
 """)
+
+
+@pytest.mark.regression('13045')
+def test_dotkit_in_config_does_not_raise(
+        mock_low_high_config, write_config_file, capsys
+):
+    write_config_file('config',
+                      {'config': {'module_roots': {'dotkit': '/some/path'}}},
+                      'high')
+    spack.main.print_setup_info('sh')
+    captured = capsys.readouterr()
+
+    # Check that we set the variables we expect and that
+    # we throw a a deprecation warning without raising
+    assert '_sp_sys_type' in captured[0]  # stdout
+    assert 'Warning' in captured[1]  # stderr
+
+
+def test_internal_config_section_override(mock_low_high_config,
+                                          write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', {
+                                        'config:': {
+                                            'build_stage': wanted_list
+                                        }
+                                    }))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_internal_config_dict_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_dict))
+    assert mock_low_high_config.get('config:info') == wanted_dict
+
+
+def test_internal_config_list_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_list))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_set_section_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config::build_stage', wanted_list):
+        assert mock_low_high_config.get('config:build_stage') == wanted_list
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_list_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config:build_stage:', wanted_list):
+        assert wanted_list == mock_low_high_config.get('config:build_stage')
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_dict_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    with spack.config.override('config:info:', wanted_dict):
+        assert wanted_dict == mock_low_high_config.get('config:info')
+    assert config_merge_dict['config']['info'] == \
+        mock_low_high_config.get('config:info')
+
+
+def test_set_bad_path(config):
+    with pytest.raises(syaml.SpackYAMLError, match='Illegal leading'):
+        with spack.config.override(':bad:path', ''):
+            pass
+
+
+def test_bad_path_double_override(config):
+    with pytest.raises(syaml.SpackYAMLError,
+                       match='Meaningless second override'):
+        with spack.config.override('bad::double:override::directive', ''):
+            pass

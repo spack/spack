@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class GhostscriptFonts(Package):
     homepage = "http://ghostscript.com/"
     url = "https://www.imagemagick.org/download/delegates/ghostscript-fonts-std-8.11.tar.gz"
 
-    version('8.11', '6865682b095f8c4500c54b285ff05ef6')
+    version('8.11', sha256='0eb6f356119f2e49b2563210852e17f57f9dcc5755f350a69a46a0d641a0c401')
 
     def install(self, spec, prefix):
         fdir = join_path(prefix.share, 'font')

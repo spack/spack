@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,9 @@ class PyLinecache2(PythonPackage):
     homepage = "https://github.com/testing-cabal/linecache2"
     url      = "https://pypi.io/packages/source/l/linecache2/linecache2-1.0.0.tar.gz"
 
-    version('1.0.0', '7b25d0289ec36bff1f9e63c4329ce65c')
+    version('1.0.0', sha256='4b26ff4e7110db76eeb6f5a7b64a82623839d595c2038eeda662f2a2db78e97c')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-pbr', type=('build', 'run'))
+    depends_on('py-pbr', type='build')
+    depends_on('py-fixtures', type='test')
+    depends_on('py-unittest2', type='test')

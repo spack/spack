@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,7 +89,7 @@ class IntelPackage(PackageBase):
     2. :py:meth:`~.IntelPackage.install`
 
     They both have sensible defaults and for many packages the
-    only thing necessary will be to override setup_environment
+    only thing necessary will be to override setup_run_environment
     to set the appropriate environment variables.
     """
     #: Phases of an Intel package
@@ -455,9 +455,7 @@ class IntelPackage(PackageBase):
                     break
 
             if not matching_dirs:
-                # No match -- this *will* happen during pre-build call to
-                # setup_environment() when the destination dir is still empty.
-                # Return a sensible value anyway.
+                # No match -- return a sensible value anyway.
                 d = unversioned_dirname
 
         debug_print(d)
@@ -786,7 +784,8 @@ class IntelPackage(PackageBase):
         debug_print(mkl_libs)
 
         if len(mkl_libs) < 3:
-            raise_lib_error('Cannot locate core MKL libraries:', mkl_libnames)
+            raise_lib_error('Cannot locate core MKL libraries:', mkl_libnames,
+                            'in:', self.component_lib_dir('mkl'))
 
         # The Intel MKL link line advisor recommends these system libraries
         system_libs = find_system_libraries(
@@ -888,15 +887,15 @@ class IntelPackage(PackageBase):
         # debug_print("wrapper_vars =", wrapper_vars)
         return wrapper_vars
 
-    def mpi_setup_dependent_environment(
-            self, spack_env, run_env, dependent_spec, compilers_of_client={}):
-        '''Unified back-end for setup_dependent_environment() of Intel packages
-        that provide 'mpi'.
+    def mpi_setup_dependent_build_environment(
+            self, env, dependent_spec, compilers_of_client={}):
+        '''Unified back-end for setup_dependent_build_environment() of
+        Intel packages that provide 'mpi'.
 
         Parameters:
 
-            spack_env, run_env, dependent_spec: same as in
-                setup_dependent_environment().
+            env, dependent_spec: same as in
+                setup_dependent_build_environment().
 
             compilers_of_client (dict): Conveys spack_cc, spack_cxx, etc.,
                 from the scope of dependent packages; constructed in caller.
@@ -938,12 +937,12 @@ class IntelPackage(PackageBase):
         # Ensure that the directory containing the compiler wrappers is in the
         # PATH. Spack packages add `prefix.bin` to their dependents' paths,
         # but because of the intel directory hierarchy that is insufficient.
-        spack_env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
+        env.prepend_path('PATH', os.path.dirname(wrapper_vars['MPICC']))
 
         for key, value in wrapper_vars.items():
-            spack_env.set(key, value)
+            env.set(key, value)
 
-        debug_print("adding to spack_env:", wrapper_vars)
+        debug_print("adding to build env:", wrapper_vars)
 
     # ---------------------------------------------------------------------
     # General support for child packages
@@ -994,7 +993,7 @@ class IntelPackage(PackageBase):
         debug_print(result)
         return result
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -1004,24 +1003,7 @@ class IntelPackage(PackageBase):
            $ source parallel_studio_xe_2017/bin/psxevars.sh intel64
            [and likewise for MKL, MPI, and other components]
         """
-        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_environment
-        #
-        #   spack_env   -> Applied when dependent is built within Spack.
-        #                  Not used here.
-        #   run_env     -> Applied to the modulefile of dependent.
-        #
-        # NOTE: Spack runs setup_environment twice, once pre-build to set up
-        # the build environment, and once post-installation to determine
-        # the environment variables needed at run-time to add to the module
-        # file. The script we need to source is only present post-installation,
-        # so check for its existence before sourcing.
-        # TODO: At some point we should split setup_environment into
-        # setup_build_environment and setup_run_environment to get around
-        # this problem.
         f = self.file_to_source
-        if not f or not os.path.isfile(f):
-            return
-
         tty.debug("sourcing " + f)
 
         # All Intel packages expect at least the architecture as argument.
@@ -1033,15 +1015,9 @@ class IntelPackage(PackageBase):
         # if sys.platform == 'darwin':
         #     args = ()
 
-        run_env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
+        env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        # https://spack.readthedocs.io/en/latest/spack.html#spack.package.PackageBase.setup_dependent_environment
-        #
-        #   spack_env   -> Applied when dependent is built within Spack.
-        #   run_env     -> Applied to the modulefile of dependent.
-        #                  Not used here.
-        #
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
         # var/spack/repos/builtin/packages/intel-mpi/package.py
@@ -1051,18 +1027,20 @@ class IntelPackage(PackageBase):
         # dictionary kwarg compilers_of_client{} present and populated.
 
         # Handle everything in a callback version.
-        self._setup_dependent_env_callback(spack_env, run_env, dependent_spec)
+        self._setup_dependent_env_callback(env, dependent_spec)
 
     def _setup_dependent_env_callback(
-            self, spack_env, run_env, dependent_spec, compilers_of_client={}):
-        # Expected to be called from a client's setup_dependent_environment(),
+            self, env, dependent_spec, compilers_of_client={}):
+        # Expected to be called from a client's
+        # setup_dependent_build_environment(),
         # with args extended to convey the client's compilers as needed.
 
         if '+mkl' in self.spec or self.provides('mkl'):
             # Spack's env philosophy demands that we replicate some of the
             # settings normally handled by file_to_source ...
             #
-            # TODO: Why is setup_environment() [which uses file_to_source()]
+            # TODO: Why is setup_run_environment()
+            # [which uses file_to_source()]
             # not called as a matter of course upon entering the current
             # function? (guarding against multiple calls notwithstanding)
             #
@@ -1070,18 +1048,26 @@ class IntelPackage(PackageBase):
             env_mods = {
                 'MKLROOT': self.normalize_path('mkl'),
                 'SPACK_COMPILER_EXTRA_RPATHS': self.component_lib_dir('mkl'),
+                'CMAKE_PREFIX_PATH': self.normalize_path('mkl'),
+                'CMAKE_LIBRARY_PATH': self.component_lib_dir('mkl'),
+                'CMAKE_INCLUDE_PATH': self.component_include_dir('mkl'),
             }
 
-            spack_env.set('MKLROOT', env_mods['MKLROOT'])
-            spack_env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
-                                  env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+            env.set('MKLROOT', env_mods['MKLROOT'])
+            env.append_path('SPACK_COMPILER_EXTRA_RPATHS',
+                            env_mods['SPACK_COMPILER_EXTRA_RPATHS'])
+            env.append_path('CMAKE_PREFIX_PATH', env_mods['CMAKE_PREFIX_PATH'])
+            env.append_path('CMAKE_LIBRARY_PATH',
+                            env_mods['CMAKE_LIBRARY_PATH'])
+            env.append_path('CMAKE_INCLUDE_PATH',
+                            env_mods['CMAKE_INCLUDE_PATH'])
 
-            debug_print("adding/modifying spack_env:", env_mods)
+            debug_print("adding/modifying build env:", env_mods)
 
         if '+mpi' in self.spec or self.provides('mpi'):
             if compilers_of_client:
-                self.mpi_setup_dependent_environment(
-                    spack_env, run_env, dependent_spec, compilers_of_client)
+                self.mpi_setup_dependent_build_environment(
+                    env, dependent_spec, compilers_of_client)
                 # We could forego this nonce function and inline its code here,
                 # but (a) it sisters mpi_compiler_wrappers() [needed twice]
                 # which performs dizzyingly similar but necessarily different

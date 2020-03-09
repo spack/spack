@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,18 +8,19 @@ from spack import *
 import sys
 
 
-class Emacs(AutotoolsPackage):
+class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "https://ftpmirror.gnu.org/emacs/emacs-24.5.tar.gz"
+    gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
-    version('26.2', 'fab39c90a1d825695bbaa164934c3f9b')
-    version('26.1', '544d2ab5eb142e9ca69adb023d17bf4b')
-    version('25.3', '74ddd373dc52ac05ca7a8c63b1ddbf58')
-    version('25.2', '0a36d1cdbba6024d4dbbac027f87995f')
-    version('25.1', '95c12e6a9afdf0dcbdd7d2efa26ca42c')
-    version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
+    version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
+    version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')
+    version('26.1', sha256='760382d5e8cdc5d0d079e8f754bce1136fbe1473be24bb885669b0e38fc56aa3')
+    version('25.3', sha256='f72c6a1b48b6fbaca2b991eed801964a208a2f8686c70940013db26cd37983c9')
+    version('25.2', sha256='505bbd6ea6c197947001d0f80bfccb6b30e1add584d6376f54d4fd6e4de72d2d')
+    version('25.1', sha256='763344b90db4d40e9fe90c5d14748a9dbd201ce544e2cf0835ab48a0aa4a1c67')
+    version('24.5', sha256='2737a6622fb2d9982e9c47fb6f2fb297bda42674e09db40fc9bcc0db4297c3b6')
 
     variant('X', default=False, description="Enable an X toolkit")
     variant(

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class PyShapely(PythonPackage):
     ]
 
     version('1.6.4.post2', sha256='c4b87bb61fc3de59fc1f85e71a79b0c709dc68364d9584473697aad4aa13240f')
-    version('1.6.4', '7581ef2d0fb346f9ed157f3efc75f6a4')
+    version('1.6.4', sha256='b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655')
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
@@ -30,6 +30,6 @@ class PyShapely(PythonPackage):
     depends_on('geos@3.3:', when='@1.3:')
     depends_on('py-pytest', type='test')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('GEOS_CONFIG',
-                      join_path(self.spec['geos'].prefix.bin, 'geos-config'))
+    def setup_build_environment(self, env):
+        env.set('GEOS_CONFIG',
+                join_path(self.spec['geos'].prefix.bin, 'geos-config'))

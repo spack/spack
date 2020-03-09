@@ -1,0 +1,12 @@
+diff --git a/src/parcsr_mv/_hypre_parcsr_mv.h b/src/parcsr_mv/_hypre_parcsr_mv.h
+index db08548d1..119d0b3d9 100644
+--- a/src/parcsr_mv/_hypre_parcsr_mv.h
++++ b/src/parcsr_mv/_hypre_parcsr_mv.h
+@@ -800,6 +800,7 @@ HYPRE_Int hypre_ParCSRMatrixCopy ( hypre_ParCSRMatrix *A , hypre_ParCSRMatrix *B
+ HYPRE_Int hypre_FillResponseParToCSRMatrix ( void *p_recv_contact_buf , HYPRE_Int contact_size , HYPRE_Int contact_proc , void *ro , MPI_Comm comm , void **p_send_response_buf , HYPRE_Int *response_message_size );
+ hypre_ParCSRMatrix *hypre_ParCSRMatrixUnion ( hypre_ParCSRMatrix *A , hypre_ParCSRMatrix *B );
+ hypre_ParCSRMatrix* hypre_ParCSRMatrixClone ( hypre_ParCSRMatrix *A, HYPRE_Int copy_data );
++#define hypre_ParCSRMatrixCompleteClone(A) hypre_ParCSRMatrixClone(A,0)
+ hypre_ParCSRMatrix* hypre_ParCSRMatrixClone_v2 ( hypre_ParCSRMatrix *A, HYPRE_Int copy_data, HYPRE_Int memory_location );
+ #ifdef HYPRE_USING_CUDA
+ //hypre_int hypre_ParCSRMatrixIsManaged(hypre_ParCSRMatrix *a);

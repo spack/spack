@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,10 @@ class Sbt(Package):
     homepage = 'http://www.scala-sbt.org'
     url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
-    version('1.1.6', 'd307b131ed041c783ac5ed7bbb4768dc')
-    version('1.1.5', 'b771480feb07f98fa8cd6d787c8d4485')
-    version('1.1.4', 'c71e5fa846164d14d4cd450520d66c6a')
-    version('0.13.17', 'c52c6152cc7aadfd1f0736a1a5d0a5b8')
+    version('1.1.6', sha256='f545b530884e3abbca026df08df33d5a15892e6d98da5b8c2297413d1c7b68c1')
+    version('1.1.5', sha256='8303d7496bc70eb441e8136bd29ffc295c629dadecefa4e7a475176ab4d282d5')
+    version('1.1.4', sha256='2fbd592b1cfd7bc3612154a32925d5843b602490e8c8977a53fa86b35e308341')
+    version('0.13.17', sha256='25f782ccb2ad6d54e13ce6cec0afa3d2328874c508d68ee34e2f742e99f2c847')
 
     depends_on('java')
 

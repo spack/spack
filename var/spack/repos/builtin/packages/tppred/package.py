@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Tppred(Package):
     homepage = "https://tppred2.biocomp.unibo.it/tppred2/default/software"
     url      = "http://biocomp.unibo.it/savojard/tppred2.tar.gz"
 
-    version('2.0', 'cd848569f6a8aa51d18fbe55fe45d624')
+    version('2.0', sha256='0e180d5ce1f0bccfdbc3dbf9981b3fbe2101c85491c58c58c88856861688a4f5')
 
     depends_on('python@2.7:2.999', type='run')
     depends_on('py-scikit-learn@0.13.1', type='run')
@@ -31,5 +31,5 @@ class Tppred(Package):
         install_tree('example', prefix.example)
         install_tree('tppred2modules', prefix.modules)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('TPPRED_ROOT', prefix)
+    def setup_run_environment(self, env):
+        env.set('TPPRED_ROOT', self.prefix)

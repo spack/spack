@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RRminer(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rminer_1.4.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rminer"
 
-    version('1.4.2', '7d5d90f4ae030cf647d67aa962412c05')
+    version('1.4.2', sha256='64444dcedcd17f2f26129819d6bd2f84d4bb59c8f65328b6054ef32cb9624fc2')
 
     depends_on('r-plotrix', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

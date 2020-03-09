@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Lcals(MakefilePackage):
 
     tags = ['proxy-app']
 
-    version('1.0.2', '40c65a88f1df1436a2f72b7d3c986a21')
+    version('1.0.2', sha256='a146590f7c1e9a9311ccf74dc0bef1fb19d77429db35a33c6725529fb1b0327e')
 
     variant(
         'microarch',

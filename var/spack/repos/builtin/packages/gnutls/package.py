@@ -1,10 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Gnutls(AutotoolsPackage):
@@ -21,10 +20,10 @@ class Gnutls(AutotoolsPackage):
     version('3.6.8', sha256='aa81944e5635de981171772857e72be231a7e0f559ae0292d2737de475383e83')
     version('3.6.7.1', sha256='881b26409ecd8ea4c514fd3fbdb6fae5fab422ca7b71116260e263940a4bbbad')
     version('3.5.19', sha256='1936eb64f03aaefd6eb16cef0567457777618573826b94d03376bb6a4afadc44')
-    version('3.5.13', '4fd41ad86572933c2379b4cc321a0959')
-    version('3.5.10', '336c03a71ba90184ffd0388075dde504')
-    version('3.5.9',  '0ab25eb6a1509345dd085bc21a387951')
-    version('3.3.9',  'ff61b77e39d09f1140ab5a9cf52c58b6')
+    version('3.5.13', sha256='79f5480ad198dad5bc78e075f4a40c4a315a1b2072666919d2d05a08aec13096')
+    version('3.5.10', sha256='af443e86ba538d4d3e37c4732c00101a492fe4b56a55f4112ff0ab39dbe6579d')
+    version('3.5.9',  sha256='82b10f0c4ef18f4e64ad8cef5dbaf14be732f5095a41cf366b4ecb4050382951')
+    version('3.3.9',  sha256='39166de5293a9d30ef1cd0a4d97f01fdeed7d7dbf8db95392e309256edcb13c1')
 
     variant('zlib', default=True, description='Enable zlib compression support')
     variant('guile', default=False, description='Enable Guile bindings')
@@ -49,11 +48,10 @@ class Gnutls(AutotoolsPackage):
         url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_environment(self, build_env, run_env):
+    def setup_build_environment(self, env):
         spec = self.spec
         if '+guile' in spec:
-            build_env.set('GUILE', os.path.join(spec["guile"].prefix.bin,
-                                                'guile'))
+            env.set('GUILE', spec["guile"].prefix.bin.guile)
 
     def configure_args(self):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,4 +14,4 @@ class RBeanplot(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/beanplot_1.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/beanplot"
 
-    version('1.2', 'b24943208a4e61ee9ee0dc152634d5da')
+    version('1.2', sha256='49da299139a47171c5b4ccdea79ffbbc152894e05d552e676f135147c0c9b372')

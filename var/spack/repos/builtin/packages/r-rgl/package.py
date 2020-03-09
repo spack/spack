@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,8 +20,9 @@ class RRgl(RPackage):
 
     version('0.100.26', sha256='e1889c2723ad458b39fdf9366fdaf590d7657d3762748f8534a8491ef754e740')
     version('0.100.24', sha256='1233a7bdc5a2b908fc64d5f56e92a0e123e8f7c0b9bac93dfd005608b78fa35a')
+    version('0.100.19', sha256='50630702554e422e0603f27d499aad3b6f822de5a73da7fdf70404ac50df7025')
     version('0.99.16', sha256='692a545ed2ff0f5e15289338736f0e3c092667574c43ac358d8004901d7a1a61')
-    version('0.98.1', 'bd69e1d33f1590feb4b6dc080b133e5b')
+    version('0.98.1', sha256='5f49bed9e092e672f73c8a1a5365cdffcda06db0315ac087e95ab9c9c71a6986')
 
     depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))

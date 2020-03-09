@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,16 +18,16 @@ class Kokkos(Package):
     version('2.9.00', sha256='e0621197791ed3a381b4f02c78fa529f3cff3abb74d52157b4add17e8aa04bc4')
     version('2.8.00', sha256='1c72661f2d770517bff98837001b42b9c677d1df29f7493a1d7c008549aff630')
     version('2.7.24', sha256='a308a80ea1488f4c18884b828ce7ae9f5210b9a6b2f61b208d875084d8da8cb0')
-    version('2.7.00',  'b357f9374c1008754babb4495f95e392')
-    version('2.5.00',  '2db83c56587cb83b772d0c81a3228a21')
-    version('2.04.11', 'd4849cee6eb9001d61c30f1d9fe74336')
-    version('2.04.04', '2c6d1c2569b91c9fcd4117296438e65c')
-    version('2.04.00', 'd99ac790ff5f29545d8eb53de90c0a85')
-    version('2.03.13', '3874a159a517384541ea5b52f85501ba')
-    version('2.03.05', '8727d783453f719eec392e10a36b49fd')
-    version('2.03.00', 'f205d659d4304747759fabfba32d43c3')
-    version('2.02.15', 'de41e38f452a50bb03363c519fe20769')
-    version('2.02.07', 'd5baeea70109249f7dca763074ffb202')
+    version('2.7.00',  sha256='01595996e612ef7410aa42fa265a23101cfe1b6993fa9810ca844db5c89ad765')
+    version('2.5.00',  sha256='ea232594bf746abb99ae2aafaeef5d07adc089968010a62a88aaa892106d9476')
+    version('2.04.11', sha256='f2680aee0169f6cbbec38410f9c80bf8a160435f6a07769c1e9112da8b9349a0')
+    version('2.04.04', sha256='5bac8ddc2fac9bc6e01dd40f92ca6cbbb346a25deca5be2fec71acf712d0d0c7')
+    version('2.04.00', sha256='b04658d368986df207662a7a37c1ad974c321447bc2c2b5b696d7e9ee4481f34')
+    version('2.03.13', sha256='002748bdd0319d5ab82606cf92dc210fc1c05d0607a2e1d5538f60512b029056')
+    version('2.03.05', sha256='b18ddaa1496130ff3f675ea9ddbc6df9cdf378d53edf96df89e70ff189e10e1d')
+    version('2.03.00', sha256='722bea558d8986efee765ac912febb3c1ce289a8e9bdfef77cd0145df0ea8a3d')
+    version('2.02.15', sha256='6b4a7f189f0341f378f950f3c798f520d2e473b13435b137ff3b666e799a076d')
+    version('2.02.07', sha256='7b4ac81021d6868f4eb8e2a1cb92ba76bad9c3f197403b8b1eac0f11c983247c')
 
     variant('debug', default=False, description="Build debug version of Kokkos")
 
@@ -67,20 +67,27 @@ class Kokkos(Package):
     variant('enable_lambda', default=False,
             description="set enable_lambda Kokkos CUDA option")
 
+    host_values = ('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
+                   'Power7', 'Power8', 'Power9',
+                   'WSM', 'SNB', 'HSW', 'BDW', 'SKX',
+                   'KNC', 'KNL')
+
     gpu_values = ('Kepler30', 'Kepler32', 'Kepler35', 'Kepler37',
                   'Maxwell50', 'Maxwell52', 'Maxwell53',
                   'Pascal60', 'Pascal61',
                   'Volta70', 'Volta72')
 
-    cuda_options = ('force_uvm', 'use_ldg', 'rdc', 'enable_lambda')
+    # C++ standard variant
+    variant('cxxstd', default='none',
+            values=('c++11', 'c++14', 'c++17', 'c++1y', 'c++1z', 'c++2a'),
+            multi=False,
+            description='set cxxstandard Kokkos option')
 
     # Host architecture variant
     variant(
         'host_arch',
         default='none',
-        values=('AMDAVX', 'ARMv80', 'ARMv81', 'ARMv8-ThunderX',
-                'Power7', 'Power8', 'Power9',
-                'WSM', 'SNB', 'HSW', 'BDW', 'SKX', 'KNC', 'KNL'),
+        values=host_values,
         description='Set the host architecture to use'
     )
 
@@ -150,6 +157,11 @@ class Kokkos(Package):
             # PIC
             if '+pic' in spec:
                 g_args.append('--cxxflags=-fPIC')
+
+            # C++ standard
+            cxxstandard = spec.variants['cxxstd'].value
+            if cxxstandard != 'none':
+                g_args.append('--cxxstandard=%s' % cxxstandard)
 
             # Build Debug
             if '+debug' in spec:

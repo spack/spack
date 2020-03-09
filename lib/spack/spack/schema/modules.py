@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,8 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/modules.py
    :lines: 13-
 """
+import spack.schema.environment
+
 
 #: Matches a spec or a multi-valued variant but not another
 #: valid keyword.
@@ -66,17 +68,7 @@ module_file_configuration = {
                 }
             }
         },
-        'environment': {
-            'type': 'object',
-            'default': {},
-            'additionalProperties': False,
-            'properties': {
-                'set': dictionary_of_strings,
-                'unset': array_of_strings,
-                'prepend_path': dictionary_of_strings,
-                'append_path': dictionary_of_strings
-            }
-        }
+        'environment': spack.schema.environment.definition
     }
 }
 
@@ -135,7 +127,16 @@ properties = {
                 'default': [],
                 'items': {
                     'type': 'string',
-                    'enum': ['tcl', 'dotkit', 'lmod']}},
+                    'enum': ['tcl', 'dotkit', 'lmod']
+                },
+                'deprecatedProperties': {
+                    'properties': ['dotkit'],
+                    'message': 'cannot enable "{property}" in modules.yaml '
+                               '[support for {property} module files has been'
+                               ' dropped]',
+                    'error': False
+                },
+            },
             'lmod': {
                 'allOf': [
                     # Base configuration
@@ -163,6 +164,13 @@ properties = {
                     {}  # Specific dotkit extensions
                 ]
             },
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'the section "{property}" in modules.yaml has no effect'
+                       ' [support for {property} module files has been '
+                       'dropped]',
+            'error': False
         },
     },
 }

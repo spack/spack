@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,6 @@ class PyLockfile(PythonPackage):
     homepage = "https://pypi.python.org/pypi/lockfile"
     url      = "https://pypi.io/packages/source/l/lockfile/lockfile-0.10.2.tar.gz"
 
-    version('0.10.2', '1aa6175a6d57f082cd12e7ac6102ab15')
+    version('0.10.2', sha256='9e42252f17d1dd89ee31745e0c4fbe58862c25147eb0ef5295c9cd9bcb4ea2c1')
 
     depends_on("py-setuptools", type='build')

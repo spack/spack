@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,16 @@ class Amrex(CMakePackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
+    url      = "https://github.com/AMReX-Codes/amrex/archive/20.01.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.03', sha256='a535dcc016f0d38b55d0ab8e9067c1c53e3686961f6a1fb471cb18a0ebc909e6')
+    version('20.02', sha256='33529a23694283d12eb37d4682aa86c9cc1240bd50124efcf4464747a7554147')
+    version('20.01', sha256='f7026d267ca5de79ec7e740264d54230f419776d40feae705e939be0b1d8e0d3')
+    version('19.10', commit='52844b32b7da11e9733b9a7f4a782e51de7f5e1e')  # tag:19.10
     version('19.08', commit='bdd1146139e8727a513d451075f900c172eb81fd')  # tag:19.08
     version('18.10.1', commit='260b53169badaa760b91dfc60ea6b2ea3d9ccf06')  # tag:18.10.1
     version('18.10', commit='d37a266c38092e1174096e245326e9eead1f4e03')  # tag:18.10
@@ -78,4 +83,7 @@ class Amrex(CMakePackage):
             '-DENABLE_PARTICLES:BOOL=%s' % self.cmake_is_on('+particles'),
             '-DENABLE_SUNDIALS:BOOL=%s' % self.cmake_is_on('+sundials')
         ]
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
         return args

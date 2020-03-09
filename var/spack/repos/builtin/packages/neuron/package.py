@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,10 +22,10 @@ class Neuron(Package):
     git      = "https://github.com/nrnhines/nrn.git"
 
     version('develop', branch='master')
-    version('7.5', 'fb72c841374dfacbb6c2168ff57bfae9')
-    version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
-    version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
-    version('7.2', '5486709b6366add932e3a6d141c4f7ad')
+    version('7.5', sha256='67642216a969fdc844da1bd56643edeed5e9f9ab8c2a3049dcbcbcccba29c336')
+    version('7.4', sha256='1403ba16b2b329d2376f4bf007d96e6bf2992fa850f137f1068ad5b22b432de6')
+    version('7.3', sha256='71cff5962966c5cd5d685d90569598a17b4b579d342126b31e2d431128cc8832')
+    version('7.2', sha256='c777d73a58ff17a073e8ea25f140cb603b8b5f0df3c361388af7175e44d85b0e')
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
@@ -189,14 +189,12 @@ class Neuron(Package):
             make('VERBOSE=1')
             make('install')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         neuron_archdir = self.get_neuron_archdir()
-        run_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        run_env.prepend_path(
-            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         neuron_archdir = self.get_neuron_archdir()
-        spack_env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
-        spack_env.prepend_path(
-            'LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))

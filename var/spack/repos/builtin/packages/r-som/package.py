@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,10 @@ class RSom(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/som_0.3-5.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/som"
 
-    version('0.3-5.1', '802a5a80902579354ce3420faeeeb756')
-    version('0.3-5', '72717499794c7aa945a768b742af8895')
-    version('0.3-4', '1e25572e446409f5e32c5da5f1af98e6')
-    version('0.3-3', 'd4ac444be24f71d08b99974c2f4b96e5')
-    version('0.3-2', '4ce28f46df68fbb73905711ba2416fac')
+    version('0.3-5.1', sha256='a6f4c0e5b36656b7a8ea144b057e3d7642a8b71972da387a7133f3dd65507fb9')
+    version('0.3-5', sha256='f7672afaaffcf41a8b2dd50e4c76b3a640ea2ad099f18b5dfcf00389abf6ba07')
+    version('0.3-4', sha256='679e3d3f0af6e56da3b0a4d8577334e03ad45fe76916bbc2592548f85b6b1c84')
+    version('0.3-3', sha256='434e2210df3e6a459a8588606676c02494f58c5b52e25291d142121b7b9be5c7')
+    version('0.3-2', sha256='b46ecb79c08f3d4cf9527d5c7f85a235808dda45dae7f50909b2df90e7b9e543')
 
     depends_on('r@2.10:', type=('build', 'run'))

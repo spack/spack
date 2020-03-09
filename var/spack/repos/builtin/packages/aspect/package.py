@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,13 @@ class Aspect(CMakePackage):
     Earth's mantle and elsewhere."""
 
     homepage = "https://aspect.geodynamics.org"
-    url      = "https://github.com/geodynamics/aspect/releases/download/v2.0.0/aspect-2.0.0.tar.gz"
+    url      = "https://github.com/geodynamics/aspect/releases/download/v2.1.0/aspect-2.1.0.tar.gz"
     git      = "https://github.com/geodynamics/aspect.git"
 
     maintainers = ['tjhei']
 
     version('develop', branch='master')
+    version('2.1.0', sha256='bd574d60ed9df1f4b98e68cd526a074d0527c0792763187c9851912327d861a3')
     version('2.0.1', sha256='0bf5600c42afce9d39c1d285b0654ecfdeb0f30e9f3421651c95f54ca01ac165')
     version('2.0.0', sha256='d485c07f54248e824bdfa35f3eec8971b65e8b7114552ffa2c771bc0dede8cc0')
 
@@ -35,5 +36,5 @@ class Aspect(CMakePackage):
             ('ON' if '+fpe' in self.spec else 'OFF')
         ]
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('Aspect_DIR', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('Aspect_DIR', self.prefix)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,18 +21,13 @@ import spack.cmd.install
 from spack.error import SpackError
 from spack.spec import Spec
 from spack.main import SpackCommand
+import spack.environment as ev
 
 from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
-
-
-@pytest.fixture(scope='module')
-def parser():
-    """Returns the parser for the module command"""
-    parser = argparse.ArgumentParser()
-    spack.cmd.install.setup_parser(parser)
-    return parser
+env = SpackCommand('env')
+add = SpackCommand('add')
 
 
 @pytest.fixture()
@@ -112,7 +107,9 @@ def test_install_package_already_installed(
     (['--clean'], False),
     (['--dirty'], True),
 ])
-def test_install_dirty_flag(parser, arguments, expected):
+def test_install_dirty_flag(arguments, expected):
+    parser = argparse.ArgumentParser()
+    spack.cmd.install.setup_parser(parser)
     args = parser.parse_args(arguments)
     assert args.dirty == expected
 
@@ -142,8 +139,7 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
-    assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.name == 'ProcessError'
+    assert 'ProcessError' in out
     assert 'configure: error: in /path/to/some/file:' in out
     assert 'configure: error: cannot run C compiled programs.' in out
 
@@ -180,9 +176,10 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
     assert install.error.pkg.name == 'build-error'
     assert 'Full build log:' in out
 
+    # Message shows up for ProcessError (1), ChildError (1), and output (1)
     errors = [line for line in out.split('\n')
               if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 2
+    assert len(errors) == 3
 
 
 def test_install_overwrite(
@@ -194,22 +191,26 @@ def test_install_overwrite(
 
     install('libdwarf')
 
+    manifest = os.path.join(spec.prefix, spack.store.layout.metadata_dir,
+                            spack.store.layout.manifest_file_name)
+
     assert os.path.exists(spec.prefix)
-    expected_md5 = fs.hash_directory(spec.prefix)
+    expected_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
     with open(os.path.join(spec.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_md5 = fs.hash_directory(spec.prefix)
+    bad_md5 = fs.hash_directory(spec.prefix, ignore=[manifest])
 
     assert bad_md5 != expected_md5
 
     install('--overwrite', '-y', 'libdwarf')
+
     assert os.path.exists(spec.prefix)
-    assert fs.hash_directory(spec.prefix) == expected_md5
-    assert fs.hash_directory(spec.prefix) != bad_md5
+    assert fs.hash_directory(spec.prefix, ignore=[manifest]) == expected_md5
+    assert fs.hash_directory(spec.prefix, ignore=[manifest]) != bad_md5
 
 
 def test_install_overwrite_not_installed(
@@ -239,11 +240,20 @@ def test_install_overwrite_multiple(
 
     install('cmake')
 
+    ld_manifest = os.path.join(libdwarf.prefix,
+                               spack.store.layout.metadata_dir,
+                               spack.store.layout.manifest_file_name)
+
     assert os.path.exists(libdwarf.prefix)
-    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
+    expected_libdwarf_md5 = fs.hash_directory(libdwarf.prefix,
+                                              ignore=[ld_manifest])
+
+    cm_manifest = os.path.join(cmake.prefix,
+                               spack.store.layout.metadata_dir,
+                               spack.store.layout.manifest_file_name)
 
     assert os.path.exists(cmake.prefix)
-    expected_cmake_md5 = fs.hash_directory(cmake.prefix)
+    expected_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
 
     # Modify the first installation to be sure the content is not the same
     # as the one after we reinstalled
@@ -252,8 +262,8 @@ def test_install_overwrite_multiple(
     with open(os.path.join(cmake.prefix, 'only_in_old'), 'w') as f:
         f.write('This content is here to differentiate installations.')
 
-    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix)
-    bad_cmake_md5 = fs.hash_directory(cmake.prefix)
+    bad_libdwarf_md5 = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
+    bad_cmake_md5 = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
 
     assert bad_libdwarf_md5 != expected_libdwarf_md5
     assert bad_cmake_md5 != expected_cmake_md5
@@ -261,10 +271,13 @@ def test_install_overwrite_multiple(
     install('--overwrite', '-y', 'libdwarf', 'cmake')
     assert os.path.exists(libdwarf.prefix)
     assert os.path.exists(cmake.prefix)
-    assert fs.hash_directory(libdwarf.prefix) == expected_libdwarf_md5
-    assert fs.hash_directory(cmake.prefix) == expected_cmake_md5
-    assert fs.hash_directory(libdwarf.prefix) != bad_libdwarf_md5
-    assert fs.hash_directory(cmake.prefix) != bad_cmake_md5
+
+    ld_hash = fs.hash_directory(libdwarf.prefix, ignore=[ld_manifest])
+    cm_hash = fs.hash_directory(cmake.prefix, ignore=[cm_manifest])
+    assert ld_hash == expected_libdwarf_md5
+    assert cm_hash == expected_cmake_md5
+    assert ld_hash != bad_libdwarf_md5
+    assert cm_hash != bad_cmake_md5
 
 
 @pytest.mark.usefixtures(
@@ -360,8 +373,12 @@ def test_junit_output_with_errors(
         exc_type = getattr(builtins, exc_typename)
         raise exc_type(msg)
 
-    monkeypatch.setattr(spack.package.PackageBase, 'do_install', just_throw)
+    monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
+                        just_throw)
 
+    # TODO: Why does junit output capture appear to swallow the exception
+    # TODO: as evidenced by the two failing packages getting tagged as
+    # TODO: installed?
     with tmpdir.as_cwd():
         install('--log-format=junit', '--log-file=test.xml', 'libdwarf')
 
@@ -371,14 +388,14 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Count failures and errors correctly
-    assert 'tests="1"' in content
+    # Count failures and errors correctly: libdwarf _and_ libelf
+    assert 'tests="2"' in content
     assert 'failures="0"' in content
-    assert 'errors="1"' in content
+    assert 'errors="2"' in content
 
     # We want to have both stdout and stderr
     assert '<system-out>' in content
-    assert msg in content
+    assert 'error message="{0}"'.format(msg) in content
 
 
 @pytest.mark.usefixtures('noop_install', 'config')
@@ -465,9 +482,8 @@ def test_cdash_upload_build_error(tmpdir, mock_fetch, install_mockery,
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
-                                  capfd):
-    # capfd interferes with Spack's capturing
+def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -485,7 +501,7 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery,
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             install(
@@ -507,7 +523,7 @@ def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
 
 @pytest.mark.disable_clean_stage_check
 def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
-    # capfd interferes with Spack's capturing
+    # capfd interferes with Spack's capture of e.g., Build.xml output
     with capfd.disabled():
         with tmpdir.as_cwd():
             cdash_track = 'some_mocked_track'
@@ -556,7 +572,6 @@ def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
             report_file = report_dir.join('a_Configure.xml')
             assert report_file in report_dir.listdir()
             content = report_file.open().read()
-            import re
             install_command_regex = re.compile(
                 r'<ConfigureCommand>(.+)</ConfigureCommand>',
                 re.MULTILINE | re.DOTALL)
@@ -586,8 +601,120 @@ def test_build_warning_output(tmpdir, mock_fetch, install_mockery, capfd):
         msg = ''
         try:
             install('build-warnings')
+            assert False, "no exception was raised!"
         except spack.build_environment.ChildError as e:
             msg = e.long_message
 
         assert 'WARNING: ALL CAPITAL WARNING!' in msg
         assert 'foo.c:89: warning: some weird warning!' in msg
+
+
+def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
+    with capfd.disabled():
+        try:
+            install('--cache-only', 'libdwarf')
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    # libelf from cache failed to install, which automatically removed the
+    # the libdwarf build task and flagged the package as failed to install.
+    assert 'Installation of libdwarf failed' in msg
+
+
+def test_install_only_dependencies(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+
+def test_install_only_package(tmpdir, mock_fetch, install_mockery, capfd):
+    msg = ''
+    with capfd.disabled():
+        try:
+            install('--only', 'package', 'dependent-install')
+        except spack.installer.InstallError as e:
+            msg = str(e)
+
+    assert 'Cannot proceed with dependent-install'  in msg
+    assert '1 uninstalled dependency' in msg
+
+
+def test_install_deps_then_package(tmpdir, mock_fetch, install_mockery):
+    dep = Spec('dependency-install').concretized()
+    root = Spec('dependent-install').concretized()
+
+    install('--only', 'dependencies', 'dependent-install')
+    assert os.path.exists(dep.prefix)
+    assert not os.path.exists(root.prefix)
+
+    install('--only', 'package', 'dependent-install')
+    assert os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_in_env(tmpdir, mock_fetch, install_mockery,
+                                          mutable_mock_env_path):
+    env('create', 'test')
+
+    with ev.read('test'):
+        dep = Spec('dependency-install').concretized()
+        root = Spec('dependent-install').concretized()
+
+        install('-v', '--only', 'dependencies', 'dependent-install')
+
+        assert os.path.exists(dep.prefix)
+        assert not os.path.exists(root.prefix)
+
+
+@pytest.mark.regression('12002')
+def test_install_only_dependencies_of_all_in_env(
+    tmpdir, mock_fetch, install_mockery, mutable_mock_env_path
+):
+    env('create', '--without-view', 'test')
+
+    with ev.read('test'):
+        roots = [Spec('dependent-install@1.0').concretized(),
+                 Spec('dependent-install@2.0').concretized()]
+
+        add('dependent-install@1.0')
+        add('dependent-install@2.0')
+        install('--only', 'dependencies')
+
+        for root in roots:
+            assert not os.path.exists(root.prefix)
+            for dep in root.traverse(root=False):
+                assert os.path.exists(dep.prefix)
+
+
+def test_install_help_does_not_show_cdash_options(capsys):
+    """Make sure `spack install --help` does not describe CDash arguments"""
+    with pytest.raises(SystemExit):
+        install('--help')
+        captured = capsys.readouterr()
+        assert 'CDash URL' not in captured.out
+
+
+def test_install_help_cdash(capsys):
+    """Make sure `spack install --help-cdash` describes CDash arguments"""
+    install_cmd = SpackCommand('install')
+    out = install_cmd('--help-cdash')
+    assert 'CDash URL' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+    # capfd interferes with Spack's capturing
+    with tmpdir.as_cwd():
+        with capfd.disabled():
+            os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
+            out = install(
+                '-v',
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'a')
+            assert 'Using CDash auth token from environment' in out

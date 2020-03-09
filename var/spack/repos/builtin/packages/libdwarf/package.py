@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,11 +27,11 @@ class Libdwarf(Package):
     url      = "http://www.prevanders.net/libdwarf-20160507.tar.gz"
     list_url = homepage
 
-    version('20180129', 'c5e90fad4640f0d713ae8b986031f959')
-    version('20160507', 'ae32d6f9ece5daf05e2d4b14822ea811')
-    version('20130729', '4cc5e48693f7b93b7aa0261e63c0e21d')
-    version('20130207', '64b42692e947d5180e162e46c689dfbf')
-    version('20130126', 'ded74a5e90edb5a12aac3c29d260c5db')
+    version('20180129', sha256='8bd91b57064b0c14ade5a009d3a1ce819f1b6ec0e189fc876eb8f42a8720d8a6')
+    version('20160507', sha256='12ae39376e3915bf8fa92555989f3ad5f2f4f332b590a628541ce68987b337af')
+    version('20130729', sha256='b6455d8616baf2883e2af91f006d6cbd583128fdfff46e3d1fae460bc223bb7b')
+    version('20130207', sha256='5cb81459f0a1f6a2a10ef4635faddc2fa5e1a9e36901018c017759e491e708b8')
+    version('20130126', sha256='c23c847935f8612f4fcdcfa0b3311f1553dcbd95bb683d3d5e030440201192fe')
     depends_on("elfutils@0.163", when='@20160507', type='link')
     depends_on("elf", type='link')
     depends_on('zlib', type='link')

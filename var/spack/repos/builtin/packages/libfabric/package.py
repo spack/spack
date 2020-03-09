@@ -1,8 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os.path
 from spack import *
 
 
@@ -11,20 +12,22 @@ class Libfabric(AutotoolsPackage):
        fabric communication services to applications."""
 
     homepage = "https://libfabric.org/"
-    url      = "https://github.com/ofiwg/libfabric/releases/download/v1.6.1/libfabric-1.6.1.tar.gz"
+    url      = "https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2"
     git      = "https://github.com/ofiwg/libfabric.git"
 
-    version('develop', branch='master')
-    version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37',
-       url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/libfabric-1.8.0.tar.bz2')
-    version('1.7.1', sha256='312e62c57f79b7274f89c41823932c00b15f1cc8de9c1f8dce17cd7fdae66fa1')
-    version('1.7.0', sha256='9d7059e2ef48341f967f2a20ee215bc50f9079b32aad485f654098f83040e4be')
-    version('1.6.2', sha256='b1a9cf8c47189a1c918f8b5710d05cb50df6b47a1c9b2ba51d927e97503b4df0')
-    version('1.6.1', 'ff78dc9fcbf273a119c737a4e1df46d1')
-    version('1.6.0', '91d63ab3c0b9724a4db660019f928cab')
-    version('1.5.3', '1fe07e972fe487c6a3e44c0fb68b49a2')
-    version('1.5.0', 'fda3e9b31ebe184f5157288d059672d6')
-    version('1.4.2', '2009c8e0817060fb99606ddbf6c5ccf8')
+    version('master', branch='master')
+    version('1.9.1rc1', sha256='fdf89a0797f0d923aaef2c41cc70be45716e4d07dc5d318365b9c17795eb49ab')
+    version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c')
+    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88', preferred=True)
+    version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37')
+    version('1.7.1', sha256='f4e9cc48319763cff4943de96bf527b737c9f1d6ac3088b8b5c75d07bd719569')
+    version('1.7.0', sha256='b3dd9cc0fa36fe8c3b9997ba279ec831a905704816c25fe3c4c09fc7eeceaac4')
+    version('1.6.2', sha256='ec63f61f5e529964ef65fd101627d8782c0efc2b88b3d5fc7f0bfd2c1e95ab2c')
+    version('1.6.1', sha256='33215a91450e2234ebdc7c467f041b6757f76f5ba926425e89d80c27b3fd7da2')
+    version('1.6.0', sha256='b3ce7bd655052ea4da7bf01a3177d96d94e5f41b3fd6011ac43f50fcb2dc7581')
+    version('1.5.3', sha256='f62a40da06f8951db267a59a4ee7363b6ee60a7abbc55cd5db6c8b067d93fa0c')
+    version('1.5.0', sha256='88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23')
+    version('1.4.2', sha256='5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5')
 
     fabrics = ('psm',
                'psm2',
@@ -38,10 +41,12 @@ class Libfabric(AutotoolsPackage):
                'rxd',
                'mlx',
                'tcp',
-               'efa')
+               'efa',
+               'mrail',
+               'shm')
 
     variant('fabrics',
-            default='sockets',
+            default='sockets,tcp,udp',
             description='A list of enabled fabrics',
             values=fabrics,
             multi=True)
@@ -53,6 +58,12 @@ class Libfabric(AutotoolsPackage):
     variant('kdreg', default=False,
             description='Enable kdreg on supported Cray platforms')
 
+    # For version 1.9.0:
+    # headers: fix forward-declaration of enum fi_collective_op with C++
+    patch('https://github.com/ofiwg/libfabric/commit/2e95b0efd85fa8a3d814128e34ec57ffd357460e.patch',
+          sha256='71f06e8bf0adeccd425b194ac524e4d596469e9dab9e7a4f8bb209e6b9a454f4',
+          when='@1.9.0')
+
     depends_on('rdma-core', when='fabrics=verbs')
     depends_on('opa-psm2', when='fabrics=psm2')
     depends_on('psm', when='fabrics=psm')
@@ -63,6 +74,14 @@ class Libfabric(AutotoolsPackage):
     depends_on('automake', when='@develop', type='build')
     depends_on('libtool', when='@develop', type='build')
 
+    resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/fabtests-1.9.0.tar.bz2',
+             sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
+             placement='fabtests', when='@1.9.0')
+    resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/fabtests-1.8.0.tar.gz',
+             sha256='4b9af18c9c7c8b28eaeac4e6e9148bd2ea7dc6b6f00f8e31c90a6fc536c5bb6c',
+             placement='fabtests', when='@1.8.0')
     resource(name='fabtests',
              url='https://github.com/ofiwg/libfabric/releases/download/v1.7.0/fabtests-1.7.0.tar.gz',
              sha256='ebb4129dc69dc0e1f48310ce1abb96673d8ddb18166bc595312ebcb96e803de9',
@@ -86,11 +105,14 @@ class Libfabric(AutotoolsPackage):
     resource(name='fabtests',
              url='https://github.com/ofiwg/fabtests/releases/download/v1.4.2/fabtests-1.4.2.tar.gz',
              sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
-             placement='fabtests', when='@1.5.0')
+             placement='fabtests', when='@1.4.2')
 
-    def setup_environment(self, spack_env, run_env):
+    conflicts('@1.9.0', when='platform=darwin',
+              msg='This distribution is missing critical files')
+
+    def setup_build_environment(self, env):
         if self.run_tests:
-            spack_env.prepend_path('PATH', self.prefix.bin)
+            env.prepend_path('PATH', self.prefix.bin)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):
@@ -117,15 +139,29 @@ class Libfabric(AutotoolsPackage):
 
         return args
 
-    def installcheck(self):
-        fi_info = Executable(self.prefix.bin.fi_info)
-        fi_info()
+    def install(self, spec, prefix):
+        # Call main install method
+        super(Libfabric, self).install(spec, prefix)
 
-        # Build and run more extensive tests
+        # Build and install fabtests, if available
+        if not os.path.isdir('fabtests'):
+            return
         with working_dir('fabtests'):
             configure = Executable('./configure')
             configure('--prefix={0}'.format(self.prefix),
                       '--with-libfabric={0}'.format(self.prefix))
             make()
             make('install')
+
+    def installcheck(self):
+        fi_info = Executable(self.prefix.bin.fi_info)
+        fi_info()
+
+        # Run fabtests test suite if available
+        if not os.path.isdir('fabtests'):
+            return
+        if self.spec.satisfies('@1.8.0,1.9.0'):
+            # make test seems broken.
+            return
+        with working_dir('fabtests'):
             make('test')

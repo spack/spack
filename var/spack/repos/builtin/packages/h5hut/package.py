@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,9 @@ class H5hut(AutotoolsPackage):
     High-Performance I/O Library for Particle-based Simulations."""
 
     homepage = "https://amas.psi.ch/H5hut/"
-    url      = "https://amas.psi.ch/H5hut/raw-attachment/wiki/DownloadSources/H5hut-1.99.13.tar.gz"
+    url      = "http://amas.web.psi.ch/Downloads/H5hut/H5hut-2.0.0rc3.tar.gz"
 
-    version('1.99.13', '2a07a449afe50534de006ac6954a421a')
+    version('2.0.0rc3', sha256='1ca9a9478a99e1811ecbca3c02cc49258050d339ffb1a170006eab4ab2a01790')
 
     variant('fortran', default=True, description='Enable Fortran support')
     variant('mpi',     default=True, description='Enable MPI support')

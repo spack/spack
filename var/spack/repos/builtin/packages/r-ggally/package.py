@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RGgally(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/GGally"
 
     version('1.4.0', sha256='9a47cdf004c41f5e4024327b94227707f4dad3a0ac5556d8f1fba9bf0a6355fe')
-    version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
+    version('1.3.2', sha256='f4143f45254fed794be991180aeffe459f6756bfa08acad963707d8e843cfd0a')
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))

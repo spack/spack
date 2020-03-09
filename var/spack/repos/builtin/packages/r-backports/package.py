@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class RBackports(RPackage):
 
     version('1.1.4', sha256='ee4b5efef22fa7ef27d7983ffcd31db52f81e1fbb7189c6e89ee09b69349ff03')
     version('1.1.3', sha256='e41bd146824ec921994f1b176d0e4cca0b36dd3db32ca7a954d872a5ba214cc1')
-    version('1.1.1', '969543a0af32dc23bba9bb37ec82008c')
-    version('1.1.0', 'b97a71b026fd7ede0e449be93d160c17')
+    version('1.1.1', sha256='494e81a4829339c8f1cc3e015daa807e9138b8e21b929965fc7c00b1abbe8897')
+    version('1.1.0', sha256='c5536966ed6ca93f20c9a21d4f569cc1c6865d3352445ea66448f82590349fcd')
 
     depends_on('r@3.0.0:', type=('build', 'run'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyBsddb3(PythonPackage):
     homepage = "https://pypi.python.org/pypi/bsddb3/6.2.5"
     url      = "https://pypi.io/packages/source/b/bsddb3/bsddb3-6.2.5.tar.gz"
 
-    version('6.2.5', '610267c189964c905a931990e1ba438c')
+    version('6.2.5', sha256='784bf40ad935258507594a89b32ea11f362cde120751c8b96de163955ced7db8')
 
     depends_on('python@2.6:')
     depends_on('py-setuptools', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class RLme4(RPackage):
 
     version('1.1-21', sha256='7f5554b69ff8ce9bac21e8842131ea940fb7a7dfa2de03684f236d3e3114b20c')
     version('1.1-20', sha256='44f45f5cd20ec6a50bf96a939b1db44b1a180dbc871a5e3042baf7a107016b2c')
-    version('1.1-12', 'da8aaebb67477ecb5631851c46207804')
+    version('1.1-12', sha256='2976b567a4a2144814ff9db987b0aa55c16122c78ecb51b9e09b87fe66a1c048')
 
     depends_on('r@3.0.2:', when='@:1.1-15', type=('build', 'run'))
     depends_on('r@3.2.0:', when='@1.1-16:', type=('build', 'run'))

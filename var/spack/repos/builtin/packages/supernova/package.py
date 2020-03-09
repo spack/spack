@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,8 @@ class Supernova(Package):
     http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "https://support.10xgenomics.com/de-novo-assembly/software/overview/latest/welcome"
+    manual_download = True
+
     version('2.1.1', sha256='2f58eb66951e257b89359134ab8e35ad638c4ed51cb3fb8121625dfcc7761938')
     version('2.0.1', '3697ce043c798fcb672fe0a66c56d6f0')
 
@@ -34,8 +36,8 @@ class Supernova(Package):
     def url_for_version(self, version):
         return "file://{0}/supernova-{1}.tar.gz".format(os.getcwd(), version)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
 
     def install(self, spec, prefix):
         rm = which('rm')

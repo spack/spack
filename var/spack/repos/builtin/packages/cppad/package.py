@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Cppad(CMakePackage):
     git      = "https://github.com/coin-or/CppAD.git"
 
     version('develop', branch='master')
-    version('20170114', '565a534dc813fa1289764222cd8c11ea')
+    version('20170114', sha256='fa3980a882be2a668a7522146273a1b4f1d8dabe66ad4aafa8964c8c1fd6f957')
 
     def cmake_args(self):
         # This package does not obey CMAKE_INSTALL_PREFIX

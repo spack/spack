@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Ray(CMakePackage):
     homepage = "http://denovoassembler.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/denovoassembler/Ray-2.3.1.tar.bz2"
 
-    version('2.3.1', '82f693c4db60af4328263c9279701009')
+    version('2.3.1', sha256='3122edcdf97272af3014f959eab9a0f0e5a02c8ffc897d842b06b06ccd748036')
 
     depends_on('mpi')
 

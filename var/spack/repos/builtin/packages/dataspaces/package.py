@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,10 @@ class Dataspaces(AutotoolsPackage):
     """an extreme scale data management framework."""
 
     homepage = "http://www.dataspaces.org"
-    url      = "http://personal.cac.rutgers.edu/TASSL/projects/data/downloads/dataspaces-1.6.2.tar.gz"
-    git      = "https://github.com/melrom/dataspaces.git"
+    url      = "https://dataspaces.rdi2.rutgers.edu/downloads/dataspaces-1.6.2.tar.gz"
 
-    version('develop', branch='master')
-    version('1.6.2', '73caa4920b6f2c0c6d6cb87640ff04be')
+    version('1.8.0', sha256='7f204bb3c03c2990f5a2d76a29185466b584793c63ada03e5e694627e6060605')
+    version('1.6.2', sha256='3c43d551c1e8198a4ab269c83928e1dc6f8054e6d41ceaee45155d91a48cf9bf')
 
     variant('dimes',
             default=False,
@@ -57,6 +56,7 @@ class Dataspaces(AutotoolsPackage):
         args = []
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
+        args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
         if self.spec.satisfies('+dimes'):
             args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):

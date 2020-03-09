@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xload(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xload"
     url      = "https://www.x.org/archive/individual/app/xload-1.1.2.tar.gz"
 
-    version('1.1.2', '0af9a68193849b16f8168f096682efb4')
+    version('1.1.2', sha256='4863ad339d22c41a0ca030dc5886404f5ae8b8c47cd5e09f0e36407edbdbe769')
 
     depends_on('libxaw')
     depends_on('libxmu')

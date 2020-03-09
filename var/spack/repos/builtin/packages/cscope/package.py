@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class Cscope(AutotoolsPackage):
     """Cscope is a developer's tool for browsing source code."""
 
     homepage = "http://cscope.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/cscope/cscope/15.8b/cscope-15.8b.tar.gz"
+    url = "https://sourceforge.net/projects/cscope/files/cscope/v15.9/cscope-15.9.tar.gz"
 
-    version('15.8b', '8f9409a238ee313a96f9f87fe0f3b176')
+    version('15.9', sha256='c5505ae075a871a9cd8d9801859b0ff1c09782075df281c72c23e72115d9f159')
+    version('15.8b', sha256='4889d091f05aa0845384b1e4965aa31d2b20911fb2c001b2cdcffbcb7212d3af')
 
     depends_on('ncurses')
 
@@ -20,4 +21,11 @@ class Cscope(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('pkgconfig', type='build')
 
-    build_targets = ['CURSES_LIBS=-lncursesw']
+    build_targets = ['CURSES_LIBS=-lncursesw -ltinfo']
+
+    def url_for_version(self, version):
+        url = "https://sourceforge.net/projects/cscope/files/cscope/{0}{1}/cscope-{1}.tar.gz"
+        if version >= Version('15.9'):
+            return url.format('v', version)
+        else:
+            return url.format('', version)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,10 +18,10 @@ class Grackle(Package):
     homepage = 'http://grackle.readthedocs.io/en/grackle-3.1/'
     url = 'https://bitbucket.org/grackle/grackle/get/grackle-3.1.tar.bz2'
 
-    version('3.1', 'cee7799dc505010e2e875950561bbbe1')
-    version('3.0', 'dc85e664da7e70b65b3ef7164477a959')
-    version('2.2', 'ec49ed1db5a42db21f478285150c2ba3')
-    version('2.0.1', 'a9624ad13a60c592c1a0a4ea8e1ae86d')
+    version('3.1', sha256='504fb080c7f8578c92dcde76cf9e8b851331a38ac76fc4a784df4ecbe1ff2ae8')
+    version('3.0', sha256='9219033332188d615e49135a3b030963f076b3afee098592b0c3e9f8bafdf504')
+    version('2.2', sha256='b1d201313c924df38d1e677015f7c31dce42083ef6a0e0936bb9410ccd8a3655')
+    version('2.0.1', sha256='8f784aaf53d98ddb52b448dc51eb9ec452261a2dbb360170a798693b85165f7d')
 
     variant('float', default=False, description='Build with float')
 

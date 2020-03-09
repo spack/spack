@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,13 @@ class Adios(AutotoolsPackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
-    version('1.13.1', '958aed11240d7f5a065ab5ee271ecb44')
-    version('1.13.0', '68af36b821debbdf4748b20320a990ce')
-    version('1.12.0', '84a1c71b6698009224f6f748c5257fc9')
-    version('1.11.1', '5639bfc235e50bf17ba9dafb14ea4185')
-    version('1.11.0', '5eead5b2ccf962f5e6d5f254d29d5238')
-    version('1.10.0', 'eff450a4c0130479417cfd63186957f3')
-    version('1.9.0',  '310ff02388bbaa2b1c1710ee970b5678')
+    version('1.13.1', sha256='b1c6949918f5e69f701cabfe5987c0b286793f1057d4690f04747852544e157b')
+    version('1.13.0', sha256='7b5ee8ff7a5f7215f157c484b20adb277ec0250f87510513edcc25d2c4739f50')
+    version('1.12.0', sha256='22bc22c157322abec2d1a0817a259efd9057f88c2113e67d918a9a5ebcb3d88d')
+    version('1.11.1', sha256='9f5c10b9471a721ba57d1cf6e5a55a7ad139a6c12da87b4dc128539e9eef370e')
+    version('1.11.0', sha256='e89d14ccbe7181777225e0ba6c272c0941539b8ccd440e72ed5a9457441dae83')
+    version('1.10.0', sha256='6713069259ee7bfd4d03f47640bf841874e9114bab24e7b0c58e310c42a0ec48')
+    version('1.9.0',  sha256='23b2bb70540d51ab0855af0b205ca484fd1bd963c39580c29e3133f9e6fffd46')
 
     variant('shared', default=True,
             description='Builds a shared version of the library')
@@ -79,12 +79,12 @@ class Adios(AutotoolsPackage):
     depends_on('sz@:1.4.10', when='@:1.12.0 +sz')
     depends_on('sz@1.4.11.0:1.4.11.99', when='@1.13.0 +sz')
     depends_on('sz@1.4.12.3:1.4.12.99', when='@1.13.1: +sz')
-    depends_on('zfp@:0.5.0', when='+zfp')
+    depends_on('zfp@0.5.1:0.5.99', when='+zfp')
     depends_on('lz4', when='+lz4')
     depends_on('c-blosc@1.12.0:', when='+blosc')
     # optional transports & file converters
     depends_on('hdf5@1.8:+hl+mpi', when='+hdf5')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('libevpath', when='staging=flexpath')
     depends_on('dataspaces+mpi', when='staging=dataspaces')
 
@@ -100,6 +100,10 @@ class Adios(AutotoolsPackage):
     #   https://github.com/ornladios/ADIOS/commit/3b21a8a41509
     #   https://github.com/spack/spack/issues/1683
     patch('adios_1100.patch', when='@:1.10.0^hdf5@1.10:')
+
+    # ADIOS 1.13.1 is written for ZFP 0.5.0 interfaces
+    #   https://github.com/ornladios/ADIOS/pull/204
+    patch('zfp051.patch', when='@1.11.0:1.13.1')
 
     def validate(self, spec):
         """Checks if incompatible variants have been activated at the same time

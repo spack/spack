@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,13 @@ class Vcftools(AutotoolsPackage):
     url      = "https://github.com/vcftools/vcftools/releases/download/v0.1.14/vcftools-0.1.14.tar.gz"
 
     # this is "a pre-release"
-    # version('0.1.15', '61045197848dea20a0158d2faf02e5be')
-    version('0.1.14', 'a110662535651caa6cc8c876216a9f77')
+    # version('0.1.15', sha256='31e47afd5be679d89ece811a227525925b6907cce4af2c86f10f465e080383e3')
+    version('0.1.14', sha256='76d799dd9afcb12f1ed42a07bc2886cd1a989858a4d047f24d91dcf40f608582')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('zlib')
 
-    # this needs to be in sync with what setup_environment adds to
+    # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
     def configure_args(self):
         return ['--with-pmdir={0}'.format(self.prefix.lib)]
@@ -51,5 +51,5 @@ class Vcftools(AutotoolsPackage):
             kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
             filter_file(match, substitute, *files, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix.lib)

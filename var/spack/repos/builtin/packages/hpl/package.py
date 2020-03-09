@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class Hpl(AutotoolsPackage):
     # Note: HPL uses autotools starting with 2.3
 
     version('2.3', sha256='32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830')
-    version('2.2', '0eb19e787c3dc8f4058db22c9e0c5320')
+    version('2.2', sha256='ac7534163a09e21a5fa763e4e16dfc119bc84043f6e6a807aba666518f8df440')
 
     variant('openmp', default=False, description='Enable OpenMP support')
 

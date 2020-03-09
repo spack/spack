@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class Xtensor(CMakePackage):
 
     version('develop', branch='master')
     version('0.20.7', sha256='b45290d1bb0d6cef44771e7482f1553b2aa54dbf99ef9406fec3eb1e4d01d52b')
-    version('0.15.1', 'c24ecc406003bd1ac22291f1f7cac29a')
-    version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
+    version('0.15.1', sha256='2f4ac632f7aa8c8e9da99ebbfc949d9129b4d644f715ef16c27658bf4fddcdd3')
+    version('0.13.1', sha256='f9ce4cd2110386d49e3f36bbab62da731c557b6289be19bc172bd7209b92a6bc')
 
     variant('xsimd', default=True,
             description='Enable SIMD intrinsics')

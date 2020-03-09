@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Randrproto(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/proto/randrproto"
     url      = "https://www.x.org/archive/individual/proto/randrproto-1.5.0.tar.gz"
 
-    version('1.5.0', '863d6ee3e0b2708f75d968470ed31eb9')
+    version('1.5.0', sha256='8f8a716d6daa6ba05df97d513960d35a39e040600bf04b313633f11679006fab')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

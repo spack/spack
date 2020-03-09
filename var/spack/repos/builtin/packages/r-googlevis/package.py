@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RGooglevis(RPackage):
 
     version('0.6.4', sha256='7dcaf0e9d5e5598c17e8bd474141708de37eeb2578b09788431b9d871edb7eb8')
     version('0.6.3', sha256='17d104c5d4e6ab7b984df229cd51be19681e4726077afec7c61a33f6e4c0b6ef')
-    version('0.6.0', 'ec36fd2a6884ddc7baa894007d0d0468')
+    version('0.6.0', sha256='862708097fbb5d4e83193777f40979d7848f9841d94d48ee8a74106266acc440')
 
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))

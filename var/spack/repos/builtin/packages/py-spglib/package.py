@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PySpglib(PythonPackage):
     homepage = "http://atztogo.github.io/spglib/"
     url      = "https://pypi.io/packages/source/s/spglib/spglib-1.9.9.18.tar.gz"
 
-    version('1.9.9.18', 'b8b46268d3aeada7b9b201b11882548f')
+    version('1.9.9.18', sha256='cbbb8383320b500dc6100b83d5e914a26a97ef8fc97c82d8921b10220e4126cd')
 
     # Most Python packages only require setuptools as a build dependency.
     # However, spglib requires setuptools during runtime as well.

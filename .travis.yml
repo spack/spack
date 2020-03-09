@@ -18,10 +18,15 @@ jobs:
   fast_finish: true
   include:
     - stage: 'style checks'
-      python: '2.7'
+      python: '3.8'
       os: linux
       language: python
       env: TEST_SUITE=flake8
+# Shell integration with module files
+    - python: '3.8'
+      os: linux
+      language: python
+      env: [ TEST_SUITE=bootstrap ]
     - stage: 'unit tests + documentation'
       python: '2.6'
       dist: trusty
@@ -43,69 +48,23 @@ jobs:
     - python: '3.7'
       os: linux
       language: python
+      env: TEST_SUITE=unit
+    - python: '3.8'
+      os: linux
+      language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.7'
+    - python: '3.8'
       os: linux
       language: python
       env: TEST_SUITE=doc
     - os: osx
       language: generic
       env: [ TEST_SUITE=unit, PYTHON_VERSION=2.7, COVERAGE=true ]
-# mpich (AutotoolsPackage)
-    - stage: 'build tests'
-      python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-# astyle (MakefilePackage)
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=astyle' ]
-# tut (WafPackage)
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=tut' ]
-# py-setuptools (PythonPackage)
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=py-setuptools' ]
-# perl-dbi (PerlPackage)
-#    - python: '2.7'
-#      os: linux
-#      language: python
-#      env: [ TEST_SUITE=build, 'SPEC=perl-dbi' ]
-# openjpeg (CMakePackage + external cmake)
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=openjpeg' ]
-# r-rcpp (RPackage + external R)
-    - python: '2.7'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=r-rcpp' ]
-# mpich (AutotoolsPackage)
-    - python: '3.6'
-      os: linux
-      language: python
-      env: [ TEST_SUITE=build, 'SPEC=mpich' ]
-    - python: '3.6'
-      stage: 'docker build'
-      os: linux
-      language: python
-      env: TEST_SUITE=docker
-  allow_failures:
-    - env: TEST_SUITE=docker
+      if: type != pull_request
 
 stages:
   - 'style checks'
   - 'unit tests + documentation'
-  - 'build tests'
-  - name: 'docker build'
-    if: type = push AND branch IN (develop, master)
 
 
 #=============================================================================
@@ -149,7 +108,6 @@ cache:
   pip: true
   ccache: true
   directories:
-    - ~/.mirror
     - ~/.ccache
 
 # Work around Travis's lack of support for Python on OSX
@@ -167,7 +125,7 @@ install:
   - pip install --upgrade pip
   - pip install --upgrade six
   - pip install --upgrade setuptools
-  - pip install --upgrade codecov
+  - pip install --upgrade codecov coverage==4.5.4
   - pip install --upgrade flake8
   - pip install --upgrade pep8-naming
   - if [[ "$TEST_SUITE" == "doc" ]]; then
@@ -182,17 +140,9 @@ before_script:
   # Need this to be able to compute the list of changed files
   - git fetch origin ${TRAVIS_BRANCH}:${TRAVIS_BRANCH}
 
-  # Set up external deps for build tests, b/c they take too long to compile
-  - if [[ "$TEST_SUITE" == "build" ]]; then
-        cp share/spack/qa/configuration/*.yaml etc/spack/;
-    fi
-
 #=============================================================================
 # Building
 #=============================================================================
-services:
-  - docker
-
 script:
   - share/spack/qa/run-$TEST_SUITE-tests
 

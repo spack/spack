@@ -1,13 +1,14 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import functools
 import platform
+import re
 import warnings
 
 try:
-    from collections.abc import Sequence
+    from collections.abc import Sequence  # novm
 except ImportError:
     from collections import Sequence
 
@@ -219,12 +220,13 @@ class Microarchitecture(object):
             min_version, max_version = entry['versions'].split(':')
 
             # Check version suffixes
-            min_version, _, min_suffix = min_version.partition('-')
-            max_version, _, max_suffix = max_version.partition('-')
-            version, _, suffix = version.partition('-')
+            min_version, min_suffix = version_components(min_version)
+            max_version, max_suffix = version_components(max_version)
+            version, suffix = version_components(version)
 
             # If the suffixes are not all equal there's no match
-            if suffix != min_suffix or suffix != max_suffix:
+            if ((suffix != min_suffix and min_version) or
+                (suffix != max_suffix and max_version)):
                 return False
 
             # Assume compiler versions fit into semver
@@ -274,6 +276,26 @@ def generic_microarchitecture(name):
     return Microarchitecture(
         name, parents=[], vendor='generic', features=[], compilers={}
     )
+
+
+def version_components(version):
+    """Decomposes the version passed as input in version number and
+    suffix and returns them.
+
+    If the version number of the suffix are not present, an empty
+    string is returned.
+
+    Args:
+        version (str): version to be decomposed into its components
+    """
+    match = re.match(r'([\d.]*)(-?)(.*)', str(version))
+    if not match:
+        return '', ''
+
+    version_number = match.group(1)
+    suffix = match.group(3)
+
+    return version_number, suffix
 
 
 def _known_microarchitectures():

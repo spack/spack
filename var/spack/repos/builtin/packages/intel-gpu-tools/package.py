@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class IntelGpuTools(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/intel-gpu-tools/"
     url      = "https://www.x.org/archive/individual/app/intel-gpu-tools-1.16.tar.gz"
 
-    version('1.16', '3996f10fc86a28ec59e1cf7b227dad78')
+    version('1.16', sha256='4874e6e7704c8d315deaf5b44cc9467ea5e502c7f816470a4a28827fcb34643f')
 
     depends_on('libdrm@2.4.64:')
     depends_on('libpciaccess@0.10:', when=(sys.platform != 'darwin'))

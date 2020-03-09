@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class Jasper(Package):
     url      = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz"
     list_url = homepage
 
-    version('2.0.14',  '23561b51da8eb5d0dc85b91eff3d9a7f',
+    version('2.0.14',  sha256='2a1f61e55afe8b4ce8115e1508c5d7cb314d56dfcc2dd323f90c072f88ccf57b',
             url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz")
-    version('1.900.1', 'a342b2b4495b3e1394e161eb5d85d754',
+    version('1.900.1', sha256='6b905a9c2aca2e275544212666eefc4eb44d95d0a57e4305457b407fe63f9494',
             url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip")
 
     variant('jpeg',   default=True,  description='Enable the use of the JPEG library')

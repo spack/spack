@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Libxstream(Package):
     homepage = 'https://github.com/hfp/libxstream'
     url      = 'https://github.com/hfp/libxstream/archive/0.9.0.tar.gz'
 
-    version('0.9.0', 'fd74b7cf5f145ff4925d91be2809571c')
+    version('0.9.0', sha256='03365f23b337533b8e5a049a24bc5a91c0f1539dd042ca5312abccc8f713b473')
 
     def patch(self):
         kwargs = {'ignore_absent': False, 'backup': True, 'string': True}

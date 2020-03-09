@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Lbann(CMakePackage):
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git      = "https://github.com/LLNL/lbann.git"
 
+    maintainers = ['bvanessen']
+
     version('develop', branch='develop')
     version('0.99', branch='develop')
     version('0.98.1', sha256='9a2da8f41cd8bf17d1845edf9de6d60f781204ebd37bffba96d8872036c10c66')
@@ -26,9 +28,9 @@ class Lbann(CMakePackage):
     version('0.96', sha256='97af78e9d3c405e963361d0db96ee5425ee0766fa52b43c75b8a5670d48e4b4a')
     version('0.95', sha256='d310b986948b5ee2bedec36383a7fe79403721c8dc2663a280676b4e431f83c2')
     version('0.94', sha256='567e99b488ebe6294933c98a212281bffd5220fc13a0a5cd8441f9a3761ceccf')
-    version('0.93', '1913a25a53d4025fa04c16f14afdaa55')
-    version('0.92', 'c0eb1595a7c74640e96f280beb497564')
-    version('0.91', '83b0ec9cd0b7625d41dfb06d2abd4134')
+    version('0.93', sha256='77bfd7fe52ee7495050f49bcdd0e353ba1730e3ad15042c678faa5eeed55fb8c')
+    version('0.92', sha256='9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84')
+    version('0.91', sha256='b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5')
 
     variant('gpu', default=False, description='Builds with support for GPUs via CUDA and cuDNN')
     variant('nccl', default=False, description='Builds with support for NCCL communication lib')
@@ -46,6 +48,7 @@ class Lbann(CMakePackage):
             '(note that for v0.99 conduit is required)')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('docs', default=False, description='Builds with support for building documentation')
+    variant('extras', default=False, description='Add python modules for LBANN related tools')
 
     conflicts('@:0.90,0.99:', when='~conduit')
 
@@ -94,29 +97,32 @@ class Lbann(CMakePackage):
                '~pthreads_pf ~python ~qt ~stitching ~superres ~ts ~video'
                '~videostab ~videoio ~vtk', when='+opencv')
 
-    depends_on('protobuf@3.6.1: build_type=Release')
     depends_on('cnpy')
     depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
 
-    depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
-    depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0.99 +conduit')
+    depends_on('conduit@0.4.0: +hdf5', when='@:0.90,0.99:')
 
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99:')
-    depends_on('py-configparser', type='run', when='@:0.90,0.99:')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99:')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99:')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99:')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99:')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99:')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99:')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
+    depends_on('py-configparser', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +extras')
+    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +extras')
+    depends_on('py-pytest', type='test', when='@:0.90,0.99:')
+    depends_on('py-protobuf+cpp@3.6.1:', type=('build', 'run'), when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
+    depends_on('catch2', type='test')
+    depends_on('clara')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -153,7 +159,10 @@ class Lbann(CMakePackage):
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
-            '-DLBANN_VERBOSE=0'])
+            '-DLBANN_VERBOSE=0',
+            '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
+            # protobuf is included by py-protobuf+cpp
+            '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
 
         if self.spec.satisfies('@:0.90') or self.spec.satisfies('@0.95:'):
             args.extend([
@@ -174,8 +183,9 @@ class Lbann(CMakePackage):
             args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
-                spec['conduit'].prefix)])
+            args.extend([
+                '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
+                '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

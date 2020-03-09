@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Glimmer(MakefilePackage):
 
     homepage = "https://ccb.jhu.edu/software/glimmer"
 
-    version('3.02b', '344d012ae12596de905866fe9eb7f16c')
+    version('3.02b', sha256='ecf28e03d0a675aed7360ca34ca7f19993f5c3ea889273e657ced9fa7d1e2bf6')
 
     build_directory = 'src'
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,7 @@ class RTfmpvalue(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/TFMPvalue"
 
     version('0.0.8', sha256='6d052529f7b59d0384edc097f724f70468013777b6adf4c63e61a359029d3841')
-    version('0.0.6', '69fdf4f9b9a0f408a5cee9ce34bea261')
+    version('0.0.6', sha256='cee3aa2d4e22856865d820f695e29a5f23486e5e08cd42cb95a0728f5f9522a1')
 
     depends_on('r@3.0.1:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.1:', type=('build', 'run'))

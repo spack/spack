@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Qrupdate(MakefilePackage):
     homepage = "http://sourceforge.net/projects/qrupdate/"
     url      = "https://downloads.sourceforge.net/qrupdate/qrupdate-1.1.2.tar.gz"
 
-    version('1.1.2', '6d073887c6e858c24aeda5b54c57a8c4')
+    version('1.1.2', sha256='e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08')
 
     depends_on("blas")
     depends_on("lapack")
@@ -29,17 +29,31 @@ class Qrupdate(MakefilePackage):
         return
 
     def install(self, spec, prefix):
+
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        # Build static and dynamic libraries
-        make('lib', 'solib',
-             'BLAS={0}'.format(lapack_blas.ld_flags),
-             'LAPACK={0}'.format(lapack_blas.ld_flags))
-        # "INSTALL" confuses "make install" on case-insensitive filesystems
+
+        make_args = [
+            'BLAS={0}'.format(lapack_blas.ld_flags),
+            'LAPACK={0}'.format(lapack_blas.ld_flags)
+        ]
+
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            make_args.append('FFLAGS=-fdefault-integer-8')
+
+        # Build static and dynamic libraries:
+        make('lib', 'solib', *make_args)
+
+        # "INSTALL" confuses "make install" on case-insensitive filesystems:
         if os.path.isfile("INSTALL"):
             os.remove("INSTALL")
-        # create lib folder:
+
+        # Create lib folder:
         if (sys.platform == 'darwin'):
             mkdirp(prefix.lib)
+
         make("install", "PREFIX=%s" % prefix)
 
     @run_after('install')

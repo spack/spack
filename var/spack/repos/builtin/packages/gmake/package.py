@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,21 +6,23 @@
 from spack import *
 
 
-class Gmake(AutotoolsPackage):
+class Gmake(AutotoolsPackage, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and
     other non-source files of a program from the program's source files."""
 
     homepage = "https://www.gnu.org/software/make/"
-    url      = "https://ftpmirror.gnu.org/make/make-4.2.1.tar.gz"
+    gnu_mirror_path = "make/make-4.2.1.tar.gz"
 
-    version('4.2.1', '7d0dcb6c474b258aab4d54098f2cf5a7')
-    version('4.0',   'b5e558f981326d9ca1bfdb841640721a')
+    version('4.2.1', sha256='e40b8f018c1da64edd1cc9a6fce5fa63b2e707e404e20cad91fbae337c98a5b7')
+    version('4.0',   sha256='fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69')
 
     variant('guile', default=False, description='Support GNU Guile for embedded scripting')
     variant('nls', default=True, description='Enable Native Language Support')
 
     depends_on('gettext', when='+nls')
     depends_on('guile', when='+guile')
+
+    depends_on('texinfo', type='build')
 
     build_directory = 'spack-build'
 

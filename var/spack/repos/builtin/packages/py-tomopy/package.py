@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class PyTomopy(PythonPackage):
         'tomopy.prep', 'tomopy.misc', 'tomopy.io', 'doc.demo'
     ]
 
-    version('1.0.0', '986ac2c85a4af9ada0403b4c746d2cd4')
+    version('1.0.0', sha256='ee45f7a062e5a66d6f18a904d2e204e48d85a1ce1464156f9e2f6353057dfe4c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

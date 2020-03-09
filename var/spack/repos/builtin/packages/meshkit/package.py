@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Meshkit(AutotoolsPackage):
     homepage = "http://sigma.mcs.anl.gov/meshkit-library"
     url = "http://ftp.mcs.anl.gov/pub/fathom/meshkit-1.5.0.tar.gz"
 
-    version('1.5.0',       '90b52416598ef65525ce4457a50ffe68')
+    version('1.5.0',       sha256='6a4c119af191e24ef40644acb7cfbe967af0678ac3412f38a943fb28d661cac7')
 
     variant("mpi", default=True, description='enable mpi support')
     variant("netgen", default=False, description='enable netgen support')

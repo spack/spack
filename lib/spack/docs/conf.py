@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -159,7 +159,7 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '_spack_root']
+exclude_patterns = ['_build', '_spack_root', '.spack-env']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -176,7 +176,25 @@ exclude_patterns = ['_build', '_spack_root']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+# We use our own extension of the default style with a few modifications
+from pygments.style import Style
+from pygments.styles.default import DefaultStyle
+from pygments.token import Generic, Comment, Text
+
+class SpackStyle(DefaultStyle):
+    styles = DefaultStyle.styles.copy()
+    background_color       = "#f4f4f8"
+    styles[Generic.Output] = "#355"
+    styles[Generic.Prompt] = "bold #346ec9"
+
+import pkg_resources
+dist = pkg_resources.Distribution(__file__)
+sys.path.append('.')  # make 'conf' module findable
+ep = pkg_resources.EntryPoint.parse('spack = conf:SpackStyle', dist=dist)
+dist._ep_map = {'pygments.styles': {'plugin1': ep}}
+pkg_resources.working_set.add(dist)
+
+pygments_style = 'spack'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []

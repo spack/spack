@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xqilla(AutotoolsPackage):
     homepage = "http://xqilla.sourceforge.net/HomePage"
     url      = "https://downloads.sourceforge.net/project/xqilla/XQilla-2.3.3.tar.gz"
 
-    version('2.3.3', '8ece20348687b6529bb934c17067803c')
+    version('2.3.3', sha256='8f76b9b4f966f315acc2a8e104e426d8a76ba4ea3441b0ecfdd1e39195674fd6')
 
     variant('debug', default=False, description='Build a debugging version.')
     variant('shared', default=True, description='Build shared libraries.')

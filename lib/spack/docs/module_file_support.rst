@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by individual
 programmers on their development machines. To support this common practice
 Spack integrates with `Environment Modules
-<http://modules.sourceforge.net/>`_ ,  `LMod
-<http://lmod.readthedocs.io/en/latest/>`_ and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ by
+<http://modules.sourceforge.net/>`_  and  `LMod
+<http://lmod.readthedocs.io/en/latest/>`_ by
 providing post-install hooks that generate module files and commands to manipulate them.
 
 .. note::
@@ -67,7 +67,7 @@ to load the ``cmake`` module:
    $ module load cmake-3.7.2-gcc-6.3.0-fowuuby
 
 Neither of these is particularly pretty, easy to remember, or
-easy to type. Luckily, Spack has its own interface for using modules and dotkits.
+easy to type. Luckily, Spack has its own interface for using modules.
 
 ^^^^^^^^^^^^^
 Shell support
@@ -108,20 +108,10 @@ that the startup time may be slightly increased because of that.
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Once you have shell support enabled you can use the same spec syntax
-you're used to:
+you're used to and you can use the same shortened names you use
+everywhere else in Spack.
 
-=========================  ==========================
-Modules                    Dotkit
-=========================  ==========================
-``spack load <spec>``      ``spack use <spec>``
-``spack unload <spec>``    ``spack unuse <spec>``
-=========================  ==========================
-
-And you can use the same shortened names you use everywhere else in
-Spack.
-
-For example, if you are using dotkit, this will add the ``mpich``
-package built with ``gcc`` to your path:
+For example this will add the ``mpich`` package built with ``gcc`` to your path:
 
 .. code-block:: console
 
@@ -129,16 +119,9 @@ package built with ``gcc`` to your path:
 
    # ... wait for install ...
 
-   $ spack use mpich %gcc@4.4.7     # dotkit
-   Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
+   $ spack load mpich %gcc@4.4.7
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
-
-Or, similarly if you are using modules, you could type:
-
-.. code-block:: console
-
-   $ spack load mpich %gcc@4.4.7    # modules
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer
@@ -146,28 +129,29 @@ want to use a package, you can type unload or unuse similarly:
 
 .. code-block:: console
 
-   $ spack unload mpich %gcc@4.4.7  # modules
-   $ spack unuse  mpich %gcc@4.4.7  # dotkit
+   $ spack unload mpich %gcc@4.4.7
 
 .. note::
 
-   These ``use``, ``unuse``, ``load``, and ``unload`` subcommands are
-   only available if you have enabled Spack's shell support *and* you
-   have dotkit or modules installed on your machine.
+   The ``load`` and ``unload`` subcommands are only available if you
+   have enabled Spack's shell support. These command DO NOT use the
+   underlying Spack-generated module files.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Ambiguous module names
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+Ambiguous specs
+^^^^^^^^^^^^^^^
 
-If a spec used with load/unload or use/unuse is ambiguous (i.e. more
-than one installed package matches it), then Spack will warn you:
+If a spec used with load/unload or is ambiguous (i.e. more than one
+installed package matches it), then Spack will warn you:
 
 .. code-block:: console
 
    $ spack load libelf
-   ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
-   libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   ==> Error: libelf matches multiple packages.
+   Matching packages:
+     libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
+     libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   Use a more specific spec
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -189,8 +173,15 @@ To identify just the one built with the Intel compiler.
 ``spack module tcl loads``
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
+In some cases, it is desirable to use a Spack-generated module, rather
+than relying on Spack's built-in user-environment modification
+capabilities. To translate a spec into a module name, use ``spack
+module tcl loads`` or ``spack module lmod loads`` depending on the
+module system desired.
+
+
+To load not just a module, but also all the modules it depends on, use
+the ``--dependencies`` option. This is not required for most modules
 because Spack builds binaries with RPATH support.  However, not all
 packages use RPATH to find their dependencies: this can be true in
 particular for Python extensions, which are currently *not* built with
@@ -292,8 +283,6 @@ that can be generated by Spack:
   +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
   |                             | **Hook name**      |  **Default root directory**   | **Default template file**                    | **Compatible tools** |
   +=============================+====================+===============================+==============================================+======================+
-  |  **Dotkit**                 | ``dotkit``         |  share/spack/dotkit           | share/spack/templates/modules/modulefile.dk  | DotKit               |
-  +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
   |  **TCL - Non-Hierarchical** | ``tcl``            |  share/spack/modules          | share/spack/templates/modules/modulefile.tcl | Env. Modules/LMod    |
   +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
   |  **Lua - Hierarchical**     | ``lmod``           |  share/spack/lmod             | share/spack/templates/modules/modulefile.lua | LMod                 |
@@ -323,8 +312,7 @@ content of the module files generated by Spack. The first one:
 
 .. code-block:: python
 
-   def setup_environment(self, spack_env, run_env):
-       """Set up the compile and runtime environments for a package."""
+   def setup_run_environment(self, env):
        pass
 
 can alter the content of the module file associated with the same package where it is overridden.
@@ -332,16 +320,15 @@ The second method:
 
 .. code-block:: python
 
-   def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-       """Set up the environment of packages that depend on this one"""
+   def setup_dependent_run_environment(self, env, dependent_spec):
        pass
 
 can instead inject run-time environment modifications in the module files of packages
 that depend on it. In both cases you need to fill ``run_env`` with the desired
 list of environment modifications.
 
-.. note::
- The ``r`` package and callback APIs
+.. admonition:: The ``r`` package and callback APIs
+
   An example in which it is crucial to override both methods
   is given by the ``r`` package. This package installs libraries and headers
   in non-standard locations and it is possible to prepend the appropriate directory
@@ -356,14 +343,14 @@ list of environment modifications.
   with the following snippet:
 
   .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
-     :pyobject: R.setup_environment
+     :pyobject: R.setup_run_environment
 
   The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
   .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
-     :pyobject: R.setup_dependent_environment
+     :pyobject: R.setup_dependent_run_environment
 
 .. _modules-yaml:
 
@@ -377,7 +364,7 @@ are named ``modules.yaml``. The default configuration:
 .. literalinclude:: _spack_root/etc/spack/defaults/modules.yaml
    :language: yaml
 
-activates the hooks to generate ``tcl`` and ``dotkit`` module files and inspects
+activates the hooks to generate ``tcl`` module files and inspects
 the installation folder of each package for the presence of a set of subdirectories
 (``bin``, ``man``, ``share/man``, etc.). If any is found its full path is prepended
 to the environment variables listed below the folder name.
@@ -399,12 +386,9 @@ to the generator being customized:
    modules:
      enable:
        - tcl
-       - dotkit
        - lmod
      tcl:
        # contains environment modules specific customizations
-     dotkit:
-       # contains dotkit specific customizations
      lmod:
        # contains lmod specific customizations
 
@@ -590,15 +574,14 @@ do so by using the environment blacklist:
 .. code-block:: yaml
 
    modules:
-     dotkit:
+     tcl:
        all:
          filter:
            # Exclude changes to any of these variables
            environment_blacklist: ['CPATH', 'LIBRARY_PATH']
 
-The configuration above will generate dotkit module files that will not contain
-modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
-files that instead will contain these modifications.
+The configuration above will generate module files that will not contain
+modifications to either ``CPATH`` or ``LIBRARY_PATH``.
 
 
 .. _autoloading-dependencies:

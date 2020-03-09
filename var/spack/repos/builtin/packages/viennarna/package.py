@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,8 @@ class Viennarna(AutotoolsPackage):
     homepage = "https://www.tbi.univie.ac.at/RNA/"
     url      = "https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_4_x/ViennaRNA-2.4.3.tar.gz"
 
-    version('2.4.3', '41be2fd36a5323a35ed50debfc7bd118')
-    version('2.3.5', '4542120adae9b7abb605e2304c2a1326')
+    version('2.4.3', sha256='4cda6e22029b34bb9f5375181562f69e4a780a89ead50fe952891835e9933ac0')
+    version('2.3.5', sha256='26b62a00da21bc5597b580ab8fef4e624234ec446d7d3cb0ce22803a5d7074ca')
 
     variant('sse', default=True, description='Enable SSE in order to substantially speed up execution')
     variant('perl', default=True, description='Build ViennaRNA with Perl interface')

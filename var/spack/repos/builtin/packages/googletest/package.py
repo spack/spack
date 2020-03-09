@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,13 @@ from spack import *
 class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""
     homepage = "https://github.com/google/googletest"
-    url      = "https://github.com/google/googletest/tarball/release-1.7.0"
+    url      = "https://github.com/google/googletest/tarball/release-1.10.0"
 
-    version('1.8.1', sha256='8e40a005e098b1ba917d64104549e3da274e31261dedc57d6250fe91391b2e84')
-    version('1.8.0', sha256='d8c33605d23d303b08a912eaee7f84c4e091d6e3d90e9a8ec8aaf7450dfe2568')
-    version('1.7.0', sha256='9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b')
-    version('1.6.0', sha256='a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a')
+    version('1.10.0', sha256='e4a7cd97c903818abe7ddb129db9c41cc9fd9e2ded654be57ced26d45c72e4c9')
+    version('1.8.1',  sha256='8e40a005e098b1ba917d64104549e3da274e31261dedc57d6250fe91391b2e84')
+    version('1.8.0',  sha256='d8c33605d23d303b08a912eaee7f84c4e091d6e3d90e9a8ec8aaf7450dfe2568')
+    version('1.7.0',  sha256='9639cf8b7f37a4d0c6575f52c01ef167c5f11faee65252296b3ffc2d9acd421b')
+    version('1.6.0',  sha256='a61e20c65819eb39a2da85c88622bac703b865ca7fe2bfdcd3da734d87d5521a')
 
     variant('gmock', default=False, description='Build with gmock')
     conflicts('+gmock', when='@:1.7.0')

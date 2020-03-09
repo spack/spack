@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,9 @@ parameters=(
     SPACK_F77_RPATH_ARG
     SPACK_FC_RPATH_ARG
     SPACK_TARGET_ARGS
+    SPACK_DTAGS_TO_ADD
+    SPACK_DTAGS_TO_STRIP
+    SPACK_LINKER_ARG
     SPACK_SHORT_SPEC
     SPACK_SYSTEM_DIRS
 )
@@ -40,7 +43,7 @@ parameters=(
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
 # The default compiler flags are passed from these variables:
-#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS,
 #   SPACK_LDFLAGS, SPACK_LDLIBS
 # Debug env var is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
@@ -166,6 +169,25 @@ if [[ -z $mode ]]; then
         fi
     done
 fi
+
+# This is needed to ensure we set RPATH instead of RUNPATH
+# (or the opposite, depending on the configuration in config.yaml)
+#
+# Documentation on this mechanism is lacking at best. A few sources
+# of information are (note that some of them take explicitly the
+# opposite stance that Spack does):
+#
+# http://blog.qt.io/blog/2011/10/28/rpath-and-runpath/
+# https://wiki.debian.org/RpathIssue
+#
+# The only discussion I could find on enabling new dynamic tags by
+# default on ld is the following:
+#
+# https://sourceware.org/ml/binutils/2013-01/msg00307.html
+#
+dtags_to_add="${SPACK_DTAGS_TO_ADD}"
+dtags_to_strip="${SPACK_DTAGS_TO_STRIP}"
+linker_arg="${SPACK_LINKER_ARG}"
 
 # Set up rpath variable according to language.
 eval rpath=\$SPACK_${comp}_RPATH_ARG
@@ -293,6 +315,8 @@ while [ -n "$1" ]; do
                     die "-Wl,-rpath was not followed by -Wl,*"
                 fi
                 rp="${arg#-Wl,}"
+            elif [[ "$arg" = "$dtags_to_strip" ]] ; then
+                :  # We want to remove explicitly this flag
             else
                 other_args+=("-Wl,$arg")
             fi
@@ -319,12 +343,18 @@ while [ -n "$1" ]; do
                 fi
                 shift 3;
                 rp="$1"
+            elif [[ "$2" = "$dtags_to_strip" ]] ; then
+                shift  # We want to remove explicitly this flag
             else
                 other_args+=("$1")
             fi
             ;;
         *)
-            other_args+=("$1")
+            if [[ "$1" = "$dtags_to_strip" ]] ; then
+                :  # We want to remove explicitly this flag
+            else
+                other_args+=("$1")
+            fi
             ;;
     esac
 
@@ -462,10 +492,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
+        if [ ! -z "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
+        if [ ! -z "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xdriinfo(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xdriinfo"
     url      = "https://www.x.org/archive/individual/app/xdriinfo-1.0.5.tar.gz"
 
-    version('1.0.5', '34a4a9ae69c60f4c2566bf9ea4bcf311')
+    version('1.0.5', sha256='e4e6abaa4591c540ab63133927a6cebf0a5f4d27dcd978878ab4a422d62a838e')
 
     depends_on('libx11')
     depends_on('expat')

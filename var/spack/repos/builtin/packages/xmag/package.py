@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xmag(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xmag"
     url      = "https://www.x.org/archive/individual/app/xmag-1.0.6.tar.gz"
 
-    version('1.0.6', '2827ae4b293535623b9f7b659c506dcd')
+    version('1.0.6', sha256='07c5ec9114376dcd9a3303a38779e79b949d486f3b832d4a438550357d797aa5')
 
     depends_on('libxaw')
     depends_on('libxmu')

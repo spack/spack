@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Interproscan(Package):
     homepage = "https://www.ebi.ac.uk/interpro/interproscan.html"
     url      = "https://github.com/ebi-pf-team/interproscan/archive/5.36-75.0.tar.gz"
 
+    version('5.38-76.0', sha256='cb191ff8eee275689b789167a57b368ea5c06bbcd36b4de23e8bbbbdc0fc7434')
     version('5.36-75.0', sha256='383d7431e47c985056c856ceb6d4dcf7ed2559a4a3d5c210c01ce3975875addb')
     version('4.8',
             sha256='f1cb0ae1218eb05ed59ad7f94883f474eb9a6185a56ad3a93a364acb73506a3f',
@@ -27,10 +28,11 @@ class Interproscan(Package):
         sha256='551610a4682b112522f3ded5268f76ba9a47399a72e726fafb17cc938a50e7ee',
     )
 
-    depends_on('java@8.0:8.9', when='@5:', type=('build', 'run'))
-    depends_on('maven', when='@5:', type='build')
-    depends_on('python@3:', when='@5:', type=('build', 'run'))
+    depends_on('java@8.0:8.9', type=('build', 'run'), when='@5:5.36-99.0')
+    depends_on('java@11.0:', type=('build', 'run'), when='@5.37-76.0:')
+    depends_on('maven', type='build', when='@5:')
     depends_on('perl@5:', type=('build', 'run'))
+    depends_on('python@3:', when='@5:', type=('build', 'run'))
     depends_on('perl-cgi', when='@:4.8', type=('build', 'run'))
     depends_on('perl-mailtools', when='@:4.8', type=('build', 'run'))
     depends_on('perl-xml-quote', when='@:4.8', type=('build', 'run'))
@@ -40,6 +42,7 @@ class Interproscan(Package):
 
     patch('large-gid.patch', when='@5:')
     patch('non-interactive.patch', when='@:4.8')
+    patch('ps_scan.patch', when='@:4.8')
 
     def install(self, spec, prefix):
         with working_dir('core'):

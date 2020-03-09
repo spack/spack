@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyCutadapt(PythonPackage):
     git      = "https://github.com/marcelm/cutadapt.git"
 
     version('2.5', sha256='ced79e49b93e922e579d0bb9d21298dcb2d7b7b1ea721feed484277e08b1660b')
-    version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
+    version('1.13', sha256='aa9f2c1f33dc081fe94f42b1250e4382b8fb42cabbf6e70a76ff079f211d5fc0')
 
     depends_on('python@2.7:', type=('build', 'run'), when='@1.13')
     depends_on('python@3.4:', type=('build', 'run'), when='@2.5:')

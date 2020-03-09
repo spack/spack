@@ -1,20 +1,25 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
 import json
+import os
 
 import pytest
 import spack.cmd as cmd
 import spack.cmd.find
+import spack.user_environment as uenv
 from spack.main import SpackCommand
 from spack.spec import Spec
 from spack.util.pattern import Bunch
+import spack.environment as ev
 
 
 find = SpackCommand('find')
+env = SpackCommand('env')
+install = SpackCommand('install')
 
 base32_alphabet = 'abcdefghijklmnopqrstuvwxyz234567'
 
@@ -50,6 +55,8 @@ def test_query_arguments():
     args = Bunch(
         only_missing=False,
         missing=False,
+        only_deprecated=False,
+        deprecated=False,
         unknown=False,
         explicit=False,
         implicit=False,
@@ -61,7 +68,7 @@ def test_query_arguments():
     assert 'installed' in q_args
     assert 'known' in q_args
     assert 'explicit' in q_args
-    assert q_args['installed'] is True
+    assert q_args['installed'] == ['installed']
     assert q_args['known'] is any
     assert q_args['explicit'] is any
     assert 'start_date' in q_args
@@ -300,3 +307,27 @@ def test_find_no_sections(database, config):
 def test_find_command_basic_usage(database):
     output = find()
     assert 'mpileaks' in output
+
+
+@pytest.mark.regression('9875')
+def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
+                            mock_packages, mock_archive, config):
+    """Test `find` formats requiring concrete specs work in environments."""
+    env('create', 'test')
+    with ev.read('test'):
+        install('mpileaks')
+        find('-p')
+        find('-l')
+        find('-L')
+        # Would throw error on regression
+
+
+def test_find_loaded(database, working_env):
+    output = find('--loaded', '--group')
+    assert output == ''  # 0 packages installed printed separately
+
+    os.environ[uenv.spack_loaded_hashes_var] = ':'.join(
+        [x.dag_hash() for x in spack.store.db.query()])
+    output = find('--loaded')
+    expected = find()
+    assert output == expected

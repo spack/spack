@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import re
 import six
 
 import llnl.util.lang
+import llnl.util.tty
 import spack.spec
 
 
@@ -72,11 +73,35 @@ def _make_validator():
                     '"{0}" is an invalid spec [{1}]'.format(spec_str, str(e))
                 )
 
+    def _deprecated_properties(validator, deprecated, instance, schema):
+        if not (validator.is_type(instance, "object") or
+                validator.is_type(instance, "array")):
+            return
+
+        # Get a list of the deprecated properties, return if there is none
+        deprecated_properties = [
+            x for x in instance if x in deprecated['properties']
+        ]
+        if not deprecated_properties:
+            return
+
+        # Retrieve the template message
+        msg = deprecated['message']
+        is_error = deprecated['error']
+        if not is_error:
+            for entry in deprecated_properties:
+                llnl.util.tty.warn(msg.format(property=entry))
+        else:
+            import jsonschema
+            for entry in deprecated_properties:
+                yield jsonschema.ValidationError(msg.format(property=entry))
+
     return jsonschema.validators.extend(
         jsonschema.Draft4Validator, {
             "validate_spec": _validate_spec,
             "properties": _set_defaults,
-            "patternProperties": _set_pp_defaults
+            "patternProperties": _set_pp_defaults,
+            "deprecatedProperties": _deprecated_properties
         }
     )
 

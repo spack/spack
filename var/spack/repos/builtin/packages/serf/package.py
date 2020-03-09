@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Serf(SConsPackage):
     homepage  = 'https://serf.apache.org/'
     url       = 'https://archive.apache.org/dist/serf/serf-1.3.9.tar.bz2'
 
-    version('1.3.9', '26015c63e3bbb108c1689bf2090e4c26351db674')
-    version('1.3.8', '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
+    version('1.3.9', sha256='549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc')
+    version('1.3.8', sha256='e0500be065dbbce490449837bb2ab624e46d64fc0b090474d9acaa87c82b2590')
 
     variant('debug', default=False,
             description='Enable debugging info and strict compile warnings')

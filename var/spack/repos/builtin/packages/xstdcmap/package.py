@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Xstdcmap(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xstdcmap"
     url      = "https://www.x.org/archive/individual/app/xstdcmap-1.0.3.tar.gz"
 
-    version('1.0.3', '70c1fd18b79c3ea1dae136e2eabe1c82')
+    version('1.0.3', sha256='b97aaa883a9eedf9c3056ea1a7e818e3d93b63aa1f54193ef481d392bdef5711')
 
     depends_on('libxmu')
     depends_on('libx11')

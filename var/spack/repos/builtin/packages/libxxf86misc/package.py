@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Libxxf86misc(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXxf86misc"
     url      = "https://www.x.org/archive/individual/lib/libXxf86misc-1.0.3.tar.gz"
 
-    version('1.0.3', 'c8d8743e146bcd2aa9856117ac5ef6c0')
+    version('1.0.3', sha256='358f692f793af00f6ef4c7a8566c1bcaeeea37e417337db3f519522cc1df3946')
 
     depends_on('libx11')
     depends_on('libxext')

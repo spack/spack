@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,28 +12,36 @@ class Protobuf(CMakePackage):
     """Google's data interchange format."""
 
     homepage = "https://developers.google.com/protocol-buffers"
-    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.2.0.tar.gz"
+    url      = "https://github.com/protocolbuffers/protobuf/archive/v3.10.1.tar.gz"
     root_cmakelists_dir = "cmake"
 
-    version('3.7.1', sha256='f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f')
-    version('3.7.0', sha256='a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320')
-    version('3.6.1', sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
-    version('3.5.2', 'ff6742018c172c66ecc627029ad54280')
-    version('3.5.1.1', '5005003ae6b94773c4bbca87a644b131')
-    version('3.5.1',   '710f1a75983092c9b45ecef207236104')
-    version('3.5.0.1', 'b3ed2401acf167207277b254fd7f9638')
-    version('3.5.0',   'd95db321e1a9901fffc51ed8994afd36')
-    version('3.4.1',   '31b19dcfd6567095fdb66a8c07347222')
-    version('3.4.0', '1d077a7d4db3d75681f5c333f2de9b1a')
-    version('3.3.0', 'f0f712e98de3db0c65c0c417f5e7aca8')
-    version('3.2.0', 'efaa08ae635664fb5e7f31421a41a995')
-    version('3.1.0', '39d6a4fa549c0cce164aa3064b1492dc')
-    version('3.0.2', '7349a7f43433d72c6d805c6ca22b7eeb')
-    # does not build with CMake:
-    # version('2.5.0', '9c21577a03adc1879aba5b52d06e25cf')
+    version('3.11.2',  sha256='e8c7601439dbd4489fe5069c33d374804990a56c2f710e00227ee5d8fd650e67')
+    version('3.11.1',  sha256='4f8e805825c53bbc3c9f6b6abc009b5b5679e4702bccfca1121c42ff5ec801c7')
+    version('3.11.0',  sha256='6d356a6279cc76d2d5c4dfa6541641264b59eae0bc96b852381361e3400d1f1c')
+    version('3.10.1',  sha256='6adf73fd7f90409e479d6ac86529ade2d45f50494c5c10f539226693cb8fe4f7')
+    version('3.10.0',  sha256='758249b537abba2f21ebc2d02555bf080917f0f2f88f4cbe2903e0e28c4187ed')
+    version('3.9.2',   sha256='1fbf1c2962af287607232b2eddeaec9b4f4a7a6f5934e1a9276e9af76952f7e0')
+    version('3.9.1',   sha256='98e615d592d237f94db8bf033fba78cd404d979b0b70351a9e5aaff725398357')
+    version('3.7.1',   sha256='f1748989842b46fa208b2a6e4e2785133cfcc3e4d43c17fecb023733f0f5443f')
+    version('3.7.0',   sha256='a19dcfe9d156ae45d209b15e0faed5c7b5f109b6117bfc1974b6a7b98a850320')
+    version('3.6.1',   sha256='3d4e589d81b2006ca603c1ab712c9715a76227293032d05b26fca603f90b3f5b')
+    version('3.5.2',   sha256='4ffd420f39f226e96aebc3554f9c66a912f6cad6261f39f194f16af8a1f6dab2')
+    version('3.5.1.1', sha256='56b5d9e1ab2bf4f5736c4cfba9f4981fbc6976246721e7ded5602fbaee6d6869')
+    version('3.5.1',   sha256='826425182ee43990731217b917c5c3ea7190cfda141af4869e6d4ad9085a740f')
+    version('3.5.0.1', sha256='86be71e61c76575c60839452a4f265449a6ea51570d7983cb929f06ad294b5f5')
+    version('3.5.0',   sha256='0cc6607e2daa675101e9b7398a436f09167dffb8ca0489b0307ff7260498c13c')
+    version('3.4.1',   sha256='8e0236242106e680b4f9f576cc44b8cd711e948b20a9fc07769b0a20ceab9cc4')
+    version('3.4.0',   sha256='f6600abeee3babfa18591961a0ff21e7db6a6d9ef82418a261ec4fee44ee6d44')
+    version('3.3.0',   sha256='9a36bc1265fa83b8e818714c0d4f08b8cec97a1910de0754a321b11e66eb76de')
+    version('3.2.0',   sha256='a839d3f1519ff9d68ab908de5a0f269650ef1fc501c10f6eefd4cae51d29b86f')
+    version('3.1.0',   sha256='fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d')
+    version('3.0.2',   sha256='a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     depends_on('zlib')
 
@@ -43,7 +51,10 @@ class Protobuf(CMakePackage):
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
 
-    patch('intel_inline.patch', when='@3.2.0: %intel')
+    patch('intel-v1.patch', when='@3.2:@3.6 %intel')
+
+    # See https://github.com/protocolbuffers/protobuf/pull/7197
+    patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,

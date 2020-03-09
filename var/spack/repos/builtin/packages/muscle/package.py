@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Muscle(MakefilePackage):
     homepage = "http://drive5.com/muscle/"
     url      = "http://www.drive5.com/muscle/muscle_src_3.8.1551.tar.gz"
 
-    version('3.8.1551', '1b7c9661f275a82d3cf708f923736bf8')
+    version('3.8.1551', sha256='c70c552231cd3289f1bad51c9bd174804c18bb3adcf47f501afec7a68f9c482e')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

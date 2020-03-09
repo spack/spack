@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,13 +17,15 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
-    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
-    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
+    #
+    # the previous metis website http://glaros.dtc.umn.edu/gkhome/metis/metis
+    # no longer exists. This is a github mirror that provides metis 5.1.0
+    #
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
-    version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
-    version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
+    homepage = "https://github.com/scivision/METIS/"
+    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+
+    version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -49,13 +51,6 @@ class Metis(Package):
 
     patch('install_gklib_defs_rename.patch', when='@5:')
     patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
-
-    def url_for_version(self, version):
-        url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
-        if version < Version('4.0.3'):
-            url += "/OLD"
-        url += "/metis-{0}.tar.gz".format(version)
-        return url
 
     @when('@5:')
     def patch(self):

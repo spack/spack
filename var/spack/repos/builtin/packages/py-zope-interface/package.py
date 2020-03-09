@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class PyZopeInterface(PythonPackage):
     # Maybe some kind of namespace issue?
     # import_modules = ['zope.interface', 'zope.interface.common']
 
-    version('4.5.0', '7b669cd692d817772c61d2e3ad0f1e71')
+    version('4.5.0', sha256='57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 

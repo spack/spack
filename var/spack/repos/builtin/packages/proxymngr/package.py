@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Proxymngr(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/proxymngr"
     url      = "https://www.x.org/archive/individual/app/proxymngr-1.0.4.tar.gz"
 
-    version('1.0.4', 'a165cf704f6a413f0bacf65ea470331f')
+    version('1.0.4', sha256='d40f2d15985ee8e8ef5320a85c0b1899a7bc95974a65137ae886e499bced86f4')
 
     depends_on('libice')
     depends_on('libxt')

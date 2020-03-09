@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,14 +60,14 @@ Customize dependencies
 ----------------------
 
 Spack allows *dependencies* of a particular installation to be
-customized extensively.  Suppose that ``mpileaks`` depends indirectly
-on ``libelf`` and ``libdwarf``.  Using ``^``, users can add custom
+customized extensively.  Suppose that ``hdf5`` depends
+on ``openmpi`` and indirectly on ``hwloc``.  Using ``^``, users can add custom
 configurations for the dependencies:
 
 .. code-block:: console
 
-   # Install mpileaks and link it with specific versions of libelf and libdwarf
-   $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug ^libelf@0.8.12 ^libdwarf@20130729+debug
+   # Install hdf5 and link it with specific versions of openmpi and hwloc
+   $ spack install hdf5@1.10.1 %gcc@4.7.3 +debug ^openmpi+cuda fabrics=auto ^hwloc+gl
 
 ------------------------
 Non-destructive installs

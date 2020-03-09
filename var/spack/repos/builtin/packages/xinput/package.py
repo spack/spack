@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Xinput(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xinput"
     url      = "https://www.x.org/archive/individual/app/xinput-1.6.2.tar.gz"
 
-    version('1.6.2', '6684f6015298d22936438173be3b7ef5')
+    version('1.6.2', sha256='2c8ca5ff2a8703cb7d898629a4311db720dbd30d0c162bfe37f18849a727bd42')
 
     depends_on('libx11')
     depends_on('libxext')

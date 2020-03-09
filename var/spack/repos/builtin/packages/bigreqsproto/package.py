@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Bigreqsproto(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/proto/bigreqsproto"
     url      = "https://www.x.org/archive/individual/proto/bigreqsproto-1.1.2.tar.gz"
 
-    version('1.1.2', '9b83369ac7a5eb2bf54c8f34db043a0e')
+    version('1.1.2', sha256='de68a1a9dd1a1219ad73531bff9f662bc62fcd777387549c43cd282399f4a6ea')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

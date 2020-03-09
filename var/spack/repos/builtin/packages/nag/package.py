@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ import os
 class Nag(Package):
     """The NAG Fortran Compiler."""
     homepage = "http://www.nag.com/nagware/np.asp"
+    maintainers = ['ThemosTsikas']
 
-    version('6.2', '8b119cc3296969bbd68b781f625de272')
-    version('6.1', '9b3cc0f8703c79f6231ae12359535119')
-    version('6.0', '3fa1e7f7b51ef8a23e6c687cdcad9f96')
+    version('7.0', sha256='fafd97ebb58753ab5b9f13822d2e3d24c2f488ea25928c4c3a13e4e2e350ab3e')
+    version('6.2', sha256='9b60f6ffa4f4be631079676963e74eea25e8824512e5c864eb06758b2a3cdd2d')
+    version('6.1', sha256='32580e0004e6798abf1fa52f0070281b28abeb0da2387530a4cc41218e813c7c')
 
     # Licensing
     license_required = True
@@ -25,7 +26,7 @@ class Nag(Package):
     def url_for_version(self, version):
         # TODO: url and checksum are architecture dependent
         # TODO: We currently only support x86_64
-        url = 'http://www.nag.com/downloads/impl/npl6a{0}na_amd64.tgz'
+        url = 'https://www.nag.com/downloads/impl/npl6a{0}na_amd64.tgz'
         return url.format(version.joined)
 
     def install(self, spec, prefix):
@@ -37,6 +38,6 @@ class Nag(Package):
         # Run install script
         os.system('./INSTALLU.sh')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('F77', join_path(self.prefix.bin, 'nagfor'))
-        run_env.set('FC',  join_path(self.prefix.bin, 'nagfor'))
+    def setup_run_environment(self, env):
+        env.set('F77', self.prefix.bin.nagfor)
+        env.set('FC',  self.prefix.bin.nagfor)

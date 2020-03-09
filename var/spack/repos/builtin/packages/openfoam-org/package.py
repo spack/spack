@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,11 +62,15 @@ class OpenfoamOrg(Package):
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version('develop', branch='master')
-    version('5.0', 'cd8c5bdd3ff39c34f61747c8e55f59d1',
+    version('7', sha256='12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5',
+            url=baseurl + '/OpenFOAM-7/archive/version-7.tar.gz')
+    version('6', sha256='32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025',
+            url=baseurl + '/OpenFOAM-6/archive/version-6.tar.gz')
+    version('5.0', sha256='9057d6a8bb9fa18802881feba215215699065e0b3c5cdd0c0e84cb29c9916c89',
             url=baseurl + '/OpenFOAM-5.x/archive/version-5.0.tar.gz')
-    version('4.1', 'afd7d8e66e7db0ffaf519b14f1a8e1d4',
+    version('4.1', sha256='2de18de64e7abdb1b649ad8e9d2d58b77a2b188fb5bcb6f7c2a038282081fd31',
             url=baseurl + '/OpenFOAM-4.x/archive/version-4.1.tar.gz')
-    version('2.4.0', 'ad7d8b7b0753655b2b6fd9e92eefa92a',
+    version('2.4.0', sha256='9529aa7441b64210c400c019dcb2e0410fcfd62a6f62d23b6c5994c4753c4465',
             url=baseurl + '/OpenFOAM-2.4.x/archive/version-2.4.0.tar.gz')
 
     variant('int64', default=False,
@@ -75,6 +79,8 @@ class OpenfoamOrg(Package):
             description='Compile with 32-bit scalar (single-precision)')
     variant('source', default=True,
             description='Install library/application sources and tutorials')
+    variant('metis', default=False,
+            description='With metis decomposition')
 
     depends_on('mpi')
     depends_on('zlib')
@@ -85,12 +91,17 @@ class OpenfoamOrg(Package):
     depends_on('scotch~metis+mpi~int64', when='~int64')
     depends_on('scotch~metis+mpi+int64', when='+int64')
 
+    depends_on('metis@5:', when='+metis')
+    depends_on('metis+int64', when='+metis+int64')
+
     # General patches - foamEtcFile as per openfoam.com (robuster)
     common = ['spack-Allwmake', 'README-spack']
     assets = ['bin/foamEtcFile']
 
     # Version-specific patches
-    patch('50-etc.patch', when='@5.0:')
+    patch('https://github.com/OpenFOAM/OpenFOAM-7/commit/ef33cf38ac9b811072a8970c71fbda35a90f6641.patch',
+          sha256='73103e6b1bdbf3b1e0d517cbbd11562e98c6e9464df5f43e5125e9a5b457d1c5', when='@7')
+    patch('50-etc.patch', when='@5.0:5.9')
     patch('41-etc.patch', when='@4.1')
     patch('41-site.patch', when='@4.1:')
     patch('240-etc.patch', when='@2.4.0')
@@ -126,24 +137,32 @@ class OpenfoamOrg(Package):
             settings['label-size'] = False
         return settings
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # This should be similar to the openfoam package,
         # but sourcing the etc/bashrc here seems to exit with an error.
         # ... this needs to be examined in more detail.
         #
         # Minimal environment only.
-        run_env.set('FOAM_PROJECT_DIR', self.projectdir)
-        run_env.set('WM_PROJECT_DIR', self.projectdir)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('WM_PROJECT_DIR', self.projectdir)
         for d in ['wmake', self.archbin]:  # bin already added automatically
-            run_env.prepend_path('PATH', join_path(self.projectdir, d))
+            env.prepend_path('PATH', join_path(self.projectdir, d))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
         previous versions.
         """
-        spack_env.set('FOAM_PROJECT_DIR', self.projectdir)
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        """Location of the OpenFOAM project directory.
+        This is identical to the WM_PROJECT_DIR value, but we avoid that
+        variable since it would mask the normal OpenFOAM cleanup of
+        previous versions.
+        """
+        env.set('FOAM_PROJECT_DIR', self.projectdir)
 
     @property
     def projectdir(self):
@@ -244,6 +263,11 @@ class OpenfoamOrg(Package):
                 'SCOTCH_ARCH_PATH': spec['scotch'].prefix,
                 # For src/parallel/decompose/Allwmake
                 'SCOTCH_VERSION': 'scotch-{0}'.format(spec['scotch'].version),
+            }
+
+        if '+metis' in spec:
+            self.etc_config['metis'] = {
+                'METIS_ARCH_PATH': spec['metis'].prefix,
             }
 
         # Write prefs files according to the configuration.

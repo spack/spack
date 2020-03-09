@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,21 @@ class Sirius(CMakePackage, CudaPackage):
     homepage = "https://github.com/electronic-structure/SIRIUS"
     url      = "https://github.com/electronic-structure/SIRIUS/archive/v6.1.5.tar.gz"
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
+    git      = "https://github.com/electronic-structure/SIRIUS.git"
 
-    version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
+    version('develop', branch='develop')
+    version('master', branch='master')
+
+    version('6.5.0', sha256='5544f3abbb71dcd6aa08d18aceaf53c38373de4cbd0c3af44fbb39c20cfeb7cc')
+    version('6.4.4', sha256='1c5de9565781847658c3cc11edcb404e6e6d1c5a9dfc81e977de7a9a7a162c8a')
+    version('6.4.3', sha256='4d1effeadb84b3e1efd7d9ac88018ef567aa2e0aa72e1112f0abf2e493e2a189')
+    version('6.4.2', sha256='40b9b66deebb6538fc0f4cd802554d0d763ea6426b9b2f0e8db8dc617e494479')
+    version('6.4.1', sha256='86f25c71517952a63e92e0a9bcf66d27e4afb2b0d67cf84af480f116b8e7f53c')
+    version('6.4.0', sha256='bc61758b71dd2996e2ff515b8c3560b2c69c00931cb2811a163a31bcfea4436e')
+    version('6.3.4', sha256='8839e988b4bb6ef99b6180f7fba03a5537e31fce51bb3e4c2298b513d6a07e0a')
+    version('6.3.3', sha256='7ba30a4e5c9a545433251211454ec0d59b74ba8941346057bc7de11e7f6886f7')
     version('6.3.2', sha256='1723e5ad338dad9a816369a6957101b2cae7214425406b12e8712c82447a7ee5')
+    version('6.1.5', sha256='379f0a2e5208fd6d91c2bd4939c3a5c40002975fb97652946fa1bfe4a3ef97cb')
 
     variant('shared', default=False, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
@@ -25,8 +37,12 @@ class Sirius(CMakePackage, CudaPackage):
     variant('elpa', default=False, description="Use ELPA")
     variant('vdwxc', default=False, description="Enable libvdwxc support")
     variant('scalapack', default=False, description="Enable scalapack support")
+    variant('magma', default=False, description="Enable MAGMA support")
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
-    depends_on('python')
+    depends_on('python', type=('build', 'run'))
     depends_on('mpi')
     depends_on('gsl')
     depends_on('lapack')
@@ -35,19 +51,29 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spglib')
     depends_on('hdf5+hl')
     depends_on('pkgconfig', type='build')
-    depends_on('py-mpi4py', when='+python')
-    depends_on('py-pybind11', when='+python')
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
+    depends_on('py-scipy', when='+python', type=('build', 'run'))
+    depends_on('py-h5py', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python', type=('build', 'run'))
+    depends_on('py-pyyaml', when='+python', type=('build', 'run'))
+    depends_on('py-mpi4py', when='+python', type=('build', 'run'))
+    depends_on('py-voluptuous', when='+python', type=('build', 'run'))
+    depends_on('py-pybind11', when='+python', type=('build', 'run'))
+    depends_on('magma', when='+magma')
 
+    depends_on('spfft', when='@6.4.0:')
+    depends_on('spfft+cuda', when='@6.4.0:+cuda')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
     depends_on('libvdwxc+mpi', when='+vdwxc')
     depends_on('scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
+    extends('python', when='+python')
 
     conflicts('+shared', when='@6.3.0:')  # option to build shared libraries has been removed
 
     # TODO:
-    # add support for MAGMA, CRAY_LIBSCI, ROCm, testing
+    # add support for CRAY_LIBSCI, ROCm, testing
 
     patch("strip-spglib-include-subfolder.patch", when='@6.1.5')
     patch("link-libraries-fortran.patch", when='@6.1.5')
@@ -96,6 +122,7 @@ class Sirius(CMakePackage, CudaPackage):
         args = [
             _def('+openmp'),
             _def('+elpa'),
+            _def('+magma'),
             _def('+vdwxc'),
             _def('+scalapack'),
             _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
@@ -137,7 +164,7 @@ class Sirius(CMakePackage, CudaPackage):
 
         if '+cuda' in spec:
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch:
+            if cuda_arch[0] != 'none':
                 args += [
                     '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
                 ]

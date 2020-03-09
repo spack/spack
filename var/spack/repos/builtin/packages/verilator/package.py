@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,15 +35,15 @@ class Verilator(AutotoolsPackage):
     homepage = "https://www.veripool.org/projects/verilator"
     url      = "https://www.veripool.org/ftp/verilator-3.920.tgz"
 
-    version('3.920', '71de7b9ddb27a72e96ed2a04e5ccf933')
-    version('3.904', '7d4dc8e61d5e0e564c3016a06f0b9d07')
+    version('3.920', sha256='2b5c38aa432d0766a38475219f9548d64d18104ce8bdcb5d29e42f5da06943ff')
+    version('3.904', sha256='ea95e08b2d70682ad42e6c2f5ba99f59b2e7b220791214076099cdf6b7a8c1cb')
 
     depends_on('bison', type='build')
     depends_on('flex')
     depends_on('perl',  type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('VERILATOR_ROOT', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('VERILATOR_ROOT', self.prefix)
 
     # verilator requires access to its shipped scripts (bin) and include
     # but the standard make doesn't put it in the correct places

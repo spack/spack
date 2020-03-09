@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class RAls(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ALS_0.0.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ALS"
 
-    version('0.0.6', 'b72d97911e8ab7e4f8aed1a710b3d62d')
+    version('0.0.6', sha256='ca90d27115ae9e476967f521bf6935723e410a3bf92477e7570e14bfd3b099eb')
 
     depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-iso', type=('build', 'run'))

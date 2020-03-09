@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class Ruby(AutotoolsPackage):
     list_url = "http://cache.ruby-lang.org/pub/ruby/"
     list_depth = 1
 
-    version('2.6.2', 'a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
-    version('2.5.3', '9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
-    version('2.2.0', 'cd03b28fd0b555970f5c4fd481700852')
+    version('2.6.2', sha256='a0405d2bf2c2d2f332033b70dff354d224a864ab0edd462b7a413420453b49ab')
+    version('2.5.3', sha256='9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c')
+    version('2.2.0', sha256='7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc')
 
     variant('openssl', default=True, description="Enable OpenSSL support")
     variant('readline', default=False, description="Enable Readline support")
@@ -63,7 +63,7 @@ class Ruby(AutotoolsPackage):
         args.append('--with-tk=%s' % self.spec['tk'].prefix)
         return args
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         ruby_paths = []
@@ -71,10 +71,10 @@ class Ruby(AutotoolsPackage):
             if d.package.extends(self.spec):
                 ruby_paths.append(d.prefix)
 
-        spack_env.set_path('GEM_PATH', ruby_paths)
+        env.set_path('GEM_PATH', ruby_paths)
 
         # The actual installation path for this gem
-        spack_env.set('GEM_HOME', dependent_spec.prefix)
+        env.set('GEM_HOME', dependent_spec.prefix)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before ruby modules' install() methods.  Sets GEM_HOME

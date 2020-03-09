@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ class CmakeClient(CMakePackage):
     def do_not_execute(self):
         self.did_something = True
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env):
         spack_cc    # Ensure spack module-scope variable is avaiabl
         check(from_cmake == "from_cmake",
               "setup_environment couldn't read global set by cmake.")
@@ -52,7 +52,7 @@ class CmakeClient(CMakePackage):
               "link arg on dependency spec not readable from "
               "setup_environment.")
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_build_environment(self, spack_env, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
         check(from_cmake == "from_cmake",
               "setup_dependent_environment couldn't read global set by cmake.")

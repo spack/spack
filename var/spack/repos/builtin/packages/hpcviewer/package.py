@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,18 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2020.02', 'x86_64'):  'af1f514547a9325aee30eb891b31e38c7ea3f33d2d1978b44f83e7daa3d5de6b',
+        ('2020.02', 'ppc64'):   '7bb4926202db663aedd5a6830778c5f73f6b08a65d56861824ea95ba83b1f59c',
+        ('2020.02', 'ppc64le'): 'cfcebb7ba301affd6d21d2afd43c540e6dd4c5bc39b0d20e8bd1e4fed6aa3481',
+        ('2020.01', 'x86_64'):  '3cd5a2a382cec1d64c8bd0abaf2b1461dcd4092a4b4074ddbdc1b96d2a0b4220',
+        ('2020.01', 'ppc64'):   '814394a5f410033cc1019526c268ef98b5b381e311fcd39ae8b2bde6c6ff017c',
+        ('2020.01', 'ppc64le'): 'e830e956b8088c415fb25ef44a8aca16ebcb27bcd34536866612343217e3f9e4',
+        ('2019.12', 'x86_64'):  '6ba149c8d23d9913291655602894f7a91f9c838e69ae5682fd7b605467255c2d',
+        ('2019.12', 'ppc64'):   '787257272381fac26401e1013952bea94635172503e7abf8063081fe03f08384',
+        ('2019.12', 'ppc64le'): 'fd20891fdae6dd5c2313cdd98e53c52023a0cf146a1121d0c889ebedc08a8bb9',
+        ('2019.09', 'x86_64'):  '40982a43880fe646b7f9d03ac4911b55f8a4464510eb8c7304ffaf4d4205ecc6',
+        ('2019.09', 'ppc64'):   '3972d604bd160c058185b6f8f3f3a63c4031046734b29cc386c24e40831e6798',
+        ('2019.09', 'ppc64le'): 'c348f442b7415aadb94ead06bd35e96442a49a9768fd8c972ca707d77d61e0c3',
         ('2019.08', 'x86_64'):  '249aae6a23dca19286ee15909afbeba5e515388f1c1ad87f572454534fccb9f2',
         ('2019.08', 'ppc64'):   'f91b4772c92c05a4a35c88eec094604f3c233c7233adeede97acba38592da379',
         ('2019.08', 'ppc64le'): 'b1bd5c76b37f225a01631193e0a62524bd41a54b3354a658fdfd0f66c444cc28',
@@ -52,6 +64,18 @@ class Hpcviewer(Package):
     }
 
     trace_sha = {
+        ('2020.02', 'x86_64'):  'b7b634e91108aa50a2e8647ac6bac87df775ae38aff078545efaa84735e0a666',
+        ('2020.02', 'ppc64'):   'a3e845901689e1b32bc6ab2826c6ac6ed352df4839090fa530b20f747e6e0957',
+        ('2020.02', 'ppc64le'): 'a64a283f61e706d988952a7cede9fac0328b09d2d0b64e4c08acc54e38781c98',
+        ('2020.01', 'x86_64'):  '9459177a2445e85d648384e2ccee20524592e91a74d615262f32d0876831cd7c',
+        ('2020.01', 'ppc64'):   '02366a2ba30b9b2450d50cf44933288f04fae5bf9868eef7bb2ae1b49d4f454e',
+        ('2020.01', 'ppc64le'): '39970e84e397ed96bc994e7b8db3b7b3aab4e3155fa7ca8e68b9274bb58115f0',
+        ('2019.12', 'x86_64'):  '6339b36e655e2c2b07af4cb40946f325acc46da3ec590d36069661e69b046a92',
+        ('2019.12', 'ppc64'):   'fe4ee5af22a983fa0ddbfbd97fa6676f07492400536e900188455f21e489c59b',
+        ('2019.12', 'ppc64le'): '2688ea834c546b9e2c6e9d69d271a62dd00f6bc7ff4cb874563ba8d0ae5824e3',
+        ('2019.09', 'x86_64'):  '8d7ce0710570bb8cd424d88cc4b5bfe821330f24fef84bbbbb370fa291b60a14',
+        ('2019.09', 'ppc64'):   'dfb3fe8283cbaeaa1653e8c8bf68267a3f25886bc452309b10f88a7b1e713ec6',
+        ('2019.09', 'ppc64le'): 'c1b6ab4f6c91e3a226e8629de62e718c92318ffd83d03db3c40678d578b99b20',
         ('2019.08', 'x86_64'):  '6cefed6a397298ab31cadd10831f5d5533d3f634a4a76bb93f686e603a42c5ed',
         ('2019.08', 'ppc64'):   '64ca5605c89dd3065cacaeee4a8e2ac14b47953530711ed9e04666c8435e44e8',
         ('2019.08', 'ppc64le'): 'bee03b5cb2de7e8556cf1249f98ece7848c13a0de6b8ba71786c430da68f7bcc',
@@ -66,18 +90,18 @@ class Hpcviewer(Package):
         ('2019.02', 'ppc64le'): '01a159306e7810efe07157ec823ac6ca7570ec2014c95db599a3f90eee33355c',
     }
 
-    version_list = ['2019.02', '2019.04', '2019.07', '2019.08']
-
-    for ver in version_list:
-        key = (ver, platform.machine())
-        if key in viewer_sha and key in trace_sha:
-            version(ver, url=viewer_url(*key), sha256=viewer_sha[key])
+    for key in viewer_sha.keys():
+        if key in trace_sha and key[1] == platform.machine():
+            version(key[0], url=viewer_url(*key), sha256=viewer_sha[key])
 
             resource(name='hpctraceviewer', url=trace_url(*key),
                      sha256=trace_sha[key], placement='TRACE',
-                     when='@{0}'.format(ver))
+                     when='@{0}'.format(key[0]))
 
     depends_on('java@8', type=('build', 'run'))
+
+    conflicts('target=aarch64:', msg='hpcviewer is not available on arm')
+    conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
 
     # Both hpcviewer and trace viewer have an install script.
     def install(self, spec, prefix):

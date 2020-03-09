@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,8 @@ class RStanheaders(RPackage):
 
     version('2.18.1-10', sha256='8a9f7e22105428e97d14f44f75395c37cf8c809de148d279c620024452b3565a')
     version('2.18.1', sha256='ce0d609a7cd11725b1203bdeae92acc54da3a48b8266eb9dbdb9d95b14df9209')
-    version('2.17.1', '11d8770277dd18e563852852633c6c25')
-    version('2.10.0-2', '9d09b1e9278f08768f7a988ad9082d57')
+    version('2.17.1', sha256='4300a1910a2eb40d7a6ecabea3c1e26f0aa9421eeb3000689272a0f62cb80d97')
+    version('2.10.0-2', sha256='ce4e335172bc65da874699302f6ba5466cdbcf69458c11954c0f131fc78b59b7')
 
     depends_on('r@3.4.0:', when='@2.18.0:', type=('build', 'run'))
     depends_on('pandoc', type='build')

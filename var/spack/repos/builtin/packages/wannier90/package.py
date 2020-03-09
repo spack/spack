@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class Wannier90(MakefilePackage):
     homepage = 'http://wannier.org'
     url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
 
-    version('2.1.0', '07a81c002b41d6d0f97857e55c57d769')
-    version('2.0.1', '4edd742506eaba93317249d33261fb22')
+    version('2.1.0', sha256='ee90108d4bc4aa6a1cf16d72abebcb3087cf6c1007d22dda269eb7e7076bddca')
+    version('2.0.1', sha256='05ea7cd421a219ce19d379ad6ae3d9b1a84be4ffb367506ffdfab1e729309e94')
 
     depends_on('mpi')
     depends_on('lapack')

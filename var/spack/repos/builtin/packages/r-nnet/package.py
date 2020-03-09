@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class RNnet(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/nnet_7.3-12.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/nnet"
 
-    version('7.3-12', 'dc7c6f0d0de53d8fc72b44554400a74e')
+    version('7.3-12', sha256='2723523e8581cc0e2215435ac773033577a16087a3f41d111757dd96b8c5559d')
 
     depends_on('r@2.14:', type=('build', 'run'))

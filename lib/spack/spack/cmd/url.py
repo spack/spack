@@ -1,14 +1,12 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division, print_function
 from collections import defaultdict
-try:
-    from urllib.parse import urlparse
-except ImportError:
-    from urlparse import urlparse
+
+import six.moves.urllib.parse as urllib_parse
 
 import spack.fetch_strategy as fs
 import spack.repo
@@ -137,7 +135,7 @@ def url_list(args):
 
     # Gather set of URLs from all packages
     for pkg in spack.repo.path.all_packages():
-        url = getattr(pkg.__class__, 'url', None)
+        url = getattr(pkg, 'url', None)
         urls = url_list_parsing(args, urls, url, pkg)
 
         for params in pkg.versions.values():
@@ -162,10 +160,13 @@ def url_summary(args):
     correct_versions = 0
 
     # Collect statistics on which regexes were matched and how often
-    name_regex_dict    = dict()
-    name_count_dict    = defaultdict(int)
-    version_regex_dict = dict()
-    version_count_dict = defaultdict(int)
+    name_regex_dict     = dict()
+    right_name_count    = defaultdict(int)
+    wrong_name_count    = defaultdict(int)
+
+    version_regex_dict  = dict()
+    right_version_count = defaultdict(int)
+    wrong_version_count = defaultdict(int)
 
     tty.msg('Generating a summary of URL parsing in Spack...')
 
@@ -173,7 +174,7 @@ def url_summary(args):
     for pkg in spack.repo.path.all_packages():
         urls = set()
 
-        url = getattr(pkg.__class__, 'url', None)
+        url = getattr(pkg, 'url', None)
         if url:
             urls.add(url)
 
@@ -191,9 +192,11 @@ def url_summary(args):
             try:
                 version, vs, vl, vi, vregex = parse_version_offset(url)
                 version_regex_dict[vi] = vregex
-                version_count_dict[vi] += 1
                 if version_parsed_correctly(pkg, version):
                     correct_versions += 1
+                    right_version_count[vi] += 1
+                else:
+                    wrong_version_count[vi] += 1
             except UndetectableVersionError:
                 pass
 
@@ -201,9 +204,11 @@ def url_summary(args):
             try:
                 name, ns, nl, ni, nregex = parse_name_offset(url, version)
                 name_regex_dict[ni] = nregex
-                name_count_dict[ni] += 1
                 if name_parsed_correctly(pkg, name):
                     correct_names += 1
+                    right_name_count[ni] += 1
+                else:
+                    wrong_name_count[ni] += 1
             except UndetectableNameError:
                 pass
 
@@ -218,101 +223,135 @@ def url_summary(args):
     tty.msg('Statistics on name regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expression')
+    print('    Index   Right   Wrong   Total   Regular Expression')
     for ni in sorted(name_regex_dict.keys()):
-        print('    {0:>3}: {1:>6}   r{2!r}'.format(
-            ni, name_count_dict[ni], name_regex_dict[ni]))
+        print('    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}'.format(
+            ni,
+            right_name_count[ni],
+            wrong_name_count[ni],
+            right_name_count[ni] + wrong_name_count[ni],
+            name_regex_dict[ni])
+        )
     print()
 
     tty.msg('Statistics on version regular expressions:')
 
     print()
-    print('    Index  Count  Regular Expression')
+    print('    Index   Right   Wrong   Total   Regular Expression')
     for vi in sorted(version_regex_dict.keys()):
-        print('    {0:>3}: {1:>6}   r{2!r}'.format(
-            vi, version_count_dict[vi], version_regex_dict[vi]))
+        print('    {0:>5}   {1:>5}   {2:>5}   {3:>5}   r{4!r}'.format(
+            vi,
+            right_version_count[vi],
+            wrong_version_count[vi],
+            right_version_count[vi] + wrong_version_count[vi],
+            version_regex_dict[vi])
+        )
     print()
 
     # Return statistics, only for testing purposes
     return (total_urls, correct_names, correct_versions,
-            name_count_dict, version_count_dict)
+            right_name_count, right_version_count)
 
 
 def url_stats(args):
-    stats = {}  # stats about fetchers in packages.
-    nvers = 0   # total number of versions
-    npkgs = 0   # total number of packages
+    class UrlStats(object):
+        def __init__(self):
+            self.total = 0
+            self.schemes = defaultdict(lambda: 0)
+            self.checksums = defaultdict(lambda: 0)
+            self.url_type = defaultdict(lambda: 0)
+            self.git_type = defaultdict(lambda: 0)
 
-    def inc(fstype, category, attr=None):
-        """Increment statistics in the stats dict."""
-        categories = stats.setdefault(fstype, {})
-        if attr:
-            cat_stats = categories.setdefault(category, {})
-            val = cat_stats.setdefault(attr, 0)
-            stats[fstype][category][attr] = val + 1
-        else:
-            val = categories.setdefault(category, 0)
-            stats[fstype][category] = val + 1
+        def add(self, fetcher):
+            self.total += 1
 
-    # over all packages
+            url_type = fetcher.url_attr
+            self.url_type[url_type or 'no code'] += 1
+
+            if url_type == 'url':
+                digest = getattr(fetcher, 'digest', None)
+                if digest:
+                    algo = crypto.hash_algo_for_digest(digest)
+                else:
+                    algo = 'no checksum'
+                self.checksums[algo] += 1
+
+                # parse out the URL scheme (https/http/ftp/etc.)
+                urlinfo = urllib_parse.urlparse(fetcher.url)
+                self.schemes[urlinfo.scheme] += 1
+
+            elif url_type == 'git':
+                if getattr(fetcher, 'commit', None):
+                    self.git_type['commit'] += 1
+                elif getattr(fetcher, 'branch', None):
+                    self.git_type['branch'] += 1
+                elif getattr(fetcher, 'tag', None):
+                    self.git_type['tag'] += 1
+                else:
+                    self.git_type['no ref'] += 1
+
+    npkgs = 0
+    version_stats = UrlStats()
+    resource_stats = UrlStats()
+
     for pkg in spack.repo.path.all_packages():
         npkgs += 1
 
-        if not pkg.has_code:
-            for _ in pkg.versions:
-                inc('No code', 'total')
-                nvers += 1
-            continue
-
-        # look at each version
         for v, args in pkg.versions.items():
-            # figure out what type of fetcher it is
             fetcher = fs.for_package_version(pkg, v)
-            nvers += 1
+            version_stats.add(fetcher)
 
-            fstype = fetcher.url_attr
-            inc(fstype, 'total')
-
-            # put some special stats in for particular types of fetchers.
-            if fstype == 'git':
-                if 'commit' in args:
-                    inc('git', 'security', 'commit')
-                else:
-                    inc('git', 'security', 'no commit')
-            elif fstype == 'url':
-                for h in crypto.hashes:
-                    if h in args:
-                        inc('url', 'checksums', h)
-                        break
-                else:
-                    if 'checksum' in args:
-                        h = crypto.hash_algo_for_digest(args['checksum'])
-                        inc('url', 'checksums', h)
-                    else:
-                        inc('url', 'checksums', 'no checksum')
-
-                # parse out the URL scheme (https/http/ftp/etc.)
-                urlinfo = urlparse(fetcher.url)
-                inc('url', 'schemes', urlinfo.scheme)
+        for _, resources in pkg.resources.items():
+            for resource in resources:
+                resource_stats.add(resource.fetcher)
 
     # print a nice summary table
-    tty.msg("%d total versions for %d packages:" % (nvers, npkgs))
-    line_width = 36
-    print("-" * line_width)
-    for fetcher, fetcher_stats in sorted(stats.items(), reverse=True):
-        fs_total = fetcher_stats['total']
-        fs_pct = float(fs_total) / nvers * 100
-        print("%-22s%5d%8.1f%%" % (fetcher, fs_total, fs_pct))
+    tty.msg("URL stats for %d packages:" % npkgs)
 
-        for category, cat_stats in sorted(fetcher_stats.items(), reverse=True):
-            if category == 'total':
-                continue
-            print("  %s" % category)
+    def print_line():
+        print("-" * 62)
 
-            for name, number in sorted(cat_stats.items(), reverse=True):
-                pct = float(number) / fs_total * 100
-                print("    %-18s%5d%8.1f%%" % (name, number, pct))
-        print("-" * line_width)
+    def print_stat(indent, name, stat_name=None):
+        width = 20 - indent
+        fmt = " " * indent
+        fmt += "%%-%ds" % width
+        if stat_name is None:
+            print(fmt % name)
+        else:
+            fmt += "%12d%8.1f%%%12d%8.1f%%"
+            v = getattr(version_stats, stat_name).get(name, 0)
+            r = getattr(resource_stats, stat_name).get(name, 0)
+            print(fmt % (name,
+                         v, v / version_stats.total * 100,
+                         r, r / resource_stats.total * 100))
+
+    print_line()
+    print("%-20s%12s%9s%12s%9s" % ("stat", "versions", "%", "resources", "%"))
+    print_line()
+    print_stat(0, "url", "url_type")
+
+    print_stat(4, "schemes")
+    schemes = set(version_stats.schemes) | set(resource_stats.schemes)
+    for scheme in schemes:
+        print_stat(8, scheme, "schemes")
+
+    print_stat(4, "checksums")
+    checksums = set(version_stats.checksums) | set(resource_stats.checksums)
+    for checksum in checksums:
+        print_stat(8, checksum, "checksums")
+    print_line()
+
+    types = set(version_stats.url_type) | set(resource_stats.url_type)
+    types -= set(["url", "git"])
+    for url_type in sorted(types):
+        print_stat(0, url_type, "url_type")
+        print_line()
+
+    print_stat(0, "git", "url_type")
+    git_types = set(version_stats.git_type) | set(resource_stats.git_type)
+    for git_type in sorted(git_types):
+        print_stat(4, git_type, "git_type")
+    print_line()
 
 
 def print_name_and_version(url):
@@ -395,22 +434,9 @@ def name_parsed_correctly(pkg, name):
     Returns:
         bool: True if the name was correctly parsed, else False
     """
-    pkg_name = pkg.name
+    pkg_name = remove_prefix(pkg.name)
 
     name = simplify_name(name)
-
-    # After determining a name, `spack create` determines a build system.
-    # Some build systems prepend a special string to the front of the name.
-    # Since this can't be guessed from the URL, it would be unfair to say
-    # that these names are incorrectly parsed, so we remove them.
-    if pkg_name.startswith('r-'):
-        pkg_name = pkg_name[2:]
-    elif pkg_name.startswith('py-'):
-        pkg_name = pkg_name[3:]
-    elif pkg_name.startswith('perl-'):
-        pkg_name = pkg_name[5:]
-    elif pkg_name.startswith('octave-'):
-        pkg_name = pkg_name[7:]
 
     return name == pkg_name
 
@@ -436,8 +462,32 @@ def version_parsed_correctly(pkg, version):
     return False
 
 
+def remove_prefix(pkg_name):
+    """Remove build system prefix ('py-', 'perl-', etc.) from a package name.
+
+    After determining a name, `spack create` determines a build system.
+    Some build systems prepend a special string to the front of the name.
+    Since this can't be guessed from the URL, it would be unfair to say
+    that these names are incorrectly parsed, so we remove them.
+
+    Args:
+        pkg_name (str): the name of the package
+
+    Returns:
+        str: the name of the package with any build system prefix removed
+    """
+    prefixes = [
+        'r-', 'py-', 'tcl-', 'lua-', 'perl-', 'ruby-', 'llvm-',
+        'intel-', 'votca-', 'octave-', 'gtkorvo-'
+    ]
+
+    prefix = next((p for p in prefixes if pkg_name.startswith(p)), '')
+
+    return pkg_name[len(prefix):]
+
+
 def remove_separators(version):
-    """Removes separator characters ('.', '_', and '-') from a version.
+    """Remove separator characters ('.', '_', and '-') from a version.
 
     A version like 1.2.3 may be displayed as 1_2_3 in the URL.
     Make sure 1.2.3, 1-2-3, 1_2_3, and 123 are considered equal.

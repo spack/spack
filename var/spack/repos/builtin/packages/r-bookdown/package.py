@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RBookdown(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/bookdown"
 
     version('0.12', sha256='38eb4c5b877ccd85b16cfe74a48c3bc53de2f276da98e5515f37e7a06e065bb0')
-    version('0.5', '7bad360948e2b22d28397870b9319f17')
+    version('0.5', sha256='b7331fd56f64bd2bddc34e2a188fc491f9ff5308f44f7e3151721247f21ca67e')
 
     depends_on('r-yaml@2.1.14:', when='@:0.10', type=('build', 'run'))
     depends_on('r-rmarkdown@1.12:', type=('build', 'run'))

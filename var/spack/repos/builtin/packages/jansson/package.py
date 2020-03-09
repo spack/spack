@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Jansson(CMakePackage):
     url      = "https://github.com/akheron/jansson/archive/v2.9.tar.gz"
     maintainers = ['ax3l']
 
-    version('2.9', 'd2db25c437b359fc5a065ed938962237')
+    version('2.9', sha256='952fa714b399e71c1c3aa020e32e899f290c82126ca4d0d14cff5d10af457656')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

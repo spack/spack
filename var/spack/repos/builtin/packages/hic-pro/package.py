@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class HicPro(MakefilePackage):
     homepage = "https://github.com/nservant/HiC-Pro"
     url      = "https://github.com/nservant/HiC-Pro/archive/v2.10.0.tar.gz"
 
-    version('2.10.0', '6ae2213dcc984b722d1a1f65fcbb21a2')
+    version('2.10.0', sha256='df181ea5c57247caf6b25fd15dfbb03df597ff8c4f57599d88607648bb61f1b7')
 
     depends_on('bowtie2')
     depends_on('samtools')

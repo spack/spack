@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,6 @@ class RSnow(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/snow"
 
     version('0.4-3', sha256='8512537daf334ea2b8074dbb80cf5e959a403a78d68bc1e97664e8a4f64576d8')
-    version('0.4-2', 'afc7b0dfd4518aedb6fc81712fd2ac70')
+    version('0.4-2', sha256='ee070187aea3607c9ca6235399b3db3e181348692405d038e962e06aefccabd7')
 
     depends_on('r@2.13.1:', type=('build', 'run'))

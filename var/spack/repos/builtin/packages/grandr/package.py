@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Grandr(AutotoolsPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/grandr"
     url      = "https://www.x.org/archive/individual/app/grandr-0.1.tar.gz"
 
-    version('0.1', '707109a105f2ab1bb216e6e6a5a10ba4')
+    version('0.1', sha256='67a049c8dccdb48897efbd86c2b1d3b0ff5ce3c7859c46b0297d64c881b36d24')
 
     depends_on('gtkplus@2.0.0:')
     depends_on('gconf')

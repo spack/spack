@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class SwapAssembler(MakefilePackage):
     homepage = "https://sourceforge.net/projects/swapassembler/"
     url      = "https://sourceforge.net/projects/swapassembler/files/SWAP_Assembler-0.4.tar.bz2/download"
 
-    version('0.4', '944f2aeae4f451be81160bb625304fc3')
+    version('0.4', sha256='45632e25578aacfbacd76df9697cbc798e09ac92284d9c9c07be15e0eb348e0d')
 
     depends_on('mpich')
 

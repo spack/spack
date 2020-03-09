@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,9 @@ import spack.concretize
 import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
-from spack.spec import Spec, CompilerSpec
-from spack.spec import ConflictsInSpecError, SpecError
+from spack.error import SpecError
+from spack.package_prefs import PackagePrefs
+from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
 from spack.test.conftest import MockPackage, MockPackageMultiRepo
 import spack.compilers
@@ -83,13 +84,32 @@ def spec(request):
 
 
 @pytest.fixture(params=[
-    'haswell', 'broadwell', 'skylake', 'icelake'
+    # Mocking the host detection
+    'haswell', 'broadwell', 'skylake', 'icelake',
+    # Using preferred targets from packages.yaml
+    'icelake-preference', 'cannonlake-preference'
 ])
 def current_host(request, monkeypatch):
-    target = llnl.util.cpu.targets[request.param]
-    monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
-    monkeypatch.setattr(spack.platforms.test.Test, 'default', request.param)
-    return target
+    # is_preference is not empty if we want to supply the
+    # preferred target via packages.yaml
+    cpu, _, is_preference = request.param.partition('-')
+    target = llnl.util.cpu.targets[cpu]
+
+    # this function is memoized, so clear its state for testing
+    spack.architecture.get_platform.cache.clear()
+
+    if not is_preference:
+        monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
+        monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+        yield target
+    else:
+        # There's a cache that needs to be cleared for unit tests
+        PackagePrefs._packages_config_cache = None
+        with spack.config.override('packages:all', {'target': [cpu]}):
+            yield target
+
+    # clear any test values fetched
+    spack.architecture.get_platform.cache.clear()
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
@@ -256,7 +276,7 @@ class TestConcretize(object):
         Spec('hypre').concretize()
 
     def test_concretize_two_virtuals_with_one_bound(
-            self, mutable_mock_packages
+            self, mutable_mock_repo
     ):
         """Test a package with multiple virtual dependencies and one preset."""
         Spec('hypre ^openblas').concretize()
@@ -282,7 +302,7 @@ class TestConcretize(object):
         with pytest.raises(spack.spec.MultipleProviderError):
             s.concretize()
 
-    def test_no_matching_compiler_specs(self, mock_config):
+    def test_no_matching_compiler_specs(self, mock_low_high_config):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec('a %gcc@0.0.0')
@@ -584,9 +604,13 @@ class TestConcretize(object):
             Spec(spec).concretized()
 
     @pytest.mark.parametrize('spec, best_achievable', [
+        ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
-        ('mpileaks%gcc@5.3.0', 'skylake_avx512')
+        ('mpileaks%gcc@5.3.0', 'broadwell'),
+        # Apple's clang always falls back to x86-64 for now
+        ('mpileaks%clang@9.1.0-apple', 'x86_64')
     ])
+    @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
             self, spec, best_achievable, current_host
     ):
@@ -596,3 +620,16 @@ class TestConcretize(object):
         with spack.concretize.disable_compiler_existence_check():
             s = Spec(spec).concretized()
             assert str(s.architecture.target) == str(expected)
+
+    @pytest.mark.regression('8735,14730')
+    def test_compiler_version_matches_any_entry_in_compilers_yaml(self):
+        # Ensure that a concrete compiler with different compiler version
+        # doesn't match (here it's 4.5 vs. 4.5.0)
+        with pytest.raises(spack.concretize.UnavailableCompilerVersionError):
+            s = Spec('mpileaks %gcc@4.5')
+            s.concretize()
+
+        # An abstract compiler with a version list could resolve to 4.5.0
+        s = Spec('mpileaks %gcc@4.5:')
+        s.concretize()
+        assert str(s.compiler.version) == '4.5.0'

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -188,46 +188,40 @@ class YamlFilesystemView(FilesystemView):
 
         # Super class gets projections from the kwargs
         # YAML specific to get projections from YAML file
-        projections_path = os.path.join(self._root, _projections_path)
+        self.projections_path = os.path.join(self._root, _projections_path)
         if not self.projections:
-            if os.path.exists(projections_path):
-                # Read projections file from view
-                with open(projections_path, 'r') as f:
-                    projections_data = s_yaml.load(f)
-                    spack.config.validate(projections_data,
-                                          spack.schema.projections.schema)
-                    self.projections = projections_data['projections']
-            else:
-                # Write projections file to new view
-                # Not strictly necessary as the empty file is the empty
-                # projection but it makes sense for consistency
-                try:
-                    mkdirp(os.path.dirname(projections_path))
-                    with open(projections_path, 'w') as f:
-                        f.write(s_yaml.dump({'projections': self.projections}))
-                except OSError as e:
-                    if self.projections:
-                        raise e
-        elif not os.path.exists(projections_path):
+            # Read projections file from view
+            self.projections = self.read_projections()
+        elif not os.path.exists(self.projections_path):
             # Write projections file to new view
-            mkdirp(os.path.dirname(projections_path))
-            with open(projections_path, 'w') as f:
-                f.write(s_yaml.dump({'projections': self.projections}))
+            self.write_projections()
         else:
             # Ensure projections are the same from each source
             # Read projections file from view
-            with open(projections_path, 'r') as f:
-                projections_data = s_yaml.load(f)
-                spack.config.validate(projections_data,
-                                      spack.schema.projections.schema)
-                if self.projections != projections_data['projections']:
-                    msg = 'View at %s has projections file' % self._root
-                    msg += ' which does not match projections passed manually.'
-                    raise ConflictingProjectionsError(msg)
+            if self.projections != self.read_projections():
+                msg = 'View at %s has projections file' % self._root
+                msg += ' which does not match projections passed manually.'
+                raise ConflictingProjectionsError(msg)
 
         self.extensions_layout = YamlViewExtensionsLayout(self, layout)
 
         self._croot = colorize_root(self._root) + " "
+
+    def write_projections(self):
+        if self.projections:
+            mkdirp(os.path.dirname(self.projections_path))
+            with open(self.projections_path, 'w') as f:
+                f.write(s_yaml.dump_config({'projections': self.projections}))
+
+    def read_projections(self):
+        if os.path.exists(self.projections_path):
+            with open(self.projections_path, 'r') as f:
+                projections_data = s_yaml.load(f)
+                spack.config.validate(projections_data,
+                                      spack.schema.projections.schema)
+                return projections_data['projections']
+        else:
+            return {}
 
     def add_specs(self, *specs, **kwargs):
         assert all((s.concrete for s in specs))
@@ -357,6 +351,9 @@ class YamlFilesystemView(FilesystemView):
         tree.unmerge_directories(view_dst, ignore_file)
 
     def remove_file(self, src, dest):
+        if not os.path.lexists(dest):
+            tty.warn("Tried to remove %s which does not exist" % dest)
+            return
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only
@@ -374,6 +371,9 @@ class YamlFilesystemView(FilesystemView):
         with_dependents = kwargs.get("with_dependents", True)
         with_dependencies = kwargs.get("with_dependencies", False)
 
+        # caller can pass this in, as get_all_specs() is expensive
+        all_specs = kwargs.get("all_specs", None) or set(self.get_all_specs())
+
         specs = set(specs)
 
         if with_dependencies:
@@ -381,8 +381,6 @@ class YamlFilesystemView(FilesystemView):
 
         if kwargs.get("exclude", None):
             specs = set(filter_exclude(specs, kwargs["exclude"]))
-
-        all_specs = set(self.get_all_specs())
 
         to_deactivate = specs
         to_keep = all_specs - to_deactivate
@@ -401,23 +399,31 @@ class YamlFilesystemView(FilesystemView):
                      "The following packages will be unusable: %s"
                      % ", ".join((s.name for s in dependents)))
 
-        extensions = set(filter(lambda s: s.package.is_extension,
-                         to_deactivate))
-        standalones = to_deactivate - extensions
+        # Determine the order that packages should be removed from the view;
+        # dependents come before their dependencies.
+        to_deactivate_sorted = list()
+        depmap = dict()
+        for spec in to_deactivate:
+            depmap[spec] = set(d for d in spec.traverse(root=False)
+                               if d in to_deactivate)
 
-        # Please note that a traversal of the DAG in post-order and then
-        # forcibly removing each package should remove the need to specify
-        # with_dependents for deactivating extensions/allow removal without
-        # additional checks (force=True). If removal performance becomes
-        # unbearable for whatever reason, this should be the first point of
-        # attack.
-        #
-        # see: https://github.com/spack/spack/pull/3227#discussion_r117147475
-        remove_extension = ft.partial(self.remove_extension,
-                                      with_dependents=with_dependents)
+        while depmap:
+            for spec in [s for s, d in depmap.items() if not d]:
+                to_deactivate_sorted.append(spec)
+                for s in depmap.keys():
+                    depmap[s].discard(spec)
+                depmap.pop(spec)
+        to_deactivate_sorted.reverse()
 
-        set(map(remove_extension, extensions))
-        set(map(self.remove_standalone, standalones))
+        # Ensure that the sorted list contains all the packages
+        assert set(to_deactivate_sorted) == to_deactivate
+
+        # Remove the packages from the view
+        for spec in to_deactivate_sorted:
+            if spec.package.is_extension:
+                self.remove_extension(spec, with_dependents=with_dependents)
+            else:
+                self.remove_standalone(spec)
 
         self._purge_empty_directories()
 

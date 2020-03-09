@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,10 +22,10 @@ class Zoltan(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/zoltan"
     url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
 
-    version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
-    version('3.8', '9d8fba8a990896881b85351d4327c4a9')
-    version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
-    version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
+    version('3.83', sha256='d0d78fdeab7a385c87d3666b8a8dc748994ff04d3fd846872a4845e12d79c1bb')
+    version('3.8', sha256='5bdd46548fb9c73b225bbcf3d206c558c318cb292f0b19645e536315d14aafb7')
+    version('3.6', sha256='d2cb41e5fb72ca564b24bc5f21d82d9f7992f2c977bc82b243a01a8a8ee4eb9c')
+    version('3.3', sha256='8a90585674ab1bbd011dab29f778b9816519712c78d0aab4cdde9c68f02b30dc')
 
     patch('notparallel.patch', when='@3.8')
 

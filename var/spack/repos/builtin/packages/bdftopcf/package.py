@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Bdftopcf(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/bdftopcf"
     url      = "https://www.x.org/archive/individual/app/bdftopcf-1.0.5.tar.gz"
 
-    version('1.0.5', '456416d33e0d41a96b5a3725d99e1be3')
+    version('1.0.5', sha256='78a5ec945de1d33e6812167b1383554fda36e38576849e74a9039dc7364ff2c3')
 
     depends_on('libxfont')
 

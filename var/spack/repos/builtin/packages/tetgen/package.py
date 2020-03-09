@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class Tetgen(Package):
 
     homepage = "http://wias-berlin.de/software/tetgen/"
 
-    version('1.5.0', '3b9fd9cdec121e52527b0308f7aad5c1', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
-    version('1.4.3', 'd6a4bcdde2ac804f7ec66c29dcb63c18', url='http://www.tetgen.org/files/tetgen1.4.3.tar.gz')
+    version('1.5.0', sha256='4d114861d5ef2063afd06ef38885ec46822e90e7b4ea38c864f76493451f9cf3', url='http://www.tetgen.org/1.5/src/tetgen1.5.0.tar.gz')
+    version('1.4.3', sha256='952711bb06b7f64fd855eb24c33f08e3faf40bdd54764de10bbe5ed5b0dce034', url='http://www.tetgen.org/files/tetgen1.4.3.tar.gz')
 
     variant('debug', default=False, description='Builds the library in debug mode.')
     variant('except', default=False, description='Replaces asserts with exceptions for better C++ compatibility.')

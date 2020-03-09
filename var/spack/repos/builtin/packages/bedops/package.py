@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class Bedops(MakefilePackage):
     homepage = "https://bedops.readthedocs.io"
     url      = "https://github.com/bedops/bedops/archive/v2.4.30.tar.gz"
 
-    version('2.4.35', 'b425b3e05fd4cd1024ef4dd8bf04b4e5')
-    version('2.4.34', 'fc467d96134a0efe8b134e638af87a1a')
-    version('2.4.30', '4e5d9f7b7e5432b28aef8d17a22cffab')
+    version('2.4.35', sha256='da0265cf55ef5094834318f1ea4763d7a3ce52a6900e74f532dd7d3088c191fa')
+    version('2.4.34', sha256='533a62a403130c048d3378e6a975b73ea88d156d4869556a6b6f58d90c52ed95')
+    version('2.4.30', sha256='218e0e367aa79747b2f90341d640776eea17befc0fdc35b0cec3c6184098d462')
 
     @property
     def build_targets(self):

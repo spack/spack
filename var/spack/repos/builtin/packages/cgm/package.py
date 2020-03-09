@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,10 @@ class Cgm(AutotoolsPackage):
     homepage = "http://sigma.mcs.anl.gov/cgm-library"
     url = "http://ftp.mcs.anl.gov/pub/fathom/cgm-16.0.tar.gz"
 
-    version('16.0', 'a68aa5954d82502ff75d5eb91a29a01c')
-    version('13.1.1', '4e8dbc4ba8f65767b29f985f7a23b01f')
-    version('13.1.0', 'a6c7b22660f164ce893fb974f9cb2028')
-    version('13.1', '95f724bda04919fc76818a5b7bc0b4ed')
+    version('16.0', sha256='b98afe70c64efa19decc5ff01602e8c7afc6b22ce646cad30dc92ecfdce6e23d')
+    version('13.1.1', sha256='ffde54f0c86055b06cad911bbd4297b88c3fb124c873b03ebee626f807b8ab87')
+    version('13.1.0', sha256='c81bead4b919bd0cea9dbc61b219e316718d940bd3dc70825c58efbf0a0acdc3')
+    version('13.1', sha256='985aa6c5db4257999af6f2bdfcb24f2bce74191cdcd98e937700db7fd9f6b549')
 
     variant("mpi", default=True, description='enable mpi support')
     variant("oce", default=False, description='enable oce geometry kernel')

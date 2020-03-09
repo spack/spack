@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ def setup_parser(subparser):
                             help="configuration section to print. "
                                  "options: %(choices)s",
                             nargs='?',
-                            metavar='SECTION',
+                            metavar='section',
                             choices=spack.config.section_schemas)
 
     blame_parser = sp.add_parser(
@@ -42,19 +42,21 @@ def setup_parser(subparser):
     blame_parser.add_argument('section',
                               help="configuration section to print. "
                               "options: %(choices)s",
-                              metavar='SECTION',
+                              metavar='section',
                               choices=spack.config.section_schemas)
 
     edit_parser = sp.add_parser('edit', help='edit configuration file')
     edit_parser.add_argument('section',
                              help="configuration section to edit. "
                                   "options: %(choices)s",
-                             metavar='SECTION',
+                             metavar='section',
                              nargs='?',
                              choices=spack.config.section_schemas)
     edit_parser.add_argument(
         '--print-file', action='store_true',
         help="print the file name that would be edited")
+
+    sp.add_parser('list', help='list configuration sections')
 
 
 def _get_scope_and_section(args):
@@ -83,7 +85,6 @@ def config_get(args):
 
     With no arguments and an active environment, print the contents of
     the environment's manifest file (spack.yaml).
-
     """
     scope, section = _get_scope_and_section(args)
 
@@ -113,7 +114,6 @@ def config_edit(args):
 
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
-
     """
     scope, section = _get_scope_and_section(args)
     if not scope and not section:
@@ -127,8 +127,19 @@ def config_edit(args):
         editor(config_file)
 
 
+def config_list(args):
+    """List the possible configuration sections.
+
+    Used primarily for shell tab completion scripts.
+    """
+    print(' '.join(list(spack.config.section_schemas)))
+
+
 def config(parser, args):
-    action = {'get': config_get,
-              'blame': config_blame,
-              'edit': config_edit}
+    action = {
+        'get': config_get,
+        'blame': config_blame,
+        'edit': config_edit,
+        'list': config_list,
+    }
     action[args.config_command](args)

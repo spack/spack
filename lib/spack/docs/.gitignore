@@ -3,3 +3,5 @@ command_index.rst
 spack*.rst
 llnl*.rst
 _build
+.spack-env
+spack.lock

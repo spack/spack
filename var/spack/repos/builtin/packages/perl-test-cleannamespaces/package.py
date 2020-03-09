@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PerlTestCleannamespaces(PerlPackage):
     homepage = "http://search.cpan.org/~ether/Test-CleanNamespaces-0.22/lib/Test/CleanNamespaces.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Test-CleanNamespaces-0.22.tar.gz"
 
-    version('0.22', '8c48bb0427f2077edce57c50491468ec')
+    version('0.22', sha256='862a221994dd413b2f350450f22c96f57cac78784b1aca1a8fc763fc5449aaca')
 
     depends_on('perl-sub-exporter', type=('build', 'run'))
     depends_on('perl-module-runtime', type=('build', 'run'))

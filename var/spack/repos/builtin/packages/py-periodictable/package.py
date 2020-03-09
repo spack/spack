@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPeriodictable(PythonPackage):
     url      = "https://pypi.io/packages/source/p/periodictable/periodictable-1.4.1.tar.gz"
 
     version('1.5.0', sha256='b020c04c6765d21903e4604a76ca33cda98677003fe6eb48ed3690cfb03253b2')
-    version('1.4.1', '7246b63cc0b6b1be6e86b6616f9e866e')
+    version('1.4.1', sha256='f42e66f6efca33caec4f27dad8d6a6d4e59da147ecf5adfce152cb84e7bd160b')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))

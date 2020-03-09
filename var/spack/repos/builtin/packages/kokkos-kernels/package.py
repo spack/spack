@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,9 @@ class KokkosKernels(MakefilePackage):
     homepage = "https://github.com/kokkos/kokkos-kernels"
     url      = "https://github.com/kokkos/kokkos-kernels/archive/2.7.00.tar.gz"
 
-    version('2.7.00', 'dfb21f26da9f1f976d84826a1510d91e')
-    version('2.6.00', 'ef8ba7509d82417dbc82a2f021886949')
-    version('2.5.00', '94f4bd78b36b9c53c18df3ccfd552041')
+    version('2.7.00', sha256='adf4af44eadbdfbeb9ec69dd5fae4e2852bd1fbe4a69213efd199e49f4098254')
+    version('2.6.00', sha256='14ebf806f66b9ca73949a478b8d959be7fa1165a640935760a724d7cc0a66335')
+    version('2.5.00', sha256='2c2289da3a41dafd97726e90507debafbb9f5e49ca5b0f5c8d1e044a5796f000')
     version('develop', git='https://github.com/kokkos/kokkos-kernels',
             branch='develop')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class PyMdanalysis(PythonPackage):
     version('0.16.2', sha256='407d9a9ff1ab8a5e47973714d06fabff220f8d08a28792dee93e88e70e995b0a')
     version('0.16.1', sha256='3dc8f5d639ab3a0d152cbd7259ae9372ec8a9bac0f8cb7d3b80ce5adc1e3ee57')
     version('0.16.0', sha256='c4824fa1fddd336daa39371436187ebb023366885fb250c2827ed7fce2546bd4')
-    version('0.15.0', '19e5a8e6c2bfe85f6209d1d7a36e4f20')
+    version('0.15.0', sha256='9088786048b47339cba1f8a586977bbb3bb04ae1bcd0462b59e45bda37e25533')
 
     variant('analysis', default=True,
             description='Enable analysis packages: matplotlib, scipy, seaborn')

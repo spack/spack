@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Raft(CMakePackage):
     git      = "https://bitbucket.org/gill_martinez/raft_aps.git"
 
     version('develop', branch='master')
-    version('1.2.3', '4d1b106d9b3493e63dde96f7dd44b834')
+    version('1.2.3', sha256='c41630e74491c8db272dcf4707e9b11cdcb226c0b7e978ca6eba8006f47bdae6')
 
     depends_on('mpi')
     depends_on('cmake', type='build')

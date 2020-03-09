@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,6 @@ class RGridbase(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/gridBase_0.4-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/gridBase"
 
-    version('0.4-7', '6d5064a85f5c966a92ee468ae44c5f1f')
+    version('0.4-7', sha256='be8718d24cd10f6e323dce91b15fc40ed88bccaa26acf3192d5e38fe33e15f26')
 
     depends_on('r@2.3.0:', type=('build', 'run'))

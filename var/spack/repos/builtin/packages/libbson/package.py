@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,13 +15,13 @@ class Libbson(AutotoolsPackage):
 
     maintainers = ['michaelkuhn']
 
-    version('1.9.1', 'f91f59fc5a0cbba94d4d32dad1bd0cfd')
-    version('1.8.1', '42601455cf7f450b46f62c4e6115c440')
-    version('1.8.0', '8b3c64570eec721f951831958e707a5a')
-    version('1.7.0', 'e196ad77dd8458ebc1166e6135030b63')
-    version('1.6.3', 'b7bdb314197106fcfb4af105a582d343')
-    version('1.6.2', 'c128a2ae3e35295e1176465be60f19db')
-    version('1.6.1', '4d6779451bc5764a7d4982c01e7bd8c2')
+    version('1.9.1', sha256='236d9fcec0fe419c2201481081e497f49136eda2349b61cfede6233013bf7601')
+    version('1.8.1', sha256='9d18d14671b7890e27b2a5ce33a73a5ed5d33d39bba70209bae99c1dc7aa1ed4')
+    version('1.8.0', sha256='63dea744b265a2e17c7b5e289f7803c679721d98e2975ea7d56bc1e7b8586bc1')
+    version('1.7.0', sha256='442d89e89dfb43bba1f65080dc61fdcba01dcb23468b2842c1dbdd4acd6049d3')
+    version('1.6.3', sha256='e9e4012a9080bdc927b5060b126a2c82ca11e71ebe7f2152d079fa2ce461a7fb')
+    version('1.6.2', sha256='aad410123e4bd8a9804c3c3d79e03344e2df104872594dc2cf19605d492944ba')
+    version('1.6.1', sha256='5f160d44ea42ce9352a7a3607bc10d3b4b22d3271763aa3b3a12665e73e3a02d')
 
     depends_on('autoconf', type='build', when='@1.6.1')
     depends_on('automake', type='build', when='@1.6.1')

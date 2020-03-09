@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,11 +30,21 @@ Default is ``$spack/opt/spack``.
 ``install_hash_length`` and ``install_path_scheme``
 ---------------------------------------------------
 
-The default Spack installation path can be very long and can create
-problems for scripts with hardcoded shebangs. There are two parameters
-to help with that. Firstly, the ``install_hash_length`` parameter can
-set the length of the hash in the installation path from 1 to 32. The
-default path uses the full 32 characters.
+The default Spack installation path can be very long and can create problems
+for scripts with hardcoded shebangs. Additionally, when using the Intel
+compiler, and if there is also a long list of dependencies, the compiler may
+segfault. If you see the following:
+
+     .. code-block:: console
+
+       : internal error: ** The compiler has encountered an unexpected problem.
+       ** Segmentation violation signal raised. **
+       Access violation or stack overflow. Please contact Intel Support for assistance.
+
+it may be because variables containing dependency specs may be too long. There
+are two parameters to help with long path names. Firstly, the
+``install_hash_length`` parameter can set the length of the hash in the
+installation path from 1 to 32. The default path uses the full 32 characters.
 
 Secondly, it is also possible to modify the entire installation
 scheme. By default Spack uses
@@ -74,7 +84,6 @@ the location for each type of module.  e.g.:
    module_roots:
      tcl:    $spack/share/spack/modules
      lmod:   $spack/share/spack/lmod
-     dotkit: $spack/share/spack/dotkit
 
 See :ref:`modules` for details.
 
@@ -92,9 +101,10 @@ the selected ``build_stage`` path.
 .. warning:: We highly recommend specifying ``build_stage`` paths that
    distinguish between staging and other activities to ensure 
    ``spack clean`` does not inadvertently remove unrelated files.
-   This can be accomplished by using a combination of ``spack`` and or
-   ``stage`` in each path as shown in the default settings and documented
-   examples.
+   Spack prepends ``spack-stage-`` to temporary staging directory names to
+   reduce this risk.  Using a combination of ``spack`` and or ``stage`` in
+   each specified path, as shown in the default settings and documented
+   examples, will add another layer of protection.
 
 By default, Spack's ``build_stage`` is configured like this:
 
@@ -226,3 +236,24 @@ ccache`` to learn more about the default settings and how to change
 them). Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/LLNL/spack/pull/3761#issuecomment-294352232).
+
+------------------
+``shared_linking``
+------------------
+
+Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
+so that they can find their dependencies. Has no effect on macOS.
+Two options are allowed:
+
+ 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker
+ 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker
+
+``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``
+and ld.so will search for libraries in transitive ``RPATHs`` of
+parent objects.
+
+``RUNPATH`` search paths have lower precedence than ``LD_LIBRARY_PATH``,
+and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
+the loading object.
+
+DO NOT MIX the two options within the same install tree.

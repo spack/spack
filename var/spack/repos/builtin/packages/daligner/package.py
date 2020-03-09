@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Daligner(MakefilePackage):
     homepage = "https://github.com/thegenemyers/DALIGNER"
     url      = "https://github.com/thegenemyers/DALIGNER/archive/V1.0.tar.gz"
 
-    version('1.0', 'f1b4c396ae062caa4c0e6423ba0725ef')
+    version('1.0', sha256='2fb03616f0d60df767fbba7c8f0021ec940c8d822ab2011cf58bd56a8b9fb414')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

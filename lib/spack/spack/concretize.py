@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,7 +74,7 @@ class Concretizer(object):
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
             if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
+                raise spack.error.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
@@ -281,25 +281,7 @@ class Concretizer(object):
             else:
                 # To get default platform, consider package prefs
                 if PackagePrefs.has_preferred_targets(spec.name):
-                    target_prefs = PackagePrefs(spec.name, 'target')
-                    target_specs = [spack.spec.Spec('target=%s' % tname)
-                                    for tname in cpu.targets]
-
-                    def tspec_filter(s):
-                        # Filter target specs by whether the architecture
-                        # family is the current machine type. This ensures
-                        # we only consider x86_64 targets when on an
-                        # x86_64 machine, etc. This may need to change to
-                        # enable setting cross compiling as a default
-                        target = cpu.targets[str(s.architecture.target)]
-                        arch_family_name = target.family.name
-                        return arch_family_name == platform.machine()
-
-                    # Sort filtered targets by package prefs
-                    target_specs = list(filter(tspec_filter, target_specs))
-                    target_specs.sort(key=target_prefs)
-
-                    new_target = target_specs[0].architecture.target
+                    new_target = self.target_from_package_preferences(spec)
                 else:
                     new_target = new_plat.target('default_target')
 
@@ -309,6 +291,33 @@ class Concretizer(object):
         spec_changed = new_arch != spec.architecture
         spec.architecture = new_arch
         return spec_changed
+
+    def target_from_package_preferences(self, spec):
+        """Returns the preferred target from the package preferences if
+        there's any.
+
+        Args:
+            spec: abstract spec to be concretized
+        """
+        target_prefs = PackagePrefs(spec.name, 'target')
+        target_specs = [spack.spec.Spec('target=%s' % tname)
+                        for tname in cpu.targets]
+
+        def tspec_filter(s):
+            # Filter target specs by whether the architecture
+            # family is the current machine type. This ensures
+            # we only consider x86_64 targets when on an
+            # x86_64 machine, etc. This may need to change to
+            # enable setting cross compiling as a default
+            target = cpu.targets[str(s.architecture.target)]
+            arch_family_name = target.family.name
+            return arch_family_name == platform.machine()
+
+        # Sort filtered targets by package prefs
+        target_specs = list(filter(tspec_filter, target_specs))
+        target_specs.sort(key=target_prefs)
+        new_target = target_specs[0].architecture.target
+        return new_target
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
@@ -353,7 +362,16 @@ class Concretizer(object):
         # compiler_for_spec Should think whether this can be more
         # efficient
         def _proper_compiler_style(cspec, aspec):
-            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+            compilers = spack.compilers.compilers_for_spec(
+                cspec, arch_spec=aspec
+            )
+            # If the spec passed as argument is concrete we want to check
+            # the versions match exactly
+            if (cspec.concrete and compilers and
+                cspec.version not in [c.version for c in compilers]):
+                return []
+
+            return compilers
 
         if spec.compiler and spec.compiler.concrete:
             if (self.check_for_compiler_existence and not
@@ -394,7 +412,9 @@ class Concretizer(object):
                     return True
                 else:
                     # No compiler with a satisfactory spec was found
-                    raise UnavailableCompilerVersionError(other_compiler)
+                    raise UnavailableCompilerVersionError(
+                        other_compiler, spec.architecture
+                    )
         else:
             # We have no hints to go by, grab any compiler
             compiler_list = spack.compilers.all_compiler_specs()
@@ -526,7 +546,12 @@ class Concretizer(object):
         current_platform = spack.architecture.get_platform(
             spec.architecture.platform
         )
-        if current_target != current_platform.target('default_target') or \
+
+        default_target = current_platform.target('default_target')
+        if PackagePrefs.has_preferred_targets(spec.name):
+            default_target = self.target_from_package_preferences(spec)
+
+        if current_target != default_target or \
             (self.abstract_spec.architecture is not None and
              self.abstract_spec.architecture.target is not None):
             return False
@@ -544,6 +569,11 @@ class Concretizer(object):
                     continue
 
                 if candidate is not None:
+                    msg = ('{0.name}@{0.version} cannot build optimized '
+                           'binaries for "{1}". Using best target possible: '
+                           '"{2}"')
+                    msg = msg.format(spec.compiler, current_target, candidate)
+                    tty.warn(msg)
                     spec.architecture.target = candidate
                     return True
             else:

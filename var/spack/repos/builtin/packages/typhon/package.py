@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,7 @@ class Typhon(CMakePackage):
     version('develop', branch='develop')
 
     version('3.0.2', sha256='28087eb07bf91d23792900214728b5eea61b5e81aa33df28c032dadd6d89b76e')
-    version('3.0.1', '89045decfba5fd468ef05ad4c924df8c')
-    version('3.0', 'ec67cd1aa585ce2410d4fa50514a916f')
+    version('3.0.1', sha256='8d6e19192e52eadf92175423ae0efd8a1a343c2ea2bc48aacb9028074447c2bb')
+    version('3.0', sha256='b9736269ebe9c0fd7efabc4716b0543144780ed26ddaf595083354113aa2efd7')
 
     depends_on('mpi')

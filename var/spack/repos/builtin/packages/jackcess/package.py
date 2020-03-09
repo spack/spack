@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,8 +13,8 @@ class Jackcess(Package):
     homepage = "http://jackcess.sourceforge.net/"
     url      = "https://sourceforge.net/projects/jackcess/files/jackcess/2.1.12/jackcess-2.1.12.jar"
 
-    version('2.1.12',   '7d051d8dd93f2fe7e5e86389ea380619', expand=False)
-    version('1.2.14.3', 'ef778421c1385ac9ab4aa7edfb954caa', expand=False,
+    version('2.1.12',   sha256='347e666d8f6abf382a0e1a7597421911423f20cf71237225f9eb53626f377f22', expand=False)
+    version('1.2.14.3', sha256='a6fab0c4b5daf23dcf7fd309ee4ffc6df12ff982510c094e45442adf88712787', expand=False,
             url='https://sourceforge.net/projects/jackcess/files/jackcess/Older%20Releases/1.2.14.3/jackcess-1.2.14.3.jar')
 
     extends('jdk')

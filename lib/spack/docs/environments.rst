@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,8 @@ Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
 file is named ``spack.lock``
+
+.. _environments-using:
 
 ------------------
 Using Environments
@@ -292,19 +294,37 @@ or
 
    $ spack -E myenv add python
 
+.. _environments_concretization:
+
 ^^^^^^^^^^^^
 Concretizing
 ^^^^^^^^^^^^
 
 Once some user specs have been added to an environment, they can be
-concretized.  The following command will concretize all user specs
-that have been added and not yet concretized:
+concretized. *By default specs are concretized separately*, one after
+the other. This mode of operation permits to deploy a full
+software stack where multiple configurations of the same package
+need to be installed alongside each other. Central installations done
+at HPC centers by system administrators or user support groups
+are a common case that fits in this behavior.
+Environments *can also be configured to concretize all
+the root specs in a self-consistent way* to ensure that
+each package in the environment comes with a single configuration. This
+mode of operation is usually what is required by software developers that
+want to deploy their development environment.
+
+Regardless of which mode of operation has been chosen, the following
+command will ensure all the root specs are concretized according to the
+constraints that are prescribed in the configuration:
 
 .. code-block:: console
 
    [myenv]$ spack concretize
 
-This command will re-concretize all specs:
+In the case of specs that are not concretized together, the command
+above will concretize only the specs that were added and not yet
+concretized. Forcing a re-concretization of all the specs can be done
+instead with this command:
 
 .. code-block:: console
 
@@ -364,11 +384,12 @@ the Environment.
 Loading
 ^^^^^^^
 
-Once an environment has been installed, the following creates a load script for it:
+Once an environment has been installed, the following creates a load
+script for it:
 
 .. code-block:: console
 
-   $ spack env myenv loads -r
+   $ spack env loads -r
 
 This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
@@ -466,6 +487,34 @@ the ``spack.yaml`` manifest under the heading ``specs``.
 Appending to this list in the yaml is identical to using the ``spack
 add`` command from the command line. However, there is more power
 available from the yaml file.
+
+"""""""""""""""""""
+Spec concretization
+"""""""""""""""""""
+
+Specs can be concretized separately or together, as already
+explained in :ref:`environments_concretization`. The behavior active
+under any environment is determined by the ``concretization`` property:
+
+.. code-block:: yaml
+
+   spack:
+       specs:
+         - ncview
+         - netcdf
+         - nco
+         - py-sphinx
+       concretization: together
+
+which can currently take either one of the two allowed values ``together`` or ``separately``
+(the default).
+
+.. admonition:: Re-concretization of user specs
+
+   When concretizing specs together the entire set of specs will be
+   re-concretized after any addition of new user specs, to ensure that
+   the environment remains consistent. When instead the specs are concretized
+   separately only the new specs will be re-concretized after any addition.
 
 """""""""""""
 Spec Matrices
@@ -764,7 +813,7 @@ ACLOCAL_PATH        share/aclocal
 LD_LIBRARY_PATH     lib, lib64
 LIBRARY_PATH        lib, lib64
 CPATH               include
-PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig
+PKG_CONFIG_PATH     lib/pkgconfig, lib64/pkgconfig, share/pkgconfig
 CMAKE_PREFIX_PATH   .
 =================== =========
 

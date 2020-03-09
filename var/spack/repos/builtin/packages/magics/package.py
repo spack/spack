@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 import glob
+import os
 
 
 class Magics(CMakePackage):
@@ -19,14 +20,14 @@ class Magics(CMakePackage):
     # The policy on which minor releases remain available and which get deleted
     # after a newer version becomes available is unclear.
     version('4.1.0', sha256='e56fb1bf82d57957a61a76284ad22024f4a7c3c989f6f796e57dfd45d88400c0')
-    version('2.34.3', 'b4180bc4114ffd723b80728947f50c17')
-    version('2.34.1', '1ecc5cc20cb0c3f2f0b9171626f09d53')
-    version('2.33.0', '8d513fd2244f2974b3517a8b30dd51f6')
-    version('2.32.0', 'e17956fffce9ea826cf994f8d275e0f5')
-    version('2.31.0', '3564dca9e1b4af096fd631906f5e6c89')
-    version('2.29.6', '56d2c31ca75162e5e86ef75d355e87f1')
-    version('2.29.4', '91c561f413316fb665b3bb563f3878d1')
-    version('2.29.0', 'db20a4d3c51a2da5657c31ae3de59709')
+    version('2.34.3', sha256='38487562e83c0470f94d9c7fb9418cbadf92f1e643033237baba2abdc77e6238')
+    version('2.34.1', sha256='8df27f8f262ebc32a61f8696df15a7b4a6e4203b2a8e53fe7aa13caa1c4e3fa4')
+    version('2.33.0', sha256='32d3079749f89988715a8c3df01b712d9b989b7fd242828ec09563e47c5a3e82')
+    version('2.32.0', sha256='233b046c93b84be60ac8011212668de35c2693d89fffcaad333b42b8c4ffad06')
+    version('2.31.0', sha256='13c314661bb154499a87db9063238d6ecebad0d4fec37b0f3d90fe34aa37eec6')
+    version('2.29.6', sha256='88cfa5e2bd823c4669a3d2fe0349f14545e810333c1b4d031ce74a7a5218a2db')
+    version('2.29.4', sha256='82bdb4f7e38776776d2155a82d0acaa017402365a043731708345ac4ac00198f')
+    version('2.29.0', sha256='4c5067c4630e831bf81d15454476ff0d050c488b768f6a10272aad62ce8d0f92')
 
     # The patch reorders includes and adds namespaces where necessary to
     # resolve ambiguity of invocations of isnan and isinf functions. The
@@ -105,7 +106,11 @@ class Magics(CMakePackage):
         for plfile in glob.glob('*/*.pl'):
             filter_file('#!/usr/bin/perl', '#!/usr/bin/env perl', plfile)
         for pyfile in glob.glob('*/*.py'):
-            filter_file('#!/usr/bin/python', '#!/usr/bin/env python', pyfile)
+            filter_file('#!/usr/bin/python',
+                        '#!/usr/bin/env {0}'.format(
+                            os.path.basename(
+                                self.spec['python'].command.path)),
+                        pyfile)
 
     def cmake_args(self):
         args = [

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xpr(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xpr"
     url      = "https://www.x.org/archive/individual/app/xpr-1.0.4.tar.gz"
 
-    version('1.0.4', '6adfa60f458474c0c226454c233fc32f')
+    version('1.0.4', sha256='9ec355388ae363fd40239a3fa56908bb2f3e53b5bfc872cf0182d14d730c6207')
 
     depends_on('libxmu')
     depends_on('libx11')

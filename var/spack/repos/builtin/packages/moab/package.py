@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,11 +26,11 @@ class Moab(AutotoolsPackage):
     # of MoAB to 5.0.2 set to current head of the master branch.
     version('5.0.2', commit='01d05b1805236ef44da36f67eb2701095f2e33c7')
     version('5.0.1', commit='6cc12bd4ae3fa7c9ad81c595e4d38fa84f0884be')
-    version('5.0.0', '1840ca02366f4d3237d44af63e239e3b')
-    version('4.9.2', '540931a604c180bbd3c1bb3ee8c51dd0')
-    version('4.9.1', '19cc2189fa266181ad9109b18d0b2ab8')
-    version('4.9.0', '40695d0a159040683cfa05586ad4a7c2')
-    version('4.8.2', '1dddd10f162fce3cfffaedc48f6f467d')
+    version('5.0.0', sha256='df5d5eb8c0d0dbb046de2e60aa611f276cbf007c9226c44a24ed19c570244e64')
+    version('4.9.2', sha256='26611b8cc24f6b7df52eb4ecbd31523d61523da0524b5a2d066a7656e2e82ac5')
+    version('4.9.1', sha256='b26cee46c096157323cafe047ad58616e16ebdb1e06caf6878673817cb4410cf')
+    version('4.9.0', sha256='267a7c05da847e4ea856db2c649a5484fb7bdc132ab56721ca50ee69a7389f4d')
+    version('4.8.2', sha256='b105cff42930058dc14eabb9a25e979df7289b175732fe319d2494e83e09e968')
 
     variant('mpi', default=True, description='enable mpi support')
     variant('hdf5', default=True,
@@ -39,8 +39,6 @@ class Moab(AutotoolsPackage):
             description='Required to enable the ExodusII reader/writer.')
     variant('pnetcdf', default=False,
             description='Enable pnetcdf (AKA parallel-netcdf) support')
-    variant('netcdf', default=False,
-            description='Required to enable the ExodusII reader/writer.')
     variant('zoltan', default=False, description='Enable zoltan support')
     variant('cgm', default=False, description='Enable common geometric module')
     variant('metis', default=True, description='Enable metis link')
@@ -77,7 +75,7 @@ class Moab(AutotoolsPackage):
     depends_on('mpi', when='+mpi')
     depends_on('hdf5', when='+hdf5')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c', when='+netcdf')
     depends_on('parallel-netcdf', when='+pnetcdf')
     depends_on('cgm', when='+cgm')
     depends_on('metis', when='+metis')
@@ -129,7 +127,7 @@ class Moab(AutotoolsPackage):
             options.append('--without-hdf5')
 
         if '+netcdf' in spec:
-            options.append('--with-netcdf=%s' % spec['netcdf'].prefix)
+            options.append('--with-netcdf=%s' % spec['netcdf-c'].prefix)
         else:
             options.append('--without-netcdf')
 

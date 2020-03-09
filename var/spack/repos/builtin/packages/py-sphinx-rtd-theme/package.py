@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PySphinxRtdTheme(PythonPackage):
     import_modules = ['sphinx_rtd_theme']
 
     version('0.4.3',  sha256='728607e34d60456d736cc7991fd236afb828b21b82f956c5ea75f94c8414040a')
-    version('0.2.5b1',  '0923473a43bd2527f32151f195f2a521')
-    version('0.1.10a0', '83bd95cae55aa8b773a8cc3a41094282')
+    version('0.2.5b1',  sha256='d99513e7f2f8b9da8fdc189ad83df926b83d7fb15ad7ed07f24665d1f29d38da')
+    version('0.1.10a0', sha256='1225df3fc8337b14d53779435381b7f7705b9f4819610f6b74e555684cee2ac4')
 
     depends_on('py-setuptools', type='build')

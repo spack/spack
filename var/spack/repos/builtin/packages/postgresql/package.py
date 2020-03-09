@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,14 +24,14 @@ class Postgresql(AutotoolsPackage):
     version('10.6',   sha256='68a8276f08bda8fbefe562faaf8831cb20664a7a1d3ffdbbcc5b83e08637624b')
     version('10.5',   sha256='6c8e616c91a45142b85c0aeb1f29ebba4a361309e86469e0fb4617b6a73c4011')
     version('10.4',   sha256='1b60812310bd5756c62d93a9f93de8c28ea63b0df254f428cd1cf1a4d9020048')
-    version('10.3', '506498796a314c549388cafb3d5c717a')
-    version('10.2', 'e97c3cc72bdf661441f29069299b260a')
+    version('10.3', sha256='6ea268780ee35e88c65cdb0af7955ad90b7d0ef34573867f223f14e43467931a')
+    version('10.2', sha256='fe32009b62ddb97f7f014307ce9d0edb6972f5a698e63cb531088e147d145bad')
     version('10.1',   sha256='3ccb4e25fe7a7ea6308dea103cac202963e6b746697366d72ec2900449a5e713')
     version('10.0',   sha256='712f5592e27b81c5b454df96b258c14d94b6b03836831e015c65d6deeae57fd1')
     version('9.6.12', sha256='2e8c8446ba94767bda8a26cf5a2152bf0ae68a86aaebf894132a763084579d84')
     version('9.6.11', sha256='38250adc69a1e8613fb926c894cda1d01031391a03648894b9a6e13ff354a530')
-    version('9.5.3', '3f0c388566c688c82b01a0edf1e6b7a0')
-    version('9.3.4', 'd0a41f54c377b2d2fab4a003b0dac762')
+    version('9.5.3', sha256='7385c01dc58acba8d7ac4e6ad42782bd7c0b59272862a3a3d5fe378d4503a0b4')
+    version('9.3.4', sha256='9ee819574dfc8798a448dc23a99510d2d8924c2f8b49f8228cd77e4efc8a6621')
 
     variant('client_only', default=False,
             description='Build and install client only.')
@@ -87,25 +87,32 @@ class Postgresql(AutotoolsPackage):
         else:
             AutotoolsPackage.install(self, spec, prefix)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
 
         if '+perl' in spec:
-            run_env.prepend_path('PERL5LIB', self.prefix.lib)
+            env.prepend_path('PERL5LIB', self.prefix.lib)
         if '+tcl' in spec:
-            run_env.prepend_path('TCLLIBPATH', self.prefix.lib)
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
-            run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def setup_dependent_build_environment(self, env, dependent_spec):
         spec = self.spec
 
         if '+perl' in spec:
-            spack_env.prepend_path('PERL5LIB', self.prefix.lib)
-            run_env.prepend_path('PERL5LIB', self.prefix.lib)
+            env.prepend_path('PERL5LIB', self.prefix.lib)
         if '+tcl' in spec:
-            spack_env.prepend_path('TCLLIBPATH', self.prefix.lib)
-            run_env.prepend_path('TCLLIBPATH', self.prefix.lib)
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
         if '+python' in spec:
-            spack_env.prepend_path('PYTHONPATH', self.prefix.lib)
-            run_env.prepend_path('PYTHONPATH', self.prefix.lib)
+            env.prepend_path('PYTHONPATH', self.prefix.lib)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        spec = self.spec
+
+        if '+perl' in spec:
+            env.prepend_path('PERL5LIB', self.prefix.lib)
+        if '+tcl' in spec:
+            env.prepend_path('TCLLIBPATH', self.prefix.lib)
+        if '+python' in spec:
+            env.prepend_path('PYTHONPATH', self.prefix.lib)

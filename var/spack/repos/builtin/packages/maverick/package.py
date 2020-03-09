@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Maverick(MakefilePackage):
     homepage = "https://github.com/bobverity/MavericK"
     url      = "https://github.com/bobverity/MavericK/archive/v1.0.4.tar.gz"
 
-    version('1.0.4', '0c17c9a73fd0ac0aef17339173ddedc2')
+    version('1.0.4', sha256='d4634c1b3f09cec9eb60d72348e2f479d74220ecbdebd940bb18b480db8df8cb')
 
     conflicts('%gcc@:6.0')
     conflicts('%cce')

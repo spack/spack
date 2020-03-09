@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,13 +18,14 @@ class Vim(AutotoolsPackage):
     homepage = "http://www.vim.org"
     url      = "https://github.com/vim/vim/archive/v8.1.0338.tar.gz"
 
-    version('8.1.0338', '94191b4141245a5deb4955c4a80359bb')
-    version('8.1.0001', 'edb6f5c67cb3100ea9e3966a43b9c9da')
-    version('8.0.1376', '62855881a2d96d48956859d74cfb8a3b')
-    version('8.0.0503', '82b77bd5cb38b70514bed47cfe033b8c')
-    version('8.0.0454', '4030bf677bdfbd14efb588e4d9a24128')
-    version('8.0.0134', 'c74668d25c2acc85d655430dd60886cd')
-    version('7.4.2367', 'a0a7bc394f7ab1d95571fe6ab05da3ea')
+    version('8.1.2141', sha256='7be3c3d88a6c871121230ffb9b7371b1d2ab462118dedb967c7265473af1144b')
+    version('8.1.0338', sha256='3febcc4e49eaca458be1a1e8055a3a52887aa2054b03e24d5f38d192c3de51a0')
+    version('8.1.0001', sha256='c342acaa26589f371fa34a5ca213b95811f26185c12443f8f48ad2868dee2935')
+    version('8.0.1376', sha256='1ad8b5a0b9b63df5abc3f8050e31e1cb49379ffcfd2662a56daeff8bd3d780b9')
+    version('8.0.0503', sha256='f2a316a7ae83eccfecf4a700e631094fce9df873358e3d5f112134faa74082ac')
+    version('8.0.0454', sha256='e1f683c4a0e3fa56fa02769bbca576e4960850b0ca8640514a7b114b88c27b89')
+    version('8.0.0134', sha256='1b3e3e7d187eed55cbdb0a1dae6b8f3b885005fbae84222420877d7afa3b2310')
+    version('7.4.2367', sha256='a9ae4031ccd73cc60e771e8bf9b3c8b7f10f63a67efce7f61cd694cd8d7cda5c')
 
     feature_sets = ('huge', 'big', 'normal', 'small', 'tiny')
     for fs in feature_sets:
@@ -56,6 +57,7 @@ class Vim(AutotoolsPackage):
     depends_on('libxtst', when="+x")
 
     depends_on('ncurses', when="@7.4:")
+    depends_on('findutils', type='build')
 
     def configure_args(self):
         spec = self.spec
@@ -79,7 +81,10 @@ class Vim(AutotoolsPackage):
 
         configure_args = ["--enable-fail-if-missing"]
 
-        configure_args.append("--with-tlib=ncursesw")
+        if '+termlib' in spec['ncurses']:
+            configure_args.append("--with-tlib=tinfow")
+        else:
+            configure_args.append("--with-tlib=ncursesw")
 
         configure_args.append("--with-features=" + feature_set)
 

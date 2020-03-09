@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,13 +13,13 @@ class Flex(AutotoolsPackage):
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
 
-    version('2.6.4', '2882e3179748cc9f9c23ec593d6adc8d')
-    version('2.6.3', 'a5f65570cd9107ec8a8ec88f17b31bb1')
+    version('2.6.4', sha256='e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995')
+    version('2.6.3', sha256='68b2742233e747c462f781462a2a1e299dc6207401dac8f0bbb316f48565c2aa')
     # Avoid flex '2.6.2' (major bug)
     # See issue #2554; https://github.com/westes/flex/issues/113
-    version('2.6.1', '05bcd8fb629e0ae130311e8a6106fa82')
-    version('2.6.0', '760be2ee9433e822b6eb65318311c19d')
-    version('2.5.39', '5865e76ac69c05699f476515592750d7')
+    version('2.6.1', sha256='3c43f9e658e45e8aae3cf69fa11803d60550865f023852830d557c5f0623c13b')
+    version('2.6.0', sha256='cde6e46064a941a3810f7bbc612a2c39cb3aa29ce7eb775089c2515d0adfa7e9')
+    version('2.5.39', sha256='258d3c9c38cae05932fb470db58b6a288a361c448399e6bda2694ef72a76e7cd')
 
     variant('lex', default=True,
             description="Provide symlinks for lex and libl")
@@ -27,6 +27,8 @@ class Flex(AutotoolsPackage):
     depends_on('bison',         type='build')
     depends_on('gettext@0.19:', type='build')
     depends_on('help2man',      type='build')
+    depends_on('findutils',     type='build')
+    depends_on('diffutils',     type='build')
 
     # Older tarballs don't come with a configure script and the patch for
     # 2.6.4 touches configure

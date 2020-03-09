@@ -1,27 +1,64 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shutil
 from spack import *
 
 
-class Npm(AutotoolsPackage):
+# NOTE: not actually an Autotools package
+class Npm(Package):
     """npm: A package manager for javascript."""
 
     homepage = "https://github.com/npm/npm"
     # base http://www.npmjs.com/
-    url      = "https://registry.npmjs.org/npm/-/npm-3.10.5.tgz"
+    url      = "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
 
-    version('3.10.9', 'ec1eb22b466ce87cdd0b90182acce07f')
-    version('3.10.5', '46002413f4a71de9b0da5b506bf1d992')
+    version('6.13.7', sha256='6adf71c198d61a5790cf0e057f4ab72c6ef6c345d72bed8bb7212cb9db969494')
+    version('6.13.4', sha256='a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7')
+    version('3.10.9', sha256='fb0871b1aebf4b74717a72289fade356aedca83ee54e7386e38cb51874501dd6')
+    version('3.10.5', sha256='ff019769e186152098841c1fa6325e5a79f7903a45f13bd0046a4dc8e63f845f')
 
     depends_on('node-js', type=('build', 'run'))
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    # npm 6.13.4 ships with node-gyp 5.0.5, which contains several Python 3
+    # compatibility issues on macOS. Manually update to node-gyp 6.0.1 for
+    # full Python 3 support.
+    resource(name='node-gyp', destination='node-gyp',
+             url='https://registry.npmjs.org/node-gyp/-/node-gyp-6.0.1.tgz',
+             sha256='bbc0e137e17a63676efc97a0e3b1fcf101498a1c2c01c3341cd9491f248711b8')
+    resource(name='env-paths', destination='env-paths',
+             url='https://registry.npmjs.org/env-paths/-/env-paths-2.2.0.tgz',
+             sha256='168b394fbca60ea81dc84b1824466df96246b9eb4d671c2541f55f408a264b4c')
+
+    phases = ['configure', 'build', 'install']
+
+    def patch(self):
+        shutil.rmtree('node_modules/node-gyp')
+        install_tree('node-gyp/package', 'node_modules/node-gyp')
+        filter_file(r'"node-gyp": "\^5\..*"', '"node-gyp": "^6.0.1"',
+                    'package.json')
+        install_tree('env-paths/package', 'node_modules/env-paths')
+
+    def configure(self, spec, prefix):
+        configure('--prefix={0}'.format(prefix))
+
+    def build(self, spec, prefix):
+        make()
+
+    def install(self, spec, prefix):
+        make('install')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
         if not os.path.isdir(npm_config_cache_dir):
             mkdir(npm_config_cache_dir)
-        run_env.set('npm_config_cache', npm_config_cache_dir)
-        spack_env.set('npm_config_cache', npm_config_cache_dir)
+        env.set('npm_config_cache', npm_config_cache_dir)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
+        if not os.path.isdir(npm_config_cache_dir):
+            mkdir(npm_config_cache_dir)
+        env.set('npm_config_cache', npm_config_cache_dir)

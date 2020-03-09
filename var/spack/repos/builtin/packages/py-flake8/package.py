@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,9 @@ class PyFlake8(PythonPackage):
 
     version('3.7.8',  sha256='201720797dc9691dd349819994e4a0bc281b70ee2ff77b0c928bb1d3c5aa9810')
     version('3.7.7',  sha256='b3f76b02351008dc772276e74b09dd3d4b5c567ff8c6ab573352cb8fd7007444')
-    version('3.5.0', '4e312803bbd8e4a1e566ffac887ae647')
-    version('3.0.4', 'cf2a7d8c92070f7b62253404ffb54df7')
-    version('2.5.4', '366dd1de6c300254c830b81e66979f06')
+    version('3.5.0', sha256='60ffe2fdacce4ebe7cadc30f310cf1edfd8ff654ef79525d90cf0756e69de44e')
+    version('3.0.4', sha256='87a2b642900a569fc2f27ab3b79573e0d02d2fee7445c6abab84eb33dcb60365')
+    version('2.5.4', sha256='ce03cc1acbe1726775ca57b40fab1d177550debb2f2f6b7a3c860541f3971cf5')
 
     extends('python', ignore='bin/(pyflakes|pycodestyle)')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))

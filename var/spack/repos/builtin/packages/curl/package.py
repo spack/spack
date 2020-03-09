@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,23 +15,24 @@ class Curl(AutotoolsPackage):
     # URL must remain http:// so Spack can bootstrap curl
     url      = "http://curl.haxx.se/download/curl-7.60.0.tar.bz2"
 
+    version('7.68.0', sha256='207f54917dd6a2dc733065ccf18d61bb5bebeaceb5df49cd9445483e8623eeb9')
     version('7.63.0', sha256='9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8')
-    version('7.60.0', 'bd2aabf78ded6a9aec8a54532fd6b5d7')
-    version('7.59.0', 'a2192804f7c2636a09320416afcf888e')
-    version('7.56.0', 'e0caf257103e0c77cee5be7e9ac66ca4')
-    version('7.54.0', '89bb7ba87384dfbf4f1a3f953da42458')
-    version('7.53.1', 'fb1f03a142236840c1a77c035fa4c542')
-    version('7.52.1', 'dd014df06ff1d12e173de86873f9f77a')
-    version('7.50.3', 'bd177fd6deecce00cfa7b5916d831c5e')
-    version('7.50.2', '6e161179f7af4b9f8b6ea21420132719')
-    version('7.50.1', '015f6a0217ca6f2c5442ca406476920b')
-    version('7.49.1', '6bb1f7af5b58b30e4e6414b8c1abccab')
-    version('7.47.1', '9ea3123449439bbd960cd25cf98796fb')
-    version('7.46.0', '9979f989a2a9930d10f1b3deeabc2148')
-    version('7.45.0', '62c1a352b28558f25ba6209214beadc8')
-    version('7.44.0', '6b952ca00e5473b16a11f05f06aa8dae')
-    version('7.43.0', '11bddbb452a8b766b932f859aaeeed39')
-    version('7.42.1', '296945012ce647b94083ed427c1877a8')
+    version('7.60.0', sha256='897dfb2204bd99be328279f88f55b7c61592216b0542fcbe995c60aa92871e9b')
+    version('7.59.0', sha256='b5920ffd6a8c95585fb95070e0ced38322790cb335c39d0dab852d12e157b5a0')
+    version('7.56.0', sha256='de60a4725a3d461c70aa571d7d69c788f1816d9d1a8a2ef05f864ce8f01279df')
+    version('7.54.0', sha256='f50ebaf43c507fa7cc32be4b8108fa8bbd0f5022e90794388f3c7694a302ff06')
+    version('7.53.1', sha256='1c7207c06d75e9136a944a2e0528337ce76f15b9ec9ae4bb30d703b59bf530e8')
+    version('7.52.1', sha256='d16185a767cb2c1ba3d5b9096ec54e5ec198b213f45864a38b3bda4bbf87389b')
+    version('7.50.3', sha256='7b7347d976661d02c84a1f4d6daf40dee377efdc45b9e2c77dedb8acf140d8ec')
+    version('7.50.2', sha256='0c72105df4e9575d68bcf43aea1751056c1d29b1040df6194a49c5ac08f8e233')
+    version('7.50.1', sha256='3c12c5f54ccaa1d40abc65d672107dcc75d3e1fcb38c267484334280096e5156')
+    version('7.49.1', sha256='eb63cec4bef692eab9db459033f409533e6d10e20942f4b060b32819e81885f1')
+    version('7.47.1', sha256='ddc643ab9382e24bbe4747d43df189a0a6ce38fcb33df041b9cb0b3cd47ae98f')
+    version('7.46.0', sha256='b7d726cdd8ed4b6db0fa1b474a3c59ebbbe4dcd4c61ac5e7ade0e0270d3195ad')
+    version('7.45.0', sha256='65154e66b9f8a442b57c436904639507b4ac37ec13d6f8a48248f1b4012b98ea')
+    version('7.44.0', sha256='1e2541bae6582bb697c0fbae49e1d3e6fad5d05d5aa80dbd6f072e0a44341814')
+    version('7.43.0', sha256='baa654a1122530483ccc1c58cc112fec3724a82c11c6a389f1e6a37dc8858df9')
+    version('7.42.1', sha256='e2905973391ec2dfd7743a8034ad10eeb58dab8b3a297e7892a41a7999cac887')
 
     variant('nghttp2',    default=False, description='build nghttp2 library (requires C++11)')
     variant('libssh2',    default=False, description='enable libssh2 support')

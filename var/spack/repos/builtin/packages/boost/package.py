@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,52 +22,55 @@ class Boost(Package):
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
+    maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
-    version('1.70.0', '5b2e5ccc454503cfbba6c1221f5d495f0de279ea')
-    version('1.69.0', 'ea6eee4b5999f9c02105386850f63a53f0250eaa')
-    version('1.68.0', '18863a7cae4d58ae85eb63d400f774f60a383411')
-    version('1.67.0', '694ae3f4f899d1a80eb7a3b31b33be73c423c1ae')
-    version('1.66.0', 'b6b284acde2ad7ed49b44e856955d7b1ea4e9459')
-    version('1.65.1', '41d7542ce40e171f3f7982aff008ff0d')
-    version('1.65.0', '5512d3809801b0a1b9dd58447b70915d')
+    version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
+    version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
+    version('1.70.0', sha256='430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778')
+    version('1.69.0', sha256='8f32d4617390d1c2d16f26a27ab60d97807b35440d45891fa340fc2648b04406')
+    version('1.68.0', sha256='7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7')
+    version('1.67.0', sha256='2684c972994ee57fc5632e03bf044746f6eb45d4920c343937a465fd67a5adba')
+    version('1.66.0', sha256='5721818253e6a0989583192f96782c4a98eb6204965316df9f5ad75819225ca9')
+    version('1.65.1', sha256='9807a5d16566c57fd74fb522764e0b134a8bbe6b6e8967b83afefd30dcd3be81')
+    version('1.65.0', sha256='ea26712742e2fb079c2a566a31f3266973b76e38222b9f88b387e3c8b2f9902c')
     # NOTE: 1.64.0 seems fine for *most* applications, but if you need
     #       +python and +mpi, there seem to be errors with out-of-date
     #       API calls from mpi/python.
     #       See: https://github.com/spack/spack/issues/3963
-    version('1.64.0', '93eecce2abed9d2442c9676914709349')
-    version('1.63.0', '1c837ecd990bb022d07e7aab32b09847')
-    version('1.62.0', '5fb94629535c19e48703bdb2b2e9490f')
-    version('1.61.0', '6095876341956f65f9d35939ccea1a9f')
-    version('1.60.0', '65a840e1a0b13a558ff19eeb2c4f0cbe')
-    version('1.59.0', '6aa9a5c6a4ca1016edd0ed1178e3cb87')
-    version('1.58.0', 'b8839650e61e9c1c0a89f371dd475546')
-    version('1.57.0', '1be49befbdd9a5ce9def2983ba3e7b76')
-    version('1.56.0', 'a744cf167b05d72335f27c88115f211d')
-    version('1.55.0', 'd6eef4b4cacb2183f2bf265a5a03a354')
-    version('1.54.0', '15cb8c0803064faef0c4ddf5bc5ca279')
-    version('1.53.0', 'a00d22605d5dbcfb4c9936a9b35bc4c2')
-    version('1.52.0', '3a855e0f919107e0ca4de4d84ad3f750')
-    version('1.51.0', '4b6bd483b692fd138aef84ed2c8eb679')
-    version('1.50.0', '52dd00be775e689f55a987baebccc462')
-    version('1.49.0', '0d202cb811f934282dea64856a175698')
-    version('1.48.0', 'd1e9a7a7f532bb031a3c175d86688d95')
-    version('1.47.0', 'a2dc343f7bc7f83f8941e47ed4a18200')
-    version('1.46.1', '7375679575f4c8db605d426fc721d506')
-    version('1.46.0', '37b12f1702319b73876b0097982087e0')
-    version('1.45.0', 'd405c606354789d0426bc07bea617e58')
-    version('1.44.0', 'f02578f5218f217a9f20e9c30e119c6a')
-    version('1.43.0', 'dd49767bfb726b0c774f7db0cef91ed1')
-    version('1.42.0', '7bf3b4eb841b62ffb0ade2b82218ebe6')
-    version('1.41.0', '8bb65e133907db727a2a825c5400d0a6')
-    version('1.40.0', 'ec3875caeac8c52c7c129802a8483bd7')
-    version('1.39.0', 'a17281fd88c48e0d866e1a12deecbcc0')
-    version('1.38.0', '5eca2116d39d61382b8f8235915cb267')
-    version('1.37.0', '8d9f990bfb7e83769fa5f1d6f065bc92')
-    version('1.36.0', '328bfec66c312150e4c2a78dcecb504b')
-    version('1.35.0', 'dce952a7214e72d6597516bcac84048b')
-    version('1.34.1', '2d938467e8a448a2c9763e0a9f8ca7e5')
-    version('1.34.0', 'ed5b9291ffad776f8757a916e1726ad0')
+    version('1.64.0', sha256='7bcc5caace97baa948931d712ea5f37038dbb1c5d89b43ad4def4ed7cb683332')
+    version('1.63.0', sha256='beae2529f759f6b3bf3f4969a19c2e9d6f0c503edcb2de4a61d1428519fcb3b0')
+    version('1.62.0', sha256='36c96b0f6155c98404091d8ceb48319a28279ca0333fba1ad8611eb90afb2ca0')
+    version('1.61.0', sha256='a547bd06c2fd9a71ba1d169d9cf0339da7ebf4753849a8f7d6fdb8feee99b640')
+    version('1.60.0', sha256='686affff989ac2488f79a97b9479efb9f2abae035b5ed4d8226de6857933fd3b')
+    version('1.59.0', sha256='727a932322d94287b62abb1bd2d41723eec4356a7728909e38adb65ca25241ca')
+    version('1.58.0', sha256='fdfc204fc33ec79c99b9a74944c3e54bd78be4f7f15e260c0e2700a36dc7d3e5')
+    version('1.57.0', sha256='910c8c022a33ccec7f088bd65d4f14b466588dda94ba2124e78b8c57db264967')
+    version('1.56.0', sha256='134732acaf3a6e7eba85988118d943f0fa6b7f0850f65131fff89823ad30ff1d')
+    version('1.55.0', sha256='fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52')
+    version('1.54.0', sha256='047e927de336af106a24bceba30069980c191529fd76b8dff8eb9a328b48ae1d')
+    version('1.53.0', sha256='f88a041b01882b0c9c5c05b39603ec8383fb881f772f6f9e6e6fd0e0cddb9196')
+    version('1.52.0', sha256='222b6afd7723f396f5682c20130314a10196d3999feab5ba920d2a6bf53bac92')
+    version('1.51.0', sha256='fb2d2335a29ee7fe040a197292bfce982af84a645c81688a915c84c925b69696')
+    version('1.50.0', sha256='c9ace2b8c81fa6703d1d17c7e478de3bc51101c5adbdeb3f6cb72cf3045a8529')
+    version('1.49.0', sha256='dd748a7f5507a7e7af74f452e1c52a64e651ed1f7263fce438a06641d2180d3c')
+    version('1.48.0', sha256='1bf254b2d69393ccd57a3cdd30a2f80318a005de8883a0792ed2f5e2598e5ada')
+    version('1.47.0', sha256='815a5d9faac4dbd523fbcf3fe1065e443c0bbf43427c44aa423422c6ec4c2e31')
+    version('1.46.1', sha256='e1dfbf42b16e5015c46b98e9899c423ca4d04469cbeee05e43ea19236416d883')
+    version('1.46.0', sha256='2f90f60792fdc25e674b8a857a0bcbb8d01199651719c90d5c4f8c61c08eba59')
+    version('1.45.0', sha256='55ed3ec51d5687e8224c988e22bef215dacce04e037d9f689569a80c4377a6d5')
+    version('1.44.0', sha256='45c328029d97d1f1dc7ff8c9527cd0c5cc356636084a800bca2ee4bfab1978db')
+    version('1.43.0', sha256='344f100b1aa410e812cabf0e4130728a80be042bf346135516b9187853806120')
+    version('1.42.0', sha256='4b1eb95bd250ce15ac66435d6167f225b072b0d3a7eb72477a31847a9ca9e609')
+    version('1.41.0', sha256='1ef94e6749eaf13318284b4f629be063544c7015b45e38113b975ac1945cc726')
+    version('1.40.0', sha256='36cf4a239b587067a4923fdf6e290525a14c3af29829524fa73f3dec6841530c')
+    version('1.39.0', sha256='44785eae8c6cce61a29a8a51f9b737e57b34d66baa7c0bcd4af188832b8018fd')
+    version('1.38.0', sha256='3ee3a45af4d2fabf343b9e05cfbe033c35d63719b45a6554d5849e4a34216066')
+    version('1.37.0', sha256='d52ef49f70b1b9addc4e0d1a3a2a1966227f0d173c3301bac3e6d399eeac5472')
+    version('1.36.0', sha256='9a4a0cfbbd227c20a13519a2c41f2e707dc0d89e518a3c7bfcd381f7b7fbcdef')
+    version('1.35.0', sha256='f8bf7368a22ccf2e2cf77048ab2129744be4c03f8488c76ad31c0aa229b280da')
+    version('1.34.1', sha256='0f866c75b025a4f1340117a106595cc0675f48ba1e5a9b5c221ec7f19e96ec4c')
+    version('1.34.0', sha256='455cb8fa41b759272768257c2e7bdc5c47ec113245dfa533f275e787a855efd2')
 
     default_install_libs = set(['atomic',
                                 'chrono',
@@ -93,8 +96,12 @@ class Boost(Package):
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
+    #
+    # Boost.Container can be both header-only and compiled. '+container'
+    # indicates the compiled version which requires Extended Allocator
+    # support. The header-only library is installed when no variant is given.
     default_noinstall_libs\
-        = set(['context', 'coroutine', 'fiber', 'mpi', 'python'])
+        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
@@ -171,6 +178,9 @@ class Boost(Package):
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
 
+    # Container's Extended Allocators were not added until 1.56.0
+    conflicts('+container', when='@:1.55.99')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -205,7 +215,7 @@ class Boost(Package):
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
-    patch('clang-linux_add_option2.patch', when='@:1.55.0')
+    patch('clang-linux_add_option2.patch', when='@1.47.0:1.55.0')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -216,9 +226,6 @@ class Boost(Package):
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("platform=darwin"):
-            return 'darwin'
-
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
@@ -253,7 +260,7 @@ class Boost(Package):
         boost_toolset_id = self.determine_toolset(spec)
 
         # Arm compiler bootstraps with 'gcc' (but builds as 'clang')
-        if spec.satisfies('%arm'):
+        if spec.satisfies('%arm') or spec.satisfies('%fj'):
             options.append('--with-toolset=gcc')
         else:
             options.append('--with-toolset=%s' % boost_toolset_id)
@@ -305,7 +312,9 @@ class Boost(Package):
                 '-s', 'BZIP2_INCLUDE=%s' % spec['bzip2'].prefix.include,
                 '-s', 'BZIP2_LIBPATH=%s' % spec['bzip2'].prefix.lib,
                 '-s', 'ZLIB_INCLUDE=%s' % spec['zlib'].prefix.include,
-                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib])
+                '-s', 'ZLIB_LIBPATH=%s' % spec['zlib'].prefix.lib,
+                '-s', 'NO_LZMA=1',
+                '-s', 'NO_ZSTD=1'])
 
         link_types = ['static']
         if '+shared' in spec:
@@ -365,6 +374,12 @@ class Boost(Package):
                 cxxflags.append('-stdlib=libc++')
                 options.extend(['toolset=clang',
                                 'linkflags="-stdlib=libc++"'])
+        elif spec.satisfies('%xl') or spec.satisfies('%xl_r'):
+            # see also: https://lists.boost.org/boost-users/2019/09/89953.php
+            # the cxxstd setting via spack is not sufficient to drive the
+            # change into boost compilation
+            if spec.variants['cxxstd'].value == '11':
+                cxxflags.append('-std=c++11')
 
         if cxxflags:
             options.append('cxxflags="{0}"'.format(' '.join(cxxflags)))
@@ -397,15 +412,6 @@ class Boost(Package):
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, 'boost')
-            mkdirp(join_path(prefix, 'include'))
-            dst = join_path(prefix, 'include', 'boost')
-            install_tree(src, dst)
-            return
 
         # Remove libraries that the release version does not support
         if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
@@ -424,6 +430,16 @@ class Boost(Package):
             with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
+
+        if not with_libs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix
+            # directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path

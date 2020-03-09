@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Sparta(Package):
     homepage = "https://github.com/atulkakrana/sPARTA.github"
     url      = "https://github.com/atulkakrana/sPARTA/archive/1.25.tar.gz"
 
-    version('1.25', '50fda66bf860f63ae8aef5e8fb997a75')
+    version('1.25', sha256='007997b9bf5041ae35c9bb79455d533c0f0773f9dd3ba4e5ddf306139625681f')
 
     depends_on('bowtie2')
     depends_on('python@3:', type=('build', 'run'))

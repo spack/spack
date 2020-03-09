@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Libxft(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXft"
     url      = "https://www.x.org/archive/individual/lib/libXft-2.3.2.tar.gz"
 
-    version('2.3.2', '3a2c1ce2641817dace55cd2bfe10b0f0')
+    version('2.3.2', sha256='26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507')
 
     depends_on('freetype@2.1.6:')
     depends_on('fontconfig@2.5.92:')

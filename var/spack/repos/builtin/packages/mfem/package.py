@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,31 +45,38 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    # Tagged development version used by xSDK
+    version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
+
+    version('4.0.0',
+            'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
+            url='https://bit.ly/mfem-4-0', extension='.tar.gz',
+            preferred=True)
+
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
 
     version('3.4.0',
-            '4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://bit.ly/mfem-3-4', extension='.tar.gz',
-            preferred=True)
+            sha256='4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
+            url='https://bit.ly/mfem-3-4', extension='.tar.gz')
 
     version('3.3.2',
-            'b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
+            sha256='b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
             url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.3.1-laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
-            'b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
+            sha256='b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
             url='http://goo.gl/Vrpsns', extension='.tar.gz')
 
     version('3.2',
-            '2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
+            sha256='2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
             url='http://goo.gl/Y9T75B', extension='.tar.gz')
 
     version('3.1',
-            '841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
+            sha256='841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
             url='http://goo.gl/xrScXn', extension='.tar.gz')
 
     variant('static', default=True,
@@ -89,6 +96,9 @@ class Mfem(Package):
             description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
+    variant('occa', default=False, description='Enable OCCA backend')
+    variant('raja', default=False, description='Enable RAJA backend')
+
     variant('threadsafe', default=False,
             description=('Enable thread safe features.'
                          ' Required for OpenMP.'
@@ -161,12 +171,13 @@ class Mfem(Package):
 
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
-    depends_on('lapack', when='+lapack')
+    depends_on('lapack@3.0:', when='+lapack')
 
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
+    depends_on('sundials@5.0.0', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('pumi', when='+pumi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
@@ -178,23 +189,41 @@ class Mfem(Package):
     # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
     #            when='+petsc')
     depends_on('mpfr', when='+mpfr')
-    depends_on('netcdf', when='+netcdf')
+    depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
 
+    # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
+    # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
+    conflicts('+hypre+superlu-dist',
+              when='mfem@4.0.0 ^hypre@2.16.0 ^superlu-dist@6.1.1')
+
+    # The OCCA backend is first available in MFEM 4.0.0
+    depends_on('occa', when='mfem@4.0.0:+occa')
+    conflicts('+occa', when='mfem@:3.99.999')
+
+    # The RAJA backend is first available in MFEM 4.0.0
+    depends_on('raja', when='mfem@4.0.0:+raja')
+    conflicts('+raja', when='mfem@:3.99.999')
+
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
 
+    # Patch to fix MFEM makefile syntax error. See
+    # https://github.com/mfem/mfem/issues/1042 for the bug report and
+    # https://github.com/mfem/mfem/pull/1043 for the bugfix contributed
+    # upstream.
+    patch('mfem-4.0.0-makefile-syntax-fix.patch', when='@4.0.0')
     phases = ['configure', 'build', 'install']
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.unset('MFEM_DIR')
-        spack_env.unset('MFEM_BUILD_DIR')
+    def setup_build_environment(self, env):
+        env.unset('MFEM_DIR')
+        env.unset('MFEM_BUILD_DIR')
 
     #
     # Note: Although MFEM does support CMake configuration, MFEM
@@ -261,7 +290,14 @@ class Mfem(Package):
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
 
+        if spec.satisfies('@4.0.0:'):
+            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa'),
+                        'MFEM_USE_RAJA=%s' % yes_no('+raja')]
+
         cxxflags = spec.compiler_flags['cxxflags']
+        if self.spec.satisfies('@4.0:'):
+            cxxflags.append(self.compiler.cxx11_flag)
+
         if cxxflags:
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
@@ -332,9 +368,9 @@ class Mfem(Package):
 
         if '+netcdf' in spec:
             options += [
-                'NETCDF_OPT=-I%s' % spec['netcdf'].prefix.include,
+                'NETCDF_OPT=-I%s' % spec['netcdf-c'].prefix.include,
                 'NETCDF_LIB=%s' %
-                ld_flags_from_dirs([spec['netcdf'].prefix.lib], ['netcdf'])]
+                ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
 
         if '+gzstream' in spec:
             if "@:3.3.2" in spec:
@@ -371,6 +407,20 @@ class Mfem(Package):
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
 
+        if '+occa' in spec:
+            options += ['OCCA_DIR=%s' % spec['occa'].prefix,
+                        'OCCA_OPT=-I%s' % spec['occa'].prefix.include,
+                        'OCCA_LIB=%s' %
+                        ld_flags_from_dirs([spec['occa'].prefix.lib],
+                                           ['occa'])]
+
+        if '+raja' in spec:
+            options += ['RAJA_DIR=%s' % spec['raja'].prefix,
+                        'RAJA_OPT=-I%s' % spec['raja'].prefix.include,
+                        'RAJA_LIB=%s' %
+                        ld_flags_from_dirs([spec['raja'].prefix.lib],
+                                           ['RAJA'])]
+
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value
         if timer != 'auto':
@@ -389,8 +439,35 @@ class Mfem(Package):
                 hdf5 = conduit['hdf5']
                 headers += find_headers('hdf5', hdf5.prefix.include)
                 libs += hdf5.libs
+
+            ##################
+            # cyrush note:
+            ##################
+            # spack's HeaderList is applying too much magic, undermining us:
+            #
+            #  It applies a regex to strip back to the last "include" dir
+            #  in the path. In our case we need to pass the following
+            #  as part of the CONDUIT_OPT flags:
+            #
+            #    -I<install_path>/include/conduit
+            #
+            #  I tried several ways to present this path to the HeaderList,
+            #  but the regex always kills the trailing conduit dir
+            #  breaking build.
+            #
+            #  To resolve the issue, we simply join our own string with
+            #  the headers results (which are important b/c they handle
+            #  hdf5 paths when enabled).
+            ##################
+
+            # construct proper include path
+            conduit_include_path = conduit.prefix.include.conduit
+            # add this path to the found flags
+            conduit_opt_flags = "-I{0} {1}".format(conduit_include_path,
+                                                   headers.cpp_flags)
+
             options += [
-                'CONDUIT_OPT=%s' % headers.cpp_flags,
+                'CONDUIT_OPT=%s' % conduit_opt_flags,
                 'CONDUIT_LIB=%s' % ld_flags_from_library_list(libs)]
 
         make('config', *options, parallel=False)

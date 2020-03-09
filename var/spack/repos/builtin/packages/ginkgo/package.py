@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,14 @@ class Ginkgo(CMakePackage, CudaPackage):
     with a focus on sparse solution of linear systems."""
 
     homepage = "https://ginkgo-project.github.io/"
-    url      = "https://github.com/ginkgo-project/ginkgo.git"
     git      = "https://github.com/ginkgo-project/ginkgo.git"
 
     maintainers = ['tcojean', 'hartwiganzt']
 
     version('develop', branch='develop')
     version('master', branch='master')
-    version('1.0.0', commit='4524464')  # v1.0.0
+    version('1.1.0', commit='b9bec8225442b3eb2a85a870efa112ab767a17fb')  # v1.1.0
+    version('1.0.0', commit='45244641e0c2b19ba33aecd25153c0bddbcbe1a0')  # v1.0.0
 
     variant('shared', default=True, description='Build shared libraries')
     variant('full_optimizations', default=False, description='Compile with all optimizations')
@@ -31,6 +31,8 @@ class Ginkgo(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.9:', type='build')
     depends_on('cuda@9:',    when='+cuda')
+
+    conflicts('%gcc@:5.2.9')
 
     def cmake_args(self):
         spec = self.spec

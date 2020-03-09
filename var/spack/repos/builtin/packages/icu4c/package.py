@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,13 @@ class Icu4c(AutotoolsPackage):
     C/C++ interface."""
 
     homepage = "http://site.icu-project.org/"
-    url      = "http://download.icu-project.org/files/icu4c/57.1/icu4c-57_1-src.tgz"
-    list_url = "http://download.icu-project.org/files/icu4c"
-    list_depth = 2
+    url      = "https://github.com/unicode-org/icu/releases/download/release-65-1/icu4c-65_1-src.tgz"
 
-    version('64.1', 'f150be2231c13bb45206d79e0242372b')
-    version('60.1', '3d164a2d1bcebd1464c6160ebb8315ef')
-    version('58.2', 'fac212b32b7ec7ab007a12dff1f3aea1')
-    version('57.1', '976734806026a4ef8bdd17937c8898b9')
+    version('65.1', sha256='53e37466b3d6d6d01ead029e3567d873a43a5d1c668ed2278e253b683136d948')
+    version('64.1', sha256='92f1b7b9d51b396679c17f35a2112423361b8da3c1b9de00aa94fd768ae296e6')
+    version('60.1', sha256='f8f5a6c8fbf32c015a467972bdb1477dc5f5d5dfea908b6ed218715eeb5ee225')
+    version('58.2', sha256='2b0a4410153a9b20de0e20c7d8b66049a72aef244b53683d0d7521371683da0c')
+    version('57.1', sha256='ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581')
 
     variant('cxxstd',
             default='11',
@@ -29,11 +28,18 @@ class Icu4c(AutotoolsPackage):
 
     depends_on('python', type='build', when='@64.1:')
 
+    conflicts('%intel@:16', when='@60.1:',
+              msg="Intel compilers have immature C++11 and multibyte support")
+
     configure_directory = 'source'
 
     def url_for_version(self, version):
-        url = "http://download.icu-project.org/files/icu4c/{0}/icu4c-{1}-src.tgz"
-        return url.format(version.dotted, version.underscored)
+        if version >= Version('65'):
+            url = "https://github.com/unicode-org/icu/releases/download/release-{0}/icu4c-{1}-src.tgz"
+            return url.format(version.dashed, version.underscored)
+        else:
+            url = "http://download.icu-project.org/files/icu4c/{0}/icu4c-{1}-src.tgz"
+            return url.format(version.dotted, version.underscored)
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags':
@@ -43,6 +49,12 @@ class Icu4c(AutotoolsPackage):
                          'cxx{0}_flag'.format(
                              self.spec.variants['cxxstd'].value)))
         return (None, flags, None)
+
+    # Need to make sure that locale is UTF-8 in order to process source
+    # files in UTF-8.
+    @when('@59:')
+    def setup_build_environment(self, env):
+        env.set('LC_ALL', 'en_US.UTF-8')
 
     def configure_args(self):
         args = []

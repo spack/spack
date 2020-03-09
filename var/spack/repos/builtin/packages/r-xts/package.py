@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,6 @@ class RXts(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/xts"
 
     version('0.11-2', sha256='12772f6a66aab5b84b0665c470f11a3d8d8a992955c027261cfe8e6077ee13b8')
-    version('0.9-7', 'a232e94aebfa654653a7d88a0503537b')
+    version('0.9-7', sha256='f11f7cb98f4b92b7f6632a2151257914130880c267736ef5a264b5dc2dfb7098')
 
     depends_on('r-zoo@1.7-12:', type=('build', 'run'))

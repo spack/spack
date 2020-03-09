@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -93,12 +93,11 @@ pattern_exemptions = dict(
     for file_pattern, error_dict in pattern_exemptions.items())
 
 
-def changed_files(args):
+def changed_files(base=None, untracked=True, all_files=False):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
 
-    base = args.base
     if base is None:
         base = os.environ.get('TRAVIS_BRANCH', 'develop')
 
@@ -114,11 +113,11 @@ def changed_files(args):
     ]
 
     # Add new files that are untracked
-    if args.untracked:
+    if untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
     # add everything if the user asked for it
-    if args.all:
+    if all_files:
         git_args.append(['ls-files', '--exclude-standard'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
@@ -179,6 +178,12 @@ def add_pattern_exemptions(line, codes):
 
 def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in pattern_exemptions."""
+
+    # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
+    # Starting with Python 3.8, it must be placed on the `def` line
+    # https://gitlab.com/pycqa/flake8/issues/583
+    ignore_f811_on_previous_line = False
+
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
@@ -197,6 +202,12 @@ def filter_file(source, dest, output=False):
                             if pattern.search(line):
                                 line_errors.append(code)
                                 break
+
+                if 'F811' in line_errors:
+                    ignore_f811_on_previous_line = True
+                elif ignore_f811_on_previous_line:
+                    line_errors.append('F811')
+                    ignore_f811_on_previous_line = False
 
                 if line_errors:
                     line = add_pattern_exemptions(line, line_errors)
@@ -246,7 +257,7 @@ def flake8(parser, args):
 
         with working_dir(spack.paths.prefix):
             if not file_list:
-                file_list = changed_files(args)
+                file_list = changed_files(args.base, args.untracked, args.all)
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')

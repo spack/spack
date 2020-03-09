@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class RTigris(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tigris"
 
     version('0.8.2', sha256='ed8d6ab25332c2cc800858d58324bd8264772d8a916a3f0a8d489250a7e7140e')
-    version('0.5.3', 'c11cb459bf134d3deb1a641a60c86413')
+    version('0.5.3', sha256='6ecf76f82216798465cd9704acb432caea47469ffc4953f1aaefa4d642a28445')
 
     depends_on('r@3.0.0:', when='@:0.5.3', type=('build', 'run'))
     depends_on('r@3.3.0:', when='@0.6.1:', type=('build', 'run'))

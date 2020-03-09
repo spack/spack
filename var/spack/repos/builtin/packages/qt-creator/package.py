@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,15 +9,12 @@ from spack import *
 class QtCreator(QMakePackage):
     """The Qt Creator IDE."""
     homepage = 'https://www.qt.io/ide/'
-    url      = 'http://download.qt.io/official_releases/qtcreator/4.3/4.3.1/qt-creator-opensource-src-4.3.1.tar.gz'
+    url      = 'http://download.qt.io/official_releases/qtcreator/4.8/4.8.0/qt-creator-opensource-src-4.8.0.tar.gz'
 
     list_url = 'http://download.qt.io/official_releases/qtcreator/'
     list_depth = 2
 
-    version('4.8.0', '9e75b07f068d8577ca7160a827bcecae')
-    version('4.4.0', 'bae2e08bb5087aba65d41eb3f9328d9a')
-    version('4.3.1', '6769ea47f287e2d9e30ff92acb899eef')
-    version('4.1.0', '657727e4209befa4bf5889dff62d9e0a')
+    version('4.8.0', sha256='4c4813454637141a45aa8f18be5733e4ba993335d95940aadf12fda66cf6f849')
 
     depends_on('qt@5.6.0:+opengl')
     # Qt Creator comes bundled with its own copy of sqlite. Qt has a build
@@ -35,8 +32,8 @@ class QtCreator(QMakePackage):
         url = 'http://download.qt.io/official_releases/qtcreator/{0}/{1}/qt-creator-opensource-src-{1}.tar.gz'
         return url.format(version.up_to(2), version)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('INSTALL_ROOT', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('INSTALL_ROOT', self.prefix)
 
     def qmake_args(self):
         return ['-r']

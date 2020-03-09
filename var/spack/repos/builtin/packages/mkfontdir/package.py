@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Mkfontdir(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/mkfontdir"
     url      = "https://www.x.org/archive/individual/app/mkfontdir-1.0.7.tar.gz"
 
-    version('1.0.7', '52a5bc129f3f3ac54e7115608cec3cdc')
+    version('1.0.7', sha256='bccc5fb7af1b614eabe4a22766758c87bfc36d66191d08c19d2fa97674b7b5b7')
 
     depends_on('mkfontscale', type='run')
 

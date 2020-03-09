@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,14 +10,13 @@ class Pism(CMakePackage):
     """Parallel Ice Sheet Model"""
 
     homepage = "http://pism-docs.org/wiki/doku.php:="
-    url      = "https://github.com/pism/pism/archive/v0.7.3.tar.gz"
+    url      = "https://github.com/pism/pism/archive/v1.1.4.tar.gz"
     git      = "https://github.com/pism/pism.git"
 
     maintainers = ['citibeth']
 
     version('develop', branch='dev')
     version('1.1.4', sha256='8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44')
-    version('0.7.3', '7cfb034100d99d5c313c4ac06b7f17b6')
     version('0.7.x', branch='stable0.7')
     version('icebin', branch='efischer/dev')
 
@@ -74,9 +73,9 @@ class Pism(CMakePackage):
     depends_on('fftw')
     depends_on('gsl')
     depends_on('mpi')
-    depends_on('netcdf')    # Only the C interface is used, no netcdf-cxx4
+    depends_on('netcdf-c')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
-    depends_on('udunits2')
+    depends_on('udunits')
     depends_on('proj@:4')
     depends_on('everytrace', when='+everytrace')
 
@@ -117,7 +116,7 @@ class Pism(CMakePackage):
             '-DPism_USE_EVERYTRACE=%s' %
             ('YES' if '+everytrace' in spec else 'NO')]
 
-    def setup_environment(self, spack_env, env):
+    def setup_run_environment(self, env):
         env.set('PISM_PREFIX', self.prefix)
         env.set('PISM_BIN', self.prefix.bin)
 

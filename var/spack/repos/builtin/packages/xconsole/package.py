@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xconsole(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xconsole"
     url      = "https://www.x.org/archive/individual/app/xconsole-1.0.6.tar.gz"
 
-    version('1.0.6', '46cb988e31a0cf9a02c2bbc4a82bd572')
+    version('1.0.6', sha256='28151453a0a687462516de133bac0287b488a2ff56da78331fee34bc1bf3e7d5')
 
     depends_on('libxaw')
     depends_on('libxmu')

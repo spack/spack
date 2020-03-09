@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PerlTestMost(PerlPackage):
     homepage = "http://search.cpan.org/~ovid/Test-Most-0.35/lib/Test/Most.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/O/OV/OVID/Test-Most-0.35.tar.gz"
 
-    version('0.35', '03dbabd34d6f40af8bd47f5fbb0c6989')
+    version('0.35', sha256='9897a6f4d751598d2ed1047e01c1554b01d0f8c96c45e7e845229782bf6f657f')
 
     depends_on('perl-exception-class', type=('build', 'run'))
     depends_on('perl-test-differences', type=('build', 'run'))

@@ -1,76 +1,49 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import sys
 from spack import *
 
 
-class Ftgl(AutotoolsPackage):
+class Ftgl(CMakePackage):
     """Library to use arbitrary fonts in OpenGL applications."""
 
-    homepage = "http://ftgl.sourceforge.net/docs/html/"
-    url      = "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/2.1.2/ftgl-2.1.2.tar.gz/download"
-    list_url = "https://sourceforge.net/projects/ftgl/files/FTGL%20Source/"
-    list_depth = 1
+    homepage = "https://github.com/frankheckenbach/ftgl"
+    git      = "https://github.com/frankheckenbach/ftgl.git"
 
-    version('2.1.3-rc5', sha256='5458d62122454869572d39f8aa85745fc05d5518001bcefa63bd6cbb8d26565b')
-    version('2.1.2', 'f81c0a7128192ba11e036186f9a968f2')
+    version('master', branch='master')
+    version('2.4.0', commit='483639219095ad080538e07ceb5996de901d4e74')
+    version('2.3.1', commit='3c0fdf367824b6381f29df3d8b4590240db62ab7')
 
-    variant('doc', default=False, description='Build docs')
-    conflicts('+doc', when='@2.1.3-rc5')
+    # FIXME: Doc generation is broken in upstream build system
+    # variant('doc', default=False, description='Build the documentation')
+    variant('shared', default=True, description='Build as a shared library')
 
-    # Ftgl does not come with a configure script
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool', type='build')
-    depends_on('m4', type='build')
-
+    depends_on('cmake@2.8:', type='build')
+    # depends_on('doxygen', type='build', when='+doc')  -- FIXME, see above
     depends_on('pkgconfig', type='build')
     depends_on('gl')
     depends_on('glu')
     depends_on('freetype@2.0.9:')
-    depends_on('doxygen', type='build', when='+doc')
 
-    # Fix unnecessary qualifier in 2.1.2.
-    patch('remove-extra-qualifier.diff', when='@2.1.2')
-    # Add missing GL libraries to LDFLAGS.
-    patch('ftgl-2.1.3-rc5-ldflags.patch', when='@2.1.3-rc5')
+    # Fix oversight in CMakeLists
+    patch('remove-ftlibrary-from-sources.diff', when='@:2.4.0')
 
-    # Deactivate docs if we're not building them.
-    @when('@2.1.2~doc')
-    def patch(self):
-        filter_file('SUBDIRS = src demo docs',
-                    'SUBDIRS = src demo', os.path.join('unix', 'Makefile'))
-
-    @when('@2.1.3-rc5~doc')
-    def patch(self):
-        filter_file('SUBDIRS = src test demo docs',
-                    'SUBDIRS = src test demo', 'Makefile.am')
-        filter_file('SUBDIRS = src test demo docs',
-                    'SUBDIRS = src test demo', 'Makefile.in')
-
-    @property
-    def configure_directory(self):
-        if self.spec.satisfies('@2.1.2'):
-            subdir = 'mac' if sys.platform == 'darwin' else 'unix'
-            return os.path.join(self.stage.source_path, subdir)
-        else:
-            return self.stage.source_path
-
-    def configure_args(self):
-        args = ['--enable-shared', '--disable-static',
-                '--with-gl-inc={0}'.format(
-                    self.spec['gl'].prefix.include),
-                '--with-gl-lib={0}'.format(
-                    self.spec['gl'].prefix.lib),
-                '--with-freetype={0}'.format(
-                    self.spec['freetype'].prefix),
-                '--with-glut-inc={0}'.format(
-                    self.spec['glu'].prefix.include),
-                '--with-glut-lib={0}'.format(
-                    self.spec['glu'].prefix.lib),
-                '--with-x']
+    def cmake_args(self):
+        spec = self.spec
+        args = ['-DBUILD_SHARED_LIBS={0}'.format(spec.satisfies('+shared'))]
         return args
+
+    # FIXME: See doc variant comment
+    # @run_after('build')
+    # def build_docs(self):
+    #     if '+doc' in self.spec:
+    #         cmake = self.spec['cmake'].command
+    #         cmake('--build', '../spack-build', '--target', 'doc')
+    #
+    # @run_after('install')
+    # def install_docs(self):
+    #     if '+doc' in self.spec:
+    #         cmake = self.spec['cmake'].command
+    #         cmake('--install', '../spack-build', '--target', 'doc')

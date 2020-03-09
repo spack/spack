@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,6 @@ class RDeldir(RPackage):
 
     version('0.1-23', sha256='e0112bce9fc94daf73596a0fff9b3958b80872e3bbb487be73e157b13a6f201d')
     version('0.1-21', sha256='b9dabcc1813c7a0f8edaf720a94bdd611a83baf3d3e52e861d352369e815690c')
-    version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
+    version('0.1-14', sha256='89d365a980ef8589971e5d311c6bd59fe32c48dbac8000a880b9655032c99289')
 
     depends_on('r@0.99:', type=('build', 'run'))

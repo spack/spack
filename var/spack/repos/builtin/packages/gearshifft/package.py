@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Gearshifft(CMakePackage):
 
     maintainers = ['ax3l']
 
-    version('0.2.1-lw', 'c3208b767b24255b488a83e5d9e517ea')
+    version('0.2.1-lw', sha256='04ba7401615ab29a37089c0dce8580270c0c4aa1ba328c9d438d6e4f163899c5')
 
     variant('cufft', default=True,
             description='Compile gearshifft_cufft')

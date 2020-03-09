@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,8 @@ class RQuantreg(RPackage):
     version('5.51', sha256='df1330d245f66ee6d924b209bd4c15d44ff8cce52667959ec0d299975428bdb1')
     version('5.42.1', sha256='4cc2b0883c52694e58fcfde83e30e4a54be9f4d9cbcf6138f6498cc8e0b3ccab')
     version('5.40', sha256='86e310a235009ab85635dfb8803c175f80a35892e237db2525c4ef37a98936eb')
-    version('5.29', '643ca728200d13f8c2e62365204e9907')
-    version('5.26', '1d89ed932fb4d67ae2d5da0eb8c2989f')
+    version('5.29', sha256='bb4638e8f295579afa5c40c4de7266a6ea9221436ba4ca802f94cdb43bf20f25')
+    version('5.26', sha256='9d7403f7c5ee219ec155838648401a1c4915a46a74f5774a0f6876c537ef2c87')
 
     depends_on('r@2.6:', type=('build', 'run'))
     depends_on('r-sparsem', type=('build', 'run'))

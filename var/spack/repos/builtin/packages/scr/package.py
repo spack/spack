@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,6 @@ class Scr(CMakePackage):
     homepage = "http://computing.llnl.gov/projects/scalable-checkpoint-restart-for-mpi"
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
-
-    # NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
-    # scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
-    # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
-    # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
 
     version('master', branch='master')
     version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847')

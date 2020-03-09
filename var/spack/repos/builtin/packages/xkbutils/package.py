@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Xkbutils(AutotoolsPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/xkbutils"
     url      = "https://www.x.org/archive/individual/app/xkbutils-1.0.4.tar.gz"
 
-    version('1.0.4', '6b898346b84e07c2f13b097193ca0413')
+    version('1.0.4', sha256='cf31303cbdd6a86c34cab46f4b6e0c7acd2e84578593b334a146142894529bca')
 
     depends_on('libxaw')
     depends_on('libxt')

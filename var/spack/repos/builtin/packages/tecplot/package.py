@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Tecplot(Package):
     by post-processing charge density data."""
 
     homepage = "https://www.tecplot.com/"
+    manual_download = True
+
     version('2017r1', '06a8057d33a519607720d4c621cd3f50', expand=False)
     version('2018r2', 'd3cf54a7555e0259b7ba0d82fef23bc3', expand=False)
 

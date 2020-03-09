@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,8 +26,8 @@ class RMlrmbo(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/mlrMBO"
 
     version('1.1.2', sha256='8e84caaa5d5d443d7019128f88ebb212fb095870b3a128697c9b64fe988f3efe')
-    version('1.1.1', '9a35b41ceb8754111af294dee0ae76e0')
-    version('1.1.0', '9e27ff8498225d24863b8da758d2918e')
+    version('1.1.1', sha256='e87d9912a9b4a968364584205b8ef6f7fea0b5aa043c8d31331a7b7be02dd7e4')
+    version('1.1.0', sha256='6ae82731a566333f06085ea2ce23ff2a1007029db46eea57d06194850350a8a0')
 
     depends_on('r-mlr@2.10:', type=('build', 'run'))
     depends_on('r-paramhelpers@1.10:', type=('build', 'run'))

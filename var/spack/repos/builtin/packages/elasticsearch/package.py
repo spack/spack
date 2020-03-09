@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,9 @@ class Elasticsearch(Package):
     homepage = "https://www.elastic.co/"
     url      = "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.4.tar.gz"
 
-    version('6.4.0', '5c23c99a52600b250a6871bf6a744e8b')
-    version('6.2.4', '692d01956fe7aee2d08ac0fbf7b7a19e')
+    version('6.4.0', sha256='e9786efb5cecd12adee2807c7640ba9a1ab3b484d2e87497bb8d0b6df0e24f01')
+    version('6.3.0', sha256='0464127140820d82b24bd2830232131ea85bcd49267a8bc7365e4fa391dee2a3')
+    version('6.2.4', sha256='91e6f1ea1e1dd39011e7a703d2751ca46ee374665b08b0bfe17e0c0c27000e8e')
 
     depends_on('jdk', type='run')
 

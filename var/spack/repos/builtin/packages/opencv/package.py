@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Opencv(CMakePackage):
+class Opencv(CMakePackage, CudaPackage):
     """OpenCV is released under a BSD license and hence it's free for both
     academic and commercial use. It has C++, C, Python and Java interfaces and
     supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
@@ -25,8 +25,11 @@ class Opencv(CMakePackage):
     git      = 'https://github.com/opencv/opencv.git'
 
     version('master', branch='master')
+    version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
+    version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
+    version('4.1.1', sha256='5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217')
     version('4.1.0-openvino', sha256='58764d2487c6fb4cd950fb46483696ae7ae28e257223d6e44e162caa22ee9e5c')
-    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7', preferred=True)
+    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7')
     version('4.0.1-openvino', sha256='8cbe32d12a70decad7a8327eb4fba46016a9c47ff3ba6e114d27b450f020716f')
     version('4.0.1',          sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
     version('4.0.0-openvino', sha256='aa910078ed0b7e17bd10067e04995c131584a6ed6d0dcc9ca44a292aa8e296fc')
@@ -34,19 +37,19 @@ class Opencv(CMakePackage):
     version('3.4.6',          sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d')
     version('3.4.5',          sha256='0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e')
     version('3.4.4',          sha256='a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746')
-    version('3.4.3',    '712896f5815938c014c199dde142d508')
-    version('3.4.1',    'a0b7a47899e67b3490ea31edc4f6e8e6')
-    version('3.4.0',    '170732dc760e5f7ddeccbe53ba5d16a6')
-    version('3.3.1',    'b1ed9aea030bb5bd9df28524d97de84c')
-    version('3.3.0',    '98a4e4c6f23ec725e808a891dc11eec4')
-    version('3.2.0',    '1ea44a1d98c126ad40079d8eb914a72e')
-    version('3.1.0',    'a0669e22172dfc3225835b180744c9f0')
-    version('2.4.13.2', 'fe52791ce523681a67036def4c25261b')
-    version('2.4.13.1', 'f6d354500d5013e60dc0fc44b07a63d1')
-    version('2.4.13',   '8feb45a71adad89b8017a777477c3eff')
-    version('2.4.12.3', '2496a4a4caf8fecfbfc294fbe6a814b0')
-    version('2.4.12.2', 'bc0c60c2ea1cf4078deef99569912fc7')
-    version('2.4.12.1', '7192f51434710904b5e3594872b897c3')
+    version('3.4.3',    sha256='4eef85759d5450b183459ff216b4c0fa43e87a4f6aa92c8af649f89336f002ec')
+    version('3.4.1',    sha256='f1b87684d75496a1054405ae3ee0b6573acaf3dad39eaf4f1d66fdd7e03dc852')
+    version('3.4.0',    sha256='678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da')
+    version('3.3.1',    sha256='5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee')
+    version('3.3.0',    sha256='8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6')
+    version('3.2.0',    sha256='9541efbf68f298f45914b4e837490647f4d5e472b4c0c04414a787d116a702b2')
+    version('3.1.0',    sha256='f3b160b9213dd17aa15ddd45f6fb06017fe205359dbd1f7219aad59c98899f15')
+    version('2.4.13.2', sha256='4b00c110e6c54943cbbb7cf0d35c5bc148133ab2095ee4aaa0ac0a4f67c58080')
+    version('2.4.13.1', sha256='0d5ce5e0973e3a745f927d1ee097aaf909aae59f787be6d27a03d639e2d96bd7')
+    version('2.4.13',   sha256='94ebcca61c30034d5fb16feab8ec12c8a868f5162d20a9f0396f0f5f6d8bbbff')
+    version('2.4.12.3', sha256='a4cbcd2d470860b0cf1f8faf504619c18a8ac38fd414c5a88ed3e94c963aa750')
+    version('2.4.12.2', sha256='150a165eb14a5ea74fb94dcc16ac7d668a6ff20a4449df2570734a2abaab9c0e')
+    version('2.4.12.1', sha256='c1564771f79304a2597ae4f74f44032021e3a46657e4a117060c08f5ed05ad83')
 
     # Standard variants
     variant('shared', default=True,
@@ -60,6 +63,7 @@ class Opencv(CMakePackage):
     # OpenCV modules
     variant('calib3d', default=True, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
+    variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
     variant('dnn', default=True, description='Build DNN support')
     variant('features2d', default=True, description='features2d module')
     variant('flann', default=True, description='flann module')
@@ -78,9 +82,6 @@ class Opencv(CMakePackage):
     variant('videoio', default=True, description='videoio module')
 
     # Optional 3rd party components
-    variant('cuda', default=True, description='Activates support for CUDA')
-    # Cuda@10.0.130 does not support gcc > 7
-    conflicts('%gcc@7:', when='+cuda')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
@@ -104,8 +105,7 @@ class Opencv(CMakePackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    depends_on('eigen~mpfr', when='+eigen', type='build')
-
+    depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')
@@ -123,6 +123,11 @@ class Opencv(CMakePackage):
 
     depends_on('ffmpeg', when='+videoio')
     depends_on('mpi', when='+videoio')
+
+    # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
+    # exists, otherwise build will fail
+    # See https://github.com/opencv/opencv_contrib/issues/1786
+    conflicts('cuda@10:', when='+cudacodec')
 
     extends('python', when='+python')
 
@@ -150,6 +155,8 @@ class Opencv(CMakePackage):
                 'ON' if '+calib3d' in spec else 'OFF')),
             '-DBUILD_opencv_core:BOOL={0}'.format((
                 'ON' if '+core' in spec else 'OFF')),
+            '-DBUILD_opencv_cudacodec={0}'.format((
+                'ON' if '+cudacodec' in spec else 'OFF')),
             '-DBUILD_opencv_dnn:BOOL={0}'.format((
                 'ON' if '+dnn' in spec else 'OFF')),
             '-DBUILD_opencv_features2d={0}'.format((

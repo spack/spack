@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class RubySvn2git(Package):
     homepage = "https://github.com/nirvdrum/svn2git/"
     url      = "https://github.com/nirvdrum/svn2git/archive/v2.4.0.tar.gz"
 
-    version('2.4.0', 'f19ac6eb0634aa1fed31a1e40a2aeaa2')
+    version('2.4.0', sha256='81d0a3eff5b12b729d0fe8ad117db386954c635067f1c86007360c6c76dec253')
 
     depends_on('git')
     depends_on('subversion+perl')

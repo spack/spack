@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,6 @@ class PerlDataStag(PerlPackage):
     homepage = "http://search.cpan.org/~cmungall/Data-Stag-0.14/Data/Stag.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/C/CM/CMUNGALL/Data-Stag-0.14.tar.gz"
 
-    version('0.14', 'f803acf74f1bfccc118aeac5483ee871')
+    version('0.14', sha256='4ab122508d2fb86d171a15f4006e5cf896d5facfa65219c0b243a89906258e59')
 
     depends_on('perl-io-string', type=('build', 'run'))

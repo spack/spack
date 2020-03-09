@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class AtSpi2Core(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-core"
     list_depth = 1
 
-    version('2.28.0', '9c42f79636ed1c0e908b7483d789b32e')
+    version('2.28.0', sha256='42a2487ab11ce43c288e73b2668ef8b1ab40a0e2b4f94e80fca04ad27b6f1c87')
 
     depends_on('glib@2.56.1:')
     depends_on('dbus@1.12.8:')
@@ -35,6 +35,6 @@ class AtSpi2Core(MesonPackage):
         url = 'http://ftp.gnome.org/pub/gnome/sources/at-spi2-core'
         return url + '/%s/at-spi2-core-%s.tar.xz' % (version.up_to(2), version)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # this avoids an "import site" error in the build
-        spack_env.unset('PYTHONHOME')
+        env.unset('PYTHONHOME')

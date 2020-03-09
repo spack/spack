@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RTestthat(RPackage):
 
     version('2.2.1', sha256='67ee0512bb312695c81fd74338bb8ce9e2e58763681ddbcdfdf35f52dfdb0b78')
     version('2.1.0', sha256='cf5fa7108111b32b86e70819352f86b57ab4e835221bb1e83642d52a1fdbcdd4')
-    version('1.0.2', '6c6a90c8db860292df5784a70e07b8dc')
+    version('1.0.2', sha256='0ef7df0ace1fddf821d329f9d9a5d42296085350ae0d94af62c45bd203c8415e')
 
     depends_on('r@3.1:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
