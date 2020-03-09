@@ -1,19 +1,24 @@
 ---
-name: Build error 
+name: "\U0001F4A5 Build error" 
 about: Some package in Spack didn't build correctly  
 labels: "build-error"
 ---
 
-*Thanks for taking the time to report this build failure. To proceed with the
+<!--*Thanks for taking the time to report this build failure. To proceed with the
 report please:*
 1. Title the issue "Installation issue: <name-of-the-package>".
 2. Provide the information required below.
-3. Remove the template instructions before posting the issue.
 
 We encourage you to try, as much as possible, to reduce your problem to the minimal example that still reproduces the issue. That would help us a lot in fixing it quickly and effectively!
+-->
 
 
----
+### Spack version
+<!-- Add the output to the command below -->
+```console
+$ spack --version
+
+```
 
 ### Steps to reproduce the issue
 
@@ -24,7 +29,7 @@ $ spack install <spec> # Fill in the exact spec you are using
 
 ### Platform and user environment
 
-Please report your OS here:
+<!-- Please report your OS here:
 ```commandline
 $ uname -a 
 Linux nuvolari 4.15.0-29-generic #31-Ubuntu SMP Tue Jul 17 15:39:52 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
@@ -37,10 +42,11 @@ and, if relevant, post or attach:
 - `compilers.yaml`
 
 to the issue
+-->
 
 ### Additional information
 
-Sometimes the issue benefits from additional details. In these cases there are
+<!--Sometimes the issue benefits from additional details. In these cases there are
 a few things we can suggest doing. First of all, you can post the full output of:
 ```console
 $ spack spec --install-status <spec>
@@ -75,4 +81,9 @@ will provide additional debug information. After the failure you will find two f
     failed object after Spack's compiler wrapper did its processing 
 
 You can post or attach those files to provide maintainers with more information on what
-is causing the failure.
+is causing the failure.-->
+
+### General information
+
+- [ ] I have run `spack --version` and reported the version of Spack
+- [ ] I have searched the issues of this repo and believe this is not a duplicate

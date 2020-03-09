@@ -15,15 +15,15 @@ from spack.version import Version
 
 
 @pytest.fixture()
-def concretize_scope(config, tmpdir):
+def concretize_scope(mutable_config, tmpdir):
     """Adds a scope for concretization preferences"""
     tmpdir.ensure_dir('concretize')
-    config.push_scope(
+    mutable_config.push_scope(
         ConfigScope('concretize', str(tmpdir.join('concretize'))))
 
     yield
 
-    config.pop_scope()
+    mutable_config.pop_scope()
     spack.repo.path._provider_index = None
 
 
@@ -84,16 +84,24 @@ class TestConcretizePreferences(object):
             'mpileaks', debug=True, opt=True, shared=False, static=False
         )
 
-    def test_preferred_compilers(self, mutable_mock_repo):
+    def test_preferred_compilers(self):
         """Test preferred compilers are applied correctly
         """
-        update_packages('mpileaks', 'compiler', ['clang@3.3'])
-        spec = concretize('mpileaks')
-        assert spec.compiler == spack.spec.CompilerSpec('clang@3.3')
+        # Need to make sure the test uses an available compiler
+        compiler_list = spack.compilers.all_compiler_specs()
+        assert compiler_list
 
-        update_packages('mpileaks', 'compiler', ['gcc@4.5.0'])
+        # Try the first available compiler
+        compiler = str(compiler_list[0])
+        update_packages('mpileaks', 'compiler', [compiler])
         spec = concretize('mpileaks')
-        assert spec.compiler == spack.spec.CompilerSpec('gcc@4.5.0')
+        assert spec.compiler == spack.spec.CompilerSpec(compiler)
+
+        # Try the last available compiler
+        compiler = str(compiler_list[-1])
+        update_packages('mpileaks', 'compiler', [compiler])
+        spec = concretize('mpileaks')
+        assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
         """Test preferred compilers are applied correctly

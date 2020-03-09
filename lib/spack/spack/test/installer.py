@@ -31,6 +31,12 @@ def _none(*args, **kwargs):
     return None
 
 
+def _not_locked(installer, lock_type, pkg):
+    """Generic monkeypatch function for _ensure_locked to return no lock"""
+    tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
+    return lock_type, None
+
+
 def _true(*args, **kwargs):
     """Generic monkeypatch function that always returns True."""
     return True
@@ -382,9 +388,61 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
 
 def test_dump_packages_deps(install_mockery, tmpdir):
     """Test to add coverage to dump_packages."""
+
     spec = spack.spec.Spec('simple-inheritance').concretized()
     with tmpdir.as_cwd():
         inst.dump_packages(spec, '.')
+
+
+@pytest.mark.tld
+def test_check_deps_status_errs(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status failures."""
+    spec, installer = create_installer('a')
+
+    # Make sure the package is identified as failed
+    orig_fn = spack.database.Database.prefix_failed
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
+
+    with pytest.raises(inst.InstallError, match='install failure'):
+        installer._check_deps_status()
+
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', orig_fn)
+
+    # Ensure do not acquire the lock
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
+
+    with pytest.raises(inst.InstallError, match='write locked by another'):
+        installer._check_deps_status()
+
+
+@pytest.mark.tld
+def test_check_deps_status_external(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status for external."""
+    spec, installer = create_installer('a')
+
+    deps = spec.dependencies()
+    assert len(deps) > 0
+    dep_id = 'b'
+
+    # Ensure the known dependent is installed if flagged as external
+    monkeypatch.setattr(spack.spec.Spec, 'external', True)
+    installer._check_deps_status()
+    assert dep_id in installer.installed
+
+
+@pytest.mark.tld
+def test_check_deps_status_upstream(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status for upstream."""
+    spec, installer = create_installer('a')
+
+    deps = spec.dependencies()
+    assert len(deps) > 0
+    dep_id = 'b'
+
+    # Ensure the known dependent, b, is installed if flagged as upstream
+    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    installer._check_deps_status()
+    assert dep_id in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -613,10 +671,6 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     def _requeued(installer, task):
         tty.msg('requeued {0}' .format(task.pkg.spec.name))
 
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
-
     spec, installer = create_installer('b')
 
     # Ensure never acquire a lock
@@ -639,10 +693,6 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
     def _install(installer, task, **kwargs):
         tty.msg('{0} installing'.format(task.pkg.spec.name))
-
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
 
     def _prep(installer, task, keep_prefix, keep_stage, restage):
         installer.installed.add('b')

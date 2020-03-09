@@ -11,10 +11,11 @@ class PyH5py(PythonPackage):
     HDF5 library from Python."""
 
     homepage = "http://www.h5py.org/"
-    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.9.0.tar.gz"
+    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.10.0.tar.gz"
 
     import_modules = ['h5py', 'h5py._hl']
 
+    version('2.10.0', sha256='84412798925dc870ffd7107f045d7659e60f5d46d1c70c700375248bf6bf512d')
     version('2.9.0', sha256='9d41ca62daf36d6b6515ab8765e4c8c4388ee18e2a665701fef2b41563821002')
     version('2.8.0', sha256='e626c65a8587921ebc7fb8d31a49addfdd0b9a9aa96315ea484c09803337b955')
     version('2.7.1', sha256='180a688311e826ff6ae6d3bda9b5c292b90b28787525ddfcb10a29d5ddcae2cc')
@@ -31,6 +32,7 @@ class PyH5py(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     # Build and runtime dependencies
+    depends_on('py-cached-property@1.5:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
 

@@ -13,6 +13,8 @@ class G4neutronxs(Package):
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NEUTRONXS.1.4.tar.gz"
 
+    maintainers = ['drbenmorgan']
+
     version('1.4', sha256='57b38868d7eb060ddd65b26283402d4f161db76ed2169437c266105cca73a8fd')
 
     def install(self, spec, prefix):
