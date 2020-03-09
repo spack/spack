@@ -28,12 +28,28 @@ class PyHorovod(PythonPackage):
     version('0.16.3',       sha256='1857cf1b335723366cc71e4bcd0583f2dde0c821212cda0e1b6bddfe4ba1ea0d')
     version('0.16.2',       sha256='baa9754e59ab0ee72d3b5769cf77e06a2c7b0a2d9626e0e14ca2ab131934ce74')
 
+    variant('pytorch', default=True, description='Enables PyTorch')
+    variant('mxnet', default=False, description='Enables mxnet')
+    variant('mpi', default=True, description='Enables MPI build')
+    variant('gloo', default=False, description='Enables features related to distributed support')
+    variant('cuda', default=True, description='Enables CUDA build')
+
     depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('openmpi', type=('build', 'run'))
-    depends_on('nccl')
+    depends_on('py-cloudpickle', type=('build', 'run'))
+    depends_on('py-psutil', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-torch', type=('build', 'run'))
     depends_on('py-pip', type=('build'))
+
+    # Optional dependencies
+    depends_on('cuda', when='+cuda')
+    depends_on('nccl', when='+nccl')
+    depends_on('gloo', when='+gloo')
+    depends_on('mpi', when='+mpi')
+    depends_on('py-torch', type=('build', 'run'), when='+pytorch')
+    depends_on('mxnet', when='+mxnet')
 
     phases = ['clean', 'sdist', 'install']
 
