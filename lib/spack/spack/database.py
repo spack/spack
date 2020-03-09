@@ -36,7 +36,6 @@ import spack.spec
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from llnl.util.filesystem import mkdirp
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
 from spack.filesystem_view import YamlFilesystemView
