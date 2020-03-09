@@ -732,3 +732,12 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
         installer.install()
 
     assert 'b' in installer.installed
+
+
+def test_install_skip_patch(install_mockery, mock_fetch):
+    """Test the path skip_patch install path."""
+    spec, installer = create_installer('b')
+
+    installer.install(fake=False, skip_patch=True)
+
+    assert 'b' in installer.installed
