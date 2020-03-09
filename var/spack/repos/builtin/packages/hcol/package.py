@@ -22,5 +22,4 @@ class Hcol(Package):
     # prefix, in "namespaces/packages/hcol".  This allows 'spack activate' to
     # symlink hcol at the right location for spiral packages.
     def install(self, spec, prefix):
-        source = self.stage.source_path
-        install_tree(source, join_path(prefix, 'namespaces/packages/hcol'))
+        install_tree('.', prefix.namespaces.packages.hcol)
