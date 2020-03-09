@@ -14,6 +14,8 @@ class Stat(AutotoolsPackage):
     git      = "https://github.com/llnl/stat.git"
 
     version('develop', branch='develop')
+    version('4.0.2', sha256='9ece10dde8e1579c9db469ac8d2391b26e59498c0947dbb271c2d01d7ef0a65d',
+            url='https://github.com/LLNL/STAT/releases/download/v4.0.2/stat-4.0.2.tar.gz')
     version('4.0.1', sha256='ae3fbd6946003fb16233d82d40285780a9a802da5fe30d09adb8a8b2a2cc4ad6',
             url='https://github.com/LLNL/STAT/files/2489327/stat-4.0.1.tar.gz')
     version('4.0.0', sha256='1c4f62686645f6dc1d9ef890acc9c2839c150789dc220718775878feb41bdabf',

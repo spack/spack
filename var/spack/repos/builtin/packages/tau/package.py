@@ -68,7 +68,7 @@ class Tau(Package):
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
     variant('adios2', default=False, description='Activates ADIOS2 output support')
-    variant('sqlite', default=True, description='Activates SQLite3 output support')
+    variant('sqlite', default=False, description='Activates SQLite3 output support')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -99,6 +99,10 @@ class Tau(Package):
     # Elf only required from 2.28.1 on
     conflicts('+libelf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
+
+    # ADIOS2, SQLite only available from 2.29.1 on
+    conflicts('+adios2', when='@:2.29.1')
+    conflicts('+sqlite', when='@:2.29.1')
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 

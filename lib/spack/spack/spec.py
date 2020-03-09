@@ -369,6 +369,10 @@ class ArchSpec(object):
         if not need_to_check:
             return True
 
+        # self is not concrete, but other_target is there and strict=True
+        if self.target is None:
+            return False
+
         for target_range in str(other_target).split(','):
             t_min, sep, t_max = target_range.partition(':')
 
@@ -1919,9 +1923,7 @@ class Spec(object):
 
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                # Fill in dependencies by looking them up by name in deps dict
-                deps[name]._dependencies[dname] = DependencySpec(
-                    deps[name], deps[dname], dtypes)
+                deps[name]._add_dependency(deps[dname], dtypes)
 
         return spec
 

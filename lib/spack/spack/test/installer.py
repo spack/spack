@@ -27,6 +27,12 @@ def _none(*args, **kwargs):
     return None
 
 
+def _not_locked(installer, lock_type, pkg):
+    """Generic monkeypatch function for _ensure_locked to return no lock"""
+    tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
+    return lock_type, None
+
+
 def _true(*args, **kwargs):
     """Generic monkeypatch function that always returns True."""
     return True
@@ -239,7 +245,7 @@ def test_ensure_locked_have(install_mockery, tmpdir):
 def test_package_id(install_mockery):
     """Test to cover package_id functionality."""
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, matches='spec is not concretized'):
+    with pytest.raises(ValueError, match='spec is not concretized'):
         inst.package_id(pkg)
 
     spec = spack.spec.Spec('trivial-install-test-package')
@@ -274,7 +280,7 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
 
     # Test up to the dependency check
     monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
-    with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
+    with pytest.raises(spack.repo.UnknownPackageError, match='not found'):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
 
 
@@ -283,6 +289,57 @@ def test_dump_packages_deps(install_mockery, tmpdir):
     spec = spack.spec.Spec('simple-inheritance').concretized()
     with tmpdir.as_cwd():
         inst.dump_packages(spec, '.')
+
+
+@pytest.mark.tld
+def test_check_deps_status_errs(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status failures."""
+    spec, installer = create_installer('a')
+
+    # Make sure the package is identified as failed
+    orig_fn = spack.database.Database.prefix_failed
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
+
+    with pytest.raises(inst.InstallError, match='install failure'):
+        installer._check_deps_status()
+
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', orig_fn)
+
+    # Ensure do not acquire the lock
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
+
+    with pytest.raises(inst.InstallError, match='write locked by another'):
+        installer._check_deps_status()
+
+
+@pytest.mark.tld
+def test_check_deps_status_external(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status for external."""
+    spec, installer = create_installer('a')
+
+    deps = spec.dependencies()
+    assert len(deps) > 0
+    dep_id = 'b'
+
+    # Ensure the known dependent is installed if flagged as external
+    monkeypatch.setattr(spack.spec.Spec, 'external', True)
+    installer._check_deps_status()
+    assert dep_id in installer.installed
+
+
+@pytest.mark.tld
+def test_check_deps_status_upstream(install_mockery, monkeypatch):
+    """Test to cover _check_deps_status for upstream."""
+    spec, installer = create_installer('a')
+
+    deps = spec.dependencies()
+    assert len(deps) > 0
+    dep_id = 'b'
+
+    # Ensure the known dependent, b, is installed if flagged as upstream
+    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    installer._check_deps_status()
+    assert dep_id in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
@@ -332,6 +389,27 @@ def test_install_task_use_cache(install_mockery, monkeypatch):
     monkeypatch.setattr(inst, '_install_from_cache', _true)
     installer._install_task(task)
     assert spec.package.name in installer.installed
+
+
+def test_install_task_stop_iter(install_mockery, monkeypatch, capfd):
+    """Test _install_task to cover the StopIteration exception."""
+    mock_err_msg = 'mock stop iteration'
+
+    def _raise(installer, pkg):
+        raise StopIteration(mock_err_msg)
+
+    spec, installer = create_installer('a')
+    task = create_build_task(spec.package)
+
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _raise)
+
+    installer._install_task(task)
+    out = capfd.readouterr()[0]
+
+    assert mock_err_msg in out
+    assert 'Package stage directory' in out
+    assert spec.package.stage.source_path in out
 
 
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
@@ -428,7 +506,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -446,7 +524,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -457,10 +535,6 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
     def _requeued(installer, task):
         tty.msg('requeued {0}' .format(task.pkg.spec.name))
-
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
 
     spec, installer = create_installer('b')
 
@@ -484,10 +558,6 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
     def _install(installer, task, **kwargs):
         tty.msg('{0} installing'.format(task.pkg.spec.name))
-
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
 
     def _prep(installer, task, keep_prefix, keep_stage, restage):
         installer.installed.add('b')
@@ -573,7 +643,7 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
     spec, installer = create_installer('b')
 
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
         installer.install()
 
     assert 'b' in installer.installed
