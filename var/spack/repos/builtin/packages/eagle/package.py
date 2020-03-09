@@ -35,7 +35,7 @@ class Eagle(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        
+
         bins = [
             'eagle',
             'eagle-rc',
