@@ -1530,12 +1530,20 @@ class PackageInstaller(object):
                 self._update_installed(task)
                 raise
 
-            except (Exception, KeyboardInterrupt, SystemExit) as exc:
-                # Assuming best effort installs so suppress the exception and
-                # mark as a failure UNLESS this is the explicit package.
+            except KeyboardInterrupt as exc:
+                # The build has been terminated with a Ctrl-C so terminate.
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
+                raise
+
+            except (Exception, SystemExit) as exc:
+                # Best effort installs suppress the exception and mark the
+                # package as a failure UNLESS this is the explicit package.
+                err = 'Failed to install {0} due to {1}: {2}'
+                tty.error(err.format(pkg.name, exc.__class__.__name__,
+                          str(exc)))
+
                 self._update_failed(task, True, exc)
 
                 if pkg_id == self.pkg_id:

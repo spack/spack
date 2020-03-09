@@ -718,6 +718,26 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     assert 'Warning: b failed to install' in out
 
 
+def test_install_fail_on_interrupt(install_mockery, monkeypatch, capsys):
+    """Test ctrl-c interrupted install."""
+    err_msg = 'mock keyboard interrupt'
+
+    def _interrupt(installer, task, **kwargs):
+        raise KeyboardInterrupt(err_msg)
+
+    spec, installer = create_installer('a')
+
+    # Raise a KeyboardInterrupt error to trigger early termination
+    monkeypatch.setattr(inst.PackageInstaller, '_install_task', _interrupt)
+
+    with pytest.raises(KeyboardInterrupt, match=err_msg):
+        installer.install()
+
+    out = str(capsys.readouterr())
+    assert 'Failed to install' in out
+    assert err_msg in out
+
+
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
     def _requeued(installer, task):
