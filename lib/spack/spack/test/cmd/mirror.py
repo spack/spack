@@ -66,6 +66,29 @@ def test_mirror_from_env(tmpdir, mock_packages, mock_fetch, config,
         assert mirror_res == expected
 
 
+@pytest.fixture
+def source_for_pkg_with_hash(mock_packages, tmpdir):
+    pkg = spack.repo.get('trivial-pkg-with-valid-hash')
+    local_url_basename = os.path.basename(pkg.url)
+    local_path = os.path.join(str(tmpdir), local_url_basename)
+    with open(local_path, 'w') as f:
+        f.write(pkg.hashed_content)
+    local_url = "file://" + local_path
+    pkg.versions[spack.version.Version('1.0')]['url'] = local_url
+
+
+def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config,
+                              source_for_pkg_with_hash):
+    mirror_dir = str(tmpdir_factory.mktemp('mirror-dir'))
+
+    specs = [spack.spec.Spec(x).concretized() for x in
+             ['git-test', 'trivial-pkg-with-valid-hash']]
+    spack.mirror.create(mirror_dir, specs, skip_unstable_versions=True)
+
+    assert (set(os.listdir(mirror_dir)) - set(['_source-cache']) ==
+            set(['trivial-pkg-with-valid-hash']))
+
+
 def test_mirror_crud(tmp_scope, capsys):
     with capsys.disabled():
         mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')

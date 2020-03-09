@@ -105,8 +105,7 @@ class Opencv(CMakePackage, CudaPackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    depends_on('eigen~mpfr', when='+eigen', type='build')
-
+    depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')

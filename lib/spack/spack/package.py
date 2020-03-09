@@ -1135,8 +1135,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for patch in self.spec.patches:
             patch.fetch()
-            if patch.cache():
-                patch.cache().cache_local()
+            if patch.stage:
+                patch.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""

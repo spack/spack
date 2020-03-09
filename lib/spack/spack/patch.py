@@ -85,7 +85,8 @@ class Patch(object):
 
         apply_patch(stage, self.path, self.level, self.working_dir)
 
-    def cache(self):
+    @property
+    def stage(self):
         return None
 
     def to_dict(self):
@@ -247,9 +248,6 @@ class UrlPatch(Patch):
         self._stage = spack.stage.Stage(fetcher, mirror_paths=mirror_ref)
         self._stage.create()
         return self._stage
-
-    def cache(self):
-        return self.stage
 
     def clean(self):
         self.stage.destroy()
