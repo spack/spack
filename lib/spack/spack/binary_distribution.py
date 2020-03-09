@@ -308,7 +308,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     tmpdir = tempfile.mkdtemp()
     cache_prefix = build_cache_prefix(tmpdir)
 
-    tarfile_name = tarball_name(spec, '.tar.bz2')
+    tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_dir = os.path.join(cache_prefix, tarball_directory_name(spec))
     tarfile_path = os.path.join(tarfile_dir, tarfile_name)
     spackfile_path = os.path.join(
@@ -377,8 +377,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             shutil.rmtree(tmpdir)
             tty.die(e)
 
+
     # create compressed tarball of the install prefix
-    with closing(tarfile.open(tarfile_path, 'w:bz2')) as tar:
+    with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
                 arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
@@ -592,16 +593,16 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     stagepath = os.path.dirname(filename)
     spackfile_name = tarball_name(spec, '.spack')
     spackfile_path = os.path.join(stagepath, spackfile_name)
-    tarfile_name = tarball_name(spec, '.tar.bz2')
+    tarfile_name = tarball_name(spec, '.tar.gz')
     tarfile_path = os.path.join(tmpdir, tarfile_name)
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.join(tmpdir, specfile_name)
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
-    # older buildcache tarfiles use gzip compression
+    # some buildcache tarfiles use bzip2 compression
     if not os.path.exists(tarfile_path):
-        tarfile_name = tarball_name(spec, '.tar.gz')
+        tarfile_name = tarball_name(spec, '.tar.bz2')
         tarfile_path = os.path.join(tmpdir, tarfile_name)
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
