@@ -1,0 +1,38 @@
+diff --git a/scripts/getsummary b/scripts/getsummary
+index 43bdae5..986502a 100755
+--- a/scripts/getsummary
++++ b/scripts/getsummary
+@@ -668,7 +668,7 @@ Basic double operations - times in nanoseconds - smaller is better
+ ------------------------------------------------------------------
+ Host                 OS  double double double double
+                          add    mul    div    bogo
+---------- ------------- ------  ------ ------ ------ 
++--------- ------------- ------- ------ ------ ------ 
+ EOF
+ 
+ 	for ($i = 0; $i <= $#uname; $i++) {
+diff --git a/scripts/results b/scripts/results
+index cd07c15..78369f8 100755
+--- a/scripts/results
++++ b/scripts/results
+@@ -27,7 +27,7 @@ cd ../bin/$OS
+ PATH=.:${PATH}; export PATH
+ export SYNC_MAX
+ export OUTPUT
+-lmbench $CONFIG 2>../${RESULTS}
++lmbench $CONFIG 2>${RESULTS}
+ 
+ if [ X$MAIL = Xyes ]
+ then	echo Mailing results
+diff --git a/src/Makefile b/src/Makefile
+index 2555014..32e27af 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -58,6 +58,7 @@ SAMPLES=lmbench/Results/aix/rs6000 lmbench/Results/hpux/snake \
+ 	lmbench/Results/irix/indigo2 lmbench/Results/linux/pentium \
+ 	lmbench/Results/osf1/alpha lmbench/Results/solaris/ss20* 
+ 
++LDFLAGS += -ltirpc
+ COMPILE=$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
+ 
+ INCS =	bench.h lib_mem.h lib_tcp.h lib_udp.h stats.h timing.h
