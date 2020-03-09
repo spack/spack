@@ -718,7 +718,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     assert 'Warning: b failed to install' in out
 
 
-def test_install_fail_on_interrupt(install_mockery, monkeypatch, capsys):
+def test_install_fail_on_interrupt(install_mockery, monkeypatch):
     """Test ctrl-c interrupted install."""
     err_msg = 'mock keyboard interrupt'
 
@@ -733,9 +733,44 @@ def test_install_fail_on_interrupt(install_mockery, monkeypatch, capsys):
     with pytest.raises(KeyboardInterrupt, match=err_msg):
         installer.install()
 
+
+def test_install_fail_fast_on_detect(install_mockery, monkeypatch, capsys):
+    """Test fail_fast install when an install failure is detected."""
+    spec, installer = create_installer('a')
+
+    # Make sure the package is identified as failed
+    #
+    # This will prevent b from installing, which will cause the build of a
+    # to be skipped.
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
+
+    with pytest.raises(spack.installer.InstallError):
+        installer.install(fail_fast=True)
+
     out = str(capsys.readouterr())
-    assert 'Failed to install' in out
-    assert err_msg in out
+    assert 'Skipping build of a' in out
+
+
+def test_install_fail_fast_on_except(install_mockery, monkeypatch, capsys):
+    """Test fail_fast install when an install failure results from an error."""
+    err_msg = 'mock patch failure'
+
+    def _patch(installer, task, **kwargs):
+        raise RuntimeError(err_msg)
+
+    spec, installer = create_installer('a')
+
+    # Raise a non-KeyboardInterrupt exception to trigger fast failure.
+    #
+    # This will prevent b from installing, which will cause the build of a
+    # to be skipped.
+    monkeypatch.setattr(spack.package.PackageBase, 'do_patch', _patch)
+
+    with pytest.raises(spack.installer.InstallError, matches=err_msg):
+        installer.install(fail_fast=True)
+
+    out = str(capsys.readouterr())
+    assert 'Skipping build of a' in out
 
 
 def test_install_lock_failures(install_mockery, monkeypatch, capfd):

@@ -549,6 +549,9 @@ install_args_docstring = """
             dirty (bool): Don't clean the build environment before installing.
             explicit (bool): True if package was explicitly installed, False
                 if package was implicitly installed (as a dependency).
+            fail_fast (bool): Fail if any dependency fails to install;
+                otherwise, the default is to install as many dependencies as
+                possible (i.e., best effort installation).
             fake (bool): Don't really build; install fake stub files instead.
             force (bool): Install again, even if already installed.
             install_deps (bool): Install dependencies before installing this
@@ -1385,10 +1388,13 @@ class PackageInstaller(object):
 
         Args:"""
 
+        fail_fast = kwargs.get('fail_fast', False)
         install_deps = kwargs.get('install_deps', True)
         keep_prefix = kwargs.get('keep_prefix', False)
         keep_stage = kwargs.get('keep_stage', False)
         restage = kwargs.get('restage', False)
+
+        fail_fast_err = 'Terminating after first install failure'
 
         # install_package defaults True and is popped so that dependencies are
         # always installed regardless of whether the root was installed
@@ -1449,6 +1455,10 @@ class PackageInstaller(object):
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
+
+                if fail_fast:
+                    raise InstallError(fail_fast_err)
+
                 continue
 
             # Attempt to get a write lock.  If we can't get the lock then
@@ -1545,6 +1555,12 @@ class PackageInstaller(object):
                           str(exc)))
 
                 self._update_failed(task, True, exc)
+
+                if fail_fast:
+                    # The user requested the installation to terminate on
+                    # failure.
+                    raise InstallError('{0}: {1}'
+                                       .format(fail_fast_err, str(exc)))
 
                 if pkg_id == self.pkg_id:
                     raise
