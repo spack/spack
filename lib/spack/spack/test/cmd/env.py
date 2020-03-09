@@ -11,6 +11,7 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.hash_types as ht
+import spack.installer
 import spack.modules
 import spack.environment as ev
 
@@ -147,6 +148,88 @@ def test_env_install_all(install_mockery, mock_fetch):
     env_specs = e._get_environment_specs()
     spec = next(x for x in env_specs if x.name == 'cmake-client')
     assert spec.package.installed
+
+
+def test_env_install_all_fails(install_mockery, mock_fetch, monkeypatch,
+                               capfd):
+    """Test install_all when one of the packages repeatedly fails.
+
+    This test confirms the environment's install_all will proceed after a
+    previous spec fails.  In this case the dependency and dependent are
+    provided, in order, so the dependency will fail once when built explicitly
+    and, again, when it is a dependency.
+    """
+    err_msg = 'Mock _install_task error'
+
+    # Save original _install_task function for conditional use in monkeypatch
+    orig_fn = spack.installer.PackageInstaller._install_task
+
+    def _inst_task(inst, task, **kwargs):
+        spec = task.pkg.spec
+        if spec.name == 'b':
+            raise spack.installer.InstallError(err_msg)
+
+        orig_fn(inst, task, **kwargs)
+
+    monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
+                        _inst_task)
+
+    e = ev.create('test-fails')
+    e.add('b')   # attempts to install dependency explicitly
+    e.add('a')   # attempts to install dependent (a) after dependency (b)
+    e.concretize()
+    e.install_all()
+
+    out = capfd.readouterr()[1]
+    env_specs = e._get_environment_specs()
+    for spec in env_specs:
+        assert not spec.package.installed
+    assert out.count(err_msg) == 2  # b_explicit + b_dependency
+    assert 'Skipping build of a' in out
+
+
+def test_env_install_all_seq(install_mockery, mock_fetch, monkeypatch):
+    """Test install_all when a successfully installed package is repeatedly
+    installed.
+
+    This test uses the environment installation process to exercise the
+    distributed build multiple times with overlapping dependencies in the
+    same process to ensure proper management of package installation statuses.
+
+    A key part of this test addresses a problem that occurred when attempting
+    to install a package dependent on another successfully installed, multiply
+    referenced package.  An infinite loop would arise after an earlier package
+    fails to install.
+    """
+    err_msg = 'Mock _install_task error'
+
+    # Save original _install_task function for conditional use in monkeypatch
+    # since we only want one (common) package to fail to install.
+    orig_fn = spack.installer.PackageInstaller._install_task
+
+    def _inst_task(inst, task, **kwargs):
+        spec = task.pkg.spec
+        if spec.name == 'dt-diamond-left':
+            raise spack.installer.InstallError(err_msg)
+
+        orig_fn(inst, task, **kwargs)
+
+    monkeypatch.setattr(spack.installer.PackageInstaller, '_install_task',
+                        _inst_task)
+
+    e = ev.create('test-seq')
+    e.add('dt-diamond-bottom')
+    e.add('dt-diamond-left')
+    e.add('dt-diamond')
+    e.concretize()
+    e.install_all()
+
+    env_specs = e._get_environment_specs()
+    for spec in env_specs:
+        if spec.name in ['dt-diamond-bottom', 'dt-diamond-right']:
+            assert spec.package.installed
+        else:
+            assert not spec.package.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):

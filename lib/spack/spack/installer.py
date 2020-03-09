@@ -881,7 +881,7 @@ class PackageInstaller(object):
             .format(lock_type)
 
         pkg_id = package_id(pkg)
-        ltype, lock = self.locks.get(pkg_id, (lock_type, None))
+        ltype, lpkg, lock = self.locks.get(pkg_id, (lock_type, None, None))
         if lock and ltype == lock_type:
             return ltype, lock
 
@@ -932,6 +932,7 @@ class PackageInstaller(object):
         except (lk.LockDowngradeError, lk.LockTimeoutError) as exc:
             tty.debug(err.format(op, desc, pkg_id, exc.__class__.__name__,
                                  str(exc)))
+            self._release_lock(pkg_id)
             lock = None
 
         except (Exception, KeyboardInterrupt, SystemExit) as exc:
@@ -940,8 +941,8 @@ class PackageInstaller(object):
             self._cleanup_all_tasks()
             raise
 
-        self.locks[pkg_id] = (lock_type, lock)
-        return self.locks[pkg_id]
+        self.locks[pkg_id] = (lock_type, pkg, lock)
+        return (lock_type, lock)
 
     def _init_queue(self, install_deps, install_package):
         """
@@ -1224,8 +1225,8 @@ class PackageInstaller(object):
         if pkg_id in self.locks:
             err = "{0} exception when releasing {1} lock for {2}: {3}"
             msg = 'Releasing {0} lock on {1}'
-            ltype, lock = self.locks[pkg_id]
-            if lock is not None:
+            ltype, lpkg, lock = self.locks[pkg_id]
+            if lock:
                 try:
                     tty.verbose(msg.format(ltype, pkg_id))
                     if ltype == 'read':
@@ -1235,6 +1236,13 @@ class PackageInstaller(object):
                 except Exception as exc:
                     tty.warn(err.format(exc.__class__.__name__, ltype,
                                         pkg_id, str(exc)))
+            if lpkg:
+                prefix = lpkg.spec.prefix
+                if prefix:
+                    lock = spack.store.db._prefix_locks.pop(prefix, None)
+                    if lock:
+                        tty.debug('Removed cached prefix lock for {0}'
+                                  .format(prefix))
 
     def _remove_task(self, pkg_id):
         """

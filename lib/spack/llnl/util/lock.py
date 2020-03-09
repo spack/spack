@@ -375,7 +375,7 @@ class Lock(object):
             self._writes = 0
             self._log_downgraded(wait_time, nattempts)
         else:
-            raise LockDowngradeError(self.path)
+            raise LockDowngradeError(self.path, self._reads, self._writes)
 
     def upgrade_read_to_write(self, timeout=None):
         """
@@ -394,7 +394,7 @@ class Lock(object):
             self._writes = 1
             self._log_upgraded(wait_time, nattempts)
         else:
-            raise LockUpgradeError(self.path)
+            raise LockUpgradeError(self.path, self._reads, self._writes)
 
     def release_read(self, release_fn=None):
         """Releases a read lock.
@@ -621,8 +621,10 @@ class LockError(Exception):
 
 class LockDowngradeError(LockError):
     """Raised when unable to downgrade from a write to a read lock."""
-    def __init__(self, path):
-        msg = "Cannot downgrade lock from write to read on file: %s" % path
+    def __init__(self, path, reads, writes):
+        counts = '{0} reads, {1} writes'.format(reads, writes)
+        msg = 'Cannot downgrade lock on {0} from write to read: {1}' \
+            .format(path, counts)
         super(LockDowngradeError, self).__init__(msg)
 
 
@@ -636,8 +638,10 @@ class LockTimeoutError(LockError):
 
 class LockUpgradeError(LockError):
     """Raised when unable to upgrade from a read to a write lock."""
-    def __init__(self, path):
-        msg = "Cannot upgrade lock from read to write on file: %s" % path
+    def __init__(self, path, reads, writes):
+        counts = '{0} reads, {1} writes'.format(reads, writes)
+        msg = 'Cannot upgrade lock on {0} from read to write: {1}' \
+            .format(path, counts)
         super(LockUpgradeError, self).__init__(msg)
 
 

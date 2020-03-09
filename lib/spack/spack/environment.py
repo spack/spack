@@ -1165,21 +1165,25 @@ class Environment(object):
         self._install(concrete, **install_args)
 
     def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        spec.package.do_install(**install_args)
+        try:
+            # "spec" must be concrete
+            spec.package.do_install(**install_args)
 
-        if not spec.external:
-            # Make sure log directory exists
-            log_path = self.log_path
-            fs.mkdirp(log_path)
+            if not spec.external:
+                # Make sure log directory exists
+                log_path = self.log_path
+                fs.mkdirp(log_path)
 
-            with fs.working_dir(self.path):
-                # Link the resulting log file into logs dir
-                build_log_link = os.path.join(
-                    log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
-                if os.path.lexists(build_log_link):
-                    os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                with fs.working_dir(self.path):
+                    # Link the resulting log file into logs dir
+                    build_log_link = os.path.join(
+                        log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
+                    if os.path.lexists(build_log_link):
+                        os.remove(build_log_link)
+                    os.symlink(spec.package.build_log_path, build_log_link)
+        except (Exception, SystemExit) as exc:
+            # TODO: Terminate if --fast-fail (once PR #15295 is merged)
+            tty.debug('Failed to install {0}: {1}'.format(spec.name, str(exc)))
 
     def install_all(self, args=None):
         """Install all concretized specs in an environment.

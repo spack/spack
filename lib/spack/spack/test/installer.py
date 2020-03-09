@@ -237,9 +237,10 @@ def test_ensure_locked_have(install_mockery, tmpdir):
     with tmpdir.as_cwd():
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
         lock_type = 'read'
-        tpl = (lock_type, lock)
+        tpl = (lock_type, spec.package, lock)
         installer.locks[installer.pkg_id] = tpl
-        assert installer._ensure_locked(lock_type, spec.package) == tpl
+        res_tpl = installer._ensure_locked(lock_type, spec.package)
+        assert res_tpl == (tpl[0], tpl[2])
 
 
 def test_package_id(install_mockery):
@@ -419,7 +420,7 @@ def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
     pkg_id = 'test'
     with tmpdir.as_cwd():
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
-        installer.locks[pkg_id] = ('write', lock)
+        installer.locks[pkg_id] = ('write', spec.package, lock)
         assert lock._writes == 0
 
         installer._release_lock(pkg_id)
