@@ -28,8 +28,7 @@ class Spath(CMakePackage):
         if "+mpi" in self.spec:
             args.append('-DMPI=ON')
             args.append("-DMPI_C_COMPILER=%s" % self.spec['mpi'].mpicc)
-
-        if "~mpi" in self.spec:
+        else:
             args.append('-DMPI=OFF')
 
         return args
