@@ -377,8 +377,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             shutil.rmtree(tmpdir)
             tty.die(e)
 
-
-    # create compressed tarball of the install prefix
+    # create gzip compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
                 arcname='%s' % os.path.basename(spec.prefix))
