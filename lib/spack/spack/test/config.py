@@ -642,14 +642,30 @@ config:
 
 
 @contextlib.contextmanager
-def does_not_raise():
-    yield
+def _exception_handler(want_exception):
+    """Abstract the complication of deciding on the correct context manager
+    out of test_nested_override().
+    """
+    @contextlib.contextmanager
+    def _does_not_raise():
+        yield
+
+    with pytest.raises(RuntimeError) if want_exception else _does_not_raise():
+        yield
 
 
 @pytest.mark.parametrize('want_exception', [False, True],
                          ids=['simple', 'with_exception'])
 def test_nested_override(want_exception):
-    """Ensure proper scope naming and nesting of overrides."""
+    """Ensure proper scope naming and behavior of nested overrides.
+
+    In the "simple" case, verify that we can nest two overrides and expect
+    correct state before and after each override has executed and been cleaned
+    up.
+
+    In the "with_exception" case, verify correct behavior in the presence of an
+    exception.
+    """
     base_name = spack.config.overrides_base_name
 
     def _check_scopes(num_expected, debug_values=[]):
@@ -667,8 +683,7 @@ def test_nested_override(want_exception):
     # Check results from single and nested override
     _check_scopes(0)
     try:
-        with (pytest.raises(RuntimeError)
-              if want_exception else does_not_raise()):
+        with _exception_handler(want_exception):
             with spack.config.override('config:debug', True):
                 try:
                     with spack.config.override('config:debug', False):
