@@ -31,11 +31,11 @@ packages:
       - psp-validation@0.2.1
       - py-pytouchreader@1.4.3
       # - py-basalt@0.2.4
-      - py-entity-management@1.1.0
+      - py-entity-management@1.1.1
       - py-jupyter-notebook@4.2.3
-      - py-bbp-analysis-framework@1.6.41
+      - py-bbp-analysis-framework@1.6.42
       - py-bbp-morphology-workflow@1.0.1
-      - py-simwriter@1.0.0
+      - py-simwriter@1.0.1
       - py-morph-tool@0.1.14
       - py-neurodamus
       - py-sonata-network-reduction@0.0.3 ^neuron%intel@19.0.4

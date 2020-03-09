@@ -12,6 +12,7 @@ class PyBbpAnalysisFramework(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-analysis-framework'
     git      = 'ssh://bbpcode.epfl.ch/nse/bbp-analysis-framework'
 
+    version('1.6.42', commit='5783358e8a8c63055ce5c76d43f55875471cefe8')
     version('1.6.41', commit='75a29902164a855a5ab7921a96aeb1f054284108')
     version('1.6.40', commit='66624837486d8e0783b146b208646eee55bbdb7a')
     version('1.6.39', commit='35eb9e33022bad3f73f377fdeeeabb30245229a6')
@@ -23,3 +24,6 @@ class PyBbpAnalysisFramework(PythonPackage):
     depends_on('py-scipy', type='run')
     depends_on('py-neurotools', type='run')
     depends_on('py-progressbar', type='run')
+
+    depends_on('py-pdf2image', type='run')
+    depends_on('pngquant', type='run')

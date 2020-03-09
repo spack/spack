@@ -12,7 +12,7 @@ class PySimwriter(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/project/proj1/simwriter'
     git      = 'ssh://bbpcode.epfl.ch/project/proj1/simwriter'
 
-    version('1.0.0', commit='eea126f3c0511342b9af78e51c7133aae1d28896')
+    version('1.0.1', commit='5e6ed1a3e58894bdc7869d5685a1027c745e8eeb')
 
     depends_on('py-setuptools', type=('build'))
 
