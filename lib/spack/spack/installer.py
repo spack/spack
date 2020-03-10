@@ -181,6 +181,9 @@ def _packages_needed_to_bootstrap_compiler(pkg):
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     dep.concretize()
+    # mark compiler as depended-on by the package that uses it
+    dep._dependents[pkg.name] = spack.spec.DependencySpec(
+        pkg.spec, dep, ('build',))
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
     packages.append((dep.package, True))
@@ -1609,6 +1612,21 @@ class BuildTask(object):
         self.dependencies = set(package_id(d.package) for d in
                                 self.spec.dependencies() if
                                 package_id(d.package) != self.pkg_id)
+
+        # Handle bootstrapped compiler
+        #
+        # The bootstrapped compiler is not a dependency in the spec, but it is
+        # a dependency of the build task. Here we add it to self.dependencies
+        compiler_spec = self.spec.compiler
+        arch_spec = self.spec.architecture
+        if not spack.compilers.compilers_for_spec(compiler_spec,
+                                                  arch_spec=arch_spec):
+            # The compiler is in the queue, identify it as dependency
+            dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
+            dep.architecture = arch_spec
+            dep.concretize()
+            dep_id = package_id(dep.package)
+            self.dependencies.add(dep_id)
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
