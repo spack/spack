@@ -38,7 +38,7 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
-    variant('consistentFPCSR', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
+    variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
 
     variant(
         'threads', default='none',
@@ -98,6 +98,8 @@ class Openblas(MakefilePackage):
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+    conflicts('+consistent_fpcsr', when='threads=none',
+              msg='FPCSR consistency only applies to multithreading')
 
     @property
     def parallel(self):
@@ -251,7 +253,7 @@ class Openblas(MakefilePackage):
 
         # Synchronize floating-point control and status register (FPCSR)
         # between threads (x86/x86_64 only).
-        if '+consistentFPCSR' in self.spec:
+        if '+consistent_fpcsr' in self.spec:
             make_defs += ['CONSISTENT_FPCSR=1']
 
         # Prevent errors in `as` assembler from newer instructions
