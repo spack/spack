@@ -143,12 +143,12 @@ class Axom(Package):
         if "SYS_TYPE" in env:
             # Are we on a LLNL system then strip node number
             hostname = hostname.rstrip('1234567890')
-        host_config_path = "%s-%s-%s.cmake" % (hostname,
-                                               self._get_sys_type(spec),
-                                               spec.compiler)
-        dest_dir     = self.stage.source_path
-        host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
-        return host_config_path
+        filename = "{0}-{1}-{2}.cmake".format(hostname,
+                                              self._get_sys_type(spec),
+                                              spec.compiler)
+        dest_dir = self.stage.source_path
+        fullpath = os.path.abspath(pjoin(dest_dir, filename))
+        return fullpath
 
     def hostconfig(self, spec, prefix):
         """
