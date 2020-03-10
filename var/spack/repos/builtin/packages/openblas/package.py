@@ -137,12 +137,23 @@ class Openblas(MakefilePackage):
 
         return micros
 
-    @staticmethod
-    def _microarch_target_args(microarch, available_targets):
+    def _microarch_target_args(self):
         """Given a spack microarchitecture and a list of targets found in
         OpenBLAS' TargetList.txt, determine the best command-line arguments.
         """
-        args = []  # Return value
+        # Read available openblas targets
+        targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
+        if os.path.exists(targetlist_name):
+            with open(targetlist_name) as f:
+                available_targets = self._read_targets(f)
+        else:
+            available_targets = []
+
+        # Get our build microarchitecture
+        microarch = self.spec.target
+
+        # List of arguments returned by this function
+        args = []
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
@@ -166,11 +177,14 @@ class Openblas(MakefilePackage):
                 if microarch.name in available_targets:
                     break
 
-        arch_name = microarch.family.name
-        if arch_name in openblas_arch:
-            # Apply possible spack->openblas arch name mapping
-            arch_name = openblas_arch_map.get(arch_name, arch_name)
-            args.append('ARCH=' + arch_name)
+        if self.version >= Version("0.3"):
+            # 'ARCH' argument causes build errors in older OpenBLAS
+            # see https://github.com/spack/spack/issues/15385
+            arch_name = microarch.family.name
+            if arch_name in openblas_arch:
+                # Apply possible spack->openblas arch name mapping
+                arch_name = openblas_arch_map.get(arch_name, arch_name)
+                args.append('ARCH=' + arch_name)
 
         if microarch.vendor == 'generic':
             # User requested a generic platform, or we couldn't find a good
@@ -190,8 +204,6 @@ class Openblas(MakefilePackage):
 
     @property
     def make_defs(self):
-        spec = self.spec
-
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
@@ -209,13 +221,7 @@ class Openblas(MakefilePackage):
             make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
         # Add target and architecture flags
-        targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
-        if os.path.exists(targetlist_name):
-            with open(targetlist_name) as f:
-                avail_targets = self._read_targets(f)
-        else:
-            avail_targets = []
-        make_defs += self._microarch_target_args(spec.target, avail_targets)
+        make_defs += self._microarch_target_args()
 
         if '~shared' in self.spec:
             if '+pic' in self.spec:
