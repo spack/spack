@@ -14,6 +14,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = "http://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
+    version('2.34', sha256='89f010078b6cf69c23c27897d686055ab89b198dddf819efb0a4f2c38a0b36e6')
     version('2.33.1', sha256='0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2')
     version('2.32',   sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
     version('2.31.1', sha256='ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
