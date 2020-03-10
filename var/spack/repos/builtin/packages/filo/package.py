@@ -9,7 +9,7 @@ from spack import *
 class Filo(CMakePackage):
     """File flush and fetch, with MPI"""
 
-    homepage = "https://github.com/ECP-VeloC/filo"
+    homepage = "https://github.com/ecp-veloc/filo"
     git      = "https://github.com/ecp-veloc/filo.git"
 
     tags = ['ecp']

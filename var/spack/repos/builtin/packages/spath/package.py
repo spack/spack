@@ -9,7 +9,7 @@ from spack import *
 class Spath(CMakePackage):
     """Represent and manipulate file system paths"""
 
-    homepage = "https://github.com/ECP-VeloC/spath"
+    homepage = "https://github.com/ecp-veloc/spath"
     git      = "https://github.com/ecp-veloc/spath.git"
 
     tags = ['ecp']

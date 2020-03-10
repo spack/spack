@@ -19,8 +19,8 @@ def async_api_validator(pkg_name, variant_name, values):
 class Axl(CMakePackage):
     """Asynchronous transfer library"""
 
-    homepage = "https://github.com/ECP-VeloC/AXL"
-    url      = "https://github.com/ECP-VeloC/AXL/archive/v0.1.1.zip"
+    homepage = "https://github.com/ecp-veloc/AXL"
+    url      = "https://github.com/ecp-veloc/AXL/archive/v0.1.1.zip"
     git      = "https://github.com/ecp-veloc/axl.git"
 
     tags = ['ecp']
