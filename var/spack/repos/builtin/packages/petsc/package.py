@@ -100,7 +100,7 @@ class Petsc(Package):
     variant('batch', default=False,
             description='Enable when mpiexec is not available to run binaries')
     variant('valgrind', default=False,
-            description='Activates support for Valgrind')
+            description='Enable Valgrind Client Request mechanism')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
