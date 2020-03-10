@@ -159,7 +159,8 @@ class Hpx(CMakePackage, CudaPackage):
             '-DBOOST_ROOT={0}'.format(spec['boost'].prefix),
             '-DHWLOC_ROOT={0}'.format(spec['hwloc'].prefix),
             '-DHPX_WITH_BOOST_ALL_DYNAMIC_LINK=ON',
-            '-DBUILD_SHARED_LIBS=ON'
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DHPX_DATASTRUCTURES_WITH_ADAPT_STD_TUPLE=OFF'
         ])
 
         return args
