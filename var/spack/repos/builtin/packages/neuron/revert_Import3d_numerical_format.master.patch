@@ -1,0 +1,22 @@
+diff --git a/share/lib/hoc/import3d/import3d_gui.hoc b/share/lib/hoc/import3d/import3d_gui.hoc
+index f388abe..9c326dc 100755
+--- a/share/lib/hoc/import3d/import3d_gui.hoc
++++ b/share/lib/hoc/import3d/import3d_gui.hoc
+@@ -1064,7 +1064,7 @@ proc instantiate() {local i, j, min, haspy, ispycontext, keepCommands  localobj
+ 		    if (ispycontext) {
+ 		        pyobj.neuron._pt3dstyle_in_obj($o1, tstr, sec.raw.x[0][0], sec.raw.x[1][0], sec.raw.x[2][0])
+ 		    } else {
+-			    sprint(tstr1, "%s { pt3dstyle(1, %.8g, %.8g, %.8g) }\n", tstr, sec.raw.x[0][0], sec.raw.x[1][0], sec.raw.x[2][0])
++			    sprint(tstr1, "%s { pt3dstyle(1, %g, %g, %g) }\n", tstr, sec.raw.x[0][0], sec.raw.x[1][0], sec.raw.x[2][0])
+ 			    commands.append(new String(tstr1))
+             }
+ 		}
+@@ -1086,7 +1086,7 @@ proc instantiate() {local i, j, min, haspy, ispycontext, keepCommands  localobj
+ 		    if (ispycontext) {
+ 		        pyobj.neuron._pt3dadd_in_obj($o1, tstr, xx.x[j], yy.x[j], zz.x[j], dd.x[j])
+ 		    } else {
+-			    sprint(tstr1, "%s { pt3dadd(%.8g, %.8g, %.8g, %.8g) }\n",\
++			    sprint(tstr1, "%s { pt3dadd(%g, %g, %g, %g) }\n",\
+ 			      tstr,xx.x[j], yy.x[j], zz.x[j], dd.x[j])
+ 			    commands.append(new String(tstr1))
+             }
