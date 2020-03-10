@@ -1554,7 +1554,7 @@ class BuildTask(object):
 
         # Handle bootstrapped compiler
         #
-        # The boostrapped compiler is not a dependency in the spec, but it is
+        # The bootstrapped compiler is not a dependency in the spec, but it is
         # a dependency of the build task. Here we add it to self.dependencies
         compiler_spec = self.spec.compiler
         arch_spec = self.spec.architecture
