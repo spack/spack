@@ -60,6 +60,8 @@ class Openblas(MakefilePackage):
     patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
+    # See https://github.com/spack/spack/issues/15385
+    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8: %intel')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -94,6 +96,7 @@ class Openblas(MakefilePackage):
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
 
+    # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
 
     @property
