@@ -400,8 +400,42 @@ def replace_prefix_text(path_name, old_dir, new_dir):
 def replace_prefix_bin(path_name, old_dir, new_dir):
     """
     Attempt to replace old install prefix with new install prefix
+    in binary files by prefixing new install prefix with os.sep
+    until the lengths of the prefixes are the same.
+    """
+
+    def replace(match):
+        occurances = match.group().count(old_dir.encode('utf-8'))
+        olen = len(old_dir.encode('utf-8'))
+        nlen = len(new_dir.encode('utf-8'))
+        padding = (olen - nlen) * occurances
+        if padding < 0:
+            return data
+        return match.group().replace(old_dir.encode('utf-8'),
+                                     os.sep.encode('utf-8') * padding +
+                                     new_dir.encode('utf-8'))
+
+    with open(path_name, 'rb+') as f:
+        data = f.read()
+        f.seek(0)
+        original_data_len = len(data)
+        pat = re.compile(old_dir.encode('utf-8') + b'([^\0]*?)\0')
+        if not pat.search(data):
+            return
+        ndata = pat.sub(replace, data)
+        if not len(ndata) == original_data_len:
+            raise BinaryStringReplacementException(
+                path_name, original_data_len, len(ndata))
+        f.write(ndata)
+        f.truncate()
+
+
+def replace_prefix_nullterm(path_name, old_dir, new_dir):
+    """
+    Attempt to replace old install prefix with new install prefix
     in binary files by replacing with null terminated string
     that is the same length unless the old path is shorter
+    Used on linux to replace mach-o rpaths
     """
 
     def replace(match):
@@ -413,7 +447,6 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
             return data
         return match.group().replace(old_dir.encode('utf-8'),
                                      new_dir.encode('utf-8')) + b'\0' * padding
-
     with open(path_name, 'rb+') as f:
         data = f.read()
         f.seek(0)
@@ -466,8 +499,7 @@ def relocate_macho_binaries(path_names, old_dir, new_dir, allow_root):
             modify_object_macholib(path_name, placeholder, new_dir)
             modify_object_macholib(path_name, old_dir, new_dir)
         if len(new_dir) <= len(old_dir):
-            replace_prefix_bin(path_name, old_dir,
-                               new_dir)
+            replace_prefix_nullterm(path_name, old_dir, new_dir)
         else:
             tty.warn('Cannot do a binary string replacement'
                      ' with padding for %s'
@@ -684,13 +716,6 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     strings = Executable('strings')
 
-    # if we're relocating patchelf itself, use it
-
-    if file[-13:] == "/bin/patchelf":
-        patchelf = Executable(file)
-    else:
-        patchelf = Executable(get_patchelf())
-
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
 
@@ -700,8 +725,8 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = patchelf('--print-rpath', file, output=str).strip()
-            set_of_strings.discard(rpaths.strip())
+            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
             rpaths, deps, idpath = macho_get_paths(file)
@@ -756,4 +781,5 @@ def mime_type(file):
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     if '/' not in output:
         output += '/'
-    return tuple(output.strip().split('/'))
+    split_by_slash = output.strip().split('/')
+    return (split_by_slash[0], "/".join(split_by_slash[1:]))

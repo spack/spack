@@ -54,6 +54,8 @@ class IntelMkl(IntelPackage):
     version('11.3.2.181', sha256='bac04a07a1fe2ae4996a67d1439ee90c54f31305e8663d1ccfce043bed84fc27',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8711/l_mkl_11.3.2.181.tgz')
 
+    depends_on('cpio', type='build')
+
     variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False, description='64 bit integers')
     variant(

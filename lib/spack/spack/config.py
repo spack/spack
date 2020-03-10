@@ -97,6 +97,7 @@ configuration_paths = (
 config_defaults = {
     'config': {
         'debug': False,
+        'connect_timeout': 10,
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
@@ -279,6 +280,7 @@ class InternalConfigScope(ConfigScope):
         self.sections = syaml.syaml_dict()
 
         if data:
+            data = InternalConfigScope._process_dict_keyname_overrides(data)
             for section in data:
                 dsec = data[section]
                 validate({section: dsec}, section_schemas[section])
@@ -304,6 +306,25 @@ class InternalConfigScope(ConfigScope):
 
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
+
+    @staticmethod
+    def _process_dict_keyname_overrides(data):
+        """Turn a trailing `:' in a key name into an override attribute."""
+        result = {}
+        for sk, sv in iteritems(data):
+            if sk.endswith(':'):
+                key = syaml.syaml_str(sk[:-1])
+                key.override = True
+            else:
+                key = sk
+
+            if isinstance(sv, dict):
+                result[key]\
+                    = InternalConfigScope._process_dict_keyname_overrides(sv)
+            else:
+                result[key] = copy.copy(sv)
+
+        return result
 
 
 class Configuration(object):
@@ -504,14 +525,14 @@ class Configuration(object):
 
         Accepts the path syntax described in ``get()``.
         """
-        section, _, rest = path.partition(':')
+        parts = _process_config_path(path)
+        section = parts.pop(0)
 
-        if not rest:
+        if not parts:
             self.update_config(section, value, scope=scope)
         else:
             section_data = self.get_config(section, scope=scope)
 
-            parts = rest.split(':')
             data = section_data
             while len(parts) > 1:
                 key = parts.pop(0)
@@ -611,7 +632,7 @@ def _config():
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
-    it. It is bundled inside a function so that configuratoin can be
+    it. It is bundled inside a function so that configuration can be
     initialized lazily.
 
     Return:
@@ -762,17 +783,12 @@ def _merge_yaml(dest, source):
     Config file authors can optionally end any attribute in a dict
     with `::` instead of `:`, and the key will override that of the
     parent instead of merging.
-
     """
     def they_are(t):
         return isinstance(dest, t) and isinstance(source, t)
 
-    # If both are None, handle specially and return None.
-    if source is None and dest is None:
-        return None
-
     # If source is None, overwrite with source.
-    elif source is None:
+    if source is None:
         return None
 
     # Source list is prepended (for precedence)
@@ -798,8 +814,9 @@ def _merge_yaml(dest, source):
             # to copy mark information on source keys to dest.
             key_marks[sk] = sk
 
-        # ensure that keys are marked in the destination.  the key_marks dict
-        # ensures we can get the actual source key objects from dest keys
+        # ensure that keys are marked in the destination. The
+        # key_marks dict ensures we can get the actual source key
+        # objects from dest keys
         for dk in list(dest.keys()):
             if dk in key_marks and syaml.markable(dk):
                 syaml.mark(dk, key_marks[dk])
@@ -811,9 +828,34 @@ def _merge_yaml(dest, source):
 
         return dest
 
-    # In any other case, overwrite with a copy of the source value.
-    else:
-        return copy.copy(source)
+    # If we reach here source and dest are either different types or are
+    # not both lists or dicts: replace with source.
+    return copy.copy(source)
+
+
+#
+# Process a path argument to config.set() that may contain overrides ('::' or
+# trailing ':')
+#
+def _process_config_path(path):
+    result = []
+    if path.startswith(':'):
+        raise syaml.SpackYAMLError("Illegal leading `:' in path `{0}'".
+                                   format(path), '')
+    seen_override_in_path = False
+    while path:
+        front, sep, path = path.partition(':')
+        if (sep and not path) or path.startswith(':'):
+            if seen_override_in_path:
+                raise syaml.SpackYAMLError("Meaningless second override"
+                                           " indicator `::' in path `{0}'".
+                                           format(path), '')
+            path = path.lstrip(':')
+            front = syaml.syaml_str(front)
+            front.override = True
+            seen_override_in_path = True
+        result.append(front)
+    return result
 
 
 #

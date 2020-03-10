@@ -42,6 +42,7 @@ def _fetch_cache():
     building the same package different ways or multiple times.
     """
     path = spack.config.get('config:source_cache')
+
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
     path = spack.util.path.canonicalize_path(path)
@@ -50,8 +51,9 @@ def _fetch_cache():
 
 
 class MirrorCache(object):
-    def __init__(self, root):
+    def __init__(self, root, skip_unstable_versions):
         self.root = os.path.abspath(root)
+        self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
         """Fetch and relocate the fetcher's target into our mirror cache."""
@@ -84,5 +86,3 @@ class MirrorCache(object):
 
 #: Spack's local cache for downloaded source archives
 fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
-
-mirror_cache = None

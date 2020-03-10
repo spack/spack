@@ -18,7 +18,7 @@ import json
 from six.moves.urllib.error import URLError
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp, install_tree
+from llnl.util.filesystem import mkdirp
 
 import spack.cmd
 import spack.config as config
@@ -342,8 +342,18 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             raise NoOverwriteException(url_util.format(remote_specfile_path))
 
     # make a copy of the install directory to work with
-    workdir = os.path.join(tempfile.mkdtemp(), os.path.basename(spec.prefix))
-    install_tree(spec.prefix, workdir, symlinks=True)
+    workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, '.tar')
+    temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
+        tar.add(name='%s' % spec.prefix,
+                arcname='.')
+    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
+        tar.extractall(workdir)
+    os.remove(temp_tarfile_path)
 
     # create info for later relocation and create tar
     write_buildinfo_file(spec.prefix, workdir, rel=rel)
@@ -367,7 +377,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             shutil.rmtree(tmpdir)
             tty.die(e)
 
-    # create compressed tarball of the install prefix
+    # create gzip compressed tarball of the install prefix
     with closing(tarfile.open(tarfile_path, 'w:gz')) as tar:
         tar.add(name='%s' % workdir,
                 arcname='%s' % os.path.basename(spec.prefix))
@@ -407,8 +417,8 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         sign_tarball(key, force, specfile_path)
     # put tarball, spec and signature files in .spack archive
     with closing(tarfile.open(spackfile_path, 'w')) as tar:
-        tar.add(name='%s' % tarfile_path, arcname='%s' % tarfile_name)
-        tar.add(name='%s' % specfile_path, arcname='%s' % specfile_name)
+        tar.add(name=tarfile_path, arcname='%s' % tarfile_name)
+        tar.add(name=specfile_path, arcname='%s' % specfile_name)
         if not unsigned:
             tar.add(name='%s.asc' % specfile_path,
                     arcname='%s.asc' % specfile_name)
@@ -422,6 +432,9 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         spackfile_path, remote_spackfile_path, keep_original=False)
     web_util.push_to_url(
         specfile_path, remote_specfile_path, keep_original=False)
+
+    tty.msg('Buildache for "%s" written to \n %s' %
+            (spec, remote_spackfile_path))
 
     try:
         # create an index.html for the build_cache directory so specs can be
@@ -586,6 +599,10 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
     with closing(tarfile.open(spackfile_path, 'r')) as tar:
         tar.extractall(tmpdir)
+    # some buildcache tarfiles use bzip2 compression
+    if not os.path.exists(tarfile_path):
+        tarfile_name = tarball_name(spec, '.tar.bz2')
+        tarfile_path = os.path.join(tmpdir, tarfile_name)
     if not unsigned:
         if os.path.exists('%s.asc' % specfile_path):
             try:
@@ -638,7 +655,17 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     # so the pathname should be the same now that the directory layout
     # is confirmed
     workdir = os.path.join(tmpdir, os.path.basename(spec.prefix))
-    install_tree(workdir, spec.prefix, symlinks=True)
+    # install_tree copies hardlinks
+    # create a temporary tarfile from prefix and exract it to workdir
+    # tarfile preserves hardlinks
+    temp_tarfile_name = tarball_name(spec, '.tar')
+    temp_tarfile_path = os.path.join(tmpdir, temp_tarfile_name)
+    with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
+        tar.add(name='%s' % workdir,
+                arcname='.')
+    with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
+        tar.extractall(spec.prefix)
+    os.remove(temp_tarfile_path)
 
     # cleanup
     os.remove(tarfile_path)
@@ -775,6 +802,7 @@ def get_specs(force=False, allarch=False):
 def get_keys(install=False, trust=False, force=False):
     """
     Get pgp public keys available on mirror
+    with suffix .key or .pub
     """
     if not spack.mirror.MirrorCollection():
         tty.die("Please add a spack mirror to allow " +
@@ -791,16 +819,18 @@ def get_keys(install=False, trust=False, force=False):
             tty.msg("Finding public keys in %s" % mirror_dir)
             files = os.listdir(mirror_dir)
             for file in files:
-                if re.search(r'\.key', file):
+                if re.search(r'\.key', file) or re.search(r'\.pub', file):
                     link = url_util.join(fetch_url_build_cache, file)
                     keys.add(link)
         else:
             tty.msg("Finding public keys at %s" %
                     url_util.format(fetch_url_build_cache))
-            p, links = web_util.spider(fetch_url_build_cache, depth=1)
+            # For s3 mirror need to request index.html directly
+            p, links = web_util.spider(
+                url_util.join(fetch_url_build_cache, 'index.html'), depth=1)
 
             for link in links:
-                if re.search(r'\.key', link):
+                if re.search(r'\.key', link) or re.search(r'\.pub', link):
                     keys.add(link)
 
         for link in keys:

@@ -825,10 +825,12 @@ class OpenfoamArch(object):
             self.arch_option = '-march=knl'
 
         # spec.architecture.platform is like `uname -s`, but lower-case
-        platform = spec.architecture.platform
+        platform = str(spec.architecture.platform)
 
         # spec.target.family is like `uname -m`
-        target = spec.target.family
+        target = str(spec.target.family)
+
+        # No spack platform family for ia64 or armv7l
 
         if platform == 'linux':
             if target == 'x86_64':

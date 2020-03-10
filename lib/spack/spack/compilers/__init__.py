@@ -413,6 +413,14 @@ def get_compilers(config, cspec=None, arch_spec=None):
             assert arch_spec is None
 
         if arch_spec and target and (target != family and target != 'any'):
+            # If the family of the target is the family we are seeking,
+            # there's an error in the underlying configuration
+            if llnl.util.cpu.targets[target].family == family:
+                msg = ('the "target" field in compilers.yaml accepts only '
+                       'target families [replace "{0}" with "{1}"'
+                       ' in "{2}" specification]')
+                msg = msg.format(str(target), family, items.get('spec', '??'))
+                raise ValueError(msg)
             continue
 
         compilers.append(_compiler_from_config_entry(items))

@@ -18,6 +18,9 @@ class Pegtl(CMakePackage):
     url      = "https://github.com/taocpp/PEGTL/tarball/2.1.4"
     git      = "https://github.com/taocpp/PEGTL.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('2.1.4', sha256='d990dccc07b4d9ba548326d11c5c5e34fa88b34fe113cb5377da03dda29f23f2')
     version('2.0.0', sha256='5aae0505077e051cae4d855c38049cc6cf71103a6cc8d0ddef01a576e8a60cc0')
+
+    # Ref: https://github.com/taocpp/PEGTL/blob/master/src/example/pegtl/json_classes.hpp
+    patch('change_to_virtual_destructor.patch', when='@:2.4')

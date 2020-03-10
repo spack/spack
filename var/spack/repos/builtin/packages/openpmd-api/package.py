@@ -14,7 +14,8 @@ class OpenpmdApi(CMakePackage):
 
     maintainers = ['ax3l']
 
-    version('develop', branch='dev')
+    version('dev', branch='dev')
+    version('0.11.0',  tag='0.11.0-alpha')
     version('0.10.3',  tag='0.10.3-alpha')
     version('0.10.2',  tag='0.10.2-alpha')
     version('0.10.1',  tag='0.10.1-alpha')
@@ -35,7 +36,7 @@ class OpenpmdApi(CMakePackage):
 
     depends_on('cmake@3.11.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
-    depends_on('catch2@2.6.1: ~single_header', type='test')
+    depends_on('catch2@2.6.1:', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
     depends_on('hdf5@1.8.13:', when='+hdf5')
     depends_on('hdf5@1.8.13: ~mpi', when='~mpi +hdf5')
@@ -114,4 +115,4 @@ class OpenpmdApi(CMakePackage):
         # pre-load dependent CMake-PUBLIC header-only libs
         env.prepend_path('CMAKE_PREFIX_PATH',
                          self.spec['mpark-variant'].prefix)
-        prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)
+        env.prepend_path('CPATH', self.spec['mpark-variant'].prefix.include)

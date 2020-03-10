@@ -80,9 +80,10 @@ class Openmpi(AutotoolsPackage):
     version('develop', branch='master')
 
     # Current
-    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
+    version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
 
     # Still supported
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
     version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
     version('3.1.5', preferred=True, sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
@@ -193,7 +194,7 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
-    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.3')
+    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.2')
 
     # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
     # Haven't release fix for 2.1.x
@@ -202,6 +203,13 @@ class Openmpi(AutotoolsPackage):
     # Fixed in 3.0.3 and 3.1.3
     patch('btl_vader.patch', when='@3.0.1:3.0.2')
     patch('btl_vader.patch', when='@3.1.0:3.1.2')
+
+    # Reported upstream: https://github.com/open-mpi/ompi/pull/6378
+    # We support only versions based on Libtool 2.4.6.
+    patch('nag_ltmain_1.patch', when='@2.1.4:2.1.999,3.0.1:4%nag')
+    patch('nag_ltmain_2.patch', when='@2.1.2:2.1.3,3.0.0%nag')
+    patch('nag_ltmain_3.patch', when='@2.0.0:2.1.1%nag')
+    patch('nag_ltmain_4.patch', when='@1.10.4:1.10.999%nag')
 
     variant(
         'fabrics',
@@ -398,6 +406,7 @@ class Openmpi(AutotoolsPackage):
         spec = self.spec
         config_args = [
             '--enable-shared',
+            '--disable-silent-rules'
         ]
 
         # Add extra_rpaths dirs from compilers.yaml into link wrapper
