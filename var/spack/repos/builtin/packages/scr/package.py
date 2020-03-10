@@ -31,11 +31,11 @@ class Scr(CMakePackage):
 
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
-    depends_on('er', when="@develop,3:")
-    depends_on('kvtree', when="@develop,3:")
-    depends_on('rankstr', when="@develop,3:")
-    depends_on('filo', when="@develop,3:")
-    depends_on('spath', when="@develop,3:")
+    depends_on('er', when="@3:")
+    depends_on('kvtree', when="@3:")
+    depends_on('rankstr', when="@3:")
+    depends_on('filo', when="@3:")
+    depends_on('spath', when="@3:")
 
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
