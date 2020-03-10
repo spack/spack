@@ -56,6 +56,7 @@ class Umpire(CMakePackage):
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=On',
+                '-DENABLE_DEVICE_CONST=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
         else:
             options.append('-DENABLE_CUDA=Off')

@@ -15,6 +15,7 @@ class Raja(CMakePackage, CudaPackage):
     version('develop', branch='develop', submodules='True')
     version('master',  branch='master',  submodules='True')
     version('0.11.0', tag='v0.11.0', submodules="True")
+    version('0.10.1', tag='v0.10.1', submodules="True")
     version('0.10.0', tag='v0.10.0', submodules="True")
     version('0.9.0', tag='v0.9.0', submodules="True")
     version('0.8.0', tag='v0.8.0', submodules="True")
@@ -51,5 +52,14 @@ class Raja(CMakePackage, CudaPackage):
             cuda_arch = cuda_value[0]
             if cuda_arch is not None:
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
+
+        # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
+        # is used by the spack compiler wrapper.  This can go away when BLT
+        # removes -Werror from GTest flags
+        sys_type = ""
+        if "SYS_TYPE" in env:
+            sys_type = env["SYS_TYPE"]
+        if "blueos" in sys_type:
+            options.extend(['-DENABLE_TESTS=OFF'])
 
         return options
