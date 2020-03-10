@@ -944,21 +944,18 @@ class SvnFetchStrategy(VCSFetchStrategy):
         return self.revision
 
     def get_source_id(self):
+        output = self.svn('info', '--xml', self.url, output=str)
         try:
             import xml.etree.ElementTree
-        except ImportError:
-            # This python install doesn't have xml support
-            output = self.svn('info', self.url, output=str)
-            if not output:
-                return None
-            lines = output.split('\n')
-            for line in lines:
-                if line.startswith('Revision:'):
-                    return line.split()[-1]
-        else:
-            output = self.svn('info', '--xml', self.url, output=str)
             info = xml.etree.ElementTree.fromstring(output)
             return info.find('entry/commit').get('revision')
+        except ImportError:
+            # This python install doesn't have xml support
+            match = re.search(r'<commit\s+revision\s*=\s*"(\d+)">', output,
+                              re.M)
+            if not match:
+                return None
+            return int(match.group(1))
 
     def mirror_id(self):
         if self.revision:
