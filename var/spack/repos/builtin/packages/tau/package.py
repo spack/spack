@@ -23,6 +23,7 @@ class Tau(Package):
     git      = "https://github.com/UO-OACISS/tau2"
 
     version('develop', branch='master')
+    version('2.29', sha256='146be769a23c869a7935e8fa5ba79f40ba36b9057a96dda3be6730fc9ca86086')
     version('2.28.2', sha256='64e129a482056755012b91dae2fb4f728dbf3adbab53d49187eca952891c5457')
     version('2.28.1', sha256='b262e5c9977471e9f5a8d729b3db743012df9b0ab8244da2842039f8a3b98b34')
     version('2.28', sha256='68c6f13ae748d12c921456e494006796ca2b0efebdeef76ee7c898c81592883e')
@@ -66,6 +67,8 @@ class Tau(Package):
     variant('cuda', default=False, description='Activates CUDA support')
     variant('fortran', default=darwin_default, description='Activates Fortran support')
     variant('io', default=True, description='Activates POSIX I/O support')
+    variant('adios2', default=False, description='Activates ADIOS2 output support')
+    variant('sqlite', default=False, description='Activates SQLite3 output support')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -75,6 +78,7 @@ class Tau(Package):
     variant('ppc64le', default=False, description='Build for IBM Power LE nodes')
     variant('x86_64', default=False, description='Force build for x86 Linux instead of auto-detect')
 
+    depends_on('zlib', type='link')
     depends_on('pdt', when='+pdt')  # Required for TAU instrumentation
     depends_on('scorep', when='+scorep')
     depends_on('otf2@2.1:', when='+otf2')
@@ -86,13 +90,19 @@ class Tau(Package):
     depends_on('binutils+libiberty+headers~nls', when='+binutils')
     depends_on('python@2.7:', when='+python')
     depends_on('libunwind', when='+libunwind')
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='+mpi', type=('build', 'run', 'link'))
     depends_on('cuda', when='+cuda')
     depends_on('gasnet', when='+gasnet')
+    depends_on('adios2', when='+adios2')
+    depends_on('sqlite', when='+sqlite')
 
     # Elf only required from 2.28.1 on
     conflicts('+libelf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
+
+    # ADIOS2, SQLite only available from 2.29.1 on
+    conflicts('+adios2', when='@:2.29.1')
+    conflicts('+sqlite', when='@:2.29.1')
 
     filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
 
@@ -131,6 +141,9 @@ class Tau(Package):
         compiler_options.append(useropt)
         return compiler_options
 
+    def setup_build_environment(self, env):
+        env.prepend_path('LIBRARY_PATH', self.spec['zlib'].prefix.lib)
+
     def install(self, spec, prefix):
         # TAU isn't happy with directories that have '@' in the path.  Sigh.
         change_sed_delimiter('@', ';', 'configure')
@@ -140,8 +153,7 @@ class Tau(Package):
         # TAU configure, despite the name , seems to be a manually
         # written script (nothing related to autotools).  As such it has
         # a few #peculiarities# that make this build quite hackish.
-        options = ["-prefix=%s" % prefix,
-                   "-iowrapper"]
+        options = ["-prefix=%s" % prefix]
 
         if '+craycnl' in spec:
             options.append('-arch=craycnl')
@@ -201,6 +213,11 @@ class Tau(Package):
             options.append("-otf=%s" % spec['otf2'].prefix)
 
         if '+mpi' in spec:
+            env['CC'] = spec['mpi'].mpicc
+            env['CXX'] = spec['mpi'].mpicxx
+            env['F77'] = spec['mpi'].mpif77
+            env['FC'] = spec['mpi'].mpifc
+
             options.append('-mpi')
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
@@ -213,6 +230,12 @@ class Tau(Package):
 
         if '+cuda' in spec:
             options.append("-cuda=%s" % spec['cuda'].prefix)
+
+        if '+adios2' in spec:
+            options.append("-adios=%s" % spec['adios2'].prefix)
+
+        if '+sqlite' in spec:
+            options.append("-sqlite3=%s" % spec['sqlite'].prefix)
 
         if '+phase' in spec:
             options.append('-PROFILEPHASE')

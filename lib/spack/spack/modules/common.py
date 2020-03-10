@@ -28,26 +28,24 @@ and is divided among four classes:
 Each of the four classes needs to be sub-classed when implementing a new
 module type.
 """
+import collections
 import copy
 import datetime
 import inspect
 import os.path
 import re
-import collections
 
-import six
 import llnl.util.filesystem
 import llnl.util.tty as tty
-
-import spack.paths
 import spack.build_environment as build_environment
-import spack.util.environment
-import spack.tengine as tengine
-import spack.util.path
-import spack.util.environment
 import spack.error
-import spack.util.spack_yaml as syaml
+import spack.paths
+import spack.schema.environment
+import spack.tengine as tengine
+import spack.util.environment
 import spack.util.file_permissions as fp
+import spack.util.path
+import spack.util.spack_yaml as syaml
 
 
 #: config section for this file
@@ -344,7 +342,11 @@ def get_module(module_type, spec, get_full_path, required=True):
         The module name or path. May return ``None`` if the module is not
         available.
     """
-    if spec.package.installed_upstream:
+    try:
+        upstream = spec.package.installed_upstream
+    except spack.repo.UnknownPackageError:
+        upstream, record = spack.store.db.query_by_spec_hash(spec.dag_hash())
+    if upstream:
         module = (spack.modules.common.upstream_module_index
                   .upstream_module(spec, module_type))
         if not module:
@@ -415,22 +417,7 @@ class BaseConfiguration(object):
         """List of environment modifications that should be done in the
         module.
         """
-        env_mods = spack.util.environment.EnvironmentModifications()
-        actions = self.conf.get('environment', {})
-
-        def process_arglist(arglist):
-            if method == 'unset':
-                for x in arglist:
-                    yield (x,)
-            else:
-                for x in six.iteritems(arglist):
-                    yield x
-
-        for method, arglist in actions.items():
-            for args in process_arglist(arglist):
-                getattr(env_mods, method)(*args)
-
-        return env_mods
+        return spack.schema.environment.parse(self.conf.get('environment', {}))
 
     @property
     def suffixes(self):
@@ -441,6 +428,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
+        suffixes = sorted(set(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes
@@ -640,16 +628,9 @@ class BaseContext(tengine.Context):
             msg = 'unknown, software installed outside of Spack'
             return msg
 
-        # This is quite simple right now, but contains information on how
-        # to call different build system classes.
-        for attr in ('configure_args', 'cmake_args'):
-            try:
-                configure_args = getattr(pkg, attr)()
-                return ' '.join(configure_args)
-            except (AttributeError, IOError, KeyError):
-                # The method doesn't exist in the current spec,
-                # or it's not usable
-                pass
+        if os.path.exists(pkg.install_configure_args_path):
+            with open(pkg.install_configure_args_path, 'r') as args_file:
+                return args_file.read()
 
         # Returning a false-like value makes the default templates skip
         # the configure option section

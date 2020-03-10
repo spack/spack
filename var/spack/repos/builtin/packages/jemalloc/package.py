@@ -13,6 +13,7 @@ class Jemalloc(Package):
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
     version('5.2.1', sha256='34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6')
+    version('5.2.0', sha256='74be9f44a60d2a99398e706baa921e4efde82bf8fd16e5c0643c375c5851e3b4')
     version('4.5.0', sha256='9409d85664b4f135b77518b0b118c549009dc10f6cba14557d170476611f6780')
     version('4.4.0', sha256='a7aea63e9718d2f1adf81d87e3df3cb1b58deb86fc77bad5d702c4c59687b033')
     version('4.3.1', sha256='f7bb183ad8056941791e0f075b802e8ff10bd6e2d904e682f87c8f6a510c278b')

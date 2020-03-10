@@ -218,7 +218,7 @@ _keys() {
 _config_sections() {
     if [[ -z "${SPACK_CONFIG_SECTIONS:-}" ]]
     then
-        SPACK_CONFIG_SECTIONS="compilers mirrors repos packages modules config upstreams"
+        SPACK_CONFIG_SECTIONS="$(spack config list)"
     fi
     SPACK_COMPREPLY="$SPACK_CONFIG_SECTIONS"
 }
@@ -226,7 +226,7 @@ _config_sections() {
 _extensions() {
     if [[ -z "${SPACK_EXTENSIONS:-}" ]]
     then
-        SPACK_EXTENSIONS="aspell go-bootstrap go icedtea jdk kim-api lua matlab mofem-cephas octave openjdk perl python r ruby rust tcl yorick"
+        SPACK_EXTENSIONS="$(spack extensions)"
     fi
     SPACK_COMPREPLY="$SPACK_EXTENSIONS"
 }
@@ -313,7 +313,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
     fi
 }
 
@@ -382,7 +382,7 @@ _spack_buildcache() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory --no-rebuild-index -y --spec-yaml --no-deps"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --no-rebuild-index -y --spec-yaml --only"
     else
         _all_packages
     fi
@@ -391,7 +391,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
     else
         _all_packages
     fi
@@ -400,7 +400,7 @@ _spack_buildcache_install() {
 _spack_buildcache_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force"
+        SPACK_COMPREPLY="-h --help -l --long -L --very-long -v --variants -f --force -a --allarch"
     else
         _all_packages
     fi
@@ -507,7 +507,7 @@ _spack_clone() {
 _spack_commands() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -a --aliases --format --header --update"
+        SPACK_COMPREPLY="-h --help --update-completion -a --aliases --format --header --update"
     else
         SPACK_COMPREPLY=""
     fi
@@ -584,7 +584,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit"
+        SPACK_COMPREPLY="get blame edit list"
     fi
 }
 
@@ -615,6 +615,10 @@ _spack_config_edit() {
     fi
 }
 
+_spack_config_list() {
+    SPACK_COMPREPLY="-h --help"
+}
+
 _spack_configure() {
     if $list_options
     then
@@ -622,6 +626,10 @@ _spack_configure() {
     else
         _all_packages
     fi
+}
+
+_spack_containerize() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_create() {
@@ -937,7 +945,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1017,7 +1025,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1264,7 +1272,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c"
+        SPACK_COMPREPLY="-h --help -c -m"
     else
         SPACK_COMPREPLY=""
     fi

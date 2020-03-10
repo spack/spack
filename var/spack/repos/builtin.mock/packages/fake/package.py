@@ -11,6 +11,3 @@ class Fake(Package):
     url      = "http://www.fake-spack-example.org/downloads/fake-1.0.tar.gz"
 
     version('1.0', 'foobarbaz')
-
-    def install(self, spec, prefix):
-        pass

@@ -21,7 +21,7 @@ import multiprocessing.pool
 
 try:
     # Python 2 had these in the HTMLParser package.
-    from HTMLParser import HTMLParser, HTMLParseError
+    from HTMLParser import HTMLParser, HTMLParseError  # novm
 except ImportError:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
@@ -80,7 +80,7 @@ if sys.version_info[0] < 3:
         Process = NonDaemonProcess
 else:
 
-    class NonDaemonContext(type(multiprocessing.get_context())):
+    class NonDaemonContext(type(multiprocessing.get_context())):  # novm
         Process = NonDaemonProcess
 
     class NonDaemonPool(multiprocessing.pool.Pool):
@@ -128,7 +128,7 @@ def read_from_url(url, accept_content_type=None):
                 warn_no_ssl_cert_checking()
             else:
                 # User wants SSL verification, and it *can* be provided.
-                context = ssl.create_default_context()
+                context = ssl.create_default_context()  # novm
         else:
             # User has explicitly indicated that they do not want SSL
             # verification.
@@ -205,6 +205,8 @@ def push_to_url(
                     # needs to be done in separate steps.
                     shutil.copy2(local_file_path, remote_file_path)
                     os.remove(local_file_path)
+                else:
+                    raise
 
     elif remote_url.scheme == 's3':
         if extra_args is None:

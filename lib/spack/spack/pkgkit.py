@@ -50,7 +50,10 @@ from spack.util.executable import *
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
-    DependencyConflictError, InstallError, ExternalPackageError
+    DependencyConflictError
+
+from spack.installer import \
+    ExternalPackageError, InstallError, InstallLockError, UpstreamPackageError
 
 from spack.variant import any_combination_of, auto_or_any_combination_of
 from spack.variant import disjoint_sets

@@ -19,7 +19,7 @@ class Hpctoolkit(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     version('master', branch='master')
-    version('gpu', branch='gpu')
+    version('2020.03.01', commit='94ede4e6fa1e05e6f080be8dc388240ea027f769')
     version('2019.12.28', commit='b4e1877ff96069fd8ed0fdf0e36283a5b4b62240')
     version('2019.08.14', commit='6ea44ed3f93ede2d0a48937f288a2d41188a277c')
     version('2018.12.28', commit='8dbf0d543171ffa9885344f32f23cc6f7f6e39bc')
@@ -53,7 +53,7 @@ class Hpctoolkit(AutotoolsPackage):
             'for the compute nodes.')
 
     variant('cuda', default=False,
-            description='Support CUDA on NVIDIA GPUs (master or gpu branch).')
+            description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
 
     boost_libs = (
         '+atomic +chrono +date_time +filesystem +system +thread +timer'
@@ -62,18 +62,18 @@ class Hpctoolkit(AutotoolsPackage):
 
     depends_on('binutils+libiberty~nls', type='link')
     depends_on('boost' + boost_libs)
-    depends_on('bzip2', type='link')
-    depends_on('dyninst')
-    depends_on('elfutils~nls', type='link')
-    depends_on('intel-tbb')
+    depends_on('bzip2+shared', type='link')
+    depends_on('dyninst@9.3.2:')
+    depends_on('elfutils+bzip2+xz~nls', type='link')
+    depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit')
     depends_on('libmonitor+bgq', when='+bgq')
-    depends_on('libunwind@2018.10.0:')
+    depends_on('libunwind@1.4: +xz')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
     depends_on('xz', type='link')
-    depends_on('zlib')
+    depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
     depends_on('intel-xed', when='target=x86_64:')
@@ -84,14 +84,14 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
 
-    conflicts('%gcc@:4.99.99', when='@gpu',
-              msg='the gpu branch requires gnu gcc 5.x or later')
-
-    conflicts('%gcc@:4.99.99', when='@master',
-              msg='the master branch requires gnu gcc 5.x or later')
+    conflicts('%gcc@:4.99.99', when='@2020.03.01:',
+              msg='hpctoolkit requires gnu gcc 5.x or later')
 
     conflicts('+cuda', when='@2018.0.0:2019.99.99',
-              msg='cuda is only available on the master or gpu branches')
+              msg='cuda requires 2020.03.01 or later')
+
+    conflicts('+bgq', when='@2020.03.01:',
+              msg='blue gene requires 2019.12.28 or earlier')
 
     flag_handler = AutotoolsPackage.build_system_flags
 

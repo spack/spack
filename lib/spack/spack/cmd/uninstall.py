@@ -6,6 +6,7 @@
 from __future__ import print_function
 
 import sys
+import itertools
 
 import spack.cmd
 import spack.environment as ev
@@ -205,9 +206,6 @@ def do_uninstall(env, specs, force):
             # want to uninstall.
             spack.package.Package.uninstall_by_spec(item, force=True)
 
-        if env:
-            _remove_from_env(item, env)
-
     # A package is ready to be uninstalled when nothing else references it,
     # unless we are requested to force uninstall it.
     is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
@@ -225,10 +223,6 @@ def do_uninstall(env, specs, force):
         packages = [x for x in packages if x not in ready]
         for item in ready:
             item.do_uninstall(force=force)
-
-    # write any changes made to the active environment
-    if env:
-        env.write()
 
 
 def get_uninstall_list(args, specs, env):
@@ -317,9 +311,13 @@ def uninstall_specs(args, specs):
     if not args.yes_to_all:
         confirm_removal(anything_to_do)
 
-    # just force-remove things in the remove list
-    for spec in remove_list:
-        _remove_from_env(spec, env)
+    if env:
+        # Remove all the specs that are supposed to be uninstalled or just
+        # removed.
+        with env.write_transaction():
+            for spec in itertools.chain(remove_list, uninstall_list):
+                _remove_from_env(spec, env)
+            env.write()
 
     # Uninstall everything on the list
     do_uninstall(env, uninstall_list, args.force)

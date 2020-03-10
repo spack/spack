@@ -101,7 +101,8 @@ class Cmake(Package):
     depends_on('zlib',           when='~ownlibs')
     depends_on('bzip2',          when='~ownlibs')
     depends_on('xz',             when='~ownlibs')
-    depends_on('libarchive',     when='~ownlibs')
+    depends_on('libarchive@3.1.0:', when='~ownlibs')
+    depends_on('libarchive@3.3.3:',     when='@3.15.0:~ownlibs')
     depends_on('libuv@1.0.0:1.10.99',   when='@3.7.0:3.10.3~ownlibs')
     depends_on('libuv@1.10.0:1.10.99',  when='@3.11.0:3.11.99~ownlibs')
     depends_on('libuv@1.10.0:',  when='@3.12.0:~ownlibs')
@@ -173,6 +174,10 @@ class Cmake(Package):
 
         # Make sure to create an optimized release build
         args.append('-DCMAKE_BUILD_TYPE=Release')
+
+        # Install CMake correctly, even if `spack install` runs
+        # inside a ctest environment
+        args.append('-DCMake_TEST_INSTALL=OFF')
 
         # When building our own private copy of curl then we need to properly
         # enable / disable oepnssl

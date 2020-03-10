@@ -307,8 +307,9 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
+                tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1)
+                    stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
 
@@ -492,8 +493,14 @@ class Stage(object):
         spack.caches.fetch_cache.store(
             self.fetcher, self.mirror_paths.storage_path)
 
-    def cache_mirror(self, stats):
-        """Perform a fetch if the resource is not already cached"""
+    def cache_mirror(self, mirror, stats):
+        """Perform a fetch if the resource is not already cached
+
+        Arguments:
+            mirror (MirrorCache): the mirror to cache this Stage's resource in
+            stats (MirrorStats): this is updated depending on whether the
+                caching operation succeeded or failed
+        """
         if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
             # BundleFetchStrategy has no source to fetch. The associated
             # fetcher does nothing but the associated stage may still exist.
@@ -504,20 +511,23 @@ class Stage(object):
             # must examine the type of the fetcher.
             return
 
-        dst_root = spack.caches.mirror_cache.root
+        if (mirror.skip_unstable_versions and
+            not fs.stable_target(self.default_fetcher)):
+            return
+
         absolute_storage_path = os.path.join(
-            dst_root, self.mirror_paths.storage_path)
+            mirror.root, self.mirror_paths.storage_path)
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
             self.check()
-            spack.caches.mirror_cache.store(
+            mirror.store(
                 self.fetcher, self.mirror_paths.storage_path)
             stats.added(absolute_storage_path)
 
-        spack.caches.mirror_cache.symlink(self.mirror_paths)
+        mirror.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded

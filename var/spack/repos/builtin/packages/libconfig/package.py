@@ -14,6 +14,7 @@ class Libconfig(AutotoolsPackage):
 
     force_autoreconf = True
 
+    version('1.7.2', sha256='f67ac44099916ae260a6c9e290a90809e7d782d96cdd462cac656ebc5b685726')
     version('1.7.1', sha256='d288e6ae817f4ef78df43cdb2647f768dc97899ee82fcc41f857e8eb9fd7fbdb')
     version('1.5',   sha256='cae5c02361d8a9b2bb26946c64f089d2e5e599972f386203fbc48975c0d885c8')
 
