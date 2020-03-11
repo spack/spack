@@ -15,7 +15,15 @@ class Graphblast(MakefilePackage, CudaPackage):
     version('master', submodules=True)
 
     depends_on('boost +program_options')
+    # Package failed to compile with gcc >= 5
     depends_on('gcc@:4')
 
     def install(self, spec, prefix):
         install_tree(self.build_directory, self.prefix)
+
+    @run_before('build')
+    def set_cudarch(self):
+        if cuda_arch is not None:
+            makefile = filterFile('common.mk')
+            makefile.filter(r'CUDA_ARCH = 35', 'CUDA_ARCH = ' +
+                spec.variants['cuda_arch'].value)
