@@ -122,7 +122,8 @@ spack() {
                         if [ -z ${1+x} ] || \
                            [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ] || \
-                           [ "${_a#* -h}" != "$_a" ];
+                           [ "${_a#* -h}" != "$_a" ] || \
+                           [ "${_a#* --help}" != "$_a" ];
                         then
                             # no args or args contain -h/--help, --sh, or --csh: just execute
                             command spack env activate "$@"
