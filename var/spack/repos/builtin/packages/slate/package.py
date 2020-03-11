@@ -37,6 +37,22 @@ class Slate(Package):
             env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
         env.prepend_path('CPATH', self.spec['intel-mkl'].prefix.mkl.include)
 
+    def patch(self):
+        # temporary fix for Issue 15454 - a py3 str+byte concatenation error
+        # ... that affects the configure script used by testsweeper subrepo
+        # ... and which prevents slate from building when py3 is used
+        sp = self.stage.source_path
+        configfile = '{0}/testsweeper/config/config.py'.format(sp)
+        filter_file('log.write( stdout )', 'log.write( str(stdout) )',
+                    configfile, backup=False, string=True)
+        filter_file('log.write( stderr )', 'log.write( str(stderr) )',
+                    configfile, backup=False, string=True)
+        filter_file("out = '(' + out.strip() + ')'",
+                    "out = '(' + str(out.strip()) + ')'",
+                    configfile, backup=False, string=True)
+        filter_file("if (flag in err)", "if (flag in str(err))",
+                    configfile, backup=False, string=True)
+
     def install(self, spec, prefix):
         f_cuda = "1" if spec.variants['cuda'].value else "0"
         f_mpi = "1" if spec.variants['mpi'].value else "0"
