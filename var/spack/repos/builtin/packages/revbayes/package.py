@@ -15,10 +15,10 @@ class Revbayes(CMakePackage):
     git      = "https://github.com/revbayes/revbayes.git"
 
     version('develop', branch='development')
-    version('1.0.13', sha256='472b4ccc44d813c1ff1b8d27e8ccf3d96388de79aa1688b3714f683ba65038fa')
-    version('1.0.12', sha256='d79f3a9bc72305cab35009d11e1f027fcaacde7329a4c49b5b8285588a8d3588')
-    version('1.0.11', sha256='7e81b1952e3a63cb84617fa632f4ccdf246b4d79e7d537a423540de047dadf50')
-    version('1.0.10', sha256='95e9affe8ca8d62880cf46778b6ec9dd8726e62a185670ebcbadf2eb2bb79f93')
+    version('1.0.13', url='https://github.com/revbayes/revbayes.archive/archive/v1.0.13.tar.gz', sha256='e85e2e1fe182fe9f504900150d936a06d252a362c591b9d3d8272dd085aa85d9')
+    version('1.0.12', url='https://github.com/revbayes/revbayes.archive/archive/v1.0.12.tar.gz', sha256='80c926bb6b37288d02e36e07b44e4663841cd1fe541e2cc0b0e44c89ca929759')
+    version('1.0.11', url='https://github.com/revbayes/revbayes.archive/archive/v1.0.11.tar.gz', sha256='03052194baa220dde7e622a739f09f34393f67ea00a0b163b409d313d7fc7c02')
+    version('1.0.10', url='https://github.com/revbayes/revbayes.archive/archive/v1.0.10.tar.gz', sha256='6a3cf303e7224b0b32637bd8e2c3c2cf2621f5dbe599cd74ce4b0c215d0fcd2d')
 
     variant('mpi', default=True, description='Enable MPI parallel support')
 
