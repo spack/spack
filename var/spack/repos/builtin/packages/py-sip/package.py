@@ -59,13 +59,11 @@ class PySip(Package):
 
     @run_after('install')
     def extend_path_setup(self):
-        if 'module=PyQt5.sip' in self.spec:
+        #See github issue #14121 and PR #15297
+        module = self.spec.variants['module'].value
+        if module != 'sip':
+            module = module.split('.')[0]
             with working_dir(site_packages_dir):
-                with open('./PyQt5/__init__.py', 'w') as f:
-                    f.write('from pkgutil import extend_path\n')
-                    f.write('__path__ = extend_path(__path__, __name__)\n')
-        elif 'module=PyQt4.sip' in self.spec:
-            with working_dir(site_packages_dir):
-                with open('./PyQt4/__init__.py', 'w') as f:
+                with open(os.path.join(module, '__init__.py', 'w') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')
