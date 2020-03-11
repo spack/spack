@@ -59,7 +59,7 @@ packages:
       # - py-elephant
       - py-exhale
       # - py-fastaindex
-      # - py-flake8
+      - py-flake8
       - py-funcsigs
       - py-future
       - py-futures
