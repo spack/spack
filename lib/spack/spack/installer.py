@@ -410,7 +410,10 @@ def dump_packages(spec, path):
                 source_repo = spack.repo.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except spack.repo.RepoError:
+            except spack.repo.RepoError as err:
+                tty.debug('Failed to create source repo for {0}: {1}'
+                          .format(node.name, str(err)))
+                source_pkg_dir = None
                 tty.warn("Warning: Couldn't copy in provenance for {0}"
                          .format(node.name))
 
@@ -422,10 +425,10 @@ def dump_packages(spec, path):
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
-        if node is not spec:
-            install_tree(source_pkg_dir, dest_pkg_dir)
-        else:
+        if node is spec:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
+        elif source_pkg_dir:
+            install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def install_msg(name, pid):
