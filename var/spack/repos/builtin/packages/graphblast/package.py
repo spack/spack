@@ -14,6 +14,8 @@ class Graphblast(MakefilePackage, CudaPackage):
 
     version('master', submodules=True)
 
+    variant('cuda', default=True)
+
     depends_on('boost +program_options')
     # Package failed to compile with gcc >= 5
     depends_on('gcc@:4')
