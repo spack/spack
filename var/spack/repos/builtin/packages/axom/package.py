@@ -185,20 +185,20 @@ class Axom(Package):
 
         host_config_path = self._get_host_config_path(spec)
         cfg = open(host_config_path, "w")
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# !!!! This is a generated file, edit at own risk !!!!\n")
-        cfg.write("#------------------{}\n".format("-" * 60))
-        cfg.write("# SYS_TYPE: {}\n".format(sys_type))
-        cfg.write("# Compiler Spec: {}\n".format(spec.compiler))
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
+        cfg.write("# SYS_TYPE: {0}\n".format(sys_type))
+        cfg.write("# Compiler Spec: {0}\n".format(spec.compiler))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         # show path to cmake for reference and to be used by config-build.py
-        cfg.write("# CMake executable path: {}\n".format(cmake_exe))
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("# CMake executable path: {0}\n".format(cmake_exe))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         # compiler settings
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# Compilers\n")
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         cfg.write(cmake_cache_entry("CMAKE_C_COMPILER", c_compiler))
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
@@ -210,9 +210,9 @@ class Axom(Package):
             cfg.write(cmake_cache_option("ENABLE_FORTRAN", False))
 
         # TPL locations
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# TPLs\n")
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         # Try to find the common prefix of the TPL directory, including the
         # compiler. If found, we will use this in the TPL paths
@@ -267,9 +267,9 @@ class Axom(Package):
         else:
             cfg.write("# Umpire not built\n\n")
 
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# MPI\n")
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         if "+mpi" in spec:
             cfg.write(cmake_cache_option("ENABLE_MPI", True))
@@ -308,9 +308,9 @@ class Axom(Package):
         # Devtools
         ##################################
 
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# Devtools\n")
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         # Add common prefix to path replacement list
         if "+devtools" in spec:
@@ -373,9 +373,9 @@ class Axom(Package):
         # Other machine specifics
         ##################################
 
-        cfg.write("#------------------{}\n".format("-" * 60))
+        cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# Other machine specifics\n")
-        cfg.write("#------------------{}\n\n".format("-" * 60))
+        cfg.write("#------------------{0}\n\n".format("-" * 60))
 
         # OpenMP
         if "+openmp" in spec:
@@ -417,9 +417,9 @@ class Axom(Package):
                                             description))
 
             if "+cuda" in spec:
-                cfg.write("#------------------{}\n".format("-" * 60))
+                cfg.write("#------------------{0}\n".format("-" * 60))
                 cfg.write("# Cuda\n")
-                cfg.write("#------------------{}\n\n".format("-" * 60))
+                cfg.write("#------------------{0}\n\n".format("-" * 60))
 
                 cfg.write(cmake_cache_option("ENABLE_CUDA", True))
                 cudatoolkitdir = spec['cuda'].prefix
