@@ -64,6 +64,6 @@ class PySip(Package):
         if module != 'sip':
             module = module.split('.')[0]
             with working_dir(site_packages_dir):
-                with open(os.path.join(module, '__init__.py', 'w') as f:
+                with open(os.path.join(module, '__init__.py'), 'w') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')
