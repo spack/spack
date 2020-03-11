@@ -427,7 +427,7 @@ def dump_packages(spec, path):
         if node is spec:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
         elif source_pkg_dir:
-            install_tree(source_pkg_dir, dest_pkg_dir)
+            fs.install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def install_msg(name, pid):
