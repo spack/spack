@@ -41,7 +41,6 @@ class PyPyqt5(SIPPackage):
     depends_on('py-sip@:4.19.18 module=PyQt5.sip', type=('build', 'run'), when='@:5.13.0')
     depends_on('qscintilla', when='+qsci')
 
-
     # For building Qscintilla python bindings
     resource(name='qscintilla',
              url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.10.2/QScintilla_gpl-2.10.2.tar.gz',

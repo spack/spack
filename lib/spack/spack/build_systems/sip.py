@@ -10,6 +10,7 @@ from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 import os
 
+
 class SIPPackage(PackageBase):
     """Specialized class for packages that are built using the
     SIP build system. See https://www.riverbankcomputing.com/software/sip/intro
