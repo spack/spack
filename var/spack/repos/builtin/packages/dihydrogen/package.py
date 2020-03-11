@@ -14,7 +14,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
        needs of the distributed machine learning effort, LBANN."""
 
     homepage = "https://github.com/LLNL/DiHydrogen.git"
-    url      = "https://github.com/LLNL/DiHydrogen.git"
     git      = "https://github.com/LLNL/DiHydrogen.git"
 
     maintainers = ['bvanessen']
@@ -37,8 +36,6 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Search for and enable ROCm/HIP language features in DiHydrogen.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('test', default=False,
-            description='Builds test suite')
 
     # Override the default set of CUDA architectures with the relevant
     # subset from lib/spack/spack/build_systems/cuda.py
