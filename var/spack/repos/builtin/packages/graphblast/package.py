@@ -17,8 +17,10 @@ class Graphblast(MakefilePackage, CudaPackage):
     variant('cuda', default=True)
 
     depends_on('boost +program_options')
-    # Package failed to compile with gcc >= 5
-    depends_on('gcc@:4')
+
+    # This package confirmed to compile with gcc <= 4.9.4, boost@1.58
+    # TODO: the package doesn't compile as CMakePackage currently
+    # once that is fixed it should be converted to a CMakePackage type.
 
     def install(self, spec, prefix):
         install_tree(self.build_directory, self.prefix)
