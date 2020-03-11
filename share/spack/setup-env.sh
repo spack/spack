@@ -114,12 +114,15 @@ spack() {
                 command spack env -h
             else
                 case $_sp_arg in
+                    # get --sh, --csh, --help, or -h arguments
+                    # space is important for -h case to differentiate between `-h`
+                    # argument and environments with "-h" in the name
                     activate)
-                        _a="$@"
+                        _a=" $@"
                         if [ -z ${1+x} ] || \
-                           [ "${_a#*--sh}" != "$_a" ] || \
-                           [ "${_a#*--csh}" != "$_a" ] || \
-                           [ "${_a#*-h}" != "$_a" ];
+                           [ "${_a#* --sh}" != "$_a" ] || \
+                           [ "${_a#* --csh}" != "$_a" ] || \
+                           [ "${_a#* -h}" != "$_a" ];
                         then
                             # no args or args contain -h/--help, --sh, or --csh: just execute
                             command spack env activate "$@"
@@ -130,8 +133,8 @@ spack() {
                         ;;
                     deactivate)
                         _a="$@"
-                        if [ "${_a#*--sh}" != "$_a" ] || \
-                           [ "${_a#*--csh}" != "$_a" ];
+                        if [ "${_a#* --sh}" != "$_a" ] || \
+                           [ "${_a#* --csh}" != "$_a" ];
                         then
                             # just  execute the command if --sh or --csh are provided
                             command spack env deactivate "$@"
