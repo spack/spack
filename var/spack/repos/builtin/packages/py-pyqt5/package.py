@@ -62,13 +62,6 @@ class PyPyqt5(SIPPackage):
         return args
 
     @run_after('install')
-    def extend_path_setup(self):
-        with working_dir(site_packages_dir):
-            with open('./PyQt5/__init__.py', 'a') as f:
-                f.write('from pkgutil import extend_path\n')
-                f.write('__path__ = extend_path(__path__, __name__)\n')
-
-    @run_after('install')
     def make_qsci(self):
         if '+qsci' in self.spec:
             rsrc_py_path = os.path.join(
