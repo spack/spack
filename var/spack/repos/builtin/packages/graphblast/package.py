@@ -6,22 +6,16 @@
 from spack import *
 
 
-class Graphblast(CmakePackage, CudaPackage):
-    """FIXME: Put a proper description of your package here."""
+class Graphblast(MakefilePackage, CudaPackage):
+    """High-Performance Linear Algebra-based Graph Primitives on GPUs"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage    = "https://www.example.com"
+    homepage    = "https://github.com/gunrock/graphblast"
     git         = "https://github.com/gunrock/graphblast.git"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('master', submodules=True)
 
-    # FIXME: Add dependencies if required.
-    depends_on('boost')
+    depends_on('boost +program_options')
+    depends_on('gcc@:4')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
         install_tree(self.build_directory, self.prefix)
