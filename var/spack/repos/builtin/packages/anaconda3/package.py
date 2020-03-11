@@ -45,7 +45,7 @@ class Anaconda3(Package):
     version('2.1.0',   sha256='af3225ccbe8df0ffb918939e009aa57740e35058ebf9dfcf5fec794a77556c3c', expand=False)
     version('2.0.1',   sha256='3c3b834793e461f3316ad1d9a9178c67859a9d74aaf7bcade076f04134dd1e26', expand=False)
     version('2.0.0',   sha256='57ce4f97e300cf94c5724f72d992e9eecef708fdaa13bc672ae9779773056540', expand=False)
-    #Anaconda3 Base installation
+
     def install(self, spec, prefix):
         dir, anaconda_script = split(self.stage.archive_file)
         bash = which('bash')
