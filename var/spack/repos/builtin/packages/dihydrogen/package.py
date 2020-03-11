@@ -25,7 +25,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
     variant('developer', default=False,
             description='Enable extra warnings and force tests to be enabled.')
     variant('half', default=False,
-            description='Enable FP16 support on the CPU. Requires the Half library.')
+            description='Enable FP16 support on the CPU.')
     variant('legacy', default=False,
             description='Enable the legacy DistConv code branch.')
     variant('nvshmem', default=False,
@@ -33,7 +33,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
     variant('openmp', default=False,
             description='Enable CPU acceleration with OpenMP threads.')
     variant('rocm', default=False,
-            description='Search for and enable ROCm/HIP language features in DiHydrogen.')
+            description='Enable ROCm/HIP language features.')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
@@ -101,7 +101,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
             if len(cuda_arch) == 1 and cuda_arch[0] == 'auto':
                 args.append('-DCMAKE_CUDA_FLAGS=-arch=sm_60')
             else:
-                cuda_arch = [x for x in spec.variants['cuda_arch'].value if x != 'auto']
+                cuda_arch = [x for x in spec.variants['cuda_arch'].value
+                             if x != 'auto']
                 if cuda_arch:
                     args.append('-DCMAKE_CUDA_FLAGS={0}'.format(
                         ' '.join(self.cuda_flags(cuda_arch))
