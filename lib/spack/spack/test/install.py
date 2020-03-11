@@ -437,8 +437,8 @@ def test_pkg_install_paths(install_mockery):
     shutil.rmtree(log_dir)
 
 
-def test_pkg_install_log_no_log(install_mockery, monkeypatch):
-    """Test the installer log function with no log file."""
+def test_log_install_without_build_files(install_mockery):
+    """Test the installer log function when no build files are present."""
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
 
@@ -447,13 +447,16 @@ def test_pkg_install_log_no_log(install_mockery, monkeypatch):
         spack.installer.log(spec.package)
 
 
-def test_pkg_install_log_with_log(install_mockery, monkeypatch):
-    """Test the installer log function with no log file."""
-    orig_install = fs.install
+def test_log_install_with_build_files(install_mockery, monkeypatch):
+    """Test the installer's log function when have build files."""
     config_log = 'config.log'
 
+    # Retain the original function for use in the monkey patch that is used
+    # to raise an exception under the desired condition for test coverage.
+    orig_install_fn = fs.install
+
     def _install(src, dest):
-        orig_install(src, dest)
+        orig_install_fn(src, dest)
         if src.endswith(config_log):
             raise Exception('Mock log install error')
 
