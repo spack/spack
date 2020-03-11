@@ -27,6 +27,7 @@ class Graphblast(MakefilePackage, CudaPackage):
 
     @run_before('build')
     def set_cudarch(self):
+        cuda_arch = self.spec.variants['cuda_arch'].value
         if cuda_arch is not None:
             makefile = filterFile('common.mk')
             makefile.filter(r'CUDA_ARCH = 35', 'CUDA_ARCH = ' +
