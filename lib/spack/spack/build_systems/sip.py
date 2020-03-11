@@ -8,7 +8,7 @@ import inspect
 from llnl.util.filesystem import working_dir, join_path
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-
+import os
 
 class SIPPackage(PackageBase):
     """Specialized class for packages that are built using the
@@ -120,7 +120,7 @@ class SIPPackage(PackageBase):
         module = self.spec['py-sip'].variants['module'].value
         if module != 'sip':
             module = module.split('.')[0]
-            with working_dir(site_packages_dir):
+            with working_dir(inspect.getmodule(self).site_packages_dir):
                 with open(os.path.join(module, '__init__.py'), 'a') as f:
                     f.write('from pkgutil import extend_path\n')
                     f.write('__path__ = extend_path(__path__, __name__)\n')
