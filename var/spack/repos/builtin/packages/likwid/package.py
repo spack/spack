@@ -6,8 +6,6 @@
 from spack import *
 import glob
 import os
-import platform
-
 
 class Likwid(Package):
     """Likwid is a simple to install and use toolsuite of command line
@@ -41,12 +39,6 @@ class Likwid(Package):
 
     depends_on('perl', type=('build', 'run'))
 
-    supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
-    if platform.machine() == 'aarch64':
-        supported_compilers = {'gcc': 'GCCARMv8'}
-    elif platform.machine().startswith('ppc64'):
-        supported_compilers = {'gcc': 'GCCPOWER'}
-
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
 
@@ -64,13 +56,18 @@ class Likwid(Package):
                     *files)
 
     def install(self, spec, prefix):
-        if self.compiler.name not in self.supported_compilers:
+        supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+        if spec.target() == 'aarch64':
+            supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
+        elif spec.target().startswith('ppc64'):
+            supported_compilers = {'gcc': 'GCCPOWER'}
+        if self.compiler.name not in supported_compilers:
             raise RuntimeError('{0} is not a supported compiler \
             to compile Likwid'.format(self.compiler.name))
 
         filter_file('^COMPILER .*',
                     'COMPILER = ' +
-                    self.supported_compilers[self.compiler.name],
+                    supported_compilers[self.compiler.name],
                     'config.mk')
         filter_file('^PREFIX .*',
                     'PREFIX = ' +
