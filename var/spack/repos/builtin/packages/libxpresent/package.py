@@ -15,10 +15,15 @@ class Libxpresent(AutotoolsPackage):
 
     version('1.0.0', sha256='92f1bdfb67ae2ffcdb25ad72c02cac5e4912dc9bc792858240df1d7f105946fa')
 
-    depends_on('libx11')
+    depends_on('libx11', type='link')
+    depends_on('libxext', type='link')
+    depends_on('libxfixes', type='link')
+    depends_on('libxrandr', type='link')
 
-    depends_on('xproto', type='build')
-    depends_on('presentproto@1.0:', type='build')
-    depends_on('xextproto', type='build')
+    depends_on('xproto', type='link')
+    depends_on('presentproto@1.0:', type='link')
+    depends_on('xextproto', type='link')
+    depends_on('fixesproto', type='link')
+    depends_on('randrproto', type='link')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

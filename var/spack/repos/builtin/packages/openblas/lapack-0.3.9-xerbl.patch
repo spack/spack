@@ -1,0 +1,14 @@
+diff --git a/lapack-netlib/SRC/sorhr_col.f b/lapack-netlib/SRC/sorhr_col.f
+index 38976245..600c19fb 100644
+--- a/lapack-netlib/SRC/sorhr_col.f
++++ b/lapack-netlib/SRC/sorhr_col.f
+@@ -282,7 +282,8 @@
+      $                   NPLUSONE
+ *     ..
+ *     .. External Subroutines ..
+-      EXTERNAL           SCOPY, SLAORHR_COL_GETRFNP, SSCAL, STRSM, XERBLA
++      EXTERNAL           SCOPY, SLAORHR_COL_GETRFNP, SSCAL, STRSM,
++     $                   XERBLA
+ *     ..
+ *     .. Intrinsic Functions ..
+       INTRINSIC          MAX, MIN

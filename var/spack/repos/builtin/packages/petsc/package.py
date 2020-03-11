@@ -99,6 +99,8 @@ class Petsc(Package):
             description='Activate X support')
     variant('batch', default=False,
             description='Enable when mpiexec is not available to run binaries')
+    variant('valgrind', default=False,
+            description='Enable Valgrind Client Request mechanism')
 
     # 3.8.0 has a build issue with MKL - so list this conflict explicitly
     conflicts('^intel-mkl', when='@3.8.0')
@@ -146,6 +148,7 @@ class Petsc(Package):
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
+    depends_on('valgrind', when='+valgrind')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
     # conflict in headers see
@@ -280,7 +283,7 @@ class Petsc(Package):
 
         # Activates library support if needed
         for library in ('metis', 'hdf5', 'hypre', 'parmetis',
-                        'mumps', 'trilinos', 'fftw'):
+                        'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(
                     library=library, value=('1' if library in spec else '0'))
