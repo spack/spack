@@ -86,6 +86,12 @@ class R(AutotoolsPackage):
 
     patch('zlib.patch', when='@:3.3.2')
 
+    # R cannot be built with '-O2' optimization
+    # with Fujitsu Compiler @4.1.0 now.
+    # Until the Fujitsu compiler resolves this problem,
+    # temporary fix to lower the optimization level.
+    patch('change_optflags_tmp.patch', when='%fj@4.1.0')
+
     filter_compiler_wrappers(
         'Makeconf', relative_root=os.path.join('rlib', 'R', 'etc')
     )

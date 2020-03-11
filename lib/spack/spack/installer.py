@@ -182,6 +182,9 @@ def _packages_needed_to_bootstrap_compiler(pkg):
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     dep.concretize()
+    # mark compiler as depended-on by the package that uses it
+    dep._dependents[pkg.name] = spack.spec.DependencySpec(
+        pkg.spec, dep, ('build',))
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
     packages.append((dep.package, True))
@@ -407,7 +410,10 @@ def dump_packages(spec, path):
                 source_repo = spack.repo.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except spack.repo.RepoError:
+            except spack.repo.RepoError as err:
+                tty.debug('Failed to create source repo for {0}: {1}'
+                          .format(node.name, str(err)))
+                source_pkg_dir = None
                 tty.warn("Warning: Couldn't copy in provenance for {0}"
                          .format(node.name))
 
@@ -419,10 +425,10 @@ def dump_packages(spec, path):
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
-        if node is not spec:
-            install_tree(source_pkg_dir, dest_pkg_dir)
-        else:
+        if node is spec:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
+        elif source_pkg_dir:
+            install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def install_msg(name, pid):
@@ -1607,6 +1613,21 @@ class BuildTask(object):
         self.dependencies = set(package_id(d.package) for d in
                                 self.spec.dependencies() if
                                 package_id(d.package) != self.pkg_id)
+
+        # Handle bootstrapped compiler
+        #
+        # The bootstrapped compiler is not a dependency in the spec, but it is
+        # a dependency of the build task. Here we add it to self.dependencies
+        compiler_spec = self.spec.compiler
+        arch_spec = self.spec.architecture
+        if not spack.compilers.compilers_for_spec(compiler_spec,
+                                                  arch_spec=arch_spec):
+            # The compiler is in the queue, identify it as dependency
+            dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
+            dep.architecture = arch_spec
+            dep.concretize()
+            dep_id = package_id(dep.package)
+            self.dependencies.add(dep_id)
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
