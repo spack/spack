@@ -40,6 +40,7 @@ class SIPPackage(PackageBase):
     extends('python')
 
     depends_on('qt')
+    depends_on('py-sip')
 
     def python(self, *args, **kwargs):
         """The python ``Executable``."""
