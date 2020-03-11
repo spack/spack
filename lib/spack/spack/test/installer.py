@@ -185,7 +185,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch, capsys):
-    """Tests to SystemExit path for_try_install_from_binary_cache."""
+    """Tests SystemExit path for_try_install_from_binary_cache."""
     def _spec(spec, force):
         spec = spack.spec.Spec('mpi').concretized()
         return {spec: None}
@@ -410,7 +410,7 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
 
 
 def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
-    """Test dump_packages with dependencies happy path."""
+    """Test happy path for dump_packages with dependencies."""
 
     spec_name = 'simple-inheritance'
     spec = spack.spec.Spec(spec_name).concretized()
@@ -422,7 +422,7 @@ def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
 
 
 def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
-    """Test dump_packages with dependencie error paths."""
+    """Test error paths for dump_packages with dependencies."""
     orig_bpp = spack.store.layout.build_packages_path
     orig_dirname = spack.repo.Repo.dirname_for_package_name
     repo_err_msg = "Mock dirname_for_package_name"
