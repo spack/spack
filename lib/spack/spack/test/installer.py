@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import py
 import pytest
 
 import llnl.util.tty as tty
@@ -15,6 +16,22 @@ import spack.installer as inst
 import spack.util.lock as lk
 import spack.repo
 import spack.spec
+
+
+def _mock_repo(root, namespace):
+    """Create an empty repository at the specified root
+
+    Args:
+        root (str): path to the mock repository root
+        namespace (str):  mock repo's namespace
+    """
+    repodir = py.path.local(root) if isinstance(root, str) else root
+    repodir.ensure(spack.repo.packages_dir_name, dir=True)
+    yaml = repodir.join('repo.yaml')
+    yaml.write("""
+repo:
+   namespace: {0}
+""".format(namespace))
 
 
 def _noop(*args, **kwargs):
@@ -284,11 +301,57 @@ def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
         inst._packages_needed_to_bootstrap_compiler(spec.package)
 
 
-def test_dump_packages_deps(install_mockery, tmpdir):
-    """Test to add coverage to dump_packages."""
+def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
+    """Test to add coverage to dump_packages with dependencies happy path."""
+
+    spec_name = 'simple-inheritance'
+    spec = spack.spec.Spec(spec_name).concretized()
+    inst.dump_packages(spec, str(tmpdir))
+
+    repo = mock_repo_path.repos[0]
+    dest_pkg = repo.filename_for_package_name(spec_name)
+    assert os.path.isfile(dest_pkg)
+
+
+def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
+    """Test to add coverage to dump_packages with dependencies."""
+    orig_bpp = spack.store.layout.build_packages_path
+    orig_dirname = spack.repo.Repo.dirname_for_package_name
+    repo_err_msg = "Mock dirname_for_package_name"
+
+    def bpp_path(spec):
+        # Perform the original function
+        source = orig_bpp(spec)
+        # Mock the required directory structure for the repository
+        _mock_repo(os.path.join(source, spec.namespace), spec.namespace)
+        return source
+
+    def _repoerr(repo, name):
+        if name == 'cmake':
+            raise spack.repo.RepoError(repo_err_msg)
+        else:
+            return orig_dirname(repo, name)
+
+    # Now mock the creation of the required directory structure to cover
+    # the try-except block
+    monkeypatch.setattr(spack.store.layout, 'build_packages_path', bpp_path)
+
     spec = spack.spec.Spec('simple-inheritance').concretized()
-    with tmpdir.as_cwd():
-        inst.dump_packages(spec, '.')
+    path = str(tmpdir)
+
+    # The call to install_tree will raise the exception since not mocking
+    # creation of dependency package files within *install* directories.
+    with pytest.raises(IOError, match=path):
+        inst.dump_packages(spec, path)
+
+    # Now try the error path, which requires the mock directory structure
+    # above
+    monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
+    with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
+        inst.dump_packages(spec, path)
+
+    out = str(capsys.readouterr()[1])
+    assert "Couldn't copy in provenance for cmake" in out
 
 
 @pytest.mark.tld
