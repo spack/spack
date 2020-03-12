@@ -23,8 +23,8 @@ class Jblob(Package):
 
     depends_on('java@8:', type='run')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('JAVA_HOME', self.spec['java'].prefix)
+    def setup_run_environment(self, env):
+        env.set('JAVA_HOME', self.spec['java'].prefix)
 
     def install(self, spec, prefix):
         filter_file('/opt/jblob-' + self.version, prefix, 'jblob')
