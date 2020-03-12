@@ -75,6 +75,10 @@ class Libfabric(AutotoolsPackage):
     depends_on('libtool', when='@develop', type='build')
 
     resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.9.1/fabtests-1.9.1.tar.bz2',
+             sha256='6f8ced2c6b3514759a0e177c8b2a19125e4ef0714d4cc0fe0386b33bd6cd5585',
+             placement='fabtests', when='@1.9.1')
+    resource(name='fabtests',
              url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/fabtests-1.9.0.tar.bz2',
              sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
              placement='fabtests', when='@1.9.0')

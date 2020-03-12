@@ -42,8 +42,6 @@ class Likwid(Package):
 
     depends_on('perl', type=('build', 'run'))
 
-    supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
-
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
 
@@ -61,13 +59,18 @@ class Likwid(Package):
                     *files)
 
     def install(self, spec, prefix):
-        if self.compiler.name not in self.supported_compilers:
+        supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+        if spec.target.family == 'aarch64':
+            supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
+        elif spec.target.family == 'ppc64' or spec.target.family == 'ppc64le':
+            supported_compilers = {'gcc': 'GCCPOWER'}
+        if self.compiler.name not in supported_compilers:
             raise RuntimeError('{0} is not a supported compiler \
             to compile Likwid'.format(self.compiler.name))
 
         filter_file('^COMPILER .*',
                     'COMPILER = ' +
-                    self.supported_compilers[self.compiler.name],
+                    supported_compilers[self.compiler.name],
                     'config.mk')
         filter_file('^PREFIX .*',
                     'PREFIX = ' +
