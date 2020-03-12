@@ -31,7 +31,7 @@ packages:
       - psp-validation@0.2.1
       - py-pytouchreader@1.4.3
       # - py-basalt@0.2.4
-      - py-entity-management@1.1.1
+      - py-entity-management@1.1.3
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.42
       - py-bbp-morphology-workflow@1.0.1
