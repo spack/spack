@@ -83,6 +83,7 @@ class Cuda(Package):
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
+        env.set('CUDA_TOOLKIT_ROOT_DIR', self.prefix)
 
     def install(self, spec, prefix):
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
