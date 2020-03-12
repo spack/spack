@@ -15,18 +15,15 @@ class Lmbench(MakefilePackage):
     homepage = "http://lmbench.sourceforge.net/"
     git      = "https://github.com/intel/lmbench.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
     depends_on('libtirpc')
 
     def setup_build_environment(self, env):
         env.prepend_path('CPATH', self.spec['libtirpc'].prefix.include.tirpc)
+        env.append_flags('LDFLAGS', '-ltirpc')
 
     def build(self, spec, prefix):
-        if 'LDFLAGS' in env and env['LDFLAGS']:
-            env['LDFLAGS'] += ' ' + '-ltirpc'
-        else:
-            env['LDFLAGS'] = '-ltirpc'
         make('build')
 
     def install(self, spec, prefix):
