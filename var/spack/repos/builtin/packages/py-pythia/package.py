@@ -17,4 +17,4 @@ class PyPythia(PythonPackage):
     version('0.8.1.18', sha256='f6025e6d70046dc71e375eded3d731506f8dd79e2e53b7e1436754439dcdef1e')
 
     depends_on('python@:2', type=('build', 'run'))
-    depends_on('py-merlin', type='build')
+    depends_on('py-merlin-info', type='build')

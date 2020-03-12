@@ -7,7 +7,12 @@ from spack import *
 
 
 class PyMerlinInfo(PythonPackage):
-    """A custom version of Phillip J. Eby's setuptools."""
+    """
+    A custom version of Phillip J. Eby's setuptools.
+    
+    This package was previously named merlin but was reappropriated
+    on PyPi due to lack of development.
+    """
 
     homepage = "https://pypi.org/project/merlin_info/"
     url      = "https://pypi.io/packages/source/m/merlin_info/merlin_info-1.8.tar.gz"
