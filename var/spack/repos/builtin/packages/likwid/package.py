@@ -7,6 +7,7 @@ from spack import *
 import glob
 import os
 
+
 class Likwid(Package):
     """Likwid is a simple to install and use toolsuite of command line
     applications for performance oriented programmers. It works for Intel and
@@ -59,7 +60,7 @@ class Likwid(Package):
         supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
         if spec.target.family == 'aarch64':
             supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
-        elif spec.target.family == 'ppc64' or  spec.target.family == 'ppc64le':
+        elif spec.target.family == 'ppc64' or spec.target.family == 'ppc64le':
             supported_compilers = {'gcc': 'GCCPOWER'}
         if self.compiler.name not in supported_compilers:
             raise RuntimeError('{0} is not a supported compiler \
