@@ -113,6 +113,8 @@ class Qgis(CMakePackage):
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
     depends_on('qt@:4', when='@2')
 
+    patch('pyqt.patch')
+
     def cmake_args(self):
         spec = self.spec
         args = []
