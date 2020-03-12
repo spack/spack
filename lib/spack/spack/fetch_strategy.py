@@ -1239,7 +1239,7 @@ def _from_merged_attrs(fetcher, pkg, version):
         # TODO: refactor this logic into its own method or function
         # TODO: to avoid duplication
         mirrors = [spack.url.substitute_version(u, version)
-                   for u in getattr(pkg, 'urls', [])]
+                   for u in getattr(pkg, 'urls', [])[1:]]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)
