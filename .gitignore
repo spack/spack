@@ -27,3 +27,8 @@ lib/spack/spack/test/.cache
 *.in.log
 *.out.log
 *.orig
+
+# Eclipse files
+.project
+.cproject
+.pydevproject

@@ -32,7 +32,7 @@ def pkg_factory():
     def factory(url, urls):
 
         def fn(v):
-            main_url = url or urls.pop(0)
+            main_url = url or urls[0]
             return spack.url.substitute_version(main_url, v)
 
         return Pkg(

@@ -16,9 +16,9 @@ class Libfabric(AutotoolsPackage):
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('master', branch='master')
-    version('1.9.1rc1', sha256='fdf89a0797f0d923aaef2c41cc70be45716e4d07dc5d318365b9c17795eb49ab')
+    version('1.9.1', sha256='c305c6035c992523e08c7591a6a3707225ba3e72de40443eaed837a10df6771a')
     version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c')
-    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88', preferred=True)
+    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88')
     version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37')
     version('1.7.1', sha256='f4e9cc48319763cff4943de96bf527b737c9f1d6ac3088b8b5c75d07bd719569')
     version('1.7.0', sha256='b3dd9cc0fa36fe8c3b9997ba279ec831a905704816c25fe3c4c09fc7eeceaac4')
@@ -74,6 +74,10 @@ class Libfabric(AutotoolsPackage):
     depends_on('automake', when='@develop', type='build')
     depends_on('libtool', when='@develop', type='build')
 
+    resource(name='fabtests',
+             url='https://github.com/ofiwg/libfabric/releases/download/v1.9.1/fabtests-1.9.1.tar.bz2',
+             sha256='6f8ced2c6b3514759a0e177c8b2a19125e4ef0714d4cc0fe0386b33bd6cd5585',
+             placement='fabtests', when='@1.9.1')
     resource(name='fabtests',
              url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/fabtests-1.9.0.tar.bz2',
              sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
