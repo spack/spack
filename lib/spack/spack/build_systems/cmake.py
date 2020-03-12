@@ -262,7 +262,12 @@ class CMakePackage(PackageBase):
         if variant not in self.variants:
             raise KeyError(
                 '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+
         value = self.spec.variants[variant].value
+        if isinstance(value, (tuple, list)):
+            # Sort multi-valued variants for reproducibility
+            value = sorted(value)
+
         return self.define(cmake_var, value)
 
     def flags_to_build_system_args(self, flags):
