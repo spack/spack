@@ -8,8 +8,9 @@ from spack import *
 
 
 class SourceHighlight(AutotoolsPackage):
-    """This program, given a source file, produces a document with syntax highlighting.
-    It also provides a C++ highlight library (since version 3.0). """
+    """This program, given a source file, produces a document with syntax
+    highlighting. It also provides a C++ highlight library
+    (since version 3.0). """
 
     homepage = "https://www.gnu.org/software/src-highlite/"
     url      = "ftp://ftp.gnu.org/gnu/src-highlite/source-highlight-3.1.8.tar.gz"
@@ -18,4 +19,3 @@ class SourceHighlight(AutotoolsPackage):
     version('3.1.8', sha256='01336a7ea1d1ccc374201f7b81ffa94d0aecb33afc7d6903ebf9fbf33a55ada3')
 
     depends_on('boost')
-
