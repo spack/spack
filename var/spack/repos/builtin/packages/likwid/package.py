@@ -59,7 +59,7 @@ class Likwid(Package):
         supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
         if spec.target.family == 'aarch64':
             supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
-        elif spec.target().startswith('ppc64'):
+        elif spec.target.family == 'ppc64' or  spec.target.family == 'ppc64le':
             supported_compilers = {'gcc': 'GCCPOWER'}
         if self.compiler.name not in supported_compilers:
             raise RuntimeError('{0} is not a supported compiler \
