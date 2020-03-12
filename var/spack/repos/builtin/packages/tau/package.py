@@ -10,7 +10,6 @@ import glob
 import platform
 import sys
 from llnl.util.filesystem import join_path
-import re
 
 
 class Tau(Package):
@@ -290,18 +289,19 @@ class Tau(Package):
 
     def fix_tau_compilers(self):
         filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' + self.compiler.cc,
-                    self.prefix + '/include/Makefile', backup=False)
-        filter_file('FULL_CXX=' + re.escape(spack_cxx), 'FULL_CXX=' +
+                    self.prefix + '/include/Makefile', backup=False,
+                    string=True)
+        filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
                     self.compiler.cxx, self.prefix + '/include/Makefile',
-                    backup=False)
-        for makefile in os.listdir(self.prefix + '/lib'):
+                    backup=False, string=True)
+        for makefile in os.listdir(self.prefix.lib):
             if makefile.startswith('Makefile.tau'):
                 filter_file('FULL_CC=' + spack_cc, 'FULL_CC=' +
-                            self.compiler.cc, self.prefix + '/lib/' + makefile,
-                            backup=False)
-                filter_file('FULL_CXX=' + re.escape(spack_cxx), 'FULL_CXX=' +
-                            self.compiler.cxx, self.prefix + '/lib/' +
-                            makefile, backup=False)
+                            self.compiler.cc, self.prefix.lib + "/" +
+                            makefile, backup=False, string=True)
+                filter_file('FULL_CXX=' + spack_cxx, 'FULL_CXX=' +
+                            self.compiler.cxx, self.prefix.lib +
+                            "/" + makefile, backup=False, string=True)
 
     def setup_run_environment(self, env):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
