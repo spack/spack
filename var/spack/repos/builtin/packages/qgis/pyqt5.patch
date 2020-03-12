@@ -1,5 +1,5 @@
 diff --git a/cmake/FindPyQt5.py b/cmake/FindPyQt5.py
-index 6a55a0f801..601b6cbffc 100644
+index 6a55a0f801..d6eda1fa1e 100644
 --- a/cmake/FindPyQt5.py
 +++ b/cmake/FindPyQt5.py
 @@ -40,6 +40,7 @@ except ImportError:
@@ -18,8 +18,8 @@ index 6a55a0f801..601b6cbffc 100644
 -        'pyqt_sip_dir': sip_dir,
 -        'pyqt_bin_dir': cfg.default_bin_dir,
 +        'pyqt_mod_dir': os.path.dirname(PyQt5.QtCore.__file__),
-+        'pyqt_sip_dir': os.path.join(pyqt_prefix,share,sip,PyQt5),
++        'pyqt_sip_dir': os.path.join(pyqt_prefix,'share','sip','PyQt5'),
 +        'pyqt_bin_dir': os.path.join(pyqt_prefix,'bin'),
      }
      pyqtcfg = sipconfig.Configuration([cfg])
-
+ 
