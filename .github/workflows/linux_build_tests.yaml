@@ -42,6 +42,7 @@ jobs:
         python-version: 3.8
     - name: Install System Packages
       run: |
+        sudo apt-get update
         sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev findutils openssl libssl-dev libpciaccess-dev
         R --version
         perl --version
