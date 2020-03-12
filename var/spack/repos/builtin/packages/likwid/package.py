@@ -57,7 +57,7 @@ class Likwid(Package):
 
     def install(self, spec, prefix):
         supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
-        if spec.target() == 'aarch64':
+        if spec.target.family == 'aarch64':
             supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
         elif spec.target().startswith('ppc64'):
             supported_compilers = {'gcc': 'GCCPOWER'}
