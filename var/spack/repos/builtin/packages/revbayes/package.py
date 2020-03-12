@@ -26,7 +26,7 @@ class Revbayes(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     conflicts('%gcc@7.1.0:', when='@:1.0.12')
-    
+
     def url_for_version(self, version):
         if version > Version('1.0.13'):
             return 'https://github.com/revbayes/revbayes/archive/v{0}.tar.gz'.format(version)
