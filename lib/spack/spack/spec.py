@@ -50,7 +50,7 @@ line is a spec for a particular installation of the mpileaks package.
 Here is the EBNF grammar for a spec::
 
   spec-list    = { spec [ dep-list ] }
-  dep_list     = { ^ spec }
+  dep_list     = { ^ spec | ^ id=spec }
   spec         = id [ options ]
   options      = { @version-list | +variant | -variant | ~variant |
                    %compiler | arch=architecture | [ flag ]=value}
@@ -4041,36 +4041,7 @@ class SpecParser(spack.parse.Parser):
                     specs.append(self.spec_by_hash())
 
                 elif self.accept(DEP):
-                    if not specs:
-                        # We're parsing an anonymous spec beginning with a
-                        # dependency. Push the token to recover after creating
-                        # anonymous spec
-                        self.push_tokens([self.token])
-                        specs.append(self.spec(None))
-                    else:
-                        dep = None
-                        if self.accept(FILE):
-                            # this may return None, in which case we backtrack
-                            dep = self.spec_from_file()
-
-                        if not dep and self.accept(HASH):
-                            # We're finding a dependency by hash for an
-                            # anonymous spec
-                            dep = self.spec_by_hash()
-                            dep = dep.copy(deps=('link', 'run'))
-
-                        if not dep:
-                            # We're adding a dependency to the last spec
-                            self.expect(ID)
-                            dep = self.spec(self.token.value)
-
-                        # Raise an error if the previous spec is already
-                        # concrete (assigned by hash)
-                        if specs[-1]._hash:
-                            raise RedundantSpecError(specs[-1], 'dependency')
-                        # command line deps get empty deptypes now.
-                        # Real deptypes are assigned later per packages.
-                        specs[-1]._add_dependency(dep, ())
+                    self._parse_dependency(specs)
 
                 else:
                     # If the next token can be part of a valid anonymous spec,
@@ -4090,6 +4061,52 @@ class SpecParser(spack.parse.Parser):
             raise SpecParseError(e)
 
         return specs
+
+    def _parse_dependency(self, specs):
+        """Parse the bit of a spec after a dependency sigil ^
+
+        Prerequisite is that the last accepted token was DEP.
+
+        Args:
+            specs: list of specs to be updated while parsing
+        """
+        if not specs:
+            # We're parsing an anonymous spec beginning with a
+            # dependency. Push the token to recover after creating
+            # anonymous spec
+            self.push_tokens([self.token])
+            specs.append(self.spec(None))
+        else:
+            dep = None
+            if self.accept(FILE):
+                # this may return None, in which case we backtrack
+                dep = self.spec_from_file()
+
+            if not dep and self.accept(HASH):
+                # We're finding a dependency by hash for an
+                # anonymous spec
+                dep = self.spec_by_hash()
+                dep = dep.copy(deps=('link', 'run'))
+
+            if not dep:
+                # We're adding a dependency to the last spec. This dependency
+                # can be either of the form ^spec i.e. a usual dependency or
+                # of the form ^vdep=spec if we have to bind a vdep to a
+                # particular provider.
+                self.expect(ID)
+
+                if self.accept(EQ):
+                    self.expect(VAL)
+
+                dep = self.spec(self.token.value)
+
+            # Raise an error if the previous spec is already
+            # concrete (assigned by hash)
+            if specs[-1]._hash:
+                raise RedundantSpecError(specs[-1], 'dependency')
+            # command line deps get empty deptypes now.
+            # Real deptypes are assigned later per packages.
+            specs[-1]._add_dependency(dep, ())
 
     def spec_from_file(self):
         """Read a spec from a filename parsed on the input stream.

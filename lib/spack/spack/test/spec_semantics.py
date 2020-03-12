@@ -987,3 +987,11 @@ class TestSpecSematics(object):
         s = Spec('mpileaks +unknown')
         with pytest.raises(UnknownVariantError, match=r'package has no such'):
             s.concretize()
+
+    @pytest.mark.parametrize('spec_str,specs_in_dag', [
+        ('hdf5+mpi ^mpi=mpich', ['mpich'])
+    ])
+    def test_parse_virtual_deps_bindings(self, spec_str, specs_in_dag):
+        s = Spec(spec_str)
+        for expected in specs_in_dag:
+            assert expected in s
