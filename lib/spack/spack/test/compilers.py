@@ -232,7 +232,10 @@ def test_default_flags():
 # Verify behavior of particular compiler definitions.
 def test_clang_flags():
     # Common
-    supported_flag_test("pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "gcc@4.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "gcc@4.0")
 
     # Apple Clang.
     supported_flag_test(
@@ -260,7 +263,10 @@ def test_clang_flags():
 def test_cce_flags():
     supported_flag_test("openmp_flag", "-h omp", "cce@1.0")
     supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
-    supported_flag_test("pic_flag", "-h PIC", "cce@1.0")
+    supported_flag_test("cc_pic_flag",  "-h PIC", "cce@1.0")
+    supported_flag_test("cxx_pic_flag", "-h PIC", "cce@1.0")
+    supported_flag_test("f77_pic_flag", "-h PIC", "cce@1.0")
+    supported_flag_test("fc_pic_flag",  "-h PIC", "cce@1.0")
 
 
 def test_gcc_flags():
@@ -275,7 +281,10 @@ def test_gcc_flags():
     supported_flag_test("cxx14_flag", "-std=c++14", "gcc@4.9")
     supported_flag_test("cxx14_flag", "", "gcc@6.0")
     unsupported_flag_test("cxx17_flag", "gcc@4.9")
-    supported_flag_test("pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "gcc@4.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "gcc@4.0")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "gcc@4.0")
 
 
 def test_intel_flags():
@@ -287,33 +296,48 @@ def test_intel_flags():
     unsupported_flag_test("cxx14_flag", "intel@14.0")
     supported_flag_test("cxx14_flag", "-std=c++1y", "intel@15.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "intel@15.0.2")
-    supported_flag_test("pic_flag", "-fPIC", "intel@1.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "intel@1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "intel@1.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "intel@1.0")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "intel@1.0")
 
 
 def test_nag_flags():
     supported_flag_test("openmp_flag", "-openmp", "nag@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "nag@1.0")
-    supported_flag_test("pic_flag", "-PIC", "nag@1.0")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "nag@1.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "nag@1.0")
+    supported_flag_test("f77_pic_flag", "-PIC",  "nag@1.0")
+    supported_flag_test("fc_pic_flag",  "-PIC",  "nag@1.0")
 
 
 def test_pgi_flags():
     supported_flag_test("openmp_flag", "-mp", "pgi@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "pgi@1.0")
-    supported_flag_test("pic_flag", "-fpic", "pgi@1.0")
+    supported_flag_test("cc_pic_flag",  "-fpic", "pgi@1.0")
+    supported_flag_test("cxx_pic_flag", "-fpic", "pgi@1.0")
+    supported_flag_test("f77_pic_flag", "-fpic", "pgi@1.0")
+    supported_flag_test("fc_pic_flag",  "-fpic", "pgi@1.0")
 
 
 def test_xl_flags():
     supported_flag_test("openmp_flag", "-qsmp=omp", "xl@1.0")
     unsupported_flag_test("cxx11_flag", "xl@13.0")
     supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl@13.1")
-    supported_flag_test("pic_flag", "-qpic", "xl@1.0")
+    supported_flag_test("cc_pic_flag",  "-qpic", "xl@1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl@1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl@1.0")
+    supported_flag_test("fc_pic_flag",  "-qpic", "xl@1.0")
 
 
 def test_xl_r_flags():
     supported_flag_test("openmp_flag", "-qsmp=omp", "xl_r@1.0")
     unsupported_flag_test("cxx11_flag", "xl_r@13.0")
     supported_flag_test("cxx11_flag", "-qlanglvl=extended0x", "xl_r@13.1")
-    supported_flag_test("pic_flag", "-qpic", "xl_r@1.0")
+    supported_flag_test("cc_pic_flag",  "-qpic", "xl_r@1.0")
+    supported_flag_test("cxx_pic_flag", "-qpic", "xl_r@1.0")
+    supported_flag_test("f77_pic_flag", "-qpic", "xl_r@1.0")
+    supported_flag_test("fc_pic_flag",  "-qpic", "xl_r@1.0")
 
 
 def test_fj_flags():
@@ -323,7 +347,10 @@ def test_fj_flags():
     supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
     supported_flag_test("c99_flag", "-std=c99", "fj@4.0.0")
     supported_flag_test("c11_flag", "-std=c11", "fj@4.0.0")
-    supported_flag_test("pic_flag", "-KPIC", "fj@4.0.0")
+    supported_flag_test("cc_pic_flag",  "-KPIC", "fj@4.0.0")
+    supported_flag_test("cxx_pic_flag", "-KPIC", "fj@4.0.0")
+    supported_flag_test("f77_pic_flag", "-KPIC", "fj@4.0.0")
+    supported_flag_test("fc_pic_flag",  "-KPIC", "fj@4.0.0")
 
 
 @pytest.mark.regression('10191')

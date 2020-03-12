@@ -48,7 +48,7 @@ class Libiberty(AutotoolsPackage, GNUMirrorPackage):
             flags.append('-O2')
 
         if '+pic' in self.spec:
-            flags.append(self.compiler.pic_flag)
+            flags.append(self.compiler.cc_pic_flag)
 
         return (None, None, flags)
 

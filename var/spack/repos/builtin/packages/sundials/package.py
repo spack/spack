@@ -211,7 +211,7 @@ class Sundials(CMakePackage):
         def on_off(varstr):
             return 'ON' if varstr in self.spec else 'OFF'
 
-        fortran_flag = self.compiler.pic_flag
+        fortran_flag = self.compiler.f77_pic_flag
         if (spec.satisfies('%clang platform=darwin')) and ('+fcmix' in spec):
             f77 = Executable(self.compiler.f77)
             libgfortran = LibraryList(f77('--print-file-name',
