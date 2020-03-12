@@ -722,3 +722,76 @@ class Openmpi(AutotoolsPackage):
                     tty.debug("File not present: " + exe)
                 else:
                     copy(script_stub, exe)
+
+    def _test_check_versions(self):
+        # TBD: How fragile is the list of files expected to be in the bin dir?
+        # TBD: How fragile are the exit codes for commands without --version?
+
+        comp_vers = str(self.spec.compiler.version)
+        spec_vers = str(self.spec.version)
+        bad_option = 'unknown option'
+        checks = {
+            'mpiCC': ([comp_vers], None),
+            'mpic++': ([comp_vers], None),
+            'mpicc': ([comp_vers], None),
+            'mpicxx': ([comp_vers], None),
+            'mpiexec': ([spec_vers], None),
+            'mpif77': ([comp_vers], None),
+            'mpif90': ([comp_vers], None),
+            'mpifort': ([comp_vers], None),
+            'mpirun': ([spec_vers], None),
+            'ompi-clean': ([bad_option], 213),
+            'ompi-dvm': ([spec_vers], None),
+            'ompi-ps': ([bad_option], 213),
+            'ompi-server': ([bad_option], 1),
+            'ompi-top': ([bad_option], 1),
+            'ompi_info': ([spec_vers], None),
+            'opal_wrapper': (['Cannot open configuration file'], 243),
+            'orte-clean': ([bad_option], 213),
+            'orte-dvm': ([spec_vers], None),
+            'orte-info': (['did not have enough parameters'], 1),
+            'orte-ps': ([bad_option], 213),
+            'orte-server': ([bad_option], 1),
+            'orte-top': ([bad_option], 1),
+            'ortecc': ([comp_vers], None),
+            #'orted': ([bad_option], 213),
+            'orted': ([bad_option], 1),
+            'orterun': ([spec_vers], None),
+            'oshCC': ([comp_vers], None),
+            'oshc++': ([comp_vers], None),
+            'oshcc': ([comp_vers], None),
+            'oshcxx': ([comp_vers], None),
+            'oshfort': ([comp_vers], None),
+            'oshmem_info': ([spec_vers], None),
+            'oshrun': ([spec_vers], None),
+            'prun': ([spec_vers], None),
+            'shmemCC': ([comp_vers], None),
+            'shmemc++': ([comp_vers], None),
+            'shmemcc': ([comp_vers], None),
+            'shmemcxx': ([comp_vers], None),
+            'shmemfort': ([comp_vers], None),
+            'shmemrun': ([spec_vers], None),
+        }
+
+        print('TLD: version=%s' % spec_vers)
+        failed = []
+        for exe in checks:
+            expected, status = checks[exe]
+            try:
+                self.run_test(exe, ['--version'], expected, status)
+            except Exception as exc:
+                print('ERROR: Version check failed for {0}: {1}'
+                      .format(exe, str(exc)))
+                failed.append(exe)
+
+        num_failed = len(failed)
+        assert num_failed == 0, \
+            '{0} of {1} version checks failed: {2}' \
+            .format(num_failed, len(checks), failed)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known packages
+        self._test_check_versions()
+
+        # TODO: Add and execute simple MPI test programs
