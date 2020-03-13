@@ -32,6 +32,7 @@ class Magma(CMakePackage, CudaPackage):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
     conflicts('~cuda', msg='Magma requires cuda')
 
