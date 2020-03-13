@@ -477,6 +477,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: This is currently only used by package sanity tests.
     manual_download = False
 
+    #: Set of additional options used when fetching package versions.
+    fetch_options = {}
+
     #
     # Set default licensing information
     #
@@ -763,7 +766,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If no specific URL, use the default, class-level URL
         url = getattr(self, 'url', None)
         urls = getattr(self, 'urls', [None])
-        default_url = url or urls.pop(0)
+        default_url = url or urls[0]
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
