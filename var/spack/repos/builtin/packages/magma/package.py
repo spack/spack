@@ -69,7 +69,7 @@ class Magma(CMakePackage, CudaPackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
 
-        if spec.satisfies('^cuda@9.0:'):
+        if spec.satisfies('^cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
                 capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch )
