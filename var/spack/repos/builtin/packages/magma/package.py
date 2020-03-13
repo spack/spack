@@ -28,6 +28,7 @@ class Magma(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Enable shared library')
     variant('cuda', default=True) # Cuda is a requirement
+    variant('cuda_arch', default='60', multi=True)
 
     depends_on('blas')
     depends_on('lapack')
@@ -39,6 +40,7 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
+
 
     def cmake_args(self):
         spec = self.spec
@@ -68,10 +70,13 @@ class Magma(CMakePackage, CudaPackage):
                 ])
 
         if spec.satisfies('^cuda@9.0:'):
+            cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
-                options.extend(['-DGPU_TARGET=sm30'])
+                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch )
+                options.extend(['-DGPU_TARGET=' + capabilities])
             else:
-                options.extend(['-DGPU_TARGET=sm_30'])
+                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch )
+                options.extend(['-DGPU_TARGET=' + capabilities])
 
         if '@2.5.0' in spec:
             options.extend(['-DMAGMA_SPARSE=OFF'])
