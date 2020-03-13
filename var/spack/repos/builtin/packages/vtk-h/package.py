@@ -34,7 +34,7 @@ class VtkH(Package, CudaPackage):
     and DIY2 to provide a toolkit with hybrid parallel capabilities."""
 
     homepage = "https://github.com/Alpine-DAV/vtk-h"
-    url      = "https://github.com/Alpine-DAV/vtk-h/releases/download/v0.5.3/vtkh.tar.gz"
+    url      = "https://github.com/Alpine-DAV/vtk-h/releases/download/v0.5.3/vtkh-v0.5.3.tar.gz"
     git      = "https://github.com/Alpine-DAV/vtk-h.git"
 
     maintainers = ['cyrush']
