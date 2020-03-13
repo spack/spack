@@ -32,6 +32,8 @@ class Magma(CMakePackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
 
+    conflicts('~cuda', msg='Magma requires cuda')
+
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
