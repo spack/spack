@@ -17,5 +17,5 @@ class PyAstpretty(PythonPackage):
     variant('typed', default=False, description='Add support for typed comments')
 
     depends_on('python@3.6.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-typed-ast', type=('build', 'run'), when='+typed')
