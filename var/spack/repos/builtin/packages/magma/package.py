@@ -28,13 +28,14 @@ class Magma(CMakePackage, CudaPackage):
     variant('shared', default=True,
             description='Enable shared library')
     variant('cuda', default=True, description='Build with CUDA')
-    variant('cuda_arch', default='60', multi=True)
 
     depends_on('blas')
     depends_on('lapack')
     depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
     conflicts('~cuda', msg='Magma requires cuda')
+    conflicts('cuda_arch=none',
+              msg='Please indicate a CUDA arch value or values')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
