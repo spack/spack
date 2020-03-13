@@ -551,6 +551,8 @@ install_args_docstring = """
                 package
             install_source (bool): By default, source is not installed, but
                 for debugging it might be useful to keep it around.
+            keep_failures (bool): Keep install failure markings.  By default,
+                they are removed.
             keep_prefix (bool): Keep install prefix on failure. By default,
                 destroys it.
             keep_stage (bool): By default, stage is destroyed only if there
@@ -944,7 +946,7 @@ class PackageInstaller(object):
         self.locks[pkg_id] = (lock_type, pkg, lock)
         return (lock_type, lock)
 
-    def _init_queue(self, install_deps, install_package):
+    def _init_queue(self, install_deps, install_package, keep_failures=False):
         """
         Initialize the build task priority queue and spec state.
 
@@ -953,10 +955,15 @@ class PackageInstaller(object):
                 otherwise ``False``
             install_package (bool): ``True`` if installing the package,
                 otherwise ``False``
+            keep_failures (bool): ``True`` if previous failures should be kept,
+                otherwise ``False``
         """
         tty.debug('Initializing the build queue for {0}'.format(self.pkg.name))
         install_compilers = spack.config.get(
             'config:install_missing_compilers', False)
+
+        if keep_failures:
+            tty.debug('Keeping previous failure markings as requested')
 
         if install_deps:
             for dep in self.spec.traverse(order='post', root=False):
@@ -969,10 +976,11 @@ class PackageInstaller(object):
                 if package_id(dep_pkg) not in self.build_tasks:
                     self._push_task(dep_pkg, False, 0, 0, STATUS_ADDED)
 
-                # Clear any persistent failure markings _unless_ they are
-                # associated with another process in this parallel build
-                # of the spec.
-                spack.store.db.clear_failure(dep, force=False)
+                if not keep_failures:
+                    # Clear any persistent failure markings _unless_ they are
+                    # associated with another process in this parallel build
+                    # of the spec.
+                    spack.store.db.clear_failure(dep, force=False)
 
             # Push any missing compilers (if requested) as part of the
             # package dependencies.
@@ -980,8 +988,9 @@ class PackageInstaller(object):
                 self._add_bootstrap_compilers(self.pkg)
 
         if install_package and self.pkg_id not in self.build_tasks:
-            # Be sure to clear any previous failure
-            spack.store.db.clear_failure(self.pkg.spec, force=True)
+            if not keep_failures:
+                # Be sure to clear any previous failure
+                spack.store.db.clear_failure(self.pkg.spec, force=True)
 
             # If not installing dependencies, then determine their
             # installation status before proceeding
@@ -1376,6 +1385,7 @@ class PackageInstaller(object):
         install_deps = kwargs.get('install_deps', True)
         keep_prefix = kwargs.get('keep_prefix', False)
         keep_stage = kwargs.get('keep_stage', False)
+        keep_failures = kwargs.get('keep_failures', False)
         restage = kwargs.get('restage', False)
 
         # install_package defaults True and is popped so that dependencies are
@@ -1393,7 +1403,7 @@ class PackageInstaller(object):
             return
 
         # Initialize the build task queue
-        self._init_queue(install_deps, install_package)
+        self._init_queue(install_deps, install_package, keep_failures)
 
         # Proceed with the installation
         while self.build_pq:

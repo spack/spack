@@ -184,7 +184,7 @@ def test_env_install_all_fails(install_mockery, mock_fetch, monkeypatch,
     env_specs = e._get_environment_specs()
     for spec in env_specs:
         assert not spec.package.installed
-    assert out.count(err_msg) == 2  # b_explicit + b_dependency
+    assert out.count(err_msg) == 1  # b_explicit, not as b_dependency
     assert 'Skipping build of a' in out
 
 

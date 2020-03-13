@@ -32,6 +32,7 @@ def update_kwargs_from_args(args, kwargs):
     that will be passed to Package.do_install API"""
 
     kwargs.update({
+        'keep_failures': args.keep_failures,
         'keep_prefix': args.keep_prefix,
         'keep_stage': args.keep_stage,
         'restage': not args.dont_restage,
@@ -78,6 +79,9 @@ the dependencies"""
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="reinstall an existing spec, even if it has dependents")
+    subparser.add_argument(
+        '--keep-failures', action='store_true',
+        help="don't remove previous install failure marks before installation")
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="don't remove the install prefix if installation fails")
@@ -278,7 +282,7 @@ environment variables:
                     env.write(regenerate_views=False)
 
             tty.msg("Installing environment %s" % env.name)
-            env.install_all(args)
+            env.install_all(args, **kwargs)
             with env.write_transaction():
                 # It is not strictly required to synchronize view regeneration
                 # but doing so can prevent redundant work in the filesystem.

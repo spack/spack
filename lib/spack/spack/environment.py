@@ -1208,7 +1208,7 @@ class Environment(object):
         for spec in uninstalled_specs:
             # Parse cli arguments and construct a dictionary
             # that will be passed to Package.do_install API
-            kwargs = dict()
+            kwargs = {'keep_failures': True}
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
 

@@ -4231,6 +4231,24 @@ to get rid of the install prefix before you build again:
 
    $ spack uninstall --force <spec>
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Keeping install failure tracking data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, ``spack install`` will clear all persistent install
+failure tracking information as part of its set up process. If you
+want to preserve the existing information, you can use the
+``--keep-failures`` option:
+
+.. code-block:: console
+
+   $ spack install --keep-failures <spec>
+
+This option allows you to install new packages without Spack
+attempting to rebuild failed dependency packages.  The tracking
+data will automatically be deleted the next time ``spack install``
+is run without this option.
+
 ---------------------
 Graphing dependencies
 ---------------------
