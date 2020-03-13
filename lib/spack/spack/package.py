@@ -477,6 +477,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: This is currently only used by package sanity tests.
     manual_download = False
 
+    #: Set of additional options used when fetching package versions.
+    fetch_options = {}
+
     #
     # Set default licensing information
     #
