@@ -22,12 +22,14 @@ class G4radioactivedecay(Package):
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data', 'RadioactiveDecay{0}'
+        install_path = join_path(prefix.share, 'data',
+                                 'RadioactiveDecay{0}'
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        install_path = join_path(self.prefix.share, 'data', 'RadioactiveDecay{0}'
+        install_path = join_path(self.prefix.share, 'data',
+                                 'RadioactiveDecay{0}'
                                  .format(self.version))
         env.set('G4RADIOACTIVEDATA', install_path)
 

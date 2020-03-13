@@ -11,7 +11,7 @@ class G4abla(Package):
     """Geant4 data for nuclear shell effects in INCL/ABLA hadronic mode"""
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4ABLA.3.0.tar.gz"
-    
+
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added

@@ -11,7 +11,7 @@ class G4emlow(Package):
     """Geant4 data files for low energy electromagnetic processes."""
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4EMLOW.6.50.tar.gz"
-    
+
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added

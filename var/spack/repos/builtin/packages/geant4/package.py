@@ -51,13 +51,14 @@ class Geant4(CMakePackage):
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
-        depends_on('clhep@2.3.3.0: cxxstd='+std, when='@10.3.3: cxxstd='+std)
+        depends_on('clhep@2.3.3.0: cxxstd=' + std,
+                   when='@10.3.3: cxxstd=' + std)
 
-        # Spack only supports Xerces-c 3 and above, so no need for version req
-        depends_on('xerces-c cxxstd='+std, when='cxxstd='+std)
+        # Spack only supports Xerces-c 3 and above, so no version req
+        depends_on('xerces-c cxxstd=' + std, when='cxxstd=' + std)
 
         # Vecgeom will need specific versions for each Geant4 version
-        depends_on('vecgeom cxxstd='+std, when='+vecgeom cxxstd='+std)
+        depends_on('vecgeom cxxstd=' + std, when='+vecgeom cxxstd=' + std)
 
     depends_on("expat")
     depends_on("zlib")
