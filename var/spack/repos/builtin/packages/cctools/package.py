@@ -24,6 +24,7 @@ class Cctools(AutotoolsPackage):
     depends_on('python@2.7:3', when='@7', type=('build', 'run'))
     depends_on('python@:2.9', when='@6.1.1', type=('build', 'run'))
     depends_on('readline')
+    depends_on('gettext')  # Corrects python linking of -lintl flag.
     depends_on('swig')
     # depends_on('xrootd')
     depends_on('zlib')
