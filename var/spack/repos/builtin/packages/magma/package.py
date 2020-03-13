@@ -8,9 +8,9 @@ from spack import *
 
 
 class Magma(CMakePackage, CudaPackage):
-    """The MAGMA project aims to develop a dense linear algebra library similar to
-       LAPACK but for heterogeneous/hybrid architectures, starting with current
-       "Multicore+GPU" systems.
+    """The MAGMA project aims to develop a dense linear algebra library similar
+       to LAPACK but for heterogeneous/hybrid architectures, starting with
+       current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
@@ -27,7 +27,7 @@ class Magma(CMakePackage, CudaPackage):
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
-    variant('cuda', default=True) # Cuda is a requirement
+    variant('cuda', default=True)  # Cuda is a requirement
     variant('cuda_arch', default='60', multi=True)
 
     depends_on('blas')
@@ -40,7 +40,6 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
-
 
     def cmake_args(self):
         spec = self.spec
@@ -72,10 +71,10 @@ class Magma(CMakePackage, CudaPackage):
         if spec.satisfies('^cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
-                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch )
+                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch)
                 options.extend(['-DGPU_TARGET=' + capabilities])
             else:
-                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch )
+                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
                 options.extend(['-DGPU_TARGET=' + capabilities])
 
         if '@2.5.0' in spec:
