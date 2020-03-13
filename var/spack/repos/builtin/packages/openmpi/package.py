@@ -77,7 +77,7 @@ class Openmpi(AutotoolsPackage):
 
     maintainers = ['hppritcha']
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
     # Current
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
@@ -237,6 +237,7 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
@@ -431,9 +432,10 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))
 
-        if spec.satisfies('@2.0:'):
-            # for Open-MPI 2.0:, C++ bindings are disabled by default.
-            config_args.extend(['--enable-mpi-cxx'])
+        if '+cxx' in spec:
+            config_args.append('--enable-mpi-cxx')
+        else:
+            config_args.append('--disable-mpi-cxx')
 
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
