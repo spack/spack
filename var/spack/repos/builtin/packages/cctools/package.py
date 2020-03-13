@@ -21,8 +21,7 @@ class Cctools(AutotoolsPackage):
 
     depends_on('openssl')
     depends_on('perl+shared', type=('build', 'run'))
-    depends_on('python@2.7:3', when='@7', type=('build', 'run'))
-    depends_on('python@:2.9', when='@6.1.1', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
     depends_on('readline')
     depends_on('gettext')  # Corrects python linking of -lintl flag.
     depends_on('swig')
@@ -46,21 +45,49 @@ class Cctools(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        # For python
-        if self.spec.satisfies('^python@3:'):
-            args.append('--with-python-path=no')
-            args.append(
-                '--with-python3-path={0}'.format(self.spec['python'].prefix)
-            )
+
+        # make sure we do not pick a python outside spack:
+        if self.spec.satisfies('@6.1.1'):
+            if self.spec.satisfies('^python@3:'):
+                args.extend([
+                    '--with-python3-path', self.spec['python'].prefix,
+                    '--with-python-path', 'no'
+                ])
+            elif self.spec.satisfies('^python@:2.9'):
+                args.extend([
+                    '--with-python-path', self.spec['python'].prefix,
+                    '--with-python3-path', 'no'
+                ])
+            else:
+                args.extend([
+                    '--with-python-path', 'no',
+                    '--with-python3-path', 'no'
+                ])
         else:
-            args.append('--with-python3-path=no')
-            args.append(
-                '--with-python-path={0}'.format(self.spec['python'].prefix)
-            )
+            # versions 7 and above, where --with-python-path recognized the
+            # python version:
+            if self.spec.satisfies('^python@3:'):
+                args.extend([
+                    '--with-python-path', self.spec['python'].prefix,
+                    '--with-python2-path', 'no'
+                ])
+            elif self.spec.satisfies('^python@:2.9'):
+                args.extend([
+                    '--with-python-path', self.spec['python'].prefix,
+                    '--with-python3-path', 'no'
+                ])
+            else:
+                args.extend([
+                    '--with-python2-path', 'no',
+                    '--with-python3-path', 'no'
+                ])
+
         # disable these bits
         for p in ['mysql', 'xrootd']:
             args.append('--with-{0}-path=no'.format(p))
+
         # point these bits at the Spack installations
         for p in ['openssl', 'perl', 'readline', 'swig', 'zlib']:
             args.append('--with-{0}-path={1}'.format(p, self.spec[p].prefix))
+
         return args
