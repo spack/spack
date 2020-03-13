@@ -67,7 +67,7 @@ class VtkH(Package, CudaPackage):
     depends_on("vtk-m@1.5.2+cuda~tbb~openmp", when="+cuda~openmp")
 
     depends_on("vtk-m@1.5.2~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@1.5.1~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m@1.5.2~tbb~openmp~shared", when="~openmp~shared")
 
     depends_on("vtk-m@1.5.2+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
     depends_on("vtk-m@1.5.2+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
