@@ -27,3 +27,6 @@ class PyBbpAnalysisFramework(PythonPackage):
 
     depends_on('py-pdf2image', type='run')
     depends_on('pngquant', type='run')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec['pngquant'].prefix.bin)
