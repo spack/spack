@@ -545,7 +545,7 @@ class Trilinos(CMakePackage):
             '-DTPL_ENABLE_LAPACK=ON',
             '-DLAPACK_LIBRARY_NAMES=%s' % ';'.join(lapack.names),
             '-DLAPACK_LIBRARY_DIRS=%s' % ';'.join(lapack.directories),
-            '-DTPL_ENABLE_GLM:BOOL=%s' % ( 'ON' if '+glm' in spec else 'OFF'),
+            '-DTPL_ENABLE_GLM:BOOL=%s' % ('ON' if '+glm' in spec else 'OFF'),
             '-DTPL_ENABLE_Matio:BOOL=%s' % (
                 'ON' if '+matio' in spec else 'OFF'),
             '-DTPL_ENABLE_X11:BOOL=%s' % (
