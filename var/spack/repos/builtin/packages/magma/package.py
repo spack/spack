@@ -27,7 +27,7 @@ class Magma(CMakePackage, CudaPackage):
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
-    variant('cuda', default=True)  # Cuda is a requirement
+    variant('cuda', default=True, description='Build with CUDA')
     variant('cuda_arch', default='60', multi=True)
 
     depends_on('blas')
