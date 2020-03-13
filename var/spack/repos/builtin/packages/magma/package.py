@@ -27,10 +27,10 @@ class Magma(CMakePackage, CudaPackage):
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
+    variant('cuda', default=True) # Cuda is a requirement
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cuda')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
