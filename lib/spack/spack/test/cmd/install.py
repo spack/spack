@@ -498,7 +498,6 @@ def test_cdash_upload_clean_build(tmpdir, mock_fetch, install_mockery, capfd):
             assert '</Build>' in content
             assert '<Text>' not in content
 
-
 @pytest.mark.disable_clean_stage_check
 def test_cdash_upload_extra_params(tmpdir, mock_fetch, install_mockery, capfd):
     # capfd interferes with Spack's capture of e.g., Build.xml output

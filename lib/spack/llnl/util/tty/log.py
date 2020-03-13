@@ -20,6 +20,11 @@ from six import StringIO
 
 import llnl.util.tty as tty
 
+try:
+    import termios
+except:
+    termios = None
+
 # Use this to strip escape sequences
 _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 
@@ -51,7 +56,7 @@ def _strip(line):
     return _escape.sub('', line)
 
 
-class keyboard_input(object):
+class _keyboard_input(object):
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
@@ -96,14 +101,12 @@ class keyboard_input(object):
         if not self.stream or not self.stream.isatty():
             return
 
-        try:
-            # If this fails, self.old_cfg will remain None
-            if not _is_background_tty():
-                import termios
+        # If this fails, self.old_cfg will remain None
+        if termios and not _is_background_tty():
+            # save old termios settings
+            old_cfg = termios.tcgetattr(self.stream)
 
-                # save old termios settings
-                self.old_cfg = termios.tcgetattr(self.stream)
-
+            try:
                 # create new settings with canonical input and echo
                 # disabled, so keypresses are immediate & don't echo.
                 self.new_cfg = termios.tcgetattr(self.stream)
@@ -112,14 +115,15 @@ class keyboard_input(object):
 
                 # Apply new settings for terminal
                 termios.tcsetattr(self.stream, termios.TCSADRAIN, self.new_cfg)
+                self.old_cfg = old_cfg
 
-        except Exception:
-            pass  # some OS's do not support termios, so ignore
+            except Exception:
+                pass  # some OS's do not support termios, so ignore
+
 
     def __exit__(self, exc_type, exception, traceback):
         """If termios was avaialble, restore old settings."""
         if self.old_cfg:
-            import termios
             with background_safe():  # change it back even if backgrounded now
                 termios.tcsetattr(self.stream, termios.TCSADRAIN, self.old_cfg)
 
@@ -458,9 +462,11 @@ class log_output(object):
             # Echo to stdout if requested or forced
             if echo or force_echo:
                 try:
-                    import termios
-                    conf = termios.tcgetattr(sys.stdout)
-                    tostop = conf[3] & termios.TOSTOP
+                    if termios:
+                        conf = termios.tcgetattr(sys.stdout)
+                        tostop = conf[3] & termios.TOSTOP
+                    else:
+                        tostop = True
                 except Exception:
                     tostop = True
                 if not (tostop and _is_background_tty()):
@@ -478,28 +484,18 @@ class log_output(object):
             return (False, force_echo)
 
         try:
-            while True:
-                if not _is_background_tty():
-                    with keyboard_input(stdin):
-                        # No need to set any timeout for select.select
-                        # Wait until a key press or an event on in_pipe.
-                        rlist, _, _ = select.select(istreams, [], [])
-                        # Allow user to toggle echo with 'v' key.
-                        # Currently ignores other chars.
-                        if stdin in rlist:
-                            # Double check we're still in the foreground
-                            if not _is_background_tty():
-                                if stdin.read(1) == 'v':
-                                    echo = not echo
+            with _keyboard_input(stdin):
+                while True:
+                    # No need to set any timeout for select.select
+                    # Wait until a key press or an event on in_pipe.
+                    rlist, _, _ = select.select(istreams, [], [])
+                    # Allow user to toggle echo with 'v' key.
+                    # Currently ignores other chars.
+                    # only read stdin if we're in the foreground
+                    if stdin in rlist and not _is_background_tty():
+                        if stdin.read(1) == 'v':
+                            echo = not echo
 
-                        if in_pipe in rlist:
-                            br, fe = handle_write(force_echo)
-                            force_echo = fe
-                            if br:
-                                break
-                else:
-                    # don't read stdin as a background process
-                    rlist, _, _ = select.select([in_pipe], [], [])
                     if in_pipe in rlist:
                         br, fe = handle_write(force_echo)
                         force_echo = fe
