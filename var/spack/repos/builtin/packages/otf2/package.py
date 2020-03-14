@@ -24,6 +24,8 @@ class Otf2(AutotoolsPackage):
     version('1.3.1', sha256='c4605ace845d89fb1a19223137b92cc503b01e3db5eda8c9e0715d0cfcf2e4b9')
     version('1.2.1', sha256='1db9fb0789de4a9c3c96042495e4212a22cb581f734a1593813adaf84f2288e4')
 
+    depends_on('python@2:2.9999', type='build')
+
     def configure_args(self):
         return [
             '--enable-shared',
