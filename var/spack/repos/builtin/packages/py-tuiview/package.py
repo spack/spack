@@ -11,8 +11,8 @@ class PyTuiview(PythonPackage):
     table manipulation abilities.
     """
 
-    homepage = "https://bitbucket.org/chchrsc/tuiview"
-    url      = "https://bitbucket.org/chchrsc/tuiview/get/tuiview-1.1.7.tar.gz"
+    homepage = "https://github.com/ubarsc/tuiview"
+    url      = "https://github.com/ubarsc/tuiview/releases/download/tuiview-1.2.6/tuiview-1.2.6.tar.gz"
 
     version('1.1.7', sha256='fbf0bf29cc775357dad4f8a2f0c2ffa98bbf69d603a96353e75b321adef67573')
 
