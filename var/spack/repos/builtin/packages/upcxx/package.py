@@ -10,7 +10,7 @@ def cross_detect():
     if spack.architecture.platform().name == 'cray':
         if which('srun'):
             return 'cray-aries-slurm'
-        if which('alps'):
+        if which('aprun'):
             return 'cray-aries-alps'
     return 'none'
 
@@ -35,7 +35,7 @@ class Upcxx(Package):
             description="UPC++ cross-compile target (autodetect by default)")
 
     conflicts('cross=none', when='platform=cray',
-              msg='None is unacceptable on Cray.')
+              msg='None is unacceptable on Cray. Please specify an appropriate "cross" value')
 
     depends_on('cuda', when='+cuda')
     depends_on('python@2.7.5:2.999', type=("build", "run"))
