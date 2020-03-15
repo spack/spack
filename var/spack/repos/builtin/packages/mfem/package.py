@@ -275,7 +275,8 @@ class Mfem(Package):
 
         zlib_var = 'MFEM_USE_ZLIB' if (spec.satisfies('@4.1.0:')) else \
                    'MFEM_USE_GZSTREAM'
-        zlib_str = 'YES' if ('+gzstream' in spec) or ('+zlib' in spec) else 'NO'
+        zlib_str = 'YES' if ('+gzstream' in spec) or ('+zlib' in spec) \
+                   else 'NO'
 
         options = [
             'PREFIX=%s' % prefix,
