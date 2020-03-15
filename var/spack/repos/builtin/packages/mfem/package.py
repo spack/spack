@@ -105,9 +105,8 @@ class Mfem(Package):
                          ' May cause minor performance issues.'))
     variant('superlu-dist', default=False,
             description='Enable MPI parallel, sparse direct solvers')
-    # Placeholder for STRUMPACK, support added in mfem v3.3.2:
-    # variant('strumpack', default=False,
-    #       description='Enable support for STRUMPACK')
+    variant('strumpack', default=False,
+            description='Enable support for STRUMPACK')
     variant('suite-sparse', default=False,
             description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
@@ -128,6 +127,8 @@ class Mfem(Package):
             description='Enable binary data I/O using Conduit')
     variant('gzstream', default=True,
             description='Support zip\'d streams for I/O')
+    variant('zlib', default=True,
+            description='Support zip\'d streams for I/O')
     variant('gnutls', default=False,
             description='Enable secure sockets using GnuTLS')
     variant('libunwind', default=False,
@@ -146,8 +147,12 @@ class Mfem(Package):
 
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
+    # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
+    # strumpack v3 support which is available starting with mfem v4.0:
+    conflicts('+strumpack', when='@:3.99.999')
     conflicts('+gnutls', when='@:3.1')
     conflicts('+gzstream', when='@:3.2')
+    conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
     conflicts('+sundials', when='@:3.2')
@@ -177,10 +182,12 @@ class Mfem(Package):
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
     depends_on('sundials@2.7.0:', when='@3.3.2:+sundials~mpi')
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
-    depends_on('sundials@5.0.0', when='@4.0.1-xsdk:+sundials~mpi')
+    depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
+    depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
     depends_on('pumi', when='+pumi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
+    depends_on('strumpack@3.0.0:', when='+strumpack')
     # The PETSc tests in MFEM will fail if PETSc is not configured with
     # SuiteSparse and MUMPS. On the other hand, if we require the variants
     # '+suite-sparse+mumps' of PETSc, the xsdk package concretization fails.
@@ -192,6 +199,7 @@ class Mfem(Package):
     depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
     depends_on('zlib', when='+gzstream')
+    depends_on('zlib', when='+zlib')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
     depends_on('conduit+mpi', when='+conduit+mpi')
@@ -265,6 +273,10 @@ class Mfem(Package):
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
             metis5_str = 'YES'
 
+        zlib_var = 'MFEM_USE_ZLIB' if (spec.satisfies('@4.1.0:')) else \
+                   'MFEM_USE_GZSTREAM'
+        zlib_str = 'YES' if ('+gzstream' in spec) or ('+zlib' in spec) else 'NO'
+
         options = [
             'PREFIX=%s' % prefix,
             'MFEM_USE_MEMALLOC=YES',
@@ -273,13 +285,14 @@ class Mfem(Package):
             # compiler is defined by env['SPACK_CXX'].
             'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+libunwind'),
-            'MFEM_USE_GZSTREAM=%s' % yes_no('+gzstream'),
+            '%s=%s' % (zlib_var, zlib_str),
             'MFEM_USE_METIS=%s' % yes_no('+metis'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % yes_no('+threadsafe'),
             'MFEM_USE_MPI=%s' % yes_no('+mpi'),
             'MFEM_USE_LAPACK=%s' % yes_no('+lapack'),
             'MFEM_USE_SUPERLU=%s' % yes_no('+superlu-dist'),
+            'MFEM_USE_STRUMPACK=%s' % yes_no('+strumpack'),
             'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
@@ -295,10 +308,10 @@ class Mfem(Package):
                         'MFEM_USE_RAJA=%s' % yes_no('+raja')]
 
         cxxflags = spec.compiler_flags['cxxflags']
-        if self.spec.satisfies('@4.0:'):
-            cxxflags.append(self.compiler.cxx11_flag)
 
         if cxxflags:
+            if self.spec.satisfies('@4.0.0:'):
+                cxxflags.append(self.compiler.cxx11_flag)
             # The cxxflags are set by the spack c++ compiler wrapper. We also
             # set CXXFLAGS explicitly, for clarity, and to properly export the
             # cxxflags in the variable MFEM_CXXFLAGS in config.mk.
@@ -342,6 +355,33 @@ class Mfem(Package):
                  spec['parmetis'].prefix.lib,
                  ld_flags_from_library_list(lapack_blas))]
 
+        if '+strumpack' in spec:
+            strumpack = spec['strumpack']
+            sp_opt = ['-I%s' % strumpack.prefix.include]
+            sp_lib = ['-L%s -lstrumpack' % strumpack.prefix.lib]
+            # Parts of STRUMPACK use fortran, so we need to link with the
+            # fortran library and also the MPI fortran librariry:
+            if os.path.basename(env['FC']) == 'gfortran':
+                sp_lib += ['-lgfortran']
+            if '^mpich' in strumpack:
+                sp_lib += ['-lmpifort']
+            elif '^openmpi' in strumpack:
+                sp_lib += ['-lmpi_mpifh']
+            if '+openmp' in strumpack:
+                sp_opt += [self.compiler.openmp_flag]
+            if '^scalapack' in strumpack:
+                scalapack = strumpack['scalapack']
+                sp_opt += ['-I%s' % scalapack.prefix.include]
+                sp_lib += ['-L%s -lscalapack' % scalapack.prefix.lib]
+            if '+butterflypack' in strumpack:
+                bp = strumpack['butterflypack']
+                sp_opt += ['-I%s' % bp.prefix.include]
+                sp_lib += [
+                    '-L%s -ldbutterflypack -lzbutterflypack' % bp.prefix.lib]
+            options += [
+                'STRUMPACK_OPT=%s' % ' '.join(sp_opt),
+                'STRUMPACK_LIB=%s' % ' '.join(sp_lib)]
+
         if '+suite-sparse' in spec:
             ss_spec = 'suite-sparse:' + self.suitesparse_components
             options += [
@@ -372,7 +412,7 @@ class Mfem(Package):
                 'NETCDF_LIB=%s' %
                 ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
 
-        if '+gzstream' in spec:
+        if ('+gzstream' in spec) or ('+zlib' in spec):
             if "@:3.3.2" in spec:
                 options += ['ZLIB_DIR=%s' % spec['zlib'].prefix]
             else:
