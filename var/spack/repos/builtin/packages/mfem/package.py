@@ -45,13 +45,17 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.1.0',
+            '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
+            url='https://bit.ly/mfem-4-1', extension='.tar.gz',
+            preferred=True)
+
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
 
     version('4.0.0',
             'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
-            url='https://bit.ly/mfem-4-0', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-0', extension='.tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
