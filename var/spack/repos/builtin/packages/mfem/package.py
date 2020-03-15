@@ -168,6 +168,7 @@ class Mfem(Package):
     conflicts('+conduit', when='@:3.3.2')
 
     conflicts('+superlu-dist', when='~mpi')
+    conflicts('+strumpack', when='~mpi')
     conflicts('+petsc', when='~mpi')
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
@@ -210,8 +211,12 @@ class Mfem(Package):
 
     # The MFEM 4.0.0 SuperLU interface fails when using hypre@2.16.0 and
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
-    conflicts('+hypre+superlu-dist',
-              when='mfem@4.0.0 ^hypre@2.16.0 ^superlu-dist@6.1.1')
+    # This issue was resolved in v4.1.
+    conflicts('+superlu-dist',
+              when='mfem@:4.0.999 ^hypre@2.16.0: ^superlu-dist@6:')
+    # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
+    # when using hypre version >= 2.16.0:
+    conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
 
     # The OCCA backend is first available in MFEM 4.0.0
     depends_on('occa', when='mfem@4.0.0:+occa')
