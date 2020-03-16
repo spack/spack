@@ -447,7 +447,7 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         data = f.read()
         f.seek(0)
         original_data_len = len(data)
-        pat = re.compile(old_dir.encode('utf-8') + b'([^\0]*?)\0')
+        pat = re.compile(old_dir.encode('utf-8'))
         if not pat.search(data):
             return
         ndata = pat.sub(replace, data)
