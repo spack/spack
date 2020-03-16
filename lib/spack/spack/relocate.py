@@ -682,19 +682,18 @@ def relocate_links(linknames, old_layout_root, new_layout_root,
     link_names = [os.path.join(new_install_prefix, linkname)
                   for linkname in linknames]
     for link_name in link_names:
-        old_link_target = os.readlink(link_name)
-        old_link_target = re.sub(placeholder, old_layout_root, old_link_target)
-        if old_link_target.startswith(old_install_prefix):
+        link_target = os.readlink(link_name)
+        link_target = re.sub(placeholder, old_layout_root, link_target)
+        if link_target.startswith(old_install_prefix):
             new_link_target = re.sub(
-                old_install_prefix, new_install_prefix, old_link_target)
+                old_install_prefix, new_install_prefix, link_target)
             os.unlink(link_name)
             os.symlink(new_link_target, link_name)
-        else:
-            msg = 'Old link target %s' % old_link_target
+        if (os.path.isabs(link_target) and
+            not link_target.startswith(new_install_prefix)):
+            msg = 'Link target %s' % link_target
             msg += ' for symbolic link %s is outside' % link_name
-            msg += ' of the old install prefix %s.\n' % old_install_prefix
-            msg += 'This symbolic link will not be relocated'
-            msg += ' and might break relocation.'
+            msg += ' of the newinstall prefix %s.\n' % new_install_prefix
             tty.warn(msg)
 
 
