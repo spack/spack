@@ -7,9 +7,9 @@ from spack import *
 
 
 class NfsUtils(AutotoolsPackage):
-    """FThe NFS Utilities package contains the userspace server and client tools
+    """The NFS Utilities package contains the userspace server and client tools
     necessary to use the kernel's NFS abilities. NFS is a protocol that allows
-    sharing file systems over the network. """
+    sharing file systems over the network."""
 
     homepage = "http://linux-nfs.org/"
     url      = "https://sourceforge.net/projects/nfs/files/nfs-utils/2.4.2/nfs-utils-2.4.2.tar.gz/download"
