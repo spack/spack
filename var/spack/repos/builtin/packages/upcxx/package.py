@@ -79,7 +79,30 @@ class Upcxx(Package):
             env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
-        env['CC'] = self.compiler.cc
-        env['CXX'] = self.compiler.cxx
-        installsh = Executable("./install")
-        installsh(prefix)
+        if spec.version <= Version('2019.9.0'):
+            env['CC'] = self.compiler.cc
+            env['CXX'] = self.compiler.cxx
+            installsh = Executable("./install")
+            installsh(prefix)
+        else:
+            if 'platform=cray' in self.spec: 
+                # undo spack compiler wrappers - the compiler must work post-install
+                # the hack above no longer works after the fix to issue #287
+                real_cc = join_path(env['CRAYPE_DIR'],'bin','cc')
+                real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
+                # workaround a bug in the UPC++ installer: (issue #346)
+                env['GASNET_CONFIGURE_ARGS'] = \
+                    "--with-cc=" + real_cc + " --with-cxx=" + real_cxx
+            else:
+                real_cc = self.compiler.cc
+                real_cxx = self.compiler.cxx
+            env['CC'] = real_cc
+            env['CXX'] = real_cxx
+
+            installsh = Executable("./configure")
+            installsh('--prefix=' + prefix)
+
+            make()
+
+            make('install')
+   
