@@ -25,6 +25,7 @@ class Upcxx(Package):
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
 
+    version('2020.3.0', sha256='01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f')
     version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
     version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
 
@@ -38,7 +39,9 @@ class Upcxx(Package):
               msg='None is unacceptable on Cray. Please specify an appropriate "cross" value')
 
     depends_on('cuda', when='+cuda')
-    depends_on('python@2.7.5:2.999', type=("build", "run"))
+    # Require Python2 2.7.5+ up to 2019.9.0, 2020.3.0 and later also permit Python3
+    depends_on('python@2.7.5:2.999', type=("build", "run"), when='@:2019.9.0')
+    depends_on('python@2.7.5:', type=("build", "run"), when='@2020.3.0:')
 
     def url_for_version(self, version):
         if version > Version('2019.3.2'):
