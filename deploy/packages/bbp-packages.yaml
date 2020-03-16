@@ -38,7 +38,7 @@ packages:
       - py-simwriter@1.0.1
       - py-morph-tool@0.1.14
       - py-neurodamus
-      - py-sonata-network-reduction@0.0.4 ^neuron%intel@19.0.4^py-ipython%gcc
+      - py-sonata-network-reduction@0.0.5 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
     target_matrix:

@@ -9,7 +9,7 @@ from spack import *
 class PyJoblib(PythonPackage):
     """Python function as pipeline jobs"""
 
-    homepage = "http://packages.python.org/joblib/"
+    homepage = "https://joblib.readthedocs.io"
     url      = "https://pypi.io/packages/source/j/joblib/joblib-0.14.0.tar.gz"
 
     import_modules = [
@@ -17,6 +17,7 @@ class PyJoblib(PythonPackage):
         'joblib.externals.loky', 'joblib.externals.loky.backend'
     ]
 
+    version('0.14.1', sha256='0630eea4f5664c463f23fbf5dcfc54a2bc6168902719fa8e19daf033022786c8')
     version('0.14.0', sha256='6fcc57aacb4e89451fd449e9412687c51817c3f48662c3d8f38ba3f8a0a193ff')
     version('0.13.2', sha256='315d6b19643ec4afd4c41c671f9f2d65ea9d787da093487a81ead7b0bac94524')
     version('0.10.3', sha256='29b2965a9efbc90a5fe66a389ae35ac5b5b0c1feabfc7cab7fd5d19f429a071d')
