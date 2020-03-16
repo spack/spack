@@ -28,6 +28,7 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
 
+    depends_on('hdf5@:1.10.999', when='@:4.10.2')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
