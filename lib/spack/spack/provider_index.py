@@ -13,6 +13,11 @@ import six
 import spack.error
 import spack.util.spack_json as sjson
 
+try:
+    from collections import ChainMap  # novm
+except ImportError:
+    from chainmap import ChainMap
+
 
 def _cross_provider_maps(lmap, rmap):
     """Return a dictionary that combines constraint requests from both input.
@@ -352,8 +357,7 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
         non_binds = [x for x in specs if str(x) not in binds]
         middle = ProviderIndex(non_binds, restrict=True)
 
-        import collections
-        self.providers = collections.ChainMap(highest, middle, lowest)
+        self.providers = ChainMap(highest, middle, lowest)
 
     def update_with(self, spec):
         is_highest = False
