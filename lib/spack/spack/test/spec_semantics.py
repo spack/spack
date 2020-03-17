@@ -989,9 +989,11 @@ class TestSpecSematics(object):
             s.concretize()
 
     @pytest.mark.parametrize('spec_str,specs_in_dag', [
-        ('hdf5+mpi ^mpi=mpich', ['mpich'])
+        ('hdf5+mpi ^mpi=mpich', [('mpich', 'mpich'), ('mpi', 'mpich')])
     ])
     def test_parse_virtual_deps_bindings(self, spec_str, specs_in_dag):
         s = Spec(spec_str)
-        for expected in specs_in_dag:
-            assert expected in s
+        s.concretize()
+        for label, expected in specs_in_dag:
+            assert label in s
+            assert s[label].satisfies(expected, strict=True)

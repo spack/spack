@@ -3,6 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
+try:
+    import collections.abc as abc  # novm
+except ImportError:
+    import collections as abc
 import itertools
 
 import six
@@ -129,7 +133,7 @@ class _IndexBase(object):
         return repr(self.providers)
 
 
-class ProviderIndex(_IndexBase):
+class ProviderIndex(abc.Mapping, _IndexBase):
     def __init__(self, specs=None, restrict=False):
         """Provider index based on a single mapping of providers.
 
@@ -157,13 +161,26 @@ class ProviderIndex(_IndexBase):
             if spec.virtual:
                 continue
 
-            self.update(spec)
+            self.update_with(spec)
 
-    def update(self, spec):
+    def __getitem__(self, key):
+        return self.providers[key]
+
+    def __iter__(self):
+        return iter(self.providers)
+
+    def __len__(self):
+        return len(self.providers)
+
+    def update_with(self, spec, only=None, exclude=None):
         """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
+            only (sequence of str or None): virtual specs to consider for
+                the update. If None all provided virtual specs are considered.
+            exclude (sequence of str or None): virtual specs to exclude from
+                the update.
         """
         if not isinstance(spec, spack.spec.Spec):
             spec = spack.spec.Spec(spec)
@@ -175,6 +192,22 @@ class ProviderIndex(_IndexBase):
         assert not spec.virtual, "cannot update an index using a virtual spec"
 
         pkg_provided = spec.package_class.provided
+        if only is not None:
+            # FIXME: Here we need to use k.name since the key is a Spec and
+            # FIXME: llnl.util.lang.total_ordering interferes with string
+            # FIXME: comparison
+            pkg_provided = {
+                k: v for k, v in pkg_provided.items() if k.name in only
+            }
+
+        if exclude is not None:
+            # FIXME: Here we need to use k.name since the key is a Spec and
+            # FIXME: llnl.util.lang.total_ordering interferes with string
+            # FIXME: comparison
+            pkg_provided = {
+                k: v for k, v in pkg_provided.items() if k.name not in exclude
+            }
+
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
             for provider_spec in provider_specs:
                 # TODO: fix this comment.
@@ -294,6 +327,55 @@ class ProviderIndex(_IndexBase):
                 spack.spec.Spec.from_node_dict(vpkg),
                 set(spack.spec.Spec.from_node_dict(p) for p in plist)))
         return index
+
+
+class IndexWithBindings(abc.Mapping, _IndexBase):
+    def __init__(self, specs, bindings):
+        self.bindings = bindings
+
+        # Be safe if the argument is a generator that can
+        # be consumed only once
+        specs = list(specs)
+
+        highest, binds = ProviderIndex(restrict=True), []
+        lowest = ProviderIndex(restrict=True)
+        for v, constraint in bindings.items():
+            s = [x for x in specs if x.satisfies(constraint, strict=True)]
+            if not s:
+                continue
+
+            assert len(s) == 1, specs
+            binds.append(str(s[0]))
+            highest.update_with(s[0], only=(v,))
+            lowest.update_with(s[0], exclude=(v,))
+
+        non_binds = [x for x in specs if str(x) not in binds]
+        middle = ProviderIndex(non_binds, restrict=True)
+
+        import collections
+        self.providers = collections.ChainMap(highest, middle, lowest)
+
+    def update_with(self, spec):
+        is_highest = False
+        for vspec, constraint in self.bindings.items():
+            if not spec.satisfies(constraint, strict=True):
+                continue
+
+            is_highest = True
+            self.providers.maps[0].update_with(spec, only=(vspec,))
+            self.providers.maps[2].update_with(spec, exclude=(vspec,))
+
+        if not is_highest:
+            self.providers.maps[1].update_with(spec)
+
+    def __getitem__(self, key):
+        return self.providers[key]
+
+    def __iter__(self):
+        return iter(self.providers)
+
+    def __len__(self):
+        return len(self.providers)
 
 
 def _transform(providers, transform_fun, out_mapping_type=dict):
