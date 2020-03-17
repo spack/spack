@@ -22,6 +22,7 @@ class Spykfunc(PythonPackage):
     version('0.15.0', tag='v0.15.0', submodules=True, get_full_repo=True)
     version('0.15.1', tag='v0.15.1', submodules=True, get_full_repo=True)
     version('0.15.2', tag='v0.15.2', submodules=True, get_full_repo=True)
+    version('0.15.3', tag='v0.15.3', submodules=True, get_full_repo=True)
 
     depends_on('cmake', type='build', when='@0.16:')
     depends_on('boost', type=('build', 'link'), when='@0.16:')
