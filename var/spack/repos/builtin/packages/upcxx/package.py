@@ -112,4 +112,18 @@ class Upcxx(Package):
             make()
 
             make('install')
-   
+  
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def test_install(self):
+        if self.spec.version <= Version('2019.9.0'):
+            spack.main.send_warning_to_tty("run_tests not supported in UPC++ version " + self.spec.version.string + " -- SKIPPED")
+        else:
+            test_networks='NETWORKS=$(CONDUITS)' # enable testing of unofficial conduits (mpi)
+            make('test_install', test_networks)  # builds hello world against installed tree in all configurations
+            make('tests-clean')                  # cleanup
+            make('tests', test_networks)         # builds all tests for all networks in debug mode
+            if 'cross=none' in self.spec:
+                make('run-tests','NETWORKS=smp') # runs tests for smp backend
+            make('tests-clean')   # cleanup
+
