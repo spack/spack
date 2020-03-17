@@ -29,6 +29,9 @@ class Upcxx(Package):
     version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
     version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
 
+    variant('mpi', default=False,
+            description='Enables detection of MPI-based spawner and mpi-conduit')
+
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
 
@@ -38,6 +41,7 @@ class Upcxx(Package):
     conflicts('cross=none', when='platform=cray',
               msg='None is unacceptable on Cray. Please specify an appropriate "cross" value')
 
+    depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
     # Require Python2 2.7.5+ up to 2019.9.0, 2020.3.0 and later also permit Python3
     depends_on('python@2.7.5:2.999', type=("build", "run"), when='@:2019.9.0')
@@ -54,8 +58,10 @@ class Upcxx(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
-        if 'platform=cray' in self.spec:
-            env.set('GASNET_CONFIGURE_ARGS', '--enable-mpi=probe')
+        if '+mpi' in self.spec:
+            env.set('GASNET_CONFIGURE_ARGS','--enable-mpi --enable-mpi-compat')
+        else:
+            env.set('GASNET_CONFIGURE_ARGS','--without-mpicc')
 
         if 'cross=none' not in self.spec:
             env.set('CROSS', self.spec.variants['cross'].value)
@@ -88,7 +94,13 @@ class Upcxx(Package):
 
         if spec.version <= Version('2019.9.0'):
             env['CC'] = self.compiler.cc
-            env['CXX'] = self.compiler.cxx
+            if '+mpi' in self.spec:
+                if 'platform=cray' in self.spec: 
+                    env['GASNET_CONFIGURE_ARGS'] += " --with-mpicc=" + self.compiler.cc
+                else:
+                    env['CXX'] = spec['mpi'].mpicxx
+            else:
+                env['CXX'] = self.compiler.cxx
             installsh = Executable("./install")
             installsh(prefix)
         else:
@@ -98,11 +110,16 @@ class Upcxx(Package):
                 real_cc = join_path(env['CRAYPE_DIR'],'bin','cc')
                 real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
                 # workaround a bug in the UPC++ installer: (issue #346)
-                env['GASNET_CONFIGURE_ARGS'] = \
-                    "--with-cc=" + real_cc + " --with-cxx=" + real_cxx
+                env['GASNET_CONFIGURE_ARGS'] += \
+                    " --with-cc=" + real_cc + " --with-cxx=" + real_cxx
+                if '+mpi' in self.spec:
+                    env['GASNET_CONFIGURE_ARGS'] += " --with-mpicc=" + real_cc
             else:
                 real_cc = self.compiler.cc
                 real_cxx = self.compiler.cxx
+                if '+mpi' in self.spec:
+                    real_cxx = spec['mpi'].mpicxx
+
             env['CC'] = real_cc
             env['CXX'] = real_cxx
 
