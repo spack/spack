@@ -989,7 +989,28 @@ class TestSpecSematics(object):
             s.concretize()
 
     @pytest.mark.parametrize('spec_str,specs_in_dag', [
-        ('hdf5+mpi ^mpi=mpich', [('mpich', 'mpich'), ('mpi', 'mpich')])
+        ('hdf5+mpi ^mpi=mpich', [('mpich', 'mpich'), ('mpi', 'mpich')]),
+        # Try different combinations with packages that provides a
+        # disjoint set of virtual dependencies
+        ('netlib-scalapack ^mpich ^openblas',
+         [('mpi', 'mpich'), ('lapack', 'openblas'), ('blas', 'openblas')]),
+        ('netlib-scalapack ^mpi=mpich ^openblas',
+         [('mpi', 'mpich'), ('lapack', 'openblas'), ('blas', 'openblas')]),
+        ('netlib-scalapack ^mpich ^lapack=openblas',
+         [('mpi', 'mpich'), ('lapack', 'openblas'), ('blas', 'openblas')]),
+        ('netlib-scalapack ^mpi=mpich ^lapack=openblas',
+         [('mpi', 'mpich'), ('lapack', 'openblas'), ('blas', 'openblas')]),
+        # Test that we can mix dependencies that provide an overlapping
+        # sets of virtual dependencies
+        # ('netlib-scalapack ^mpi=intel-parallel-studio ^lapack=openblas',
+        # [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
+        #  ('blas', 'openblas')]),
+        ('netlib-scalapack ^mpi=intel-parallel-studio ^openblas',
+         [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
+          ('blas', 'openblas')]),
+        # ('netlib-scalapack ^intel-parallel-studio ^lapack=openblas',
+        #  [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
+        #   ('blas', 'openblas')]),
     ])
     def test_parse_virtual_deps_bindings(self, spec_str, specs_in_dag):
         s = Spec(spec_str)
