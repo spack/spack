@@ -58,7 +58,6 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
-    depends_on("xerces-c")
     depends_on("gl", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
