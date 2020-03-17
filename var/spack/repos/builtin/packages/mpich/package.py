@@ -145,7 +145,9 @@ spack package at this time.''',
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
 
-    # Avoid identical installations with different specs.
+    # MPICH does not require libxml2 and libpciaccess for versions before 3.3
+    # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
+    # case to avoid generating an identical MPICH installation.
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
 
