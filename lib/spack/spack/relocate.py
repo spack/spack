@@ -61,15 +61,6 @@ class BinaryTextReplaceException(spack.error.SpackError):
         super(BinaryTextReplaceException, self).__init__(msg, err_msg)
 
 
-class PatchelfError(spack.error.SpackError):
-    """
-    Raised when patchelf command returns a ProcessError.
-    """
-
-    def __init__(self, error):
-        super(PatchelfError, self).__init__(error)
-
-
 def get_patchelf():
     """
     Returns the full patchelf binary path if available in $PATH.
@@ -116,7 +107,7 @@ def get_existing_elf_rpaths(path_name):
         rpaths = output.rstrip('\n').split(':')
     except ProcessError as e:
         msg = 'patchelf --print-rpath %s produced an error %s' % (path_name, e)
-        raise PatchelfError(msg)
+        tty.warn(msg)
     return rpaths
 
 
@@ -376,9 +367,9 @@ def modify_elf_object(path_name, new_rpaths):
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                  '%s' % path_name, output=str, error=str)
     except ProcessError as e:
-        msg = 'patchelf --set-rpath %s failed with error %s' % (path_name, e)
-        raise PatchelfError(msg)
-        pass
+        msg = 'patchelf --force-rpath --set-rpath %s failed with error %s' % (
+            path_name, e)
+        tty.warn(msg)
     if os.path.exists(bak_path):
         os.remove(bak_path)
 
