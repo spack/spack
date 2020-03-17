@@ -994,6 +994,7 @@ class Spec(object):
         self._dependents = DependencyMap()
         self._dependencies = DependencyMap()
         self.namespace = None
+        self._explicit_providers = {}
 
         self._hash = None
         self._build_hash = None
@@ -1148,6 +1149,17 @@ class Spec(object):
         arch = self.architecture
         if arch and not arch.platform and (arch.os or arch.target):
             self._set_architecture(platform=spack.architecture.platform().name)
+
+    def _add_explicit_provider(self, virtual, spec):
+        # We cannot provide the same virtual multiple times
+        if virtual in self._explicit_providers:
+            # TODO: add an error message
+            msg = 'virtual dependency "{0}" cannot be specified multiple times'
+            raise ValueError(msg.format(virtual))
+
+        # TODO: need to manage the case in which multiple
+        # TODO: virtual dependencies are provided together
+        self._explicit_providers[virtual] = spec
 
     #
     # Public interface
@@ -1372,6 +1384,17 @@ class Spec(object):
     @prefix.setter
     def prefix(self, value):
         self._prefix = spack.util.prefix.Prefix(value)
+
+    @property
+    def providers(self):
+        try:
+            return spack.provider_index.IndexWithBindings(
+                self.traverse(), self._explicit_providers
+            )
+        except spack.error.SpackError:
+            # This case should take care of cases where a spec
+            # has unknown namespaces or similar things.
+            return spack.provider_index.IndexWithBindings([], {})
 
     def _spec_hash(self, hash):
         """Utility method for computing different types of Spec hashes.
@@ -2049,8 +2072,9 @@ class Spec(object):
               a problem.
         """
         # Make an index of stuff this spec already provides
-        self_index = spack.provider_index.ProviderIndex(
-            self.traverse(), restrict=True)
+        self_index = spack.provider_index.IndexWithBindings(
+            self.traverse(), self._explicit_providers
+        )
         changed = False
         done = False
 
@@ -2128,7 +2152,7 @@ class Spec(object):
                     changed = True
 
                 spec._dependencies.owner = spec
-                self_index.update(spec)
+                self_index.update_with(spec)
                 done = False
                 break
 
@@ -2155,6 +2179,9 @@ class Spec(object):
         if not self.name:
             raise spack.error.SpecError(
                 "Attempting to concretize anonymous spec")
+
+        # Check that the explicit bindings are correct
+        self._verify_bindings()
 
         if self._concrete:
             return
@@ -2302,6 +2329,22 @@ class Spec(object):
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
         self.architecture.target.optimization_flags(self.compiler)
+
+    def _verify_bindings(self):
+        """Check if the explicit bindings are correct."""
+        missing = []
+        for v, s in self._explicit_providers.items():
+            index = spack.provider_index.ProviderIndex([s], restrict=True)
+            providers = index.providers_for(v)
+            if not providers:
+                missing.append((v, s))
+
+        if missing:
+            msg = "explicit bindings cannot be satisfied [{0}]"
+            detail = []
+            for v, s in missing:
+                detail.append('"{0}" does not provide "{1}"'.format(str(s), v))
+            raise ValueError(msg.format(", ".join(detail)))
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
@@ -2492,7 +2535,9 @@ class Spec(object):
             if provider:
                 dep = provider
         else:
-            index = spack.provider_index.ProviderIndex([dep], restrict=True)
+            index = spack.provider_index.IndexWithBindings(
+                [dep], self._explicit_providers
+            )
             items = list(spec_deps.items())
             for name, vspec in items:
                 if not vspec.virtual:
@@ -2506,7 +2551,7 @@ class Spec(object):
                     required = index.providers_for(vspec.name)
                     if required:
                         raise UnsatisfiableProviderSpecError(required[0], dep)
-            provider_index.update(dep)
+            provider_index.update_with(dep)
 
         # If the spec isn't already in the set of dependencies, add it.
         # Note: dep is always owned by this method. If it's from the
@@ -2638,10 +2683,11 @@ class Spec(object):
                 else:
                     all_spec_deps[name].constrain(spec)
 
-        # Initialize index of virtual dependency providers if
-        # concretize didn't pass us one already
-        provider_index = spack.provider_index.ProviderIndex(
-            [s for s in all_spec_deps.values()], restrict=True)
+        # FIXME: Revisit this part
+        bindings = getattr(self, '_explicit_providers', {})
+        provider_index = spack.provider_index.IndexWithBindings(
+            [s for s in all_spec_deps.values()], bindings
+        )
 
         # traverse the package DAG and fill out dependencies according
         # to package files & their 'when' specs
@@ -2953,10 +2999,12 @@ class Spec(object):
                 return False
 
         # For virtual dependencies, we need to dig a little deeper.
-        self_index = spack.provider_index.ProviderIndex(
-            self.traverse(), restrict=True)
-        other_index = spack.provider_index.ProviderIndex(
-            other.traverse(), restrict=True)
+        self_index = spack.provider_index.IndexWithBindings(
+            self.traverse(), self._explicit_providers
+        )
+        other_index = spack.provider_index.IndexWithBindings(
+            other.traverse(), other._explicit_providers
+        )
 
         # This handles cases where there are already providers for both vpkgs
         if not self_index.satisfies(other_index):
@@ -3093,6 +3141,7 @@ class Spec(object):
             self._dup_deps(other, deptypes, caches)
 
         self._concrete = other._concrete
+        self._explicit_providers = other._explicit_providers
 
         if caches:
             self._hash = other._hash
@@ -3193,8 +3242,7 @@ class Spec(object):
                 itertools.chain(
                     # Regular specs
                     (x for x in self.traverse() if x.name == name),
-                    (x for x in self.traverse()
-                     if (not x.virtual) and x.package.provides(name))
+                    self.providers.providers_for(name)
                 )
             )
         except StopIteration:
@@ -4094,11 +4142,17 @@ class SpecParser(spack.parse.Parser):
                 # of the form ^vdep=spec if we have to bind a vdep to a
                 # particular provider.
                 self.expect(ID)
-
+                dep_or_virtual = self.token.value
                 if self.accept(EQ):
+                    # ^vdep=spec
+                    virtual_dependency = dep_or_virtual
                     self.expect(VAL)
-
-                dep = self.spec(self.token.value)
+                    # Implicit recursion on the parser below
+                    dep = Spec(self.token.value)
+                    specs[-1]._add_explicit_provider(virtual_dependency, dep)
+                else:
+                    # ^spec
+                    dep = self.spec(self.token.value)
 
             # Raise an error if the previous spec is already
             # concrete (assigned by hash)
