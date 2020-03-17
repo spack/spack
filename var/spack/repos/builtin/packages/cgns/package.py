@@ -31,6 +31,7 @@ class Cgns(CMakePackage):
     variant('scoping', default=True,  description='Enable scoping')
     variant('mpi',     default=True,  description='Enable parallel cgns')
     variant('int64',   default=False, description='Build with 64-bit integers')
+    variant('shared',  default=True,  description='Enable shared library')
 
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -48,7 +49,9 @@ class Cgns(CMakePackage):
             '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
                 'ON' if '+mpi' in spec else 'OFF'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
-            '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF'
+            '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF',
+            '-DCGNS_BUILD_SHARED:BOOL=%s' % (
+                'ON' if '+shared' in spec else 'OFF')
         ])
 
         if '+mpi' in spec:
