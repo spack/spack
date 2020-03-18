@@ -2309,6 +2309,26 @@ class Spec(object):
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
+        # Check that there are no inconsistencies with providers
+        # providing multiple virtual dependencies together
+        for virtual_dep in list(self.providers):
+            provider_spec = self.providers.providers_for(virtual_dep)[0]
+            vdeps = provider_spec.package.provided_together[virtual_dep]
+            # A single entry means this virtual dependency is not tied
+            # to other virtual dependencies
+            if len(vdeps) == 1:
+                continue
+
+            missing = ['"{0}"'.format(v) for v in vdeps
+                       if self[v] != provider_spec]
+            if missing:
+                msg = ('"{0}" needs to be a provider for {1} if used as '
+                       'a provider for "{2}"')
+                msg = msg.format(
+                    provider_spec.name, ', '.join(missing), virtual_dep
+                )
+                raise ValueError(msg)
+
         # Now that the spec is concrete we should check if
         # there are declared conflicts
         #

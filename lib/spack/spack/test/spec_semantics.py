@@ -1012,9 +1012,19 @@ class TestSpecSematics(object):
          [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
           ('blas', 'openblas')]),
     ])
-    def test_parse_virtual_deps_bindings(self, spec_str, specs_in_dag):
+    def test_virtual_deps_bindings(self, spec_str, specs_in_dag):
         s = Spec(spec_str)
         s.concretize()
         for label, expected in specs_in_dag:
             assert label in s
             assert s[label].satisfies(expected, strict=True)
+
+    @pytest.mark.parametrize('spec_str', [
+        'netlib-scalapack ^intel-parallel-studio ^openblas',
+        'netlib-scalapack ^blas=atlas ^openblas',
+        'netlib-scalapack ^lapack=intel-parallel-studio ^openblas',
+    ])
+    def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
+        s = Spec(spec_str)
+        with pytest.raises(Exception):
+            s.concretize()
