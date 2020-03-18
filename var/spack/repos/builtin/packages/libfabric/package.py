@@ -148,7 +148,7 @@ class Libfabric(AutotoolsPackage):
         super(Libfabric, self).install(spec, prefix)
 
         # Build and install fabtests, if available
-        if not os.path.isdir('fabtests'):
+        if not os.path.isdir('fabtests') or not self.run_tests:
             return
         with working_dir('fabtests'):
             configure = Executable('./configure')
@@ -162,7 +162,7 @@ class Libfabric(AutotoolsPackage):
         fi_info()
 
         # Run fabtests test suite if available
-        if not os.path.isdir('fabtests'):
+        if not os.path.isdir('fabtests') or not self.run_tests:
             return
         if self.spec.satisfies('@1.8.0,1.9.0'):
             # make test seems broken.
