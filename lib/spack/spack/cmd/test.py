@@ -56,6 +56,9 @@ def setup_parser(subparser):
 
 
 def test(parser, args):
+    # record test time
+    now = datetime.datetime.now()
+
     # cdash help option
     if args.help_cdash:
         parser = argparse.ArgumentParser(
@@ -92,7 +95,6 @@ environment variables:
                 log_dir = os.getcwd()
                 log_file = os.path.join(log_dir, args.log_file)
         else:
-            now = datetime.datetime.now()
             log_file = os.path.join(
                 os.getcwd(),
                 'test-%s' % now.strftime('%Y-%m-%d_%H:%M:%S'))
@@ -103,7 +105,9 @@ environment variables:
         if args.smoke_test:
             for spec in specs_to_test:
                 try:
-                    spec.package.do_test(not args.keep_tmpdir)
+                    spec.package.do_test(
+                        remove_directory=not args.keep_tmpdir,
+                        time=now)
                 except BaseException as e:
                     pass  # Test is logged, go on to other tests
         else:
