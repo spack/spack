@@ -14,6 +14,8 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
+import spack.util.path as sup
+import spack.config
 from spack.paths import lib_path, var_path
 
 
@@ -25,7 +27,7 @@ level = "long"
 class AllClean(argparse.Action):
     """Activates flags -s -d -f -m and -p simultaneously"""
     def __call__(self, parser, namespace, values, option_string=None):
-        parser.parse_args(['-sdfmp'], namespace=namespace)
+        parser.parse_args(['-sdfmpt'], namespace=namespace)
 
 
 def setup_parser(subparser):
@@ -45,7 +47,10 @@ def setup_parser(subparser):
         '-p', '--python-cache', action='store_true',
         help="remove .pyc, .pyo files and __pycache__ folders")
     subparser.add_argument(
-        '-a', '--all', action=AllClean, help="equivalent to -sdfmp", nargs=0
+        '-t', '--test-stage', action='store_true',
+        help="remove all files in Spack test stage")
+    subparser.add_argument(
+        '-a', '--all', action=AllClean, help="equivalent to -sdfmpt", nargs=0
     )
     arguments.add_common_arguments(subparser, ['specs'])
 
@@ -53,7 +58,7 @@ def setup_parser(subparser):
 def clean(parser, args):
     # If nothing was set, activate the default
     if not any([args.specs, args.stage, args.downloads, args.failures,
-                args.misc_cache, args.python_cache]):
+                args.misc_cache, args.test_stage, args.python_cache]):
         args.stage = True
 
     # Then do the cleaning falling through the cases
@@ -80,6 +85,20 @@ def clean(parser, args):
     if args.misc_cache:
         tty.msg('Removing cached information on repositories')
         spack.caches.misc_cache.destroy()
+
+    if args.test_stage:
+        tty.msg("Removing files in test stage")
+
+        # get stage
+        test_stage_root = sup.canonicalize_path(
+            spack.config.get('config:test_stage', ''))
+
+        # delete any subdirectories
+        if os.path.exists(test_stage_root):
+            contents = [os.path.join(test_stage_root, entry)
+                        for entry in os.listdir(test_stage_root)]
+            for entry in contents:
+                shutil.rmtree(entry)
 
     if args.python_cache:
         tty.msg('Removing python cache files')
