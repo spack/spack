@@ -161,7 +161,7 @@ packages. If neither are chosen, don't run tests for any packages."""
         help="Show usage instructions for CDash reporting"
     )
     arguments.add_cdash_args(subparser, False)
-    arguments.add_common_arguments(subparser, ['yes_to_all'])
+    arguments.add_common_arguments(subparser, ['yes_to_all', 'spec'])
 
 
 def default_log_file(spec):
