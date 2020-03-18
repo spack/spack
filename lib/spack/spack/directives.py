@@ -408,7 +408,7 @@ def extends(spec, **kwargs):
     return _execute_extends
 
 
-@directive('provided')
+@directive(dicts=('provided', 'provided_together'))
 def provides(*specs, **kwargs):
     """Allows packages to provide a virtual dependency.  If a package provides
        'mpi', other packages can declare that they depend on "mpi", and spack
@@ -424,15 +424,19 @@ def provides(*specs, **kwargs):
         # to build the ProviderIndex.
         when_spec.name = pkg.name
 
-        for string in specs:
-            for provided_spec in spack.spec.parse(string):
-                if pkg.name == provided_spec.name:
-                    raise CircularReferenceError(
-                        "Package '%s' cannot provide itself.")
+        spec_objs = [spack.spec.Spec(x) for x in specs]
+        spec_names = [x.name for x in spec_objs]
+        for provided_spec in spec_objs:
+            pkg.provided_together[provided_spec.name] = spec_names
 
-                if provided_spec not in pkg.provided:
-                    pkg.provided[provided_spec] = set()
-                pkg.provided[provided_spec].add(when_spec)
+            if pkg.name == provided_spec.name:
+                raise CircularReferenceError(
+                    "Package '%s' cannot provide itself.")
+
+            if provided_spec not in pkg.provided:
+                pkg.provided[provided_spec] = set()
+            pkg.provided[provided_spec].add(when_spec)
+
     return _execute_provides
 
 
