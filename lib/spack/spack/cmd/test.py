@@ -61,6 +61,7 @@ def setup_parser(subparser):
 def test(parser, args):
     # record test time
     now = datetime.datetime.now()
+    tty.msg("Spack test at %s" % now.strftime('%Y-%m-%d_%H:%M:%S'))
 
     # cdash help option
     if args.help_cdash:
