@@ -20,4 +20,4 @@ class PyTuiview(PythonPackage):
     depends_on("py-pyqt4", type=('build', 'run'), when='@:1.1.99')
     depends_on("py-pyqt5", type=('build', 'run'), when='@1.2.0:')
     depends_on("py-numpy", type=('build', 'run'))
-    depends_on("gdal+python")
+    depends_on("gdal@1.11.0:+python")
