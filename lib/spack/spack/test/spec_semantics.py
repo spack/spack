@@ -1002,15 +1002,15 @@ class TestSpecSematics(object):
          [('mpi', 'mpich'), ('lapack', 'openblas'), ('blas', 'openblas')]),
         # Test that we can mix dependencies that provide an overlapping
         # sets of virtual dependencies
-        # ('netlib-scalapack ^mpi=intel-parallel-studio ^lapack=openblas',
-        # [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
-        #  ('blas', 'openblas')]),
+        ('netlib-scalapack ^mpi=intel-parallel-studio ^lapack=openblas',
+         [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
+          ('blas', 'openblas')]),
         ('netlib-scalapack ^mpi=intel-parallel-studio ^openblas',
          [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
           ('blas', 'openblas')]),
-        # ('netlib-scalapack ^intel-parallel-studio ^lapack=openblas',
-        #  [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
-        #   ('blas', 'openblas')]),
+        ('netlib-scalapack ^intel-parallel-studio ^lapack=openblas',
+         [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
+          ('blas', 'openblas')]),
     ])
     def test_parse_virtual_deps_bindings(self, spec_str, specs_in_dag):
         s = Spec(spec_str)

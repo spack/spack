@@ -14,6 +14,6 @@ class IntelParallelStudio(Package):
 
     version('cluster.2020.0', sha256='573b1d20707d68ce85b')
 
-    provides('mpi')
+    provides('mpi@:3')
     provides('scalapack')
     provides('blas', 'lapack')

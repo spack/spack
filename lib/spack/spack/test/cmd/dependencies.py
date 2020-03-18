@@ -13,7 +13,9 @@ from spack.main import SpackCommand
 
 dependencies = SpackCommand('dependencies')
 
-mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
+mpis = [
+    'intel-parallel-studio', 'mpich', 'mpich2', 'multi-provider-mpi', 'zmpi'
+]
 mpi_deps = ['fake']
 
 
