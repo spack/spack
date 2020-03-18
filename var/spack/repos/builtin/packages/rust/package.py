@@ -25,6 +25,8 @@ class Rust(Package):
 
     maintainers = ["AndrewGaspar"]
 
+    phases = ['configure', 'build', 'install']
+
     extendable = True
 
     variant(
@@ -326,10 +328,15 @@ class Rust(Package):
                         target=rust_target
                     ),
                     sha256=rust_sha256,
-                    destination='dist',
+                    destination='spack_bootstrap_stage',
                     when='@{version} platform={platform} target={target}'.format(
                         version=rust_version,
                         platform=rust_arch['platform'],
                         target=rust_arch['target']
                     )
                 )
+
+    def configure(self, spec, prefix):
+        bootstrapping_install = Executable('./spack_bootstrap_stage/install.sh')
+        # install into the staging area
+        bootstrapping_install('--prefix=spack_bootstrap')
