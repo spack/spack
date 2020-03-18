@@ -77,6 +77,9 @@ class Rust(Package):
     depends_on('libssh2')
     depends_on('libgit2')
 
+    # The `x.py` bootstrapping script did not exist prior to Rust 1.14. It
+    # would be possible to support both, but for simplicitly, we only support
+    # Rust 1.14 and newer
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
     version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573')
     version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b')
@@ -119,23 +122,13 @@ class Rust(Package):
     version('1.15.1', sha256='2e7daad418a830b45b977cd7ecf181b65f30f73df63ff36e124ea5fe5d1af327')
     version('1.15.0', sha256='f655e4fac9c2abb93eb579e29c408e46052c0e74b7655cd222c63c6743457673')
     version('1.14.0', sha256='c790edd2e915bd01bea46122af2942108479a2fda9a6f76d1094add520ac3b6b')
-    version('1.13.0', sha256='ecb84775ca977a5efec14d0cad19621a155bfcbbf46e8050d18721bb1e3e5084')
-    version('1.12.1', sha256='97913ae4cb255618aaacd1a534b11f343634b040b32656250d09d8d9ec02d3dc')
-    version('1.12.0', sha256='ac5907d6fa96c19bd5901d8d99383fb8755127571ead3d4070cce9c1fb5f337a')
-    version('1.11.0', sha256='3685034a78e70637bdfa3117619f759f2481002fd9abbc78cc0f737c9974de6a')
-    version('1.10.0', sha256='a4015aacf4f6d8a8239253c4da46e7abaa8584f8214d1828d2ff0a8f56176869')
-    version('1.9.0',  sha256='b19b21193d7d36039debeaaa1f61cbf98787e0ce94bd85c5cbe2a59462d7cfcd')
-    version('1.8.0',  sha256='af4466147e8d4db4de2a46e07494d2dc2d96313c5b37da34237f511c905f7449')
-    version('1.7.0',  sha256='6df96059d87b718676d9cd879672e4e22418b6093396b4ccb5b5b66df37bf13a')
-    version('1.6.0',  sha256='3002a4a00004b0727709abeefe1ab1b2731845e4dab74566f363861801bb3326')
-    version('1.5.0',  sha256='641037af7b7b6cad0b231cc20671f8a314fbf2f40fc0901d0b877c39fc8da5a0')
-    version('1.4.0',  sha256='1c0dfdce5c85d8098fcebb9adf1493847ab40c1dfaa8cc997af09b2ef0aa8211')
-    version('1.3.0',  sha256='ea02d7bc9e7de5b8be3fe6b37ea9b2bd823f9a532c8e4c47d02f37f24ffa3126')
-    version('1.2.0',  sha256='ea6eb983daf2a073df57186a58f0d4ce0e85c711bec13c627a8c85d51b6a6d78')
-    version('1.1.0',  sha256='cb09f443b37ec1b81fe73c04eb413f9f656859cf7d00bc5088008cbc2a63fa8a')
-    version('1.0.0',  sha256='c304cbd4f7b25d116b73c249f66bdb5c9da8645855ce195a41bda5077b995eba')
-    
 
+    # The Rust bootstrapping process requires a bootstrapping compiler. The
+    # easiest way to do this is to download the binary distribution of the
+    # same version of the compiler and build with that.
+    #
+    # This dictionary contains a version: hash dictionary for each supported
+    # Rust target.
     rust_releases = {
         'x86_64-unknown-linux-gnu': {
             '1.42.0': '7d1e07ad9c8a33d8d039def7c0a131c5917aa3ea0af3d0cc399c6faf7b789052',
@@ -179,22 +172,7 @@ class Rust(Package):
             '1.16.0': '48621912c242753ba37cad5145df375eeba41c81079df46f93ffb4896542e8fd',
             '1.15.1': 'b1e7c818a3cc8b010932f0efc1cf0ede7471958310f808d543b6e32d2ec748e7',
             '1.15.0': '576fcced49744af5ea438afc4411395530426b0a3d4839c5205f646f15850663',
-            '1.14.0': 'c71325cfea1b6f0bdc5189fa4c50ff96f828096ff3f7b5056367f9685d6a4d04',
-            '1.13.0': '95f4c372b1b81ac1038161e87e932dd7ab875d25c167a861c3949b0f6a65516d',
-            '1.12.1': '9e546aec13e389429ba2d86c8f4e67eba5af146c979e4faa16ffb40ddaf9984c',
-            '1.12.0': '3a9647123f1f056571d6603e40f21a96162702e1ae4725ee8c2bc9452a87cf5d',
-            '1.11.0': 'f4ebbd6d9494cb8fa6c410cb58954e1913546c2bca8963faebc424591547d83f',
-            '1.10.0': 'f189303d52b37c8bb694b9d9739ae73ffa926cbdeffde1d5d6a5c6e811940293',
-            '1.9.0':  '288ff13efa2577e81c77fc2cb6e2b49b1ed0ceab51b4fa12f7efb87039ac49b7',
-            '1.8.0':  'd5a7c10070f8053defe07d1704762c91e94fc30a1020d16b111d63e9af365d48',
-            '1.7.0':  'd36634bd8df3d7565487b70af03dfda1c43c635cd6f2993f47cd61fda00d890a',
-            '1.6.0':  '8630cc02432b4423d64eeae4ef071ec58e5dd1f3d555a3a3cc34b759202813f6',
-            '1.5.0':  '60b83f74d882ce2ba5bc979b5b0589dca56659f215b3259e7188fed8c50aac9d',
-            '1.4.0':  '2de2424b50ca2ab3a67c495b6af03c720801a2928ad30884438ad0f5436ac51d',
-            '1.3.0':  'fa755b6331ff7554e6e8545ee20af7897b0adc65f471dd24ae8a467a944755b4',
-            '1.2.0':  '2311420052e06b3e698ce892924ec40890a8ff0499902e7fc5350733187a1531',
-            '1.1.0':  '5a8b1c4bb254a698a69cd05734909a3933567be6996422ff53f947fd115372e6',
-            '1.0.0':  'aab0d853314675d5e80e427c613a0e646ae75fbbc856b886dab682280f825d53'
+            '1.14.0': 'c71325cfea1b6f0bdc5189fa4c50ff96f828096ff3f7b5056367f9685d6a4d04'
         },
         'powerpc64le-unknown-linux-gnu': {
             '1.42.0': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
@@ -282,25 +260,12 @@ class Rust(Package):
             '1.16.0': '2d08259ee038d3a2c77a93f1a31fc59e7a1d6d1bbfcba3dba3c8213b2e5d1926',
             '1.15.1': '38606e464b31a778ffa7d25d490a9ac53b472102bad8445b52e125f63726ac64',
             '1.15.0': '8b02c3714d30a6111af805d76df0de28c045f883a9171839ebd5667327f2e50a',
-            '1.14.0': '3381341524b0184da5ed2cdcddc2a25e2e335e87f1cf676f64d98ee5e6479f20',
-            '1.13.0': 'f538ca5732b844cf7f00fc4aaaf200a49a845b58b4ec8aef38da0b00e2cf6efe',
-            '1.12.1': '0ac5e58dba3d24bf09dcc90eaac02d2df053122b0def945ec4cfe36ac6d4d011',
-            '1.12.0': '608c4530dcbd2e29c9600a0743b1a83a62556c9525385a7e1a7ba4aa1467a132',
-            '1.11.0': '2cdbc47438dc86ecaf35298317b77d735956eb160862e3f6d0fda0da656ecc35',
-            '1.10.0': '4bb71249f4afd7cee07f63d681f9fcb1b525ee3dfd49722adab7a40024e45af7',
-            '1.9.0':  'd59b5509e69c1cace20a57072e3b3ecefdbfd8c7e95657b0ff2ac10aa1dfebe6',
-            '1.8.0':  '606bfa2ac277f2f37be1bbd4fd933f7820c8ed7b39efe8f58c1063e9a31d326e',
-            '1.7.0':  '9642c62bba6d47a6103729d5617f031ce61b68d34735a9873fa99f7d8769cce4',
-            '1.6.0':  '8c6897ed37ef6fd2890b176afa65306cc8943e3c770c9530a701f1aefd3942b1',
-            '1.5.0':  'bad9d1a96bd423662f247ae9dd5f61846aae668ad2b8c332e72a8cf407f473e4',
-            '1.4.0':  '7256617aec7c106be2aa3c5df0a2e613b13ec55e6237ab612bb4164719e09e21',
-            '1.3.0':  'bfeac876e22cc5fe63a250644ce1a6f3892c13a5461131a881419bd06fcb2011',
-            '1.2.0':  '0d471e672fac5a450ae5507b335fda2efc0b22ea9fb7f215c6a9c466dafa2661',
-            '1.1.0':  'ac802916da3f9c431377c00b864a517bc356859495b7a8a123ce2c532ee8fa83',
-            '1.0.0':  '4b18ea61f2fda53d0f2e59ddf651e96a08ed31205db15e82fa514d434c5594d8'
+            '1.14.0': '3381341524b0184da5ed2cdcddc2a25e2e335e87f1cf676f64d98ee5e6479f20'
         }
     }
 
+    # This dictionary maps Rust target architectures to Spack constraints that
+    # match that target.
     rust_archs = {
         'x86_64-unknown-linux-gnu': [
             { 'platform': 'linux', 'target': 'x86_64:' },
@@ -315,6 +280,15 @@ class Rust(Package):
         ]
     }
 
+    # This loop generates resources for each binary distribution, and maps
+    # them to the version of the compiler they bootstrap. This is in place
+    # of listing each resource explicitly, which would be potentially even
+    # more verbose.
+    #
+    # NOTE: This loop should technically specify the architecture to be the
+    # _host_ architecture, not the target architecture, in order to support
+    # cross compiling. I'm not sure Spack provides a way to specify a
+    # distinction in the when clause, though.
     for rust_target, rust_versions in iteritems(rust_releases):
         for rust_arch in rust_archs[rust_target]:
             for rust_version, rust_sha256 in iteritems(rust_versions):
@@ -336,6 +310,7 @@ class Rust(Package):
                     )
                 )
 
+    # This routine returns the target architecture we intend to build for.
     def get_rust_target(self):
         if self.spec.satisfies('platform=linux target=x86_64:') or \
            self.spec.satisfies('platform=cray target=x86_64:'):
@@ -352,6 +327,8 @@ class Rust(Package):
 
     def configure(self, spec, prefix):
         target = self.get_rust_target()
+        # See the NOTE above the resource loop - should be host architecture,
+        # not target aarchitecture if we're to support cross-compiling.
         bootstrapping_install = Executable(
             './spack_bootstrap_stage/rust-{version}-{target}/install.sh'.format(
                 version=spec.version,
