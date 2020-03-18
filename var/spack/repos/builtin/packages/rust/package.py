@@ -77,9 +77,9 @@ class Rust(Package):
     depends_on('libssh2')
     depends_on('libgit2')
 
-    # The `x.py` bootstrapping script did not exist prior to Rust 1.14. It
+    # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
-    # Rust 1.14 and newer
+    # Rust 1.17 and newer
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
     version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573')
     version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b')
@@ -118,10 +118,6 @@ class Rust(Package):
     version('1.19.0', sha256='15231f5053fb72ad82be91f5abfd6aa60cb7898c5089e4f1ac5910a731090c51')
     version('1.18.0', sha256='d2dc36e99b9e2269488b2bcddde43c234e6bde03edf70cba82a027ff49c36111')
     version('1.17.0', sha256='4baba3895b75f2492df6ce5a28a916307ecd1c088dc1fd02dbfa8a8e86174f87')
-    version('1.16.0', sha256='f966b31eb1cd9bd2df817c391a338eeb5b9253ae0a19bf8a11960c560f96e8b4')
-    version('1.15.1', sha256='2e7daad418a830b45b977cd7ecf181b65f30f73df63ff36e124ea5fe5d1af327')
-    version('1.15.0', sha256='f655e4fac9c2abb93eb579e29c408e46052c0e74b7655cd222c63c6743457673')
-    version('1.14.0', sha256='c790edd2e915bd01bea46122af2942108479a2fda9a6f76d1094add520ac3b6b')
 
     # The Rust bootstrapping process requires a bootstrapping compiler. The
     # easiest way to do this is to download the binary distribution of the
@@ -168,11 +164,7 @@ class Rust(Package):
             '1.20.0': 'ca1cf3aed73ff03d065a7d3e57ecca92228d35dc36d9274a6597441319f18eb8',
             '1.19.0': '30ff67884464d32f6bbbde4387e7557db98868e87fb2afbb77c9b7716e3bff09',
             '1.18.0': 'abdc9f37870c979dd241ba8c7c06d8bb99696292c462ed852c0af7f988bb5887',
-            '1.17.0': 'bbb0e249a7a3e8143b569706c7d2e7e5f51932c753b7fd26c58ccd2015b02c6b',
-            '1.16.0': '48621912c242753ba37cad5145df375eeba41c81079df46f93ffb4896542e8fd',
-            '1.15.1': 'b1e7c818a3cc8b010932f0efc1cf0ede7471958310f808d543b6e32d2ec748e7',
-            '1.15.0': '576fcced49744af5ea438afc4411395530426b0a3d4839c5205f646f15850663',
-            '1.14.0': 'c71325cfea1b6f0bdc5189fa4c50ff96f828096ff3f7b5056367f9685d6a4d04'
+            '1.17.0': 'bbb0e249a7a3e8143b569706c7d2e7e5f51932c753b7fd26c58ccd2015b02c6b'
         },
         'powerpc64le-unknown-linux-gnu': {
             '1.42.0': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
@@ -212,11 +204,7 @@ class Rust(Package):
             '1.20.0': 'cf5be95e2f8212b5231b175d2d2572fdf55a637997655eef460fdeec2ed6d349',
             '1.19.0': '9ca374e9ea1e5f33394d2a8278591def523cbf05ec0ecfa966673f10b72c035c',
             '1.18.0': '62cae76530faccf51ac8f92c1e65a9c3823465088bf4e6fdf0ece4197e74f5a3',
-            '1.17.0': '2dda1fff20aecd7b208babfd45f70c608978fe2594916d1448e42757bb7e759f',
-            '1.16.0': '4a6fcf1f6a015b9809e2fa7d3b35d117364e95df21a890089c8f5c06e252b7a5',
-            '1.15.1': '3f40285145ad3b7cde703b18ac9c57bafb482c636da26d65f54abbf369b013cb',
-            '1.15.0': 'b3d50b34d464ee1adb56b7924499eb619153fd486ea07a3400067725d119a0c5',
-            '1.14.0': 'd3956c671b35fb43e6ebd1757719f862d7c700c223b65fa61bdf628ced81b3af'
+            '1.17.0': '2dda1fff20aecd7b208babfd45f70c608978fe2594916d1448e42757bb7e759f'
         },
         'x86_64-apple-darwin': {
             '1.42.0': 'db1055c46e0d54b99da05e88c71fea21b3897e74a4f5ff9390e934f3f050c0a8',
@@ -256,11 +244,7 @@ class Rust(Package):
             '1.20.0': 'fa1fb8896d5e327cbe6deeb50e6e9a3346de629f2e6bcbd8c10f19f3e2ed67d5',
             '1.19.0': '5c668fb60a3ba3e97dc2cb8967fc4bb9422b629155284dcb89f94d116bb17820',
             '1.18.0': '30f210e3133121812d74995a2831cfb3fe79c271b3cb1721815943bd4f7eb297',
-            '1.17.0': '1689060c07ec727e9756f19c9373045668471ab56fd8f53e92701150bbe2032b',
-            '1.16.0': '2d08259ee038d3a2c77a93f1a31fc59e7a1d6d1bbfcba3dba3c8213b2e5d1926',
-            '1.15.1': '38606e464b31a778ffa7d25d490a9ac53b472102bad8445b52e125f63726ac64',
-            '1.15.0': '8b02c3714d30a6111af805d76df0de28c045f883a9171839ebd5667327f2e50a',
-            '1.14.0': '3381341524b0184da5ed2cdcddc2a25e2e335e87f1cf676f64d98ee5e6479f20'
+            '1.17.0': '1689060c07ec727e9756f19c9373045668471ab56fd8f53e92701150bbe2032b'
         }
     }
 
