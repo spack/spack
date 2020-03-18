@@ -102,6 +102,9 @@ environment variables:
     with reporter('test'):
         if args.smoke_test:
             for spec in specs_to_test:
-                spec.package.do_test(not args.keep_tmpdir)
+                try:
+                    spec.package.do_test(not args.keep_tmpdir)
+                except BaseException as e:
+                    pass  # Test is logged, go on to other tests
         else:
             raise NotImplementedError
