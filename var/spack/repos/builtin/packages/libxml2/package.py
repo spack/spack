@@ -74,34 +74,6 @@ class Libxml2(AutotoolsPackage):
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
 
-    def _run_test(self, exe, options, expected, status):
-        """Run the test and confirm obtain the expected results
-
-        Args:
-            exe (str): the name of the executable
-            options (list of str): list of options to pass to the runner
-            expected (list of str): list of expected output strings
-            status (int or None): the expected process status if int or None
-                if the test is expected to succeed
-        """
-        result = 'fail with status {0}'.format(status) if status else 'succeed'
-        tty.msg('test: {0}: expect to {1}'.format(exe, result))
-        runner = which(exe)
-        assert runner is not None
-
-        try:
-            output = runner(*options, output=str.split, error=str.split)
-            assert not status, 'Expected execution to fail'
-        except ProcessError as err:
-            output = str(err)
-            status_msg = 'exited with status {0}'.format(status)
-            expected_msg = 'Expected \'{0}\' in \'{1}\''.format(
-                status_msg, err.message)
-            assert status_msg in output, expected_msg
-
-        for check in expected:
-            assert check in output
-
     def test(self):
         """Perform smoke tests on the installed package"""
         # Start with what we already have post-install
@@ -129,7 +101,7 @@ class Libxml2(AutotoolsPackage):
         }
         for exe in exec_checks:
             for options, expected, status in exec_checks[exe]:
-                self._run_test(exe, options, expected, status)
+                self.run_test(exe, options, expected, status)
 
         # Perform some cleanup
         fs.force_remove(test_fn)
