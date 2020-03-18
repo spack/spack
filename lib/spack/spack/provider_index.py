@@ -350,9 +350,11 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
                 continue
 
             assert len(s) == 1, specs
-            binds.append(str(s[0]))
-            highest.update_with(s[0], only=(v,))
-            lowest.update_with(s[0], exclude=(v,))
+            s = s[0]
+            binds.append(str(s))
+            virtual_deps = s.package.provided_together.get(v, (v,))
+            highest.update_with(s, only=virtual_deps)
+            lowest.update_with(s, exclude=virtual_deps)
 
         non_binds = [x for x in specs if str(x) not in binds]
         middle = ProviderIndex(non_binds, restrict=True)
@@ -365,9 +367,10 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
             if not spec.satisfies(constraint, strict=True):
                 continue
 
+            binds = spec.package.provided_together[vspec]
             is_highest = True
-            self.providers.maps[0].update_with(spec, only=(vspec,))
-            self.providers.maps[2].update_with(spec, exclude=(vspec,))
+            self.providers.maps[0].update_with(spec, only=binds)
+            self.providers.maps[2].update_with(spec, exclude=binds)
 
         if not is_highest:
             self.providers.maps[1].update_with(spec)

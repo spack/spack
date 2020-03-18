@@ -84,7 +84,7 @@ def test_remove_and_add(database, module_type):
         return
 
     rm_cli_args = ['rm', '-y', 'mpileaks']
-    module_files = _module_files(module_type, 'mpileaks')
+    module_files = _module_files(module_type, 'mpileaks ^mpich')
     for item in module_files:
         assert os.path.exists(item)
 
