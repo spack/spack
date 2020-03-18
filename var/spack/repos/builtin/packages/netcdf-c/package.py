@@ -5,17 +5,6 @@
 
 from spack import *
 
-import numbers
-
-
-def is_integral(x):
-    """Any integer value"""
-    try:
-        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
-    except ValueError:
-        return False
-
-
 class NetcdfC(AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
     machine-independent data formats that support the creation, access, and
