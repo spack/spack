@@ -44,6 +44,7 @@ import spack.repo
 import spack.store
 import spack.url
 import spack.util.environment
+import spack.util.path as sup
 import spack.util.web
 from llnl.util.filesystem import mkdirp, touch, working_dir
 from llnl.util.lang import memoized
@@ -1596,11 +1597,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def test_log_name(self):
-        return 'test-%s' % self.spec.format('{name}-{hash:7}')
+        return 'test-%s-out.txt' % self.spec.format('{name}-{hash:7}')
 
     test_requires_compiler = False
 
-    def do_test(self, remove_directory=False, dirty=False):
+    def do_test(self, time, remove_directory=False, dirty=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1611,7 +1612,13 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        test_log_file = os.path.join(os.getcwd(), self.test_log_name)
+        test_stage = Prefix(os.path.join(
+                sup.canonicalize_path(
+                    spack.config.get('config:test_stage', os.getcwd())),
+                time.strftime('%Y-%m-%d_%H:%M:%S')))
+        if not os.path.exists(test_stage):
+            mkdirp(test_stage)
+        test_log_file = os.path.join(test_stage, self.test_log_name)
 
         def test_process():
             with log_output(test_log_file) as logger:
@@ -1624,8 +1631,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.set_debug(True)
 
                 # setup test directory
-                alltestsdir = Prefix(os.getcwd()).join('spack-tests')
-                testdir = alltestsdir.join(self.spec.format('{name}-{hash}'))
+                testdir = test_stage.join(self.spec.format('{name}-{hash}'))
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
                 mkdirp(testdir)
@@ -1665,8 +1671,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # cleanup test directory
                     if remove_directory:
                         shutil.rmtree(testdir)
-                        if not os.listdir(alltestsdir):
-                            shutil.rmtree(alltestsdir)
+                        if not os.listdir(test_stage):
+                            shutil.rmtree(test_stage)
 
         spack.build_environment.fork(
             self, test_process, dirty=dirty, fake=False, context='test')
