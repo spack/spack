@@ -36,7 +36,7 @@ __all__ = [
 
 def fetch_log(pkg, do_fn, dir):
     log_files = {
-        'do_install': pkg.build_log_path,
+        '_install_task': pkg.build_log_path,
         'do_test': os.path.join(dir, pkg.test_log_name),
     }
     try:
@@ -130,7 +130,7 @@ class InfoCollector(object):
             """
             @functools.wraps(do_fn)
             def wrapper(instance, *args, **kwargs):
-                if isinstance(instance, PackageBase):
+                if isinstance(instance, spack.package.PackageBase):
                     pkg = instance
                 elif hasattr(args[0], 'pkg'):
                     pkg = args[0].pkg
@@ -152,12 +152,12 @@ class InfoCollector(object):
                 start_time = time.time()
                 value = None
                 try:
-                    value = _install_task(instance, *args, **kwargs)
+                    value = do_fn(instance, *args, **kwargs)
                     package['result'] = 'success'
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
-                    if do_fn.__name__ == 'do_install' and installed_on_entry:
+                    if do_fn.__name__ == '_install_task' and installed_on_entry:
                         return
 
                 except spack.build_environment.InstallError as e:
@@ -240,22 +240,25 @@ class collect_info(object):
 
             # The file 'junit.xml' is written when exiting
             # the context
-            specs = [Spec('hdf5').concretized()]
-            with collect_info(specs, 'junit', 'junit.xml'):
+            s = [Spec('hdf5').concretized()]
+            with collect_info(PackageBase, do_install, s, 'junit', 'a.xml'):
                 # A report will be generated for these specs...
-                for spec in specs:
-                    spec.do_install()
+                for spec in s:
+                    getattr(class, function)(spec)
                 # ...but not for this one
                 Spec('zlib').concretized().do_install()
 
     Args:
+        class: class on which to wrap a function
+        function: function to wrap
         format_name (str or None): one of the supported formats
-        args (dict): args passed to spack install
+        args (dict): args passed to function
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, function, format_name, args):
+    def __init__(self, cls, function, format_name, args):
+        self.cls = cls
         self.function = function
         self.filename = None
         if args.cdash_upload_url:
@@ -280,7 +283,8 @@ class collect_info(object):
     def __enter__(self):
         if self.format_name:
             # Start the collector and patch self.function on appropriate class
-            self.collector = InfoCollector(self.function, self.specs, self.dir)
+            self.collector = InfoCollector(
+                self.cls, self.function, self.specs, self.dir)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):

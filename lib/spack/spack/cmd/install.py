@@ -263,7 +263,8 @@ environment variables:
         tty.warn("Deprecated option: --run-tests: use --test=all instead")
 
     # 1. Abstract specs from cli
-    reporter = spack.report.collect_info('do_install', args.log_format, args)
+    reporter = spack.report.collect_info(
+        spack.package.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:
         reporter.filename = args.log_file
 
