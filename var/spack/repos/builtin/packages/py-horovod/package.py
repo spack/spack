@@ -10,20 +10,20 @@ class PyHorovod(PythonPackage):
 
     homepage = "https://github.com/horovod"
     git      = "https://github.com/horovod/horovod.git"
-    url      = "https://github.com/horovod/horovod/archive/v0.19.0.tar.gz"
 
     maintainers = ['adamjstewart']
 
-    version('master', branch='master', submodules='True')
-    version('0.19.0', sha256='0e9fec11cd7f5f39a09f0785d1097cb51c44537ae14c9b4b2578b5cdd21efb9b')
-    version('0.18.2', sha256='a073e08cec65474afdb2d011486b4cb6c7ac8fcb1eca3e02b169e1e7b4a66da6')
-    version('0.18.1', sha256='26e236d1f60955e9dd12b9f0a836f0691296a010fcd1ac72295970a780f4e4fb')
-    version('0.18.0', sha256='94f13e7110c5f3fd1aa194b9d886b5bb91c9bc02ade31bcb84fc6e7f9c043455')
-    version('0.17.1', sha256='14eea5744eda9c62988ffa278a9a5472cebbc6a287eca9ed48cacfcd177e8978')
-    version('0.17.0', sha256='4bb121dda6cdaa1677535470adc1836493a9c4930ab19f6b491254ea47a12a4f')
-    version('0.16.4', sha256='c0168dfeb31a56ede52eae115f43fa2d06a5db55a37201064ef901c8000d708d')
-    version('0.16.3', sha256='1857cf1b335723366cc71e4bcd0583f2dde0c821212cda0e1b6bddfe4ba1ea0d')
-    version('0.16.2', sha256='baa9754e59ab0ee72d3b5769cf77e06a2c7b0a2d9626e0e14ca2ab131934ce74')
+    version('master', branch='master', submodules=True)
+    version('0.19.1', tag='v0.19.1', submodules=True)
+    version('0.19.0', tag='v0.19.0', submodules=True)
+    version('0.18.2', tag='v0.18.2', submodules=True)
+    version('0.18.1', tag='v0.18.1', submodules=True)
+    version('0.18.0', tag='v0.18.0', submodules=True)
+    version('0.17.1', tag='v0.17.1', submodules=True)
+    version('0.17.0', tag='v0.17.0', submodules=True)
+    version('0.16.4', tag='v0.16.4', submodules=True)
+    version('0.16.3', tag='v0.16.3', submodules=True)
+    version('0.16.2', tag='v0.16.2', submodules=True)
 
     # Deep learning frameworks
     variant('pytorch',    default=True,  description='Enables PyTorch')
@@ -36,13 +36,13 @@ class PyHorovod(PythonPackage):
 
     # GPU support
     variant('cuda', default=True, description='Enables CUDA build')
-    variant('gpu_allreduce', default='nccl',
+    variant('gpu_allreduce', default='mpi',
             description='Backend to use for GPU_ALLREDUCE',
             values=('mpi', 'nccl'), multi=False)  # DDL support is deprecated
     variant('gpu_allgather', default='mpi',
             description='Backend to use for GPU_ALLGATHER',
             values=('mpi',), multi=False)
-    variant('gpu_broadcast', default='nccl',
+    variant('gpu_broadcast', default='mpi',
             description='Backend to use for GPU_BROADCAST',
             values=('mpi', 'nccl'), multi=False)
 
@@ -117,3 +117,4 @@ class PyHorovod(PythonPackage):
                 self.spec.variants['gpu_allgather'].value.upper())
         env.set('HOROVOD_GPU_BROADCAST',
                 self.spec.variants['gpu_broadcast'].value.upper())
+        env.set('HOROVOD_ALLOW_MIXED_GPU_IMPL', 1)
