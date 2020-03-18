@@ -58,10 +58,13 @@ class Upcxx(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
+        env.set('UPCXX_PYTHON', self.spec['python'].command.path) # ensure we use the correct python
+
         if '+mpi' in self.spec:
             env.set('GASNET_CONFIGURE_ARGS','--enable-mpi --enable-mpi-compat')
         else:
             env.set('GASNET_CONFIGURE_ARGS','--without-mpicc')
+
 
         if 'cross=none' not in self.spec:
             env.set('CROSS', self.spec.variants['cross'].value)
@@ -71,6 +74,8 @@ class Upcxx(Package):
             env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
 
     def setup_run_environment(self, env):
+        env.set('UPCXX_PYTHON', self.spec['python'].command.path) # ensure we use the correct python
+
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
         if 'platform=cray' in self.spec:
