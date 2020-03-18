@@ -337,6 +337,23 @@ class Rust(Package):
                 )
 
     def configure(self, spec, prefix):
-        bootstrapping_install = Executable('./spack_bootstrap_stage/install.sh')
+        if self.spec.satisfies('platform=linux target=x86_64:') or \
+           self.spec.satisfies('platform=cray target=x86_64:'):
+            target = 'x86_64-unknown-linux-gnu'
+        elif self.spec.satisfies('platform=linux target=ppc64le:'):
+            target = 'powerpc64le-unknown-linux-gnu'
+        elif self.spec.satisfies('platform=darwin target=x86_64:'):
+            target = 'x86_64-apple-darwin'
+        else:
+            raise InstallError(
+                "rust-binary is not supported for '%s'"
+                % self.spec.architecture)
+
+        bootstrapping_install = Executable(
+            './spack_bootstrap_stage/rust-{version}-{target}/install.sh'.format(
+                version=spec.version,
+                target=target
+            )
+        )
         # install into the staging area
         bootstrapping_install('--prefix=spack_bootstrap')
