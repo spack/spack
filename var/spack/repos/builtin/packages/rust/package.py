@@ -336,19 +336,22 @@ class Rust(Package):
                     )
                 )
 
-    def configure(self, spec, prefix):
+    def get_rust_target(self):
         if self.spec.satisfies('platform=linux target=x86_64:') or \
            self.spec.satisfies('platform=cray target=x86_64:'):
-            target = 'x86_64-unknown-linux-gnu'
+            return 'x86_64-unknown-linux-gnu'
         elif self.spec.satisfies('platform=linux target=ppc64le:'):
-            target = 'powerpc64le-unknown-linux-gnu'
+            return 'powerpc64le-unknown-linux-gnu'
         elif self.spec.satisfies('platform=darwin target=x86_64:'):
-            target = 'x86_64-apple-darwin'
+            return 'x86_64-apple-darwin'
         else:
             raise InstallError(
-                "rust-binary is not supported for '%s'"
-                % self.spec.architecture)
+                "rust-binary is not supported for '{0}'".format(
+                    self.spec.architecture
+                ))
 
+    def configure(self, spec, prefix):
+        target = self.get_rust_target()
         bootstrapping_install = Executable(
             './spack_bootstrap_stage/rust-{version}-{target}/install.sh'.format(
                 version=spec.version,
@@ -356,4 +359,77 @@ class Rust(Package):
             )
         )
         # install into the staging area
-        bootstrapping_install('--prefix=spack_bootstrap')
+        bootstrapping_install('--prefix={}'.format(
+            join_path(self.stage.source_path, 'spack_bootstrap')
+        ))
+
+        boot_bin = join_path(self.stage.source_path, 'spack_bootstrap/bin')
+
+        # Always build rustc and cargo
+        tools = ['rustc', 'cargo']
+        # Only make additional components available in 'rust-bootstrap'
+        if '+rustfmt' in self.spec:
+            tools.append('rustfmt')
+        if '+analysis' in self.spec:
+            tools.append('analysis')
+        if '@1.33: +clippy' in self.spec:
+            tools.append('clippy')
+        if '+rls' in self.spec:
+            tools.append('rls')
+        if '+src' in self.spec:
+            tools.append('src')
+
+        ar = which('ar', required=True)
+
+        with open('config.toml', 'w') as out_file:
+            out_file.write("""\
+[build]
+cargo = "{cargo}"
+rustc = "{rustc}"
+docs = false
+vendor = true
+extended = true
+verbose = 2
+tools = {tools}
+
+[rust]
+channel = "stable"
+rpath = true
+# This is a temporary fix due to rust 1.42 breaking self bootstrapping
+# See: https://github.com/rust-lang/rust/issues/69953
+#
+# In general, this should be safe because bootstrapping typically ensures
+# everything but the bootstrapping script is warning free for the latest set
+# of warning.
+deny-warnings = false
+
+[target.{target}]
+ar = "{ar}"
+
+[install]
+prefix = "{prefix}"
+sysconfdir = "etc"
+""".format(
+                cargo=join_path(boot_bin, 'cargo'),
+                rustc=join_path(boot_bin, 'rustc'),
+                prefix=prefix,
+                target=target,
+                ar=ar.path,
+                tools=tools
+            )
+            )
+
+    def build(self, spec, prefix):
+        x_py = Executable('./x.py')
+        x_py(
+            'build',
+            extra_env={
+                # vendored libgit2 wasn't correctly building (couldn't find the
+                # vendored libssh2), so let's just have spack build it
+                'LIBSSH2_SYS_USE_PKG_CONFIG': '1',
+                'LIBGIT2_SYS_USE_PKG_CONFIG': '1'
+            })
+
+    def install(self, spec, prefix):
+        x_py = Executable('./x.py')
+        x_py('install')
