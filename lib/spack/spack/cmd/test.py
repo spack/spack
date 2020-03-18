@@ -50,6 +50,9 @@ def setup_parser(subparser):
         '--capability', action='store_false', dest='smoke_test', default=True,
         help='run full capability tests using pavilion')
 
+    cd_group = subparser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
+
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER,
         help="list of specs to test")
@@ -106,8 +109,9 @@ environment variables:
             for spec in specs_to_test:
                 try:
                     spec.package.do_test(
+                        time=now,
                         remove_directory=not args.keep_tmpdir,
-                        time=now)
+                        dirty=args.dirty)
                 except BaseException as e:
                     pass  # Test is logged, go on to other tests
         else:
