@@ -3,6 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -66,3 +71,35 @@ class Libxml2(AutotoolsPackage):
         if '+python' in self.spec:
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
+
+    def test(self):
+        """Perform smoke tests on the installed package"""
+        # Start with what we already have post-install
+        tty.msg('test: Performing simple import test')
+        self.import_module_test()
+
+        # Now run defined tests based on expected executables
+        dtd_path = './data/info.dtd'
+        test_fn = 'test.xml'
+        exec_checks = {
+            'xml2-config': [
+                (['--version'], [str(self.spec.version)], None)],
+            'xmllint': [
+                (['--version'],
+                 ['using libxml', str(self.spec.version).replace('.', '0')],
+                 None),
+                (['--auto', '-o', test_fn], [], None),
+                (['--postvalid', test_fn],
+                 ['validity error', 'no DTD found', 'does not validate'], 3),
+                (['--dtdvalid', dtd_path, test_fn],
+                 ['validity error', 'does not follow the DTD'], 3),
+                (['--dtdvalid', dtd_path, './data/info.xml'], [], None)],
+            'xmlcatalog': [
+                (['--create'], ['<catalog xmlns', 'catalog"/>'], None)],
+        }
+        for exe in exec_checks:
+            for options, expected, status in exec_checks[exe]:
+                self.run_test(exe, options, expected, status)
+
+        # Perform some cleanup
+        fs.force_remove(test_fn)
