@@ -15,6 +15,7 @@ class PyPytouchreader(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
 
     version('develop', get_full_repo=True)
+    version('1.4.4', tag='v1.4.4', get_full_repo=True)
     version('1.4.3', tag='v1.4.3', get_full_repo=True)
     version('1.4.2', tag='v1.4.2', get_full_repo=True)
     version('1.4.0', tag='v1.4.0', get_full_repo=True)
