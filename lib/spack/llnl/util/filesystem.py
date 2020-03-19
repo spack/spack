@@ -42,6 +42,8 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'chgrp',
+    'chmod_x',
     'copy',
     'install',
     'copy_tree',
@@ -52,6 +54,7 @@ __all__ = [
     'partition_path',
     'prefixes',
     'remove_dead_links',
+    'remove_directory_contents',
     'remove_if_dead_link',
     'remove_linked_tree',
     'set_executable',
@@ -1683,3 +1686,13 @@ def prefixes(path):
         pass
 
     return paths
+
+
+def remove_directory_contents(dir):
+    """Remove all contents of a directory."""
+    if os.path.exists(dir):
+        for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
+            if os.path.isfile(entry) or os.path.islink(entry):
+                os.unlink(entry)
+            else:
+                shutil.rmtree(entry)
