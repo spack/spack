@@ -128,104 +128,160 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
-        'x86_64-unknown-linux-gnu': {
-            '1.42.0': '7d1e07ad9c8a33d8d039def7c0a131c5917aa3ea0af3d0cc399c6faf7b789052',
-            '1.41.1': 'a6d5a3b3f574aafc8f787fea37aad9fb8a7946b383ae5348146927192ff0bef0',
-            '1.41.0': '343ba8ef7397eab7b3bb2382e5e4cb08835a87bff5c8074382c0b6930a41948b',
-            '1.40.0': 'fc91f8b4bd18314e83a617f2389189fc7959146b7177b773370d62592d4b07d0',
-            '1.39.0': 'b10a73e5ba90034fe51f0f02cb78f297ed3880deb7d3738aa09dc5a4d9704a25',
-            '1.38.0': 'adda26b3f0609dbfbdc2019da4a20101879b9db2134fae322a4e863a069ec221',
-            '1.37.0': 'cb573229bfd32928177c3835fdeb62d52da64806b844bc1095c6225b0665a1cb',
-            '1.36.0': '15e592ec52f14a0586dcebc87a957e472c4544e07359314f6354e2b8bd284c55',
-            '1.35.0': 'cf600e2273644d8629ed57559c70ca8db4023fd0156346facca9ab3ad3e8f86c',
-            '1.34.2': '2bf6622d980a52832bae141304e96f317c8a1ccd2dfd69a134a14033e6e43c0f',
-            '1.34.1': '8e2eead11bd5bf61409e29018d007c6fc874bcda2ff54db3d04d1691e779c14e',
-            '1.34.0': '170647ed41b497dc937a6b2556700210bc4be187b1735029ef9ccf52e2cb5ab8',
-            '1.33.0': '6623168b9ee9de79deb0d9274c577d741ea92003768660aca184e04fe774393f',
-            '1.32.0': 'e024698320d76b74daf0e6e71be3681a1e7923122e3ebd03673fcac3ecc23810',
-            '1.31.1': 'a64685535d0c457f49a8712a096a5c21564cd66fd2f7da739487f028192ebe3c',
-            '1.30.1': 'a01a493ed8946fc1c15f63e74fc53299b26ebf705938b4d04a388a746dfdbf9e',
-            '1.30.0': 'f620e3125cc505c842150bd873c0603432b6cee984cdae8b226cf92c8aa1a80f',
-            '1.29.2': 'e9809825c546969a9609ff94b2793c9107d7d9bed67d557ed9969e673137e8d8',
-            '1.29.1': 'b36998aea6d58525f25d89f1813b6bfd4cad6ff467e27bd11e761a20dde43745',
-            '1.29.0': '09f99986c17b1b6b1bfbc9dd8785e0e4693007c5feb67915395d115c1a3aea9d',
-            '1.28.0': '2a1390340db1d24a9498036884e6b2748e9b4b057fc5219694e298bdaa37b810',
-            '1.27.2': '5028a18e913ef3eb53e8d8119d2cc0594442725e055a9361012f8e26f754f2bf',
-            '1.27.1': '435778a837af764da2a7a7fb4d386b7b78516c7dfc732d892858e9a8a539989b',
-            '1.27.0': '235ad78e220b10a2d0267aea1e2c0f19ef5eaaff53ad6ff8b12c1d4370dec9a3',
-            '1.26.2': 'd2b4fb0c544874a73c463993bde122f031c34897bb1eeb653d2ba2b336db83e6',
-            '1.26.1': 'b7e964bace1286696d511c287b945f3ece476ba77a231f0c31f1867dfa5080e0',
-            '1.26.0': '13691d7782577fc9f110924b26603ade1990de0b691a3ce2dc324b4a72a64a68',
-            '1.25.0': '06fb45fb871330a2d1b32a27badfe9085847fe824c189ddc5204acbe27664f5e',
-            '1.24.1': '4567e7f6e5e0be96e9a5a7f5149b5452828ab6a386099caca7931544f45d5327',
-            '1.24.0': '336cf7af6c857cdaa110e1425719fa3a1652351098dc73f156e5bf02ed86443c',
-            '1.23.0': '9a34b23a82d7f3c91637e10ceefb424539dcfa327c2dcd292ff10c047b1fdc7e'
+        '1.42.0': {
+            'x86_64-unknown-linux-gnu':      '7d1e07ad9c8a33d8d039def7c0a131c5917aa3ea0af3d0cc399c6faf7b789052',
+            'powerpc64le-unknown-linux-gnu': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
+            'x86_64-apple-darwin':           'db1055c46e0d54b99da05e88c71fea21b3897e74a4f5ff9390e934f3f050c0a8'
         },
-        'powerpc64le-unknown-linux-gnu': {
-            '1.42.0': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
-            '1.41.1': 'f9b53ca636625b3a2dd87600b6274223c11f866c9b5a34b638ea0013186659d3',
-            '1.41.0': 'ba231b0d8273d6928f61e2be3456e816a1de8050135e20c0623dc7a6ea03ba68',
-            '1.40.0': 'b1a23e35c383f99e647df6a9239b1dc9313e293deb70a76ba58e8ebe55ef623b',
-            '1.39.0': '53b3fd942c52709f7e6fe11ea572d086e315a57a40b84b9b3290ac0ec8c7c84a',
-            '1.38.0': 'f9ed1bb6525abdd4dd6ef10782ad45d2f71496e0c3c88e806b510c81a91c4ff7',
-            '1.37.0': '27c59ec40e9e9f71490dc00bf165156ae3ea77c20ffa4b5e5fd712e67527b477',
-            '1.36.0': '654a7a18d881811c09f630b0c917825b586e94a6142eceaede6b8046718e4054',
-            '1.35.0': 'a933955adec386d75d126e78df5b9941936e156acb3353fc44b85995a81c7bb2',
-            '1.34.2': '4ddd55014bbd954b3499859bfa3146bff471de21c1d73fc6e7cccde290fc1918',
-            '1.34.1': '94ac92d08afcfa2d77ae207e91b57c00cb48ff7ba08a27ed3deb2493f33e8fb1',
-            '1.34.0': '3027e87802e161cce6f3a23d961f6d73b9ed6e829b2cd7af5dfccf6e1207e552',
-            '1.33.0': 'db885aa4c2c6896c85257be2ade5c9edea660ca6878970683e8d5796618329b5',
-            '1.32.0': 'd6d5c9154f4459465d68ebd4fa1e17bad4b6cfe219667dddd9123c3bfb5dd839',
-            '1.31.1': 'a6f61b7a8a06a2b0a785391cc3e6bb8004aa72095eea80db1561039f5bb3e975',
-            '1.30.1': 'a7d4806e6702bdbad5017eeddc62f7ff7eb2438b1b9c39cbc90c2b1207f8e65f',
-            '1.30.0': '0b53e257dc3d9f3d75cd97be569d3bf456d2c0af57ed0bd5e7a437227d8f465a',
-            '1.29.2': '344003b808c20424c4699c9452bd37cdee23857dd4aa125e67d1d6e4bc992091',
-            '1.29.1': '26a6d652ade6b6a96e6af18e846701ee28f912233372dfe15432139252f88958',
-            '1.29.0': 'd6954f1da53f7b3618fba3284330d99b6142bb25d9febba6dbfedad59ca53329',
-            '1.28.0': '255818156ec1f795ed808a44b4fdb8019187d5ebb7f837ae8f55a1ca40862bb6',
-            '1.27.2': '11034d150e811d4903b09fd42f0cb76d467a6365a158101493405fff1054572f',
-            '1.27.1': 'a08e6b6fed3329fcd1220b2ee4cd7a311d99121cf780fb6e1c6353bfeddfb176',
-            '1.27.0': '847774a751e848568215739d384e3baf4d6ec37d27fb3add7a8789208c213aff',
-            '1.26.2': 'ea045869074ae3617eeb51207ce183e6915784b9ed615ecb92ce082ddb86ec1f',
-            '1.26.1': 'ad8b2f6dd8c5cca1251d65b75ed2120aae3c5375d2c8ed690259cf4a652d7d3c',
-            '1.26.0': '3ba3a4905730ec01007ca1096d9fc3780f4e81f71139a619e1f526244301b7f4',
-            '1.25.0': '79eeb2a7fafa2e0f65f29a1dc360df69daa725347e4b6a533684f1c07308cc6e',
-            '1.24.1': '6f6c4bebbd7d6dc9989bf372c512dea55af8f56a1a0cfe97784667f0ac5430ee',
-            '1.24.0': '25d9b965a63ad2f345897028094d4c7eafa432237b478754ccbcc299f80629c8',
-            '1.23.0': '60f1a1cc182c516de08c1f42ada01604a3d94383e9dded6b237ae2233999437b'
+        '1.41.1': {
+            'x86_64-unknown-linux-gnu':      'a6d5a3b3f574aafc8f787fea37aad9fb8a7946b383ae5348146927192ff0bef0',
+            'powerpc64le-unknown-linux-gnu': 'f9b53ca636625b3a2dd87600b6274223c11f866c9b5a34b638ea0013186659d3',
+            'x86_64-apple-darwin':           '16615288cf74239783de1b435d329f3d56ed13803c7c10cd4b207d7c8ffa8f67'
         },
-        'x86_64-apple-darwin': {
-            '1.42.0': 'db1055c46e0d54b99da05e88c71fea21b3897e74a4f5ff9390e934f3f050c0a8',
-            '1.41.1': '16615288cf74239783de1b435d329f3d56ed13803c7c10cd4b207d7c8ffa8f67',
-            '1.41.0': 'b6504003ab70b11f278e0243a43ba9d6bf75e8ad6819b4058a2b6e3991cc8d7a',
-            '1.40.0': '749ca5e0b94550369cc998416b8854c13157f5d11d35e9b3276064b6766bcb83',
-            '1.39.0': '3736d49c5e9592844e1a5d5452883aeaf8f1e25d671c1bc8f01e81c1766603b5',
-            '1.38.0': 'bd301b78ddcd5d4553962b115e1dca5436dd3755ed323f86f4485769286a8a5a',
-            '1.37.0': 'b2310c97ffb964f253c4088c8d29865f876a49da2a45305493af5b5c7a3ca73d',
-            '1.36.0': '91f151ec7e24f5b0645948d439fc25172ec4012f0584dd16c3fb1acb709aa325',
-            '1.35.0': 'ac14b1c7dc330dcb53d8641d74ebf9b32aa8b03b9d650bcb9258030d8b10dbd6',
-            '1.34.2': '6fdd4bf7fe26dded0cd57b41ab5f0500a5a99b7bc770523a425e9e34f63d0fd8',
-            '1.34.1': 'f4e46b9994ccfab4a84059298d1dc8fd446b1bbb7449462e0459948f7debea0e',
-            '1.34.0': 'e6bea8d865cc7341c17fa3b8f25f7989e6b04f53e9da24878addc524f3a32664',
-            '1.33.0': '864e7c074a0b88e38883c87c169513d072300bb52e1d320a067bd34cf14f66bd',
-            '1.32.0': 'f0dfba507192f9b5c330b5984ba71d57d434475f3d62bd44a39201e36fa76304',
-            '1.31.1': '8398b1b303bdf0e7605d08b87070a514a4f588797c6fb3593718cb9cec233ad6',
-            '1.30.1': '3ba1704a7defe3d9a6f0c1f68792c084da83bcba85e936d597bac0c019914b94',
-            '1.30.0': '07008d90932712282bc599f1e9a226e97879c758dc1f935e6e2675e45694cc1b',
-            '1.29.2': '63f54e3013406b39fcb5b84bcf5e8ce85860d0b97a1e156700e467bf5fb5d5f2',
-            '1.29.1': '07b07fbd6fab2390e19550beb8008745a8626cc5e97b72dc659061c1c3b3d008',
-            '1.29.0': '28a0473637585742f6d80ccd8afd88b6b400e65d623c33cb892412759444da93',
-            '1.28.0': '5d7a70ed4701fe9410041c1eea025c95cad97e5b3d8acc46426f9ac4f9f02393',
-            '1.27.2': '30c5cc58759caa4efdf2ea7d8438633139c98bee3408beb29ceb26985f3f5f70',
-            '1.27.1': '475be237962d6aef1038a2faada26fda1e0eaea5d71d6950229a027a9c2bfe08',
-            '1.27.0': 'a1d48190992e01aac1a181bce490c80cb2c1421724b4ff0e2fb7e224a958ce0f',
-            '1.26.2': 'f193705d4c0572a358670dbacbf0ffadcd04b3989728b442f4680fa1e065fa72',
-            '1.26.1': 'ebf898b9fa7e2aafc53682a41f18af5ca6660ebe82dd78f28cd9799fe4dc189a',
-            '1.26.0': '38708803c3096b8f101d1919ee2d7e723b0adf1bc1bb986b060973b57d8c7c28',
-            '1.25.0': 'fcd0302b15e857ba4a80873360cf5453275973c64fa82e33bfbed02d88d0ad17',
-            '1.24.1': '9d4aacdb5849977ea619d399903c9378163bd9c76ea11dac5ef6eca27849f501',
-            '1.24.0': '1aecba7cab4bc1a9e0e931c04aa00849e930b567d243da7b676ede8f527a2992',
-            '1.23.0': '9274e977322bb4b153f092255ac9bd85041142c73eaabf900cb2ef3d3abb2eba'
+        '1.41.0': {
+            'x86_64-unknown-linux-gnu':      '343ba8ef7397eab7b3bb2382e5e4cb08835a87bff5c8074382c0b6930a41948b',
+            'powerpc64le-unknown-linux-gnu': 'ba231b0d8273d6928f61e2be3456e816a1de8050135e20c0623dc7a6ea03ba68',
+            'x86_64-apple-darwin':           'b6504003ab70b11f278e0243a43ba9d6bf75e8ad6819b4058a2b6e3991cc8d7a'
+        },
+        '1.40.0': {
+            'x86_64-unknown-linux-gnu':      'fc91f8b4bd18314e83a617f2389189fc7959146b7177b773370d62592d4b07d0',
+            'powerpc64le-unknown-linux-gnu': 'b1a23e35c383f99e647df6a9239b1dc9313e293deb70a76ba58e8ebe55ef623b',
+            'x86_64-apple-darwin':           '749ca5e0b94550369cc998416b8854c13157f5d11d35e9b3276064b6766bcb83'
+        },
+        '1.39.0': {
+            'x86_64-unknown-linux-gnu':      'b10a73e5ba90034fe51f0f02cb78f297ed3880deb7d3738aa09dc5a4d9704a25',
+            'powerpc64le-unknown-linux-gnu': '53b3fd942c52709f7e6fe11ea572d086e315a57a40b84b9b3290ac0ec8c7c84a',
+            'x86_64-apple-darwin':           '3736d49c5e9592844e1a5d5452883aeaf8f1e25d671c1bc8f01e81c1766603b5'
+        },
+        '1.38.0': {
+            'x86_64-unknown-linux-gnu':      'adda26b3f0609dbfbdc2019da4a20101879b9db2134fae322a4e863a069ec221',
+            'powerpc64le-unknown-linux-gnu': 'f9ed1bb6525abdd4dd6ef10782ad45d2f71496e0c3c88e806b510c81a91c4ff7',
+            'x86_64-apple-darwin':           'bd301b78ddcd5d4553962b115e1dca5436dd3755ed323f86f4485769286a8a5a'
+        },
+        '1.37.0': {
+            'x86_64-unknown-linux-gnu':      'cb573229bfd32928177c3835fdeb62d52da64806b844bc1095c6225b0665a1cb',
+            'powerpc64le-unknown-linux-gnu': '27c59ec40e9e9f71490dc00bf165156ae3ea77c20ffa4b5e5fd712e67527b477',
+            'x86_64-apple-darwin':           'b2310c97ffb964f253c4088c8d29865f876a49da2a45305493af5b5c7a3ca73d'
+        },
+        '1.36.0': {
+            'x86_64-unknown-linux-gnu':      '15e592ec52f14a0586dcebc87a957e472c4544e07359314f6354e2b8bd284c55',
+            'powerpc64le-unknown-linux-gnu': '654a7a18d881811c09f630b0c917825b586e94a6142eceaede6b8046718e4054',
+            'x86_64-apple-darwin':           '91f151ec7e24f5b0645948d439fc25172ec4012f0584dd16c3fb1acb709aa325'
+        },
+        '1.35.0': {
+            'x86_64-unknown-linux-gnu':      'cf600e2273644d8629ed57559c70ca8db4023fd0156346facca9ab3ad3e8f86c',
+            'powerpc64le-unknown-linux-gnu': 'a933955adec386d75d126e78df5b9941936e156acb3353fc44b85995a81c7bb2',
+            'x86_64-apple-darwin':           'ac14b1c7dc330dcb53d8641d74ebf9b32aa8b03b9d650bcb9258030d8b10dbd6'
+        },
+        '1.34.2': {
+            'x86_64-unknown-linux-gnu':      '2bf6622d980a52832bae141304e96f317c8a1ccd2dfd69a134a14033e6e43c0f',
+            'powerpc64le-unknown-linux-gnu': '4ddd55014bbd954b3499859bfa3146bff471de21c1d73fc6e7cccde290fc1918',
+            'x86_64-apple-darwin':           '6fdd4bf7fe26dded0cd57b41ab5f0500a5a99b7bc770523a425e9e34f63d0fd8'
+        },
+        '1.34.1': {
+            'x86_64-unknown-linux-gnu':      '8e2eead11bd5bf61409e29018d007c6fc874bcda2ff54db3d04d1691e779c14e',
+            'powerpc64le-unknown-linux-gnu': '94ac92d08afcfa2d77ae207e91b57c00cb48ff7ba08a27ed3deb2493f33e8fb1',
+            'x86_64-apple-darwin':           'f4e46b9994ccfab4a84059298d1dc8fd446b1bbb7449462e0459948f7debea0e'
+        },
+        '1.34.0': {
+            'x86_64-unknown-linux-gnu':      '170647ed41b497dc937a6b2556700210bc4be187b1735029ef9ccf52e2cb5ab8',
+            'powerpc64le-unknown-linux-gnu': '3027e87802e161cce6f3a23d961f6d73b9ed6e829b2cd7af5dfccf6e1207e552',
+            'x86_64-apple-darwin':           'e6bea8d865cc7341c17fa3b8f25f7989e6b04f53e9da24878addc524f3a32664'
+        },
+        '1.33.0': {
+            'x86_64-unknown-linux-gnu':      '6623168b9ee9de79deb0d9274c577d741ea92003768660aca184e04fe774393f',
+            'powerpc64le-unknown-linux-gnu': 'db885aa4c2c6896c85257be2ade5c9edea660ca6878970683e8d5796618329b5',
+            'x86_64-apple-darwin':           '864e7c074a0b88e38883c87c169513d072300bb52e1d320a067bd34cf14f66bd'
+        },
+        '1.32.0': {
+            'x86_64-unknown-linux-gnu':      'e024698320d76b74daf0e6e71be3681a1e7923122e3ebd03673fcac3ecc23810',
+            'powerpc64le-unknown-linux-gnu': 'd6d5c9154f4459465d68ebd4fa1e17bad4b6cfe219667dddd9123c3bfb5dd839',
+            'x86_64-apple-darwin':           'f0dfba507192f9b5c330b5984ba71d57d434475f3d62bd44a39201e36fa76304'
+        },
+        '1.31.1': {
+            'x86_64-unknown-linux-gnu':      'a64685535d0c457f49a8712a096a5c21564cd66fd2f7da739487f028192ebe3c',
+            'powerpc64le-unknown-linux-gnu': 'a6f61b7a8a06a2b0a785391cc3e6bb8004aa72095eea80db1561039f5bb3e975',
+            'x86_64-apple-darwin':           '8398b1b303bdf0e7605d08b87070a514a4f588797c6fb3593718cb9cec233ad6'
+        },
+        '1.30.1': {
+            'x86_64-unknown-linux-gnu':      'a01a493ed8946fc1c15f63e74fc53299b26ebf705938b4d04a388a746dfdbf9e',
+            'powerpc64le-unknown-linux-gnu': 'a7d4806e6702bdbad5017eeddc62f7ff7eb2438b1b9c39cbc90c2b1207f8e65f',
+            'x86_64-apple-darwin':           '3ba1704a7defe3d9a6f0c1f68792c084da83bcba85e936d597bac0c019914b94'
+        },
+        '1.30.0': {
+            'x86_64-unknown-linux-gnu':      'f620e3125cc505c842150bd873c0603432b6cee984cdae8b226cf92c8aa1a80f',
+            'powerpc64le-unknown-linux-gnu': '0b53e257dc3d9f3d75cd97be569d3bf456d2c0af57ed0bd5e7a437227d8f465a',
+            'x86_64-apple-darwin':           '07008d90932712282bc599f1e9a226e97879c758dc1f935e6e2675e45694cc1b'
+        },
+        '1.29.2': {
+            'x86_64-unknown-linux-gnu':      'e9809825c546969a9609ff94b2793c9107d7d9bed67d557ed9969e673137e8d8',
+            'powerpc64le-unknown-linux-gnu': '344003b808c20424c4699c9452bd37cdee23857dd4aa125e67d1d6e4bc992091',
+            'x86_64-apple-darwin':           '63f54e3013406b39fcb5b84bcf5e8ce85860d0b97a1e156700e467bf5fb5d5f2'
+        },
+        '1.29.1': {
+            'x86_64-unknown-linux-gnu':      'b36998aea6d58525f25d89f1813b6bfd4cad6ff467e27bd11e761a20dde43745',
+            'powerpc64le-unknown-linux-gnu': '26a6d652ade6b6a96e6af18e846701ee28f912233372dfe15432139252f88958',
+            'x86_64-apple-darwin':           '07b07fbd6fab2390e19550beb8008745a8626cc5e97b72dc659061c1c3b3d008'
+        },
+        '1.29.0': {
+            'x86_64-unknown-linux-gnu':      '09f99986c17b1b6b1bfbc9dd8785e0e4693007c5feb67915395d115c1a3aea9d',
+            'powerpc64le-unknown-linux-gnu': 'd6954f1da53f7b3618fba3284330d99b6142bb25d9febba6dbfedad59ca53329',
+            'x86_64-apple-darwin':           '28a0473637585742f6d80ccd8afd88b6b400e65d623c33cb892412759444da93'
+        },
+        '1.28.0': {
+            'x86_64-unknown-linux-gnu':      '2a1390340db1d24a9498036884e6b2748e9b4b057fc5219694e298bdaa37b810',
+            'powerpc64le-unknown-linux-gnu': '255818156ec1f795ed808a44b4fdb8019187d5ebb7f837ae8f55a1ca40862bb6',
+            'x86_64-apple-darwin':           '5d7a70ed4701fe9410041c1eea025c95cad97e5b3d8acc46426f9ac4f9f02393'
+        },
+        '1.27.2': {
+            'x86_64-unknown-linux-gnu':      '5028a18e913ef3eb53e8d8119d2cc0594442725e055a9361012f8e26f754f2bf',
+            'powerpc64le-unknown-linux-gnu': '11034d150e811d4903b09fd42f0cb76d467a6365a158101493405fff1054572f',
+            'x86_64-apple-darwin':           '30c5cc58759caa4efdf2ea7d8438633139c98bee3408beb29ceb26985f3f5f70'
+        },
+        '1.27.1': {
+            'x86_64-unknown-linux-gnu':      '435778a837af764da2a7a7fb4d386b7b78516c7dfc732d892858e9a8a539989b',
+            'powerpc64le-unknown-linux-gnu': 'a08e6b6fed3329fcd1220b2ee4cd7a311d99121cf780fb6e1c6353bfeddfb176',
+            'x86_64-apple-darwin':           '475be237962d6aef1038a2faada26fda1e0eaea5d71d6950229a027a9c2bfe08'
+        },
+        '1.27.0': {
+            'x86_64-unknown-linux-gnu':      '235ad78e220b10a2d0267aea1e2c0f19ef5eaaff53ad6ff8b12c1d4370dec9a3',
+            'powerpc64le-unknown-linux-gnu': '847774a751e848568215739d384e3baf4d6ec37d27fb3add7a8789208c213aff',
+            'x86_64-apple-darwin':           'a1d48190992e01aac1a181bce490c80cb2c1421724b4ff0e2fb7e224a958ce0f'
+        },
+        '1.26.2': {
+            'x86_64-unknown-linux-gnu':      'd2b4fb0c544874a73c463993bde122f031c34897bb1eeb653d2ba2b336db83e6',
+            'powerpc64le-unknown-linux-gnu': 'ea045869074ae3617eeb51207ce183e6915784b9ed615ecb92ce082ddb86ec1f',
+            'x86_64-apple-darwin':           'f193705d4c0572a358670dbacbf0ffadcd04b3989728b442f4680fa1e065fa72'
+        },
+        '1.26.1': {
+            'x86_64-unknown-linux-gnu':      'b7e964bace1286696d511c287b945f3ece476ba77a231f0c31f1867dfa5080e0',
+            'powerpc64le-unknown-linux-gnu': 'ad8b2f6dd8c5cca1251d65b75ed2120aae3c5375d2c8ed690259cf4a652d7d3c',
+            'x86_64-apple-darwin':           'ebf898b9fa7e2aafc53682a41f18af5ca6660ebe82dd78f28cd9799fe4dc189a'
+        },
+        '1.26.0': {
+            'x86_64-unknown-linux-gnu':      '13691d7782577fc9f110924b26603ade1990de0b691a3ce2dc324b4a72a64a68',
+            'powerpc64le-unknown-linux-gnu': '3ba3a4905730ec01007ca1096d9fc3780f4e81f71139a619e1f526244301b7f4',
+            'x86_64-apple-darwin':           '38708803c3096b8f101d1919ee2d7e723b0adf1bc1bb986b060973b57d8c7c28'
+        },
+        '1.25.0': {
+            'x86_64-unknown-linux-gnu':      '06fb45fb871330a2d1b32a27badfe9085847fe824c189ddc5204acbe27664f5e',
+            'powerpc64le-unknown-linux-gnu': '79eeb2a7fafa2e0f65f29a1dc360df69daa725347e4b6a533684f1c07308cc6e',
+            'x86_64-apple-darwin':           'fcd0302b15e857ba4a80873360cf5453275973c64fa82e33bfbed02d88d0ad17'
+        },
+        '1.24.1': {
+            'x86_64-unknown-linux-gnu':      '4567e7f6e5e0be96e9a5a7f5149b5452828ab6a386099caca7931544f45d5327',
+            'powerpc64le-unknown-linux-gnu': '6f6c4bebbd7d6dc9989bf372c512dea55af8f56a1a0cfe97784667f0ac5430ee',
+            'x86_64-apple-darwin':           '9d4aacdb5849977ea619d399903c9378163bd9c76ea11dac5ef6eca27849f501'
+        },
+        '1.24.0': {
+            'x86_64-unknown-linux-gnu':      '336cf7af6c857cdaa110e1425719fa3a1652351098dc73f156e5bf02ed86443c',
+            'powerpc64le-unknown-linux-gnu': '25d9b965a63ad2f345897028094d4c7eafa432237b478754ccbcc299f80629c8',
+            'x86_64-apple-darwin':           '1aecba7cab4bc1a9e0e931c04aa00849e930b567d243da7b676ede8f527a2992'
+        },
+        '1.23.0': {
+            'x86_64-unknown-linux-gnu':      '9a34b23a82d7f3c91637e10ceefb424539dcfa327c2dcd292ff10c047b1fdc7e',
+            'powerpc64le-unknown-linux-gnu': '60f1a1cc182c516de08c1f42ada01604a3d94383e9dded6b237ae2233999437b',
+            'x86_64-apple-darwin':           '9274e977322bb4b153f092255ac9bd85041142c73eaabf900cb2ef3d3abb2eba'
         }
     }
 
@@ -254,9 +310,9 @@ class Rust(Package):
     # _host_ architecture, not the target architecture, in order to support
     # cross compiling. I'm not sure Spack provides a way to specify a
     # distinction in the when clause, though.
-    for rust_target, rust_versions in iteritems(rust_releases):
-        for rust_arch in rust_archs[rust_target]:
-            for rust_version, rust_sha256 in iteritems(rust_versions):
+    for rust_version, rust_targets in iteritems(rust_releases):
+        for rust_target, rust_sha256 in iteritems(rust_targets):
+            for rust_arch in rust_archs[rust_target]:
                 resource(
                     name='rust-{version}-{target}'.format(
                         version=rust_version,
