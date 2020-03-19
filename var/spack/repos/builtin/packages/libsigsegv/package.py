@@ -73,6 +73,7 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
             expected = fd.read()
         self._run_test(prog, options, expected, None)
 
+    # TODO: Replace this once can acquire the test from the build
     def _do_sigsegv1(self, cc):
         # Note the compilation options and order are from an actual install
         # on a specific linux machine, which used gcc.
@@ -100,5 +101,6 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         # Run the basic smoke test
         self._do_smoke_test(cc)
 
+        # TODO: Adjust this once can acquire the test from the build
         # Run the sigsegv1 test taken from the test suite
-        self._do_sigsegv1(cc)
+        # self._do_sigsegv1(cc)
