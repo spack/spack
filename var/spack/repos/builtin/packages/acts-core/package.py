@@ -34,6 +34,7 @@ class ActsCore(CMakePackage):
     maintainers = ['HadrienG2']
 
     version('develop', branch='master')
+    version('0.18.0', commit='d58a68cf75b52a5e0f563bc237f09250aa9da80c')
     version('0.17.0', commit='0789f654ff484b013fd27e5023cf342785ea8d97')
     version('0.16.0', commit='b3d965fe0b8ae335909d79114ef261c6b996773a')
     version('0.15.0', commit='267c28f69c561e64369661a6235b03b5a610d6da')
