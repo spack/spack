@@ -21,7 +21,3 @@ class Amdblis(BlisBase):
     git = "https://github.com/amd/blis.git"
 
     version('2.1', sha256='3b1d611d46f0f13b3c0917e27012e0f789b23dbefdddcf877b20327552d72fb3')
-
-    @property
-    def libs(self):
-        return find_libraries(['libblis'], root=self.prefix, recursive=True)
