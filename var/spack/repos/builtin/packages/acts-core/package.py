@@ -77,7 +77,8 @@ class ActsCore(CMakePackage):
 
     depends_on('cmake @3.11:', type='build')
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.62: +program_options +test', when='@0.10.4:')
+    depends_on('boost @1.62: +program_options +test', when='@0.10.4:0.18.0')
+    depends_on('boost @1.69: +program_options +test', when='@0.19.0:')
     depends_on('eigen @3.2.9:', type='build')
     depends_on('nlohmann-json @3.2.0:', when='@0.14.0: +json')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
