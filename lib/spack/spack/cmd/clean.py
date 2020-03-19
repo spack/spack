@@ -8,6 +8,7 @@ import os
 import shutil
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 
 import spack.caches
 import spack.cmd
@@ -88,17 +89,9 @@ def clean(parser, args):
 
     if args.test_stage:
         tty.msg("Removing files in test stage")
-
-        # get stage
         test_stage_root = sup.canonicalize_path(
             spack.config.get('config:test_stage', ''))
-
-        # delete any subdirectories
-        if os.path.exists(test_stage_root):
-            contents = [os.path.join(test_stage_root, entry)
-                        for entry in os.listdir(test_stage_root)]
-            for entry in contents:
-                shutil.rmtree(entry)
+        fs.remove_directory_contents(test_stage_root)
 
     if args.python_cache:
         tty.msg('Removing python cache files')
