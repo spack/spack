@@ -137,7 +137,7 @@ def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
     norm_rpaths = list()
     for rpath in rel_rpaths:
         if rpath.startswith('$ORIGIN'):
-            sub = re.sub('$ORIGIN',
+            sub = re.sub(re.escape('$ORIGIN'),
                          os.path.dirname(orig_path_name),
                          rpath)
             norm = os.path.normpath(sub)
