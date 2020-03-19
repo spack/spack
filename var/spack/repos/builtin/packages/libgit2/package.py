@@ -48,7 +48,7 @@ class Libgit2(CMakePackage):
         'https', default='system', description='HTTPS support',
         values=('system', 'openssl', 'none'), multi=False)
     variant('ssh', default=True, description='Enable SSH support')
-    variant('curl', default=True, description='Enable libcurl support (only supported through v0.27)')
+    variant('curl', default=False, description='Enable libcurl support (only supported through v0.27)')
 
     # Build Dependencies
     depends_on('cmake@2.8:', type='build', when="@:0.28")
@@ -59,7 +59,9 @@ class Libgit2(CMakePackage):
     depends_on('openssl', when='https=system platform=linux')
     depends_on('openssl', when='https=system platform=cray')
     depends_on('openssl', when='https=openssl')
-    depends_on('curl', when='@:0.27 +curl')
+    depends_on('curl', when='+curl')
+
+    conflicts('+curl', when='@0.28:')
 
     def cmake_args(self):
         args = []
