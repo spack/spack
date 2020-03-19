@@ -312,8 +312,8 @@ class Database(object):
         if not os.path.exists(self._db_dir):
             fs.mkdirp(self._db_dir)
 
-        if not os.path.exists(self._failure_dir):
-            fs.mkdirp(self._failure_dir)
+        if not os.path.exists(self._failure_dir) and not is_upstream:
+            mkdirp(self._failure_dir)
 
         self.is_upstream = is_upstream
 

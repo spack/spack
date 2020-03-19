@@ -20,6 +20,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
+    version('6.2', sha256='30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d')
     version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
     version('6.0', sha256='f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260')
     version('5.9', sha256='9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b')

@@ -13,7 +13,7 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.1.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -27,6 +27,7 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.2.1', sha256='ffe2f9cdcea1086fc414e82f42271ecf1976700b8edd16ca9d376189c6d93aee')
     version('3.2.0', sha256='651d76daf9168250370d4befb09f79875daa2224a9096d97dfc3ed764c842be4')
     version('3.1.3', sha256='db3121f12fb9b99f105d1413aebaeb3d943f269f3d262b45586d12765866f0c6')
     version('3.1.2', sha256='8e8e2c2fe3d873108735c6ee9884e6f36f467df4a143136209cff303b183bada')
