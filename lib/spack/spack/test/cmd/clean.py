@@ -8,6 +8,7 @@ import spack.stage
 import spack.caches
 import spack.main
 import spack.package
+import llnl.util.filesystem as fs
 
 clean = spack.main.SpackCommand('clean')
 
@@ -28,18 +29,20 @@ def mock_calls_for_clean(monkeypatch):
         spack.caches.fetch_cache, 'destroy', Counter(), raising=False)
     monkeypatch.setattr(
         spack.caches.misc_cache, 'destroy', Counter())
+    monkeypatch.setattr(fs, 'remove_directory_contents', Counter())
 
 
 @pytest.mark.usefixtures(
     'mock_packages', 'config', 'mock_calls_for_clean'
 )
 @pytest.mark.parametrize('command_line,counters', [
-    ('mpileaks', [1, 0, 0, 0]),
-    ('-s',       [0, 1, 0, 0]),
-    ('-sd',      [0, 1, 1, 0]),
-    ('-m',       [0, 0, 0, 1]),
-    ('-a',       [0, 1, 1, 1]),
-    ('',         [0, 0, 0, 0]),
+    ('mpileaks', [1, 0, 0, 0, 0]),
+    ('-s',       [0, 1, 0, 0, 0]),
+    ('-sd',      [0, 1, 1, 0, 0]),
+    ('-m',       [0, 0, 0, 1, 0]),
+    ('-t',       [0, 0, 0, 0, 1]),
+    ('-a',       [0, 1, 1, 1, 1]),
+    ('',         [0, 0, 0, 0, 0]),
 ])
 def test_function_calls(command_line, counters):
 
@@ -52,3 +55,4 @@ def test_function_calls(command_line, counters):
     assert spack.stage.purge.call_count == counters[1]
     assert spack.caches.fetch_cache.destroy.call_count == counters[2]
     assert spack.caches.misc_cache.destroy.call_count == counters[3]
+    assert fs.remove_directory_contents.call_count == counters[4]
