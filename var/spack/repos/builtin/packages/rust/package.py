@@ -9,15 +9,10 @@ from six import iteritems
 class Rust(Package):
     """The Rust programming language toolchain
     
-    This package can bootstrap any version of the Rust compiler. It does this
-    by downloading the platform-appropriate binary distribution of the desired
-    version of the rust compiler, and then building that compiler from source.
-
-    Rust has a few build and link time dependencies. The big one is LLVM. This
-    package's default is to use Rust's vendored version of LLVM as it contains
-    a number of customizations just for Rust. However, an external or
-    spack-built LLVM can be used if you're you're a power user by setting the
-    `llvm` variant.
+    This package can bootstrap any version of the Rust compiler since Rust 1.23.
+    It does this by downloading the platform-appropriate binary distribution of
+    the desired version of the rust compiler, and then building that compiler
+    from source.
     """
 
     homepage = "https://www.rust-lang.org"
@@ -57,14 +52,6 @@ class Rust(Package):
         'src',
         default=True,
         description='Install Rust source files'
-    )
-
-    variant(
-        'llvm',
-        default='vendored',
-        description='LLVM distribution to use. "external" is at your own risk',
-        values=('vendored', 'external'),
-        multi=False
     )
 
     depends_on('cmake', type='build')
