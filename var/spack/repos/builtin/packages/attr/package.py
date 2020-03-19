@@ -30,7 +30,6 @@ class Attr(AutotoolsPackage):
 
     # Ref. http://www.linuxfromscratch.org/blfs/view/7.5/postlfs/attr.html
     def install(self, spec, prefix):
-        make()
         if self.version >= Version('2.4.48'):
             make('install')
         else:
