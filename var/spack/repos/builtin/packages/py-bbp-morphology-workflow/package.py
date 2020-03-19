@@ -13,10 +13,10 @@ class PyBbpMorphologyWorkflow(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/platform/bbp-morphology-workflow"
     git      = "ssh://bbpcode.epfl.ch/platform/bbp-morphology-workflow"
     version('develop', branch='master')
-    version('1.0.1', tag='morphology-repair-workflow-v1.0.1')
+    version('1.0.3', tag='morphology-repair-workflow-v1.0.3')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-neuroc', type='run')
     depends_on('py-morph-tool', type='run')
-    depends_on('py-morph-repair', type='run')
+    depends_on('py-neuror', type='run')
