@@ -201,17 +201,18 @@ class ProviderIndex(abc.Mapping, _IndexBase):
             # FIXME: Here we need to use k.name since the key is a Spec and
             # FIXME: llnl.util.lang.total_ordering interferes with string
             # FIXME: comparison
-            pkg_provided = {
-                k: v for k, v in pkg_provided.items() if k.name in only
-            }
+            pkg_provided = dict(
+                (k, v) for k, v in pkg_provided.items() if k.name in only
+            )
 
         if exclude is not None:
             # FIXME: Here we need to use k.name since the key is a Spec and
             # FIXME: llnl.util.lang.total_ordering interferes with string
             # FIXME: comparison
-            pkg_provided = {
-                k: v for k, v in pkg_provided.items() if k.name not in exclude
-            }
+            pkg_provided = dict(
+                (k, v) for k, v in pkg_provided.items()
+                if k.name not in exclude
+            )
 
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
             for provider_spec in provider_specs:
