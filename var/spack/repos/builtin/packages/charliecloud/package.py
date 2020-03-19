@@ -9,6 +9,7 @@ from spack import *
 class Charliecloud(AutotoolsPackage):
     """Lightweight user-defined software stacks for HPC."""
 
+    maintainers = ['j-ogas']
     homepage = "https://hpc.github.io/charliecloud"
     url      = "https://github.com/hpc/charliecloud/releases/download/v0.14/charliecloud-0.9.10.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
@@ -16,8 +17,9 @@ class Charliecloud(AutotoolsPackage):
     version('master', branch='master')
     version('0.14',   sha256='4ae23c2d6442949e16902f9d5604dbd1d6059aeb5dd461b11fc5c74d49dcb194')
 
-    depends_on('python@3.5:', type='run')
+    depends_on('python@3.5:',    type='run')
     depends_on('py-lark-parser', type='run')
+    depends_on('py-requests',    type='run')
 
     # man pages and html docs variant
     variant('docs', default=False, description='Build man pages and html docs')
@@ -32,7 +34,9 @@ class Charliecloud(AutotoolsPackage):
 
         args = []
 
-        if '+docs' not in self.spec:
+        if '+docs' in self.spec:
+            args.append('--enable-html')
+        else:
             args.append('--disable-html')
 
         return args
