@@ -110,6 +110,10 @@ class Upcxx(Package):
             installsh(prefix)
         else:
             if 'platform=cray' in self.spec: 
+                # Spack loads the cray-libsci module incorrectly on ALCF theta, breaking the compiler
+                # cray-libsci is completely irrelevant to our build, so disable it
+                for var in ['PE_PKGCONFIG_PRODUCTS', 'PE_PKGCONFIG_LIBS']:
+                    env[var]=":".join(filter(lambda x: "libsci" not in x.lower(),env[var].split(":")))
                 # undo spack compiler wrappers - the compiler must work post-install
                 # the hack above no longer works after the fix to issue #287
                 real_cc = join_path(env['CRAYPE_DIR'],'bin','cc')
