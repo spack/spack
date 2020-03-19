@@ -56,10 +56,6 @@ class Rust(Package):
     )
 
     depends_on('cmake', type='build')
-    # We don't use binutils on Mac - we pick up ar either from the system or
-    # compiler
-    depends_on('binutils', type='build', when='platform=linux')
-    depends_on('binutils', type='build', when='platform=cray')
     depends_on('python@:2.8', type='build')
     depends_on('openssl')
     depends_on('libssh2')
