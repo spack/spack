@@ -77,6 +77,15 @@ class Rust(Package):
     depends_on('libssh2')
     depends_on('libgit2')
 
+    # Version Notes:
+    # Here's some information on why your favorite Rust version may be missing.
+    #
+    # < 1.23:
+    # Rust seems to eagerly search for ar next to cc. Spack makes wrappers for
+    # cc and c++, but not for ar, so no ar is found. In future versions, ar
+    # can be specified in the config.
+    #
+    # < 1.17:
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
@@ -111,13 +120,6 @@ class Rust(Package):
     version('1.24.1', sha256='3ea53d45e8d2e9a41afb3340cf54b9745f845b552d802d607707cf04450761ef')
     version('1.24.0', sha256='bb8276f6044e877e447f29f566e4bbf820fa51fea2f912d59b73233ffd95639f')
     version('1.23.0', sha256='7464953871dcfdfa8afcc536916a686dd156a83339d8ec4d5cb4eb2fe146cb91')
-    version('1.22.1', sha256='8b7a42bdd6eb205a8c533eb41b5c42389a88158d060aed1e0f461f68c1fd3fd3')
-    version('1.22.0', sha256='0ac96fbc4fc4a616f8b0ad2f458f2af7e03c141271624cfb2be907b05cbe4a69')
-    version('1.21.0', sha256='1707c142244b5bd909993559c6116c81987c1de21d6207c05d3ecbe5bba548fa')
-    version('1.20.0', sha256='2aa4875ff4472c6e35262bbb9052cb2623da3dae6084a858cc59d36f33f18214')
-    version('1.19.0', sha256='15231f5053fb72ad82be91f5abfd6aa60cb7898c5089e4f1ac5910a731090c51')
-    version('1.18.0', sha256='d2dc36e99b9e2269488b2bcddde43c234e6bde03edf70cba82a027ff49c36111')
-    version('1.17.0', sha256='4baba3895b75f2492df6ce5a28a916307ecd1c088dc1fd02dbfa8a8e86174f87')
 
     # The Rust bootstrapping process requires a bootstrapping compiler. The
     # easiest way to do this is to download the binary distribution of the
@@ -157,14 +159,7 @@ class Rust(Package):
             '1.25.0': '06fb45fb871330a2d1b32a27badfe9085847fe824c189ddc5204acbe27664f5e',
             '1.24.1': '4567e7f6e5e0be96e9a5a7f5149b5452828ab6a386099caca7931544f45d5327',
             '1.24.0': '336cf7af6c857cdaa110e1425719fa3a1652351098dc73f156e5bf02ed86443c',
-            '1.23.0': '9a34b23a82d7f3c91637e10ceefb424539dcfa327c2dcd292ff10c047b1fdc7e',
-            '1.22.1': '8cf4e840041fb05721673836997c5aac5673f733660927dfb64b8d653a3a94fa',
-            '1.22.0': '11118f670343f3ebdd4790f845fd68f38db65b19261b81b3ab580d8425d0a7c6',
-            '1.21.0': 'b41e70e018402bc04d02fde82f91bea24428e6be432f0df12ac400cfb03108e8',
-            '1.20.0': 'ca1cf3aed73ff03d065a7d3e57ecca92228d35dc36d9274a6597441319f18eb8',
-            '1.19.0': '30ff67884464d32f6bbbde4387e7557db98868e87fb2afbb77c9b7716e3bff09',
-            '1.18.0': 'abdc9f37870c979dd241ba8c7c06d8bb99696292c462ed852c0af7f988bb5887',
-            '1.17.0': 'bbb0e249a7a3e8143b569706c7d2e7e5f51932c753b7fd26c58ccd2015b02c6b'
+            '1.23.0': '9a34b23a82d7f3c91637e10ceefb424539dcfa327c2dcd292ff10c047b1fdc7e'
         },
         'powerpc64le-unknown-linux-gnu': {
             '1.42.0': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
@@ -197,14 +192,7 @@ class Rust(Package):
             '1.25.0': '79eeb2a7fafa2e0f65f29a1dc360df69daa725347e4b6a533684f1c07308cc6e',
             '1.24.1': '6f6c4bebbd7d6dc9989bf372c512dea55af8f56a1a0cfe97784667f0ac5430ee',
             '1.24.0': '25d9b965a63ad2f345897028094d4c7eafa432237b478754ccbcc299f80629c8',
-            '1.23.0': '60f1a1cc182c516de08c1f42ada01604a3d94383e9dded6b237ae2233999437b',
-            '1.22.1': 'b0c5149c16ce705c572b4c0976dd5c197309f12dda313f83a10e4f0a979eea6c',
-            '1.22.0': '1fb64fc8f76ca8ae00fcc57774f1fb2e3517b46000f44cd7e50246ed90ecb976',
-            '1.21.0': '67d4a1c5ed3c19168ca5fee799fc6a153a9b45d88e4351723fc41f409f87bec9',
-            '1.20.0': 'cf5be95e2f8212b5231b175d2d2572fdf55a637997655eef460fdeec2ed6d349',
-            '1.19.0': '9ca374e9ea1e5f33394d2a8278591def523cbf05ec0ecfa966673f10b72c035c',
-            '1.18.0': '62cae76530faccf51ac8f92c1e65a9c3823465088bf4e6fdf0ece4197e74f5a3',
-            '1.17.0': '2dda1fff20aecd7b208babfd45f70c608978fe2594916d1448e42757bb7e759f'
+            '1.23.0': '60f1a1cc182c516de08c1f42ada01604a3d94383e9dded6b237ae2233999437b'
         },
         'x86_64-apple-darwin': {
             '1.42.0': 'db1055c46e0d54b99da05e88c71fea21b3897e74a4f5ff9390e934f3f050c0a8',
@@ -237,14 +225,7 @@ class Rust(Package):
             '1.25.0': 'fcd0302b15e857ba4a80873360cf5453275973c64fa82e33bfbed02d88d0ad17',
             '1.24.1': '9d4aacdb5849977ea619d399903c9378163bd9c76ea11dac5ef6eca27849f501',
             '1.24.0': '1aecba7cab4bc1a9e0e931c04aa00849e930b567d243da7b676ede8f527a2992',
-            '1.23.0': '9274e977322bb4b153f092255ac9bd85041142c73eaabf900cb2ef3d3abb2eba',
-            '1.22.1': 'c7cf38a9fe56cc03b61213899e0e2db2153ce4c69ed36b794264c5d3629dae57',
-            '1.22.0': 'dcd0693666dbf595212323a2ee7c14bbe4ff94b527742a378be0482753ff99f2',
-            '1.21.0': '75a7f4bd7c72948030bb9e421df27e8a650dea826fb5b836cf59d23d6f985a0d',
-            '1.20.0': 'fa1fb8896d5e327cbe6deeb50e6e9a3346de629f2e6bcbd8c10f19f3e2ed67d5',
-            '1.19.0': '5c668fb60a3ba3e97dc2cb8967fc4bb9422b629155284dcb89f94d116bb17820',
-            '1.18.0': '30f210e3133121812d74995a2831cfb3fe79c271b3cb1721815943bd4f7eb297',
-            '1.17.0': '1689060c07ec727e9756f19c9373045668471ab56fd8f53e92701150bbe2032b'
+            '1.23.0': '9274e977322bb4b153f092255ac9bd85041142c73eaabf900cb2ef3d3abb2eba'
         }
     }
 
@@ -351,7 +332,7 @@ docs = false
 vendor = true
 extended = true
 verbose = 2
-tools = {tools}
+{tools}
 
 [rust]
 channel = "stable"
@@ -362,7 +343,7 @@ rpath = true
 # In general, this should be safe because bootstrapping typically ensures
 # everything but the bootstrapping script is warning free for the latest set
 # of warning.
-deny-warnings = false
+{deny_warnings}
 
 [target.{target}]
 ar = "{ar}"
@@ -375,8 +356,9 @@ sysconfdir = "etc"
                 rustc=join_path(boot_bin, 'rustc'),
                 prefix=prefix,
                 target=target,
+                deny_warnings='deny-warnings = false' if '@1.42.0' in self.spec else '',
                 ar=ar.path,
-                tools=tools
+                tools='tools={0}'.format(tools) if '@1.25:' in self.spec else ''
             )
             )
 
