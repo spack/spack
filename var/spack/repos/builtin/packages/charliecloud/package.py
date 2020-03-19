@@ -16,7 +16,7 @@ class Charliecloud(AutotoolsPackage):
     version('master', branch='master')
     version('0.14',   sha256='4ae23c2d6442949e16902f9d5604dbd1d6059aeb5dd461b11fc5c74d49dcb194')
 
-    depends_on('python@3.5:', type=('run')
+    depends_on('python@3.5:', type='run')
     depends_on('py-lark-parser', type='run')
 
     # man pages and html docs variant
