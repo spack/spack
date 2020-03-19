@@ -6,13 +6,14 @@
 from spack import *
 from six import iteritems
 
+
 class Rust(Package):
     """The Rust programming language toolchain
-    
-    This package can bootstrap any version of the Rust compiler since Rust 1.23.
-    It does this by downloading the platform-appropriate binary distribution of
-    the desired version of the rust compiler, and then building that compiler
-    from source.
+
+    This package can bootstrap any version of the Rust compiler since Rust
+    1.23. It does this by downloading the platform-appropriate binary
+    distribution of the desired version of the rust compiler, and then building
+    that compiler from source.
     """
 
     homepage = "https://www.rust-lang.org"
@@ -276,15 +277,15 @@ class Rust(Package):
     # match that target.
     rust_archs = {
         'x86_64-unknown-linux-gnu': [
-            { 'platform': 'linux', 'target': 'x86_64:' },
-            { 'platform': 'cray', 'target': 'x86_64:' }
+            {'platform': 'linux', 'target': 'x86_64:'},
+            {'platform': 'cray', 'target': 'x86_64:'}
         ],
         'powerpc64le-unknown-linux-gnu': [
-            { 'platform': 'linux', 'target': 'ppc64le:' },
-            { 'platform': 'cray', 'target': 'ppc64le:' }
+            {'platform': 'linux', 'target': 'ppc64le:'},
+            {'platform': 'cray', 'target': 'ppc64le:'}
         ],
         'x86_64-apple-darwin': [
-            { 'platform': 'darwin', 'target': 'x86_64:' }
+            {'platform': 'darwin', 'target': 'x86_64:'}
         ]
     }
 
@@ -311,11 +312,12 @@ class Rust(Package):
                     ),
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
-                    when='@{version} platform={platform} target={target}'.format(
-                        version=rust_version,
-                        platform=rust_arch['platform'],
-                        target=rust_arch['target']
-                    )
+                    when='@{version} platform={platform} target={target}'\
+                        .format(
+                            version=rust_version,
+                            platform=rust_arch['platform'],
+                            target=rust_arch['target']
+                        )
                 )
 
     # This routine returns the target architecture we intend to build for.
@@ -338,13 +340,14 @@ class Rust(Package):
         # See the NOTE above the resource loop - should be host architecture,
         # not target aarchitecture if we're to support cross-compiling.
         bootstrapping_install = Executable(
-            './spack_bootstrap_stage/rust-{version}-{target}/install.sh'.format(
+            './spack_bootstrap_stage/rust-{version}-{target}/install.sh'
+            .format(
                 version=spec.version,
                 target=target
             )
         )
         # install into the staging area
-        bootstrapping_install('--prefix={}'.format(
+        bootstrapping_install('--prefix={0}'.format(
             join_path(self.stage.source_path, 'spack_bootstrap')
         ))
 
@@ -366,6 +369,17 @@ class Rust(Package):
 
         ar = which('ar', required=True)
 
+        # build.tools was introduced in Rust 1.25
+        tools_spec = 'tools={0}'.format(tools) if '@1.25:' in self.spec else ''
+        # This is a temporary fix due to rust 1.42 breaking self bootstrapping
+        # See: https://github.com/rust-lang/rust/issues/69953
+        #
+        # In general, this should be safe because bootstrapping typically
+        # ensures everything but the bootstrapping script is warning free for
+        # the latest set of warning.
+        deny_warnings_spec = \
+            'deny-warnings = false' if '@1.42.0' in self.spec else ''
+
         with open('config.toml', 'w') as out_file:
             out_file.write("""\
 [build]
@@ -375,18 +389,12 @@ docs = false
 vendor = true
 extended = true
 verbose = 2
-{tools}
+{tools_spec}
 
 [rust]
 channel = "stable"
 rpath = true
-# This is a temporary fix due to rust 1.42 breaking self bootstrapping
-# See: https://github.com/rust-lang/rust/issues/69953
-#
-# In general, this should be safe because bootstrapping typically ensures
-# everything but the bootstrapping script is warning free for the latest set
-# of warning.
-{deny_warnings}
+{deny_warnings_spec}
 
 [target.{target}]
 ar = "{ar}"
@@ -399,9 +407,9 @@ sysconfdir = "etc"
                 rustc=join_path(boot_bin, 'rustc'),
                 prefix=prefix,
                 target=target,
-                deny_warnings='deny-warnings = false' if '@1.42.0' in self.spec else '',
+                deny_warnings_spec=deny_warnings_spec,
                 ar=ar.path,
-                tools='tools={0}'.format(tools) if '@1.25:' in self.spec else ''
+                tools_spec=tools_spec
             )
             )
 
