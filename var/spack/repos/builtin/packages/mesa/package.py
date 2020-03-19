@@ -69,9 +69,9 @@ class Mesa(AutotoolsPackage):
     provides('glx@1.4', when='+glx ~glvnd')
     # provides('egl@1.5', when='+egl ~glvnd')
 
-    provides('glvnd-gl', when='+glvnd')
-    provides('glvnd-glx', when='+glvnd +glx')
-    # provides('glvnd-egl', when='+glvnd +egl')
+    provides('libglvnd-be-gl', when='+glvnd')
+    provides('libglvnd-be-glx', when='+glvnd +glx')
+    # provides('libglvnd-be-egl', when='+glvnd +egl')
 
     # Variant dependencies
     depends_on('llvm@6:', when='+llvm')

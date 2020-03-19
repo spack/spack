@@ -46,9 +46,9 @@ class Opengl(Package):
     # is exclusively provided externally the dependency is never traversed.
     # depends_on('libglvnd', when='+glvnd')  # don't uncomment this
 
-    provides('glvnd-gl', when='+glvnd')
-    provides('glvnd-glx', when='+glvnd +glx')
-    provides('glvnd-egl', when='+glvnd +egl')
+    provides('libglvnd-be-gl', when='+glvnd')
+    provides('libglvnd-be-glx', when='+glvnd +glx')
+    provides('libglvnd-be-egl', when='+glvnd +egl')
 
     provides('egl@1.5', when='~glvnd +egl')
 
