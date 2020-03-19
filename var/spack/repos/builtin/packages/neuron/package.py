@@ -143,7 +143,8 @@ class Neuron(Package):
     filter_compiler_wrappers("*/bin/nrnoc_makefile")
     filter_compiler_wrappers("*/share/nrn/libtool")
 
-    def get_neuron_archdir(self):
+    @property
+    def archdir(self):
         """Determine the architecture-specific neuron base directory.
 
         Instead of recreating the logic of the neuron's configure
@@ -329,11 +330,12 @@ class Neuron(Package):
             cc_compiler = self.spec["mpi"].mpicc
             cxx_compiler = self.spec["mpi"].mpicxx
 
-        arch = self.get_neuron_archdir()
         libtool_makefile = join_path(self.prefix, "share/nrn/libtool")
-        nrniv_makefile = join_path(self.prefix, arch, "./bin/nrniv_makefile")
+        nrniv_makefile = join_path(
+            self.prefix, self.archdir, "./bin/nrniv_makefile"
+        )
         nrnmech_makefile = join_path(
-            self.prefix, arch, "./bin/nrnmech_makefile"
+            self.prefix, self.archdir, "./bin/nrnmech_makefile"
         )
 
         kwargs = {"backup": False, "string": True}
@@ -368,24 +370,21 @@ class Neuron(Package):
                 break
 
     def setup_run_environment(self, env):
-        neuron_archdir = self.get_neuron_archdir()
-        env.prepend_path("PATH", join_path(neuron_archdir, "bin"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(neuron_archdir, "lib"))
+        env.prepend_path("PATH", join_path(self.archdir, "bin"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.archdir, "lib"))
         self.set_python_path(env)
         if self.spec.satisfies("+mpi"):
             env.set("MPICC_CC", self.compiler.cc)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        neuron_archdir = self.get_neuron_archdir()
-        env.prepend_path("PATH", join_path(neuron_archdir, "bin"))
-        env.prepend_path("LD_LIBRARY_PATH", join_path(neuron_archdir, "lib"))
+        env.prepend_path("PATH", join_path(self.archdir, "bin"))
+        env.prepend_path("LD_LIBRARY_PATH", join_path(self.archdir, "lib"))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.set_python_path(env)
 
     def setup_dependent_package(self, module, dependent_spec):
-        neuron_archdir = self.get_neuron_archdir()
-        dependent_spec.package.neuron_archdir = neuron_archdir
+        dependent_spec.neuron_archdir = self.archdir
 
 
 @contextmanager
