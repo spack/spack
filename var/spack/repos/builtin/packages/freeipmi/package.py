@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
+import llnl.util.tty as tty
 
 
 class Freeipmi(AutotoolsPackage):
-
     """FreeIPMI provides in-band and out-of-band IPMI software based on the IPMI
     v1.5/2.0 specification. The IPMI specification defines a set of interfaces
     for platform management and is implemented by a number vendors for system
@@ -33,8 +32,8 @@ class Freeipmi(AutotoolsPackage):
     def configure_args(self):
         # FIXME: If root checking of root installation is added fix this:
         # Discussed in issue  #4432
-        sys.stderr.write("WARNING: requires 'root' for bmc-watchdog.service"
-                         " installation to /lib/systemd/system/\n")
+        tty.warn("Requires 'root' for bmc-watchdog.service installation to"
+                 " /lib/systemd/system/ !")
 
         args = ['--prefix={0}'.format(prefix)]
 
