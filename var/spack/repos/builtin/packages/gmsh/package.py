@@ -64,6 +64,7 @@ class Gmsh(CMakePackage):
     depends_on('metis', when='+metis')
 
     conflicts('+slepc', when='~petsc')
+    conflicts('+oce', when='+opencascade')
 
     def cmake_args(self):
         spec = self.spec
