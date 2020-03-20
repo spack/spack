@@ -13,7 +13,12 @@ import multiprocessing
 import os
 import pytest
 import json
-import uuid
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -704,8 +709,9 @@ def test_old_external_entries_prefix(mutable_database):
 
     with open(spack.store.db._index_path, 'w') as f:
         f.write(json.dumps(db_obj))
-    with open(spack.store.db._verifier_path, 'w') as f:
-        f.write(str(uuid.uuid4()))
+    if _use_uuid:
+        with open(spack.store.db._verifier_path, 'w') as f:
+            f.write(str(uuid.uuid4()))
 
     record = spack.store.db.get_record(s)
 

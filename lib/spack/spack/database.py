@@ -26,7 +26,12 @@ import os
 import socket
 import sys
 import time
-import uuid
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
 
 import llnl.util.tty as tty
 import six
@@ -916,10 +921,11 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-            with open(self._verifier_path, 'w') as f:
-                new_verifier = str(uuid.uuid4())
-                f.write(new_verifier)
-                self.last_seen_verifier = new_verifier
+            if _use_uuid:
+                with open(self._verifier_path, 'w') as f:
+                    new_verifier = str(uuid.uuid4())
+                    f.write(new_verifier)
+                    self.last_seen_verifier = new_verifier
         except BaseException as e:
             tty.debug(e)
             # Clean up temp file if something goes wrong.
@@ -936,11 +942,12 @@ class Database(object):
         """
         if os.path.isfile(self._index_path):
             current_verifier = ''
-            try:
-                with open(self._verifier_path, 'r') as f:
-                    current_verifier = f.read()
-            except BaseException:
-                pass
+            if _use_uuid:
+                try:
+                    with open(self._verifier_path, 'r') as f:
+                        current_verifier = f.read()
+                except BaseException:
+                    pass
             if ((current_verifier != self.last_seen_verifier) or
                     (current_verifier == '')):
                 self.last_seen_verifier = current_verifier
