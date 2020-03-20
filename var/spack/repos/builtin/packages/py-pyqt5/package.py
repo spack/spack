@@ -38,7 +38,6 @@ class PyPyqt5(SIPPackage):
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
     depends_on('py-sip module=PyQt5.sip', type=('build', 'run'))
     depends_on('py-sip@:4.19.18 module=PyQt5.sip', type=('build', 'run'), when='@:5.13.0')
-    depends_on('qscintilla', when='+qsci')
 
     # https://www.riverbankcomputing.com/static/Docs/PyQt5/installation.html
     def configure_args(self):
