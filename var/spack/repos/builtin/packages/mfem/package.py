@@ -129,8 +129,6 @@ class Mfem(Package):
             description='Enable Cubit/Genesis reader')
     variant('conduit', default=False,
             description='Enable binary data I/O using Conduit')
-    variant('gzstream', default=True,
-            description='Support zip\'d streams for I/O')
     variant('zlib', default=True,
             description='Support zip\'d streams for I/O')
     variant('gnutls', default=False,
@@ -153,9 +151,8 @@ class Mfem(Package):
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
     # strumpack v3 support which is available starting with mfem v4.0:
-    conflicts('+strumpack', when='@:3.99.999')
+    conflicts('+strumpack', when='@:3.99.99')
     conflicts('+gnutls', when='@:3.1')
-    conflicts('+gzstream', when='@:3.2')
     conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
@@ -173,10 +170,8 @@ class Mfem(Package):
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
-    conflicts('+pumi', when='+shared')
-
     depends_on('mpi', when='+mpi')
-    depends_on('hypre@2.10.0:2.13.999', when='@:3.3.999+mpi')
+    depends_on('hypre@2.10.0:2.13.99', when='@:3.3.99+mpi')
     depends_on('hypre', when='@3.4:+mpi')
 
     depends_on('metis', when='+metis')
@@ -189,7 +184,8 @@ class Mfem(Package):
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
     depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
-    depends_on('pumi', when='+pumi')
+    depends_on('pumi', when='+pumi~shared')
+    depends_on('pumi+shared', when='+pumi+shared')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('strumpack@3.0.0:', when='+strumpack')
@@ -203,7 +199,6 @@ class Mfem(Package):
     depends_on('mpfr', when='+mpfr')
     depends_on('netcdf-c@4.1.3:', when='+netcdf')
     depends_on('unwind', when='+libunwind')
-    depends_on('zlib', when='+gzstream')
     depends_on('zlib', when='+zlib')
     depends_on('gnutls', when='+gnutls')
     depends_on('conduit@0.3.1:,master:', when='+conduit')
@@ -213,18 +208,18 @@ class Mfem(Package):
     # superlu-dist@6.1.1. See https://github.com/mfem/mfem/issues/983.
     # This issue was resolved in v4.1.
     conflicts('+superlu-dist',
-              when='mfem@:4.0.999 ^hypre@2.16.0: ^superlu-dist@6:')
+              when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
     # when using hypre version >= 2.16.0:
     conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
 
     # The OCCA backend is first available in MFEM 4.0.0
     depends_on('occa', when='mfem@4.0.0:+occa')
-    conflicts('+occa', when='mfem@:3.99.999')
+    conflicts('+occa', when='mfem@:3.99.99')
 
     # The RAJA backend is first available in MFEM 4.0.0
     depends_on('raja', when='mfem@4.0.0:+raja')
-    conflicts('+raja', when='mfem@:3.99.999')
+    conflicts('+raja', when='mfem@:3.99.99')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
@@ -254,18 +249,39 @@ class Mfem(Package):
         def yes_no(varstr):
             return 'YES' if varstr in self.spec else 'NO'
 
+        # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
+        # where the same list of paths is used.
+        sys_lib_paths = [
+            '/lib64',
+            '/lib',
+            '/usr/lib64',
+            '/usr/lib',
+            '/usr/local/lib64',
+            '/usr/local/lib']
+
+        def is_sys_lib_path(dir):
+            return dir in sys_lib_paths
+
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
 
         # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
+        # Also does not add system library paths as defined by 'sys_lib_paths'
+        # above -- this is done to avoid issues like this:
+        # https://github.com/mfem/mfem/issues/1088.
         def ld_flags_from_library_list(libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories]
-            flags += [libs_list.ld_flags]
+            flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories
+                     if not is_sys_lib_path(dir)]
+            flags += ['-L%s' % dir for dir in libs_list.directories
+                      if not is_sys_lib_path(dir)]
+            flags += [libs_list.link_flags]
             return ' '.join(flags)
 
         def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in pkg_dirs_list]
-            flags += ['-L%s' % dir for dir in pkg_dirs_list]
+            flags = ['-Wl,-rpath,%s' % dir for dir in pkg_dirs_list
+                     if not is_sys_lib_path(dir)]
+            flags += ['-L%s' % dir for dir in pkg_dirs_list
+                      if not is_sys_lib_path(dir)]
             flags += ['-l%s' % lib for lib in pkg_libs_list]
             return ' '.join(flags)
 
@@ -284,8 +300,6 @@ class Mfem(Package):
 
         zlib_var = 'MFEM_USE_ZLIB' if (spec.satisfies('@4.1.0:')) else \
                    'MFEM_USE_GZSTREAM'
-        zlib_str = 'YES' if ('+gzstream' in spec) or ('+zlib' in spec) \
-                   else 'NO'
 
         options = [
             'PREFIX=%s' % prefix,
@@ -295,7 +309,7 @@ class Mfem(Package):
             # compiler is defined by env['SPACK_CXX'].
             'CXX=%s' % env['CXX'],
             'MFEM_USE_LIBUNWIND=%s' % yes_no('+libunwind'),
-            '%s=%s' % (zlib_var, zlib_str),
+            '%s=%s' % (zlib_var, yes_no('+zlib')),
             'MFEM_USE_METIS=%s' % yes_no('+metis'),
             'MFEM_USE_METIS_5=%s' % metis5_str,
             'MFEM_THREAD_SAFE=%s' % yes_no('+threadsafe'),
@@ -346,7 +360,7 @@ class Mfem(Package):
             options += [
                 'METIS_OPT=-I%s' % spec['metis'].prefix.include,
                 'METIS_LIB=%s' %
-                ld_flags_from_dirs([spec['metis'].prefix.lib], ['metis'])]
+                ld_flags_from_library_list(spec['metis'].libs)]
 
         if '+lapack' in spec:
             lapack_blas = spec['lapack'].libs + spec['blas'].libs
@@ -360,34 +374,38 @@ class Mfem(Package):
                 'SUPERLU_OPT=-I%s -I%s' %
                 (spec['superlu-dist'].prefix.include,
                  spec['parmetis'].prefix.include),
-                'SUPERLU_LIB=-L%s -L%s -lsuperlu_dist -lparmetis %s' %
-                (spec['superlu-dist'].prefix.lib,
-                 spec['parmetis'].prefix.lib,
+                'SUPERLU_LIB=%s %s' %
+                (ld_flags_from_dirs([spec['superlu-dist'].prefix.lib,
+                                     spec['parmetis'].prefix.lib],
+                                    ['superlu_dist', 'parmetis']),
                  ld_flags_from_library_list(lapack_blas))]
 
         if '+strumpack' in spec:
             strumpack = spec['strumpack']
             sp_opt = ['-I%s' % strumpack.prefix.include]
-            sp_lib = ['-L%s -lstrumpack' % strumpack.prefix.lib]
+            sp_lib = [ld_flags_from_library_list(strumpack.libs)]
             # Parts of STRUMPACK use fortran, so we need to link with the
-            # fortran library and also the MPI fortran librariry:
-            if os.path.basename(env['FC']) == 'gfortran':
-                sp_lib += ['-lgfortran']
-            if '^mpich' in strumpack:
-                sp_lib += ['-lmpifort']
-            elif '^openmpi' in strumpack:
-                sp_lib += ['-lmpi_mpifh']
+            # fortran library and also the MPI fortran library:
+            if '~shared' in strumpack:
+                if os.path.basename(env['FC']) == 'gfortran':
+                    sp_lib += ['-lgfortran']
+                if '^mpich' in strumpack:
+                    sp_lib += ['-lmpifort']
+                elif '^openmpi' in strumpack:
+                    sp_lib += ['-lmpi_mpifh']
             if '+openmp' in strumpack:
                 sp_opt += [self.compiler.openmp_flag]
             if '^scalapack' in strumpack:
                 scalapack = strumpack['scalapack']
                 sp_opt += ['-I%s' % scalapack.prefix.include]
-                sp_lib += ['-L%s -lscalapack' % scalapack.prefix.lib]
+                sp_lib += [ld_flags_from_dirs([scalapack.prefix.lib],
+                                              ['scalapack'])]
             if '+butterflypack' in strumpack:
                 bp = strumpack['butterflypack']
                 sp_opt += ['-I%s' % bp.prefix.include]
-                sp_lib += [
-                    '-L%s -ldbutterflypack -lzbutterflypack' % bp.prefix.lib]
+                sp_lib += [ld_flags_from_dirs([bp.prefix.lib],
+                                              ['dbutterflypack',
+                                               'zbutterflypack'])]
             options += [
                 'STRUMPACK_OPT=%s' % ' '.join(sp_opt),
                 'STRUMPACK_LIB=%s' % ' '.join(sp_lib)]
@@ -422,7 +440,7 @@ class Mfem(Package):
                 'NETCDF_LIB=%s' %
                 ld_flags_from_dirs([spec['netcdf-c'].prefix.lib], ['netcdf'])]
 
-        if ('+gzstream' in spec) or ('+zlib' in spec):
+        if '+zlib' in spec:
             if "@:3.3.2" in spec:
                 options += ['ZLIB_DIR=%s' % spec['zlib'].prefix]
             else:
