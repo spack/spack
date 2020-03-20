@@ -2,8 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import os
 import platform
 import re
@@ -73,28 +71,28 @@ class BinaryTextReplaceError(spack.error.SpackError):
 
 def _patchelf():
     """Return the full path to the patchelf binary, if available, else None.
-    
-    Search first the current PATH for patchelf. If not found, try to look 
-    if the preferred patchelf spec is installed and if not install it.
-    
-    Return None on Darwin or if patchelf cannot be found. 
+
+    Search first the current PATH for patchelf. If not found, try to look
+    if the default patchelf spec is installed and if not install it.
+
+    Return None on Darwin or if patchelf cannot be found.
     """
     # Check if patchelf is already in the PATH
     patchelf = spack.util.executable.which('patchelf')
     if patchelf is not None:
         return patchelf.path
-    
+
     # Check if patchelf spec is installed
     spec = spack.spec.Spec('patchelf').concretized()
     exe_path = os.path.join(spec.prefix.bin, "patchelf")
-    if spec.package.installed and os.path.exists(exe_path): 
+    if spec.package.installed and os.path.exists(exe_path):
         return exe_path
-    
+
     # Skip darwin
     if str(spack.architecture.platform()) == 'darwin':
         return None
-    
-    # Install the spec and return the path top patchelf
+
+    # Install the spec and return its path
     spec.package.do_install()
     return exe_path if os.path.exists(exe_path) else None
 
