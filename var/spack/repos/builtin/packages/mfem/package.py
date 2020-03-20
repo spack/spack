@@ -214,11 +214,12 @@ class Mfem(Package):
     conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
 
     # The OCCA backend is first available in MFEM 4.0.0
-    depends_on('occa', when='mfem@4.0.0:+occa')
+    depends_on('occa@1.0.8:', when='+occa')
     conflicts('+occa', when='mfem@:3.99.99')
 
     # The RAJA backend is first available in MFEM 4.0.0
-    depends_on('raja', when='mfem@4.0.0:+raja')
+    depends_on('raja@0.10.0:', when='@4.0.1:+raja')
+    depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     conflicts('+raja', when='mfem@:3.99.99')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
@@ -476,15 +477,13 @@ class Mfem(Package):
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
 
         if '+occa' in spec:
-            options += ['OCCA_DIR=%s' % spec['occa'].prefix,
-                        'OCCA_OPT=-I%s' % spec['occa'].prefix.include,
+            options += ['OCCA_OPT=-I%s' % spec['occa'].prefix.include,
                         'OCCA_LIB=%s' %
                         ld_flags_from_dirs([spec['occa'].prefix.lib],
                                            ['occa'])]
 
         if '+raja' in spec:
-            options += ['RAJA_DIR=%s' % spec['raja'].prefix,
-                        'RAJA_OPT=-I%s' % spec['raja'].prefix.include,
+            options += ['RAJA_OPT=-I%s' % spec['raja'].prefix.include,
                         'RAJA_LIB=%s' %
                         ld_flags_from_dirs([spec['raja'].prefix.lib],
                                            ['RAJA'])]

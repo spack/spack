@@ -16,26 +16,28 @@ builds=(
     ${mfem}
     ${mfem}'~mpi~metis~zlib'
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
-    ${mfem}'+superlu-dist+suite-sparse+petsc \
+    ${mfem}'+occa+raja+superlu-dist+suite-sparse+petsc \
         +sundials+pumi'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
-        ^petsc+suite-sparse+mumps'
-    ${mfem}'~mpi+suite-sparse+sundials'${mpfr}'+netcdf \
-        +zlib+gnutls+libunwind+conduit'
+        ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
+    ${mfem}'~mpi \
+        +occa+raja+suite-sparse+sundials'${mpfr}'+netcdf \
+        +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
     # develop version:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
     ${mfem_dev}'+shared~static \
-        +superlu-dist+suite-sparse+petsc+sundials+pumi'${mpfr}'+netcdf+zlib \
-        +gnutls+libunwind+conduit \
-        ^petsc+suite-sparse+mumps'
+        +occa+raja+superlu-dist+suite-sparse+petsc \
+        +sundials+pumi'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
+        ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
     ${mfem_dev}'+shared~static~mpi \
-        +suite-sparse+sundials'${mpfr}'+netcdf+zlib+gnutls+libunwind \
-        +conduit'
+        +occa+raja+suite-sparse+sundials'${mpfr}'+netcdf \
+        +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
 )
 
 builds2=(
     # preferred version
+    ${mfem}'+occa+raja ^occa~cuda ^raja~openmp'
     ${mfem}'+superlu-dist'
     # NOTE: On mac +strumpack works only with gcc, as of 03/20/20.
     ${mfem}'+strumpack ^hypre@2.15.1'
@@ -52,6 +54,7 @@ builds2=(
     ${mfem}'+conduit'
     ${mfem}'+petsc ^petsc+suite-sparse+mumps'
     # develop version
+    ${mfem_dev}'+occa+raja ^occa~cuda ^raja~openmp'
     ${mfem_dev}'+superlu-dist'
     # NOTE: On mac +strumpack works only with gcc, as of 03/20/20.
     ${mfem_dev}'+strumpack ^hypre@2.15.1'
