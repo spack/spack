@@ -117,5 +117,5 @@ class Openturns(CMakePackage):
                 '-DUSE_SPHINX=OFF',
                 '-DUSE_NBSPHINX=OFF',
             ])
- 
+
         return args
