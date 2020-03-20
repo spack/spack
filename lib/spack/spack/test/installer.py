@@ -4,17 +4,38 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import py
 import pytest
 
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+import llnl.util.lock as ulk
 
 import spack.binary_distribution
 import spack.compilers
 import spack.directory_layout as dl
 import spack.installer as inst
-import spack.util.lock as lk
+import spack.package_prefs as prefs
 import spack.repo
 import spack.spec
+import spack.store
+import spack.util.lock as lk
+
+
+def _mock_repo(root, namespace):
+    """Create an empty repository at the specified root
+
+    Args:
+        root (str): path to the mock repository root
+        namespace (str):  mock repo's namespace
+    """
+    repodir = py.path.local(root) if isinstance(root, str) else root
+    repodir.ensure(spack.repo.packages_dir_name, dir=True)
+    yaml = repodir.join('repo.yaml')
+    yaml.write("""
+repo:
+   namespace: {0}
+""".format(namespace))
 
 
 def _noop(*args, **kwargs):
@@ -25,6 +46,12 @@ def _noop(*args, **kwargs):
 def _none(*args, **kwargs):
     """Generic monkeypatch function that always returns None."""
     return None
+
+
+def _not_locked(installer, lock_type, pkg):
+    """Generic monkeypatch function for _ensure_locked to return no lock"""
+    tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
+    return lock_type, None
 
 
 def _true(*args, **kwargs):
@@ -129,7 +156,7 @@ def test_process_external_package_module(install_mockery, monkeypatch, capfd):
 
 def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
                                            capfd):
-    """Tests to cover _process_binary_cache_tarball when no tarball."""
+    """Tests of _process_binary_cache_tarball when no tarball."""
     monkeypatch.setattr(spack.binary_distribution, 'download_tarball', _none)
 
     pkg = spack.repo.get('trivial-install-test-package')
@@ -139,7 +166,7 @@ def test_process_binary_cache_tarball_none(install_mockery, monkeypatch,
 
 
 def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
-    """Tests to cover _process_binary_cache_tarball with a tar file."""
+    """Tests of _process_binary_cache_tarball with a tar file."""
     def _spec(spec):
         return spec
 
@@ -156,6 +183,25 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
     assert 'Installing a from binary cache' in capfd.readouterr()[0]
 
 
+def test_try_install_from_binary_cache(install_mockery, mock_packages,
+                                       monkeypatch, capsys):
+    """Tests SystemExit path for_try_install_from_binary_cache."""
+    def _spec(spec, force):
+        spec = spack.spec.Spec('mpi').concretized()
+        return {spec: None}
+
+    spec = spack.spec.Spec('mpich')
+    spec.concretize()
+
+    monkeypatch.setattr(spack.binary_distribution, 'get_spec', _spec)
+
+    with pytest.raises(SystemExit):
+        inst._try_install_from_binary_cache(spec.package, False, False)
+
+    captured = capsys.readouterr()
+    assert 'add a spack mirror to allow download' in str(captured)
+
+
 def test_installer_init_errors(install_mockery):
     """Test to ensure cover installer constructor errors."""
     with pytest.raises(ValueError, match='must be a package'):
@@ -166,17 +212,18 @@ def test_installer_init_errors(install_mockery):
         inst.PackageInstaller(pkg)
 
 
-def test_installer_strings(install_mockery):
-    """Tests of installer repr and str for coverage purposes."""
+def test_installer_repr(install_mockery):
     spec, installer = create_installer('trivial-install-test-package')
 
-    # Cover __repr__
     irep = installer.__repr__()
     assert irep.startswith(installer.__class__.__name__)
     assert "installed=" in irep
     assert "failed=" in irep
 
-    # Cover __str__
+
+def test_installer_str(install_mockery):
+    spec, installer = create_installer('trivial-install-test-package')
+
     istr = str(installer)
     assert "#tasks=0" in istr
     assert "installed (0)" in istr
@@ -184,7 +231,6 @@ def test_installer_strings(install_mockery):
 
 
 def test_installer_last_phase_error(install_mockery, capsys):
-    """Test to cover last phase error."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -197,7 +243,6 @@ def test_installer_last_phase_error(install_mockery, capsys):
 
 
 def test_installer_ensure_ready_errors(install_mockery):
-    """Test to cover _ensure_ready errors."""
     spec, installer = create_installer('trivial-install-test-package')
 
     fmt = r'cannot be installed locally.*{0}'
@@ -224,24 +269,102 @@ def test_installer_ensure_ready_errors(install_mockery):
         installer._ensure_install_ready(spec.package)
 
 
-def test_ensure_locked_have(install_mockery, tmpdir):
-    """Test to cover _ensure_locked when already have lock."""
+def test_ensure_locked_err(install_mockery, monkeypatch, tmpdir, capsys):
+    """Test _ensure_locked when a non-lock exception is raised."""
+    mock_err_msg = 'Mock exception error'
+
+    def _raise(lock, timeout):
+        raise RuntimeError(mock_err_msg)
+
+    spec, installer = create_installer('trivial-install-test-package')
+
+    monkeypatch.setattr(ulk.Lock, 'acquire_read', _raise)
+    with tmpdir.as_cwd():
+        with pytest.raises(RuntimeError):
+            installer._ensure_locked('read', spec.package)
+
+        out = str(capsys.readouterr()[1])
+        assert 'Failed to acquire a read lock' in out
+        assert mock_err_msg in out
+
+
+def test_ensure_locked_have(install_mockery, tmpdir, capsys):
+    """Test _ensure_locked when already have lock."""
     spec, installer = create_installer('trivial-install-test-package')
 
     with tmpdir.as_cwd():
+        # Test "downgrade" of a read lock (to a read lock)
         lock = lk.Lock('./test', default_timeout=1e-9, desc='test')
         lock_type = 'read'
         tpl = (lock_type, lock)
         installer.locks[installer.pkg_id] = tpl
         assert installer._ensure_locked(lock_type, spec.package) == tpl
 
+        # Test "upgrade" of a read lock without read count to a write
+        lock_type = 'write'
+        err = 'Cannot upgrade lock'
+        with pytest.raises(ulk.LockUpgradeError, match=err):
+            installer._ensure_locked(lock_type, spec.package)
 
-def test_package_id(install_mockery):
-    """Test to cover package_id functionality."""
+        out = str(capsys.readouterr()[1])
+        assert 'Failed to upgrade to a write lock' in out
+        assert 'exception when releasing read lock' in out
+
+        # Test "upgrade" of the read lock *with* read count to a write
+        lock._reads = 1
+        tpl = (lock_type, lock)
+        assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+        # Test "downgrade" of the write lock to a read lock
+        lock_type = 'read'
+        tpl = (lock_type, lock)
+        assert installer._ensure_locked(lock_type, spec.package) == tpl
+
+
+@pytest.mark.parametrize('lock_type,reads,writes', [
+    ('read', 1, 0),
+    ('write', 0, 1)])
+def test_ensure_locked_new_lock(
+        install_mockery, tmpdir, lock_type, reads, writes):
+    pkg_id = 'a'
+    spec, installer = create_installer(pkg_id)
+    with tmpdir.as_cwd():
+        ltype, lock = installer._ensure_locked(lock_type, spec.package)
+        assert ltype == lock_type
+        assert lock is not None
+        assert lock._reads == reads
+        assert lock._writes == writes
+
+
+def test_ensure_locked_new_warn(install_mockery, monkeypatch, tmpdir, capsys):
+    orig_pl = spack.database.Database.prefix_lock
+
+    def _pl(db, spec, timeout):
+        lock = orig_pl(db, spec, timeout)
+        lock.default_timeout = 1e-9 if timeout is None else None
+        return lock
+
+    pkg_id = 'a'
+    spec, installer = create_installer(pkg_id)
+
+    monkeypatch.setattr(spack.database.Database, 'prefix_lock', _pl)
+
+    lock_type = 'read'
+    ltype, lock = installer._ensure_locked(lock_type, spec.package)
+    assert ltype == lock_type
+    assert lock is not None
+
+    out = str(capsys.readouterr()[1])
+    assert 'Expected prefix lock timeout' in out
+
+
+def test_package_id_err(install_mockery):
     pkg = spack.repo.get('trivial-install-test-package')
-    with pytest.raises(ValueError, matches='spec is not concretized'):
+    with pytest.raises(ValueError, match='spec is not concretized'):
         inst.package_id(pkg)
 
+
+def test_package_id_ok(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
@@ -250,43 +373,134 @@ def test_package_id(install_mockery):
 
 
 def test_fake_install(install_mockery):
-    """Test to cover fake install basics."""
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
+
     pkg = spec.package
     inst._do_fake_install(pkg)
     assert os.path.isdir(pkg.prefix.lib)
 
 
-def test_packages_needed_to_bootstrap_compiler(install_mockery, monkeypatch):
-    """Test to cover most of _packages_needed_to_boostrap_compiler."""
-    # TODO: More work is needed to go beyond the dependency check
-    def _no_compilers(pkg, arch_spec):
-        return []
-
-    # Test path where no compiler packages returned
+def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     spec = spack.spec.Spec('trivial-install-test-package')
     spec.concretize()
     assert spec.concrete
+
     packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
     assert not packages
 
-    # Test up to the dependency check
-    monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _no_compilers)
-    with pytest.raises(spack.repo.UnknownPackageError, matches='not found'):
-        inst._packages_needed_to_bootstrap_compiler(spec.package)
+
+def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
+                                                        monkeypatch):
+    spec = spack.spec.Spec('trivial-install-test-package')
+    spec.concretize()
+
+    def _conc_spec(compiler):
+        return spack.spec.Spec('a').concretized()
+
+    # Ensure we can get past functions that are precluding obtaining
+    # packages.
+    monkeypatch.setattr(spack.compilers, 'compilers_for_spec', _none)
+    monkeypatch.setattr(spack.compilers, 'pkg_spec_for_compiler', _conc_spec)
+    monkeypatch.setattr(spack.spec.Spec, 'concretize', _noop)
+
+    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    assert packages
 
 
-def test_dump_packages_deps(install_mockery, tmpdir):
-    """Test to add coverage to dump_packages."""
+def test_dump_packages_deps_ok(install_mockery, tmpdir, mock_repo_path):
+    """Test happy path for dump_packages with dependencies."""
+
+    spec_name = 'simple-inheritance'
+    spec = spack.spec.Spec(spec_name).concretized()
+    inst.dump_packages(spec, str(tmpdir))
+
+    repo = mock_repo_path.repos[0]
+    dest_pkg = repo.filename_for_package_name(spec_name)
+    assert os.path.isfile(dest_pkg)
+
+
+def test_dump_packages_deps_errs(install_mockery, tmpdir, monkeypatch, capsys):
+    """Test error paths for dump_packages with dependencies."""
+    orig_bpp = spack.store.layout.build_packages_path
+    orig_dirname = spack.repo.Repo.dirname_for_package_name
+    repo_err_msg = "Mock dirname_for_package_name"
+
+    def bpp_path(spec):
+        # Perform the original function
+        source = orig_bpp(spec)
+        # Mock the required directory structure for the repository
+        _mock_repo(os.path.join(source, spec.namespace), spec.namespace)
+        return source
+
+    def _repoerr(repo, name):
+        if name == 'cmake':
+            raise spack.repo.RepoError(repo_err_msg)
+        else:
+            return orig_dirname(repo, name)
+
+    # Now mock the creation of the required directory structure to cover
+    # the try-except block
+    monkeypatch.setattr(spack.store.layout, 'build_packages_path', bpp_path)
+
     spec = spack.spec.Spec('simple-inheritance').concretized()
-    with tmpdir.as_cwd():
-        inst.dump_packages(spec, '.')
+    path = str(tmpdir)
+
+    # The call to install_tree will raise the exception since not mocking
+    # creation of dependency package files within *install* directories.
+    with pytest.raises(IOError, match=path):
+        inst.dump_packages(spec, path)
+
+    # Now try the error path, which requires the mock directory structure
+    # above
+    monkeypatch.setattr(spack.repo.Repo, 'dirname_for_package_name', _repoerr)
+    with pytest.raises(spack.repo.RepoError, match=repo_err_msg):
+        inst.dump_packages(spec, path)
+
+    out = str(capsys.readouterr()[1])
+    assert "Couldn't copy in provenance for cmake" in out
+
+
+def test_check_deps_status_install_failure(install_mockery, monkeypatch):
+    spec, installer = create_installer('a')
+
+    # Make sure the package is identified as failed
+    monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
+
+    with pytest.raises(inst.InstallError, match='install failure'):
+        installer._check_deps_status()
+
+
+def test_check_deps_status_write_locked(install_mockery, monkeypatch):
+    spec, installer = create_installer('a')
+
+    # Ensure the lock is not acquired
+    monkeypatch.setattr(inst.PackageInstaller, '_ensure_locked', _not_locked)
+
+    with pytest.raises(inst.InstallError, match='write locked by another'):
+        installer._check_deps_status()
+
+
+def test_check_deps_status_external(install_mockery, monkeypatch):
+    spec, installer = create_installer('a')
+
+    # Mock the known dependent, b, as external so assumed to be installed
+    monkeypatch.setattr(spack.spec.Spec, 'external', True)
+    installer._check_deps_status()
+    assert 'b' in installer.installed
+
+
+def test_check_deps_status_upstream(install_mockery, monkeypatch):
+    spec, installer = create_installer('a')
+
+    # Mock the known dependent, b, as installed upstream
+    monkeypatch.setattr(spack.package.PackageBase, 'installed_upstream', True)
+    installer._check_deps_status()
+    assert 'b' in installer.installed
 
 
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
-    """Test to cover _add_bootstrap_compilers."""
     def _pkgs(pkg):
         spec = spack.spec.Spec('mpi').concretized()
         return [(spec.package, True)]
@@ -325,13 +539,35 @@ def test_installer_init_queue(install_mockery):
 
 
 def test_install_task_use_cache(install_mockery, monkeypatch):
-    """Test _install_task to cover use_cache path."""
     spec, installer = create_installer('trivial-install-test-package')
     task = create_build_task(spec.package)
 
     monkeypatch.setattr(inst, '_install_from_cache', _true)
     installer._install_task(task)
     assert spec.package.name in installer.installed
+
+
+def test_install_task_add_compiler(install_mockery, monkeypatch, capfd):
+    config_msg = 'mock add_compilers_to_config'
+
+    def _add(_compilers):
+        tty.msg(config_msg)
+
+    spec, installer = create_installer('a')
+    task = create_build_task(spec.package)
+    task.compiler = True
+
+    # Preclude any meaningful side-effects
+    monkeypatch.setattr(spack.package.PackageBase, 'unit_test_check', _true)
+    monkeypatch.setattr(inst.PackageInstaller, '_setup_install_dir', _noop)
+    monkeypatch.setattr(spack.build_environment, 'fork', _noop)
+    monkeypatch.setattr(spack.database.Database, 'add', _noop)
+    monkeypatch.setattr(spack.compilers, 'add_compilers_to_config', _add)
+
+    installer._install_task(task)
+
+    out = capfd.readouterr()[0]
+    assert config_msg in out
 
 
 def test_release_lock_write_n_exception(install_mockery, tmpdir, capsys):
@@ -388,8 +624,36 @@ def test_cleanup_all_tasks(install_mockery, monkeypatch):
     assert len(installer.build_tasks) == 1
 
 
-def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
-    """Test to increase coverage of _cleanup_failed."""
+def test_setup_install_dir_grp(install_mockery, monkeypatch, capfd):
+    """Test _setup_install_dir's group change."""
+    mock_group = 'mockgroup'
+    mock_chgrp_msg = 'Changing group for {0} to {1}'
+
+    def _get_group(spec):
+        return mock_group
+
+    def _chgrp(path, group):
+        tty.msg(mock_chgrp_msg.format(path, group))
+
+    monkeypatch.setattr(prefs, 'get_package_group', _get_group)
+    monkeypatch.setattr(fs, 'chgrp', _chgrp)
+
+    spec, installer = create_installer('trivial-install-test-package')
+
+    fs.touchp(spec.prefix)
+    metadatadir = spack.store.layout.metadata_path(spec)
+    # Should fail with a "not a directory" error
+    with pytest.raises(OSError, match=metadatadir):
+        installer._setup_install_dir(spec.package)
+
+    out = str(capfd.readouterr()[0])
+
+    expected_msg = mock_chgrp_msg.format(spec.prefix, mock_group)
+    assert expected_msg in out
+
+
+def test_cleanup_failed_err(install_mockery, tmpdir, monkeypatch, capsys):
+    """Test _cleanup_failed exception path."""
     msg = 'Fake release_write exception'
 
     def _raise_except(lock):
@@ -409,13 +673,14 @@ def test_cleanup_failed(install_mockery, tmpdir, monkeypatch, capsys):
         assert msg in out
 
 
-def test_update_failed_no_mark(install_mockery):
-    """Test of _update_failed sans mark and dependent build tasks."""
+def test_update_failed_no_dependent_task(install_mockery):
+    """Test _update_failed with missing dependent build tasks."""
     spec, installer = create_installer('dependent-install')
-    task = create_build_task(spec.package)
 
-    installer._update_failed(task)
-    assert installer.failed['dependent-install'] is None
+    for dep in spec.traverse(root=False):
+        task = create_build_task(dep.package)
+        installer._update_failed(task, mark=False)
+        assert installer.failed[task.pkg_id] is None
 
 
 def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
@@ -428,7 +693,7 @@ def test_install_uninstalled_deps(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_update_failed', _noop)
 
     msg = 'Cannot proceed with dependent-install'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -446,7 +711,7 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(inst.PackageInstaller, '_install_task', _noop)
 
     msg = 'Installation of b failed'
-    with pytest.raises(spack.installer.InstallError, matches=msg):
+    with pytest.raises(spack.installer.InstallError, match=msg):
         installer.install()
 
     out = str(capsys.readouterr())
@@ -457,10 +722,6 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     """Cover basic install lock failure handling in a single pass."""
     def _requeued(installer, task):
         tty.msg('requeued {0}' .format(task.pkg.spec.name))
-
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
 
     spec, installer = create_installer('b')
 
@@ -484,10 +745,6 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     """Cover basic install handling for installed package."""
     def _install(installer, task, **kwargs):
         tty.msg('{0} installing'.format(task.pkg.spec.name))
-
-    def _not_locked(installer, lock_type, pkg):
-        tty.msg('{0} locked {1}' .format(lock_type, pkg.spec.name))
-        return lock_type, None
 
     def _prep(installer, task, keep_prefix, keep_stage, restage):
         installer.installed.add('b')
@@ -573,7 +830,16 @@ def test_install_dir_exists(install_mockery, monkeypatch, capfd):
 
     spec, installer = create_installer('b')
 
-    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, matches=err):
+    with pytest.raises(dl.InstallDirectoryAlreadyExistsError, match=err):
         installer.install()
+
+    assert 'b' in installer.installed
+
+
+def test_install_skip_patch(install_mockery, mock_fetch):
+    """Test the path skip_patch install path."""
+    spec, installer = create_installer('b')
+
+    installer.install(fake=False, skip_patch=True)
 
     assert 'b' in installer.installed

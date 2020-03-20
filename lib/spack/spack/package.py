@@ -68,6 +68,9 @@ _spack_build_logfile = 'spack-build-out.txt'
 # Filename for the Spack build/install environment file.
 _spack_build_envfile = 'spack-build-env.txt'
 
+# Filename for the Spack configure args file.
+_spack_configure_argsfile = 'spack-configure-args.txt'
+
 
 class InstallPhase(object):
     """Manages a single phase of the installation.
@@ -474,6 +477,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: This is currently only used by package sanity tests.
     manual_download = False
 
+    #: Set of additional options used when fetching package versions.
+    fetch_options = {}
+
     #
     # Set default licensing information
     #
@@ -599,11 +605,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         deptype = spack.dependency.canonical_deptype(deptype)
 
-        if visited is None:
-            visited = {cls.name: set()}
+        visited = {} if visited is None else visited
+        missing = {} if missing is None else missing
 
-        if missing is None:
-            missing = {cls.name: set()}
+        visited.setdefault(cls.name, set())
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
@@ -618,6 +623,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
+                    visited.setdefault(cls.name, set()).add(name)
                     visited.setdefault(name, set())
                     continue
             else:
@@ -760,7 +766,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If no specific URL, use the default, class-level URL
         url = getattr(self, 'url', None)
         urls = getattr(self, 'urls', [None])
-        default_url = url or urls.pop(0)
+        default_url = url or urls[0]
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
@@ -895,6 +901,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Otherwise, return the current install log path name.
         return os.path.join(install_path, _spack_build_logfile)
+
+    @property
+    def configure_args_path(self):
+        """Return the configure args file path associated with staging."""
+        return os.path.join(self.stage.path, _spack_configure_argsfile)
+
+    @property
+    def install_configure_args_path(self):
+        """Return the configure args file path on successful installation."""
+        install_path = spack.store.layout.metadata_path(self.spec)
+
+        return os.path.join(install_path, _spack_configure_argsfile)
 
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
@@ -1120,8 +1138,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for patch in self.spec.patches:
             patch.fetch()
-            if patch.cache():
-                patch.cache().cache_local()
+            if patch.stage:
+                patch.stage.cache_local()
 
     def do_stage(self, mirror_only=False):
         """Unpacks and expands the fetched tarball."""
@@ -2136,26 +2154,27 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
 
     See ``PackageBase.possible_dependencies`` for details.
     """
-    transitive = kwargs.get('transitive', True)
-    expand_virtuals = kwargs.get('expand_virtuals', True)
-    deptype = kwargs.get('deptype', 'all')
-    missing = kwargs.get('missing')
-
     packages = []
     for pos in pkg_or_spec:
         if isinstance(pos, PackageMeta):
-            pkg = pos
-        elif isinstance(pos, spack.spec.Spec):
-            pkg = pos.package
-        else:
-            pkg = spack.spec.Spec(pos).package
+            packages.append(pos)
+            continue
 
-        packages.append(pkg)
+        if not isinstance(pos, spack.spec.Spec):
+            pos = spack.spec.Spec(pos)
+
+        if spack.repo.path.is_virtual(pos.name):
+            packages.extend(
+                p.package_class
+                for p in spack.repo.path.providers_for(pos.name)
+            )
+            continue
+        else:
+            packages.append(pos.package_class)
 
     visited = {}
     for pkg in packages:
-        pkg.possible_dependencies(
-            transitive, expand_virtuals, deptype, visited, missing)
+        pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
 

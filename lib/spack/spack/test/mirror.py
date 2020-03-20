@@ -213,7 +213,7 @@ def test_mirror_cache_symlinks(tmpdir):
     """
     cosmetic_path = 'zlib/zlib-1.2.11.tar.gz'
     global_path = '_source-cache/archive/c3/c3e5.tar.gz'
-    cache = spack.caches.MirrorCache(str(tmpdir))
+    cache = spack.caches.MirrorCache(str(tmpdir), False)
     reference = spack.mirror.MirrorReference(cosmetic_path, global_path)
 
     cache.store(MockFetcher(), reference.storage_path)
