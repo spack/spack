@@ -333,13 +333,14 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         return args
 
-    # QMCPACK 3.6.0 release and later has a functional 'make install',
-    # the Spack 'def install' is retained for backwards compatiblity.
-    # Note that the two install methods differ in their directory
-    # structure. Additionally, we follow the recommendation on the Spack
-    # website for defining the compilers to be the MPI compiler wrappers.
+    # QMCPACK needs custom install method for a couple of reasons:
+    # Firstly, wee follow the recommendation on the Spack website
+    # for defining the compilers variables to be the MPI compiler wrappers.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
-    @when('@3.6.0:')
+    #
+    # Note that 3.6.0 release and later has a functioning 'make install',
+    # but still does not install nexus, manual, etc. So, there is no compelling
+    # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
@@ -347,40 +348,14 @@ class Qmcpack(CMakePackage, CudaPackage):
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
 
-        with working_dir(self.build_directory):
-            make('install')
-
-    @when('@:3.5.0')
-    def install(self, spec, prefix):
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-            env['F77'] = spec['mpi'].mpif77
-            env['FC'] = spec['mpi'].mpifc
-
-        # QMCPACK 'make install' does nothing, which causes
-        # Spack to throw an error.
-        #
-        # This install method creates the top level directory
-        # and copies the bin subdirectory into the appropriate
-        # location. We do not copy include or lib at this time due
-        # to technical difficulties in qmcpack itself.
-
+        # install binaries
         mkdirp(prefix)
+        install_tree('bin', prefix.bin)
 
-        # We assume cwd is self.stage.source_path
-
-        # install manual
+        # install manual, labs, and nexus
         install_tree('manual', prefix.manual)
-
-        # install nexus
+        install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
-
-        with working_dir(self.build_directory):
-            mkdirp(prefix)
-
-            # install binaries
-            install_tree('bin', prefix.bin)
 
     # QMCPACK 3.6.0 install directory structure changed, thus there
     # thus are two version of the setup_run_environment method
