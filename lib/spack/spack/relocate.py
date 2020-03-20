@@ -5,17 +5,18 @@
 
 
 import os
+import platform
 import re
 import shutil
-import platform
-import spack.repo
-import spack.cmd
+
 import llnl.util.lang
-from spack.util.executable import Executable, ProcessError
 import llnl.util.tty as tty
-from macholib.MachO import MachO
-from spack.spec import Spec
+import macholib.MachO
 import macholib.mach_o
+import spack.cmd
+import spack.repo
+import spack.spec
+import spack.util.executable as executable
 
 
 class InstallRootStringException(spack.error.SpackError):
@@ -72,7 +73,7 @@ def get_patchelf():
     patchelf = spack.util.executable.which('patchelf')
     if patchelf is not None:
         return patchelf.path
-    patchelf_spec = Spec('patchelf').concretized()
+    patchelf_spec = spack.spec.Spec('patchelf').concretized()
     patchelf = patchelf_spec.package
     if patchelf.installed:
         patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
@@ -96,16 +97,16 @@ def get_existing_elf_rpaths(path_name):
     # if we're relocating patchelf itself, use it
 
     if path_name[-13:] == "/bin/patchelf":
-        patchelf = Executable(path_name)
+        patchelf = executable.Executable(path_name)
     else:
-        patchelf = Executable(get_patchelf())
+        patchelf = executable.Executable(get_patchelf())
 
     rpaths = list()
     try:
         output = patchelf('--print-rpath', '%s' %
                           path_name, output=str, error=str)
         rpaths = output.rstrip('\n').split(':')
-    except ProcessError as e:
+    except executable.ProcessError as e:
         msg = 'patchelf --print-rpath %s produced an error %s' % (path_name, e)
         tty.warn(msg)
     return rpaths
@@ -266,7 +267,7 @@ def modify_macho_object(cur_path, rpaths, deps, idpath,
     # avoid error message for libgcc_s
     if 'libgcc_' in cur_path:
         return
-    install_name_tool = Executable('install_name_tool')
+    install_name_tool = executable.Executable('install_name_tool')
 
     if idpath:
         new_idpath = paths_to_paths.get(idpath, None)
@@ -295,7 +296,7 @@ def modify_object_macholib(cur_path, paths_to_paths):
     dictionary mapping paths in old install layout to new install layout
     """
 
-    dll = MachO(cur_path)
+    dll = macholib.MachO.MachO(cur_path)
 
     changedict = paths_to_paths
 
@@ -324,7 +325,7 @@ def macholib_get_paths(cur_path):
     Get rpaths, dependencies and id of mach-o objects
     using python macholib package
     """
-    dll = MachO(cur_path)
+    dll = macholib.MachO.MachO(cur_path)
 
     ident = None
     rpaths = list()
@@ -359,14 +360,14 @@ def modify_elf_object(path_name, new_rpaths):
 
     if path_name[-13:] == "/bin/patchelf":
         shutil.copy(path_name, bak_path)
-        patchelf = Executable(bak_path)
+        patchelf = executable.Executable(bak_path)
     else:
-        patchelf = Executable(get_patchelf())
+        patchelf = executable.Executable(get_patchelf())
 
     try:
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
                  '%s' % path_name, output=str, error=str)
-    except ProcessError as e:
+    except executable.ProcessError as e:
         msg = 'patchelf --force-rpath --set-rpath %s failed with error %s' % (
             path_name, e)
         tty.warn(msg)
@@ -789,7 +790,7 @@ def file_is_relocatable(file, paths_to_relocate=None):
     if not os.path.isabs(file):
         raise ValueError('{0} is not an absolute path'.format(file))
 
-    strings = Executable('strings')
+    strings = executable.Executable('strings')
 
     # Remove the RPATHS from the strings in the executable
     set_of_strings = set(strings(file, output=str).split())
@@ -851,7 +852,7 @@ def mime_type(file):
     Returns:
         Tuple containing the MIME type and subtype
     """
-    file_cmd = Executable('file')
+    file_cmd = executable.Executable('file')
     output = file_cmd('-b', '-h', '--mime-type', file, output=str, error=str)
     tty.debug('[MIME_TYPE] {0} -> {1}'.format(file, output.strip()))
     # In corner cases the output does not contain a subtype prefixed with a /
