@@ -362,7 +362,7 @@ class Rust(Package):
                 return 'aarch64-unknown-linux-gnu'
         elif 'platform=darwin target=x86_64:' in self.spec:
             return 'x86_64-apple-darwin'
-            
+
         raise InstallError(
             "rust is not supported for '{0}'".format(
                 self.spec.architecture
