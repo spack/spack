@@ -22,7 +22,7 @@ import llnl.util.tty as tty
 
 try:
     import termios
-except:
+except ImportError:
     termios = None
 
 # Use this to strip escape sequences
@@ -119,7 +119,6 @@ class _keyboard_input(object):
 
             except Exception:
                 pass  # some OS's do not support termios, so ignore
-
 
     def __exit__(self, exc_type, exception, traceback):
         """If termios was avaialble, restore old settings."""
