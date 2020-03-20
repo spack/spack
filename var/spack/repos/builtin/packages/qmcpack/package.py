@@ -374,22 +374,12 @@ class Qmcpack(CMakePackage, CudaPackage):
         install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
 
-    # QMCPACK 3.6.0 install directory structure changed, thus there
-    # thus are two version of the setup_run_environment method
-    @when('@:3.5.0')
     def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.
-        Set PYTHONPATH for basic analysis scripts and for Nexus."""
-        env.prepend_path('PYTHONPATH', self.prefix.nexus)
+        Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 
-    @when('@3.6.0:')
-    def setup_run_environment(self, env):
-        """Set-up runtime environment for QMCPACK.
-        Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
-        are in the  'prefix' directory instead of 'prefix.bin' which is
-        not set by the default module environment"""
-        env.prepend_path('PATH', self.prefix)
-        env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path('PATH', self.prefix.nexus + 'bin')
+        env.prepend_path('PYTHONPATH', self.prefix.nexus + 'lib')
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
