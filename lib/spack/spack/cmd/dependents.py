@@ -30,7 +30,7 @@ def setup_parser(subparser):
 
 def inverted_dependencies():
     """Iterate through all packages and return a dictionary mapping package
-       names to possible dependnecies.
+       names to possible dependencies.
 
        Virtual packages are included as sources, so that you can query
        dependents of, e.g., `mpi`, but virtuals are not included as
