@@ -25,7 +25,7 @@ class Qscintilla(QMakePackage):
     depends_on('qt')
     depends_on('py-pyqt5', type=('build', 'run'),  when='+python ^qt@5')
     depends_on('py-pyqt4', type=('build', 'run'),  when='+python ^qt@4')
-    depends_on('python',   type=('build', 'run'), when='+python')
+    depends_on('python',   type=('build', 'run'),  when='+python')
 
     extends('python', when='+python')
 
@@ -74,21 +74,28 @@ class Qscintilla(QMakePackage):
     @run_after('install')
     def make_qsci(self):
         if '+python' in self.spec:
+            if '^py-pyqt4' in self.spec:
+                py_pyqtx = 'py-pyqt4'
+                PyQtX = 'PyQt4'
+            elif '^py-pyqt5' in self.spec:
+                py_pyqtx = 'py-pyqt5'
+                PyQtX = 'PyQt5'
+
             with working_dir(self.stage.source_path + '/Python'):
                 pydir = join_path(
                     self.prefix,
                     self.spec['python'].package.site_packages_dir,
-                    'PyQt5')
-                mkdirp(self.prefix.share.sip.PyQt5)
+                    PyQtX)
+                mkdirp(os.join.path(self.prefix.share.sip,PyQtX))
                 python = self.spec['python'].command
-                python('configure.py', '--pyqt=PyQt5',
+                python('configure.py', '--pyqt=' + PyQtX,
                        '--sip=' + self.spec['py-sip'].prefix.bin.sip,
                        '--qsci-incdir=' + self.spec.prefix.include,
                        '--qsci-libdir=' + self.spec.prefix.lib,
-                       '--qsci-sipdir=' + self.prefix.share.sip.PyQt5,
+                       '--qsci-sipdir=' + self.prefix.share.sip + PyQtX,
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
-                       '--pyqt-sipdir=' + self.spec['py-pyqt5'].prefix.share.sip.PyQt5,
+                       '--pyqt-sipdir=' + os.join.path(self.spec[py_pyqtx].prefix.share.sip,PyQtX),
                        '--sip-incdir=' +
                        join_path(self.spec['py-sip'].prefix.include,
                                  'python' +
@@ -101,7 +108,7 @@ class Qscintilla(QMakePackage):
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro = FileFilter('Qsci/Qsci.pro')
                 link_qscilibs = 'LIBS += -L' + self.prefix.lib +\
-                    ' -lqscintilla2_qt5'
+                    ' -lqscintilla2_qt5' # TODO also consider qt4 case
                 qscipro.filter('TEMPLATE = lib',
                                'TEMPLATE = lib\nQT += widgets' +
                                '\nQT += printsupport\n' + link_qscilibs)
