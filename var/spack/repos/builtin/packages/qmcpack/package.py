@@ -184,6 +184,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
+    # the default flag_handler for Spack causes problems for QMCPACK
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#the-build-environment:
     flag_handler = CMakePackage.build_system_flags
 
     @when('@:3.7.0')
