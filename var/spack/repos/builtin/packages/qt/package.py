@@ -128,8 +128,7 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("sqlite", when='+sql', type=('build', 'run'))
-    depends_on("sqlite+column_metadata", when='+sql%intel', type=('build', 'run'))
+    depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
     depends_on("libsm", when='@3')
