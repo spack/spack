@@ -76,7 +76,7 @@ class Qgis(CMakePackage):
     depends_on('qca@2.2.1')
     depends_on('py-pyqt4 +qsci', when='@2')
     depends_on('py-pyqt5@5.3: +qsci', when='@3')
-    depends_on('qscintilla')
+    depends_on('qscintilla +python')
     depends_on('qjson')
     depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
