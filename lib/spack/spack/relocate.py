@@ -19,39 +19,48 @@ import spack.spec
 import spack.util.executable as executable
 
 
-class InstallRootStringException(spack.error.SpackError):
-    """
-    Raised when the relocated binary still has the install root string.
-    """
-
+class InstallRootStringError(spack.error.SpackError):
     def __init__(self, file_path, root_path):
-        super(InstallRootStringException, self).__init__(
+        """Signal that the relocated binary still has the original
+        Spack's store root string
+
+        Args:
+            file_path (str): path of the binary
+            root_path (str): original Spack's store root string
+        """
+        super(InstallRootStringError, self).__init__(
             "\n %s \ncontains string\n %s \n"
             "after replacing it in rpaths.\n"
             "Package should not be relocated.\n Use -a to override." %
             (file_path, root_path))
 
 
-class BinaryStringReplacementException(spack.error.SpackError):
-    """
-    Raised when the size of the file changes after binary path substitution.
-    """
-
+class BinaryStringReplacementError(spack.error.SpackError):
     def __init__(self, file_path, old_len, new_len):
-        super(BinaryStringReplacementException, self).__init__(
+        """The size of the file changed after binary path substitution
+
+        Args:
+            file_path (str): file with changing size
+            old_len (str): original length of the file
+            new_len (str): length of the file after substitution
+        """
+        super(BinaryStringReplacementError, self).__init__(
             "Doing a binary string replacement in %s failed.\n"
             "The size of the file changed from %s to %s\n"
             "when it should have remanined the same." %
             (file_path, old_len, new_len))
 
 
-class BinaryTextReplaceException(spack.error.SpackError):
-    """
-    Raised when the new install path is shorter than the old install path
-    so binary text replacement cannot occur.
-    """
-
+class BinaryTextReplaceError(spack.error.SpackError):
     def __init__(self, old_path, new_path):
+        """Raised when the new install path is longer than the
+        old one, so binary text replacement cannot occur.
+
+        Args:
+            old_path (str): original path to be substituted
+            new_path (str): candidate path for substitution
+        """
+
         msg = "New path longer than old path: binary text"
         msg += " replacement not possible."
         err_msg = "The new path %s" % new_path
@@ -59,7 +68,7 @@ class BinaryTextReplaceException(spack.error.SpackError):
         err_msg += "Text replacement in binaries will not work.\n"
         err_msg += "Create buildcache from an install path "
         err_msg += "longer than new path."
-        super(BinaryTextReplaceException, self).__init__(msg, err_msg)
+        super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
 
 def get_patchelf():
@@ -444,7 +453,7 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
             return
         ndata = pat.sub(replace, data)
         if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementException(
+            raise BinaryStringReplacementError(
                 path_name, original_data_len, len(ndata))
         f.write(ndata)
         f.truncate()
@@ -469,7 +478,7 @@ def replace_prefix_nullterm(path_name, old_dir, new_dir):
                                      new_dir.encode('utf-8')) + b'\0' * padding
 
     if len(new_dir) > len(old_dir):
-        raise BinaryTextReplaceException(old_dir, new_dir)
+        raise BinaryTextReplaceError(old_dir, new_dir)
 
     with open(path_name, 'rb+') as f:
         data = f.read()
@@ -480,7 +489,7 @@ def replace_prefix_nullterm(path_name, old_dir, new_dir):
             return
         ndata = pat.sub(replace, data)
         if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementException(
+            raise BinaryStringReplacementError(
                 path_name, original_data_len, len(ndata))
         f.write(ndata)
         f.truncate()
@@ -657,7 +666,7 @@ def check_files_relocatable(cur_path_names, allow_root):
     for cur_path in cur_path_names:
         if (not allow_root and
                 not file_is_relocatable(cur_path)):
-            raise InstallRootStringException(
+            raise InstallRootStringError(
                 cur_path, spack.store.layout.root)
 
 
@@ -726,7 +735,7 @@ def relocate_text_bin(path_names, old_layout_root, new_layout_root,
             replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
     else:
         if len(path_names) > 0:
-            raise BinaryTextReplaceException(
+            raise BinaryTextReplaceError(
                 old_install_prefix, new_install_prefix)
 
 
