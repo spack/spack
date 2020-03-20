@@ -59,6 +59,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('afqmc', default=False,
             description='Install with AFQMC support. NOTE that if used in '
                         'combination with CUDA, only AFQMC will have CUDA.')
+    variant('ppconvert', default=False,
+            description='Install with pseudopotential converter.')
 
     # Notes about CUDA-centric peculiarities:
     #
@@ -331,7 +333,22 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append('-DENABLE_MKL=0')
 
+        # ppconvert is not build by default because it may exhibit numerical
+        # issues on some systems
+        if '+ppconvert' in spec:
+            args.append('-DBUILD_PPCONVERT=1')
+        else:
+            args.append('-DBUILD_PPCONVERT=0')
+
         return args
+
+    # QMCPACK needs custom build method due to ppconvert
+    def build(self, spec, prefix):
+        args = self.cmake_args()
+        cmake(*args)
+        make()
+        if '+ppconvert' in spec:
+            make('ppconvert')
 
     # QMCPACK needs custom install method for a couple of reasons:
     # Firstly, wee follow the recommendation on the Spack website
