@@ -399,6 +399,11 @@ packages:
 
         e = ev.create('test', initial_yaml)
         e.concretize()
+        # Note: normally installing specs in a test environment requires doing
+        # a fake install, but not for external specs since no actions are
+        # taken to install them. The installation commands also include
+        # post-installation functions like DB-registration, so are important
+        # to do (otherwise the package is not considered installed).
         e.install_all()
         e.write()
 
