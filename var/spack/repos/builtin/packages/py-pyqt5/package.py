@@ -50,6 +50,8 @@ class PyPyqt5(SIPPackage):
                 self.spec['python'].package.site_packages_dir,
                 'PyQt5'),
         ]
+        # TODO Is the following still necessary now that 
+        # Qsci python bindings are built with Qscintilla package
         if '+qsci' in self.spec:
             args.extend(['--qsci-api-destdir', self.prefix.share.qsci])
         return args
