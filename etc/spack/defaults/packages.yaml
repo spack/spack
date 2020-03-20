@@ -40,6 +40,7 @@ packages:
       pil: [py-pillow]
       pkgconfig: [pkgconf, pkg-config]
       scalapack: [netlib-scalapack]
+      sycl: [hipsycl]
       szip: [libszip, libaec]
       tbb: [intel-tbb]
       unwind: [libunwind]
