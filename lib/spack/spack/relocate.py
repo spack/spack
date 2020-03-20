@@ -90,10 +90,8 @@ def _patchelf():
     if spec.package.installed and os.path.exists(exe_path): 
         return exe_path
     
-    # Skip darwin or test platform
-    # FIXME: remove requirement for test platform
-    if (str(spack.architecture.platform()) == 'test' or
-        str(spack.architecture.platform()) == 'darwin'):
+    # Skip darwin
+    if str(spack.architecture.platform()) == 'darwin':
         return None
     
     # Install the spec and return the path top patchelf
@@ -109,7 +107,7 @@ def get_existing_elf_rpaths(path_name):
 
     # if we're relocating patchelf itself, use it
 
-    if path_name[-13:] == "/bin/patchelf":
+    if path_name.endswith("/bin/patchelf"):
         patchelf = executable.Executable(path_name)
     else:
         patchelf = executable.Executable(_patchelf())
