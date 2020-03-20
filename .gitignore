@@ -22,8 +22,14 @@
 .coverage
 \#*
 .#*
+.cache
 lib/spack/spack/test/.cache
 /bin/spackc
 *.in.log
 *.out.log
 *.orig
+
+# Eclipse files
+.project
+.cproject
+.pydevproject

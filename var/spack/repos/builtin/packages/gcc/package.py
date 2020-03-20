@@ -25,9 +25,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     version('develop', svn=svn + 'trunk')
 
+    version('9.3.0', sha256='71e197867611f6054aa1119b13a0c0abac12834765fe2d81f35ac57f84f742d1')
     version('9.2.0', sha256='ea6ef08f121239da5695f76c9b33637a118dcf63e24164422231917fa61fb206')
     version('9.1.0', sha256='79a66834e96a6050d8fe78db2c3b32fb285b230b855d0a66288235bc04b327a0')
 
+    version('8.4.0', sha256='e30a6e52d10e1f27ed55104ad233c30bd1e99cfb5ff98ab022dc941edd1b2dd4')
     version('8.3.0', sha256='64baadfe6cc0f4947a84cb12d7f0dfaf45bb58b7e92461639596c21e02d97d2c')
     version('8.2.0', sha256='196c3c04ba2613f893283977e6011b2345d1cd1af9abeac58e916b1aab3e0080')
     version('8.1.0', sha256='1d1866f992626e61349a1ccd0b8d5253816222cdc13390dcfaa74b093aa2b153')
@@ -107,12 +109,16 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 
+    # The server is sometimes a bit slow to respond
+    timeout = {'timeout': 60}
+
     resource(
              name='newlib',
              url='ftp://sourceware.org/pub/newlib/newlib-3.0.0.20180831.tar.gz',
              sha256='3ad3664f227357df15ff34e954bfd9f501009a647667cd307bf0658aefd6eb5b',
              destination='newlibsource',
-             when='+nvptx'
+             when='+nvptx',
+             fetch_options=timeout
             )
 
     # nvptx-tools does not seem to work as a dependency,
@@ -217,7 +223,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             # Fix system headers for Catalina SDK
             # (otherwise __OSX_AVAILABLE_STARTING ends up undefined)
             patch('https://raw.githubusercontent.com/Homebrew/formula-patches/b8b8e65e/gcc/9.2.0-catalina.patch',
-                  sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0:')
+                  sha256='0b8d14a7f3c6a2f0d2498526e86e088926671b5da50a554ffa6b7f73ac4f132b', when='@9.2.0')
         # Use -headerpad_max_install_names in the build,
         # otherwise updated load commands won't fit in the Mach-O header.
         # This is needed because `gcc` avoids the superenv shim.
@@ -229,6 +235,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('piclibs.patch', when='+piclibs')
     patch('gcc-backport.patch', when='@4.7:4.9.2,5:5.3')
 
+    # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
+    # https://bugs.gentoo.org/708346
+    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:9.2.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
