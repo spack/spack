@@ -20,6 +20,7 @@ class Occa(Package):
     git      = 'https://github.com/libocca/occa.git'
 
     version('develop')
+    version('1.0.9', tag='v1.0.9')
     version('1.0.8', tag='v1.0.8')
     version('1.0.0-alpha.5', tag='v1.0.0-alpha.5')
     version('0.2.0', tag='v0.2.0')
