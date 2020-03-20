@@ -71,30 +71,34 @@ class BinaryTextReplaceError(spack.error.SpackError):
         super(BinaryTextReplaceError, self).__init__(msg, err_msg)
 
 
-def get_patchelf():
+def _patchelf():
+    """Return the full path to the patchelf binary, if available, else None.
+    
+    Search first the current PATH for patchelf. If not found, try to look 
+    if the preferred patchelf spec is installed and if not install it.
+    
+    Return None on Darwin or if patchelf cannot be found. 
     """
-    Returns the full patchelf binary path if available in $PATH.
-    Builds and installs spack patchelf package on linux platforms
-    using the first concretized spec if it is not installed and
-    returns the full patchelf binary path.
-    """
-    # as we may need patchelf, find out where it is
+    # Check if patchelf is already in the PATH
     patchelf = spack.util.executable.which('patchelf')
     if patchelf is not None:
         return patchelf.path
-    patchelf_spec = spack.spec.Spec('patchelf').concretized()
-    patchelf = patchelf_spec.package
-    if patchelf.installed:
-        patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
-        return patchelf_executable
-    else:
-        if (str(spack.architecture.platform()) == 'test' or
-            str(spack.architecture.platform()) == 'darwin'):
-            return None
-        else:
-            patchelf.do_install()
-            patchelf_executable = os.path.join(patchelf.prefix.bin, "patchelf")
-            return patchelf_executable
+    
+    # Check if patchelf spec is installed
+    spec = spack.spec.Spec('patchelf').concretized()
+    exe_path = os.path.join(spec.prefix.bin, "patchelf")
+    if spec.package.installed and os.path.exists(exe_path): 
+        return exe_path
+    
+    # Skip darwin or test platform
+    # FIXME: remove requirement for test platform
+    if (str(spack.architecture.platform()) == 'test' or
+        str(spack.architecture.platform()) == 'darwin'):
+        return None
+    
+    # Install the spec and return the path top patchelf
+    spec.package.do_install()
+    return exe_path if os.path.exists(exe_path) else None
 
 
 def get_existing_elf_rpaths(path_name):
@@ -108,7 +112,7 @@ def get_existing_elf_rpaths(path_name):
     if path_name[-13:] == "/bin/patchelf":
         patchelf = executable.Executable(path_name)
     else:
-        patchelf = executable.Executable(get_patchelf())
+        patchelf = executable.Executable(_patchelf())
 
     rpaths = list()
     try:
@@ -371,7 +375,7 @@ def modify_elf_object(path_name, new_rpaths):
         shutil.copy(path_name, bak_path)
         patchelf = executable.Executable(bak_path)
     else:
-        patchelf = executable.Executable(get_patchelf())
+        patchelf = executable.Executable(_patchelf())
 
     try:
         patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,

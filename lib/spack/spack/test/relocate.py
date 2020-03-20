@@ -64,7 +64,7 @@ def test_file_is_relocatable(source_file, is_relocatable):
     'patchelf', 'strings', 'file'
 )
 def test_patchelf_is_relocatable():
-    patchelf = spack.relocate.get_patchelf()
+    patchelf = spack.relocate._patchelf()
     assert llnl.util.filesystem.is_exe(patchelf)
     assert spack.relocate.file_is_relocatable(patchelf)
 
