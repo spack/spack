@@ -43,6 +43,9 @@ class Upcxx(Package):
     depends_on('python@2.7.5:2.999', type=("build", "run"), when='@:2019.9.0')
     depends_on('python@2.7.5:', type=("build", "run"), when='@2020.3.0:')
 
+    # All flags should be passed to the build-env in autoconf-like vars
+    flag_handler = env_flags
+
     def url_for_version(self, version):
         if version > Version('2019.3.2'):
             url = "https://bitbucket.org/berkeleylab/upcxx/downloads/upcxx-{0}.tar.gz"
@@ -79,6 +82,10 @@ class Upcxx(Package):
             env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
+        # UPC++ follows the autoconf naming convention for LDLIBS, which is 'LIBS'
+        if (env.get('LDLIBS')): 
+            env['LIBS'] = env['LDLIBS']
+
         if spec.version <= Version('2019.9.0'):
             env['CC'] = self.compiler.cc
             env['CXX'] = self.compiler.cxx
