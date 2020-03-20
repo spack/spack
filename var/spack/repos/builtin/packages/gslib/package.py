@@ -12,6 +12,10 @@ class Gslib(Package):
     homepage = "https://github.com/gslib/gslib"
     git      = "https://github.com/gslib/gslib.git"
 
+    version('develop', branch='master')
+    version('1.0.6', tag='v1.0.6')
+    version('1.0.5', tag='v1.0.5')
+    version('1.0.4', tag='v1.0.4')
     version('1.0.3', tag='v1.0.3')
     version('1.0.2', tag='v1.0.2')
     version('1.0.1', tag='v1.0.1')
