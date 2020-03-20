@@ -95,6 +95,7 @@ class Tau(Package):
     depends_on('gasnet', when='+gasnet')
     depends_on('adios2', when='+adios2')
     depends_on('sqlite', when='+sqlite')
+    depends_on('hwloc')
 
     # Elf only required from 2.28.1 on
     conflicts('+libelf', when='@:2.28.0')
