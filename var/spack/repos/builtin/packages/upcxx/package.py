@@ -34,7 +34,7 @@ class Upcxx(Package):
     version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
 
     variant('mpi', default=False,
-            description='Enables detection of MPI-based spawner and mpi-conduit')
+            description='Enables MPI-based spawners and mpi-conduit')
 
     variant('cuda', default=False,
             description='Builds a CUDA-enabled version of UPC++')
@@ -43,12 +43,15 @@ class Upcxx(Package):
             description="UPC++ cross-compile target (autodetect by default)")
 
     conflicts('cross=none', when='platform=cray',
-              msg='None is unacceptable on Cray. Please specify an appropriate "cross" value')
+              msg='cross=none is unacceptable on Cray.' +
+                  'Please specify an appropriate "cross" value')
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')
-    # Require Python2 2.7.5+ up to 2019.9.0, 2020.3.0 and later also permit Python3
-    depends_on('python@2.7.5:2.999', type=("build", "run"), when='@:2019.9.0')
+    # Require Python2 2.7.5+ up to v2019.9.0
+    depends_on('python@2.7.5:2.999',
+               type=("build", "run"), when='@:2019.9.0')
+    # v2020.3.0 and later also permit Python3
     depends_on('python@2.7.5:', type=("build", "run"), when='@2020.3.0:')
 
     # All flags should be passed to the build-env in autoconf-like vars
@@ -62,13 +65,14 @@ class Upcxx(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
-        env.set('UPCXX_PYTHON', self.spec['python'].command.path) # ensure we use the correct python
+        # ensure we use the correct python
+        env.set('UPCXX_PYTHON', self.spec['python'].command.path)
 
         if '+mpi' in self.spec:
-            env.set('GASNET_CONFIGURE_ARGS','--enable-mpi --enable-mpi-compat')
+            env.set('GASNET_CONFIGURE_ARGS',
+                    '--enable-mpi --enable-mpi-compat')
         else:
-            env.set('GASNET_CONFIGURE_ARGS','--without-mpicc')
-
+            env.set('GASNET_CONFIGURE_ARGS', '--without-mpicc')
 
         if 'cross=none' not in self.spec:
             env.set('CROSS', self.spec.variants['cross'].value)
@@ -78,7 +82,8 @@ class Upcxx(Package):
             env.set('UPCXX_CUDA_NVCC', self.spec['cuda'].prefix.bin.nvcc)
 
     def setup_run_environment(self, env):
-        env.set('UPCXX_PYTHON', self.spec['python'].command.path) # ensure we use the correct python
+        # ensure we use the correct python
+        env.set('UPCXX_PYTHON', self.spec['python'].command.path)
 
         env.set('UPCXX_INSTALL', self.prefix)
         env.set('UPCXX', self.prefix.bin.upcxx)
@@ -97,15 +102,16 @@ class Upcxx(Package):
             env.set('UPCXX_NETWORK', 'aries')
 
     def install(self, spec, prefix):
-        # UPC++ follows the autoconf naming convention for LDLIBS, which is 'LIBS'
-        if (env.get('LDLIBS')): 
+        # UPC++ follows autoconf naming convention for LDLIBS, which is 'LIBS'
+        if (env.get('LDLIBS')):
             env['LIBS'] = env['LDLIBS']
 
         if spec.version <= Version('2019.9.0'):
             env['CC'] = self.compiler.cc
             if '+mpi' in self.spec:
-                if 'platform=cray' in self.spec: 
-                    env['GASNET_CONFIGURE_ARGS'] += " --with-mpicc=" + self.compiler.cc
+                if 'platform=cray' in self.spec:
+                    env['GASNET_CONFIGURE_ARGS'] += \
+                        " --with-mpicc=" + self.compiler.cc
                 else:
                     env['CXX'] = spec['mpi'].mpicxx
             else:
@@ -113,14 +119,18 @@ class Upcxx(Package):
             installsh = Executable("./install")
             installsh(prefix)
         else:
-            if 'platform=cray' in self.spec: 
-                # Spack loads the cray-libsci module incorrectly on ALCF theta, breaking the compiler
-                # cray-libsci is completely irrelevant to our build, so disable it
+            if 'platform=cray' in self.spec:
+                # Spack loads the cray-libsci module incorrectly on ALCF theta,
+                # breaking the Cray compiler wrappers
+                # cray-libsci is irrelevant to our build, so disable it
                 for var in ['PE_PKGCONFIG_PRODUCTS', 'PE_PKGCONFIG_LIBS']:
-                    env[var]=":".join(filter(lambda x: "libsci" not in x.lower(),env[var].split(":")))
-                # undo spack compiler wrappers - the compiler must work post-install
-                # the hack above no longer works after the fix to issue #287
-                real_cc = join_path(env['CRAYPE_DIR'],'bin','cc')
+                    env[var] = ":".join(
+                        filter(lambda x: "libsci" not in x.lower(),
+                               env[var].split(":")))
+                # Undo spack compiler wrappers:
+                # the C/C++ compilers must work post-install
+                # hack above no longer works after the fix to UPC++ issue #287
+                real_cc = join_path(env['CRAYPE_DIR'], 'bin', 'cc')
                 real_cxx = join_path(env['CRAYPE_DIR'], 'bin', 'CC')
                 # workaround a bug in the UPC++ installer: (issue #346)
                 env['GASNET_CONFIGURE_ARGS'] += \
@@ -142,18 +152,22 @@ class Upcxx(Package):
             make()
 
             make('install')
-  
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def test_install(self):
         if self.spec.version <= Version('2019.9.0'):
-            spack.main.send_warning_to_tty("run_tests not supported in UPC++ version " + self.spec.version.string + " -- SKIPPED")
+            spack.main.send_warning_to_tty(
+                "run_tests not supported in UPC++ version " +
+                self.spec.version.string + " -- SKIPPED")
         else:
-            test_networks='NETWORKS=$(CONDUITS)' # enable testing of unofficial conduits (mpi)
-            make('test_install', test_networks)  # builds hello world against installed tree in all configurations
-            make('tests-clean')                  # cleanup
-            make('tests', test_networks)         # builds all tests for all networks in debug mode
+            # enable testing of unofficial conduits (mpi)
+            test_networks = 'NETWORKS=$(CONDUITS)'
+            # build hello world against installed tree in all configurations
+            make('test_install', test_networks)
+            make('tests-clean')  # cleanup
+            # build all tests for all networks in debug mode
+            make('tests', test_networks)
             if 'cross=none' in self.spec:
-                make('run-tests','NETWORKS=smp') # runs tests for smp backend
-            make('tests-clean')   # cleanup
-
+                make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
+            make('tests-clean')  # cleanup
