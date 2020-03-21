@@ -28,7 +28,8 @@ class XsdkExamples(CMakePackage):
             '-DPETSC_DIR=%s'         % spec['petsc'].prefix,
             '-DPETSC_INCLUDE_DIR=%s' % spec['petsc'].prefix.include,
             '-DPETSC_LIBRARY_DIR=%s' % spec['petsc'].prefix.lib,
-            '-DSUPERLUDIST_INCLUDE_DIR=%s' % spec['superlu-dist'].prefix.include,
+            '-DSUPERLUDIST_INCLUDE_DIR=%s' %
+            spec['superlu-dist'].prefix.include,
             '-DSUPERLUDIST_LIBRARY_DIR=%s' % spec['superlu-dist'].prefix.lib,
         ]
         if 'trilinos' in spec:
