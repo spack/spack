@@ -18,10 +18,11 @@ class Charmpp(Package):
     (your laptop) to the largest supercomputers."""
 
     homepage = "http://charmplusplus.org"
-    url      = "http://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
+    url      = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git      = "https://github.com/UIUC-PPL/charm.git"
 
     version("develop", branch="charm")
+    version('6.10.0', sha256='7c526a78aa0c202b7f0418b345138e7dc40496f0bb7b9e301e0381980450b25c')
     version("6.9.0", sha256="85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
     version("6.8.2", sha256="08e6001b0e9cd00ebde179f76098767149bf7e454f29028fb9a8bfb55778698e")
     version("6.8.1", sha256="bf39666bb9f8bad1cd17dafa3cdf35c7ef64dfaeda835cf66ae530b7baab7583")

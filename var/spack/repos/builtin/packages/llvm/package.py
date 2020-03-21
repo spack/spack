@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
 
 
 class Llvm(CMakePackage):
@@ -22,6 +23,7 @@ class Llvm(CMakePackage):
     family = 'compiler'  # Used by lmod
 
     version('master', branch='master')
+    version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
     version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
     version('8.0.0', sha256='d81238b4a69e93e29f74ce56f8107cbfcf0c7d7b40510b7879e98cc031e25167')
     version('7.1.0', sha256='71c93979f20e01f1a1cc839a247945f556fa5e63abf2084e8468b238080fd839')
@@ -70,7 +72,7 @@ class Llvm(CMakePackage):
             description="Build the LLVM C++ standard library")
     variant('compiler-rt', default=True,
             description="Build LLVM compiler runtime, including sanitizers")
-    variant('gold', default=True,
+    variant('gold', default=(sys.platform != 'darwin'),
             description="Add support for LTO with the gold linker plugin")
     variant('shared_libs', default=False,
             description="Build all components as shared libraries, faster, "
@@ -102,8 +104,10 @@ class Llvm(CMakePackage):
     # openmp dependencies
     depends_on('perl-data-dumper', type=('build'))
 
+    # ncurses dependency
+    depends_on('ncurses+termlib')
+
     # lldb dependencies
-    depends_on('ncurses', when='+lldb')
     depends_on('swig', when='+lldb')
     depends_on('libedit', when='+lldb')
     depends_on('py-six', when='@5.0.0: +lldb +python')
@@ -115,8 +119,11 @@ class Llvm(CMakePackage):
     depends_on('gmp', when='@:3.6.999 +polly')
     depends_on('isl', when='@:3.6.999 +polly')
 
-    conflicts('+clang_extra', when='~clang')
-    conflicts('+lldb',        when='~clang')
+    conflicts('+clang_extra',     when='~clang')
+    conflicts('+lldb',            when='~clang')
+    conflicts('+libcxx',          when='~clang')
+    conflicts('+internal_unwind', when='~clang')
+    conflicts('+compiler-rt',     when='~clang')
 
     # LLVM 4 and 5 does not build with GCC 8
     conflicts('%gcc@8:',       when='@:5')
@@ -155,11 +162,18 @@ class Llvm(CMakePackage):
                      llvm_check_file)
 
         except ProcessError:
-            explanation = ('The "lldb_codesign" identity must be available'
-                           ' to build LLVM with LLDB. See https://lldb.llvm'
-                           '.org/resources/build.html#code-signing-on-macos'
-                           'for details on how to create this identity.')
-            raise RuntimeError(explanation)
+            # Newer LLVM versions have a simple script that sets up
+            # automatically
+            setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+            try:
+                setup()
+            except Exception:
+                raise RuntimeError(
+                    'The "lldb_codesign" identity must be available to build '
+                    'LLVM with LLDB. See https://lldb.llvm.org/resources/'
+                    'build.html#code-signing-on-macos for details on how to '
+                    'create this identity.'
+                )
 
     def setup_build_environment(self, env):
         env.append_flags('CXXFLAGS', self.compiler.cxx11_flag)
@@ -193,6 +207,9 @@ class Llvm(CMakePackage):
 
         if '+python' in spec and '+lldb' in spec and spec.satisfies('@5.0.0:'):
             cmake_args.append('-DLLDB_USE_SYSTEM_SIX:Bool=TRUE')
+
+        if '~python' in spec and '+lldb' in spec:
+            cmake_args.append('-DLLDB_DISABLE_PYTHON:Bool=TRUE')
 
         if '+gold' in spec:
             cmake_args.append('-DLLVM_BINUTILS_INCDIR=' +
@@ -282,10 +299,11 @@ class Llvm(CMakePackage):
 
     @run_after('install')
     def post_install(self):
-        if '+clang' in self.spec and '+python' in self.spec:
-            install_tree(
-                'tools/clang/bindings/python/clang',
-                join_path(site_packages_dir, 'clang'))
+        if '+python' in self.spec:
+            install_tree('llvm/bindings/python', site_packages_dir)
+
+            if '+clang' in self.spec:
+                install_tree('clang/bindings/python', site_packages_dir)
 
         with working_dir(self.build_directory):
             install_tree('bin', join_path(self.prefix, 'libexec', 'llvm'))

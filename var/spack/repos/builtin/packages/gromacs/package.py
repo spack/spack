@@ -2,8 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
+import llnl.util.cpu
 
 
 class Gromacs(CMakePackage):
@@ -24,8 +23,10 @@ class Gromacs(CMakePackage):
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('2020.1', sha256='e1666558831a3951c02b81000842223698016922806a8ce152e8f616e29899cf')
     version('2020', sha256='477e56142b3dcd9cb61b8f67b24a55760b04d1655e8684f979a75a5eec40ba01')
+    version('2019.6', sha256='bebe396dc0db11a9d4cc205abc13b50d88225617642508168a2195324f06a358')
     version('2019.5', sha256='438061a4a2d45bbb5cf5c3aadd6c6df32d2d77ce8c715f1c8ffe56156994083a')
     version('2019.4', sha256='ba4366eedfc8a1dbf6bddcef190be8cd75de53691133f305a7f9c296e5ca1867')
     version('2019.3', sha256='4211a598bf3b7aca2b14ad991448947da9032566f13239b1a05a2d4824357573')
@@ -60,12 +61,6 @@ class Gromacs(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('simd', default='auto',
-            description='The SIMD instruction set to use',
-            values=('auto', 'none', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
-                    'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
-                    'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
-                    'ARM_NEON', 'ARM_NEON_ASIMD'))
     variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
@@ -117,13 +112,40 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
-        simd_value = self.spec.variants['simd'].value
-        if simd_value == 'auto':
-            pass
-        elif simd_value == 'none':
-            options.append('-DGMX_SIMD:STRING=None')
+        # Activate SIMD based on properties of the target
+        target = self.spec.target
+        if target >= llnl.util.cpu.targets['bulldozer']:
+            # AMD Family 15h
+            options.append('-DGMX_SIMD=AVX_128_FMA')
+        elif target >= llnl.util.cpu.targets['zen']:
+            # AMD Family 17h
+            options.append('-DGMX_SIMD=AVX2_128')
+        elif target >= llnl.util.cpu.targets['power7']:
+            # IBM Power 7 and beyond
+            options.append('-DGMX_SIMD=IBM_VSX')
+        elif target.family == llnl.util.cpu.targets['aarch64']:
+            # ARMv8
+            options.append('-DGMX_SIMD=ARM_NEON_ASIMD')
+        elif target == llnl.util.cpu.targets['mic_knl']:
+            # Intel KNL
+            options.append('-DGMX_SIMD=AVX_512_KNL')
+        elif target.vendor == 'GenuineIntel':
+            # Other Intel architectures
+            simd_features = [
+                ('sse2', 'SSE2'),
+                ('sse4_1', 'SSE4.1'),
+                ('avx', 'AVX_256'),
+                ('axv128', 'AVX2_128'),
+                ('avx2', 'AVX2_256'),
+                ('avx512', 'AVX_512'),
+            ]
+            for feature, flag in reversed(simd_features):
+                if feature in target:
+                    options.append('-DGMX_SIMD:STRING={0}'.format(flag))
+                    break
         else:
-            options.append('-DGMX_SIMD:STRING=' + simd_value)
+            # Fall back to this for unknown microarchitectures
+            options.append('-DGMX_SIMD:STRING=None')
 
         if '-rdtscp' in self.spec:
             options.append('-DGMX_USE_RDTSCP:BOOL=OFF')

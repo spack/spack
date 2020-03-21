@@ -19,7 +19,9 @@ class Likwid(Package):
     homepage = "https://github.com/RRZE-HPC/likwid"
     url      = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git      = "https://github.com/RRZE-HPC/likwid.git"
+    maintainers = ['TomTheBear']
 
+    version('5.0.1', sha256='3757b0cb66e8af0116f9288c7f90543acbd8e2af8f72f77aef447ca2b3e76453')
     version('5.0.0', sha256='26623f5a1a5fec19d798f0114774a5293d1c93a148538b9591a13e50930fa41e')
     version('4.3.4', sha256='5c0d1c66b25dac8292a02232f06454067f031a238f010c62f40ef913c6609a83')
     version('4.3.3', sha256='a681378cd66c1679ca840fb5fac3136bfec93c01b3d78cc1d00a641db325a9a3')
@@ -40,8 +42,6 @@ class Likwid(Package):
 
     depends_on('perl', type=('build', 'run'))
 
-    supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
-
     def patch(self):
         files = glob.glob('perl/*.*') + glob.glob('bench/perl/*.*')
 
@@ -59,13 +59,18 @@ class Likwid(Package):
                     *files)
 
     def install(self, spec, prefix):
-        if self.compiler.name not in self.supported_compilers:
+        supported_compilers = {'clang': 'CLANG', 'gcc': 'GCC', 'intel': 'ICC'}
+        if spec.target.family == 'aarch64':
+            supported_compilers = {'gcc': 'GCCARMv8', 'clang': 'ARMCLANG'}
+        elif spec.target.family == 'ppc64' or spec.target.family == 'ppc64le':
+            supported_compilers = {'gcc': 'GCCPOWER'}
+        if self.compiler.name not in supported_compilers:
             raise RuntimeError('{0} is not a supported compiler \
             to compile Likwid'.format(self.compiler.name))
 
         filter_file('^COMPILER .*',
                     'COMPILER = ' +
-                    self.supported_compilers[self.compiler.name],
+                    supported_compilers[self.compiler.name],
                     'config.mk')
         filter_file('^PREFIX .*',
                     'PREFIX = ' +

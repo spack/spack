@@ -43,7 +43,8 @@ class AppleLibunwind(Package):
         raise InstallError(msg)
 
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.lib)
 
     @property
     def libs(self):

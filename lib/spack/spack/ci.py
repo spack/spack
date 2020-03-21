@@ -947,8 +947,9 @@ def read_cdashid_from_mirror(spec, mirror_url):
 def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id):
     if mirror_url:
         tty.debug('Creating buildcache')
-        buildcache._createtarball(env, yaml_path, None, mirror_url, None,
-                                  True, True, False, False, True, False)
+        buildcache._createtarball(env, yaml_path, None, True, False,
+                                  mirror_url, None, True, False, False, True,
+                                  False)
         if build_id:
             tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
                 build_id, mirror_url))

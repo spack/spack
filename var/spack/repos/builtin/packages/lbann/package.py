@@ -100,8 +100,8 @@ class Lbann(CMakePackage):
     depends_on('cnpy')
     depends_on('nccl', when='@0.94:0.98.2 +gpu +nccl')
 
-    depends_on('conduit@master +hdf5', when='@0.94:0.99 +conduit')
-    depends_on('conduit@master +hdf5', when='@:0.90,0.99:')
+    depends_on('conduit@0.4.0: +hdf5', when='@0.94:0.99 +conduit')
+    depends_on('conduit@0.4.0: +hdf5', when='@:0.90,0.99:')
 
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
@@ -183,8 +183,9 @@ class Lbann(CMakePackage):
             args.extend(['-DAluminum_DIR={0}'.format(spec['aluminum'].prefix)])
 
         if '+conduit' in spec:
-            args.extend(['-DLBANN_CONDUIT_DIR={0}'.format(
-                spec['conduit'].prefix)])
+            args.extend([
+                '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
+                '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
 
         # Add support for OpenMP
         if (self.spec.satisfies('%clang')):

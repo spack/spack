@@ -58,7 +58,8 @@ class PyTorch(PythonPackage, CudaPackage):
     version('1.1.0', tag='v1.1.0', submodules=True)
     version('1.0.1', tag='v1.0.1', submodules=True)
     version('1.0.0', tag='v1.0.0', submodules=True)
-    version('0.4.1', tag='v0.4.1', submodules=True)
+    version('0.4.1', tag='v0.4.1', submodules=True,
+            submodules_delete=['third_party/nervanagpu'])
     version('0.4.0', tag='v0.4.0', submodules=True)
     version('0.3.1', tag='v0.3.1', submodules=True)
 
@@ -104,22 +105,22 @@ class PyTorch(PythonPackage, CudaPackage):
     cuda_arch_conflict = ('This version of Torch/Caffe2 only supports compute '
                           'capabilities ')
 
-    conflicts('cuda_arch=none', when='+cuda+caffe2',
+    conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
-    conflicts('cuda_arch=52', when='@1.3.0:+cuda+caffe2',
+    conflicts('cuda_arch=52', when='@1.3.0:+cuda',
               msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=50', when='@1.3.0:+cuda+caffe2',
+    conflicts('cuda_arch=50', when='@1.3.0:+cuda',
               msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=35', when='@1.3.0:+cuda+caffe2',
+    conflicts('cuda_arch=35', when='@1.3.0:+cuda',
               msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=32', when='@1.3.0:+cuda+caffe2',
+    conflicts('cuda_arch=32', when='@1.3.0:+cuda',
               msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=30', when='@1.3.0:+cuda+caffe2',
+    conflicts('cuda_arch=30', when='@1.3.0:+cuda',
               msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=30', when='@1.2.0:+cuda+caffe2',
+    conflicts('cuda_arch=30', when='@1.2.0:+cuda',
               msg=cuda_arch_conflict + '>=3.2')
-    conflicts('cuda_arch=20', when='@1.0.0:+cuda+caffe2',
+    conflicts('cuda_arch=20', when='@1.0.0:+cuda',
               msg=cuda_arch_conflict + '>=3.0')
 
     # Required dependencies

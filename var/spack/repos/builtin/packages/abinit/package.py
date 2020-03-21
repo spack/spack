@@ -71,7 +71,7 @@ class Abinit(AutotoolsPackage):
     # depends_on('elpa~openmp', when='+elpa+mpi~openmp')
     # depends_on('elpa+openmp', when='+elpa+mpi+openmp')
 
-    depends_on('fftw precision=float')
+    depends_on('fftw precision=float,double')
     depends_on('fftw~openmp', when='~openmp')
     depends_on('fftw+openmp', when='+openmp')
 

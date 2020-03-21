@@ -75,6 +75,12 @@ config:
   misc_cache: ~/.spack/cache
 
 
+  # Timeout in seconds used for downloading sources etc. This only applies
+  # to the connection phase and can be increased for slow connections or
+  # servers. 0 means no timeout.
+  connect_timeout: 10
+
+
   # If this is false, tools like curl that use SSL will not verify
   # certifiates. (e.g., curl will use use the -k option)
   verify_ssl: true
@@ -137,7 +143,7 @@ config:
   # when Spack needs to manage its own package metadata and all operations are
   # expected to complete within the default time limit. The timeout should
   # therefore generally be left untouched.
-  db_lock_timeout: 120
+  db_lock_timeout: 3
 
 
   # How long to wait when attempting to modify a package (e.g. to install it).

@@ -18,6 +18,3 @@ class OptionalDepTest3(Package):
 
     depends_on('a', when='~var')
     depends_on('b', when='+var')
-
-    def install(self, spec, prefix):
-        pass

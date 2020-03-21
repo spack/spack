@@ -13,7 +13,9 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-fortran-4.5.2.tar.gz"
+    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-fortran-4.5.2.tar.gz"
+
+    maintainers = ['skosukhin']
 
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
@@ -24,6 +26,7 @@ class NetcdfFortran(AutotoolsPackage):
             description='Enable parallel I/O for netcdf-4')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    variant('shared', default=True, description='Enable shared library')
 
     # We need to build with MPI wrappers if parallel I/O features is enabled:
     # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
@@ -34,42 +37,79 @@ class NetcdfFortran(AutotoolsPackage):
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
-    patch('nag.patch', when='@:4.4.4%nag')
+    # Moreover, Libtool can't handle '-pthread' flag coming from libcurl,
+    # doesn't inject convenience libraries into the shared ones, and is unable
+    # to detect NAG when it is called with an MPI wrapper.
+    patch('nag_libtool_2.4.2.patch', when='@:4.4.4%nag')
+    patch('nag_libtool_2.4.6.patch', when='@4.4.5:%nag')
+
+    # Enable 'make check' for NAG, which is too strict.
+    patch('nag_testing.patch', when='@4.4.5%nag')
+
+    # File fortran/nf_logging.F90 is compiled without -DLOGGING, which leads
+    # to missing symbols in the library. Additionally, the patch enables
+    # building with NAG, which refuses to compile empty source files (see also
+    # comments in the patch):
+    patch('logging.patch', when='@:4.4.5')
+
+    # Prevent excessive linking to system libraries. Without this patch the
+    # library might get linked to the system installation of libcurl. See
+    # https://github.com/Unidata/netcdf-fortran/commit/0a11f580faebbc1c4dce68bf5135709d1c7c7cc1#diff-67e997bcfdac55191033d57a16d1408a
+    patch('excessive_linking.patch', when='@4.4.5')
 
     # Parallel builds do not work in the fortran directory. This patch is
     # derived from https://github.com/Unidata/netcdf-fortran/pull/211
     patch('no_parallel_build.patch', when='@4.5.2')
 
     def flag_handler(self, name, flags):
+        config_flags = None
+
         if name in ['cflags', 'fflags'] and '+pic' in self.spec:
-            flags.append(self.compiler.pic_flag)
+            # Unlike NetCDF-C, we add PIC flag only when +pic. Adding the
+            # flags also when ~shared would make it impossible to build a
+            # static-only version of the library with NAG.
+            config_flags = [self.compiler.pic_flag]
         elif name == 'cppflags':
-            flags.append(self.spec['netcdf-c'].headers.cpp_flags)
+            config_flags = [self.spec['netcdf-c'].headers.cpp_flags]
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
             # could correctly link to all the dependencies even when the
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
-            flags.append(self.spec['netcdf-c'].libs.search_flags)
+            config_flags = [self.spec['netcdf-c'].libs.search_flags]
 
-        return None, None, flags
+        return flags, None, config_flags
 
     @property
     def libs(self):
         libraries = ['libnetcdff']
 
-        # This package installs both shared and static libraries. Permit
-        # clients to query which one they want.
         query_parameters = self.spec.last_query.extra_parameters
-        shared = 'shared' in query_parameters
 
-        return find_libraries(
+        if 'shared' in query_parameters:
+            shared = True
+        elif 'static' in query_parameters:
+            shared = False
+        else:
+            shared = '+shared' in self.spec
+
+        libs = find_libraries(
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
+        if libs:
+            return libs
+
+        msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+        raise spack.error.NoLibrariesError(
+            msg.format('shared' if shared else 'static',
+                       self.spec.name,
+                       self.spec.prefix))
+
     def configure_args(self):
-        config_args = []
+        config_args = self.enable_or_disable('shared')
+        config_args.append('--enable-static')
 
         if '+mpi' in self.spec:
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
@@ -77,3 +117,8 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
         return config_args
+
+    @when('@:4.4.5')
+    def check(self):
+        with working_dir(self.build_directory):
+            make('check', parallel=False)

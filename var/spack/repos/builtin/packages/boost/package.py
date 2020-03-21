@@ -22,8 +22,11 @@ class Boost(Package):
     git      = "https://github.com/boostorg/boost.git"
     list_url = "http://sourceforge.net/projects/boost/files/boost/"
     list_depth = 1
+    maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
+    version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
     version('1.70.0', sha256='430ae8354789de4fd19ee52f3b1f739e1fba576f0aded0897c3c2bc00fb38778')
     version('1.69.0', sha256='8f32d4617390d1c2d16f26a27ab60d97807b35440d45891fa340fc2648b04406')
     version('1.68.0', sha256='7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7')
@@ -93,8 +96,12 @@ class Boost(Package):
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
+    #
+    # Boost.Container can be both header-only and compiled. '+container'
+    # indicates the compiled version which requires Extended Allocator
+    # support. The header-only library is installed when no variant is given.
     default_noinstall_libs\
-        = set(['context', 'coroutine', 'fiber', 'mpi', 'python'])
+        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
@@ -171,6 +178,9 @@ class Boost(Package):
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
 
+    # Container's Extended Allocators were not added until 1.56.0
+    conflicts('+container', when='@:1.55.99')
+
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
 
@@ -205,7 +215,7 @@ class Boost(Package):
 
     # Add option to C/C++ compile commands in clang-linux.jam
     patch('clang-linux_add_option.patch', when='@1.56.0:1.63.0')
-    patch('clang-linux_add_option2.patch', when='@:1.55.0')
+    patch('clang-linux_add_option2.patch', when='@1.47.0:1.55.0')
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
@@ -216,9 +226,6 @@ class Boost(Package):
         return url.format(version.dotted, version.underscored)
 
     def determine_toolset(self, spec):
-        if spec.satisfies("platform=darwin"):
-            return 'darwin'
-
         toolsets = {'g++': 'gcc',
                     'icpc': 'intel',
                     'clang++': 'clang',
@@ -405,15 +412,6 @@ class Boost(Package):
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, 'boost')
-            mkdirp(join_path(prefix, 'include'))
-            dst = join_path(prefix, 'include', 'boost')
-            install_tree(src, dst)
-            return
 
         # Remove libraries that the release version does not support
         if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
@@ -432,6 +430,16 @@ class Boost(Package):
             with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
+
+        if not with_libs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix
+            # directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path

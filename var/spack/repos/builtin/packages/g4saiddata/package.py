@@ -12,6 +12,8 @@ class G4saiddata(Package):
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4SAIDDATA.1.1.tar.gz"
 
+    maintainers = ['drbenmorgan']
+
     version('1.1', sha256='a38cd9a83db62311922850fe609ecd250d36adf264a88e88c82ba82b7da0ed7f')
 
     def install(self, spec, prefix):

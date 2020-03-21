@@ -14,6 +14,7 @@ class SuiteSparse(Package):
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
     version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
     version('5.5.0', sha256='63c73451734e2bab19d1915796c6776565ea6aea5da4063a9797ecec60da2e3d')
     version('5.4.0', sha256='d9d62d539410d66550d0b795503a556830831f50087723cb191a030525eda770')
@@ -33,6 +34,7 @@ class SuiteSparse(Package):
 
     depends_on('blas')
     depends_on('lapack')
+    depends_on('m4', type='build', when='@5.0.0:')
     depends_on('cmake', when='@5.2.0:', type='build')
 
     depends_on('metis@5.1.0', when='@4.5.1:')
@@ -63,7 +65,6 @@ class SuiteSparse(Package):
         pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
 
         make_args = [
-            'INSTALL=%s' % prefix,
             # By default, the Makefile uses the Intel compilers if
             # they are found. The AUTOCC flag disables this behavior,
             # forcing it to use Spack's compiler wrappers.
@@ -130,10 +131,10 @@ class SuiteSparse(Package):
         # In those SuiteSparse versions calling "make install" in one go is
         # not possible, mainly because of GraphBLAS.  Thus compile first and
         # install in a second run.
-        if (self.spec.version >= Version('5.4.0') and
-            self.spec.version <= Version('5.6.0')):
+        if '@5.4.0:' in self.spec:
             make('default', *make_args)
 
+        make_args.append('INSTALL=%s' % prefix)
         make('install', *make_args)
 
     @property

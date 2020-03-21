@@ -31,6 +31,7 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
     version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114', preferred=True)
@@ -71,7 +72,7 @@ class Python(AutotoolsPackage):
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer
-    variant('libxml2', default=False,
+    variant('libxml2', default=True,
             description='Use a gettext library build with libxml2')
 
     variant(
@@ -160,7 +161,7 @@ class Python(AutotoolsPackage):
 
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
-    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1: %intel')
+    patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -211,6 +212,9 @@ class Python(AutotoolsPackage):
 
         # Need this to allow python build to find the Python installation.
         env.set('MACOSX_DEPLOYMENT_TARGET', platform.mac_ver()[0])
+
+        env.unset('PYTHONPATH')
+        env.unset('PYTHONHOME')
 
     def configure_args(self):
         spec = self.spec

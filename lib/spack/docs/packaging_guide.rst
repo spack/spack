@@ -929,6 +929,9 @@ Git fetching supports the following parameters to ``version``:
 * ``tag``: Name of a tag to fetch.
 * ``commit``: SHA hash (or prefix) of a commit to fetch.
 * ``submodules``: Also fetch submodules recursively when checking out this repository.
+* ``submodules_delete``: A list of submodules to forcibly delete from the repository
+  after fetching. Useful if a version in the repository has submodules that
+  have disappeared/are no longer accessible.
 * ``get_full_repo``: Ensure the full git history is checked out with all remote
   branch information. Normally (``get_full_repo=False``, the default), the git
   option ``--depth 1`` will be used if the version of git and the specified
@@ -2910,7 +2913,7 @@ discover its dependencies.
 
 If you want to see the environment that a package will build with, or
 if you want to run commands in that environment to test them out, you
-can use the :ref:`cmd-spack-env` command, documented
+can use the :ref:`cmd-spack-build-env` command, documented
 below.
 
 ^^^^^^^^^^^^^^^^^^^^^
@@ -4329,31 +4332,31 @@ directory, install directory, package directory) and others change to
 core spack locations.  For example, ``spack cd --module-dir`` will take you to
 the main python source directory of your spack install.
 
-.. _cmd-spack-env:
+.. _cmd-spack-build-env:
 
-^^^^^^^^^^^^^
-``spack env``
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+``spack build-env``
+^^^^^^^^^^^^^^^^^^^
 
-``spack env`` functions much like the standard unix ``env`` command,
-but it takes a spec as an argument.  You can use it to see the
+``spack build-env`` functions much like the standard unix ``build-env``
+command, but it takes a spec as an argument.  You can use it to see the
 environment variables that will be set when a particular build runs,
 for example:
 
 .. code-block:: console
 
-   $ spack env mpileaks@1.1%intel
+   $ spack build-env mpileaks@1.1%intel
 
 This will display the entire environment that will be set when the
 ``mpileaks@1.1%intel`` build runs.
 
 To run commands in a package's build environment, you can simply
-provide them after the spec argument to ``spack env``:
+provide them after the spec argument to ``spack build-env``:
 
 .. code-block:: console
 
    $ spack cd mpileaks@1.1%intel
-   $ spack env mpileaks@1.1%intel ./configure
+   $ spack build-env mpileaks@1.1%intel ./configure
 
 This will cd to the build directory and then run ``configure`` in the
 package's build environment.
@@ -4451,7 +4454,7 @@ translate variant flags into CMake definitions.  For example:
 
 .. code-block:: python
 
-   def configure_args(self):
+   def cmake_args(self):
        spec = self.spec
        return [
            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),

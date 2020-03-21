@@ -456,7 +456,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
             if os.path.isdir(s):
                 mkdirp(d)
             else:
-                shutil.copyfile(s, d)
+                shutil.copy2(s, d)
 
         if _permissions:
             set_install_permissions(d)
