@@ -366,14 +366,18 @@ class Qmcpack(CMakePackage, CudaPackage):
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
 
-        # install binaries
+        # create top-level directory
         mkdirp(prefix)
-        install_tree('bin', prefix.bin)
 
+        # We assume cwd is self.stage.source_path, then
         # install manual, labs, and nexus
         install_tree('manual', prefix.manual)
         install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
+
+        # install binaries
+        with working_dir(self.build_directory):
+            install_tree('bin', prefix.bin)
 
     def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.
