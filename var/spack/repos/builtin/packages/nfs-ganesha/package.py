@@ -23,16 +23,7 @@ class NfsGanesha(CMakePackage):
     depends_on('userspace-rcu')
     depends_on('ntirpc')
 
+    root_cmakelists_dir = 'src'
+
     def setup_build_environment(self, env):
         env.prepend_path('CPATH', self.spec['ntirpc'].prefix.include.ntirpc)
-
-    def build(self, spec, prefix):
-        make()
-
-    def cmake(self, spec, prefix):
-        args = std_cmake_args
-        args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.spec.prefix)
-        cmake('src', *args)
-
-    def install(self, spec, prefix):
-        make('install')
