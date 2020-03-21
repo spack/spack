@@ -193,7 +193,8 @@ def disambiguate_spec(spec, env, local=False, installed=True, first=False):
     return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
 
 
-def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True, first=False):
+def disambiguate_spec_from_hashes(spec, hashes, local=False,
+                                  installed=True, first=False):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
