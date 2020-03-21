@@ -119,6 +119,8 @@ class Mfem(Package):
             description='Enable Sundials time integrators')
     variant('pumi', default=False,
             description='Enable functionality based on PUMI')
+    variant('gslib', default=False,
+            description='Enable functionality based on GSLIB')
     variant('mpfr', default=False,
             description='Enable precise, 1D quadrature rules')
     variant('lapack', default=False,
@@ -158,6 +160,7 @@ class Mfem(Package):
     conflicts('+petsc', when='@:3.2')
     conflicts('+sundials', when='@:3.2')
     conflicts('+pumi', when='@:3.3.2')
+    conflicts('+gslib', when='@:4.0.99')
     conflicts('timer=mac', when='@:3.3.0')
     conflicts('timer=mpi', when='@:3.3.0')
     conflicts('~metis+mpi', when='@:3.3.0')
@@ -186,6 +189,8 @@ class Mfem(Package):
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
+    depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
+    depends_on('gslib@1.0.5:~mpi~mpiio', when='+gslib~mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('strumpack@3.0.0:', when='+strumpack')
@@ -322,15 +327,14 @@ class Mfem(Package):
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
             'MFEM_USE_PUMI=%s' % yes_no('+pumi'),
+            'MFEM_USE_GSLIB=%s' % yes_no('+gslib'),
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
             'MFEM_USE_MPFR=%s' % yes_no('+mpfr'),
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
-            'MFEM_USE_CONDUIT=%s' % yes_no('+conduit')]
-
-        if spec.satisfies('@4.0.0:'):
-            options += ['MFEM_USE_OCCA=%s' % yes_no('+occa'),
-                        'MFEM_USE_RAJA=%s' % yes_no('+raja')]
+            'MFEM_USE_CONDUIT=%s' % yes_no('+conduit'),
+            'MFEM_USE_OCCA=%s' % yes_no('+occa'),
+            'MFEM_USE_RAJA=%s' % yes_no('+raja')]
 
         cxxflags = spec.compiler_flags['cxxflags']
 
@@ -434,6 +438,9 @@ class Mfem(Package):
 
         if '+pumi' in spec:
             options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
+
+        if '+gslib' in spec:
+            options += ['GSLIB_DIR=%s' % spec['gslib'].prefix]
 
         if '+netcdf' in spec:
             options += [

@@ -17,10 +17,10 @@ builds=(
     ${mfem}'~mpi~metis~zlib'
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
     ${mfem}'+occa+raja+superlu-dist+suite-sparse+petsc \
-        +sundials+pumi'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+gslib'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
         ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
     ${mfem}'~mpi \
-        +occa+raja+suite-sparse+sundials'${mpfr}'+netcdf \
+        +occa+raja+suite-sparse+sundials+gslib'${mpfr}'+netcdf \
         +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
     # develop version:
     ${mfem_dev}'+shared~static'
@@ -28,10 +28,10 @@ builds=(
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
     ${mfem_dev}'+shared~static \
         +occa+raja+superlu-dist+suite-sparse+petsc \
-        +sundials+pumi'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
+        +sundials+pumi+gslib'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
         ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
     ${mfem_dev}'+shared~static~mpi \
-        +occa+raja+suite-sparse+sundials'${mpfr}'+netcdf \
+        +occa+raja+suite-sparse+sundials+gslib'${mpfr}'+netcdf \
         +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
 )
 
@@ -46,6 +46,7 @@ builds2=(
     ${mfem}'+sundials~mpi'
     ${mfem}'+sundials'
     ${mfem}'+pumi'
+    ${mfem}'+gslib'
     ${mfem}'+netcdf~mpi'
     ${mfem}'+netcdf'
     ${mfem}${mpfr}
@@ -63,6 +64,7 @@ builds2=(
     ${mfem_dev}'+sundials~mpi'
     ${mfem_dev}'+sundials'
     ${mfem_dev}'+pumi'
+    ${mfem_dev}'+gslib'
     ${mfem_dev}'+netcdf~mpi'
     ${mfem_dev}'+netcdf'
     ${mfem_dev}${mpfr}
