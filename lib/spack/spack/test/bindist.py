@@ -9,7 +9,6 @@ This test checks creating and install buildcaches
 import os
 import py
 import pytest
-import shutil
 import argparse
 import platform
 import spack.repo
@@ -125,7 +124,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
     build_stage = spack.config.get('config:build_stage')
     if not build_stage:
         spack.config.set('config:build_stage',
-                          [str(mutable_dir.join('build_stage'))], scope='user')
+                         [str(mutable_dir.join('build_stage'))], scope='user')
     timeout = spack.config.get('config:connect_timeout')
     if not timeout:
         spack.config.set('config:connect_timeout', 10, scope='user')
@@ -175,7 +174,7 @@ def config_setup():
     repocmd.setup_parser(rparser)
     rargs = rparser.parse_args(['add', spack.paths.packages_path])
     repocmd.repo(rparser, rargs)
-   # Set some spec name used globally
+    # Set some spec name used globally
     zspec = Spec('zlib')
     zspec.concretize()
     espec = Spec('environment-modules')
