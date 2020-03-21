@@ -36,7 +36,7 @@ class Gslib(Package):
         lib_dir = 'lib'
         libname = 'libgs.a'
 
-        if self.version == Version('1.0.1'):
+        if self.spec.satisfies('@1.0.1:'):
             makefile = 'Makefile'
         else:
             makefile = 'src/Makefile'
@@ -60,16 +60,19 @@ class Gslib(Package):
             ld_flags = blas.ld_flags
             filter_file(r'\$\(LDFLAGS\)', ld_flags, makefile)
 
-        if self.version == Version('1.0.1'):
+        if self.spec.satisfies('@1.0.3:'):
             make(make_cmd)
-            make('install')
-            install_tree(lib_dir, prefix.lib)
-        elif self.version == Version('1.0.0'):
-            with working_dir(src_dir):
+            make('install', 'INSTALL_ROOT=%s' % self.prefix)
+        else:
+            if self.spec.satisfies('@1.0.1:'):
                 make(make_cmd)
-                mkdir(prefix.lib)
-                install(libname, prefix.lib)
-
-        # Should only install the headers (this will be fixed in gslib on
-        # future releases).
-        install_tree(src_dir, prefix.include)
+                make('install')
+                install_tree(lib_dir, prefix.lib)
+            elif self.version == Version('1.0.0'):
+                with working_dir(src_dir):
+                    make(make_cmd)
+                    mkdir(prefix.lib)
+                    install(libname, prefix.lib)
+            # Should only install the headers (this will be fixed in gslib on
+            # future releases).
+            install_tree(src_dir, prefix.include)
