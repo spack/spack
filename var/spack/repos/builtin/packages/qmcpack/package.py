@@ -198,6 +198,15 @@ class Qmcpack(CMakePackage, CudaPackage):
                     '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
                     'CMake/FindLibxml2QMC.cmake')
 
+    @property
+    def build_targets(self):
+        spec = self.spec
+        targets = ['all']
+        if '+ppconvert' in spec:
+            targets.append('ppconvert')
+
+        return targets
+
     def cmake_args(self):
         spec = self.spec
         args = []
@@ -341,14 +350,6 @@ class Qmcpack(CMakePackage, CudaPackage):
             args.append('-DBUILD_PPCONVERT=0')
 
         return args
-
-    # QMCPACK needs custom build method due to ppconvert
-    def build(self, spec, prefix):
-        args = self.cmake_args()
-        cmake(*args)
-        make()
-        if '+ppconvert' in spec:
-            make('ppconvert')
 
     # QMCPACK needs custom install method for a couple of reasons:
     # Firstly, wee follow the recommendation on the Spack website
