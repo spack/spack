@@ -19,7 +19,18 @@ class Davix(CMakePackage):
     version('0.6.9', sha256='fbd97eb5fdf82ca48770d06bf8e2805b35f23255478aa381a9d25a49eb98e348')
     version('0.6.8', sha256='e1820f4cc3fc44858ae97197a3922cce2a1130ff553b080ba19e06eb8383ddf7')
 
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
     depends_on('pkgconfig', type='build')
     depends_on('libxml2')
     depends_on('libuuid')
     depends_on('openssl')
+
+    def cmake_args(self):
+        cmake_args = ['-DCMAKE_CXX_STANDARD={0}'.format(
+                      self.spec.variants['cxxstd'].value)]
+        return cmake_args
