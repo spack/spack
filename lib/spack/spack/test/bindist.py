@@ -107,14 +107,29 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
     cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site/%s' % platform.system().lower(),
-                       'site', 'system', 'user']])
+                       'site', 'user']])
 
     monkeypatch.setattr(spack.config, 'config', cfg)
 
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
+    print(spack.config.config)
+    njobs = spack.config.get('config:build_jobs')
+    if not njobs:
+        spack.config.set('config:build_jobs', 4, scope='user')
+    extensions = spack.config.get('config:template_dirs')
+    if not extensions:
+        spack.config.set('config:template_dirs',
+                         [os.path.join(spack.paths.share_path, 'templates')],
+                         scope='user')
 
+    mutable_dir.ensure('build_stage', dir=True)
+    build_stage = spack.config.get('config:build_stage')
+    if not build_stage:
+        spack.config.set('config:build_stage',
+                          [str(mutable_dir.join('build_stage'))], scope='user')
+    timeout = spack.config.get('config:connect_timeout')
+    if not timeout:
+        spack.config.set('config:connect_timeout', 10, scope='user')
+    print(spack.config.config)
     yield spack.config.config
     mutable_dir.remove()
 
@@ -160,18 +175,7 @@ def config_setup():
     repocmd.setup_parser(rparser)
     rargs = rparser.parse_args(['add', spack.paths.packages_path])
     repocmd.repo(rparser, rargs)
-    rargs = rparser.parse_args(['add', spack.paths.mock_packages_path])
-    repocmd.repo(rparser, rargs)
-    njobs = spack.config.get('config:build_jobs')
-    if not njobs:
-        spack.config.set('config:build_jobs', 4, scope='user')
-    extensions = spack.config.get('config:template_dirs')
-    if not extensions:
-        spack.config.set('config:template_dirs',
-                         [os.path.join(spack.paths.share_path, 'templates')],
-                         scope='user')
-
-    # Set some spec name used globally
+   # Set some spec name used globally
     zspec = Spec('zlib')
     zspec.concretize()
     espec = Spec('environment-modules')
@@ -184,9 +188,8 @@ def config_setup():
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config',
-                         'install_dir_default_layout', 'cache_directory')
+@pytest.mark.usefixtures('default_config', 'cache_directory',
+                         'install_dir_default_layout')
 def test_default_rpaths_create_install_default_layout(tmpdir,
                                                       mirror_directory_def,
                                                       config_setup,
@@ -272,16 +275,15 @@ def test_default_rpaths_create_install_default_layout(tmpdir,
 
     args = parser.parse_args(['list', '-l', '-v'])
     buildcache.buildcache(parser, args)
-    bindist._cached_specs = None
+    bindist._cached_specs = set()
     spack.stage.purge()
-    shutil.rmtree(os.path.join(mock_stage, 'build_cache'))
 
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config',
-                         'install_dir_non_default_layout', 'cache_directory')
+@pytest.mark.usefixtures('default_config', 'cache_directory',
+                         'install_dir_non_default_layout')
 def test_default_rpaths_install_nondefault_layout(tmpdir, config_setup,
                                                   mock_stage):
     """
@@ -317,16 +319,15 @@ def test_default_rpaths_install_nondefault_layout(tmpdir, config_setup,
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
-    bindist._cached_specs = None
+    bindist._cached_specs = set()
     spack.stage.purge()
-    shutil.rmtree(os.path.join(mock_stage, 'build_cache'))
 
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config',
-                         'install_dir_default_layout', 'cache_directory')
+@pytest.mark.usefixtures('default_config', 'cache_directory',
+                         'install_dir_default_layout')
 def test_relative_rpaths_create_default_layout(tmpdir, mirror_directory_rel,
                                                config_setup, mock_stage):
     """
@@ -378,16 +379,15 @@ def test_relative_rpaths_create_default_layout(tmpdir, mirror_directory_rel,
     uargs = uparser.parse_args(['-y', '--dependents', zspec.name])
     uninstall.uninstall(uparser, uargs)
 
-    bindist._cached_specs = None
+    bindist._cached_specs = set()
     spack.stage.purge()
-    shutil.rmtree(os.path.join(mock_stage, 'build_cache'))
 
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config',
-                         'install_dir_default_layout', 'cache_directory')
+@pytest.mark.usefixtures('default_config', 'cache_directory',
+                         'install_dir_default_layout')
 def test_relative_rpaths_install_default_layout(tmpdir, config_setup,
                                                 mock_stage):
     """
@@ -436,17 +436,17 @@ def test_relative_rpaths_install_default_layout(tmpdir, config_setup,
     args = parser.parse_args(install_args)
     buildcache.buildcache(parser, args)
 
-    bindist._cached_specs = None
-    shutil.rmtree(os.path.join(mock_stage, 'build_cache'))
+    bindist._cached_specs = set()
     spack.stage.purge()
 
 
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
-@pytest.mark.usefixtures('default_config',
+@pytest.mark.usefixtures('default_config', 'cache_directory',
                          'install_dir_non_default_layout')
-def test_relative_rpaths_install_nondefault(tmpdir, config_setup, mock_stage):
+def test_relative_rpaths_install_nondefault(tmpdir, config_setup,
+                                            mock_stage):
     """
     Test the installation of buildcaches with relativized rpaths
     into the non-default directory layout scheme.
@@ -473,9 +473,7 @@ def test_relative_rpaths_install_nondefault(tmpdir, config_setup, mock_stage):
 
     # test install in non-default install path scheme and relative path
     args = parser.parse_args(install_args)
-    with pytest.raises(bindist.NewLayoutException):
-        buildcache.buildcache(parser, args)
+    buildcache.buildcache(parser, args)
 
-    bindist._cached_specs = None
-    shutil.rmtree(os.path.join(mock_stage, 'build_cache'))
+    bindist._cached_specs = set()
     spack.stage.purge()
