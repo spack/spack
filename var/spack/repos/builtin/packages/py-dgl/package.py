@@ -47,6 +47,7 @@ class PyDgl(CMakePackage):
 
     build_directory = 'build'
 
+    # https://docs.dgl.ai/install/index.html#install-from-source
     def cmake_args(self):
         args = []
 
@@ -83,12 +84,45 @@ class PyDgl(CMakePackage):
 
     def install(self, spec, prefix):
         with working_dir('python'):
-            import os
-            print('Current dir:', os.getcwd())
             setup_py('install', '--prefix=' + prefix,
                      '--single-version-externally-managed', '--root=/')
+
+        # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
+        install_tree(prefix.dgl, prefix.lib)
 
     def setup_run_environment(self, env):
         # https://docs.dgl.ai/install/backend.html
         backend = self.spec.variants['backend'].value
         env.set('DGLBACKEND', backend)
+
+    @property
+    def import_modules(self):
+        modules = [
+            'dgl', 'dgl.nn', 'dgl.runtime', 'dgl.backend', 'dgl.function',
+            'dgl.contrib', 'dgl._ffi', 'dgl.data', 'dgl.runtime.ir',
+            'dgl.backend.numpy', 'dgl.contrib.sampling', 'dgl._ffi._cy2',
+            'dgl._ffi._cy3', 'dgl._ffi._ctypes',
+        ]
+
+        if 'backend=pytorch' in self.spec:
+            modules.extend([
+                'dgl.nn.pytorch', 'dgl.nn.pytorch.conv', 'dgl.backend.pytorch'
+            ])
+        elif 'backend=mxnet' in self.spec:
+            modules.extend([
+                'dgl.nn.mxnet', 'dgl.nn.mxnet.conv', 'dgl.backend.mxnet'
+            ])
+        elif 'backend=tensorflow' in self.spec:
+            modules.extend([
+                'dgl.nn.tensorflow', 'dgl.nn.tensorflow.conv',
+                'dgl.backend.tensorflow'
+            ])
+
+        return modules
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        with working_dir('spack-test', create=True):
+            for module in self.import_modules:
+                python('-c', 'import {0}'.format(module))
