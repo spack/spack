@@ -383,8 +383,8 @@ class Qmcpack(CMakePackage, CudaPackage):
         """Set-up runtime environment for QMCPACK.
         Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 
-        env.prepend_path('PATH', self.prefix.nexus + 'bin')
-        env.prepend_path('PYTHONPATH', self.prefix.nexus + 'lib')
+        env.prepend_path('PATH', self.prefix.nexus + '/bin')
+        env.prepend_path('PYTHONPATH', self.prefix.nexus + '/lib')
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
