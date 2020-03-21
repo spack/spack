@@ -17,8 +17,6 @@ class XsdkExamples(CMakePackage):
 
     version('0.1.0', sha256='d24cab1db7c0872b6474d69e598df9c8e25d254d09c425fb0a6a8d6469b8018f')
 
-    variant('cuda', default=False, description='Enable CUDA-dependent packages')
-
     depends_on('xsdk@develop', when='@develop')
     depends_on('xsdk@0.5.0', when='@0.1.0')
     depends_on('mpi')
