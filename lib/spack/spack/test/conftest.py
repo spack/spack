@@ -525,6 +525,8 @@ def database(mock_store, mock_packages, config):
     """This activates the mock store, packages, AND config."""
     with use_store(mock_store):
         yield mock_store.db
+    # Force reading the database again between tests
+    mock_store.db.last_seen_verifier = ''
 
 
 @pytest.fixture(scope='function')

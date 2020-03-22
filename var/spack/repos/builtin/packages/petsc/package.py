@@ -24,6 +24,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.12.4', sha256='56a941130da93bbacb3cfa74dcacea1e3cd8e36a0341f9ced09977b1457084c3')
     version('3.12.3', sha256='91f77d7b0f54056f085b9e27938922db3d9bb1734a2e2a6d26f43d3e6c0cf631')
     version('3.12.2', sha256='d874b2e198c4cb73551c2eca1d2c5d27da710be4d00517adb8f9eb3d6d0375e8')
     version('3.12.1', sha256='b72d895d0f4a79acb13ebc782b47b26d10d4e5706d399f533afcd5b3dba13737')
@@ -145,7 +146,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
@@ -163,8 +164,8 @@ class Petsc(Package):
     depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@5.0.0:~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@5.0.0:+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@5.0.0:5.1.3+int64', when='@3.7:3.7.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.2:5.2.99~int64', when='@3.8:3.9.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@5.2:5.2.99+int64', when='@3.8:3.9.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.4:5.4.99~int64', when='@3.10:3.10.2+superlu-dist+mpi~int64')
