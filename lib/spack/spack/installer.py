@@ -48,7 +48,7 @@ import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 
-from llnl.util.tty.color import colorize, cwrite
+from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
@@ -253,8 +253,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    cwrite('@*g{[+]} ')
-    print(message)
+    print(colorize('@*g{[+]} ') + message)
 
 
 def _process_external_package(pkg, explicit):
