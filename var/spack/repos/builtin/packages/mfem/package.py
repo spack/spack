@@ -100,6 +100,9 @@ class Mfem(Package):
             description='Required for MPI parallelism')
     variant('openmp', default=False,
             description='Enable OpenMP parallelism')
+    variant('cuda', default=False, description='Enable CUDA support')
+    variant('cuda_arch', default='sm_60',
+            description='CUDA architecture to compile for')
     variant('occa', default=False, description='Enable OCCA backend')
     variant('raja', default=False, description='Enable RAJA backend')
 
@@ -149,6 +152,7 @@ class Mfem(Package):
     conflicts('~static~shared')
     conflicts('~threadsafe', when='+openmp')
 
+    conflicts('+cuda', when='@:3.99.99')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
@@ -180,6 +184,8 @@ class Mfem(Package):
     depends_on('metis', when='+metis')
     depends_on('blas', when='+lapack')
     depends_on('lapack@3.0:', when='+lapack')
+
+    depends_on('cuda', when='+cuda')
 
     depends_on('sundials@2.7.0', when='@:3.3.0+sundials~mpi')
     depends_on('sundials@2.7.0+mpi+hypre', when='@:3.3.0+sundials+mpi')
@@ -268,6 +274,13 @@ class Mfem(Package):
         def is_sys_lib_path(dir):
             return dir in sys_lib_paths
 
+        xcompiler = ''
+        xlinker = '-Wl,'
+        if '+cuda' in spec:
+            xcompiler = '-Xcompiler='
+            xlinker = '-Xlinker='
+        cuda_arch = spec.variants['cuda_arch'].value
+
         # We need to add rpaths explicitly to allow proper export of link flags
         # from within MFEM.
 
@@ -276,7 +289,8 @@ class Mfem(Package):
         # above -- this is done to avoid issues like this:
         # https://github.com/mfem/mfem/issues/1088.
         def ld_flags_from_library_list(libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in libs_list.directories
+            flags = ['%s-rpath,%s' % (xlinker, dir)
+                     for dir in libs_list.directories
                      if not is_sys_lib_path(dir)]
             flags += ['-L%s' % dir for dir in libs_list.directories
                       if not is_sys_lib_path(dir)]
@@ -284,7 +298,7 @@ class Mfem(Package):
             return ' '.join(flags)
 
         def ld_flags_from_dirs(pkg_dirs_list, pkg_libs_list):
-            flags = ['-Wl,-rpath,%s' % dir for dir in pkg_dirs_list
+            flags = ['%s-rpath,%s' % (xlinker, dir) for dir in pkg_dirs_list
                      if not is_sys_lib_path(dir)]
             flags += ['-L%s' % dir for dir in pkg_dirs_list
                       if not is_sys_lib_path(dir)]
@@ -333,12 +347,19 @@ class Mfem(Package):
             'MFEM_USE_GNUTLS=%s' % yes_no('+gnutls'),
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit'),
+            'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
             'MFEM_USE_OCCA=%s' % yes_no('+occa'),
             'MFEM_USE_RAJA=%s' % yes_no('+raja')]
 
         cxxflags = spec.compiler_flags['cxxflags']
 
         if cxxflags:
+            cxxflags = [(xcompiler + flag) for flag in cxxflags]
+            if '+cuda' in spec:
+                cxxflags += [
+                    '-x=cu --expt-extended-lambda -arch=%s' % cuda_arch,
+                    '-ccbin %s' % (spec['mpi'].mpicxx if '+mpi' in spec
+                                   else env['CXX'])]
             if self.spec.satisfies('@4.0.0:'):
                 cxxflags.append(self.compiler.cxx11_flag)
             # The cxxflags are set by the spack c++ compiler wrapper. We also
@@ -482,6 +503,11 @@ class Mfem(Package):
 
         if '+openmp' in spec:
             options += ['OPENMP_OPT=%s' % self.compiler.openmp_flag]
+
+        if '+cuda' in spec:
+            options += [
+                'CUDA_CXX=%s' % join_path(spec['cuda'].prefix, 'bin', 'nvcc'),
+                'CUDA_ARCH=%s' % cuda_arch]
 
         if '+occa' in spec:
             options += ['OCCA_OPT=-I%s' % spec['occa'].prefix.include,
