@@ -25,6 +25,7 @@ class Cminpack(CMakePackage):
     depends_on('blas', when='+blas')
 
     # Backport a pull request for correctly linking blas.
+    # See https://github.com/devernay/cminpack/pull/21
     patch('link_with_blas_pr_21.patch', when='@:1.3.6')
 
     def cmake_args(self):
