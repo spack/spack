@@ -82,14 +82,16 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
     assert 'export FOOBAR=mpileaks' in sh_out
     assert 'setenv FOOBAR mpileaks' in csh_out
 
+
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Tests that the --first option works"""
-    install('cmake+doc')
-    #install('cmake~doc')
-
-    sh_out = load('--sh', 'cmake')
-
-    assert 'export' in sh_out
+    """Test with and without the --first option"""
+    install('libelf@0.8.12')
+    install('libelf@0.8.13')
+    # Now there are two versions of libelf; This should cause an error
+    out = load('--sh', 'libelf', fail_on_error=False)
+    assert 'export' not in out
+    # This should not cause an error
+    assert load('--sh', '--first', 'libelf')
 
 
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
