@@ -51,6 +51,12 @@ class QuantumEspresso(Package):
     variant('epw', default=False,
             description='Builds Electron-phonon Wannier executable')
 
+    # Apply internal patches by default. May need to be set to to False
+    # for 3rd party dependency patching
+    desc = 'Apply internal patches. May need to be set to False for'
+    desc = desc + ' dependency patching'
+    variant('patch', default=True, description=desc)
+
     # Dependencies
     depends_on('blas')
     depends_on('lapack')
@@ -66,13 +72,13 @@ class QuantumEspresso(Package):
     # TODO: enable building EPW when ~mpi
     depends_on('mpi', when='+epw')
 
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.004')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
 
     # Conflicts
     # MKL with 64-bit integers not supported.
     conflicts(
-        '^intel-mkl+ilp64',
+        '^mkl+ilp64',
         msg='Quantum ESPRESSO does not support MKL 64-bit integer variant'
     )
 
@@ -149,19 +155,19 @@ class QuantumEspresso(Package):
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
           sha256='bc8c5b8523156cee002d97dab42a5976dffae20605da485a427b902a236d7e6b',
-          when='@6.3:6.3.0')
+          when='+patch@6.3:6.3.0')
 
     # QE 6.3 `make install` broken and a patch must be applied
     patch('https://gitlab.com/QEF/q-e/commit/88e6558646dbbcfcafa5f3fa758217f6062ab91c.diff',
           sha256='b776890d008e16cca28c31299c62f47de0ba606b900b17cbc27c041f45e564ca',
-          when='@6.3:6.3.0')
+          when='+patch@6.3:6.3.0')
 
     # QE 6.4.1 patch to work around configure issues that only appear in the
     # Spack environment. We now are able to support:
     # `spack install qe~mpi~scalapack hdf5=serial`
     patch('https://gitlab.com/QEF/q-e/commit/5fb1195b0844e1052b7601f18ab5c700f9cbe648.diff',
           sha256='b1aa3179ee1c069964fb9c21f3b832aebeae54947ce8d3cc1a74e7b154c3c10f',
-          when='@6.4.1:6.5.0')
+          when='+patch@6.4.1:6.5.0')
 
     def install(self, spec, prefix):
 
@@ -205,7 +211,7 @@ class QuantumEspresso(Package):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        if '^intel-mkl' in spec:
+        if '^mkl' in spec:
             # A seperate FFT library is not needed when linking against MKL
             options.append(
                 'FFTW_INCLUDE={0}'.format(join_path(env['MKLROOT'],
@@ -224,10 +230,21 @@ class QuantumEspresso(Package):
         # appear twice in in link line but this is harmless
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
 
-        options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
+        # qe-6.5 fails to detect MKL for FFT if BLAS_LIBS is set due to
+        # an unfortunate upsteam change in their autoconf/configure:
+        # - qe-6.5/install/m4/x_ac_qe_blas.m4 only sets 'have_blas'
+        #   but no 'have_mkl' if BLAS_LIBS is set (which seems to be o.k.)
+        # - however, qe-6.5/install/m4/x_ac_qe_fft.m4 in 6.5 unfortunately
+        #   relies on x_ac_qe_blas.m4 to detect MKL and set 'have_mkl'
+        # - qe-5.4 up to 6.4.1 had a different logic and worked fine with
+        #   BLAS_LIBS being set
+        # However, MKL is correctly picked up by qe-6.5 for BLAS and FFT if
+        # MKLROOT is set (which SPACK does automatically for ^mkl)
+        if not ('quantum-espresso@6.5' in spec and '^mkl' in spec):
+            options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
-            scalapack_option = 'intel' if '^intel-mkl' in spec else 'yes'
+            scalapack_option = 'intel' if '^mkl' in spec else 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
 
         if '+elpa' in spec:

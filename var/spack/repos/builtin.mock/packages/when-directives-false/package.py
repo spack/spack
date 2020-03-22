@@ -23,6 +23,3 @@ class WhenDirectivesFalse(Package):
     resource(url="http://www.example.com/example-1.0-resource.tar.gz",
              md5='0123456789abcdef0123456789abcdef',
              when=False)
-
-    def install(self, spec, prefix):
-        pass

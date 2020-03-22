@@ -17,6 +17,7 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     gnu_mirror_path = "bison/bison-3.4.2.tar.gz"
 
     version('3.4.2', sha256='ff3922af377d514eca302a6662d470e857bd1a591e96a2050500df5a9d59facf')
+    version('3.4.1', sha256='7007fc89c216fbfaff5525359b02a7e5b612694df5168c74673f67055f015095')
     version('3.0.5', sha256='cd399d2bee33afa712bac4b1f4434e20379e9b4099bce47189e09a7675a2d566')
     version('3.0.4', sha256='b67fd2daae7a64b5ba862c66c07c1addb9e6b1b05c5f2049392cfd8a2172952e')
     version('2.7',   sha256='19bbe7374fd602f7a6654c131c21a15aebdc06cc89493e8ff250cb7f9ed0a831')

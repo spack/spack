@@ -20,6 +20,7 @@ class Mariadb(CMakePackage):
     homepage = "https://mariadb.org/about/"
     url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
+    version('10.4.8', sha256='10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b')
     version('10.4.7', sha256='c8e6a6d0bb4f22c416ed675d24682a3ecfa383c5283efee70c8edf131374d817')
     version('10.2.8', sha256='8dd250fe79f085e26f52ac448fbdb7af2a161f735fae3aed210680b9f2492393')
     version('10.1.23', sha256='54d8114e24bfa5e3ebdc7d69e071ad1471912847ea481b227d204f9d644300bf')
@@ -51,3 +52,10 @@ class Mariadb(CMakePackage):
     depends_on('openssl@:1.0', when='@:10.1')
 
     conflicts('%gcc@9.1.0:', when='@:5.5')
+
+    def cmake_args(self):
+        args = []
+
+        args.append('-DENABLE_DTRACE:BOOL=OFF')
+
+        return args

@@ -142,7 +142,7 @@ def compiler_info(args):
                 for flag, flag_value in iteritems(c.flags):
                     print("\t\t%s = %s" % (flag, flag_value))
             if len(c.environment) != 0:
-                if len(c.environment['set']) != 0:
+                if len(c.environment.get('set', {})) != 0:
                     print("\tenvironment:")
                     print("\t    set:")
                     for key, value in iteritems(c.environment['set']):

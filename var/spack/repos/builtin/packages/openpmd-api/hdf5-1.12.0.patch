@@ -1,0 +1,23 @@
+From 61ccc18cdd478c6281466f1f77de416559234dd8 Mon Sep 17 00:00:00 2001
+From: Axel Huebl <axel.huebl@plasma.ninja>
+Date: Tue, 17 Mar 2020 10:51:20 -0700
+Subject: [PATCH] HDF5: H5Oget_info Compatibility
+
+Update to work with HDF5 1.12.0 signature.
+Macro for older releases.
+---
+ src/IO/HDF5/HDF5IOHandler.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/IO/HDF5/HDF5IOHandler.cpp b/src/IO/HDF5/HDF5IOHandler.cpp
+index 7043861b..c125e1f4 100644
+--- a/src/IO/HDF5/HDF5IOHandler.cpp
++++ b/src/IO/HDF5/HDF5IOHandler.cpp
+@@ -1535,3 +1535,7 @@ void HDF5IOHandlerImpl::listAttributes(Writable* writable,
+     H5O_info_t object_info;
+     herr_t status;
++#if H5_VERSION_GE(1,12,0)
++    status = H5Oget_info(node_id, &object_info, H5O_INFO_NUM_ATTRS);
++#else
+     status = H5Oget_info(node_id, &object_info);
++#endif

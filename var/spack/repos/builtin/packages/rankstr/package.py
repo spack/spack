@@ -9,8 +9,8 @@ from spack import *
 class Rankstr(CMakePackage):
     """Assign one-to-one mapping of MPI ranks to strings"""
 
-    homepage = "https://github.com/ECP-VeloC/rankstr"
-    url      = "https://github.com/ECP-VeloC/rankstr/archive/v0.0.2.zip"
+    homepage = "https://github.com/ecp-veloc/rankstr"
+    url      = "https://github.com/ecp-veloc/rankstr/archive/v0.0.2.zip"
     git      = "https://github.com/ecp-veloc/rankstr.git"
 
     tags = ['ecp']

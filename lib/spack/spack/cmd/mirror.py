@@ -5,7 +5,6 @@
 
 import sys
 
-import argparse
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
@@ -40,16 +39,16 @@ def setup_parser(subparser):
                                help="directory in which to create mirror")
 
     create_parser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="specs of packages to put in mirror")
-    create_parser.add_argument(
         '-a', '--all', action='store_true',
         help="mirror all versions of all packages in Spack, or all packages"
              " in the current environment if there is an active environment"
              " (this requires significant time and space)")
     create_parser.add_argument(
         '-f', '--file', help="file with specs of packages to put in mirror")
-
+    create_parser.add_argument(
+        '--skip-unstable-versions', action='store_true',
+        help="don't cache versions unless they identify a stable (unchanging)"
+             " source code")
     create_parser.add_argument(
         '-D', '--dependencies', action='store_true',
         help="also fetch all dependencies")
@@ -57,6 +56,7 @@ def setup_parser(subparser):
         '-n', '--versions-per-spec',
         help="the number of versions to fetch for each spec, choose 'all' to"
              " retrieve all versions of each package")
+    arguments.add_common_arguments(create_parser, ['specs'])
 
     # used to construct scope arguments below
     scopes = spack.config.scopes()
@@ -64,7 +64,8 @@ def setup_parser(subparser):
 
     # Add
     add_parser = sp.add_parser('add', help=mirror_add.__doc__)
-    add_parser.add_argument('name', help="mnemonic name for mirror")
+    add_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     add_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     add_parser.add_argument(
@@ -75,7 +76,8 @@ def setup_parser(subparser):
     # Remove
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help=mirror_remove.__doc__)
-    remove_parser.add_argument('name')
+    remove_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     remove_parser.add_argument(
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
@@ -83,7 +85,8 @@ def setup_parser(subparser):
 
     # Set-Url
     set_url_parser = sp.add_parser('set-url', help=mirror_set_url.__doc__)
-    set_url_parser.add_argument('name', help="mnemonic name for mirror")
+    set_url_parser.add_argument(
+        'name', help="mnemonic name for mirror", metavar="mirror")
     set_url_parser.add_argument(
         'url', help="url of mirror directory from 'spack mirror create'")
     set_url_parser.add_argument(
@@ -308,7 +311,8 @@ def mirror_create(args):
     existed = web_util.url_exists(directory)
 
     # Actually do the work to create the mirror
-    present, mirrored, error = spack.mirror.create(directory, mirror_specs)
+    present, mirrored, error = spack.mirror.create(
+        directory, mirror_specs, args.skip_unstable_versions)
     p, m, e = len(present), len(mirrored), len(error)
 
     verb = "updated" if existed else "created"

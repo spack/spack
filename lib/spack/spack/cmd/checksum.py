@@ -10,6 +10,7 @@ import argparse
 import llnl.util.tty as tty
 
 import spack.cmd
+import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
 import spack.util.crypto
@@ -23,11 +24,9 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
-        'package',
-        help='package to checksum versions for')
-    subparser.add_argument(
         '--keep-stage', action='store_true',
         help="don't clean up staging area when command completes")
+    arguments.add_common_arguments(subparser, ['package'])
     subparser.add_argument(
         'versions', nargs=argparse.REMAINDER,
         help='versions to generate checksums for')
@@ -57,7 +56,8 @@ def checksum(parser, args):
             tty.die("Could not find any versions for {0}".format(pkg.name))
 
     version_lines = spack.stage.get_checksums_for_versions(
-        url_dict, pkg.name, keep_stage=args.keep_stage)
+        url_dict, pkg.name, keep_stage=args.keep_stage,
+        fetch_options=pkg.fetch_options)
 
     print()
     print(version_lines)

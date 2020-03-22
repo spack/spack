@@ -25,6 +25,11 @@ class Git(AutotoolsPackage):
 
     releases = [
         {
+            'version': '2.25.0',
+            'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
+            'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
+        },
+        {
             'version': '2.21.0',
             'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
             'sha256_manpages': '14c76ebb4e31f9e55cf5338a04fd3a13bced0323cd51794ccf45fc74bd0c1080'
@@ -173,9 +178,10 @@ class Git(AutotoolsPackage):
     depends_on('expat')
     depends_on('gettext')
     depends_on('libiconv')
+    depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
-    depends_on('pcre+jit', when='@2.14:')
+    depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
 
@@ -216,12 +222,17 @@ class Git(AutotoolsPackage):
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
             '--with-iconv={0}'.format(spec['libiconv'].prefix),
-            '--with-libpcre={0}'.format(spec['pcre'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
+        if '^pcre' in self.spec:
+            configure_args.append('--with-libpcre={0}'.format(
+                spec['pcre'].prefix))
+        if '^pcre2' in self.spec:
+            configure_args.append('--with-libpcre2={0}'.format(
+                spec['pcre2'].prefix))
         if '+tcltk' in self.spec:
             configure_args.append('--with-tcltk={0}'.format(
                 self.spec['tk'].prefix.bin.wish))

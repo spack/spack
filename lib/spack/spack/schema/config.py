@@ -55,6 +55,7 @@ properties = {
             },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
+            'connect_timeout': {'type': 'integer', 'minimum': 0},
             'verify_ssl': {'type': 'boolean'},
             'suppress_gpg_warnings': {'type': 'boolean'},
             'install_missing_compilers': {'type': 'boolean'},

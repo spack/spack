@@ -18,48 +18,38 @@ class Warpx(MakefilePackage):
     homepage = "https://ecp-warpx.github.io/index.html"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
-    version('master', tag='master')
-    version('dev', tag='dev')
+    maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
-    depends_on('mpi')
+    version('master', tag='master')
 
     variant('dims',
             default='3',
-            values=('1', '2', '3'),
+            values=('2', '3'),
             multi=False,
             description='Number of spatial dimensions')
 
     variant('psatd', default=False, description='Enable PSATD solver')
-    variant('do_electrostatic', default=False, description='Include electrostatic solver')
     variant('debug', default=False, description='Enable debugging features')
-    variant('tprof', default=False, description='Enable tiny profiling features')
+    variant('tprof', default=True, description='Enable tiny profiling features')
     variant('openmp', default=True, description='Enable OpenMP features')
+    variant('openpmd', default=True, description='Enable openPMD I/O')
 
+    depends_on('mpi')
     depends_on('fftw@3:', when='+psatd')
+    depends_on('pkgconfig', type='build', when='+openpmd')
+    depends_on('python', type='build')  # FIXME upstream
+    depends_on('openpmd-api@0.11.0:,dev +mpi', when='+openpmd')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              when='@master',
-             tag='master')
-
-    resource(name='amrex',
-             git='https://github.com/AMReX-Codes/amrex.git',
-             when='@dev',
              tag='development')
 
     resource(name='picsar',
              git='https://bitbucket.org/berkeleylab/picsar.git',
              tag='master')
 
-    @property
-    def build_targets(self):
-        if self.spec.satisfies('%clang'):
-            return ['CXXFLAGS={0}'.format(self.compiler.cxx11_flag)]
-        else:
-            return []
-
     def edit(self, spec, prefix):
-
         comp = 'gcc'
         vendors = {'%gcc': 'gcc', '%intel': 'intel'}
         for key, value in vendors.items():
@@ -78,16 +68,17 @@ class Warpx(MakefilePackage):
                         'DIM = {0}'.format(int(spec.variants['dims'].value)))
         makefile.filter('USE_PSATD .*',
                         'USE_PSATD = {0}'.format(torf('+psatd')))
-        makefile.filter('DO_ELECTROSTATIC .*',
-                        'DO_ELECTROSTATIC = %s' % torf('+do_electrostatic'))
         try:
             self.compiler.openmp_flag
         except UnsupportedCompilerFlag:
             use_omp = 'FALSE'
         else:
             use_omp = torf('+openmp')
+        use_openpmd = torf('+openpmd')
         makefile.filter('USE_OMP .*',
                         'USE_OMP = {0}'.format(use_omp))
+        makefile.filter('USE_OPENPMD .*',
+                        'USE_OPENPMD = {0}'.format(use_openpmd))
         makefile.filter('DEBUG .*',
                         'DEBUG = {0}'.format(torf('+debug')))
         makefile.filter('TINY_PROFILE .*',
