@@ -82,6 +82,15 @@ def test_load_includes_run_env(install_mockery, mock_fetch, mock_archive,
     assert 'export FOOBAR=mpileaks' in sh_out
     assert 'setenv FOOBAR mpileaks' in csh_out
 
+def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
+    """Tests that the --first option works"""
+    install('cmake+doc')
+    #install('cmake~doc')
+
+    sh_out = load('--sh', 'cmake')
+
+    assert 'export' in sh_out
+
 
 def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
                              mock_packages):
