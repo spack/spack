@@ -11,10 +11,12 @@ class IntelMklDnn(CMakePackage):
     (Intel(R) MKL-DNN)."""
 
     homepage = "https://intel.github.io/mkl-dnn/"
-    url      = "https://github.com/intel/mkl-dnn/archive/v1.1.1.tar.gz"
+    url      = "https://github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz"
 
     maintainers = ['adamjstewart']
 
+    version('1.2.2',  sha256='a71ec1f27c30b8a176605e8a78444f1f12301a3c313b70ff93290926c140509c')
+    version('1.2.1',  sha256='c69544783c453ab3fbf14c7a5b9a512561267690c9fc3e7fc3470f04756e0ab3')
     version('1.2',    sha256='30979a09753e8e35d942446c3778c9f0eba543acf2fb0282af8b9c89355d0ddf')
     version('1.1.3',  sha256='0e9bcbc86cc215a84a5455a395ce540c68e255eaa586e37222fff622b9b17df7')
     version('1.1.2',  sha256='284b20e0cab67025bb7d21317f805d6217ad77fb3a47ad84b3bacf37bde62da9')
@@ -25,6 +27,7 @@ class IntelMklDnn(CMakePackage):
     version('1.0.2',  sha256='3164eb2914e2160ac6ffd345781cf7554ce410830398cc6b2761e8668faf5ca8')
     version('1.0.1',  sha256='91fb84601c18f8a5a87eccd7b63d61f03495f36c5c533bd7f59443e4f8bb2595')
     version('1.0',    sha256='27fd9da9720c452852f1226581e7914efcf74e1ff898468fdcbe1813528831ba')
+    version('0.21.4', sha256='1e774138203b773b5af2eed9cc6f1973f13a7263a3b80127682246c5a6c5bc45')
     version('0.21.3', sha256='31e78581e59d7e60d4becaba3834fc6a5bf2dccdae3e16b7f70d89ceab38423f')
     version('0.21.2', sha256='ed56652dd237deb86ee9bf102c18de5f2625c059e5ab1d7512c8dc01e316b694')
     version('0.21.1', sha256='766ecfa5ac68be8cf9eacd4c712935c0ed945e5e6fe51640f05ee735cff62a38')
