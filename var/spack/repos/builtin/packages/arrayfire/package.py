@@ -26,6 +26,8 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on('blas')
     depends_on('cuda@7.5:', when='+cuda')
     depends_on('opencl', when='+opencl')
+    # TODO add opencl backends:
+    # https://github.com/arrayfire/arrayfire/wiki/Build-Instructions-for-Linux#opencl-backend-dependencies
 
     depends_on('fontconfig', when='+forge')
     depends_on('glfw@3.1.4:', when='+forge')
