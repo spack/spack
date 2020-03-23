@@ -40,14 +40,14 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
-    depends_on("expat")
-    depends_on("zlib")
-
     depends_on('geant4-data@10.6.0', when='@10.6.0')
     depends_on('geant4-data@10.5.1', when='@10.5.1')
     depends_on('geant4-data@10.4.3', when='@10.4.3')
     depends_on('geant4-data@10.4.0', when='@10.4.0')
     depends_on('geant4-data@10.3.3', when='@10.3.3')
+
+    depends_on("expat")
+    depends_on("zlib")
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
@@ -57,17 +57,23 @@ class Geant4(CMakePackage):
         # Spack only supports Xerces-c 3 and above, so no version req
         depends_on('xerces-c cxxstd=' + std, when='cxxstd=' + std)
 
-        # Vecgeom will need specific versions for each Geant4 version
-        depends_on('vecgeom cxxstd=' + std, when='+vecgeom cxxstd=' + std)
+        # Vecgeom specific versions for each Geant4 version
+        depends_on('vecgeom@1.1.5 cxxstd=' + std,
+                   when='@10.6.0:10.6.99 +vecgeom cxxstd=' + std)
+        depends_on('vecgeom@1.1.0 cxxstd=' + std,
+                   when='@10.5.0:10.5.99 +vecgeom cxxstd=' + std)
+        depends_on('vecgeom@0.5.2 cxxstd=' + std,
+                   when='@10.4.0:10.4.99 +vecgeom cxxstd=' + std)
+        depends_on('vecgeom@0.3rc cxxstd=' + std,
+                   when='@10.3.0:10.3.99 +vecgeom cxxstd=' + std)
 
-    depends_on("expat")
-    depends_on("zlib")
+    # Visualization driver ependencies
     depends_on("gl", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
     depends_on("motif", when='+motif')
-    depends_on("qt@4.8:", when="+qt")
+    depends_on("qt@5:", when="+qt")
 
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.
