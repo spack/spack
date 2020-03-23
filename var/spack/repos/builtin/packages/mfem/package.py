@@ -105,6 +105,7 @@ class Mfem(Package):
             description='CUDA architecture to compile for')
     variant('occa', default=False, description='Enable OCCA backend')
     variant('raja', default=False, description='Enable RAJA backend')
+    variant('libceed', default=False, description='Enable libCEED backend')
 
     variant('threadsafe', default=False,
             description=('Enable thread safe features.'
@@ -170,6 +171,9 @@ class Mfem(Package):
     conflicts('~metis+mpi', when='@:3.3.0')
     conflicts('+metis~mpi', when='@:3.3.0')
     conflicts('+conduit', when='@:3.3.2')
+    conflicts('+occa', when='mfem@:3.99.99')
+    conflicts('+raja', when='mfem@:3.99.99')
+    conflicts('+libceed', when='mfem@:4.0.99')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -224,14 +228,15 @@ class Mfem(Package):
     # when using hypre version >= 2.16.0:
     conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
 
-    # The OCCA backend is first available in MFEM 4.0.0
     depends_on('occa@1.0.8:', when='+occa')
-    conflicts('+occa', when='mfem@:3.99.99')
+    depends_on('occa+cuda', when='+occa+cuda')
 
-    # The RAJA backend is first available in MFEM 4.0.0
     depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
-    conflicts('+raja', when='mfem@:3.99.99')
+    depends_on('raja+cuda', when='+raja+cuda')
+
+    depends_on('libceed@0.6.0:', when='+libceed')
+    depends_on('libceed+cuda', when='+libceed+cuda')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
@@ -349,7 +354,8 @@ class Mfem(Package):
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit'),
             'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
             'MFEM_USE_OCCA=%s' % yes_no('+occa'),
-            'MFEM_USE_RAJA=%s' % yes_no('+raja')]
+            'MFEM_USE_RAJA=%s' % yes_no('+raja'),
+            'MFEM_USE_CEED=%s' % yes_no('+libceed')]
 
         cxxflags = spec.compiler_flags['cxxflags']
 
@@ -451,17 +457,24 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            # options += ['PETSC_DIR=%s' % spec['petsc'].prefix]
             options += [
                 'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
                 'PETSC_LIB=%s' %
                 ld_flags_from_library_list(spec['petsc'].libs)]
 
         if '+pumi' in spec:
-            options += ['PUMI_DIR=%s' % spec['pumi'].prefix]
+            pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
+                         'parma', 'lion', 'mth', 'apf_zoltan', 'spr']
+            options += [
+                'PUMI_OPT=-I%s' % spec['pumi'].prefix.include,
+                'PUMI_LIB=%s' %
+                ld_flags_from_dirs([spec['pumi'].prefix.lib], pumi_libs)]
 
         if '+gslib' in spec:
-            options += ['GSLIB_DIR=%s' % spec['gslib'].prefix]
+            options += [
+                'GSLIB_OPT=-I%s' % spec['gslib'].prefix.include,
+                'GSLIB_LIB=%s' %
+                ld_flags_from_dirs([spec['gslib'].prefix.lib], ['gs'])]
 
         if '+netcdf' in spec:
             options += [
@@ -520,6 +533,12 @@ class Mfem(Package):
                         'RAJA_LIB=%s' %
                         ld_flags_from_dirs([spec['raja'].prefix.lib],
                                            ['RAJA'])]
+
+        if '+libceed' in spec:
+            options += ['CEED_OPT=-I%s' % spec['libceed'].prefix.include,
+                        'CEED_LIB=%s' %
+                        ld_flags_from_dirs([spec['libceed'].prefix.lib],
+                                           ['ceed'])]
 
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value

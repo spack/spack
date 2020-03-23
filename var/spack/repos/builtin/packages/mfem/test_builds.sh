@@ -6,6 +6,10 @@ compiler=''
 mfem='mfem'${compiler}
 mfem_dev='mfem@develop'${compiler}
 
+backends='+occa+raja+libceed'
+# Using occa@develop to help the spack concretization
+backends_specs='^occa@develop~cuda ^raja~openmp'
+
 # As of 03/20/20 +mpfr breaks one of the unit tests in both @4.1.0 and @develop,
 # so it is disabled here for now.
 # mpfr='+mpfr'
@@ -16,28 +20,29 @@ builds=(
     ${mfem}
     ${mfem}'~mpi~metis~zlib'
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
-    ${mfem}'+occa+raja+superlu-dist+suite-sparse+petsc \
+    ${mfem}"$backends"'+superlu-dist+suite-sparse+petsc \
         +sundials+pumi+gslib'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
-        ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
+        ^petsc+suite-sparse+mumps'" $backends_specs"
     ${mfem}'~mpi \
-        +occa+raja+suite-sparse+sundials+gslib'${mpfr}'+netcdf \
-        +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
+        '"$backends"'+suite-sparse+sundials+gslib'${mpfr}'+netcdf \
+        +zlib+gnutls+libunwind+conduit'" $backends_specs"
     # develop version:
     ${mfem_dev}'+shared~static'
     ${mfem_dev}'+shared~static~mpi~metis~zlib'
     # NOTE: Skip +strumpack since mfem needs hypre < 2.16.0 in that case
+    # NOTE: Shared build with +gslib works on mac but not on linux
     ${mfem_dev}'+shared~static \
-        +occa+raja+superlu-dist+suite-sparse+petsc \
-        +sundials+pumi+gslib'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
-        ^petsc+suite-sparse+mumps ^occa~cuda ^raja~openmp'
+        '"$backends"'+superlu-dist+suite-sparse+petsc \
+        +sundials+pumi'${mpfr}'+netcdf+zlib+gnutls+libunwind+conduit \
+        ^petsc+suite-sparse+mumps'" $backends_specs"
     ${mfem_dev}'+shared~static~mpi \
-        +occa+raja+suite-sparse+sundials+gslib'${mpfr}'+netcdf \
-        +zlib+gnutls+libunwind+conduit ^occa~cuda ^raja~openmp'
+        '"$backends"'+suite-sparse+sundials'${mpfr}'+netcdf \
+        +zlib+gnutls+libunwind+conduit'" $backends_specs"
 )
 
 builds2=(
     # preferred version
-    ${mfem}'+occa+raja ^occa~cuda ^raja~openmp'
+    ${mfem}"$backends $backends_specs"
     ${mfem}'+superlu-dist'
     # NOTE: On mac +strumpack works only with gcc, as of 03/20/20.
     ${mfem}'+strumpack ^hypre@2.15.1'
@@ -55,7 +60,7 @@ builds2=(
     ${mfem}'+conduit'
     ${mfem}'+petsc ^petsc+suite-sparse+mumps'
     # develop version
-    ${mfem_dev}'+occa+raja ^occa~cuda ^raja~openmp'
+    ${mfem_dev}"$backends $backends_specs"
     ${mfem_dev}'+superlu-dist'
     # NOTE: On mac +strumpack works only with gcc, as of 03/20/20.
     ${mfem_dev}'+strumpack ^hypre@2.15.1'
