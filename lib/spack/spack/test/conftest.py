@@ -301,8 +301,17 @@ def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
     saved = spack.config.config
     spack.config.config = config
+
+    # Avoid using real spack configuration that has been cached by other
+    # tests, and avoid polluting the cache with spack test configuration
+    # (including modified configuration)
+    saved_compiler_cache = spack.compilers._cache_config_file
+    spack.compilers._cache_config_file = []
+
     yield
+
     spack.config.config = saved
+    spack.compilers._cache_config_file = saved_compiler_cache
 
 
 @contextlib.contextmanager
@@ -426,10 +435,6 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     cfg = spack.config.Configuration(
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
-
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
 
     with use_configuration(cfg):
         yield cfg
