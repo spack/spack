@@ -117,9 +117,13 @@ class Cray(Platform):
         '''
         # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
-            output = Executable('/bin/bash')('-lc', 'echo $CRAY_CPU_TARGET',
-                                             env={'TERM': os.environ['TERM']},
-                                             output=str, error=os.devnull)
+            bash = Executable('/bin/bash')
+            output = bash(
+                '-lc', 'echo $CRAY_CPU_TARGET',
+                env={'TERM': os.environ.get('TERM', '')},
+                output=str,
+                error=os.devnull
+            )
             output = ''.join(output.split())  # remove all whitespace
             if output:
                 self.default = output
