@@ -94,8 +94,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
 
-    conflicts('^intel-mkl+ilp64',
-              msg='QMCPACK does not support MKL 64-bit integer variant')
+    # Omitted for now due to concretizer bug
+    # conflicts('^intel-mkl+ilp64',
+    #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
     # QMCPACK 3.6.0 or later requires support for C++14
     compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
