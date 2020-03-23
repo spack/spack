@@ -30,6 +30,7 @@ class PyPyqt5(SIPPackage):
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
     version('5.12.3', sha256='0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110')
 
+    variant('qsci_api', default=False, description='Install PyQt API file for QScintilla')
 
     # Without opengl support, I got the following error:
     # sip: QOpenGLFramebufferObject is undefined
@@ -49,8 +50,7 @@ class PyPyqt5(SIPPackage):
                 self.spec['python'].package.site_packages_dir,
                 'PyQt5'),
         ]
-        # TODO Is the following still necessary now that 
-        # Qsci python bindings are built with Qscintilla package
-        if '+qsci' in self.spec:
-            args.extend(['--qsci-api-destdir', self.prefix.share.qsci])
+        if '+qsci_api' in self.spec:
+            args.extend(['--qsci-api',
+                         '--qsci-api-destdir', self.prefix.share.qsci])
         return args
