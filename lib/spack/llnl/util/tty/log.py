@@ -7,6 +7,7 @@
 """
 from __future__ import unicode_literals
 
+import atexit
 import multiprocessing
 import os
 import re
@@ -38,17 +39,23 @@ control = re.compile('(\x11\n|\x13\n)')
 
 
 @contextmanager
-def background_safe():
-    signal.signal(signal.SIGTTOU, signal.SIG_IGN)
+def ignore_signal(signum):
+    """Context manager to temporarily ignore a signal."""
+    old_handler = signal.getsignal(signum)
+    signal.signal(signum, signal.SIG_IGN)
     yield
-    signal.signal(signal.SIGTTOU, signal.SIG_DFL)
+    signal.signal(signum, old_handler)
 
 
-def _is_background_tty():
-    """Return True iff this process is backgrounded and stdout is a tty"""
-    if sys.stdout.isatty():
-        return os.getpgrp() != os.tcgetpgrp(sys.stdout.fileno())
-    return False  # not writing to tty, not background
+def _is_background_tty(stream):
+    """Return True iff calling process is in the background.
+
+    If stream is not connected to a tty, this will return False.
+    """
+    return (
+        stream.isatty() and
+        os.getpgrp() != os.tcgetpgrp(stream.fileno())
+    )
 
 
 def _strip(line):
@@ -56,14 +63,16 @@ def _strip(line):
     return _escape.sub('', line)
 
 
-class _keyboard_input(object):
+class keyboard_input(object):
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
 
-        with keyboard_input(sys.stdin):
-            r, w, x = select.select([sys.stdin], [], [])
-            # ... do something with keypresses ...
+        with keyboard_input(sys.stdin) as kb:
+            while True:
+                kb.check_fg()  # poll to ensure terminal settings on fg
+                r, w, x = select.select([sys.stdin], [], [])
+                # ... do something with keypresses ...
 
     This disables canonical input so that keypresses are available on the
     stream immediately. Typically standard input allows line editing,
@@ -73,10 +82,42 @@ class _keyboard_input(object):
     terminal.  So, the user can hit, e.g., 'v', and it's read on the
     other end of the pipe immediately but not printed.
 
-    When the with block completes, prior TTY settings are restored.
+    The ``keyboard_input`` handler takes care to ensure that terminal
+    changes only take effect when the calling process is in the
+    foreground. If the process is sent to the background, canonical input
+    and echo are re-enabled. They are disabled again when the calling
+    process is brought back to the foreground.
 
-    Note: this depends on termios support.  If termios isn't available,
-    or if the stream isn't a TTY, this context manager has no effect.
+    This context manager works *mostly* transparently through signal
+    handlers.  It uses the ``SIGTSTP`` handler to resotre terminal
+    settings when backgrounded, and the ``SIGCONT`` handler to re-enable
+    input when foregrounded.  Here are the three relevant states and
+    transitions::
+
+        [Running] -------- Ctrl-Z sends SIGTSTP ------------.
+        [ in FG ] <------- fg sends SIGCONT --------------. |
+           ^                                              | |
+           | fg (needs kb.check_fg())                     | |
+           |                                              | v
+        [Running] <------- bg sends SIGCONT ---------- [Stopped]
+        [ in BG ]                                      [ in BG ]
+
+    For normal transitions from running-in-foreground to
+    stopped-in-background and back, we intercept the ``SIGTSTP`` and
+    ``SIGCONT`` handlers and adjust terminal settings without help from
+    the user. For the transition from running-in-background to
+    running-in-foreground, the OS doesn't send any signal, so the caller
+    needs to poll with ``kb.check_fg()`` to ensure that keyboard input is
+    re-enabled on this transition.
+
+    Note: ``SIGSTOP`` can also stop a process (in the foreground or
+    background), but it can't be caught. Because of this, we can't fix
+    any terminal settings on ``SIGSTOP``, and the terminal may be left
+    with ``ICANON`` and ``ECHO`` disabled.
+
+    Note: we rely on ``termios`` support.  Without it, or if the stream
+    isn't a TTY, ``keyboard_input`` has no effect.
+
     """
     def __init__(self, stream):
         """Create a context manager that will enable keyboard input on stream.
@@ -89,42 +130,127 @@ class _keyboard_input(object):
         """
         self.stream = stream
 
+    def _is_background(self):
+        """True iff calling process is in the background."""
+        return _is_background_tty(self.stream)
+
+    def _get_canon_echo_flags(self):
+        """Get current termios canonical and echo settings."""
+        cfg = termios.tcgetattr(self.stream)
+        return (
+            bool(cfg[3] & termios.ICANON),
+            bool(cfg[3] & termios.ECHO),
+        )
+
+    def _enable_keyboard_input(self):
+        """Disable canonical input and echoing on ``self.stream``."""
+        assert self.old_cfg, "_enable_keyboard_input only works with termios"
+        assert not self._is_background(), \
+            "_enable_keyboard_input can only be called in foreground"
+
+        # "enable" input by disabling canonical mode and echo
+        new_cfg = termios.tcgetattr(self.stream)
+        new_cfg[3] &= ~termios.ICANON
+        new_cfg[3] &= ~termios.ECHO
+
+        # Apply new settings for terminal
+        try:
+            termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
+        except termios.error as e:
+            # TODO: does this happen? It was needed at one point, but I
+            # TODO: no longer see it happen.
+            tty.debug("termios error: %s" % e)
+
+    def _restore_input(self):
+        """Restore the original input configuration on ``self.stream``."""
+        assert self.old_cfg, "_restore_input only works with termios"
+
+        # _restore_input Can be called in foreground or background. When called
+        # in the background, tcsetattr triggers SIGTTOU, which we must ignore,
+        # or the process will be stopped.
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
+
+    def check_fg(self):
+        if not self.old_cfg:
+            return
+
+        # fix stream settings if we need to
+        flags = self._get_canon_echo_flags()
+        if not self._is_background() and any(flags):
+            self._enable_keyboard_input()
+
+    def _tstp_handler(self, signum, frame):
+        """Handler to restore term settings before caller is backgrounded."""
+        # retore input settings on terminal when backgrounded, so we
+        # don't leave the user's terminal in non-canonical, non-echo mode
+        self._restore_input()
+
+        # Run the default SIGTSTP handler for this process to actually stop it.
+        # We reinstall _tstp_handler on SIGCONT.
+        signal.signal(signal.SIGTSTP, self.old_tstp_handler)
+        os.kill(os.getpid(), signal.SIGTSTP)
+
+    def _cont_handler(self, signum, frame):
+        """Handler to restore or enable term settings on SIGCONT."""
+        # SICONT happens when started both in the foreground and background.
+        if self._is_background():
+            # restore defaults if we find ourselves in the background. This
+            # will likely have been done already by _tstp_handler, but this is
+            # *just in case* we get SIGSTOP/SIGCONT (SIGSTOP can't be caught)
+            self._restore_input()
+        else:
+            # re-enable keyboard input if we're newly running in the foreground
+            self._enable_keyboard_input()
+
+        # reinstall the SIGTSTP handler to disable when resuming execution
+        signal.signal(signal.SIGTSTP, self._tstp_handler)
+
     def __enter__(self):
-        """Enable immediate keypress input on stream.
+        """Enable immediate keypress input, while this process is foreground.
 
         If the stream is not a TTY or the system doesn't support termios,
         do nothing.
         """
         self.old_cfg = None
+        self.old_tstp_handler = None
+        self.old_cont_handler = None
 
         # Ignore all this if the input stream is not a tty.
         if not self.stream or not self.stream.isatty():
-            return
+            return self
 
         # If this fails, self.old_cfg will remain None
-        if termios and not _is_background_tty():
-            # save old termios settings
-            old_cfg = termios.tcgetattr(self.stream)
+        if termios:
+            # save old termios settings and signal handlers to restore later
+            self.old_cfg = termios.tcgetattr(self.stream)
+            self.old_tstp_handler = signal.getsignal(signal.SIGTSTP)
+            self.old_cont_handler = signal.getsignal(signal.SIGCONT)
 
-            try:
-                # create new settings with canonical input and echo
-                # disabled, so keypresses are immediate & don't echo.
-                self.new_cfg = termios.tcgetattr(self.stream)
-                self.new_cfg[3] &= ~termios.ICANON
-                self.new_cfg[3] &= ~termios.ECHO
+            # if we exit abnormally, make sure terminal is restored
+            atexit.register(self._restore_input)
 
-                # Apply new settings for terminal
-                termios.tcsetattr(self.stream, termios.TCSADRAIN, self.new_cfg)
-                self.old_cfg = old_cfg
+            # add handlers to disable/enable keyboard input when process
+            # moves from foreground to background.
+            signal.signal(signal.SIGTSTP, self._tstp_handler)
+            signal.signal(signal.SIGCONT, self._cont_handler)
 
-            except Exception:
-                pass  # some OS's do not support termios, so ignore
+            # enable keyboard input initially (if foreground)
+            if not self._is_background():
+                self._enable_keyboard_input()
+
+        return self
 
     def __exit__(self, exc_type, exception, traceback):
         """If termios was avaialble, restore old settings."""
         if self.old_cfg:
-            with background_safe():  # change it back even if backgrounded now
-                termios.tcsetattr(self.stream, termios.TCSADRAIN, self.old_cfg)
+            self._restore_input()
+            atexit.unregister(self._restore_input)
+
+        # restore SIGSTP and SIGCONT handlers
+        if self.old_tstp_handler:
+            signal.signal(signal.SIGTSTP, self.old_tstp_handler)
+            signal.signal(signal.SIGCONT, self.old_cont_handler)
 
 
 class Unbuffered(object):
@@ -445,61 +571,46 @@ class log_output(object):
 
         log_file = self.log_file
 
-        def handle_write(force_echo):
-            # Handle output from the with block process.
-            # If we arrive here it means that in_pipe was
-            # ready for reading : it should never happen that
-            # line is false-ish
-            line = in_pipe.readline()
-            if not line:
-                return (True, force_echo)  # break while loop
-
-            # find control characters and strip them.
-            controls = control.findall(line)
-            line = re.sub(control, '', line)
-
-            # Echo to stdout if requested or forced
-            if echo or force_echo:
-                try:
-                    if termios:
-                        conf = termios.tcgetattr(sys.stdout)
-                        tostop = conf[3] & termios.TOSTOP
-                    else:
-                        tostop = True
-                except Exception:
-                    tostop = True
-                if not (tostop and _is_background_tty()):
-                    sys.stdout.write(line)
-                    sys.stdout.flush()
-
-            # Stripped output to log file.
-            log_file.write(_strip(line))
-            log_file.flush()
-
-            if xon in controls:
-                force_echo = True
-            if xoff in controls:
-                force_echo = False
-            return (False, force_echo)
-
         try:
-            with _keyboard_input(stdin):
+            with keyboard_input(stdin) as kb:
                 while True:
+                    # ensure that input settings are sane.
+                    kb.check_fg()
+
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
                     rlist, _, _ = select.select(istreams, [], [])
+
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
                     # only read stdin if we're in the foreground
-                    if stdin in rlist and not _is_background_tty():
+                    if stdin in rlist and not _is_background_tty(stdin):
                         if stdin.read(1) == 'v':
                             echo = not echo
 
                     if in_pipe in rlist:
-                        br, fe = handle_write(force_echo)
-                        force_echo = fe
-                        if br:
+                        # Handle output from the calling process.
+                        line = in_pipe.readline()
+                        if not line:
                             break
+
+                        # find control characters and strip them.
+                        controls = control.findall(line)
+                        line = control.sub('', line)
+
+                        # Echo to stdout if requested or forced.
+                        if echo or force_echo:
+                            sys.stdout.write(line)
+                            sys.stdout.flush()
+
+                        # Stripped output to log file.
+                        log_file.write(_strip(line))
+                        log_file.flush()
+
+                        if xon in controls:
+                            force_echo = True
+                        if xoff in controls:
+                            force_echo = False
 
         except BaseException:
             tty.error("Exception occurred in writer daemon!")
