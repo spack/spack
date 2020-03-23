@@ -10,7 +10,7 @@ class RRemotes(RPackage):
     """Download and install R packages stored in 'GitHub', 'BitBucket', or
     plain 'subversion' or 'git' repositories. This package provides the
     'install_*' functions in 'devtools'. Indeed most of the code was copied
-    over from 'devtools'."""
+    over from 'devtools'. """
 
     homepage = "https://github.com/r-lib/remotes#readme"
     url      = "https://cloud.r-project.org/src/contrib/remotes_2.1.0.tar.gz"
