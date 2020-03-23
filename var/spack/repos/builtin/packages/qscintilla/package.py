@@ -23,8 +23,8 @@ class Qscintilla(QMakePackage):
     variant('python', default=False, description="Build python bindings")
 
     depends_on('qt')
-    depends_on('py-pyqt5', type=('build', 'run'),  when='+python ^qt@5')
-    depends_on('py-pyqt4', type=('build', 'run'),  when='+python ^qt@4')
+    depends_on('py-pyqt5 +qsci_api', type=('build', 'run'),  when='+python ^qt@5')
+    depends_on('py-pyqt4 +qsci_api', type=('build', 'run'),  when='+python ^qt@4')
     depends_on('python',   type=('build', 'run'),  when='+python')
 
     extends('python', when='+python')
