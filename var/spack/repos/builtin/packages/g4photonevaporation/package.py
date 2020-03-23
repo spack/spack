@@ -29,7 +29,7 @@ class G4photonevaporation(Package):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         install_path = join_path(self.prefix.share, 'data',
-                                'PhotonEvaporation{0}'
+                                 'PhotonEvaporation{0}'
                                  .format(self.version))
         env.set('G4LEVELGAMMADATA', install_path)
 
