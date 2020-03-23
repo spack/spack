@@ -335,3 +335,7 @@ class Clang(Compiler):
             os.symlink(developer_root, xcode_link)
 
         env.set('DEVELOPER_DIR', xcode_link)
+
+    def remap_debugsrc(self, from_dir, to_dir):
+        real_from_dir = os.path.realpath(from_dir)
+        return "-fdebug-prefix-map=%s=%s" % (real_from_dir, to_dir)

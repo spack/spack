@@ -425,6 +425,15 @@ then
     esac
 fi
 
+if [[ "x${SPACK_DEBUGSRC_REMAP}" != "x" ]];
+then
+  # Translate debugging source location flags
+  case "$mode" in
+      cpp|cc|ccld)
+          flags=("${flags[@]}" "${SPACK_DEBUGSRC_REMAP}") ;;
+  esac
+fi
+
 # Prepend include directories
 IFS=':' read -ra include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
