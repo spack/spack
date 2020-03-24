@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ class Lvm2(AutotoolsPackage):
 
     homepage = "https://www.sourceware.org/lvm2"
     url = "https://sourceware.org/pub/lvm2/releases/LVM2.2.03.05.tgz"
+
+    # The server is sometimes a bit slow to respond
+    fetch_options = {'timeout': 60}
 
     version('2.03.05', sha256='ca52815c999b20c6d25e3192f142f081b93d01f07b9d787e99664b169dba2700')
     version('2.03.04', sha256='f151f36fc0039997d2d9369b607b9262568b1a268afe19fd1535807355402142')

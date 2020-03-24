@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,3 +43,13 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
+
+    def patch(self):
+        # On Linux systems, iconv is provided by libc. Since CMake finds the
+        # symbol in libc, it does not look for libiconv, which leads to linker
+        # errors. This makes sure that CMake always looks for the external
+        # libconv instead.
+        filter_file('check_function_exists(iconv_open ICONV_IN_GLIBC)',
+                    'set(ICONV_IN_GLIBC FALSE)',
+                    join_path('cmake', 'FindIconv.cmake'),
+                    string=True)

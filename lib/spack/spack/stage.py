@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -271,7 +271,7 @@ class Stage(object):
         else:
             raise ValueError(
                 "Can't construct Stage without url or fetch strategy")
-        self.fetcher.set_stage(self)
+        self.fetcher.stage = self
         # self.fetcher can change with mirrors.
         self.default_fetcher = self.fetcher
         self.search_fn = search_fn
@@ -307,8 +307,9 @@ class Stage(object):
                 lock_id = prefix_bits(sha1, bit_length(sys.maxsize))
                 stage_lock_path = os.path.join(get_stage_root(), '.lock')
 
+                tty.debug("Creating stage lock {0}".format(self.name))
                 Stage.stage_locks[self.name] = spack.util.lock.Lock(
-                    stage_lock_path, lock_id, 1)
+                    stage_lock_path, lock_id, 1, desc=self.name)
 
             self._lock = Stage.stage_locks[self.name]
 
@@ -458,7 +459,7 @@ class Stage(object):
 
         for fetcher in generate_fetchers():
             try:
-                fetcher.set_stage(self)
+                fetcher.stage = self
                 self.fetcher = fetcher
                 self.fetcher.fetch()
                 break
@@ -492,21 +493,41 @@ class Stage(object):
         spack.caches.fetch_cache.store(
             self.fetcher, self.mirror_paths.storage_path)
 
-    def cache_mirror(self, stats):
-        """Perform a fetch if the resource is not already cached"""
-        dst_root = spack.caches.mirror_cache.root
+    def cache_mirror(self, mirror, stats):
+        """Perform a fetch if the resource is not already cached
+
+        Arguments:
+            mirror (MirrorCache): the mirror to cache this Stage's resource in
+            stats (MirrorStats): this is updated depending on whether the
+                caching operation succeeded or failed
+        """
+        if isinstance(self.default_fetcher, fs.BundleFetchStrategy):
+            # BundleFetchStrategy has no source to fetch. The associated
+            # fetcher does nothing but the associated stage may still exist.
+            # There is currently no method available on the fetcher to
+            # distinguish this ('cachable' refers to whether the fetcher
+            # refers to a resource with a fixed ID, which is not the same
+            # concept as whether there is anything to fetch at all) so we
+            # must examine the type of the fetcher.
+            return
+
+        if (mirror.skip_unstable_versions and
+            not fs.stable_target(self.default_fetcher)):
+            return
+
         absolute_storage_path = os.path.join(
-            dst_root, self.mirror_paths.storage_path)
+            mirror.root, self.mirror_paths.storage_path)
 
         if os.path.exists(absolute_storage_path):
             stats.already_existed(absolute_storage_path)
         else:
             self.fetch()
-            spack.caches.mirror_cache.store(
+            self.check()
+            mirror.store(
                 self.fetcher, self.mirror_paths.storage_path)
             stats.added(absolute_storage_path)
 
-        spack.caches.mirror_cache.symlink(self.mirror_paths)
+        mirror.symlink(self.mirror_paths)
 
     def expand_archive(self):
         """Changes to the stage directory and attempt to expand the downloaded
@@ -731,7 +752,8 @@ def purge():
 
 
 def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False):
+        url_dict, name, first_stage_function=None, keep_stage=False,
+        fetch_options=None):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -745,6 +767,8 @@ def get_checksums_for_versions(
         first_stage_function (callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
+        fetch_options (dict): Options used for the fetcher (such as timeout
+            or cookies)
 
     Returns:
         (str): A multi-line string containing versions and corresponding hashes
@@ -778,7 +802,12 @@ def get_checksums_for_versions(
     i = 0
     for url, version in zip(urls, versions):
         try:
-            with Stage(url, keep=keep_stage) as stage:
+            if fetch_options:
+                url_or_fs = fs.URLFetchStrategy(
+                    url, fetch_options=fetch_options)
+            else:
+                url_or_fs = url
+            with Stage(url_or_fs, keep=keep_stage) as stage:
                 # Fetch the archive
                 stage.fetch()
                 if i == 0 and first_stage_function:

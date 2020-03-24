@@ -1,13 +1,14 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
 
-from llnl.util.filesystem import working_dir
-from spack.directives import depends_on, extends, resource
-from spack.package import PackageBase, run_before, run_after
+from llnl.util.filesystem import working_dir, join_path
+from spack.directives import depends_on, extends
+from spack.package import PackageBase, run_after
+import os
 
 
 class SIPPackage(PackageBase):
@@ -40,32 +41,11 @@ class SIPPackage(PackageBase):
     extends('python')
 
     depends_on('qt')
-
-    resource(name='sip',
-             url='https://www.riverbankcomputing.com/static/Downloads/sip/4.19.18/sip-4.19.18.tar.gz',
-             sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e',
-             destination='.')
+    depends_on('py-sip')
 
     def python(self, *args, **kwargs):
         """The python ``Executable``."""
         inspect.getmodule(self).python(*args, **kwargs)
-
-    @run_before('configure')
-    def install_sip(self):
-        args = [
-            '--sip-module={0}'.format(self.sip_module),
-            '--bindir={0}'.format(self.prefix.bin),
-            '--destdir={0}'.format(inspect.getmodule(self).site_packages_dir),
-            '--incdir={0}'.format(inspect.getmodule(self).python_include_dir),
-            '--sipdir={0}'.format(self.prefix.share.sip),
-            '--stubsdir={0}'.format(inspect.getmodule(self).site_packages_dir),
-        ]
-
-        with working_dir('sip-4.19.18'):
-            self.python('configure.py', *args)
-
-            inspect.getmodule(self).make()
-            inspect.getmodule(self).make('install')
 
     def configure_file(self):
         """Returns the name of the configure file to use."""
@@ -77,12 +57,15 @@ class SIPPackage(PackageBase):
 
         args = self.configure_args()
 
+        python_include_dir = 'python' + str(spec['python'].version.up_to(2))
+
         args.extend([
             '--verbose',
             '--confirm-license',
             '--qmake', spec['qt'].prefix.bin.qmake,
-            '--sip', prefix.bin.sip,
-            '--sip-incdir', inspect.getmodule(self).python_include_dir,
+            '--sip', spec['py-sip'].prefix.bin.sip,
+            '--sip-incdir', join_path(spec['py-sip'].prefix.include,
+                                      python_include_dir),
             '--bindir', prefix.bin,
             '--destdir', inspect.getmodule(self).site_packages_dir,
         ])
@@ -131,3 +114,14 @@ class SIPPackage(PackageBase):
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)
+
+    @run_after('install')
+    def extend_path_setup(self):
+        # See github issue #14121 and PR #15297
+        module = self.spec['py-sip'].variants['module'].value
+        if module != 'sip':
+            module = module.split('.')[0]
+            with working_dir(inspect.getmodule(self).site_packages_dir):
+                with open(os.path.join(module, '__init__.py'), 'a') as f:
+                    f.write('from pkgutil import extend_path\n')
+                    f.write('__path__ = extend_path(__path__, __name__)\n')

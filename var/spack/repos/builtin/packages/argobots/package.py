@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Argobots(AutotoolsPackage):
     version("1.0a1", sha256="bef93e06026ddeba8809474923176803e64d08e1425672cd7c5b424c797d5d9d")
 
     variant("valgrind", default=False, description="Enable Valgrind")
+    variant("debug", default=False, description="Compiled with debugging symbols")
 
     depends_on("m4", type=("build"), when="@master")
     depends_on("autoconf", type=("build"), when="@master")
@@ -40,5 +41,10 @@ class Argobots(AutotoolsPackage):
             args.append('--enable-valgrind')
         else:
             args.append('--disable-valgrind')
+
+        if '+debug' in self.spec:
+            args.append('--enable-debug=yes')
+        else:
+            args.append('--disable-debug')
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,3 +28,6 @@ class PyOnnx(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-typing@3.6.4:', type=('build', 'run'))
     depends_on('py-typing-extensions@3.6.4:', type=('build', 'run'))
+
+    # 'python_out' does not recognize dllexport_decl.
+    patch('remove_dllexport_decl.patch', when='@:1.6.0')

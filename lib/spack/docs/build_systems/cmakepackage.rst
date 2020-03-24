@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -128,17 +128,20 @@ Adding flags to cmake
 ^^^^^^^^^^^^^^^^^^^^^
 
 To add additional flags to the ``cmake`` call, simply override the
-``cmake_args`` function:
+``cmake_args`` function. The following example defines values for the flags
+``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
+and without the :py:meth:`~.CMakePackage.define` and
+:py:meth:`~.CMakePackage.define_from_variant` helper functions:
 
 .. code-block:: python
 
    def cmake_args(self):
-       args = []
-
-       if '+hdf5' in self.spec:
-           args.append('-DDETECT_HDF5=ON')
-       else:
-           args.append('-DDETECT_HDF5=OFF')
+       args = [
+           '-DWHATEVER:STRING=somevalue',
+           self.define('ENABLE_BROKEN_FEATURE', False),
+           self.define_from_variant('DETECT_HDF5', 'hdf5'),
+           self.define_from_variant('THREADS'), # True if +threads
+       ]
 
        return args
 

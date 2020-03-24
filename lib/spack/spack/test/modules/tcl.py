@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -215,9 +215,10 @@ class TestTcl(object):
 
         writer, spec = factory('mpileaks+debug arch=x86-linux')
         assert 'foo' in writer.layout.use_name
+        assert 'foo-foo' not in writer.layout.use_name
 
         writer, spec = factory('mpileaks~debug arch=x86-linux')
-        assert 'bar' in writer.layout.use_name
+        assert 'bar-foo' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
         """Tests the internal set-up of run-time environment."""

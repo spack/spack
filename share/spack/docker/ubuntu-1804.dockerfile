@@ -17,15 +17,35 @@ COPY share $SPACK_ROOT/share
 COPY var   $SPACK_ROOT/var
 RUN mkdir -p $SPACK_ROOT/opt/spack
 
-RUN apt-get -yqq update                                   \
- && apt-get -yqq install                                  \
-        build-essential ca-certificates curl       g++    \
-        gcc             gfortran        git        gnupg2 \
-        iproute2        lmod            lua-posix  make   \
-        openssh-server  python          python-pip tcl    \
-        unzip                                             \
- && pip install boto3                                     \
+RUN apt-get -yqq update                           \
+ && apt-get -yqq install --no-install-recommends  \
+        build-essential                           \
+        ca-certificates                           \
+        curl                                      \
+        file                                      \
+        g++                                       \
+        gcc                                       \
+        gfortran                                  \
+        git                                       \
+        gnupg2                                    \
+        iproute2                                  \
+        lmod                                      \
+        locales                                   \
+        lua-posix                                 \
+        make                                      \
+        openssh-server                            \
+        python3                                   \
+        python3-pip                               \
+        tcl                                       \
+        unzip                                     \
+ && locale-gen en_US.UTF-8                        \
+ && pip3 install boto3                            \
  && rm -rf /var/lib/apt/lists/*
+
+# Add LANG default to en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8
 
 RUN ( echo ". /usr/share/lmod/lmod/init/bash"                       \
  &&   echo ". \$SPACK_ROOT/share/spack/setup-env.sh"                \

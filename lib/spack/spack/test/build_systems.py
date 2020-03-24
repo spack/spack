@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -181,3 +181,41 @@ class TestAutotoolsPackage(object):
         assert '--without-bar' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestCMakePackage(object):
+
+    def test_define(self):
+        s = Spec('cmake-client')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        for cls in (list, tuple):
+            arg = pkg.define('MULTI', cls(['right', 'up']))
+            assert arg == '-DMULTI:STRING=right;up'
+
+        arg = pkg.define('ENABLE_TRUTH', False)
+        assert arg == '-DENABLE_TRUTH:BOOL=OFF'
+        arg = pkg.define('ENABLE_TRUTH', True)
+        assert arg == '-DENABLE_TRUTH:BOOL=ON'
+
+        arg = pkg.define('SINGLE', 'red')
+        assert arg == '-DSINGLE:STRING=red'
+
+    def test_define_from_variant(self):
+        s = Spec('cmake-client multi=up,right ~truthy single=red')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        arg = pkg.define_from_variant('MULTI')
+        assert arg == '-DMULTI:STRING=right;up'
+
+        arg = pkg.define_from_variant('ENABLE_TRUTH', 'truthy')
+        assert arg == '-DENABLE_TRUTH:BOOL=OFF'
+
+        arg = pkg.define_from_variant('SINGLE')
+        assert arg == '-DSINGLE:STRING=red'
+
+        with pytest.raises(KeyError, match="not a variant"):
+            pkg.define_from_variant('NONEXISTENT')

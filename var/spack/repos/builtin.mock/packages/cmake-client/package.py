@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,14 @@ class CmakeClient(CMakePackage):
     url       = 'https://www.example.com/cmake-client-1.0.tar.gz'
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
+
+    variant(
+        'multi', description='',
+        values=any_combination_of('up', 'right', 'back').with_default('up')
+    )
+    variant('single', description='', default='blue',
+            values=('blue', 'red', 'green'), multi=False)
+    variant('truthy', description='', default=True)
 
     callback_counter = 0
 

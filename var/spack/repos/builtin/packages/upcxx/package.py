@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Upcxx(Package):
     Access (RMA) and Remote Procedure Call (RPC)."""
 
     homepage = "https://upcxx.lbl.gov"
+    maintainers = ['bonachea']
 
     version('2019.9.0', sha256='7d67ccbeeefb59de9f403acc719f52127a30801a2c2b9774a1df03f850f8f1d4')
     version('2019.3.2', sha256='dcb0b337c05a0feb2ed5386f5da6c60342412b49cab10f282f461e74411018ad')
@@ -37,6 +38,7 @@ class Upcxx(Package):
               msg='None is unacceptable on Cray.')
 
     depends_on('cuda', when='+cuda')
+    depends_on('python@2.7.5:2.999', type=("build", "run"))
 
     def url_for_version(self, version):
         if version > Version('2019.3.2'):

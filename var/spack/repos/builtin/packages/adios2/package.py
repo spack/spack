@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Adios2(CMakePackage):
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
     version('2.3.1', sha256='3bf81ccc20a7f2715935349336a76ba4c8402355e1dc3848fcd6f4c3c5931893')
@@ -100,14 +100,23 @@ class Adios2(CMakePackage):
 
     extends('python', when='+python')
     depends_on('python@2.7:2.8,3.5:',
-               when='@:2.4.0 +python', type=('build', 'run'))
-    depends_on('python@3.5:', when='@2.5.0: +python', type=('build', 'run'))
+               when='@:2.4.0 +python',
+               type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.5.0: +python',
+               type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:2.4.0', type='test')
+    depends_on('python@3.5:', when='@2.5.0:', type='test')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
     depends_on('py-mpi4py@2.0.0:', type=('build', 'run'), when='+mpi +python')
 
     # Fix findmpi when called by dependees
     # See https://github.com/ornladios/ADIOS2/pull/1632
     patch('cmake-update-findmpi.patch', when='@2.4.0')
+
+    # Fix the signature of the builtin clear_cache function in the
+    # third-party dill library.
+    # See https://github.com/ornladios/ADIOS2/pull/1899
+    patch('2.5-fix-clear_cache.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec
@@ -136,9 +145,11 @@ class Adios2(CMakePackage):
                 'ON' if '+fortran' in spec else 'OFF'),
             '-DADIOS2_USE_Endian_Reverse={0}'.format(
                 'ON' if '+endian_reverse' in spec else 'OFF'),
+            '-DBUILD_TESTING:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
         ]
 
-        if self.spec.version >= Version('2.4.0'):
+        if spec.version >= Version('2.4.0'):
             args.append('-DADIOS2_USE_Blosc={0}'.format(
                 'ON' if '+blosc' in spec else 'OFF'))
             args.append('-DADIOS2_USE_BZip2={0}'.format(
@@ -148,7 +159,7 @@ class Adios2(CMakePackage):
             args.append('-DADIOS2_USE_SSC={0}'.format(
                 'ON' if '+ssc' in spec else 'OFF'))
 
-        if self.spec.version >= Version('2.5.0'):
+        if spec.version >= Version('2.5.0'):
             args.append('-DADIOS2_USE_DataSpaces={0}'.format(
                 'ON' if '+dataspaces' in spec else 'OFF'))
 
@@ -168,8 +179,8 @@ class Adios2(CMakePackage):
             args.append('-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL={0}'.format(
                 'ON' if '+pic' in spec else 'OFF'))
 
-        if spec.satisfies('+python'):
+        if spec.satisfies('+python') or self.run_tests:
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=%s'
-                        % self.spec['python'].command.path)
+                        % spec['python'].command.path)
 
         return args

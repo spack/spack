@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,9 @@ class Raja(CMakePackage):
 
     version('develop', branch='develop', submodules='True')
     version('master',  branch='master',  submodules='True')
+    version('0.11.0', tag='v0.11.0', submodules="True")
+    version('0.10.0', tag='v0.10.0', submodules="True")
+    version('0.9.0', tag='v0.9.0', submodules="True")
     version('0.8.0', tag='v0.8.0', submodules="True")
     version('0.7.0', tag='v0.7.0', submodules="True")
     version('0.6.0', tag='v0.6.0', submodules="True")

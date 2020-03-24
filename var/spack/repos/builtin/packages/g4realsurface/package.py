@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class G4realsurface(Package):
     """Geant4 data for measured optical surface reflectance"""
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/RealSurface.1.0.tar.gz"
+
+    maintainers = ['drbenmorgan']
 
     version('1.0', sha256='3e2d2506600d2780ed903f1f2681962e208039329347c58ba1916740679020b1')
     version('2.1', sha256='2a287adbda1c0292571edeae2082a65b7f7bd6cf2bf088432d1d6f889426dcf3')

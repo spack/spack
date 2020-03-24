@@ -1,15 +1,17 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
+import sys
+
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
 
+import spack.cmd.common.arguments as arguments
 import spack.repo
-import sys
 
 description = "list available versions of a package"
 section = "packaging"
@@ -17,10 +19,9 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE',
-                           help='package to list versions for')
     subparser.add_argument('-s', '--safe-only', action='store_true',
                            help='only list safe versions of the package')
+    arguments.add_common_arguments(subparser, ['package'])
 
 
 def versions(parser, args):

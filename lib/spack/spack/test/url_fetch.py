@@ -1,8 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import os
 import pytest
 
@@ -10,8 +11,7 @@ from llnl.util.filesystem import working_dir, is_exe
 
 import spack.repo
 import spack.config
-from spack.fetch_strategy import FailedDownloadError
-from spack.fetch_strategy import from_list_url, URLFetchStrategy
+import spack.fetch_strategy as fs
 from spack.spec import Spec
 from spack.stage import Stage
 from spack.version import ver
@@ -23,10 +23,31 @@ def checksum_type(request):
     return request.param
 
 
+@pytest.fixture
+def pkg_factory():
+    Pkg = collections.namedtuple(
+        'Pkg', ['url_for_version', 'urls', 'url', 'versions', 'fetch_options']
+    )
+
+    def factory(url, urls, fetch_options={}):
+
+        def fn(v):
+            main_url = url or urls[0]
+            return spack.url.substitute_version(main_url, v)
+
+        return Pkg(
+            url_for_version=fn, url=url, urls=urls,
+            versions=collections.defaultdict(dict),
+            fetch_options=fetch_options
+        )
+
+    return factory
+
+
 def test_urlfetchstrategy_sans_url():
     """Ensure constructor with no URL fails."""
     with pytest.raises(ValueError):
-        with URLFetchStrategy(None):
+        with fs.URLFetchStrategy(None):
             pass
 
 
@@ -34,8 +55,8 @@ def test_urlfetchstrategy_bad_url(tmpdir):
     """Ensure fetch with bad URL fails as expected."""
     testpath = str(tmpdir)
 
-    with pytest.raises(FailedDownloadError):
-        fetcher = URLFetchStrategy(url='file:///does-not-exist')
+    with pytest.raises(fs.FailedDownloadError):
+        fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
         assert fetcher is not None
 
         with Stage(fetcher, path=testpath) as stage:
@@ -55,7 +76,7 @@ def test_fetch(
         secure,
         checksum_type,
         config,
-        mutable_mock_packages
+        mutable_mock_repo
 ):
     """Fetch an archive and make sure we can checksum it."""
     mock_archive.url
@@ -106,10 +127,14 @@ def test_from_list_url(mock_packages, config, spec, url, digest):
     """
     specification = Spec(spec).concretized()
     pkg = spack.repo.get(specification)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
+    fetch_strategy = fs.from_list_url(pkg)
+    assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == url
     assert fetch_strategy.digest == digest
+    assert fetch_strategy.extra_options == {}
+    pkg.fetch_options = {'timeout': 60}
+    fetch_strategy = fs.from_list_url(pkg)
+    assert fetch_strategy.extra_options == {'timeout': 60}
 
 
 def test_from_list_url_unspecified(mock_packages, config):
@@ -118,17 +143,21 @@ def test_from_list_url_unspecified(mock_packages, config):
 
     spec = Spec('url-list-test @2.0.0').concretized()
     pkg = spack.repo.get(spec)
-    fetch_strategy = from_list_url(pkg)
-    assert isinstance(fetch_strategy, URLFetchStrategy)
+    fetch_strategy = fs.from_list_url(pkg)
+    assert isinstance(fetch_strategy, fs.URLFetchStrategy)
     assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
     assert fetch_strategy.digest is None
+    assert fetch_strategy.extra_options == {}
+    pkg.fetch_options = {'timeout': 60}
+    fetch_strategy = fs.from_list_url(pkg)
+    assert fetch_strategy.extra_options == {'timeout': 60}
 
 
 def test_nosource_from_list_url(mock_packages, config):
     """This test confirms BundlePackages do not have list url."""
     pkg = spack.repo.get('nosource')
 
-    fetch_strategy = from_list_url(pkg)
+    fetch_strategy = fs.from_list_url(pkg)
     assert fetch_strategy is None
 
 
@@ -148,9 +177,30 @@ def test_url_extra_fetch(tmpdir, mock_archive):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmpdir)
 
-    fetcher = URLFetchStrategy(mock_archive.url)
+    fetcher = fs.URLFetchStrategy(mock_archive.url)
     with Stage(fetcher, path=testpath) as stage:
         assert fetcher.archive_file is None
         stage.fetch()
         assert fetcher.archive_file is not None
         fetcher.fetch()
+
+
+@pytest.mark.parametrize('url,urls,version,expected', [
+    (None,
+     ['https://ftpmirror.gnu.org/autoconf/autoconf-2.69.tar.gz',
+      'https://ftp.gnu.org/gnu/autoconf/autoconf-2.69.tar.gz'],
+     '2.62',
+     ['https://ftpmirror.gnu.org/autoconf/autoconf-2.62.tar.gz',
+      'https://ftp.gnu.org/gnu/autoconf/autoconf-2.62.tar.gz'])
+])
+def test_candidate_urls(pkg_factory, url, urls, version, expected):
+    """Tests that candidate urls include mirrors and that they go through
+    pattern matching and substitution for versions.
+    """
+    pkg = pkg_factory(url, urls)
+    f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+    assert f.candidate_urls == expected
+    assert f.extra_options == {}
+    pkg = pkg_factory(url, urls, fetch_options={'timeout': 60})
+    f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+    assert f.extra_options == {'timeout': 60}

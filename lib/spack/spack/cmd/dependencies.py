@@ -1,9 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import argparse
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
@@ -11,6 +9,7 @@ from llnl.util.tty.colify import colify
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
+import spack.package
 import spack.repo
 import spack.store
 
@@ -31,8 +30,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-V', '--no-expand-virtuals', action='store_false', default=True,
         dest="expand_virtuals", help="do not expand virtual dependencies")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def dependencies(parser, args):
@@ -55,22 +53,15 @@ def dependencies(parser, args):
 
     else:
         spec = specs[0]
-
-        if not spec.virtual:
-            packages = [spec.package]
-        else:
-            packages = [
-                spack.repo.get(s.name)
-                for s in spack.repo.path.providers_for(spec)]
-
-        dependencies = set()
-        for pkg in packages:
-            possible = pkg.possible_dependencies(
-                args.transitive, args.expand_virtuals, deptype=args.deptype)
-            dependencies.update(possible)
+        dependencies = spack.package.possible_dependencies(
+            spec,
+            transitive=args.transitive,
+            expand_virtuals=args.expand_virtuals,
+            deptype=args.deptype
+        )
 
         if spec.name in dependencies:
-            dependencies.remove(spec.name)
+            del dependencies[spec.name]
 
         if dependencies:
             colify(sorted(dependencies))

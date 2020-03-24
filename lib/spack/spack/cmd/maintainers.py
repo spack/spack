@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ def setup_parser(subparser):
 
     # options for commands that take package arguments
     subparser.add_argument(
-        'pkg_or_user', nargs=argparse.REMAINDER,
+        'package_or_user', nargs=argparse.REMAINDER,
         help='names of packages or users to get info for')
 
 
@@ -104,31 +104,31 @@ def maintainers(parser, args):
 
     if args.all:
         if args.by_user:
-            maintainers = maintainers_to_packages(args.pkg_or_user)
+            maintainers = maintainers_to_packages(args.package_or_user)
             for user, packages in sorted(maintainers.items()):
                 color.cprint('@c{%s}: %s'
                              % (user, ', '.join(sorted(packages))))
             return 0 if maintainers else 1
 
         else:
-            packages = packages_to_maintainers(args.pkg_or_user)
+            packages = packages_to_maintainers(args.package_or_user)
             for pkg, maintainers in sorted(packages.items()):
                 color.cprint('@c{%s}: %s'
                              % (pkg, ', '.join(sorted(maintainers))))
             return 0 if packages else 1
 
     if args.by_user:
-        if not args.pkg_or_user:
+        if not args.package_or_user:
             tty.die('spack maintainers --by-user requires a user or --all')
 
-        packages = union_values(maintainers_to_packages(args.pkg_or_user))
+        packages = union_values(maintainers_to_packages(args.package_or_user))
         colify(packages)
         return 0 if packages else 1
 
     else:
-        if not args.pkg_or_user:
+        if not args.package_or_user:
             tty.die('spack maintainers requires a package or --all')
 
-        users = union_values(packages_to_maintainers(args.pkg_or_user))
+        users = union_values(packages_to_maintainers(args.package_or_user))
         colify(users)
         return 0 if users else 1

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ import spack.util.spack_json as sjson
 
 # everything here uses the mock_env_path
 pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_packages')
+    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
@@ -169,9 +169,11 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     e = ev.read('test')
     with capfd.disabled():
         with e:
+            # The first installation outputs the package prefix
             install('cmake-client')
+            # The second installation attempt will also update the view
             out = install('cmake-client')
-            assert 'is already installed in' in out
+            assert 'Updating view at' in out
 
 
 def test_remove_after_concretize():
@@ -403,13 +405,11 @@ env:
     mpileaks:
       version: [2.2]
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -423,8 +423,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -435,8 +433,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -452,7 +450,6 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    spack.package_prefs.PackagePrefs.clear_caches()
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
@@ -465,8 +462,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -483,9 +480,6 @@ env:
   specs:
   - mpileaks
 """
-
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -498,8 +492,8 @@ packages:
     version: [0.8.11]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     # ensure included scope took effect
     assert any(
@@ -519,8 +513,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -540,8 +532,8 @@ packages:
     version: [0.8.12]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(
         x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())

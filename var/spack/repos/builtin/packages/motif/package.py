@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Motif(AutotoolsPackage):
     Motif - Graphical user interface (GUI)
     specification and the widget toolkit
     """
+    force_autoreconf = True
+
     homepage = "http://motif.ics.com/"
     url = "http://cfhcable.dl.sourceforge.net/project/motif/Motif%202.3.8%20Source%20Code/motif-2.3.8.tar.gz"
 
@@ -25,3 +27,16 @@ class Motif(AutotoolsPackage):
     depends_on("libxfixes")
     depends_on("xbitmaps")
     depends_on("jpeg")
+
+    # we need the following for autoreconf
+    depends_on("automake", type="build")
+    depends_on("autoconf", type="build")
+    depends_on("m4", type="build")
+    depends_on("libtool", type="build")
+
+    patch('add_xbitmaps_dependency.patch')
+
+    def autoreconf(self, spec, prefix):
+        autoreconf = which('autoreconf')
+        with working_dir(self.configure_directory):
+            autoreconf('-ivf')

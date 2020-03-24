@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import os
 import re
 import llnl.util.tty as tty
 from spack.paths import build_env_path
-from spack.util.executable import which
+from spack.util.executable import Executable
 from spack.architecture import Platform, Target, NoPlatformError
 from spack.operating_systems.cray_frontend import CrayFrontend
 from spack.operating_systems.cnl import Cnl
@@ -117,11 +117,17 @@ class Cray(Platform):
         '''
         # env -i /bin/bash -lc echo $CRAY_CPU_TARGET 2> /dev/null
         if getattr(self, 'default', None) is None:
-            env = which('env')
-            output = env("-i", "/bin/bash", "-lc", "echo $CRAY_CPU_TARGET",
-                         output=str, error=os.devnull)
-            self.default = output.strip()
-            tty.debug("Found default module:%s" % self.default)
+            bash = Executable('/bin/bash')
+            output = bash(
+                '-lc', 'echo $CRAY_CPU_TARGET',
+                env={'TERM': os.environ.get('TERM', '')},
+                output=str,
+                error=os.devnull
+            )
+            output = ''.join(output.split())  # remove all whitespace
+            if output:
+                self.default = output
+                tty.debug("Found default module:%s" % self.default)
         return self.default
 
     def _avail_targets(self):

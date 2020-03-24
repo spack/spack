@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Stow(AutotoolsPackage):
+class Stow(AutotoolsPackage, GNUMirrorPackage):
     """GNU Stow: a symlink farm manager
 
        GNU Stow is a symlink farm manager which takes distinct
@@ -15,7 +15,7 @@ class Stow(AutotoolsPackage):
        installed in the same place."""
 
     homepage = "https://www.gnu.org/software/stow/"
-    url      = "https://ftpmirror.gnu.org/stow/stow-2.2.2.tar.bz2"
+    gnu_mirror_path = "stow/stow-2.2.2.tar.bz2"
 
     version('2.2.2', sha256='a0022034960e47a8d23dffb822689f061f7a2d9101c9835cf11bf251597aa6fd')
     version('2.2.0', sha256='86bc30fe1d322a5c80ff3bd7580c2758149aad7c3bbfa18b48a9d95c25d66b05')

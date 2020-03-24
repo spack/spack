@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Geant4(CMakePackage):
 
     homepage = "http://geant4.cern.ch/"
     url = "http://geant4.cern.ch/support/source/geant4.10.01.p03.tar.gz"
+
+    maintainers = ['drbenmorgan']
 
     version('10.05.p01', sha256='f4a292220500fad17e0167ce3153e96e3410ecbe96284e572dc707f63523bdff')
     version('10.04', sha256='f6d883132f110eb036c69da2b21df51f13c585dc7b99d4211ddd32f4ccee1670')
@@ -56,7 +58,6 @@ class Geant4(CMakePackage):
 
     depends_on("expat")
     depends_on("zlib")
-    depends_on("xerces-c")
     depends_on("gl", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
@@ -71,6 +72,7 @@ class Geant4(CMakePackage):
 
     depends_on('geant4-data@10.03.p03', when='@10.03.p03 ~data')
     depends_on('geant4-data@10.04', when='@10.04 ~data')
+    depends_on('geant4-data@10.05.p01', when='@10.05.p01 ~data')
 
     # As released, 10.03.03 has issues with respect to using external
     # CLHEP.

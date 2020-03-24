@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@
 ORIGINAL_PATH="$PATH"
 
 . "$(dirname $0)/setup.sh"
-check_dependencies ${coverage} git hg svn
+check_dependencies $coverage git hg svn
 
 # Move to root directory of Spack
 # Allows script to be run from anywhere
@@ -37,16 +37,12 @@ bin/spack -h
 bin/spack help -a
 
 # Profile and print top 20 lines for a simple call to spack spec
-bin/spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
+spack -p --lines 20 spec mpileaks%gcc ^elfutils@0.170
 
 #-----------------------------------------------------------
 # Run unit tests with code coverage
 #-----------------------------------------------------------
-extra_args=""
-if [[ -n "$@" ]]; then
-    extra_args="-k $@"
-fi
-${coverage_run} bin/spack test --verbose "$extra_args"
+$coverage_run $(which spack) test -x --verbose
 
 #-----------------------------------------------------------
 # Run tests for setup-env.sh
@@ -57,15 +53,18 @@ export PATH="$ORIGINAL_PATH"
 unset spack
 
 # start in the spack root directory
-cd $SPACK_ROOT
+cd "$SPACK_ROOT"
 
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov seems to undo the script's redirection
 if [ "$BASH_COVERAGE" = true ]; then
-    ${QA_DIR}/bashcov ${QA_DIR}/setup-env-test.sh &> /dev/null
+    "$QA_DIR/bashcov" "$QA_DIR/setup-env-test.sh" &> /dev/null
+    "$QA_DIR/bashcov" "$QA_DIR/completion-test.sh" &> /dev/null
 fi
 
 # run the test scripts for their output (these will print nicely)
-bash ${QA_DIR}/setup-env-test.sh
-zsh  ${QA_DIR}/setup-env-test.sh
-dash ${QA_DIR}/setup-env-test.sh
+bash "$QA_DIR/setup-env-test.sh"
+zsh  "$QA_DIR/setup-env-test.sh"
+dash "$QA_DIR/setup-env-test.sh"
+
+bash "$QA_DIR/completion-test.sh"
