@@ -106,6 +106,7 @@ class Mfem(Package):
     variant('occa', default=False, description='Enable OCCA backend')
     variant('raja', default=False, description='Enable RAJA backend')
     variant('libceed', default=False, description='Enable libCEED backend')
+    variant('umpire', default=False, description='Enable Umpire support')
 
     variant('threadsafe', default=False,
             description=('Enable thread safe features.'
@@ -174,6 +175,7 @@ class Mfem(Package):
     conflicts('+occa', when='mfem@:3.99.99')
     conflicts('+raja', when='mfem@:3.99.99')
     conflicts('+libceed', when='mfem@:4.0.99')
+    conflicts('+umpire', when='mfem@:4.0.99')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -237,6 +239,9 @@ class Mfem(Package):
 
     depends_on('libceed@0.6.0:', when='+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
+
+    depends_on('umpire@2.0.0:', when='+umpire')
+    depends_on('umpire+cuda', when='+umpire+cuda')
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
@@ -355,7 +360,8 @@ class Mfem(Package):
             'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
             'MFEM_USE_OCCA=%s' % yes_no('+occa'),
             'MFEM_USE_RAJA=%s' % yes_no('+raja'),
-            'MFEM_USE_CEED=%s' % yes_no('+libceed')]
+            'MFEM_USE_CEED=%s' % yes_no('+libceed'),
+            'MFEM_USE_UMPIRE=%s' % yes_no('+umpire')]
 
         cxxflags = spec.compiler_flags['cxxflags']
 
@@ -539,6 +545,11 @@ class Mfem(Package):
                         'CEED_LIB=%s' %
                         ld_flags_from_dirs([spec['libceed'].prefix.lib],
                                            ['ceed'])]
+
+        if '+umpire' in spec:
+            options += ['UMPIRE_OPT=-I%s' % spec['umpire'].prefix.include,
+                        'UMPIRE_LIB=%s' %
+                        ld_flags_from_library_list(spec['umpire'].libs)]
 
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value
