@@ -25,7 +25,7 @@ class Med(CMakePackage):
     depends_on('hdf5@:1.10.2+mpi', when='@4.0.0')
 
     # C++11 requires a space between literal and identifier
-    patch('add_space.patch',when='@3.2.0')
+    patch('add_space.patch', when='@3.2.0')
 
     # FIXME This is minimal installation.
 
