@@ -15,6 +15,7 @@ class Sgpp(SConsPackage):
 
     # Versions with Python 3 bindings:
     version('master', git='https://github.com/SGpp/SGpp.git', branch='master')
+    version('3.3.0', sha256='ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4')
     version('3.2.0', sha256='dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d')
     # Versions with Python 2 bindings:
     version('3.1.0', sha256='6b46bc5b3966e92567d6754130666bdffb7be1d1d2c1b427d7ce964b8eaab526')
@@ -23,7 +24,7 @@ class Sgpp(SConsPackage):
     # Patch that ensures libraries will actually
     # be copied into prefix/lib upon installation
     # (otherwise it would be prefix/sgpp/lib)
-    patch('directory.patch')
+    patch('directory.patch', when='@:3.2.0')
     # Fix faulty setup.py in 3.2.0
     patch('fix-setup-py.patch', when='@3.2.0')
     # Backport opencl fix from master
@@ -33,25 +34,25 @@ class Sgpp(SConsPackage):
             default='sse3',
             values=('sse3', 'sse42', 'avx', 'fma4', 'avx2', 'avx512'),
             description='Specifies the SIMD extension to be used')
-    variant('python', default=False,
+    variant('python', default=True,
             description='Provide Python bindings for SGpp')
     variant('java', default=False,
             description='Provide Java bindings for SGpp')
     # export CLASSPATH=$(spack location --install-dir sgpp)/lib/jsgpp.jar
     # After that one can compile and run simple java examples with sgpp
-    variant('optimization', default=False,
+    variant('optimization', default=True,
             description='Builds the optimization module of SGpp')
-    variant('pde', default=False,
+    variant('pde', default=True,
             description='Builds the datadriven module of SGpp')
-    variant('quadrature', default=False,
+    variant('quadrature', default=True,
             description='Builds the datadriven module of SGpp')
     variant('datadriven', default=False,
             description='Builds the datadriven module of SGpp')
     variant('misc', default=False,
             description='Builds the misc module of SGpp')
-    variant('combigrid', default=False,
+    variant('combigrid', default=True,
             description='Builds the combigrid module of SGpp')
-    variant('solver', default=False,
+    variant('solver', default=True,
             description='Builds the solver module of SGpp')
     variant('opencl', default=False,
             description='Enables support for OpenCL accelerated operations')
@@ -76,6 +77,8 @@ class Sgpp(SConsPackage):
     depends_on('py-numpy@1.17:', when='@3.2.0:+python', type=('build', 'run'))
     depends_on('py-scipy@:1.2.3', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('py-scipy@1.3.0:', when='@3.2.0:+python', type=('build', 'run'))
+    # MPI dependency
+    depends_on('opencl@1.1:', when='+opencl', type=('build', 'run'))
     # MPI dependency
     depends_on('mpi', when='+mpi', type=('build', 'run'))
 
