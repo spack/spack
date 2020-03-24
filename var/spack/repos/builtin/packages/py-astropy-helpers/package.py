@@ -27,4 +27,4 @@ class PyAstropyHelpers(PythonPackage):
     version('2.0.10', sha256='528421568531719447677df73f547c25305fbd116c6692faa0f268eac4a3e6d6')
 
     depends_on('py-setuptools@30.3:', type='build')
-    depends_on('py-astropy')
+    depends_on('py-astropy', type=('build', 'run'))
