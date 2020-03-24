@@ -28,7 +28,3 @@ class PyAstropyHelpers(PythonPackage):
 
     depends_on('py-setuptools@30.3:', type='build')
     depends_on('py-astropy')
-
-    def build_args(self, spec, prefix):
-        args = []
-        return args
