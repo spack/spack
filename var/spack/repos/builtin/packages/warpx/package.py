@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,8 +18,9 @@ class Warpx(MakefilePackage):
     homepage = "https://ecp-warpx.github.io/index.html"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
+    maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
+
     version('master', tag='master')
-    version('dev', tag='dev')
 
     depends_on('mpi')
 
@@ -40,11 +41,6 @@ class Warpx(MakefilePackage):
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
              when='@master',
-             tag='master')
-
-    resource(name='amrex',
-             git='https://github.com/AMReX-Codes/amrex.git',
-             when='@dev',
              tag='development')
 
     resource(name='picsar',

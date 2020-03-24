@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,7 +43,7 @@ class Ncl(Package):
     # Non-optional dependencies according to the manual:
     depends_on('jpeg')
     depends_on('netcdf-c')
-    depends_on('cairo+X+pdf')
+    depends_on('cairo+X+ft+pdf')
 
     # Extra dependencies that may be missing from build system:
     depends_on('bison', type='build')
@@ -64,6 +64,7 @@ class Ncl(Package):
     depends_on('pixman')
     depends_on('bzip2')
     depends_on('freetype')
+    depends_on('fontconfig')
 
     # In Spack, we do not have an option to compile netcdf-c without netcdf-4
     # support, so we will tell the ncl configuration script that we want
@@ -224,6 +225,7 @@ class Ncl(Package):
             # Build GRIB2 support (optional) into NCL?
             'n\n',
             # Enter local library search path(s) :
+            self.spec['fontconfig'].prefix.lib + ' ' +
             self.spec['pixman'].prefix.lib + ' ' +
             self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :

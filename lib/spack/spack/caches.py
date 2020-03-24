@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,8 +50,9 @@ def _fetch_cache():
 
 
 class MirrorCache(object):
-    def __init__(self, root):
+    def __init__(self, root, skip_unstable_versions):
         self.root = os.path.abspath(root)
+        self.skip_unstable_versions = skip_unstable_versions
 
     def store(self, fetcher, relative_dest):
         """Fetch and relocate the fetcher's target into our mirror cache."""
@@ -67,15 +68,20 @@ class MirrorCache(object):
         storage location."""
 
         cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
+        storage_path = os.path.join(self.root, mirror_ref.storage_path)
         relative_dst = os.path.relpath(
-            mirror_ref.storage_path,
+            storage_path,
             start=os.path.dirname(cosmetic_path))
+
         if not os.path.exists(cosmetic_path):
+            if os.path.lexists(cosmetic_path):
+                # In this case the link itself exists but it is broken: remove
+                # it and recreate it (in order to fix any symlinks broken prior
+                # to https://github.com/spack/spack/pull/13908)
+                os.unlink(cosmetic_path)
             mkdirp(os.path.dirname(cosmetic_path))
             os.symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives
 fetch_cache = llnl.util.lang.Singleton(_fetch_cache)
-
-mirror_cache = None

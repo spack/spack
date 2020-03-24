@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,8 +29,10 @@ class PyTables(PythonPackage):
     variant('lzo', default=False, description='Support for lzo compression')
 
     # requirements.txt
-    depends_on('python@3.5:', when='@3.4:', type=('build', 'run'))
+    depends_on('python@3.5:', when='@3.6.1:', type=('build', 'run'))
+    depends_on('python@3.4:', when='@3.6.0:', type=('build', 'run'))
     depends_on('python@2.6:', type=('build', 'run'))
+
     depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.21:', type='build')
     depends_on('py-numpy@1.9.3:', type=('build', 'run'))

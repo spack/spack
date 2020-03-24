@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ from spack import *
 import glob
 import inspect
 import platform
+import sys
 
 
 class IntelTbb(Package):
@@ -18,9 +19,11 @@ class IntelTbb(Package):
     homepage = "http://www.threadingbuildingblocks.org/"
 
     # Note: when adding new versions, please check and update the
-    # patches and filters below as needed.
+    # patches, filters and url_for_version() below as needed.
 
-    # See url_for_version() below.
+    version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
+    version('2020.0', sha256='8eed2377ac62e6ac10af5a8303ce861e4525ffe491a061b48e8fe094fc741ce9')
+    version('2019.9', sha256='15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe')
     version('2019.8', sha256='7b1fd8caea14be72ae4175896510bf99c809cd7031306a1917565e6de7382fba')
     version('2019.7', sha256='4204a93f4c0fd989fb6f79acae74feb02ee39725c93968773d9b6efeb75c7a6a')
     version('2019.6', sha256='2ba197b3964fce8a84429dd15b75eba7434cb89afc54f86d5ee6f726fdbe97fd')
@@ -81,36 +84,43 @@ class IntelTbb(Package):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
-    # Build and install CMake config files if we're new enough.
-    depends_on('cmake@3.0.0:', type='build', when='@2017.0:')
+    # Testing version ranges inside when clauses was fixed in e9ee9eaf.
+    # See: #8957 and #13989.
 
-    # Note: see issues #11371 and #8957 to understand why 2019.x patches are
-    # specified one at a time.  In a nutshell, it is currently impossible
-    # to patch `2019.1` without patching `2019`.  When #8957 is fixed, this
-    # can be simplified.
+    # Build and install CMake config files if we're new enough.
+    # CMake support started in 2017.7.
+    depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
 
     # Patch for pedantic warnings (#10836).  This was fixed in the TBB
-    # source tree in 2019.6.  One patch file for 2019.1 and after...
-    patch("gcc_generic-pedantic-2019.patch", level=1,
-          when='@2019.1,2019.2,2019.3,2019.4,2019.5')
-    # ...another patch file for 2019 and before
-    patch("gcc_generic-pedantic-4.4.patch", level=1, when='@:2019.0')
+    # source tree in 2019.6.
+    patch("gcc_generic-pedantic-2019.patch", level=1, when='@2019.1:2019.5')
+    patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    # Can't use '@2019.5:' because 2019.5 <= 2019 <= 2019.99.  wtf!?
-    patch("tbb_cmakeConfig-2019.5.patch", level=0,
-          when='@2019.5,2019.6,2019.7,2019.8')
-    patch("tbb_cmakeConfig.patch", level=0, when='@2017.0:2019.4')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
+
+    # Restore the debug targets.
+    patch("makefile-debug.patch", when="@2020:")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
 
+    # Version and tar file names:
+    #  2020.0 --> v2020.0.tar.gz  starting with 2020
+    #  2017.1 --> 2017_U1.tar.gz  starting with 2017
+    #  2017   --> 2017.tar.gz
+    #  4.4.6  --> 4.4.6.tar.gz
+    #
     def url_for_version(self, version):
-        url = 'https://github.com/01org/tbb/archive/{0}.tar.gz'
-        if (version[0] >= 2017) and len(version) > 1:
-            return url.format('{0}_U{1}'.format(version[0], version[1]))
+        url = 'https://github.com/intel/tbb/archive/{0}.tar.gz'
+        if version[0] >= 2020:
+            name = 'v{0}'.format(version)
+        elif version[0] >= 2017 and len(version) > 1:
+            name = '{0}_U{1}'.format(version[0], version[1])
         else:
-            return url.format(version)
+            name = '{0}'.format(version)
+        return url.format(name)
 
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
@@ -197,7 +207,7 @@ class IntelTbb(Package):
             for f in fs:
                 install(f, prefix.lib)
 
-        if self.spec.satisfies('@2017.0:'):
+        if spec.satisfies('@2017.8,2018.1:', strict=True):
             # Generate and install the CMake Config file.
             cmake_args = ('-DTBB_ROOT={0}'.format(prefix),
                           '-DTBB_OS={0}'.format(platform.system()),
@@ -205,3 +215,9 @@ class IntelTbb(Package):
                           'tbb_config_generator.cmake')
             with working_dir(join_path(self.stage.source_path, 'cmake')):
                 inspect.getmodule(self).cmake(*cmake_args)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # Replace @rpath in ids with full path
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,7 @@ class Conduit(Package):
     git      = "https://github.com/LLNL/conduit.git"
 
     version('master', branch='master', submodules=True, preferred=True)
+    version('0.5.1', sha256='68a3696d1ec6d3a4402b44a464d723e6529ec41016f9b44c053676affe516d44')
     version('0.5.0', sha256='7efac668763d02bd0a2c0c1b134d9f5ee27e99008183905bb0512e5502b8b4fe')
     version('0.4.0', sha256='c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52')
     version('0.3.1', sha256='7b358ca03bb179876291d4a55d6a1c944b7407a80a588795b9e47940b1990521')
@@ -89,9 +90,7 @@ class Conduit(Package):
     #######################
     # Python
     #######################
-    # we need a shared version of python b/c linking with static python lib
-    # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared", when="+python")
+    depends_on("python", when="+python")
     extends("python", when="+python")
     depends_on("py-numpy", when="+python", type=('build', 'run'))
 
@@ -370,7 +369,7 @@ class Conduit(Package):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec and "+shared" in spec:
+        if "+python" in spec:
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")

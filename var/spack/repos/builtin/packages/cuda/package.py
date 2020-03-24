@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,8 +60,7 @@ class Cuda(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False,
-                    preferred=(ver == "10.1.243"))  # see GH issue 13969
+            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
 
     # macOS Mojave drops NVIDIA graphics card support -- official NVIDIA
     # drivers do not exist for Mojave. See
@@ -73,6 +72,14 @@ class Cuda(Package):
     # https://www.nvidia.com/en-us/drivers/cuda/mac-driver-archive/ mention
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
+
+    depends_on('libxml2', when='@10.1.243:')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('@10.1.243:'):
+            libxml2_home  = self.spec['libxml2'].prefix
+            env.set('LIBXML2HOME', libxml2_home)
+            env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
 
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)

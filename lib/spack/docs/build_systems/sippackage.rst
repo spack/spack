@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,10 +51,8 @@ Build system dependencies
 ``SIPPackage`` requires several dependencies. Python is needed to run
 the ``configure.py`` build script, and to run the resulting Python
 libraries. Qt is needed to provide the ``qmake`` command. SIP is also
-needed to build the package. SIP is an unusual dependency in that it
-must be installed in the same installation directory as the package,
-so instead of a ``depends_on``, we use a ``resource``. All of these
-dependencies are automatically added via the base class
+needed to build the package. All of these dependencies are automatically
+added via the base class
 
 .. code-block:: python
 
@@ -62,11 +60,7 @@ dependencies are automatically added via the base class
 
    depends_on('qt', type='build')
 
-   resource(name='sip',
-            url='https://www.riverbankcomputing.com/static/Downloads/sip/4.19.18/sip-4.19.18.tar.gz',
-            sha256='c0bd863800ed9b15dcad477c4017cdb73fa805c25908b0240564add74d697e1e',
-            destination='.')
-
+   depends_on('py-sip', type='build')
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to ``configure.py``

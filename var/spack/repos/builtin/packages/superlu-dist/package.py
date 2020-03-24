@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,6 +72,7 @@ class SuperluDist(CMakePackage):
             args.append('-Denable_openmp=ON')
         else:
             args.append('-Denable_openmp=OFF')
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

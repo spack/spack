@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,10 +44,13 @@ class Paraview(CMakePackage, CudaPackage):
     variant('opengl2', default=True, description='Enable OpenGL2 backend')
     variant('examples', default=False, description="Build examples")
     variant('hdf5', default=False, description="Use external HDF5")
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
 
     conflicts('+python', when='+python3')
     conflicts('+python', when='@5.6:')
     conflicts('+python3', when='@:5.5')
+    conflicts('+shared', when='+cuda')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -166,11 +169,18 @@ class Paraview(CMakePackage, CudaPackage):
                 pv_pydir = join_path(lib_dir,
                                      'python{0}'.format(python_version),
                                      'site-packages')
-                env.prepend_path('PYTHONPATH', pv_pydir)
-                # The Trilinos Catalyst adapter requires
-                # the vtkmodules directory in PYTHONPATH
-                env.prepend_path('PYTHONPATH', join_path(pv_pydir,
-                                                         'vtkmodules'))
+                if '+shared' in self.spec or \
+                   self.spec.version <= Version('5.7.0'):
+                    env.prepend_path('PYTHONPATH', pv_pydir)
+                    # The Trilinos Catalyst adapter requires
+                    # the vtkmodules directory in PYTHONPATH
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             'vtkmodules'))
+                else:
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             '_paraview.zip'))
+                    env.prepend_path('PYTHONPATH', join_path(pv_pydir,
+                                                             '_vtk.zip'))
 
     def cmake_args(self):
         """Populate cmake arguments for ParaView."""
@@ -234,6 +244,15 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DMPI_C_COMPILER:PATH=%s' % spec['mpi'].mpicc,
                 '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
             ])
+
+        if '+shared' in spec:
+            cmake_args.append(
+                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=ON'
+            )
+        else:
+            cmake_args.append(
+                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
+            )
 
         if '+cuda' in spec:
             cmake_args.extend([

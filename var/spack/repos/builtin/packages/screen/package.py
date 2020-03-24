@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Screen(AutotoolsPackage):
+class Screen(AutotoolsPackage, GNUMirrorPackage):
     """Screen is a full-screen window manager that multiplexes a physical
     terminal between several processes, typically interactive shells.
     """
 
     homepage = "https://www.gnu.org/software/screen/"
-    url      = "https://ftpmirror.gnu.org/screen/screen-4.3.1.tar.gz"
+    gnu_mirror_path = "screen/screen-4.3.1.tar.gz"
 
     version('4.6.2', sha256='1b6922520e6a0ce5e28768d620b0f640a6631397f95ccb043b70b91bb503fa3a')
     version('4.3.1', sha256='fa4049f8aee283de62e283d427f2cfd35d6c369b40f7f45f947dbfd915699d63')

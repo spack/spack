@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,9 @@ def decompressor_for(path, extension=None):
     if extension and re.match(r'gz', extension):
         gunzip = which('gunzip', required=True)
         return gunzip
+    if extension and re.match(r'bz2', extension):
+        bunzip2 = which('bunzip2', required=True)
+        return bunzip2
     tar = which('tar', required=True)
     tar.add_default_arg('-xf')
     return tar

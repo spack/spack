@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,10 @@ class Vim(AutotoolsPackage):
 
         configure_args = ["--enable-fail-if-missing"]
 
-        configure_args.append("--with-tlib=ncursesw")
+        if '+termlib' in spec['ncurses']:
+            configure_args.append("--with-tlib=tinfow")
+        else:
+            configure_args.append("--with-tlib=ncursesw")
 
         configure_args.append("--with-features=" + feature_set)
 

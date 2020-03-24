@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,7 +20,12 @@ class PyProtobuf(PythonPackage):
     variant('cpp', default=False,
             description='Enable the cpp implementation')
 
+    version('3.11.2',  sha256='3d7a7d8d20b4e7a8f63f62de2d192cfd8b7a53c56caba7ece95367ca2b80c574')
+    version('3.11.1',  sha256='aecdf12ef6dc7fd91713a6da93a86c2f2a8fe54840a3b1670853a2b7402e77c9')
     version('3.11.0',  sha256='97b08853b9bb71512ed52381f05cf2d4179f4234825b505d8f8d2bb9d9429939')
+    version('3.10.0',  sha256='db83b5c12c0cd30150bb568e6feb2435c49ce4e68fe2d7b903113f0e221e58fe')
+    version('3.9.2',   sha256='843f498e98ad1469ad54ecb4a7ccf48605a1c5d2bd26ae799c7a2cddab4a37ec')
+    version('3.9.1',   sha256='d831b047bd69becaf64019a47179eb22118a50dd008340655266a906c69c6417')
     version('3.7.1',   sha256='21e395d7959551e759d604940a115c51c6347d90a475c9baf471a1a86b5604a9')
     version('3.6.1',   sha256='1489b376b0f364bcc6f89519718c057eb191d7ad6f1b395ffd93d1aa45587811')
     version('3.6.0',   sha256='a37836aa47d1b81c2db1a6b7a5e79926062b5d76bd962115a0e615551be2b48d')

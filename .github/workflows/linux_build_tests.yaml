@@ -1,0 +1,58 @@
+name: linux builds
+
+on:
+  push:
+    branches:
+    - master
+    - develop
+  pull_request:
+    branches:
+    - master
+    - develop
+    paths-ignore:
+      # Don't run if we only modified packages in the built-in repository
+      - 'var/spack/repos/builtin/**'
+      - '!var/spack/repos/builtin/packages/lz4/**'
+      - '!var/spack/repos/builtin/packages/mpich/**'
+      - '!var/spack/repos/builtin/packages/tut/**'
+      - '!var/spack/repos/builtin/packages/py-setuptools/**'
+      - '!var/spack/repos/builtin/packages/openjpeg/**'
+      - '!var/spack/repos/builtin/packages/r-rcpp/**'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        package: [lz4, mpich, tut, py-setuptools, openjpeg, r-rcpp]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Cache ccache's store
+      uses: actions/cache@v1
+      with:
+        path: ~/.ccache
+        key: ccache-build-${{ matrix.package }}
+        restore-keys: |
+          ccache-build-${{ matrix.package }}
+    - name: Setup Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+    - name: Install System Packages
+      run: |
+        sudo apt-get update
+        sudo apt-get -yqq install ccache gfortran perl perl-base r-base r-base-core r-base-dev findutils openssl libssl-dev libpciaccess-dev
+        R --version
+        perl --version
+    - name: Copy Configuration
+      run: |
+        ccache -M 300M && ccache -z
+        # Set up external deps for build tests, b/c they take too long to compile
+        cp share/spack/qa/configuration/*.yaml etc/spack/
+    - name: Run the build test
+      run: |
+        . share/spack/setup-env.sh
+        SPEC=${{ matrix.package }} share/spack/qa/run-build-tests
+        ccache -s

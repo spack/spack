@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ import spack.util.spack_json as sjson
 
 # everything here uses the mock_env_path
 pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_packages')
+    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
@@ -61,6 +61,27 @@ def test_add():
     e = ev.create('test')
     e.add('mpileaks')
     assert Spec('mpileaks') in e.user_specs
+
+
+def test_env_add_virtual():
+    env('create', 'test')
+
+    e = ev.read('test')
+    e.add('mpi')
+    e.concretize()
+
+    hashes = e.concretized_order
+    assert len(hashes) == 1
+    spec = e.specs_by_hash[hashes[0]]
+    assert spec.satisfies('mpi')
+
+
+def test_env_add_nonexistant_fails():
+    env('create', 'test')
+
+    e = ev.read('test')
+    with pytest.raises(ev.SpackEnvironmentError, match=r'no such package'):
+        e.add('thispackagedoesnotexist')
 
 
 def test_env_list(mutable_mock_env_path):
@@ -148,9 +169,11 @@ def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     e = ev.read('test')
     with capfd.disabled():
         with e:
+            # The first installation outputs the package prefix
             install('cmake-client')
+            # The second installation attempt will also update the view
             out = install('cmake-client')
-            assert 'is already installed in' in out
+            assert 'Updating view at' in out
 
 
 def test_remove_after_concretize():
@@ -382,13 +405,11 @@ env:
     mpileaks:
       version: [2.2]
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -402,8 +423,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -414,8 +433,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -431,7 +450,6 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    spack.package_prefs.PackagePrefs.clear_caches()
     _env_create('test', StringIO(test_config))
 
     e = ev.read('test')
@@ -444,8 +462,8 @@ packages:
     version: [2.2]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(x.satisfies('mpileaks@2.2')
                for x in e._get_environment_specs())
@@ -462,9 +480,6 @@ env:
   specs:
   - mpileaks
 """
-
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -477,8 +492,8 @@ packages:
     version: [0.8.11]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     # ensure included scope took effect
     assert any(
@@ -498,8 +513,6 @@ env:
   specs:
   - mpileaks
 """
-    spack.package_prefs.PackagePrefs.clear_caches()
-
     _env_create('test', StringIO(test_config))
     e = ev.read('test')
 
@@ -519,8 +532,8 @@ packages:
     version: [0.8.12]
 """)
 
-    ev.prepare_config_scope(e)
-    e.concretize()
+    with e:
+        e.concretize()
 
     assert any(
         x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
@@ -765,13 +778,13 @@ def test_indirect_build_dep():
 @pytest.mark.usefixtures('config')
 def test_store_different_build_deps():
     r"""Ensure that an environment can store two instances of a build-only
-Dependency:
+    dependency::
 
-        x       y
-       /| (l)   | (b)
-  (b) | y       z2
-       \| (b)              # noqa: W605
-        z1
+              x       y
+             /| (l)   | (b)
+        (b) | y       z2
+             \| (b)
+              z1
 
     """
     default = ('build', 'link')
@@ -1777,7 +1790,7 @@ def test_duplicate_packages_raise_when_concretizing_together():
 
 
 def test_env_write_only_non_default():
-    print(env('create', 'test'))
+    env('create', 'test')
 
     e = ev.read('test')
     with open(e.manifest_path, 'r') as f:

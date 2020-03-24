@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -135,7 +135,9 @@ def process_stacktrace(countback):
 def get_timestamp(force=False):
     """Get a string timestamp"""
     if _debug or _timestamp or force:
-        return datetime.now().strftime("[%Y-%m-%d-%H:%M:%S.%f] ")
+        # Note inclusion of the PID is useful for parallel builds.
+        return '[{0}, {1}] '.format(
+            datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), os.getpid())
     else:
         return ''
 

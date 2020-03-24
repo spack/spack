@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,9 @@ class Elfutils(AutotoolsPackage):
     url      = "https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
+
+    # Sourceware is often slow to respond.
+    fetch_options = {'timeout': 60}
 
     version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
     version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')

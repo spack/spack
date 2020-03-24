@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,13 +14,13 @@ from spack.main import SpackCommand
 config = SpackCommand('config')
 
 
-def test_get_config_scope(mock_config):
+def test_get_config_scope(mock_low_high_config):
     assert config('get', 'compilers').strip() == 'compilers: {}'
 
 
-def test_get_config_scope_merged(mock_config):
-    low_path = mock_config.scopes['low'].path
-    high_path = mock_config.scopes['high'].path
+def test_get_config_scope_merged(mock_low_high_config):
+    low_path = mock_low_high_config.scopes['low'].path
+    high_path = mock_low_high_config.scopes['high'].path
 
     mkdirp(low_path)
     mkdirp(high_path)
@@ -91,3 +91,9 @@ def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
 def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
     output = config('get', fail_on_error=False)
     assert "requires a section argument or an active environment" in output
+
+
+def test_config_list():
+    output = config('list')
+    assert 'compilers' in output
+    assert 'packages' in output
