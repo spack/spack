@@ -110,7 +110,7 @@ class Charmpp(Package):
     depends_on("ucx", when="backend=ucx")
     depends_on("slurm@:17-11-9-2", when="ucx-pmi=slurmPMI")
     depends_on("slurm@17-11-9-2:", when="ucx-pmi=slurmPMI2")
-    depends_on("openmpi+pmi+ucx", when="ucx-pmi=PMIx")
+    depends_on("openmpi+pmi backend=ucx", when="ucx-pmi=PMIx")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
