@@ -7,11 +7,10 @@ from __future__ import print_function
 
 import os
 
-import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import spack.config
 import spack.repo
-import spack.spec
+import spack.util.path
 
 description = "manage package source repositories"
 section = "config"
@@ -74,7 +73,7 @@ def repo_add(args):
     path = args.path
 
     # real_path is absolute and handles substitution.
-    canon_path = fs.canonicalize_path(path)
+    canon_path = spack.util.path.canonicalize_path(path)
 
     # check if the path exists
     if not os.path.exists(canon_path):
@@ -106,9 +105,9 @@ def repo_remove(args):
     namespace_or_path = args.namespace_or_path
 
     # If the argument is a path, remove that repository from config.
-    canon_path = fs.canonicalize_path(namespace_or_path)
+    canon_path = spack.util.path.canonicalize_path(namespace_or_path)
     for repo_path in repos:
-        repo_canon_path = fs.canonicalize_path(repo_path)
+        repo_canon_path = spack.util.path.canonicalize_path(repo_path)
         if canon_path == repo_canon_path:
             repos.remove(repo_path)
             spack.config.set('repos', repos, args.scope)
