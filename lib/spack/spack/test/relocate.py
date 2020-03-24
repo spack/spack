@@ -89,6 +89,20 @@ def expected_patchelf_path(request, mutable_database, monkeypatch):
     return expected_path
 
 
+@pytest.fixture()
+def mock_patchelf(tmpdir):
+    import jinja2
+
+    def _factory(output):
+        f = tmpdir.mkdir('bin').join('patchelf')
+        t = jinja2.Template('#!/bin/bash\n{{ output }}\n')
+        f.write(t.render(output=output))
+        f.chmod(0o755)
+        return str(f)
+
+    return _factory
+
+
 @pytest.mark.requires_executables(
     '/usr/bin/gcc', 'patchelf', 'strings', 'file'
 )
@@ -140,3 +154,18 @@ def test_file_is_relocatable_errors(tmpdir):
 def test_search_patchelf(expected_patchelf_path):
     current = spack.relocate._patchelf()
     assert current == expected_patchelf_path
+
+
+@pytest.mark.parametrize('patchelf_behavior,expected', [
+    ('echo ', []),
+    ('echo /opt/foo/lib:/opt/foo/lib64', ['/opt/foo/lib', '/opt/foo/lib64']),
+    ('exit 1', [])
+])
+def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
+    # Here we are mocking an executable that is always called "patchelf"
+    # because that will skip the part where we try to build patchelf
+    # by ourselves. The executable will output some rpaths like
+    # `patchelf --print-rpath` would.
+    path = mock_patchelf(patchelf_behavior)
+    rpaths = spack.relocate._elf_rpaths_for(path)
+    assert rpaths == expected

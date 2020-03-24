@@ -97,28 +97,30 @@ def _patchelf():
     return exe_path if os.path.exists(exe_path) else None
 
 
-def get_existing_elf_rpaths(path_name):
+def _elf_rpaths_for(path):
+    """Return the RPATHs for an executable or a library.
+
+    The RPATHs are obtrained by ``patchelf --print-rpath PATH``.
+
+    Args:
+        path (str): full path to the executable or library
+
+    Return:
+        RPATHs as a list of strings.
     """
-    Return the RPATHS returned by patchelf --print-rpath path_name
-    as a list of strings.
-    """
+    # If we're relocating patchelf itself, use it
+    patchelf_path = path if path.endswith("/bin/patchelf") else _patchelf()
+    patchelf = executable.Executable(patchelf_path)
 
-    # if we're relocating patchelf itself, use it
-
-    if path_name.endswith("/bin/patchelf"):
-        patchelf = executable.Executable(path_name)
-    else:
-        patchelf = executable.Executable(_patchelf())
-
-    rpaths = list()
+    output = ''
     try:
-        output = patchelf('--print-rpath', '%s' %
-                          path_name, output=str, error=str)
-        rpaths = output.rstrip('\n').split(':')
+        output = patchelf('--print-rpath', path, output=str, error=str)
+        output = output.strip('\n')
     except executable.ProcessError as e:
-        msg = 'patchelf --print-rpath %s produced an error %s' % (path_name, e)
-        tty.warn(msg)
-    return rpaths
+        msg = 'patchelf --print-rpath {0} produced an error [{1}]'
+        tty.warn(msg.format(path, str(e)))
+
+    return output.split(':') if output else []
 
 
 def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
@@ -592,7 +594,7 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
     rpath was in the old layout root, i.e. system paths are not replaced.
     """
     for path_name in path_names:
-        orig_rpaths = get_existing_elf_rpaths(path_name)
+        orig_rpaths = _elf_rpaths_for(path_name)
         new_rpaths = list()
         if rel:
             # get the file path in the old_prefix
@@ -652,7 +654,7 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names,
     Replace old RPATHs with paths relative to old_dir in binary files
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        orig_rpaths = get_existing_elf_rpaths(cur_path)
+        orig_rpaths = _elf_rpaths_for(cur_path)
         if orig_rpaths:
             new_rpaths = get_relative_elf_rpaths(orig_path, old_layout_root,
                                                  orig_rpaths)
@@ -810,7 +812,7 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            rpaths = ':'.join(_elf_rpaths_for(file))
             set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
