@@ -29,7 +29,8 @@ class Fftw(AutotoolsPackage):
     version('3.3.5', sha256='8ecfe1b04732ec3f5b7d279fdb8efcad536d555f9d1e8fabd027037d45ea8bcf')
     version('3.3.4', sha256='8f0cde90929bc05587c3368d2f15cd0530a60b8a9912a8e2979a72dbe5af0982')
     version('2.1.5', sha256='f8057fae1c7df8b99116783ef3e94a6a44518d49c72e2e630c24b689c6022630')
-
+    version('amd-2.1', url = "https://github.com/amd/amd-fftw/archive/2.1.tar.gz", sha256='b58e063ddc9bb178dbc9914ae863e26ca511011357dd3ddf36fc014f5875d18c')
+    
     patch('pfft-3.3.5.patch', when="@3.3.5:+pfft_patches", level=0)
     patch('pfft-3.3.4.patch', when="@3.3.4+pfft_patches", level=0)
     patch('pgi-3.3.6-pl2.patch', when="@3.3.6-pl2%pgi", level=0)
@@ -136,6 +137,8 @@ class Fftw(AutotoolsPackage):
                 options.insert(0, 'CFLAGS=' + self.compiler.openmp_flag)
         if '+mpi' in spec:
             options.append('--enable-mpi')
+        if spec.satisfies('@amd'):
+            options.append('--enable-amd-opt')
 
         # Specific SIMD support.
         # all precisions
