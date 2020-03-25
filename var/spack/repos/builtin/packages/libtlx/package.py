@@ -13,11 +13,11 @@ class Libtlx(CMakePackage):
         1) high modularity with as little dependencies between
            modules as possible.
         2) attempt to never break existing interfaces.
-        3) compile on all platforms with C++ – smartphones, supercomputers,
+        3) compile on all platforms with C++ - smartphones, supercomputers,
            windows, etc.
         4) zero external dependencies: no additional libraries are required.
         5) warning and bug-freeness on all compilers.
-        6) keep overhead down – small overall size such that is can be included
+        6) keep overhead down - small overall size such that is can be included
            without bloating applications."""
 
     homepage = "https://tlx.github.io/"
