@@ -86,10 +86,10 @@ class Charmpp(Package):
 
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
-    for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
-              'pamilrts']:
-        provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
-        provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
+    #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
+    #          'pamilrts']:
+    #    provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
+    #    provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICC',  self.prefix.bin.ampicc)
@@ -189,7 +189,7 @@ class Charmpp(Package):
             os.path.basename(self.compiler.cc),
             os.path.basename(self.compiler.fc),
             "-j%d" % make_jobs,
-            "--destination=%s" % prefix,
+            "--destination=%s" % str(prefix)+"/"+str(version),
         ]
 
         if 'backend=mpi' in spec:
@@ -250,7 +250,7 @@ class Charmpp(Package):
 
         # Charm++'s install script does not copy files, it only creates
         # symbolic links. Fix this.
-        for dirpath, dirnames, filenames in os.walk(prefix):
+        for dirpath, dirnames, filenames in os.walk(str(prefix)+"/"+str(version)):
             for filename in filenames:
                 filepath = join_path(dirpath, filename)
                 if os.path.islink(filepath):
@@ -262,7 +262,7 @@ class Charmpp(Package):
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):
                         pass
-        shutil.rmtree(join_path(prefix, "tmp"))
+        shutil.rmtree(join_path(str(prefix)+"/"+str(version), "tmp"))
 
         if self.spec.satisfies('@6.9.99'):
             # A broken 'doc' link in the prefix can break the build.

@@ -74,7 +74,7 @@ class Namd(MakefilePackage):
                 # this options are take from the default provided
                 # configuration files
                 optims_opts = {
-                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
+                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math -lpthread',
                     'intel': '-O2 -ip'
                 }
 
@@ -83,7 +83,7 @@ class Namd(MakefilePackage):
 
                 fh.write('\n'.join([
                     'NAMD_ARCH = {0}'.format(self.arch),
-                    'CHARMARCH = ',
+                    'CHARMARCH = ucx-linux-x86_64',
                     'CXX = {0.cxx} {0.cxx11_flag}'.format(
                         self.compiler),
                     'CXXOPTS = {0}'.format(optim_opts),
