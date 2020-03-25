@@ -169,11 +169,12 @@ class Charmpp(Package):
 
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
-    #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
+    # for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
     #          'pamilrts']:
-    #    provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
-    #    provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
-
+    #    provides('mpi@2', when='@6.7.1:
+    #            build-target=AMPI backend={0}'.format(b))
+    #    provides('mpi@2', when='@6.7.1:
+    #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
 
