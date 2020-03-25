@@ -291,6 +291,6 @@ class Charmpp(Package):
         self.spec.mpicxx    = self.prefix.bin.ampicxx
         self.spec.mpifc     = self.prefix.bin.ampif90
         self.spec.mpif77    = self.prefix.bin.ampif77
-        self.spec.charmarch = determine_charmarch(self)
+        self.spec.charmarch = charmarch
 
 
