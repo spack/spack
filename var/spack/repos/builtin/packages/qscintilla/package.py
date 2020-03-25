@@ -81,7 +81,7 @@ class Qscintilla(QMakePackage):
                 py_pyqtx = 'py-pyqt5'
                 PyQtX = 'PyQt5'
 
-            with working_dir(self.stage.source_path + '/Python'):
+            with working_dir(join_path(self.stage.source_path, 'Python') ):
                 pydir = join_path(
                     self.prefix,
                     self.spec['python'].package.site_packages_dir,
