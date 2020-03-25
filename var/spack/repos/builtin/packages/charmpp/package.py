@@ -102,11 +102,8 @@ class Charmpp(Package):
     conflicts("backend=multicore", "+smp")
     conflicts("backend=ucx", when="@:6.9.99")
 
-    charmarch = ""
-
-    phases = ['determine_charmarch', 'install']
-
-    def determine_charmarch(self):
+    @property
+    def charmarch(self):
         plat = sys.platform
 
         if plat.startswith("linux"):
@@ -166,9 +163,8 @@ class Charmpp(Package):
                 "on a %s platform with a %s CPU" %
                 (comm, plat, mach))
 
-        charmarch = versions[(plat, mach, comm)]
+        return versions[(plat, mach, comm)]
 
-        return versions[(plat,mach,comm)]
    
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
@@ -182,6 +178,7 @@ class Charmpp(Package):
     def install(self, spec, prefix):
         
         target = spec.variants["build-target"].value
+        builddir = prefix + "/" + str(self.charmarch)
 
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
@@ -190,7 +187,7 @@ class Charmpp(Package):
             os.path.basename(self.compiler.cc),
             os.path.basename(self.compiler.fc),
             "-j%d" % make_jobs,
-            "--destination=%s" % str(prefix)+"/"+str(charmpp_version),
+            "--destination=%s" % builddir,
         ]
 
         if 'backend=mpi' in spec:
@@ -247,11 +244,11 @@ class Charmpp(Package):
         # could dissect the build script; the build instructions say
         # this wouldn't be difficult.
         build = Executable(join_path(".", "build"))
-        build(target, charmpp_version, *options)
+        build(target, self.charmarch, *options)
 
         # Charm++'s install script does not copy files, it only creates
         # symbolic links. Fix this.
-        for dirpath, dirnames, filenames in os.walk(str(prefix)+"/"+str(charmpp_version)):
+        for dirpath, dirnames, filenames in os.walk(builddir):
             for filename in filenames:
                 filepath = join_path(dirpath, filename)
                 if os.path.islink(filepath):
@@ -263,7 +260,7 @@ class Charmpp(Package):
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):
                         pass
-        shutil.rmtree(join_path(str(prefix)+"/"+str(charmpp_version), "tmp"))
+        shutil.rmtree(join_path(builddir, "tmp"))
 
         if self.spec.satisfies('@6.9.99'):
             # A broken 'doc' link in the prefix can break the build.
@@ -291,6 +288,6 @@ class Charmpp(Package):
         self.spec.mpicxx    = self.prefix.bin.ampicxx
         self.spec.mpifc     = self.prefix.bin.ampif90
         self.spec.mpif77    = self.prefix.bin.ampif77
-        self.spec.charmarch = charmarch
+        self.spec.charmarch = self.charmarch
 
 
