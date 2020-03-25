@@ -76,28 +76,28 @@ class Qscintilla(QMakePackage):
         if '+python' in self.spec:
             if '^py-pyqt4' in self.spec:
                 py_pyqtx = 'py-pyqt4'
-                PyQtX = 'PyQt4'
+                pyqtx = 'PyQt4'
             elif '^py-pyqt5' in self.spec:
                 py_pyqtx = 'py-pyqt5'
-                PyQtX = 'PyQt5'
+                pyqtx = 'PyQt5'
 
-            with working_dir(join_path(self.stage.source_path, 'Python') ):
+            with working_dir(join_path(self.stage.source_path, 'Python')):
                 pydir = join_path(
                     self.prefix,
                     self.spec['python'].package.site_packages_dir,
-                    PyQtX)
-                mkdirp(os.path.join(self.prefix.share.sip, PyQtX))
+                    pyqtx)
+                mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
                 python = self.spec['python'].command
-                python('configure.py', '--pyqt=' + PyQtX,
+                python('configure.py', '--pyqt=' + pyqtx,
                        '--sip=' + self.spec['py-sip'].prefix.bin.sip,
                        '--qsci-incdir=' + self.spec.prefix.include,
                        '--qsci-libdir=' + self.spec.prefix.lib,
                        '--qsci-sipdir=' +
-                       os.path.join(self.prefix.share.sip, PyQtX),
+                       os.path.join(self.prefix.share.sip, pyqtx),
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + os.path.join(
-                           self.spec[py_pyqtx].prefix.share.sip, PyQtX),
+                           self.spec[py_pyqtx].prefix.share.sip, pyqtx),
                        '--sip-incdir=' +
                        join_path(self.spec['py-sip'].prefix.include,
                                  'python' +
