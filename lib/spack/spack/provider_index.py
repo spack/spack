@@ -11,7 +11,7 @@ import spack.util.spack_json as sjson
 
 
 def _cross_provider_maps(lmap, rmap):
-    """Return a dictionary that combines constarint requests from both input.
+    """Return a dictionary that combines constraint requests from both input.
 
     Args:
         lmap: main provider map
@@ -65,7 +65,7 @@ class _IndexBase(object):
         """
         result = set()
         # Allow string names to be passed as input, as well as specs
-        if type(virtual_spec) == str:
+        if isinstance(virtual_spec, six.string_types):
             virtual_spec = spack.spec.Spec(virtual_spec)
 
         # Add all the providers that satisfy the vpkg spec.
@@ -81,11 +81,13 @@ class _IndexBase(object):
         return name in self.providers
 
     def satisfies(self, other):
-        """Return True if the providers of virtual specs are compatible,
-        False otherwise.
+        """Determine if the providers of virtual specs are compatible.
 
         Args:
             other: another provider index
+
+        Returns:
+            True if the providers are compatible, False otherwise.
         """
         common = set(self.providers) & set(other.providers)
         if not common:
@@ -107,6 +109,17 @@ class _IndexBase(object):
         return self.providers == other.providers
 
     def _transform(self, transform_fun, out_mapping_type=dict):
+        """Transform this provider index dictionary and return it.
+
+        Args:
+            transform_fun: transform_fun takes a (vpkg, pset) mapping and runs
+                it on each pair in nested dicts.
+            out_mapping_type: type to be used internally on the
+                transformed (vpkg, pset)
+
+        Returns:
+            Transformed mapping
+        """
         return _transform(self.providers, transform_fun, out_mapping_type)
 
     def __str__(self):
@@ -147,8 +160,7 @@ class ProviderIndex(_IndexBase):
             self.update(spec)
 
     def update(self, spec):
-        """Update the provider index with the virtual specs provided by the
-        spec passed as input
+        """Update the provider index with additional virtual specs.
 
         Args:
             spec: spec potentially providing additional virtual specs
@@ -209,7 +221,11 @@ class ProviderIndex(_IndexBase):
         sjson.dump({'provider_index': {'providers': provider_list}}, stream)
 
     def merge(self, other):
-        """Merge another provider index into this one."""
+        """Merge another provider index into this one.
+
+        Args:
+            other (ProviderIndex): provider index to be merged
+        """
         other = other.copy()   # defensive copy.
 
         for pkg in other.providers:
@@ -287,7 +303,7 @@ def _transform(providers, transform_fun, out_mapping_type=dict):
         providers: provider dictionary
         transform_fun: transform_fun takes a (vpkg, pset) mapping and runs
             it on each pair in nested dicts.
-        out_mapping_type: type to used internally on the
+        out_mapping_type: type to be used internally on the
             transformed (vpkg, pset)
 
     Returns:
