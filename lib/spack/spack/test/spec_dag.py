@@ -189,7 +189,7 @@ def test_conditional_dep_with_user_constraints():
         assert ('y@3' in spec)
 
 
-@pytest.mark.usefixtures('mutable_mock_repo')
+@pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):
