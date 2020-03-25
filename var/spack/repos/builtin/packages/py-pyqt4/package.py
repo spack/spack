@@ -34,6 +34,7 @@ class PyPyqt4(SIPPackage):
     # Supposedly can also be built with Qt 5 compatibility layer
     depends_on('qt@:4')
     depends_on('qscintilla', when='+qsci')
+    depends_on('py-sip module=PyQt4.sip')
 
     # For building Qscintilla python bindings
     resource(name='qscintilla',
@@ -68,7 +69,7 @@ class PyPyqt4(SIPPackage):
                 pydir = join_path(site_packages_dir, 'PyQt4')
                 python = self.spec['python'].command
                 python('configure.py',
-                       '--sip=' + self.prefix.bin.sip,
+                       '--sip=' + self.spec['py-sip'].prefix.bin.sip,
                        '--qsci-incdir=' +
                        self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
@@ -76,7 +77,10 @@ class PyPyqt4(SIPPackage):
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt4,
-                       '--sip-incdir=' + python_include_dir,
+                       '--sip-incdir=' +
+                       join_path(self.spec['py-sip'].prefix.include,
+                                 'python' +
+                                 str(self.spec['python'].version.up_to(2))),
                        '--stubsdir=' + pydir)
 
                 # Fix build errors

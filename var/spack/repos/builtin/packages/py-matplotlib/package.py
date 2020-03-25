@@ -9,12 +9,11 @@ from spack import *
 
 
 class PyMatplotlib(PythonPackage):
-    """matplotlib is a python 2D plotting library which produces publication
-    quality figures in a variety of hardcopy formats and interactive
-    environments across platforms."""
+    """Matplotlib is a comprehensive library for creating static, animated,
+    and interactive visualizations in Python."""
 
-    homepage = "https://pypi.python.org/pypi/matplotlib"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.1.3.tar.gz"
+    homepage = "https://matplotlib.org/"
+    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.2.1.tar.gz"
 
     maintainers = ['adamjstewart']
 
@@ -28,6 +27,8 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units'
     ]
 
+    version('3.2.1', sha256='ffe2f9cdcea1086fc414e82f42271ecf1976700b8edd16ca9d376189c6d93aee')
+    version('3.2.0', sha256='651d76daf9168250370d4befb09f79875daa2224a9096d97dfc3ed764c842be4')
     version('3.1.3', sha256='db3121f12fb9b99f105d1413aebaeb3d943f269f3d262b45586d12765866f0c6')
     version('3.1.2', sha256='8e8e2c2fe3d873108735c6ee9884e6f36f467df4a143136209cff303b183bada')
     version('3.1.1', sha256='1febd22afe1489b13c6749ea059d392c03261b2950d1d45c17e3aed812080c93')
@@ -84,7 +85,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('py-cycler@0.10:', type=('build', 'run'))
     depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
     depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
-    depends_on('py-pyparsing', type=('build', 'run'))
+    depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@2.7')

@@ -214,3 +214,16 @@ def test_optimization_flags_with_custom_versions(
         )
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
+
+
+@pytest.mark.regression('15306')
+@pytest.mark.parametrize('architecture_tuple,constraint_tuple', [
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64')),
+    (('linux', 'ubuntu18.04', None), ('linux', None, 'x86_64:')),
+])
+def test_satisfy_strict_constraint_when_not_concrete(
+        architecture_tuple, constraint_tuple
+):
+    architecture = spack.spec.ArchSpec(architecture_tuple)
+    constraint = spack.spec.ArchSpec(constraint_tuple)
+    assert not architecture.satisfies(constraint, strict=True)

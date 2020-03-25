@@ -44,11 +44,10 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
             description='Build the mixed precision (mixture of single and '
-                        'double precision) version for gpu and cpu')
+                        'double precision) version')
     variant('soa', default=True,
             description='Build with Structure-of-Array instead of '
-                        'Array-of-Structure code. Only for CPU code'
-                        'and only in mixed precision')
+                        'Array-of-Structure code. Only for CPU code')
     variant('timers', default=False,
             description='Build with support for timers')
     variant('da', default=False,
@@ -57,10 +56,20 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Install with Matplotlib (long installation time)')
     variant('qe', default=False,
             description='Install with patched Quantum Espresso 6.4.1')
+    variant('afqmc', default=False,
+            description='Install with AFQMC support. NOTE that if used in '
+                        'combination with CUDA, only AFQMC will have CUDA.')
 
+    # Notes about CUDA-centric peculiarities:
+    #
     # cuda variant implies mixed precision variant by default, but there is
     # no way to express this in variant syntax, need something like
     # variant('+mixed', default=True, when='+cuda', description="...")
+    #
+    # cuda+afqmc variant will not build the legacy CUDA code in real-space
+    # QMCPACK. This is due to a conflict in the build system. This is not
+    # worth fixing since the legacy CUDA code, will be superseded
+    # by the OpenMP 4.5 code.
 
     # high-level variant conflicts
     conflicts(
@@ -93,6 +102,12 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('%intel@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
     conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
+
+    conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
+    conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
+    conflicts('+afqmc', when='%gcc@:6.0', msg='AFQMC code requires gcc@6.1 or greater')
+    conflicts('+afqmc', when='%clang@:4.0', msg='AFQMC code requires clang 4.1 or greater')
+    conflicts('+afqmc', when='%intel@:18', msg='AFQMC code requires intel19 or greater')
 
     # Prior to QMCPACK 3.5.0 Intel MKL was not properly detected with
     # non-Intel compilers without a Spack-based hack. This hack
@@ -231,6 +246,11 @@ class Qmcpack(CMakePackage, CudaPackage):
         else:
             args.append('-DQMC_COMPLEX=0')
 
+        if '+afqmc' in spec:
+            args.append('-DBUILD_AFQMC=1')
+        else:
+            args.append('-DBUILD_AFQMC=0')
+
         # When '-DQMC_CUDA=1', CMake automatically sets:
         # '-DQMC_MIXED_PRECISION=1'
         #
@@ -238,7 +258,12 @@ class Qmcpack(CMakePackage, CudaPackage):
         # tested.
 
         if '+cuda' in spec:
-            args.append('-DQMC_CUDA=1')
+            # Cannot support both CUDA builds at the same time, see
+            # earlier notes in this package.
+            if '+afqmc' in spec:
+                args.append('-DENABLE_CUDA=1')
+            else:
+                args.append('-DQMC_CUDA=1')
             cuda_arch_list = spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
             if len(cuda_arch_list) > 1:

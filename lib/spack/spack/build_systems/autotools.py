@@ -263,6 +263,12 @@ class AutotoolsPackage(PackageBase):
             if values:
                 values_str = '{0}={1}'.format(flag.upper(), ' '.join(values))
                 self.configure_flag_args.append(values_str)
+        # Spack's fflags are meant for both F77 and FC, therefore we
+        # additionaly set FCFLAGS if required.
+        values = flags.get('fflags', None)
+        if values:
+            values_str = 'FCFLAGS={0}'.format(' '.join(values))
+            self.configure_flag_args.append(values_str)
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in

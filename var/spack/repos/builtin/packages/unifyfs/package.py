@@ -43,6 +43,7 @@ class Unifyfs(AutotoolsPackage):
     depends_on('margo')
     depends_on('mercury+bmi+sm')
     depends_on('mpi')
+    depends_on('openssl')
 
     # Optional dependencies
     depends_on('hdf5', when='+hdf5')
@@ -52,6 +53,10 @@ class Unifyfs(AutotoolsPackage):
     # Known compatibility issues with ifort and xlf. Fixes coming.
     conflicts('%intel', when='+fortran')
     conflicts('%xl', when='+fortran')
+
+    # Fix broken --enable-mpi-mount config option for version 0.9.0
+    # See https://github.com/LLNL/UnifyFS/issues/467
+    patch('auto-mount.patch', when='@0.9.0')
 
     # Parallel disabled to prevent tests from being run out-of-order when
     # installed with the --test={root, all} option.

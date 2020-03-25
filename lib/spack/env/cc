@@ -43,7 +43,7 @@ parameters=(
 # The compiler input variables are checked for sanity later:
 #   SPACK_CC, SPACK_CXX, SPACK_F77, SPACK_FC
 # The default compiler flags are passed from these variables:
-#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FCFLAGS, SPACK_FFLAGS,
+#   SPACK_CFLAGS, SPACK_CXXFLAGS, SPACK_FFLAGS,
 #   SPACK_LDFLAGS, SPACK_LDLIBS
 # Debug env var is optional; set to "TRUE" for debug logging:
 #   SPACK_DEBUG
