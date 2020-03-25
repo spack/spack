@@ -17,6 +17,9 @@ class IntelMpiBenchmarks(MakefilePackage):
     maintainers = ['carsonwoods']
 
     version('2019.5', sha256='61f8e872a3c3076af53007a68e4da3a8d66be2ba7a051dc21e626a4e2d26e651')
+    version('2019.4', sha256='aeb336be10275c1a2f579b491b6631122876b461ac7148b1d0764f13b7552690')
+    version('2019.3', sha256='4f256d11bfed9ca6166548486d61a062e67be61f13dd9f30690232720e185f31')
+    version('2019.2', sha256='0bc2224a913073aaa5958f6ae08341e5fcd39cedc6722a09bfd4a3d7591a340b')
 
     depends_on('gmake', type='build')
     depends_on('mpi')
