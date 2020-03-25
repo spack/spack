@@ -84,7 +84,28 @@ class Charmpp(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
-    @run_before('setup_dependent_build_environment')
+    depends_on("mpi", when="backend=mpi")
+    depends_on("papi", when="+papi")
+    depends_on("cuda", when="+cuda")
+
+    depends_on("ucx", when="backend=ucx")
+    depends_on("slurm@:17-11-9-2", when="ucx-pmi=slurmPMI")
+    depends_on("slurm@17-11-9-2:", when="ucx-pmi=slurmPMI2")
+    depends_on("openmpi+pmi fabrics=ucx", when="ucx-pmi=PMIx")
+
+    # Git versions of Charm++ require automake and autoconf
+    depends_on("automake", when="@develop")
+    depends_on("autoconf", when="@develop")
+
+    conflicts("~tracing", "+papi")
+
+    conflicts("backend=multicore", "+smp")
+    conflicts("backend=ucx", when="@:6.9.99")
+
+    charmarch = ""
+
+    phases = ['determine_charmarch', 'install']
+
     def determine_charmarch(self):
         plat = sys.platform
 
@@ -147,38 +168,8 @@ class Charmpp(Package):
 
         charmarch = versions[(plat, mach, comm)]
 
-    
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('MPICC',  self.prefix.bin.ampicc)
-        env.set('MPICXX', self.prefix.bin.ampicxx)
-        env.set('MPIF77', self.prefix.bin.ampif77)
-        env.set('MPIF90', self.prefix.bin.ampif90)
-
-    def setup_dependent_package(self, module, dependent_spec):
-        self.spec.mpicc     = self.prefix.bin.ampicc
-        self.spec.mpicxx    = self.prefix.bin.ampicxx
-        self.spec.mpifc     = self.prefix.bin.ampif90
-        self.spec.mpif77    = self.prefix.bin.ampif77
-        self.spec.charmarch = charmarch
-
-    depends_on("mpi", when="backend=mpi")
-    depends_on("papi", when="+papi")
-    depends_on("cuda", when="+cuda")
-
-    depends_on("ucx", when="backend=ucx")
-    depends_on("slurm@:17-11-9-2", when="ucx-pmi=slurmPMI")
-    depends_on("slurm@17-11-9-2:", when="ucx-pmi=slurmPMI2")
-    depends_on("openmpi+pmi fabrics=ucx", when="ucx-pmi=PMIx")
-
-    # Git versions of Charm++ require automake and autoconf
-    depends_on("automake", when="@develop")
-    depends_on("autoconf", when="@develop")
-
-    conflicts("~tracing", "+papi")
-
-    conflicts("backend=multicore", "+smp")
-    conflicts("backend=ucx", when="@:6.9.99")
-
+        return versions[(plat,mach,comm)]
+   
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
     #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
@@ -189,8 +180,8 @@ class Charmpp(Package):
 
 
     def install(self, spec, prefix):
+        
         target = spec.variants["build-target"].value
-
 
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
@@ -288,3 +279,18 @@ class Charmpp(Package):
     def check_build(self):
         make('-C', join_path(self.stage.source_path, 'charm/tests'),
              'test', parallel=False)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICC',  self.prefix.bin.ampicc)
+        env.set('MPICXX', self.prefix.bin.ampicxx)
+        env.set('MPIF77', self.prefix.bin.ampif77)
+        env.set('MPIF90', self.prefix.bin.ampif90)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        self.spec.mpicc     = self.prefix.bin.ampicc
+        self.spec.mpicxx    = self.prefix.bin.ampicxx
+        self.spec.mpifc     = self.prefix.bin.ampif90
+        self.spec.mpif77    = self.prefix.bin.ampif77
+        self.spec.charmarch = determine_charmarch(self)
+
+
