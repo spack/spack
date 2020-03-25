@@ -198,17 +198,17 @@ class ProviderIndex(abc.Mapping, _IndexBase):
 
         pkg_provided = spec.package_class.provided
         if only is not None:
-            # FIXME: Here we need to use k.name since the key is a Spec and
-            # FIXME: llnl.util.lang.total_ordering interferes with string
-            # FIXME: comparison
+            # Here we need to use k.name since the key is a Spec and
+            # llnl.util.lang.total_ordering interferes with string
+            # comparison
             pkg_provided = dict(
                 (k, v) for k, v in pkg_provided.items() if k.name in only
             )
 
         if exclude is not None:
-            # FIXME: Here we need to use k.name since the key is a Spec and
-            # FIXME: llnl.util.lang.total_ordering interferes with string
-            # FIXME: comparison
+            # Here we need to use k.name since the key is a Spec and
+            # llnl.util.lang.total_ordering interferes with string
+            # comparison
             pkg_provided = dict(
                 (k, v) for k, v in pkg_provided.items()
                 if k.name not in exclude
