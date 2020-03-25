@@ -18,6 +18,7 @@ class Julia(Package):
     maintainers = ['glennpj']
 
     version('master', branch='master')
+    version('1.4.0', sha256='880c73a08296ce8d94ad9605149f2a2b2b028e7202a700ef725da899300b8be9')
     version('1.3.1', sha256='053908ec2706eb76cfdc998c077de123ecb1c60c945b4b5057aa3be19147b723')
     version('1.2.0', sha256='2419b268fc5c3666dd9aeb554815fe7cf9e0e7265bc9b94a43957c31a68d9184')
     version('1.1.1', sha256='3c5395dd3419ebb82d57bcc49dc729df3b225b9094e74376f8c649ee35ed79c2')
