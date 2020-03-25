@@ -1153,12 +1153,9 @@ class Spec(object):
     def _add_explicit_provider(self, virtual, spec):
         # We cannot provide the same virtual multiple times
         if virtual in self._explicit_providers:
-            # TODO: add an error message
             msg = 'virtual dependency "{0}" cannot be specified multiple times'
             raise ValueError(msg.format(virtual))
 
-        # TODO: need to manage the case in which multiple
-        # TODO: virtual dependencies are provided together
         self._explicit_providers[virtual] = spec
 
     #
