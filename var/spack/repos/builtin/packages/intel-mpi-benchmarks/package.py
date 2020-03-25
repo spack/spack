@@ -21,15 +21,20 @@ class IntelMpiBenchmarks(MakefilePackage):
     version('2019.3', sha256='4f256d11bfed9ca6166548486d61a062e67be61f13dd9f30690232720e185f31')
     version('2019.2', sha256='0bc2224a913073aaa5958f6ae08341e5fcd39cedc6722a09bfd4a3d7591a340b')
 
-    depends_on('gmake', type='build')
     depends_on('mpi')
 
-    def install(self, spec, prefix):
+    def build(self, spec, prefix):
         env['CC'] = spec['mpi'].mpicc
         env['CXX'] = spec['mpi'].mpicxx
-        env['F77'] = spec['mpi'].mpif77
-        env['FC'] = spec['mpi'].mpifci
 
-        make('install all')
+        make("all")
 
-
+    def install(self, spec, prefix):
+        mkdir(prefix.bin)
+        install('IMB-EXT',  prefix.bin)
+        install('IMB-IO',   prefix.bin)
+        install('IMB-MPI1', prefix.bin)
+        install('IMB-MT',   prefix.bin)
+        install('IMB-NBC',  prefix.bin)
+        install('IMB-P2P',  prefix.bin)
+        install('IMB-RMA',  prefix.bin)
