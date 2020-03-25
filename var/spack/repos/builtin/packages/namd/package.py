@@ -83,7 +83,7 @@ class Namd(MakefilePackage):
 
                 fh.write('\n'.join([
                     'NAMD_ARCH = {0}'.format(self.arch),
-                    'CHARMARCH = ucx-linux-x86_64',
+                    'CHARMARCH = {0}'.format(self.spec['charmpp'].charmarch),
                     'CXX = {0.cxx} {0.cxx11_flag}'.format(
                         self.compiler),
                     'CXXOPTS = {0}'.format(optim_opts),

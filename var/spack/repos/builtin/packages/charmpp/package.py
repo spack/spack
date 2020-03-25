@@ -84,13 +84,70 @@ class Charmpp(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
-    # FIXME: backend=mpi also provides mpi, but spack does not support
-    # depends_on("mpi") and provides("mpi") in the same package currently.
-    #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
-    #          'pamilrts']:
-    #    provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
-    #    provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
+    @run_before('setup_dependent_build_environment')
+    def determine_charmarch(self):
+        plat = sys.platform
 
+        if plat.startswith("linux"):
+            plat = "linux"
+        elif plat.startswith("win"):
+            plat = "win"
+        elif plat.startswith("cnl"):
+            plat = "cnl"
+        elif plat.startswith("cnk"):
+            plat = "cnk"
+
+        mach = platform.machine()
+
+        if mach.startswith("ppc"):
+            mach = "ppc"
+        elif mach.startswith("arm"):
+            mach = "arm"
+
+        comm = self.spec.variants['backend'].value
+
+        # Define Charm++ version names for various (plat, mach, comm)
+        # combinations. Note that not all combinations are supported.
+        versions = {
+                ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
+                ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
+                ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
+                ("linux",   "i386",     "mpi"):         "mpi-linux",
+                ("linux",   "i386",     "multicore"):   "multicore-linux",
+                ("linux",   "i386",     "netlrts"):     "netlrts-linux",
+                ("linux",   "i386",     "uth"):         "uth-linux",
+                ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
+                ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
+                ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
+                ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
+                ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
+                ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
+                ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
+                ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
+                ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
+                ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
+                ("linux",   "ppc",      "pami"):        "pami-linux-ppc64le",
+                ("linux",   "ppc",      "verbs"):       "verbs-linux-ppc64le",
+                ("linux",   "arm",      "netlrts"):     "netlrts-linux-arm7",
+                ("linux",   "arm",      "multicore"):   "multicore-arm7",
+                ("win",     "x86_64",   "mpi"):         "mpi-win-x86_64",
+                ("win",     "x86_64",   "multicore"):   "multicore-win-x86_64",
+                ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
+                ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
+                ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
+                ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
+                ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
+                ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
+            }
+        if (plat, mach, comm) not in versions:
+            raise InstallError(
+                "The communication mechanism %s is not supported "
+                "on a %s platform with a %s CPU" %
+                (comm, plat, mach))
+
+        charmarch = versions[(plat, mach, comm)]
+
+    
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICC',  self.prefix.bin.ampicc)
         env.set('MPICXX', self.prefix.bin.ampicxx)
@@ -98,10 +155,11 @@ class Charmpp(Package):
         env.set('MPIF90', self.prefix.bin.ampif90)
 
     def setup_dependent_package(self, module, dependent_spec):
-        self.spec.mpicc  = self.prefix.bin.ampicc
-        self.spec.mpicxx = self.prefix.bin.ampicxx
-        self.spec.mpifc  = self.prefix.bin.ampif90
-        self.spec.mpif77 = self.prefix.bin.ampif77
+        self.spec.mpicc     = self.prefix.bin.ampicc
+        self.spec.mpicxx    = self.prefix.bin.ampicxx
+        self.spec.mpifc     = self.prefix.bin.ampif90
+        self.spec.mpif77    = self.prefix.bin.ampif77
+        self.spec.charmarch = charmarch
 
     depends_on("mpi", when="backend=mpi")
     depends_on("papi", when="+papi")
@@ -121,66 +179,18 @@ class Charmpp(Package):
     conflicts("backend=multicore", "+smp")
     conflicts("backend=ucx", when="@:6.9.99")
 
+    # FIXME: backend=mpi also provides mpi, but spack does not support
+    # depends_on("mpi") and provides("mpi") in the same package currently.
+    #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
+    #          'pamilrts']:
+    #    provides('mpi@2', when='@6.7.1: build-target=AMPI backend={0}'.format(b))
+    #    provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
+
+
+
     def install(self, spec, prefix):
         target = spec.variants["build-target"].value
 
-        plat = sys.platform
-        if plat.startswith("linux"):
-            plat = "linux"
-        elif plat.startswith("win"):
-            plat = "win"
-        elif plat.startswith("cnl"):
-            plat = "cnl"
-        elif plat.startswith("cnk"):
-            plat = "cnk"
-
-        mach = platform.machine()
-        if mach.startswith("ppc"):
-            mach = "ppc"
-        elif mach.startswith("arm"):
-            mach = "arm"
-
-        comm = spec.variants['backend'].value
-
-        # Define Charm++ version names for various (plat, mach, comm)
-        # combinations. Note that not all combinations are supported.
-        versions = {
-            ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
-            ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
-            ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
-            ("linux",   "i386",     "mpi"):         "mpi-linux",
-            ("linux",   "i386",     "multicore"):   "multicore-linux",
-            ("linux",   "i386",     "netlrts"):     "netlrts-linux",
-            ("linux",   "i386",     "uth"):         "uth-linux",
-            ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
-            ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
-            ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
-            ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
-            ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
-            ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
-            ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
-            ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
-            ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
-            ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
-            ("linux",   "ppc",      "pami"):        "pami-linux-ppc64le",
-            ("linux",   "ppc",      "verbs"):       "verbs-linux-ppc64le",
-            ("linux",   "arm",      "netlrts"):     "netlrts-linux-arm7",
-            ("linux",   "arm",      "multicore"):   "multicore-arm7",
-            ("win",     "x86_64",   "mpi"):         "mpi-win-x86_64",
-            ("win",     "x86_64",   "multicore"):   "multicore-win-x86_64",
-            ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
-            ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
-            ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
-            ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
-            ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
-            ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
-        }
-        if (plat, mach, comm) not in versions:
-            raise InstallError(
-                "The communication mechanism %s is not supported "
-                "on a %s platform with a %s CPU" %
-                (comm, plat, mach))
-        version = versions[(plat, mach, comm)]
 
         # We assume that Spack's compiler wrappers make this work. If
         # not, then we need to query the compiler vendor from Spack
@@ -189,7 +199,7 @@ class Charmpp(Package):
             os.path.basename(self.compiler.cc),
             os.path.basename(self.compiler.fc),
             "-j%d" % make_jobs,
-            "--destination=%s" % str(prefix)+"/"+str(version),
+            "--destination=%s" % str(prefix)+"/"+str(charmpp_version),
         ]
 
         if 'backend=mpi' in spec:
@@ -246,11 +256,11 @@ class Charmpp(Package):
         # could dissect the build script; the build instructions say
         # this wouldn't be difficult.
         build = Executable(join_path(".", "build"))
-        build(target, version, *options)
+        build(target, charmpp_version, *options)
 
         # Charm++'s install script does not copy files, it only creates
         # symbolic links. Fix this.
-        for dirpath, dirnames, filenames in os.walk(str(prefix)+"/"+str(version)):
+        for dirpath, dirnames, filenames in os.walk(str(prefix)+"/"+str(charmpp_version)):
             for filename in filenames:
                 filepath = join_path(dirpath, filename)
                 if os.path.islink(filepath):
@@ -262,7 +272,7 @@ class Charmpp(Package):
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):
                         pass
-        shutil.rmtree(join_path(str(prefix)+"/"+str(version), "tmp"))
+        shutil.rmtree(join_path(str(prefix)+"/"+str(charmpp_version), "tmp"))
 
         if self.spec.satisfies('@6.9.99'):
             # A broken 'doc' link in the prefix can break the build.
