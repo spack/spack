@@ -7,7 +7,9 @@ from spack import *
 
 
 class Sgpp(SConsPackage):
-    """Sparse grids library"""
+    """SGpp is a library and framework for sparse grids in different flavors.
+    SGpp supports both hierarchical spatially-adaptive sparse grids and the
+    dimensionally-adaptive sparse grid combination technique."""
 
     homepage = "https://sgpp.sparsegrids.org"
     url = "https://github.com/SGpp/SGpp/archive/v3.2.0.tar.gz"
@@ -50,7 +52,7 @@ class Sgpp(SConsPackage):
             description='Builds the datadriven module of SGpp')
     variant('misc', default=False,
             description='Builds the misc module of SGpp')
-    variant('combigrid', default=True,
+    variant('combigrid', default=False,
             description='Builds the combigrid module of SGpp')
     variant('solver', default=True,
             description='Builds the solver module of SGpp')
@@ -77,34 +79,40 @@ class Sgpp(SConsPackage):
     depends_on('py-numpy@1.17:', when='@3.2.0:+python', type=('build', 'run'))
     depends_on('py-scipy@:1.2.3', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('py-scipy@1.3.0:', when='@3.2.0:+python', type=('build', 'run'))
-    # MPI dependency
+    # OpenCL dependency
     depends_on('opencl@1.1:', when='+opencl', type=('build', 'run'))
     # MPI dependency
     depends_on('mpi', when='+mpi', type=('build', 'run'))
 
+    # Compiler with C++11 support is required
+    conflicts('%gcc@:4.8.4', msg='Compiler with c++11 support is required!')
+    conflicts('%clang@:3.2', msg='Compiler with c++11 support is required!')
+    conflicts('%intel@:14', msg='Compiler with c++11 support is required!')
     # Solver python bindings are actually using the pde module at one point:
     conflicts('-pde', when='+python+solver')
     # some modules depend on each other (notably datadriven and misc)
     conflicts('+pde', when='-solver')
-    # Datadriven requirements
+    # Datadriven module requirements
     conflicts('+datadriven', when='-solver')
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
-    conflicts('+datadriven', when='simd=sse3')
-    conflicts('+datadriven', when='simd=sse42')
-    # Misc requirements
+    conflicts('+datadriven', when='simd=sse3',
+            msg='Datadriven module requires at leastAVX!')
+    conflicts('+datadriven', when='simd=sse42',
+            msg='Datadriven module requires at least AVX!')
+    # Misc module requirements
     conflicts('+misc', when='-datadriven')
     conflicts('+misc', when='-solver')
     conflicts('+misc', when='-optimization')
     conflicts('+misc', when='-pde')
-    # Misc did not exist in older versions
-    conflicts('+misc', when='@:3.1.0')
-    # Combigrid reuqirements (for 3.2.0 or older)
+    conflicts('+misc', when='@:3.1.0',
+            msg='The misc module was introduced in version 3.2.0')
+    # Combigrid module requirements (for 3.2.0 or older)
     # newer combigrids have no dependencies
-    conflicts('+combigrid', when='@:3.2.0-optimization')
-    conflicts('+combigrid', when='@:3.2.0-pde')
-    conflicts('+combigrid', when='@:3.2.0-solver')
-    conflicts('+combigrid', when='@:3.2.0-quadrature')
+    conflicts('+combigrid', when='@:3.2.0~optimization')
+    conflicts('+combigrid', when='@:3.2.0~pde')
+    conflicts('+combigrid', when='@:3.2.0~solver')
+    conflicts('+combigrid', when='@:3.2.0~quadrature')
 
     def build_args(self, spec, prefix):
         # No need for unit tests anymore -> saves installation time
