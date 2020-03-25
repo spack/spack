@@ -18,10 +18,12 @@ class Charmpp(Package):
     (your laptop) to the largest supercomputers."""
 
     homepage = "http://charmplusplus.org"
-    url      = "https://github.com/UIUC-PPL/charm/archive/v6.10.0.tar.gz"
+    url      = "http://github.com/UIUC-PPL/charm/archive/v6.10.0.tar.gz"
     git      = "https://github.com/UIUC-PPL/charm.git"
 
     version("develop", branch="master")
+
+    version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')
     version('6.10.0', sha256='7c526a78aa0c202b7f0418b345138e7dc40496f0bb7b9e301e0381980450b25c')
     version("6.9.0", sha256="85ed660e46eeb7a6fc6b32deab08226f647c244241948f6b592ebcd2b6050cbd")
     version("6.8.2", sha256="08e6001b0e9cd00ebde179f76098767149bf7e454f29028fb9a8bfb55778698e")
@@ -127,36 +129,36 @@ class Charmpp(Package):
         # Define Charm++ version names for various (plat, mach, comm)
         # combinations. Note that not all combinations are supported.
         versions = {
-                ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
-                ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
-                ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
-                ("linux",   "i386",     "mpi"):         "mpi-linux",
-                ("linux",   "i386",     "multicore"):   "multicore-linux",
-                ("linux",   "i386",     "netlrts"):     "netlrts-linux",
-                ("linux",   "i386",     "uth"):         "uth-linux",
-                ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
-                ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
-                ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
-                ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
-                ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
-                ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
-                ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
-                ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
-                ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
-                ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
-                ("linux",   "ppc",      "pami"):        "pami-linux-ppc64le",
-                ("linux",   "ppc",      "verbs"):       "verbs-linux-ppc64le",
-                ("linux",   "arm",      "netlrts"):     "netlrts-linux-arm7",
-                ("linux",   "arm",      "multicore"):   "multicore-arm7",
-                ("win",     "x86_64",   "mpi"):         "mpi-win-x86_64",
-                ("win",     "x86_64",   "multicore"):   "multicore-win-x86_64",
-                ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
-                ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
-                ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
-                ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
-                ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
-                ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
-            }
+            ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
+            ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
+            ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
+            ("linux",   "i386",     "mpi"):         "mpi-linux",
+            ("linux",   "i386",     "multicore"):   "multicore-linux",
+            ("linux",   "i386",     "netlrts"):     "netlrts-linux",
+            ("linux",   "i386",     "uth"):         "uth-linux",
+            ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
+            ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
+            ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
+            ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
+            ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
+            ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
+            ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
+            ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
+            ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
+            ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
+            ("linux",   "ppc",      "pami"):        "pami-linux-ppc64le",
+            ("linux",   "ppc",      "verbs"):       "verbs-linux-ppc64le",
+            ("linux",   "arm",      "netlrts"):     "netlrts-linux-arm7",
+            ("linux",   "arm",      "multicore"):   "multicore-arm7",
+            ("win",     "x86_64",   "mpi"):         "mpi-win-x86_64",
+            ("win",     "x86_64",   "multicore"):   "multicore-win-x86_64",
+            ("win",     "x86_64",   "netlrts"):     "netlrts-win-x86_64",
+            ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
+            ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
+            ("cnk",     "x86_64",   "mpi"):         "mpi-bluegeneq",
+            ("cnk",     "x86_64",   "pami"):        "pami-bluegeneq",
+            ("cnk",     "x86_64",   "pamilrts"):    "pamilrts-bluegeneq",
+        }
         if (plat, mach, comm) not in versions:
             raise InstallError(
                 "The communication mechanism %s is not supported "
@@ -165,7 +167,6 @@ class Charmpp(Package):
 
         return versions[(plat, mach, comm)]
 
-   
     # FIXME: backend=mpi also provides mpi, but spack does not support
     # depends_on("mpi") and provides("mpi") in the same package currently.
     #for b in ['multicore', 'netlrts', 'verbs', 'gni', 'ofi', 'pami',
@@ -174,9 +175,8 @@ class Charmpp(Package):
     #    provides('mpi@2', when='@6.7.1: build-target=LIBS backend={0}'.format(b))
 
 
-
     def install(self, spec, prefix):
-        
+
         target = spec.variants["build-target"].value
         builddir = prefix + "/" + str(self.charmarch)
 
@@ -289,5 +289,3 @@ class Charmpp(Package):
         self.spec.mpifc     = self.prefix.bin.ampif90
         self.spec.mpif77    = self.prefix.bin.ampif77
         self.spec.charmarch = self.charmarch
-
-

@@ -74,7 +74,7 @@ class Namd(MakefilePackage):
                 # this options are take from the default provided
                 # configuration files
                 optims_opts = {
-                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math -lpthread',
+                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
                     'intel': '-O2 -ip'
                 }
 
