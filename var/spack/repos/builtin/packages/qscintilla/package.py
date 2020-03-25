@@ -110,12 +110,12 @@ class Qscintilla(QMakePackage):
                 # ".../Qsci.so: undefined symbol: _ZTI10Qsci...."
                 qscipro = FileFilter('Qsci/Qsci.pro')
                 if '^qt@4' in self.spec:
-                    qtX = 'qt4'
+                    qtx = 'qt4'
                 elif '^qt@5' in self.spec:
-                    qtX = 'qt5'
+                    qtx = 'qt5'
 
                 link_qscilibs = 'LIBS += -L' + self.prefix.lib +\
-                    ' -lqscintilla2_' + qtX
+                    ' -lqscintilla2_' + qtx
                 qscipro.filter('TEMPLATE = lib',
                                'TEMPLATE = lib\nQT += widgets' +
                                '\nQT += printsupport\n' + link_qscilibs)
