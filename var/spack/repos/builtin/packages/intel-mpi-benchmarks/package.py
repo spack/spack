@@ -30,6 +30,6 @@ class IntelMpiBenchmarks(MakefilePackage):
         env['F77'] = spec['mpi'].mpif77
         env['FC'] = spec['mpi'].mpifci
 
-        install('all')
+        make('install all')
 
 
