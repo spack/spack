@@ -92,7 +92,7 @@ class Qscintilla(QMakePackage):
                        '--sip=' + self.spec['py-sip'].prefix.bin.sip,
                        '--qsci-incdir=' + self.spec.prefix.include,
                        '--qsci-libdir=' + self.spec.prefix.lib,
-                       '--qsci-sipdir=' + self.prefix.share.sip + '/' + PyQtX,
+                       '--qsci-sipdir=' + os.path.join(self.prefix.share.sip,PyQtX),
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + os.path.join(self.spec[py_pyqtx].prefix.share.sip,PyQtX),
