@@ -15,8 +15,8 @@ class Med(CMakePackage):
 
     maintainers = ['likask']
 
-    version('3.2.0', sha256='d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138')
     version('4.0.0', sha256='a474e90b5882ce69c5e9f66f6359c53b8b73eb448c5f631fa96e8cd2c14df004')
+    version('3.2.0', sha256='d52e9a1bdd10f31aa154c34a5799b48d4266dc6b4a5ee05a9ceda525f2c6c138')
 
     variant('api23', default=True, description='Enable API2.3')
 
