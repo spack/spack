@@ -178,8 +178,8 @@ class Charmpp(Package):
 
     def install(self, spec, prefix):
 
-        if ("backend!=mpi" in self.spec) or \
-           ("backend!=netlrts" in self.spec):
+        if not("backend=mpi" in self.spec) or \
+           not("backend=netlrts" in self.spec):
             if ("+pthreads" in self.spec):
                 raise InstallError("The pthreads option is only\
                                     available on the Netlrts and MPI \
