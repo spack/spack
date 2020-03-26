@@ -50,9 +50,9 @@ class Nek5000(Package):
         with working_dir('short_tests/eddy'):
             f_size = join_path(os.getcwd(), 'SIZE')
             f_size_legacy = join_path(os.getcwd(), 'SIZE.legacy')
-            if not os.access(f_size,os.F_OK):
-                if os.access(f_size_legacy,os.F_OK):
-                    copyfile(f_size_legacy,f_size)
+            if not os.access(f_size, os.F_OK):
+                if os.access(f_size_legacy, os.F_OK):
+                    copyfile(f_size_legacy, f_size)
                 else:
                     raise RuntimeError('Can not find {}'.format(f_size))
 
