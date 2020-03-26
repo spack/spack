@@ -240,6 +240,11 @@ class PyTensorflow(Package, CudaPackage):
     patch('io_bazel_rules_docker2.patch', when='@1.15:2.0')
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
+    # Backport of 837c8b6b upstream
+    # "Remove contrib cloud bigtable and storage ops/kernels."
+    # Allows 2.0.* releases to build with '--config=nogcp'
+    patch('0001-Remove-contrib-cloud-bigtable-and-storage-ops-kernel.patch',
+          when='@2.0.0:2.0.1')
 
     phases = ['configure', 'build', 'install']
 
@@ -651,7 +656,7 @@ class PyTensorflow(Package, CudaPackage):
             if '~aws' in spec:
                 args.append('--config=noaws')
 
-            if '~gcp' in spec and not spec.satisfies('@2.0.0:2.0.1'):
+            if '~gcp' in spec:
                 args.append('--config=nogcp')
 
             if '~hdfs' in spec:
