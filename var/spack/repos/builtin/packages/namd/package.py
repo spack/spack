@@ -82,7 +82,7 @@ class Namd(MakefilePackage):
                 else:
                     optims_opts = {
                         'gcc': '-m64 -O3 -fexpensive-optimizations \
-                                -ffast-math -lpthread',
+                                -ffast-math',
                         'intel': '-O2 -ip'}
 
                 optim_opts = optims_opts[self.compiler.name] \
