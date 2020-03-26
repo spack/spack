@@ -279,6 +279,24 @@ while [ -n "$1" ]; do
     rp=""
 
     case "$1" in
+        -iquote*)
+            arg="${1#-iquote}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            if system_dir "$arg"; then
+                system_includes+=("$arg")
+            else
+                includes+=("$arg")
+            fi
+            ;;
+        -isystem*)
+            arg="${1#-isystem}"
+            if [ -z "$arg" ]; then shift; arg="$1"; fi
+            if system_dir "$arg"; then
+                system_includes+=("$arg")
+            else
+                includes+=("$arg")
+            fi
+            ;;
         -I*)
             arg="${1#-I}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi

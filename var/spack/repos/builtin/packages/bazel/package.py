@@ -90,7 +90,7 @@ class Bazel(Package):
     # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
     # Strict dependency on java@8 as per
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('zip', type=('build', 'run'))
 
@@ -115,6 +115,7 @@ class Bazel(Package):
     patch('compile-0.6.patch',  when='@0.6:0.8')
     patch('compile-0.4.patch',  when='@0.4:0.5')
     patch('compile-0.3.patch',  when='@:0.3')
+    patch('disabledepcheck.patch')
 
     phases = ['bootstrap', 'install']
 
