@@ -22,9 +22,9 @@ class PpopenAt(MakefilePackage):
         makefile_in.filter('~/ppohAT_1.0.0', prefix)
         makefile_in.filter('mkdir', 'mkdir -p')
 
-    @run_after('install')
-    def sample_install(self):
-        mkdir(join_path(self.prefix, 'examples'))
-        copy_tree('examples', join_path(self.prefix, 'examples'))
-        mkdir(join_path(self.prefix, 'doc'))
-        copy_tree('doc', join_path(self.prefix, 'doc'))
+    def install(self, spec, prefix):
+        make('install')
+        mkdir(join_path(prefix, 'examples'))
+        copy_tree('examples', join_path(prefix, 'examples'))
+        mkdir(join_path(prefix, 'doc'))
+        copy_tree('doc', join_path(prefix, 'doc'))
