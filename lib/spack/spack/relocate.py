@@ -123,20 +123,34 @@ def _elf_rpaths_for(path):
     return output.split(':') if output else []
 
 
-def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
+def _make_relative(start_path, path_root, paths):
+    """Return a list where any path in ``paths`` that starts with
+    ``path_root`` is made relative to ``dirname(start_path)``.
+
+    After a path is made relative it is prefixed with the ``$ORIGIN``
+    string.
+
+    Args:
+        start_path (str): path from which the starting directory
+            is extracted
+        path_root (str): root of the relative paths
+        paths: paths to be examined
+
+    Returns:
+        List of relative paths
     """
-    Replaces orig rpath with relative path from dirname(path_name) if an rpath
-    in orig_rpaths contains orig_layout_root. Prefixes $ORIGIN
-    to relative paths and returns replacement rpaths.
-    """
-    rel_rpaths = []
-    for rpath in orig_rpaths:
-        if re.match(orig_layout_root, rpath):
-            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
-            rel_rpaths.append(os.path.join('$ORIGIN', '%s' % rel))
-        else:
-            rel_rpaths.append(rpath)
-    return rel_rpaths
+    start_directory = os.path.dirname(start_path)
+    pattern = re.compile(path_root)
+    relative_paths = []
+
+    for path in paths:
+        if pattern.match(path):
+            rel = os.path.relpath(path, start=start_directory)
+            path = os.path.join('$ORIGIN', rel)
+
+        relative_paths.append(path)
+
+    return relative_paths
 
 
 def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
@@ -608,8 +622,8 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
             norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,
                                          prefix_to_prefix)
             # get the relativized rpaths in the new prefix
-            new_rpaths = get_relative_elf_rpaths(path_name, new_layout_root,
-                                                 norm_rpaths)
+            new_rpaths = _make_relative(path_name, new_layout_root,
+                                        norm_rpaths)
             modify_elf_object(path_name, new_rpaths)
         else:
             new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
@@ -656,8 +670,8 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names,
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
         orig_rpaths = _elf_rpaths_for(cur_path)
         if orig_rpaths:
-            new_rpaths = get_relative_elf_rpaths(orig_path, old_layout_root,
-                                                 orig_rpaths)
+            new_rpaths = _make_relative(orig_path, old_layout_root,
+                                        orig_rpaths)
             modify_elf_object(cur_path, new_rpaths)
 
 

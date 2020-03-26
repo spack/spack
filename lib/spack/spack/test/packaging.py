@@ -25,7 +25,6 @@ from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import relocate_text, relocate_links
-from spack.relocate import get_relative_elf_rpaths
 from spack.relocate import get_normalized_elf_rpaths
 from spack.relocate import macho_make_paths_relative
 from spack.relocate import macho_make_paths_normal
@@ -564,11 +563,6 @@ def test_macho_make_paths():
 
 
 def test_elf_paths():
-    out = get_relative_elf_rpaths(
-        '/usr/bin/test', '/usr',
-        ('/usr/lib', '/usr/lib64', '/opt/local/lib'))
-    assert out == ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib']
-
     out = get_normalized_elf_rpaths(
         '/usr/bin/test',
         ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
