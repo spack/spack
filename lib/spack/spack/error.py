@@ -16,6 +16,26 @@ import llnl.util.tty as tty
 debug = False
 
 
+def re_raise(e, exc_info=None):
+    """Re-raise an exception with it's original context."""
+    exc_type, context, tb = sys.exc_info()
+
+    # construct arguments to re-raise error from type
+    args = []
+    if hasattr(e, 'message'):
+        args.append(e.message)
+    if hasattr(e, 'long_message'):
+        args.append(e.long_message)
+
+    if sys.version_info[0] < 3:
+        # ugly hack: exec to avoid the fact this is a syntax
+        # error in python 3
+        exec("raise exc_type(*args), None, tb",
+             globals(), locals())
+    else:
+        raise exc_type(*args).with_traceback(tb)
+
+
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
        Subclasses can be found in the modules they have to do with.

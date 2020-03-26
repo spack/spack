@@ -1612,16 +1612,17 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
+        test_name = time.strftime('%Y-%m-%d_%H:%M:%S')
         test_stage = Prefix(os.path.join(
                 sup.canonicalize_path(
                     spack.config.get('config:test_stage', os.getcwd())),
-                time.strftime('%Y-%m-%d_%H:%M:%S')))
+                test_name))
         if not os.path.exists(test_stage):
             mkdirp(test_stage)
         test_log_file = os.path.join(test_stage, self.test_log_name)
 
         def test_process():
-            with log_output(test_log_file) as logger:
+            with tty.log.log_output(test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
                             self.spec.format('{name}-{hash:7}'))
@@ -1647,40 +1648,28 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 except Exception as e:
                     # Catch the error and print a summary to the log file
                     # so that cdash and junit reporters know about it
-                    exc_type, context, traceback = sys.exc_info()
+                    exc_info = sys.exc_info()
                     print('Error: %s' % e)
-
-                    # construct arguments to re-raise error from type
-                    args = []
-                    if hasattr(e, 'message'):
-                        args.append(e.message)
-                    if hasattr(e, 'long_message'):
-                        args.append(e.long_message)
-
-                    if sys.version_info[0] < 3:
-                        # ugly hack: exec to avoid the fact this is a syntax
-                        # error in python 3
-                        exec("raise exc_type(*args), None, traceback",
-                             globals(), locals())
-                    else:
-                        raise exc_type(*args).with_traceback(traceback)
-                finally:
-                    # reset debug level
-                    tty.set_debug(old_debug)
-
-                    # cleanup test directory
+                    import traceback
+                    traceback.print_tb(exc_info[2])
+                    spack.error.re_raise(e)
+                else:
+                    # cleanup test directory on success
                     if remove_directory:
                         shutil.rmtree(testdir)
                         if not os.listdir(test_stage):
                             shutil.rmtree(test_stage)
+                finally:
+                    # reset debug level
+                    tty.set_debug(old_debug)
 
         spack.build_environment.fork(
-            self, test_process, dirty=dirty, fake=False, context='test')
+            self, test_process, dirty=dirty, fake=False, context='test', test_name=test_name)
 
     def test(self):
         pass
 
-    def run_test(self, exe, options, expected, status):
+    def run_test(self, exe, options=[], expected=[], status=None):
         """Run the test and confirm obtain the expected results
 
         Args:
@@ -1698,15 +1687,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             output = runner(*options, output=str.split, error=str.split)
             assert not status, 'Expected execution to fail'
+
+            for check in expected:
+                cmd = ' '.join([exe] + options)
+                msg = "Expected '%s' in output of `%s`" % (check, cmd)
+#                msg += '\n%s' % output
+                assert check in output, msg
+
         except ProcessError as err:
             output = str(err)
             status_msg = 'exited with status {0}'.format(status)
-            expected_msg = 'Expected \'{0}\' in \'{1}\''.format(
-                status_msg, err.message)
-            assert status_msg in output, expected_msg
-
-        for check in expected:
-            assert check in output
+            if status_msg not in output:
+                spack.error.re_raise(err)
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.

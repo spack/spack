@@ -55,6 +55,7 @@ import spack.paths
 import spack.schema.environment
 import spack.store
 import spack.architecture as arch
+import spack.util.path
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -820,7 +821,7 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
-def fork(pkg, function, dirty, fake, context='build'):
+def fork(pkg, function, dirty, fake, context='build', **kwargs):
     """Fork a child process to do part of a spack build.
 
     Args:
@@ -860,9 +861,6 @@ def fork(pkg, function, dirty, fake, context='build'):
         if input_stream is not None:
             sys.stdin = input_stream
 
-        # Record starting directory
-        start_dir = os.getcwd()
-
         try:
             if not fake:
                 setup_package(pkg, dirty=dirty, context=context)
@@ -891,7 +889,11 @@ def fork(pkg, function, dirty, fake, context='build'):
 
             test_log = None
             if context == 'test':
-                test_log = os.path.join(start_dir, pkg.test_log_name)
+                test_log = os.path.join(
+                    spack.util.path.canonicalize_path(
+                        spack.config.get('config:test_stage')),
+                    kwargs.get('test_name'),
+                    pkg.test_log_name)
 
             # make a pickleable exception to send to parent.
             msg = "%s: %s" % (exc_type.__name__, str(exc))
@@ -983,12 +985,22 @@ def get_package_context(traceback, context=3):
             if isinstance(obj, spack.package.PackageBase):
                 break
 
+    # Determine whether we are in a package file
+    # Package files are named `package.py` and are not in the lib/spack/spack
+    # Package files have a line added at import time, so we adjust the lineno
+    # when we are getting context from a package file instead of a base class
+    filename = inspect.getfile(frame.f_code)
+    packagebase_filename = inspect.getfile(spack.package.PackageBase)
+    in_package = (filename != packagebase_filename and
+                  os.path.basename(filename) == 'package.py')
+    adjust = 0 if in_package else 1
+
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
     lines = [
         '{0}:{1:d}, in {2}:'.format(
-            inspect.getfile(frame.f_code),
-            frame.f_lineno - 1,  # subtract 1 because f_lineno is 0-indexed
+            filename,
+            tb.tb_lineno - adjust,  # adjust for import mangling
             frame.f_code.co_name
         )
     ]
@@ -997,8 +1009,8 @@ def get_package_context(traceback, context=3):
     sourcelines, start = inspect.getsourcelines(frame)
 
     # Calculate lineno of the error relative to the start of the function.
-    # Subtract 1 because f_lineno is 0-indexed.
-    fun_lineno = frame.f_lineno - start - 1
+    # Adjust for import mangling of package files.
+    fun_lineno = tb.tb_lineno - start - adjust
     start_ctx = max(0, fun_lineno - context)
     sourcelines = sourcelines[start_ctx:fun_lineno + context + 1]
 
@@ -1098,6 +1110,7 @@ class ChildError(InstallError):
 
             if self.build_log and os.path.exists(self.build_log):
                 write_log_summary('build', self.build_log)
+
             if self.test_log and os.path.exists(self.test_log):
                 write_log_summary('test', self.test_log)
 
