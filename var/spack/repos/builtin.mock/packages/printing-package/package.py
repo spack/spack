@@ -24,3 +24,8 @@ class PrintingPackage(Package):
         make('install')
 
         print("AFTER INSTALL")
+
+    def test(self):
+        print("BEFORE TEST")
+        self.run_test('true')  # run /bin/true
+        print("AFTER TEST")
