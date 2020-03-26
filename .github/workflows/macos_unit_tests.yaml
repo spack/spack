@@ -27,7 +27,7 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew update
-        brew install gcc gnupg2 dash kcov
+        brew install gcc gnupg dash kcov
     - name: Install Python packages
       run: |
         pip install --upgrade pip
@@ -47,8 +47,7 @@ jobs:
         coverage combine
         coverage xml
     - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1.0.4
+      uses: codecov/codecov-action@v1
       with:
-        token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
         file: ./coverage.xml
         flags: unittests,macos
