@@ -15,7 +15,7 @@ class PpopenMathMp(MakefilePackage):
     a seismic model and a structure model. For getting very wide applicability,
     ppOpen-Math/MP is designed so as that it is independent from grid
     structure.  Instead of grid structure, PpohMATHMP requires a data set
-    called “mapping table”. Mapping table is composed of a correspondence
+    called 'mapping table'. Mapping table is composed of a correspondence
     table of grid indexes between a send model and a receive model and
     interpolation coefficients. A subroutine for making a mapping table
     file is provided by ppOpen-Math/MP API.
