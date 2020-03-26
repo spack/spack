@@ -66,7 +66,7 @@ class Charmpp(Package):
     variant(
         "pmi",
         default="none",
-        values=("none","simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
+        values=("none", "simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
         description="The ucx/ofi/gni backends needs PMI to run!"
     )
 
@@ -178,21 +178,21 @@ class Charmpp(Package):
 
     def install(self, spec, prefix):
 
-        if  ("backend!=mpi" in self.spec) or \
-            ("backend!=netlrts" in self.spec):
-                if ("+pthreads" in self.spec):
-                    raise InstallError("The pthreads option is only\
-                                        available on the Netlrts and MPI \
-                                        network layers.")
+        if ("backend!=mpi" in self.spec) or \
+           ("backend!=netlrts" in self.spec):
+            if ("+pthreads" in self.spec):
+                raise InstallError("The pthreads option is only\
+                                    available on the Netlrts and MPI \
+                                    network layers.")
 
-        if  ("backend=ucx" in self.spec) or \
-            ("backend=ofi" in self.spec) or \
-            ("backend=gni" in self.spec):
-                if ("pmi=none" in self.spec):
-                    raise InstallError("The UCX/OFI/GNI backends need \
-                                        PMI to run. Please add pmi=... \
-                                        Note that PMIx is the preferred \
-                                        option.")
+        if ("backend=ucx" in self.spec) or \
+           ("backend=ofi" in self.spec) or \
+           ("backend=gni" in self.spec):
+            if ("pmi=none" in self.spec):
+                raise InstallError("The UCX/OFI/GNI backends need \
+                                    PMI to run. Please add pmi=... \
+                                    Note that PMIx is the preferred \
+                                    option.")
 
         target = spec.variants["build-target"].value
         builddir = prefix + "/" + str(self.charmarch)
