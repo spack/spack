@@ -72,8 +72,10 @@ class CDash(Reporter):
             tty.verbose("Using CDash auth token from environment")
             self.authtoken = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
-        if args.spec:
+        if getattr(args, 'spec', ''):
             packages = args.spec
+        elif getattr(args, 'specs', ''):
+            packages = args.specs
         else:
             packages = []
             for file in args.specfiles:
@@ -262,6 +264,7 @@ class CDash(Reporter):
         self.current_package_name = package['name']
         self.buildname = "{0} - {1}".format(
             self.base_buildname, package['name'])
+
         report_data = self.initialize_report(directory_name)
 
         for phase in ('test', 'update'):

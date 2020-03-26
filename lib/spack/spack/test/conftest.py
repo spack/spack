@@ -468,6 +468,14 @@ def mutable_config(tmpdir_factory, configuration_dir):
         *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
           for name in ['site', 'system', 'user']])
 
+    # Set variables needed for tests to run
+    # values should not be tied to any specific
+    # TODO: Fix this
+    cfg.set('config:build_jobs',
+            spack.config.get('config:build_jobs'))
+    cfg.set('config:template_dirs',
+            spack.config.get('config:template_dirs'))
+
     with use_configuration(cfg):
         yield cfg
 

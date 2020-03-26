@@ -1111,6 +1111,8 @@ class Python(AutotoolsPackage):
                 os.remove(dst)
 
     def test(self):
+        self.run_test('true', expected=['not in output'])
+
         # contains python executable
         python = which('python')
         assert os.path.dirname(python.path) == os.path.dirname(self.command.path)
