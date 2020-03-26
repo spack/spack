@@ -64,10 +64,10 @@ class Charmpp(Package):
 
     # https://github.com/UIUC-PPL/charm/issues/2477
     variant(
-        "ucx-pmi",
-        default="simplePMI",
-        values=("simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
-        description="The ucx backend needs PMI to run!"
+        "pmi",
+        default="none",
+        values=("none","simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
+        description="The ucx/ofi/gni backends needs PMI to run!"
     )
 
     # Other options
@@ -91,9 +91,9 @@ class Charmpp(Package):
     depends_on("cuda", when="+cuda")
 
     depends_on("ucx", when="backend=ucx")
-    depends_on("slurm@:17-11-9-2", when="ucx-pmi=slurmPMI")
-    depends_on("slurm@17-11-9-2:", when="ucx-pmi=slurmPMI2")
-    depends_on("openmpi+pmi fabrics=ucx", when="ucx-pmi=PMIx")
+    depends_on("slurm@:17-11-9-2", when="pmi=slurmPMI")
+    depends_on("slurm@17-11-9-2:", when="pmi=slurmPMI2")
+    depends_on("openmpi+pmi fabrics=ucx", when="pmi=PMIx")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -178,6 +178,22 @@ class Charmpp(Package):
 
     def install(self, spec, prefix):
 
+        if  ("backend!=mpi" in self.spec) or \
+            ("backend!=netlrts" in self.spec):
+                if ("+pthreads" in self.spec):
+                    raise InstallError("The pthreads option is only\
+                                        available on the Netlrts and MPI \
+                                        network layers.")
+
+        if  ("backend=ucx" in self.spec) or \
+            ("backend=ofi" in self.spec) or \
+            ("backend=gni" in self.spec):
+                if ("pmi=none" in self.spec):
+                    raise InstallError("The UCX/OFI/GNI backends need \
+                                        PMI to run. Please add pmi=... \
+                                        Note that PMIx is the preferred \
+                                        option.")
+
         target = spec.variants["build-target"].value
         builddir = prefix + "/" + str(self.charmarch)
 
@@ -224,11 +240,11 @@ class Charmpp(Package):
         if "+cuda" in spec:
             options.append("cuda")
 
-        if "ucx-pmi=slurmPMI" in spec:
+        if "pmi=slurmPMI" in spec:
             options.append("slurmpmi")
-        if "ucx-pmi=slurmPMI2" in spec:
+        if "pmi=slurmPMI2" in spec:
             options.append("slurmpmi2")
-        if "ucx-pmi=PMIX" in spec:
+        if "pmi=PMIX" in spec:
             options.append("ompipmix")
 
         if "+shared" in spec:
