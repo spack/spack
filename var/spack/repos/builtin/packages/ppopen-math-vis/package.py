@@ -37,9 +37,9 @@ class PpopenMathVis(MakefilePackage):
         makefile_in.filter('-Kfast', '-O3')
         makefile_in.filter(r'~/ppOpen-HPC/.*', prefix)
 
-    @run_after('install')
-    def sample_install(self):
-        mkdir(join_path(self.prefix, 'examples'))
-        copy_tree('examples', join_path(self.prefix, 'examples'))
-        mkdir(join_path(self.prefix, 'doc'))
-        copy_tree('doc', join_path(self.prefix, 'doc'))
+    def install(self, spec, prefix):
+        make('install')
+        mkdir(join_path(prefix, 'examples'))
+        copy_tree('examples', join_path(prefix, 'examples'))
+        mkdir(join_path(prefix, 'doc'))
+        copy_tree('doc', join_path(prefix, 'doc'))
