@@ -19,7 +19,7 @@ jobs:
         python-version: [3.7]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Setup Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -27,7 +27,8 @@ jobs:
     - name: Setup Homebrew packages
       run: |
         brew update
-        brew install gcc gnupg dash kcov
+        brew upgrade
+        brew install gcc gnupg2 dash kcov
     - name: Install Python packages
       run: |
         pip install --upgrade pip
