@@ -13,14 +13,15 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
-    url      = "https://github.com/Nek5000/Nek5000/releases/download/v17.0/Nek5000-v17.0.tar.gz"
+    url      = "https://github.com/Nek5000/Nek5000/archive/v17.0.tar.gz"
     git      = "https://github.com/Nek5000/Nek5000.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
             'spectral-elements', 'fluid', 'ecp', 'ecp-apps']
 
     version('develop', branch='master')
-    version('17.0', sha256='298d83ffd9f695ee7cf565cb445be33b02775eb9c2e9f0f74d91d89fe722e114')
+    version('17.0', sha256='4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60',
+            url="https://github.com/Nek5000/Nek5000/archive/v17.0.tar.gz")
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')
@@ -95,6 +96,7 @@ class Nek5000(Package):
             filter_file(r'^#CC\s*=.*', 'CC="{0}"'.format(cc), 'makenek')
             filter_file(r'^#SOURCE_ROOT\s*=\"\$H.*',  'SOURCE_ROOT=\"' +
                         prefix.bin.Nek5000 + '\"',  'makenek')
+
             if fflags:
                 filter_file(r'^#FFLAGS=.*', 'FFLAGS+=" {0}"'.format(fflags),
                             'makenek')
@@ -116,4 +118,4 @@ class Nek5000(Package):
         install_tree(bin_dir, prefix.bin)
 
         # Copy Nek5000 source to prefix/bin
-        install_tree('../Nek5000', prefix.bin.Nek5000)
+        install_tree(self.stage.source_path, prefix.bin.Nek5000)
