@@ -35,8 +35,22 @@ class Arm(spack.compiler.Compiler):
     # InstalledDir:
     # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
     version_argument = '--version'
-    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([^ )]+)'
-
+    version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) \(build number (\d+)\) '
+    
+    @classmethod
+    
+    def extract_version_from_output(cls, output):
+        """Extracts the version from compiler's output."""
+        
+        match = re.search(cls.version_regex, output)
+        if match:
+            if match.group(1).count('.') == 1:
+                temp = match.group(1) + ".0." + match.group(2)
+            else:
+                temp = match.group(1) + "." + match.group(2)
+        else:
+            temp = 'unknown'
+        return temp
     @classmethod
     def verbose_flag(cls):
         return "-v"
