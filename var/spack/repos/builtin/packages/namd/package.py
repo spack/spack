@@ -73,10 +73,17 @@ class Namd(MakefilePackage):
             with open('{0}.arch'.format(self.build_directory), 'w') as fh:
                 # this options are take from the default provided
                 # configuration files
-                optims_opts = {
-                    'gcc': '-m64 -O3 -fexpensive-optimizations -ffast-math',
-                    'intel': '-O2 -ip'
-                }
+                # https://github.com/UIUC-PPL/charm/pull/2778
+                if self.spec.satisfies('^charmpp@:6.10.1'):
+                    optims_opts = {
+                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                                -ffast-math -lpthread',
+                        'intel': '-O2 -ip'}
+                else:
+                    optims_opts = {
+                        'gcc': '-m64 -O3 -fexpensive-optimizations \
+                                -ffast-math -lpthread',
+                        'intel': '-O2 -ip'}
 
                 optim_opts = optims_opts[self.compiler.name] \
                     if self.compiler.name in optims_opts else ''
