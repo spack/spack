@@ -145,7 +145,7 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi', when='+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
