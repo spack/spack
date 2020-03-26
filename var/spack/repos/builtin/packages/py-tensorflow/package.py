@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os
+from glob import glob
 import sys
 
 
@@ -581,6 +580,11 @@ class PyTensorflow(Package, CudaPackage):
                 spec['nccl'].prefix.include + '"',
                 '.tf_configure.bazelrc')
 
+        if spec.satisfies('@2.0.0:2.0.1'):
+            filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
+                        '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
+                        'tensorflow/lite/experimental/ruy/platform.h')
+
         if spec.satisfies('+cuda'):
             libs = spec['cuda'].libs.directories
             libs.extend(spec['cudnn'].libs.directories)
@@ -647,7 +651,7 @@ class PyTensorflow(Package, CudaPackage):
             if '~aws' in spec:
                 args.append('--config=noaws')
 
-            if '~gcp' in spec:
+            if '~gcp' in spec and not spec.satisfies('@2.0.0:2.0.1'):
                 args.append('--config=nogcp')
 
             if '~hdfs' in spec:
@@ -679,29 +683,23 @@ class PyTensorflow(Package, CudaPackage):
 
         build_pip_package = Executable(
             'bazel-bin/tensorflow/tools/pip_package/build_pip_package')
-        build_pip_package(tmp_path)
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            for fn in glob.iglob(join_path(
-                    '../bazel-bin/tensorflow/tools/pip_package',
-                    'build_pip_package.runfiles/org_tensorflow/*')):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-            for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-
-            # macOS is case-insensitive, and BUILD file in directory
-            # containing setup.py causes the following error message:
-            #     error: could not create 'build': File exists
-            # Delete BUILD file to prevent this.
-            os.remove('BUILD')
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+
+            site_packages_dir = join_path(
+                prefix.lib,
+                ('python' + str(self.spec['python'].version.up_to(2))),
+                'site-packages')
+            fn = glob(join_path(site_packages_dir, "tensorflow-*"))
+            incpath = join_path(fn[0], "tensorflow/include")
+            setup_py('install_headers', '--install-dir={0}'.format(incpath))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
