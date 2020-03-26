@@ -24,27 +24,27 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Install Python packages
+      run: |
+          pip install --upgrade pip
+          pip install --upgrade six
+          pip install --upgrade coverage
+          pip install --upgrade setuptools
+          pip install --upgrade codecov coverage==4.5.4
+          pip install --upgrade flake8
+          pip install --upgrade pep8-naming
     - name: Setup Homebrew packages
       run: |
         brew update
         brew upgrade
         brew install gcc gnupg2 dash kcov
-    - name: Install Python packages
-      run: |
-        pip install --upgrade pip
-        pip install --upgrade six
-        pip install --upgrade coverage
-        pip install --upgrade setuptools
-        pip install --upgrade codecov coverage==4.5.4
-        pip install --upgrade flake8
-        pip install --upgrade pep8-naming
     - name: Run unit tests
       run: |
         git --version
         git fetch origin develop:develop
         env
         . share/spack/setup-env.sh
-        coverage run $(which spack) test -x --verbose
+        coverage run $(which spack) test
         coverage combine
         coverage xml
     - name: Upload to codecov.io
