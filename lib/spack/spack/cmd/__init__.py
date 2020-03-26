@@ -45,7 +45,8 @@ def python_name(cmd_name):
 
 def require_python_name(pname):
     """Require that the provided name is a valid python name (per
-    python_name())."""
+    python_name()). Useful for checking parameters for function
+    prerequisites."""
     if python_name(pname) != pname:
         raise PythonNameError(pname)
 
@@ -57,7 +58,9 @@ def cmd_name(python_name):
 
 def require_cmd_name(cname):
     """Require that the provided name is a valid command name (per
-    cmd_name())."""
+    cmd_name()). Useful for checking parameters for function
+    prerequisites.
+    """
     if cmd_name(cname) != cname:
         raise CommandNameError(cname)
 

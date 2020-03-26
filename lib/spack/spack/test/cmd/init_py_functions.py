@@ -8,6 +8,10 @@ from spack.cmd import require_python_name, python_name, PythonNameError, \
 
 
 def test_require_python_name():
+    """Python module names should not contain dashes---ensure that
+    require_python_name() raises the appropriate exception if one is
+    detected.
+    """
     require_python_name("okey_dokey")
     with pytest.raises(PythonNameError):
         require_python_name("okey-dokey")
@@ -15,6 +19,10 @@ def test_require_python_name():
 
 
 def test_require_cmd_name():
+    """By convention, Spack command names should contain dashes rather than
+    underscores---ensure that require_cmd_name() raises the appropriate
+    exception if underscores are detected.
+    """
     require_cmd_name("okey-dokey")
     with pytest.raises(CommandNameError):
         require_cmd_name("okey_dokey")
