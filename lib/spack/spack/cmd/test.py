@@ -23,8 +23,8 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('--keep-tmpdir', action='store_true',
-                           help='Keep testing directory for debuggin')
+    subparser.add_argument('--keep-stage', action='store_true',
+                           help='Keep testing directory for debugging')
     subparser.add_argument(
         '--log-format',
         default=None,
@@ -107,13 +107,20 @@ environment variables:
         reporter.filename = log_file
     reporter.specs = specs_to_test
 
-    with reporter('test'):
+    # test_stage_dir
+    test_name = now.strftime('%Y-%m-%d_%H:%M:%S')
+    stage = os.path.join(
+        spack.util.path.canonicalize_path(
+            spack.config.get('config:test_stage', os.getcwd())),
+        test_name)
+
+    with reporter('test', stage):
         if args.smoke_test:
             for spec in specs_to_test:
                 try:
                     spec.package.do_test(
                         time=now,
-                        remove_directory=not args.keep_tmpdir,
+                        remove_directory=not args.keep_stage,
                         dirty=args.dirty)
                 except BaseException as e:
                     pass  # Test is logged, go on to other tests
