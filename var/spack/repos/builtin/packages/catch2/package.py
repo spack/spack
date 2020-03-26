@@ -14,6 +14,14 @@ class Catch2(CMakePackage):
     url      = "https://github.com/catchorg/Catch2/archive/v2.9.1.tar.gz"
     maintainers = ['ax3l']
 
+    version('2.11.3', sha256='9a6967138062688f04374698fce4ce65908f907d8c0fe5dfe8dc33126bd46543')
+    version('2.11.2', sha256='a96203fa531092375678ad2d81c43317ee58c684787f24b2a55748f6c6839799')
+    version('2.11.1', sha256='9af06ca5b10362620c6c9c729821367e1aeb0f76adfc7bc3a468da83db3c50c6')
+    version('2.11.0', sha256='b9957af46a04327d80833960ae51cf5e67765fd264389bd1e275294907f1a3e0')
+    version('2.10.2', sha256='79aa46ee6c5a87bc5306bfffc6ecde6a1ad6327715b208ee2e846873f282a494')
+    version('2.10.1', sha256='dcbbe0a5f4d2a4330bdf5bcb9ef6a02303d679d46596e4ed06ca462f2372d4de')
+    version('2.10.0', sha256='a3beaa8ba6238c189e1f81238ab38e585836af13204a7099e22eff6c25b98558')
+    version('2.9.2',  sha256='54bea6d80a388a80f895cd0e2343fca72b0d9093a776af40904aefce49c13bda')
     version('2.9.1', sha256='0b36488aca6265e7be14da2c2d0c748b4ddb9c70a1ea4da75736699c629f14ac')
     version('2.9.0', sha256='00040cad9b6d6bb817ebd5853ff6dda23f9957153d8c4eedf85def0c9e787c42')
     version('2.8.0', sha256='b567c37446cd22c8550bfeb7e2fe3f981b8f3ab8b2148499a522e7f61b8a481d')
