@@ -272,9 +272,9 @@ class collect_info(object):
                              .format(self.format_name))
         self.report_writer = report_writers[self.format_name](args)
 
-    def __call__(self, type):
+    def __call__(self, type, dir=os.getcwd()):
         self.type = type
-        self.dir = os.getcwd()
+        self.dir = dir
         return self
 
     def concretization_report(self, msg):
