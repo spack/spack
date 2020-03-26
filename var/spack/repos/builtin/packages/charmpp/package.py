@@ -67,7 +67,7 @@ class Charmpp(Package):
         "pmi",
         default="none",
         values=("none", "simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
-        description="The ucx/ofi/gni backends needs PMI to run!"
+        description="The ucx/ofi/gni backends need PMI to run!"
     )
 
     # Other options
