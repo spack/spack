@@ -68,7 +68,11 @@ class Llvm(CMakePackage):
         description="NVIDIA compute cabailities to make inlining capable",
     )
 
-    variant("omp_debug", default=False, description="Include debugging code in OpenMP runtime libraries")
+    variant(
+        "omp_debug",
+        default=False,
+        description="Include debugging code in OpenMP runtime libraries",
+    )
     variant("lldb", default=True, description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
     variant(
@@ -161,7 +165,7 @@ class Llvm(CMakePackage):
     depends_on("libffi")  # libomptarget
 
     # ncurses dependency
-    depends_on('ncurses+termlib')
+    depends_on("ncurses+termlib")
 
     # lldb dependencies
     depends_on("swig", when="+lldb")
@@ -226,9 +230,9 @@ class Llvm(CMakePackage):
             except Exception:
                 raise RuntimeError(
                     'The "lldb_codesign" identity must be available to build '
-                    'LLVM with LLDB. See https://lldb.llvm.org/resources/'
-                    'build.html#code-signing-on-macos for details on how to '
-                    'create this identity.'
+                    "LLVM with LLDB. See https://lldb.llvm.org/resources/"
+                    "build.html#code-signing-on-macos for details on how to "
+                    "create this identity."
                 )
 
     def setup_build_environment(self, env):
@@ -239,7 +243,7 @@ class Llvm(CMakePackage):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
 
-    root_cmakelists_dir = 'llvm'
+    root_cmakelists_dir = "llvm"
 
     def cmake_args(self):
         spec = self.spec
@@ -258,9 +262,6 @@ class Llvm(CMakePackage):
             cmake_args.extend(
                 [
                     "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix,
-                    "-DCUDA_NVCC_EXECUTABLE:FILEPATH="
-                    + spec["cuda"].prefix.bin
-                    + "/nvcc",
                     "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
                         ",".join(spec.variants["nvptx_offload_ccs"].value)
                     ),
@@ -307,7 +308,7 @@ class Llvm(CMakePackage):
         if "+libcxx" in spec:
             projects.append("libcxx")
             projects.append("libcxxabi")
-            if spec.satisfies("@3.9.0:"):
+            if spec.satisfies("@3.9.0:") and '+libcxx_default' in spec:
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
@@ -338,7 +339,10 @@ class Llvm(CMakePackage):
                 targets.append("ARM")
             elif spec.target.family == "aarch64":
                 targets.append("AArch64")
-            elif  spec.target.family == "sparc" or spec.target.family == "sparc64":
+            elif (
+                spec.target.family == "sparc"
+                or spec.target.family == "sparc64"
+            ):
                 targets.append("Sparc")
             elif (
                 spec.target.family == "ppc64"
@@ -359,10 +363,11 @@ class Llvm(CMakePackage):
             gcc_prefix = ancestor(self.compiler.cc, 2)
             cmake_args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
-        if spec.satisfies('@4.0.0:'):
-            if spec.satisfies('platform=cray') or \
-               spec.satisfies('platform=linux'):
-                cmake_args.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
+        if spec.satisfies("@4.0.0:"):
+            if spec.satisfies("platform=cray") or spec.satisfies(
+                "platform=linux"
+            ):
+                cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(
@@ -400,11 +405,9 @@ class Llvm(CMakePackage):
                     ),
                     "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
                 ]
-                cmake_args.append(
-                    "-DCMAKE_BUILD_TYPE:String={0}".format(
-                        spec.variants["build_type"].value
-                    )
-                )
+                cmake_args.extend(self.cmake_args())
+                cmake_args.append('-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB=true')
+
                 # work around bad libelf detection in libomptarget
                 cmake_args.append(
                     "-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}".format(
@@ -412,29 +415,15 @@ class Llvm(CMakePackage):
                         spec["hwloc"].prefix.include,
                     )
                 )
-                cmake_args.append(
-                    "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
-                        ",".join(spec.variants["nvptx_offload_ccs"].value)
-                    )
-                )
-                cmake_args.append(
-                    "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix
-                )
-                cmake_args.append(
-                    "-DCUDA_NVCC_EXECUTABLE:FILEPATH="
-                    + spec["cuda"].prefix.bin
-                    + "/nvcc"
-                )
-                cmake_args.append("-DLIBOMP_USE_HWLOC=On")
 
                 cmake(*cmake_args)
                 make()
                 make("install")
-        if '+python' in self.spec:
-            install_tree('llvm/bindings/python', site_packages_dir)
+        if "+python" in self.spec:
+            install_tree("llvm/bindings/python", site_packages_dir)
 
-            if '+clang' in self.spec:
-                install_tree('clang/bindings/python', site_packages_dir)
+            if "+clang" in self.spec:
+                install_tree("clang/bindings/python", site_packages_dir)
 
         with working_dir(self.build_directory):
             install_tree("bin", join_path(self.prefix, "libexec", "llvm"))
