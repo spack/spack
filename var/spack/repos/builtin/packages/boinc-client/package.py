@@ -40,6 +40,8 @@ class BoincClient(AutotoolsPackage):
 
     version('7.16.5', sha256='33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a')
 
+    variant('manager', default=False, description='Builds the client manager')
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
@@ -52,13 +54,23 @@ class BoincClient(AutotoolsPackage):
     depends_on('libxi')
     depends_on('libx11')
     depends_on('libjpeg')
+    depends_on('wxwidgets', when='+manager')
+    depends_on('libnotify', when='+manager')
 
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
 
     def configure_args(self):
+        spec = self.spec
         args = []
+
         args.append("--disable-server")
         args.append("--enable-client")
+
+        if '+manager' in spec:
+            args.append('--enable-manager')
+        else:
+            args.append('--disable-manager')
+
         return args
