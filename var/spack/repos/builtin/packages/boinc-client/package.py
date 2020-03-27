@@ -34,7 +34,6 @@ class BoincClient(AutotoolsPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('26202',  sha256='c3b7c7c52ab50a489e13d502a46f207b73f3dda3c136a8d98fb680903ebc1e26')
     version('7.16.5', sha256='33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a')
 
     depends_on('autoconf', type='build')
