@@ -45,8 +45,13 @@ class BoincClient(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    # FIXME: Add additional dependencies if required.
-    # depends_on('foo')
+    depends_on('freeglut@3:')
+    depends_on('libsm')
+    depends_on('libice')
+    depends_on('libxmu')
+    depends_on('libxi')
+    depends_on('libx11')
+    depends_on('libjpeg')
 
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
