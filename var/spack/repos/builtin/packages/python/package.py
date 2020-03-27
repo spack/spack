@@ -670,6 +670,11 @@ class Python(AutotoolsPackage):
         # to ask Python where its LIBDIR is.
         libdir = self.get_config_var('LIBDIR')
 
+        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
+        # in LBPL
+        # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
+        libpl = self.get_config_var('LIBPL')
+
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
@@ -679,6 +684,8 @@ class Python(AutotoolsPackage):
 
             if os.path.exists(os.path.join(libdir, ldlibrary)):
                 return LibraryList(os.path.join(libdir, ldlibrary))
+            elif os.path.exists(os.path.join(libpl, ldlibrary)):
+                return LibraryList(os.path.join(libpl, ldlibrary))
             elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
                 return LibraryList(os.path.join(frameworkprefix, ldlibrary))
             else:
