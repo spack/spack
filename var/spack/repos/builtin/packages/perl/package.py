@@ -198,7 +198,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def buildtest(self):
+    def build_test(self):
         make('test')
 
     def install(self, spec, prefix):

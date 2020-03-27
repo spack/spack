@@ -118,7 +118,7 @@ class NodeJs(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def buildtest(self):
+    def build_test(self):
         make('test')
         make('test-addons')
 
