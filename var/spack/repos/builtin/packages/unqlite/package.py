@@ -1,0 +1,18 @@
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class Unqlite(CMakePackage):
+    """UnQLite is a in-process software library which implements a self-contained,
+    serverless, zero-configuration, transactional NoSQL database engine."""
+
+    homepage = "https://unqlite.org/"
+    url = "https://github.com/symisc/unqlite/archive/v1.1.9.tar.gz"
+    git = 'https://github.com/symisc/unqlite.git'
+
+    version('master', branch='master')
+    version('1.1.9', sha256='33d5b5e7b2ca223942e77d31112d2e20512bc507808414451c8a98a7be5e15c0')

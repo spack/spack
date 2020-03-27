@@ -1,3 +1,15 @@
+# v0.14.1 (2019-03-20)
+
+This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
+
+* several bugfixes for parallel installation (#15339, #15341, #15220, #15197)
+* `spack load` now works with packages that have been renamed (#14348)
+* bugfix for `suite-sparse` installation (#15326)
+* deduplicate identical suffixes added to module names (#14920)
+* fix issues with `configure_args` during module refresh (#11084)
+* increased test coverage and test fixes (#15237, #15354, #15346)
+* remove some unused code (#15431)
+
 # v0.14.0 (2020-02-23)
 
 `v0.14.0` is a major feature release, with 3 highlighted features:

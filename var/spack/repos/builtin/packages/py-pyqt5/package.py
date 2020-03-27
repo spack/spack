@@ -26,6 +26,7 @@ class PyPyqt5(SIPPackage):
         'PyQt5.QtXmlPatterns'
     ]
 
+    version('5.13.1', sha256='54b7f456341b89eeb3930e786837762ea67f235e886512496c4152ebe106d4af')
     version('5.13.0', sha256='0cdbffe5135926527b61cc3692dd301cd0328dd87eeaf1313e610787c46faff9')
     version('5.12.3', sha256='0db0fa37debab147450f9e052286f7a530404e2aaddc438e97a7dcdf56292110')
 
@@ -36,7 +37,8 @@ class PyPyqt5(SIPPackage):
     depends_on('qt@5:+opengl')
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-
+    depends_on('py-sip module=PyQt5.sip', type=('build', 'run'))
+    depends_on('py-sip@:4.19.18 module=PyQt5.sip', type=('build', 'run'), when='@:5.13.0')
     depends_on('qscintilla', when='+qsci')
 
     # For building Qscintilla python bindings
@@ -75,7 +77,7 @@ class PyPyqt5(SIPPackage):
                     'PyQt5')
                 python = self.spec['python'].command
                 python('configure.py', '--pyqt=PyQt5',
-                       '--sip=' + self.prefix.bin.sip,
+                       '--sip=' + self.spec['py-sip'].prefix.bin.sip,
                        '--qsci-incdir=' +
                        self.spec['qscintilla'].prefix.include,
                        '--qsci-libdir=' + self.spec['qscintilla'].prefix.lib,
@@ -83,7 +85,10 @@ class PyPyqt5(SIPPackage):
                        '--apidir=' + self.prefix.share.qsci,
                        '--destdir=' + pydir,
                        '--pyqt-sipdir=' + self.prefix.share.sip.PyQt5,
-                       '--sip-incdir=' + python_include_dir,
+                       '--sip-incdir=' +
+                       join_path(self.spec['py-sip'].prefix.include,
+                                 'python' +
+                                 str(self.spec['python'].version.up_to(2))),
                        '--stubsdir=' + pydir)
 
                 # Fix build errors

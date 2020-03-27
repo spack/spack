@@ -27,6 +27,7 @@ class Singularity(MakefilePackage):
     maintainers = ['ArangoGutierrez', 'alalazo']
     version('master', branch='master')
 
+    version('3.5.3', sha256='0c76f1e3808bf4c10e92b17150314b2b816be79f8101be448a6e9d7a96c9e486')
     version('3.5.2', sha256='f9c21e289377a4c40ed7a78a0c95e1ff416dec202ed49a6c616dd2c37700eab8')
     version('3.4.1', sha256='638fd7cc5ab2a20e779b8768f73baf21909148339d6c4edf6ff61349c53a70c2')
     version('3.4.0', sha256='eafb27f1ffbed427922ebe2b5b95d1c9c09bfeb897518867444fe230e3e35e41')
