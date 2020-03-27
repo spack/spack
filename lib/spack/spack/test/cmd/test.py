@@ -88,6 +88,7 @@ def test_test_output_on_failure(mock_packages, mock_archive, mock_fetch,
         out = spack_test('test-fail', fail_on_error=False)
 
     assert "Expected 'not in the output' in output of `true`" in out
+    assert "AssertionError:" in out
 
 
 def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
