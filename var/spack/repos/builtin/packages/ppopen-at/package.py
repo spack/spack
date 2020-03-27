@@ -24,6 +24,5 @@ class PpopenAt(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install')
-        mkdir(join_path(prefix, 'examples'))
         install_tree('examples', prefix.examples)
         install_tree('doc', prefix.doc)
