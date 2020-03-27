@@ -26,7 +26,7 @@ class Memsurfer(PythonPackage):
     depends_on('swig@3.0.12', type='build')
 
     depends_on('py-cython', type='build')
-    depends_on('py-numpy')
+    depends_on('py-numpy', type=('build', 'run'))
 
     depends_on('eigen@3.3.7')
     depends_on('cgal@4.13 build_type=Release +shared~core~demos~imageio')
