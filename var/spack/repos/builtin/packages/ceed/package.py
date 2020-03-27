@@ -98,9 +98,6 @@ class Ceed(BundlePackage):
     # and +mumps:
     depends_on('petsc@develop+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@3.0.0+petsc+mfem')
-    # TODO: petsc@develop requires hypre@develop; remove next line after the
-    #       release version is set:
-    depends_on('hypre@develop', when='@3.0.0+petsc')
     depends_on('hpgmg@develop+fe', when='@3.0.0+petsc')
     # ceed-2.0
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
