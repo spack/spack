@@ -10,7 +10,7 @@ class PySwiftclient(PythonPackage):
     """This is a python client for the Swift API."""
 
     homepage = "https://docs.openstack.org/python-swiftclient"
-    url      = "https://files.pythonhosted.org/packages/2a/95/6d0451141929995e4d042f3fbcbb78d3d0c661272420fefa6a8660878399/python-swiftclient-3.9.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-swiftclient/python-swiftclient-3.9.0.tar.gz"
 
     maintainers = ['ajkotobi']
 
