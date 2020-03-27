@@ -5,25 +5,13 @@
 
 import argparse
 import os
-import filecmp
-import re
-from six.moves import builtins
-import time
 
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack.config
-import spack.hash_types as ht
 import spack.package
 import spack.cmd.install
-from spack.error import SpackError
-from spack.spec import Spec
 from spack.main import SpackCommand
-import spack.environment as ev
-
-from six.moves.urllib.error import HTTPError, URLError
 
 install = SpackCommand('install')
 spack_test = SpackCommand('test')
@@ -61,7 +49,8 @@ def test_test_dirty_flag(arguments, expected):
     assert args.dirty == expected
 
 
-def test_test_output(install_mockery, mock_archive, mock_fetch, mock_test_stage):
+def test_test_output(install_mockery, mock_archive, mock_fetch,
+                     mock_test_stage):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
     spack_test('printing-package')
@@ -113,13 +102,13 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 
 
 @pytest.mark.usefixtures(
-    'mock_packages', 'mock_archive', 'mock_fetch', 'install_mockery', 'mock_test_stage'
+    'mock_packages', 'mock_archive', 'mock_fetch', 'install_mockery'
 )
 @pytest.mark.parametrize('pkg_name,msgs', [
     ('test-error', ['Error: Command exited', 'ProcessError']),
     ('test-fail', ['Error: Expected', 'AssertionError'])
 ])
-def test_junit_output_with_failures(tmpdir, pkg_name, msgs):
+def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
     with tmpdir.as_cwd():
         spack_test(

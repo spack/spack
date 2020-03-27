@@ -122,7 +122,7 @@ environment variables:
                         time=now,
                         remove_directory=not args.keep_stage,
                         dirty=args.dirty)
-                except BaseException as e:
+                except BaseException:
                     pass  # Test is logged, go on to other tests
         else:
             raise NotImplementedError

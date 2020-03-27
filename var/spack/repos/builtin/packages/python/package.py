@@ -1003,7 +1003,8 @@ class Python(AutotoolsPackage):
 
         # contains python executable
         python = which('python')
-        assert os.path.dirname(python.path) == os.path.dirname(self.command.path)
+        assert os.path.dirname(python.path) == os.path.dirname(
+            self.command.path)
 
         # run hello world
         output = self.command('-c', 'print("hello world!")',
