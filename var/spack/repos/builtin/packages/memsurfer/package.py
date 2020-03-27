@@ -12,7 +12,7 @@ class Memsurfer(PythonPackage):
        wide variety of large-scale molecular simulations."""
 
     homepage = "https://github.com/LLNL/MemSurfer"
-    git = "git@github.com:LLNL/MemSurfer.git"
+    git = "https://github.com/LLNL/MemSurfer.git"
 
     version('1.0',     tag='v1.0',       submodules=True)
     version('master',  branch='master',  submodules=True)
