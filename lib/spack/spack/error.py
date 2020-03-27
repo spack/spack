@@ -22,10 +22,12 @@ def re_raise(e, exc_info=None):
 
     # construct arguments to re-raise error from type
     args = []
-    if hasattr(e, 'message'):
+    if hasattr(e, 'args'):
+        args.extend(e.args)
+    if hasattr(e, 'message') and e.message not in e.args:
         args.append(e.message)
     if hasattr(e, 'long_message'):
-        args.append(e.long_message)
+        args.append(str(e.long_message))
 
     if sys.version_info[0] < 3:
         # ugly hack: exec to avoid the fact this is a syntax
