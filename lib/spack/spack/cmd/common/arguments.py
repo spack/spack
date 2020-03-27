@@ -111,7 +111,7 @@ class SetParallelJobs(argparse.Action):
     def default(self):
         # This default is coded as a property so that look-up
         # of this value is done only on demand
-        return min(spack.config.get('config:build_jobs'),
+        return min(spack.config.get('config:build_jobs', 16),
                    multiprocessing.cpu_count())
 
     @default.setter

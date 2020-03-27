@@ -336,7 +336,7 @@ class URLFetchStrategy(FetchStrategy):
         else:
             curl_args.append('-sS')  # just errors when not.
 
-        connect_timeout = spack.config.get('config:connect_timeout')
+        connect_timeout = spack.config.get('config:connect_timeout', 10)
 
         if self.extra_options:
             cookie = self.extra_options.get('cookie')

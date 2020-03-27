@@ -68,7 +68,8 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
-        builtins = spack.config.get('config:template_dirs')
+        builtins = spack.config.get('config:template_dirs',
+                                    ['$spack/share/spack/templates'])
         extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
