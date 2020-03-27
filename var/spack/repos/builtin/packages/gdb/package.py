@@ -33,6 +33,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
     variant('python', default=True, description='Compile with Python support')
     variant('xz', default=True, description='Compile with lzma support')
+    variant('source-highlight', default=False, description='Compile with source-highlight support')
 
     # Required dependency
     depends_on('texinfo', type='build')
@@ -40,6 +41,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     # Optional dependencies
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
+    depends_on('source-highlight', when='+source-highlight')
 
     build_directory = 'spack-build'
 
