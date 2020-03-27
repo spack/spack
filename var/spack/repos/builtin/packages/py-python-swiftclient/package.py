@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PySwiftclient(PythonPackage):
+class PyPythonSwiftclient(PythonPackage):
     """This is a python client for the Swift API."""
 
     homepage = "https://docs.openstack.org/python-swiftclient"
@@ -22,8 +22,8 @@ class PySwiftclient(PythonPackage):
     version('3.7.1', sha256='06bda5a6f81ea132e5cb52d0eb0616a0ab0958b4ec0d1cb7f850f04bf178852f')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('python@3:', type=('build', 'run'))
-    depends_on('py-futures@3:', type=('build', 'run'))
-    depends_on('py-requests', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('py-futures@3:', type=('build', 'run'), when='^python@:2')
+    depends_on('py-requests@1.1.0:', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'))
-    depends_on('py-pbr')
+    depends_on('py-pbr', type='build')
