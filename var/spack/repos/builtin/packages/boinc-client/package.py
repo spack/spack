@@ -24,10 +24,14 @@ from spack import *
 
 
 class BoincClient(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """BOINC is a platform for high-throughput computing on a
+    large scale (thousands or millions of computers). It can be
+    used for volunteer computing (using consumer devices) or
+    grid computing (using organizational resources). It
+    supports virtualized, parallel, and GPU-based
+    applications."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://boinc.berkeley.edu/"
     url      = "https://github.com/BOINC/boinc/archive/client_release/7.16/7.16.5.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
