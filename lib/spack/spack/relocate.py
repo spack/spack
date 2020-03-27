@@ -153,24 +153,33 @@ def _make_relative(start_path, path_root, paths):
     return relative_paths
 
 
-def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
+def _normalize_relative_paths(start_path, relative_paths):
+    """Normalize the relative paths with respect to the original path name
+    of the file.
+
+    If a path starts with ``$ORIGIN`` replace ``$ORIGIN`` with the
+    directory name of ``start_path`` and then normalize the path.
+
+    Args:
+        start_path (str): path from which the starting directory
+            is extracted
+        relative_paths (str): list of relative paths as obtained by a
+            call to :ref:`_make_relative`
+
+    Returns:
+        List of normalized paths
     """
-    Normalize the relative rpaths with respect to the original path name
-    of the file. If the rpath starts with $ORIGIN replace $ORIGIN with the
-    dirname of the original path name and then normalize the rpath.
-    A dictionary mapping relativized rpaths to normalized rpaths is returned.
-    """
-    norm_rpaths = list()
-    for rpath in rel_rpaths:
-        if rpath.startswith('$ORIGIN'):
-            sub = re.sub(re.escape('$ORIGIN'),
-                         os.path.dirname(orig_path_name),
-                         rpath)
-            norm = os.path.normpath(sub)
-            norm_rpaths.append(norm)
-        else:
-            norm_rpaths.append(rpath)
-    return norm_rpaths
+    normalized_paths = []
+    pattern = re.compile(re.escape('$ORIGIN'))
+    start_directory = os.path.dirname(start_path)
+
+    for path in relative_paths:
+        if path.startswith('$ORIGIN'):
+            sub = pattern.sub(start_directory, path)
+            path = os.path.normpath(sub)
+        normalized_paths.append(path)
+
+    return normalized_paths
 
 
 def set_placeholder(dirname):
@@ -616,7 +625,7 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
                                     path_name)
             # get the normalized rpaths in the old prefix using the file path
             # in the orig prefix
-            orig_norm_rpaths = get_normalized_elf_rpaths(orig_path_name,
+            orig_norm_rpaths = _normalize_relative_paths(orig_path_name,
                                                          orig_rpaths)
             # get the normalize rpaths in the new prefix
             norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,

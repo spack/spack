@@ -178,3 +178,15 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 def test_make_relative_paths(start_path, path_root, paths, expected):
     relatives = spack.relocate._make_relative(start_path, path_root, paths)
     assert relatives == expected
+
+
+@pytest.mark.parametrize('start_path,relative_paths,expected', [
+    ('/usr/bin/test',
+     ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
+     ['/usr/lib', '/usr/lib64', '/opt/local/lib'])
+])
+def test_normalize_relative_paths(start_path, relative_paths, expected):
+    normalized = spack.relocate._normalize_relative_paths(
+        start_path, relative_paths
+    )
+    assert normalized == expected
