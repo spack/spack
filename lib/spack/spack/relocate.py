@@ -182,10 +182,8 @@ def _normalize_relative_paths(start_path, relative_paths):
     return normalized_paths
 
 
-def set_placeholder(dirname):
-    """
-    return string of @'s with same length
-    """
+def _placeholder(dirname):
+    """String of  of @'s with same length of the argument"""
     return '@' * len(dirname)
 
 
@@ -704,7 +702,7 @@ def relocate_links(linknames, old_layout_root, new_layout_root,
     link target is create by replacing the old install prefix with the new
     install prefix.
     """
-    placeholder = set_placeholder(old_layout_root)
+    placeholder = _placeholder(old_layout_root)
     link_names = [os.path.join(new_install_prefix, linkname)
                   for linkname in linknames]
     for link_name in link_names:

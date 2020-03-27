@@ -27,7 +27,7 @@ from spack.relocate import needs_binary_relocation, needs_text_relocation
 from spack.relocate import relocate_text, relocate_links
 from spack.relocate import macho_make_paths_relative
 from spack.relocate import macho_make_paths_normal
-from spack.relocate import set_placeholder, macho_find_paths
+from spack.relocate import _placeholder, macho_find_paths
 from spack.relocate import file_is_relocatable
 
 
@@ -226,7 +226,7 @@ def test_relocate_links(tmpdir):
         old_install_prefix = os.path.join(
             '%s' % old_layout_root, 'debian6', 'test')
         old_binname = os.path.join(old_install_prefix, 'binfile')
-        placeholder = set_placeholder(old_layout_root)
+        placeholder = _placeholder(old_layout_root)
         re.sub(old_layout_root, placeholder, old_binname)
         filenames = ['link.ln', 'outsideprefix.ln']
         new_layout_root = os.path.join(
