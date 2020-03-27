@@ -9,7 +9,7 @@ from spack import *
 class UtilLinux(AutotoolsPackage):
     """Util-linux is a suite of essential utilities for any Linux system."""
 
-    homepage = "http://freecode.com/projects/util-linux"
+    homepage = "https://github.com/karelzak/util-linux"
     url      = "https://www.kernel.org/pub/linux/utils/util-linux/v2.29/util-linux-2.29.2.tar.gz"
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
@@ -36,6 +36,7 @@ class UtilLinux(AutotoolsPackage):
     def configure_args(self):
         config_args = [
             '--disable-use-tty-group',
+            '--disable-makeinstall-chown',
         ]
         config_args.extend(self.enable_or_disable('libuuid'))
         return config_args
