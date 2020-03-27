@@ -16,10 +16,20 @@ class Mpip(AutotoolsPackage):
     version('master', branch='master')
     version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
+    variant('shared', default=False, description="Build the shared library")
+
     depends_on("elf")
     depends_on("libdwarf")
     depends_on('libunwind', when=os.uname()[4] == "x86_64")
     depends_on("mpi")
+
+    @property
+    def build_targets(self):
+        targets = []
+        if '+shared' in self.spec:
+            targets.append('shared')
+
+        return targets
 
     def configure_args(self):
         config_args = ['--without-f77']
