@@ -754,7 +754,7 @@ class Openmpi(AutotoolsPackage):
             'orte-server': ([bad_option], 1),
             'orte-top': ([bad_option], 1),
             'ortecc': ([comp_vers], None),
-            #'orted': ([bad_option], 213),
+            # 'orted': ([bad_option], 213),
             'orted': ([bad_option], 1),
             'orterun': ([spec_vers], None),
             'oshCC': ([comp_vers], None),

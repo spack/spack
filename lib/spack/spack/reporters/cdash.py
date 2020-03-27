@@ -282,7 +282,7 @@ class CDash(Reporter):
         # The first line just says "Testing package name-hash"
         report_data['test']['loglines'].append(
             text_type("{0} output for {1}:".format(
-                    'test', package['name'])))
+                'test', package['name'])))
         for line in package['stdout'].splitlines()[1:]:
             report_data['test']['loglines'].append(
                 xml.sax.saxutils.escape(line))
@@ -296,7 +296,6 @@ class CDash(Reporter):
             # Cap the number of errors and warnings at 50 each.
             errors = errors[0:49]
             warnings = warnings[0:49]
-            nerrors = len(errors)
 
             if phase == 'test':
                 # Convert log output from ASCII to Unicode and escape for XML.

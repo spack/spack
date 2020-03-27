@@ -118,7 +118,7 @@ class InfoCollector(object):
                         'elapsed_time': '0.0',
                         'result': 'skipped',
                         'message': 'Spec already installed'
-                        }
+                    }
                     spec['packages'].append(package)
 
         def gather_info(do_fn):
@@ -138,7 +138,7 @@ class InfoCollector(object):
                     raise Exception
 
                 # We accounted before for what is already installed
-                installed_on_entry = pkg.installed
+                installed_already = pkg.installed
 
                 package = {
                     'name': pkg.name,
@@ -157,7 +157,7 @@ class InfoCollector(object):
                     package['stdout'] = fetch_log(pkg, do_fn, self.dir)
                     package['installed_from_binary_cache'] = \
                         pkg.installed_from_binary_cache
-                    if do_fn.__name__ == '_install_task' and installed_on_entry:
+                    if do_fn.__name__ == '_install_task' and installed_already:
                         return
 
                 except spack.build_environment.InstallError as e:

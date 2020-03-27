@@ -1614,9 +1614,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         test_name = time.strftime('%Y-%m-%d_%H:%M:%S')
         test_stage = Prefix(os.path.join(
-                sup.canonicalize_path(
-                    spack.config.get('config:test_stage', os.getcwd())),
-                test_name))
+            sup.canonicalize_path(
+                spack.config.get('config:test_stage', os.getcwd())),
+            test_name))
         if not os.path.exists(test_stage):
             mkdirp(test_stage)
         test_log_file = os.path.join(test_stage, self.test_log_name)
@@ -1664,7 +1664,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     tty.set_debug(old_debug)
 
         spack.build_environment.fork(
-            self, test_process, dirty=dirty, fake=False, context='test', test_name=test_name)
+            self, test_process, dirty=dirty, fake=False, context='test',
+            test_name=test_name)
 
     def test(self):
         pass

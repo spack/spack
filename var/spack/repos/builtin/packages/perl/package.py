@@ -372,7 +372,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         assert '(v{0})'.format(self.spec.version) in output
 
         tty.msg('test: Ensuring perl runs')
-        message = 'Hello, World!'
-        output = perl('-e', 'use warnings; use strict;\nprint("{0}");'.
-		      format(message), output=str.split, error=str.split)
+        msg = 'Hello, World!'
+        output = perl('-e', 'use warnings; use strict;\nprint("%s");' % msg,
+                      output=str.split, error=str.split)
         assert output == message
