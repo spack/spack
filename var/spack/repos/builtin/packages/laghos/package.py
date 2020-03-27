@@ -46,6 +46,8 @@ class Laghos(MakefilePackage):
         targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
         targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
         targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
+        if spec.satisfies('@:2.0'):
+            targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
         return targets
 
