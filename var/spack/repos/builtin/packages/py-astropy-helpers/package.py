@@ -19,4 +19,3 @@ class PyAstropyHelpers(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools@30.3:', type='build')
-    depends_on('py-astropy', type=('build', 'run'))
