@@ -46,4 +46,4 @@ fi
 #-----------------------------------------------------------
 # Run unit tests with code coverage
 #-----------------------------------------------------------
-$coverage_run $(which spack) test -x --verbose
+$coverage_run $(which spack) unit-test -x --verbose
