@@ -585,6 +585,7 @@ class PyTensorflow(Package, CudaPackage):
                 spec['nccl'].prefix.include + '"',
                 '.tf_configure.bazelrc')
 
+        # see tensorflow issue #31187 on github
         if spec.satisfies('@2.0.0:2.0.1'):
             filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
                         '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
