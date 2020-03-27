@@ -17,6 +17,9 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
 
     version('3.3.12', sha256='3ad6cd67d7f4b1d6b2d38537261564a0d26aaed077bf25c51efc1474d0e8b65c')
 
+    variant('shared', default=True, description='Build shared libraries')
+    variant('static', default=False, description='Build static libraries')
+
     depends_on('gdb@4.16:')
     depends_on('lesstif@0.89:')
 
