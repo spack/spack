@@ -44,7 +44,6 @@ class Zlib(Package):
             env.append_flags('CFLAGS', '-O2')
 
     def install(self, spec, prefix):
-        raise Exception
         config_args = []
         if '~shared' in spec:
             config_args.append('--static')
