@@ -25,7 +25,7 @@ class Memsurfer(PythonPackage):
     depends_on('cmake@3.14:', type='build')
     depends_on('swig@3.0.12', type='build')
 
-    depends_on('py-cython')
+    depends_on('py-cython', type='build')
     depends_on('py-numpy')
 
     depends_on('eigen@3.3.7')
