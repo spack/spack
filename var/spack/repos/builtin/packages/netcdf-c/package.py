@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class NetcdfC(AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
     machine-independent data formats that support the creation, access, and
