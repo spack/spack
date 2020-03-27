@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Ddd(AutotoolsPackage, GNUMirrorPackage):
@@ -49,6 +50,25 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
 
         return args
 
+    # From MacPorts: make will build the executable "ddd" and the X
+    # resource file "Ddd" in the same directory. As HFS+ is case-
+    # insensitive by default this will loosely FAIL.  Mitigate this by
+    # building/installing 'dddexe' on Darwin and fixing up post install.
+    def build(self, spec, prefix):
+        make('EXEEXT={0}'.
+             format('exe' if spec.satisfies('platform=darwin') else '')
+        )
+
     # DDD won't install in parallel
     def install(self, spec, prefix):
-        make('install', parallel=False)
+        make('install',
+             'EXEEXT={0}'.
+                 format('exe' if spec.satisfies('platform=darwin') else ''),
+             parallel=False
+        )
+
+    @run_after('install')
+    def _rename_exe_on_OSX(self):
+        if self.spec.satisfies('platform=darwin'):
+            with working_dir(self.prefix.bin):
+                os.rename('dddexe', 'ddd')
