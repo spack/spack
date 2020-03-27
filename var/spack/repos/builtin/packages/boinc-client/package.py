@@ -66,6 +66,8 @@ class BoincClient(AutotoolsPackage):
     depends_on('wxwidgets@3.0.0:', when='+manager')
     depends_on('libnotify', when='+manager')
 
+    patch('systemd-fix.patch')
+
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
         autoreconf('--install', '--verbose', '--force')
