@@ -24,6 +24,7 @@ class PyDill(PythonPackage):
     version('0.2', sha256='aba8d4c81c4136310e6ce333bd6f4f3ea2d53bd367e2f69c864428f260c0308c')
 
     depends_on('python@2.5:2.8,3.1:', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.1:', type=('build', 'run'), when='@0.3.0:')
 
     depends_on('py-setuptools@0.6:', type='build')
 
