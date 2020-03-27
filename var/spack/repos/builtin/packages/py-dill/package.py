@@ -12,6 +12,7 @@ class PyDill(PythonPackage):
     homepage = "https://github.com/uqfoundation/dill"
     url      = "https://pypi.io/packages/source/d/dill/dill-0.2.7.tar.gz"
 
+    version('0.3.1', sha256='d3ddddf2806a7bc9858b20c02dc174396795545e9d62f243b34481fd26eb3e2c')
     version('0.2.9', sha256='f6d6046f9f9195206063dd0415dff185ad593d6ee8b0e67f12597c0f4df4986f')
     version('0.2.7', sha256='ddda0107e68e4eb1772a9f434f62a513c080c7171bd0dd6fb65d992788509812')
     version('0.2.6', sha256='6c1ccca68be483fa8c66e85a89ffc850206c26373aa77a97b83d8d0994e7f1fd')
