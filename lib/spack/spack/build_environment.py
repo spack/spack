@@ -452,7 +452,6 @@ def _set_variables_for_single_module(pkg, module):
 
     jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
-    assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
     m.make_jobs = jobs
