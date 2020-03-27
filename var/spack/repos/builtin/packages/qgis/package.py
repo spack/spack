@@ -66,28 +66,28 @@ class Qgis(CMakePackage):
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
     # https://github.com/qgis/QGIS/blob/master/INSTALL
-    depends_on('qt+dbus')
-    depends_on('proj@4.4.0:')
-    depends_on('geos@3.4.0:')
-    depends_on('sqlite@3.0.0: +column_metadata')
-    depends_on('libspatialite@4.2.0:')
-    depends_on('libspatialindex')
-    depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
-    depends_on('qwt@5:')
-    depends_on('qwtpolar')
+    depends_on('exiv2')
     depends_on('expat@1.95:')
-    depends_on('qca@2.2.1')
+    depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
+    depends_on('geos@3.4.0:')
+    depends_on('libspatialindex')
+    depends_on('libspatialite@4.2.0:')
+    depends_on('libzip')
+    depends_on('proj@4.4.0:')
+    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-pyqt4', when='@2')
     depends_on('py-pyqt5@5.3:', when='@3')
-    depends_on('qscintilla +python')
-    depends_on('qjson')
     depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('qtkeychain@0.5:', when='@3:')
-    depends_on('libzip')
-    depends_on('exiv2')
-    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
+    depends_on('qca@2.2.1')
+    depends_on('qjson')
+    depends_on('qscintilla +python')
+    depends_on('qt+dbus')
+    depends_on('qtkeychain@0.5:', when='@3:')
+    depends_on('qwt@5:')
+    depends_on('qwtpolar')
+    depends_on('sqlite@3.0.0: +column_metadata')
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
