@@ -23,7 +23,7 @@ class PyPy2cairo(WafPackage):
 
     depends_on('py-pytest', type='test')
 
-    def installtest(self):
+    def install_test(self):
         with working_dir('test'):
             pytest = which('py.test')
             pytest()

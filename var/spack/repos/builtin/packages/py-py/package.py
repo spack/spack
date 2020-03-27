@@ -28,6 +28,6 @@ class PyPy(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
 
-    def buildtest(self):
+    def build_test(self):
         # Tests require pytest, creating a circular dependency
         pass

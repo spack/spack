@@ -17,6 +17,6 @@ class PySphinxcontribJsmath(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    def buildtest(self):
+    def build_test(self):
         # Requires sphinx, creating a circular dependency
         pass
