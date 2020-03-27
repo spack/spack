@@ -53,7 +53,7 @@ class BoincClient(AutotoolsPackage):
         autoreconf('--install', '--verbose', '--force')
 
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
         args = []
+        args.append("--disable-server")
+        args.append("--enable-client")
         return args
