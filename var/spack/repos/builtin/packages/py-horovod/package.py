@@ -65,9 +65,6 @@ class PyHorovod(PythonPackage):
     # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='+gloo')
     depends_on('mpi', when='+mpi')
-    depends_on('mpi', when='gpu_allreduce=mpi')
-    depends_on('mpi', when='gpu_allgather=mpi')
-    depends_on('mpi', when='gpu_broadcast=mpi')
 
     # GPU support
     depends_on('cuda', when='+cuda')
@@ -106,15 +103,20 @@ class PyHorovod(PythonPackage):
             env.set('HOROVOD_CUDA_INCLUDE',
                     self.spec['cuda'].headers.directories[0])
             env.set('HOROVOD_CUDA_LIB', self.spec['cuda'].libs.directories[0])
+
+            # These variables are ignored (and can break the build)
+            # when CUDA support is not requested.
+            # https://github.com/horovod/horovod/issues/1832
+            env.set('HOROVOD_GPU_ALLREDUCE',
+                    self.spec.variants['gpu_allreduce'].value.upper())
+            env.set('HOROVOD_GPU_ALLGATHER',
+                    self.spec.variants['gpu_allgather'].value.upper())
+            env.set('HOROVOD_GPU_BROADCAST',
+                    self.spec.variants['gpu_broadcast'].value.upper())
+            env.set('HOROVOD_ALLOW_MIXED_GPU_IMPL', 1)
+
         if '^nccl' in self.spec:
             env.set('HOROVOD_NCCL_HOME', self.spec['nccl'].prefix)
             env.set('HOROVOD_NCCL_INCLUDE',
                     self.spec['nccl'].headers.directories[0])
             env.set('HOROVOD_NCCL_LIB', self.spec['nccl'].libs.directories[0])
-        env.set('HOROVOD_GPU_ALLREDUCE',
-                self.spec.variants['gpu_allreduce'].value.upper())
-        env.set('HOROVOD_GPU_ALLGATHER',
-                self.spec.variants['gpu_allgather'].value.upper())
-        env.set('HOROVOD_GPU_BROADCAST',
-                self.spec.variants['gpu_broadcast'].value.upper())
-        env.set('HOROVOD_ALLOW_MIXED_GPU_IMPL', 1)
