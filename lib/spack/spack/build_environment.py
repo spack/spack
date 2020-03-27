@@ -720,7 +720,6 @@ def setup_package(pkg, dirty, context='build'):
     if not dirty:
         clean_environment()
 
-
     # setup compilers and build tools for build contexts
     need_compiler = context == 'build' or (context == 'test' and
                                            pkg.test_requires_compiler)
