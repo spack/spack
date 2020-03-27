@@ -298,7 +298,7 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def buildtest(self):
+    def build_test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

@@ -47,10 +47,10 @@ class WafPackage(PackageBase):
     build_system_class = 'WafPackage'
 
     # Callback names for build-time test
-    build_time_test_callbacks = ['buildtest']
+    build_time_test_callbacks = ['build_test']
 
     # Callback names for install-time test
-    install_time_test_callbacks = ['installtest']
+    install_time_test_callbacks = ['install_test']
 
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
@@ -106,7 +106,7 @@ class WafPackage(PackageBase):
 
     # Testing
 
-    def buildtest(self):
+    def build_test(self):
         """Run unit tests after build.
 
         By default, does nothing. Override this if you want to
@@ -116,7 +116,7 @@ class WafPackage(PackageBase):
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
-    def installtest(self):
+    def install_test(self):
         """Run unit tests after install.
 
         By default, does nothing. Override this if you want to

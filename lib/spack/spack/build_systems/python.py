@@ -91,7 +91,7 @@ class PythonPackage(PackageBase):
     build_system_class = 'PythonPackage'
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['buildtest']
+    build_time_test_callbacks = ['build_test']
 
     #: Callback names for install-time test
     install_time_test_callbacks = ['import_module_test']
@@ -361,7 +361,7 @@ class PythonPackage(PackageBase):
 
     # Testing
 
-    def buildtest(self):
+    def build_test(self):
         """Run unit tests after in-place build.
 
         These tests are only run if the package actually has a 'test' command.
