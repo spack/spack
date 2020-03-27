@@ -148,6 +148,6 @@ class PyMatplotlib(PythonPackage):
             setup.write('[rc_options]\n')
             setup.write('backend = ' + backend + '\n')
 
-    def buildtest(self):
+    def build_test(self):
         pytest = which('pytest')
         pytest()
