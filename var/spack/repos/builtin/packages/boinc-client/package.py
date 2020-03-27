@@ -41,19 +41,21 @@ class BoincClient(AutotoolsPackage):
     version('7.16.5', sha256='33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a')
 
     variant('manager', default=False, description='Builds the client manager')
+    variant('graphics', default=False, description='Graphic apps support')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-    depends_on('freeglut@3:')
-    depends_on('libsm')
-    depends_on('libice')
-    depends_on('libxmu')
-    depends_on('libxi')
-    depends_on('libx11')
-    depends_on('libjpeg')
+    depends_on('freeglut@3:', when='+graphics')
+    depends_on('libsm', when='+graphics')
+    depends_on('libice', when='+graphics')
+    depends_on('libxmu', when='+graphics')
+    depends_on('libxi', when='+graphics')
+    depends_on('libx11', when='+graphics')
+    depends_on('libjpeg', when='+graphics')
+    
     depends_on('wxwidgets', when='+manager')
     depends_on('libnotify', when='+manager')
 
