@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from glob import glob
 import sys
 
 
@@ -698,14 +697,6 @@ class PyTensorflow(Package, CudaPackage):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
-
-            site_packages_dir = join_path(
-                prefix.lib,
-                ('python' + str(self.spec['python'].version.up_to(2))),
-                'site-packages')
-            fn = glob(join_path(site_packages_dir, "tensorflow-*"))
-            incpath = join_path(fn[0], "tensorflow/include")
-            setup_py('install_headers', '--install-dir={0}'.format(incpath))
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
