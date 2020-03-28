@@ -74,7 +74,7 @@ locally to speed up the review process.
 We currently test against Python 2.6, 2.7, and 3.5-3.7 on both macOS and Linux and
 perform 3 types of tests:
 
-.. _cmd-spack-test:
+.. _cmd-spack-unit-test:
 
 ^^^^^^^^^^
 Unit Tests
@@ -96,7 +96,7 @@ To run *all* of the unit tests, use:
 
 .. code-block:: console
 
-   $ spack test
+   $ spack unit-test
 
 These tests may take several minutes to complete. If you know you are
 only modifying a single Spack feature, you can run subsets of tests at a
@@ -105,13 +105,13 @@ time.  For example, this would run all the tests in
 
 .. code-block:: console
 
-   $ spack test lib/spack/spack/test/architecture.py
+   $ spack unit-test lib/spack/spack/test/architecture.py
 
 And this would run the ``test_platform`` test from that file:
 
 .. code-block:: console
 
-   $ spack test lib/spack/spack/test/architecture.py::test_platform
+   $ spack unit-test lib/spack/spack/test/architecture.py::test_platform
 
 This allows you to develop iteratively: make a change, test that change,
 make another change, test that change, etc.  We use `pytest
@@ -121,29 +121,29 @@ pytest docs
 <http://doc.pytest.org/en/latest/usage.html#specifying-tests-selecting-tests>`_
 for more details on test selection syntax.
 
-``spack test`` has a few special options that can help you understand
-what tests are available.  To get a list of all available unit test
-files, run:
+``spack unit-test`` has a few special options that can help you
+understand what tests are available.  To get a list of all available
+unit test files, run:
 
-.. command-output:: spack test --list
+.. command-output:: spack unit-test --list
    :ellipsis: 5
 
-To see a more detailed list of available unit tests, use ``spack test
---list-long``:
+To see a more detailed list of available unit tests, use ``spack
+unit-test --list-long``:
 
-.. command-output:: spack test --list-long
+.. command-output:: spack unit-test --list-long
    :ellipsis: 10
 
 And to see the fully qualified names of all tests, use ``--list-names``:
 
-.. command-output:: spack test --list-names
+.. command-output:: spack unit-test --list-names
    :ellipsis: 5
 
 You can combine these with ``pytest`` arguments to restrict which tests
 you want to know about.  For example, to see just the tests in
 ``architecture.py``:
 
-.. command-output:: spack test --list-long lib/spack/spack/test/architecture.py
+.. command-output:: spack unit-test --list-long lib/spack/spack/test/architecture.py
 
 You can also combine any of these options with a ``pytest`` keyword
 search.  See the `pytest usage docs
@@ -151,7 +151,7 @@ search.  See the `pytest usage docs
 for more details on test selection syntax. For example, to see the names of all tests that have "spec"
 or "concretize" somewhere in their names:
 
-.. command-output:: spack test --list-names -k "spec and concretize"
+.. command-output:: spack unit-test --list-names -k "spec and concretize"
 
 By default, ``pytest`` captures the output of all unit tests, and it will
 print any captured output for failed tests. Sometimes it's helpful to see
@@ -161,7 +161,7 @@ argument to ``pytest``:
 
 .. code-block:: console
 
-   $ spack test -s --list-long lib/spack/spack/test/architecture.py::test_platform
+   $ spack unit-test -s --list-long lib/spack/spack/test/architecture.py::test_platform
 
 Unit tests are crucial to making sure bugs aren't introduced into
 Spack. If you are modifying core Spack libraries or adding new
@@ -176,7 +176,7 @@ how to write tests!
    You may notice the ``share/spack/qa/run-unit-tests`` script in the
    repository.  This script is designed for CI.  It runs the unit
    tests and reports coverage statistics back to Codecov. If you want to
-   run the unit tests yourself, we suggest you use ``spack test``.
+   run the unit tests yourself, we suggest you use ``spack unit-test``.
 
 ^^^^^^^^^^^^
 Flake8 Tests
