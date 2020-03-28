@@ -93,11 +93,6 @@ class Llvm(CMakePackage):
         description="Build the LLVM C++ standard library",
     )
     variant(
-        "libcxx_default",
-        default=False,
-        description="Use libcxx as the default C++ standard library",
-    )
-    variant(
         "compiler-rt",
         default=True,
         description="Build LLVM compiler runtime, including sanitizers",
@@ -193,7 +188,6 @@ class Llvm(CMakePackage):
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5.99")
 
-    conflicts("~libcxx", when="+libcxx_default")
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
     # Backport from llvm master + additional fix
@@ -309,7 +303,7 @@ class Llvm(CMakePackage):
         if "+libcxx" in spec:
             projects.append("libcxx")
             projects.append("libcxxabi")
-            if spec.satisfies("@3.9.0:") and '+libcxx_default' in spec:
+            if spec.satisfies("@3.9.0:"):
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
