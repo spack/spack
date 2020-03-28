@@ -38,7 +38,7 @@ class Ucx(AutotoolsPackage):
             description='Enable CUDA support')
 
     variant('gdrcopy', default=False,
-            description='Enable gdrcopy support')
+            description='Enable gdrcopy support (it needs to be installed system-wide)')
 
     depends_on('numactl')
     depends_on('rdma-core')
