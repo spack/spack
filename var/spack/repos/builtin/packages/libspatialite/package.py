@@ -21,5 +21,5 @@ class Libspatialite(AutotoolsPackage):
     depends_on('proj@:5')
     depends_on('geos')
     depends_on('freexl')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libxml2')
