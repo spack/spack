@@ -31,7 +31,7 @@ class Libgd(AutotoolsPackage):
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libpng')
     depends_on('jpeg')
     depends_on('libtiff')
