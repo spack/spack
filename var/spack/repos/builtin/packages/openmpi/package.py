@@ -236,6 +236,7 @@ class Openmpi(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('cuda_aware', default=False, description='Enable CUDA Aware MPI support')
     variant('pmi', default=False, description='Enable PMI support')
     variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
@@ -284,6 +285,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('valgrind~mpi', when='+memchecker')
     depends_on('ucx', when='fabrics=ucx')
     depends_on('ucx +thread_multiple', when='fabrics=ucx +thread_multiple')
+    depends_on('ucx +cuda', when='fabrics=ucx +cuda')
+    depends_on('ucx +cuda +gdrcopy', when='+cuda_aware')
     depends_on('ucx +thread_multiple', when='@3.0.0: fabrics=ucx')
     depends_on('libfabric', when='fabrics=libfabric')
     depends_on('slurm', when='schedulers=slurm')
@@ -291,6 +294,22 @@ class Openmpi(AutotoolsPackage):
     depends_on('binutils+libiberty', when='fabrics=mxm')
 
     conflicts('+cuda', when='@:1.6')  # CUDA support was added in 1.7
+    conflicts('~cuda', when='+cuda_aware',
+            msg='CUDA aware MPI depends on CUDA')
+    conflicts('fabrics=none', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=auto', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=psm', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=psm2', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=verb2', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=mxm', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
+    conflicts('fabrics=libmxm', when='+cuda_aware',
+            msg='CUDA aware MPI could only be used with UCX')
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
     conflicts('+pmi', when='@:1.5.4')  # PMI support was added in 1.5.5
