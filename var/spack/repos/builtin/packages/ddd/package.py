@@ -60,18 +60,18 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
     def build(self, spec, prefix):
         make('EXEEXT={0}'.
              format('exe' if spec.satisfies('platform=darwin') else '')
-        )
+            )
 
     # DDD won't install in parallel
     def install(self, spec, prefix):
         make('install',
              'EXEEXT={0}'.
-                 format('exe' if spec.satisfies('platform=darwin') else ''),
+             format('exe' if spec.satisfies('platform=darwin') else ''),
              parallel=False
-        )
+            )
 
     @run_after('install')
-    def _rename_exe_on_OSX(self):
+    def _rename_exe_on_darwin(self):
         if self.spec.satisfies('platform=darwin'):
             with working_dir(self.prefix.bin):
                 os.rename('dddexe', 'ddd')
