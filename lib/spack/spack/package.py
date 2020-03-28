@@ -1652,7 +1652,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     print('Error: %s' % e)
                     import traceback
                     traceback.print_tb(exc_info[2])
-                    spack.error.re_raise(e)
+                    raise  # re-raise the same error/traceback
                 else:
                     # cleanup test directory on success
                     if remove_directory:
@@ -1699,7 +1699,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             output = str(err)
             status_msg = 'exited with status {0}'.format(status)
             if status_msg not in output:
-                spack.error.re_raise(err)
+                raise  # re-raise the same error/traceback
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
