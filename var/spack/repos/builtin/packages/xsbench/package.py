@@ -28,7 +28,6 @@ class Xsbench(MakefilePackage):
 
     depends_on('mpi', when='+mpi')
 
-    
     @property
     def build_directory(self):
         if self.spec.satisfies('@:18'):
