@@ -46,7 +46,7 @@ class Glib(AutotoolsPackage):
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
     depends_on('util-linux', when='+libmount')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     # The following patch is needed for gcc-6.1
     patch('g_date_strftime.patch', when='@2.42.1')
@@ -70,7 +70,10 @@ class Glib(AutotoolsPackage):
             args.append('--with-python={0}'.format(
                 os.path.basename(self.spec['python'].command.path))
             )
-        args.append('--with-libiconv=gnu')
+        if 'libc' in self.spec:
+            args.append('--with-libiconv=maybe')
+        else:
+            args.append('--with-libiconv=gnu')
         args.extend(self.enable_or_disable('tracing'))
         # SELinux is not available in Spack, so glib should not use it.
         args.append('--disable-selinux')

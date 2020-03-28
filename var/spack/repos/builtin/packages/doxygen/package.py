@@ -29,7 +29,7 @@ class Doxygen(CMakePackage):
 
     depends_on("cmake@2.8.12:", type='build')
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
-    depends_on("libiconv")
+    depends_on("iconv")
     depends_on("flex", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
@@ -45,6 +45,8 @@ class Doxygen(CMakePackage):
     patch('shared_ptr.patch', when='@1.8.14')
 
     def patch(self):
+        if self.spec['iconv'].name == 'libc':
+            return
         # On Linux systems, iconv is provided by libc. Since CMake finds the
         # symbol in libc, it does not look for libiconv, which leads to linker
         # errors. This makes sure that CMake always looks for the external

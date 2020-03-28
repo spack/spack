@@ -49,7 +49,7 @@ class Poppler(CMakePackage):
     depends_on('qt@4.0:', when='+qt')
     depends_on('zlib', when='+zlib')
     depends_on('cairo@1.10.0:', when='+glib')
-    depends_on('libiconv', when='+iconv')
+    depends_on('iconv', when='+iconv')
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('libtiff', when='+tiff')
