@@ -19,6 +19,7 @@ class Llvm(CMakePackage):
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
     list_url = "http://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
+    maintainers = ['trws']
 
     family = "compiler"  # Used by lmod
 
