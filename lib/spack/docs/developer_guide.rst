@@ -363,9 +363,9 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 ``spack unit-test``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 See the :ref:`contributor guide section <cmd-spack-unit-test>` on
 ``spack unit-test``.
