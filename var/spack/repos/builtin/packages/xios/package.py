@@ -13,13 +13,13 @@ class Xios(Package):
 
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
 
-    version('1.0', revision=910,
-            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
-    version('2.0', revision=1627,
-            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0')
+    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
     version('2.5', revision=1860,
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5')
-    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
+    version('2.0', revision=1627,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0')
+    version('1.0', revision=910,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
 
     variant('mode', values=('debug', 'dev', 'prod'), default='dev',
             description='Build for debugging, development or production')
