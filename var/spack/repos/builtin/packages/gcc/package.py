@@ -237,8 +237,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
-    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:9.2.0')
-    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
