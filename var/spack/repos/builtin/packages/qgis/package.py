@@ -17,7 +17,6 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
-
     version('3.12.1', sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0', sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
