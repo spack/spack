@@ -19,9 +19,7 @@ class Laghos(MakefilePackage):
     git      = "https://github.com/CEED/Laghos.git"
 
     version('develop', branch='master')
-    # TODO: replace the branch 'okina' with the new sha256 sum when the 3.0
-    #       release is done.
-    version('3.0', branch='okina')
+    version('3.0', sha256='4db56286e15b42ecdc8d540c4888a7dec698b019df9c7ccb8319b7ea1f92d8b4')
     version('2.0', sha256='dd3632d5558889beec2cd3c49eb60f633f99e6d886ac868731610dd006c44c14')
     version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
     version('1.0', sha256='af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34')
