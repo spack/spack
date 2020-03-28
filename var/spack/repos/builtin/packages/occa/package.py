@@ -98,6 +98,9 @@ class Occa(Package):
         else:
             env.set('OCCA_CUDA_ENABLED', '0')
 
+        # Disable hip autodetection for now since it fails on some machines.
+        env.set('OCCA_HIP_ENABLED', '0')
+
         if '~opencl' in spec:
             env.set('OCCA_OPENCL_ENABLED', '0')
 
