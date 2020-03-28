@@ -56,4 +56,3 @@ class Ucx(AutotoolsPackage):
         if '+gdrcopy' in spec:
             config_args.append('--with-gdrcopy')
         return config_args
-
