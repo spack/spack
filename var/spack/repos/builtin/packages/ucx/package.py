@@ -34,8 +34,15 @@ class Ucx(AutotoolsPackage):
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
 
+    variant('cuda', default=False,
+            description='Enable CUDA support')
+
+    variant('gdrcopy', default=False,
+            description='Enable gdrcopy support')
+
     depends_on('numactl')
     depends_on('rdma-core')
+    depends_on('cuda', when='+cuda')
 
     def configure_args(self):
         spec = self.spec
@@ -44,4 +51,9 @@ class Ucx(AutotoolsPackage):
             config_args.append('--enable-mt')
         else:
             config_args.append('--disable-mt')
+        if '+cuda' in spec:
+            config_args.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+        if '+gdrcopy' in spec:
+            config_args.append('--with-gdrcopy')
         return config_args
+
