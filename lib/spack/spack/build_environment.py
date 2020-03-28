@@ -987,11 +987,15 @@ def get_package_context(traceback, context=3):
     # Package files are named `package.py` and are not in the lib/spack/spack
     # Package files have a line added at import time, so we adjust the lineno
     # when we are getting context from a package file instead of a base class
+    # We have to remove the file extension because it can be .py and can be
+    # .pyc depending on context, and can differ between the files
     filename = inspect.getfile(frame.f_code)
-    packagebase_filename = inspect.getfile(spack.package.PackageBase)
-    in_package = (filename != packagebase_filename and
-                  os.path.basename(filename) == 'package.py')
-    adjust = 0 if in_package else 1
+    filename_noext = os.path.splitext(filename)[0]
+    packagebase_filename_noext = os.path.splitext(
+        inspect.getfile(spack.package.PackageBase))[0]
+    in_package = (filename_noext != packagebase_filename_noext and
+                  os.path.basename(filename_noext) == 'package')
+    adjust = 1 if in_package else 0
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
