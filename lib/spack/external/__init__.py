@@ -88,10 +88,11 @@ pytest
 * Homepage: https://pypi.python.org/pypi/pytest
 * Usage: Testing framework used by Spack.
 * Version: 3.2.5 (last version supporting Python 2.6)
-* Note: This package has been slightly modified to improve
-  Python 2.6 compatibility. See the following commit if the
-  vendored copy ever needs to be updated again:
-  https://github.com/spack/spack/pull/6801/commits/ff513c39f2c67ff615de5cbc581dd69a8ec96526
+* Note: This package has been slightly modified:
+  * We improve Python 2.6 compatibility. See:
+    https://github.com/spack/spack/pull/6801.
+  * We have patched pytest not to depend on setuptools. See:
+    https://github.com/spack/spack/pull/15612
 
 ruamel.yaml
 ------
@@ -125,4 +126,5 @@ altgraph
 * Homepage: https://altgraph.readthedocs.io/en/latest/index.html
 * Usage: dependency of macholib
 * Version: 0.16.1
+
 """

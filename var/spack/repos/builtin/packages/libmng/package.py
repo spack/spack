@@ -6,10 +6,10 @@
 from spack import *
 
 
-class Libmng(AutotoolsPackage):
-    """libmng -THE reference library for reading, displaying, writing
+class Libmng(CMakePackage):
+    """THE reference library for reading, displaying, writing
        and examining Multiple-Image Network Graphics.  MNG is the animation
-       extension to the popular PNG image-format."""
+       extension to the popular PNG image format."""
     homepage = "http://sourceforge.net/projects/libmng/"
     url      = "http://downloads.sourceforge.net/project/libmng/libmng-devel/2.0.3/libmng-2.0.3.tar.gz"
 
@@ -25,11 +25,6 @@ class Libmng(AutotoolsPackage):
         filter_file(r'^(\#include \<jpeglib\.h\>)',
                     '#include<stdio.h>\n\\1', 'libmng_types.h')
 
-    @run_before('configure')
-    def clean_configure_directory(self):
-        """Without this, configure crashes with:
-
-            configure: error: source directory already configured;
-            run "make distclean" there first
-        """
-        make('distclean')
+    def cmake_args(self):
+        return ['-DWITH_LCMS2:BOOL=ON',
+                '-DWITH_LCMS1:BOOL=OFF']

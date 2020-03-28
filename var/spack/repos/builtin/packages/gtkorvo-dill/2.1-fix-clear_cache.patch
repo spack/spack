@@ -1,0 +1,148 @@
+diff -ur spack-src.org/CMakeLists.txt spack-src/CMakeLists.txt
+--- spack-src.org/CMakeLists.txt	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/CMakeLists.txt	2020-03-26 16:44:04.581014766 +0900
+@@ -184,6 +184,9 @@
+ CHECK_INCLUDE_FILES(malloc.h HAVE_MALLOC_H)
+ CHECK_INCLUDE_FILES(memory.h HAVE_MEMORY_H)
+ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
++include(CheckSymbolExists)
++check_symbol_exists(__clear_cache "" CLEAR_CACHE_DEFINED)
++message(STATUS "Clear cache defined is ${CLEAR_CACHE_DEFINED}")
+ 
+ set (NO_DISASSEMBLER TRUE)
+ if (ENABLE_DISASSEMBLY)
+diff -ur spack-src.org/arm6.c spack-src/arm6.c
+--- spack-src.org/arm6.c	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/arm6.c	2020-03-26 16:45:20.428978615 +0900
+@@ -1524,22 +1524,9 @@
+ }
+ 
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm6_flush(void *base, void *limit)
+diff -ur spack-src.org/arm6_rt.c spack-src/arm6_rt.c
+--- spack-src.org/arm6_rt.c	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/arm6_rt.c	2020-03-26 16:48:18.927720543 +0900
+@@ -109,22 +109,9 @@
+     }
+ }
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm6_flush(void *base, void *limit)
+diff -ur spack-src.org/arm8.c spack-src/arm8.c
+--- spack-src.org/arm8.c	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/arm8.c	2020-03-26 16:49:38.386063473 +0900
+@@ -1524,22 +1524,9 @@
+ }
+ 
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm8_flush(void *base, void *limit)
+diff -ur spack-src.org/arm8_rt.c spack-src/arm8_rt.c
+--- spack-src.org/arm8_rt.c	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/arm8_rt.c	2020-03-26 16:50:37.902312532 +0900
+@@ -109,22 +109,9 @@
+     }
+ }
+ 
+-/* Clear the instruction cache from `beg' to `end'.  This makes an
+-   inline system call to SYS_cacheflush.  */
+-#define CLEAR_INSN_CACHE(BEG, END)                                      \
+-{                                                                       \
+-  register unsigned long _beg __asm ("a1") = (unsigned long) (BEG);     \
+-  register unsigned long _end __asm ("a2") = (unsigned long) (END);     \
+-  register unsigned long _flg __asm ("a3") = 0;                         \
+-  __asm __volatile ("swi 0x9f0002               @ sys_cacheflush"       \
+-                    : "=r" (_beg)                                       \
+-                    : "0" (_beg), "r" (_end), "r" (_flg));              \
+-}
+-/*
+- *  Cache flush code grabbed from a Dec 1999 posting on libc-hacker 
+- *  mailing list
+- */
+-extern void __clear_cache(char*, char *);
++#ifndef CLEAR_CACHE_DEFINED
++extern void __clear_cache(void *, void *);
++#endif
+ 
+ static void
+ arm8_flush(void *base, void *limit)
+diff -ur spack-src.org/config.h.cmake spack-src/config.h.cmake
+--- spack-src.org/config.h.cmake	2020-03-26 16:38:53.358339744 +0900
++++ spack-src/config.h.cmake	2020-03-26 16:52:52.256419382 +0900
+@@ -13,10 +13,13 @@
+ #cmakedefine HAVE_DIS_ASM_H
+ 
+ /* Define to 1 if you have the <dlfcn.h> header file. */
+-#undef HAVE_DLFCN_H
++#cmakedefine HAVE_DLFCN_H
+ 
+ /* Define to 1 if you have the <inttypes.h> header file. */
+-#undef HAVE_INTTYPES_H
++#cmakedefine HAVE_INTTYPES_H
++
++/* Define to 1 if you have __clear_cache is defined  */
++#cmakedefine CLEAR_CACHE_DEFINED
+ 
+ /* Define to 1 if you have the <malloc.h> header file. */
+ #cmakedefine HAVE_MALLOC_H

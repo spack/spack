@@ -369,6 +369,10 @@ class ArchSpec(object):
         if not need_to_check:
             return True
 
+        # self is not concrete, but other_target is there and strict=True
+        if self.target is None:
+            return False
+
         for target_range in str(other_target).split(','):
             t_min, sep, t_max = target_range.partition(':')
 
@@ -1116,6 +1120,18 @@ class Spec(object):
         dspec = DependencySpec(self, spec, deptypes)
         self._dependencies[spec.name] = dspec
         spec._dependents[self.name] = dspec
+
+    def _add_default_platform(self):
+        """If a spec has an os or a target and no platform, give it
+           the default platform.
+
+           This is private because it is used by the parser -- it's not
+           expected to be used outside of ``spec.py``.
+
+        """
+        arch = self.architecture
+        if arch and not arch.platform and (arch.os or arch.target):
+            self._set_architecture(platform=spack.architecture.platform().name)
 
     #
     # Public interface
@@ -1907,9 +1923,7 @@ class Spec(object):
 
             yaml_deps = node[name]['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                # Fill in dependencies by looking them up by name in deps dict
-                deps[name]._dependencies[dname] = DependencySpec(
-                    deps[name], deps[dname], dtypes)
+                deps[name]._add_dependency(deps[dname], dtypes)
 
         return spec
 
@@ -3106,7 +3120,7 @@ class Spec(object):
             A copy of this spec.
 
         Examples:
-            Deep copy with dependnecies::
+            Deep copy with dependencies::
 
                 spec.copy()
                 spec.copy(deps=True)
@@ -4053,14 +4067,6 @@ class SpecParser(spack.parse.Parser):
         except spack.parse.ParseError as e:
             raise SpecParseError(e)
 
-        # If the spec has an os or a target and no platform, give it
-        # the default platform
-        platform_default = spack.architecture.platform().name
-        for spec in specs:
-            for s in spec.traverse():
-                if s.architecture and not s.architecture.platform and \
-                        (s.architecture.os or s.architecture.target):
-                    s._set_architecture(platform=platform_default)
         return specs
 
     def spec_from_file(self):
@@ -4192,6 +4198,7 @@ class SpecParser(spack.parse.Parser):
             else:
                 break
 
+        spec._add_default_platform()
         return spec
 
     def variant(self, name=None):

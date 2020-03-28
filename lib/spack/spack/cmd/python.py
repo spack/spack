@@ -8,6 +8,9 @@ import sys
 import code
 import argparse
 import platform
+import runpy
+
+import llnl.util.tty as tty
 
 import spack
 
@@ -20,11 +23,22 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-c', dest='python_command', help='command to execute')
     subparser.add_argument(
+        '-m', dest='module', action='store',
+        help='run library module as a script')
+    subparser.add_argument(
         'python_args', nargs=argparse.REMAINDER,
         help="file to run plus arguments")
 
 
-def python(parser, args):
+def python(parser, args, unknown_args):
+    if args.module:
+        sys.argv = ['spack-python'] + unknown_args + args.python_args
+        runpy.run_module(args.module, run_name="__main__", alter_sys=True)
+        return
+
+    if unknown_args:
+        tty.die("Unknown arguments:", " ".join(unknown_args))
+
     # Fake a main python shell by setting __name__ to __main__.
     console = code.InteractiveConsole({'__name__': '__main__',
                                        'spack': spack})

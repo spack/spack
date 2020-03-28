@@ -13,6 +13,3 @@ class C(Package):
     url      = "http://www.example.com/c-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
-
-    def install(self, spec, prefix):
-        pass
