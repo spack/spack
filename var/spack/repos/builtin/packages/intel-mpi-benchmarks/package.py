@@ -7,9 +7,12 @@ from spack import *
 
 
 class IntelMpiBenchmarks(MakefilePackage):
-    """Intel(R) MPI Benchmarks provides a set of elementary benchmarks that conform to MPI-1, MPI-2, and MPI-3 standard. 
-       You can run all of the supported benchmarks, or a subset specified in the command line using one executable file. 
-       Use command-line parameters to specify various settings, such as time measurement, message lengths, and selection of communicators. """
+    """Intel(R) MPI Benchmarks provides a set of elementary benchmarks
+       that conform to MPI-1, MPI-2, and MPI-3 standard.
+       You can run all of the supported benchmarks, or a subset specified
+       in the command line using one executable file.
+       Use command-line parameters to specify various settings, such as
+       time measurement, message lengths, and selection of communicators. """
 
     homepage = "https://software.intel.com/en-us/articles/intel-mpi-benchmarks"
     url      = "https://github.com/intel/mpi-benchmarks/archive/IMB-v2019.5.tar.gz"
@@ -23,18 +26,70 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     depends_on('mpi')
 
+    variant(
+        'benchmark', default='all',
+        values=('mpi1', 'ext', 'io', 'nbc',
+                'p2p', 'rma', 'mt', 'all'),
+        multi=True,
+        description='Specify which benchmarks to build')
+
     def build(self, spec, prefix):
         env['CC'] = spec['mpi'].mpicc
         env['CXX'] = spec['mpi'].mpicxx
 
-        make("all")
+        if 'benchmark=all' in spec:
+            make("all")
+
+        if 'benchmark=mpi1' in spec:
+            make('IMB-MPI1')
+
+        if 'benchmark=ext' in spec:
+            make('IMB-EXT')
+
+        if 'benchmark=io' in spec:
+            make('IMB-IO')
+
+        if 'benchmark=nbc' in spec:
+            make('IMB-NBC')
+
+        if 'benchmark=p2p' in spec:
+            make('IMB-P2P')
+
+        if 'benchmark=rma' in spec:
+            make('IMB-RMA')
+
+        if 'benchmark=mt' in spec:
+            make('IMB-MT')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('IMB-EXT',  prefix.bin)
-        install('IMB-IO',   prefix.bin)
-        install('IMB-MPI1', prefix.bin)
-        install('IMB-MT',   prefix.bin)
-        install('IMB-NBC',  prefix.bin)
-        install('IMB-P2P',  prefix.bin)
-        install('IMB-RMA',  prefix.bin)
+
+        if 'benchmark=all' in spec:
+            install('IMB-EXT',  prefix.bin)
+            install('IMB-IO',   prefix.bin)
+            install('IMB-MPI1', prefix.bin)
+            install('IMB-MT',   prefix.bin)
+            install('IMB-NBC',  prefix.bin)
+            install('IMB-P2P',  prefix.bin)
+            install('IMB-RMA',  prefix.bin)
+
+        if 'benchmark=mpi1' in spec:
+            install('IMB-MPI1', prefix.bin)
+
+        if 'benchmark=ext' in spec:
+            install('IMB-EXT', prefix.bin)
+
+        if 'benchmark=io' in spec:
+            install('IMB-IO', prefix.bin)
+
+        if 'benchmark=nbc' in spec:
+            install('IMB-NBC', prefix.bin)
+
+        if 'benchmark=p2p' in spec:
+            install('IMB-P2P', prefix.bin)
+
+        if 'benchmark=rma' in spec:
+            install('IMB-RMA', prefix.bin)
+
+        if 'benchmark=mt' in spec:
+            install('IMB-MT', prefix.bin)
