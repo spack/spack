@@ -29,7 +29,26 @@ class Cln(AutotoolsPackage):
     version('1.2.1', commit='567378ab4cbfd443c3d82d810599860c769251fe')
     version('1.2.0', commit='679a0a8927f011fb32411f8a31070c77a9901094')
 
+    variant('gmp',   default=True, description='Enable GMP multiprecision library')
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('gmp@4.1:', when='+gmp')
+
+    def configure_args(self):
+        spec = self.spec
+
+        configure_args = []
+
+        if '+gmp' in spec:
+            configure_args.append(
+                '--with-gmp={0}'.format(spec['gmp'].prefix)
+            )
+        else:
+            configure_args.append(
+                '--without-gmp'
+            )
+
+        return configure_args
