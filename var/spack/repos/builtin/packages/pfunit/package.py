@@ -76,7 +76,7 @@ class Pfunit(CMakePackage):
             # not sufficient for XLF build, at least on rzansel
             # need to create the path so module files can be placed
             # appropriately
-            pathlib.Path(spec.prefix.include).mkdir(parents=True, exist_ok=True)
+            mkdir(self.prefix.include)
             args.append('-DCMAKE_Fortran_STANDARD_INCLUDE_DIRECTORIES=%s' % spec.prefix.include)
 
         if spec.satisfies('+mpi'):
