@@ -6,6 +6,8 @@
 
 from spack import *
 
+import os
+
 
 class Cln(AutotoolsPackage):
     """CLN is a library for efficient computations with all kinds of numbers
@@ -36,6 +38,33 @@ class Cln(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('gmp@4.1:', when='+gmp')
+
+    # Dependencies required to define macro AC_LIB_LINKFLAGS_FROM_LIBS
+    depends_on('gettext',  type='build')
+
+    def autoreconf(self, spec, prefix):
+        autoreconf_args = ['-i']
+
+        aclocal_pkg_list = ['gettext']
+        aclocal_path = os.path.join('share', 'aclocal')
+
+        for pkg in aclocal_pkg_list:
+            autoreconf_args += ['-I',
+                                os.path.join(spec[pkg].prefix, aclocal_path)]
+
+        autoreconf = which('autoreconf')
+        autoreconf(*autoreconf_args)
+
+    @run_before('autoreconf')
+    def force_config_rpath(self):
+        source_directory = self.stage.source_path
+        build_aux_directory = os.path.join(source_directory, 'build-aux')
+
+        mkdir = which('mkdir')
+        mkdir(build_aux_directory)
+
+        touch = which('touch')
+        touch(os.path.join(build_aux_directory, 'config.rpath'))
 
     def configure_args(self):
         spec = self.spec
