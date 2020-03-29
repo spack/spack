@@ -30,41 +30,48 @@ class IntelMpiBenchmarks(MakefilePackage):
         'benchmark', default='all',
         values=('mpi1', 'ext', 'io', 'nbc',
                 'p2p', 'rma', 'mt', 'all'),
-        multi=True,
-        description='Specify which benchmarks to build')
+        multi=False,
+        description='Specify which benchmark to build')
 
     def build(self, spec, prefix):
         env['CC'] = spec['mpi'].mpicc
         env['CXX'] = spec['mpi'].mpicxx
 
-        if 'benchmark=all' in spec:
-            make("all")
-
         if 'benchmark=mpi1' in spec:
             make('IMB-MPI1')
-
-        if 'benchmark=ext' in spec:
+        elif 'benchmark=ext' in spec:
             make('IMB-EXT')
-
-        if 'benchmark=io' in spec:
+        elif 'benchmark=io' in spec:
             make('IMB-IO')
-
-        if 'benchmark=nbc' in spec:
+        elif 'benchmark=nbc' in spec:
             make('IMB-NBC')
-
-        if 'benchmark=p2p' in spec:
+        elif 'benchmark=p2p' in spec:
             make('IMB-P2P')
-
-        if 'benchmark=rma' in spec:
+        elif 'benchmark=rma' in spec:
             make('IMB-RMA')
-
-        if 'benchmark=mt' in spec:
+        elif 'benchmark=mt' in spec:
             make('IMB-MT')
+        else:
+            make("all")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
 
-        if 'benchmark=all' in spec:
+        if 'benchmark=mpi1' in spec:
+            install('IMB-MPI1', prefix.bin)
+        elif 'benchmark=ext' in spec:
+            install('IMB-EXT', prefix.bin)
+        elif 'benchmark=io' in spec:
+            install('IMB-IO', prefix.bin)
+        elif 'benchmark=nbc' in spec:
+            install('IMB-NBC', prefix.bin)
+        elif 'benchmark=p2p' in spec:
+            install('IMB-P2P', prefix.bin)
+        elif 'benchmark=rma' in spec:
+            install('IMB-RMA', prefix.bin)
+        elif 'benchmark=mt' in spec:
+            install('IMB-MT', prefix.bin)
+        else:
             install('IMB-EXT',  prefix.bin)
             install('IMB-IO',   prefix.bin)
             install('IMB-MPI1', prefix.bin)
@@ -72,24 +79,3 @@ class IntelMpiBenchmarks(MakefilePackage):
             install('IMB-NBC',  prefix.bin)
             install('IMB-P2P',  prefix.bin)
             install('IMB-RMA',  prefix.bin)
-
-        if 'benchmark=mpi1' in spec:
-            install('IMB-MPI1', prefix.bin)
-
-        if 'benchmark=ext' in spec:
-            install('IMB-EXT', prefix.bin)
-
-        if 'benchmark=io' in spec:
-            install('IMB-IO', prefix.bin)
-
-        if 'benchmark=nbc' in spec:
-            install('IMB-NBC', prefix.bin)
-
-        if 'benchmark=p2p' in spec:
-            install('IMB-P2P', prefix.bin)
-
-        if 'benchmark=rma' in spec:
-            install('IMB-RMA', prefix.bin)
-
-        if 'benchmark=mt' in spec:
-            install('IMB-MT', prefix.bin)
