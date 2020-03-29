@@ -46,7 +46,7 @@ class Lmod(AutotoolsPackage):
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'link', 'run'))
 
-    variant('auto-swap', default=False, description='Enable auto swapping conflicting modules')
+    variant('auto_swap', default=False, description='Enable auto swapping conflicting modules')
     variant('redirect', default=True, description='Enables redirect instead of pager')
 
     patch('fix_tclsh_paths.patch', when='@:6.4.3')
@@ -72,7 +72,7 @@ class Lmod(AutotoolsPackage):
     def configure_args(self):
         args = []
 
-        if '+auto-swap' in self.spec:
+        if '+auto_swap' in self.spec:
             args.append('--with-autoSwap=yes')
         else:
             args.append('--with-autoSwap=no')
