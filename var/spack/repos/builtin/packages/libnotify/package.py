@@ -24,10 +24,9 @@ from spack import *
 
 
 class Libnotify(MesonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """libnotify is a library for sending desktop notifications"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/GNOME/libnotify"
     url      = "https://github.com/GNOME/libnotify/archive/0.7.9.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
