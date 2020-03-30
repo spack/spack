@@ -153,7 +153,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='@:3.12.99+hdf5+mpi')
+    depends_on('hdf5+mpi+hl+fortran', when='@3.13:+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
@@ -179,6 +180,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.3.99~int64', when='@3.13.0:3.13.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.3.99+int64', when='@3.13.0:3.13.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
