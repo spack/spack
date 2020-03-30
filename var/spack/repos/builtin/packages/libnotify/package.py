@@ -35,8 +35,11 @@ class Libnotify(MesonPackage):
 
     version('0.7.9', sha256='9bd4f5fa911d27567e7cc2d2d09d69356c16703c4e8d22c0b49a5c45651f3af0')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('pkgconfig')
+    depends_on('glib@2:')
+    depends_on('gtkplus@2.90:')
+    depends_on('libxslt')
+    depends_on('docbook-xsl')
 
     def meson_args(self):
         # FIXME: If not needed delete this function
