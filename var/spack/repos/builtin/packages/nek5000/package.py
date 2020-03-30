@@ -13,6 +13,7 @@ class Nek5000(Package):
        dynamics"""
 
     homepage = "https://nek5000.mcs.anl.gov/"
+    url      = 'https://github.com/Nek5000/Nek5000/archive/v17.0.tar.gz'
     git      = "https://github.com/Nek5000/Nek5000.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
@@ -20,13 +21,9 @@ class Nek5000(Package):
 
     version('develop', branch='master')
     version('17.0',
-            '4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60',
-            url='https://github.com/Nek5000/Nek5000/archive/v17.0.tar.gz',
-            extension='.tar.gz')
+            '4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60')
     version('19.0',
-            'db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6',
-            url='https://github.com/Nek5000/Nek5000/archive/v19.0.tar.gz',
-            extension='.tar.gz')
+            'db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6')
 
     # MPI, Profiling and Visit variants
     variant('mpi',       default=True, description='Build with MPI.')
