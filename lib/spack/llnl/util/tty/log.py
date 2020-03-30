@@ -7,7 +7,6 @@
 """
 from __future__ import unicode_literals
 
-import atexit
 import errno
 import multiprocessing
 import os
@@ -233,9 +232,6 @@ class keyboard_input(object):
             self.old_tstp_handler = signal.getsignal(signal.SIGTSTP)
             self.old_cont_handler = signal.getsignal(signal.SIGCONT)
 
-            # if we exit abnormally, make sure terminal is restored
-            atexit.register(self._restore_input)
-
             # add handlers to disable/enable keyboard input when process
             # moves from foreground to background.
             signal.signal(signal.SIGTSTP, self._tstp_handler)
@@ -251,7 +247,6 @@ class keyboard_input(object):
         """If termios was avaialble, restore old settings."""
         if self.old_cfg:
             self._restore_input()
-            atexit.unregister(self._restore_input)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_tstp_handler:
