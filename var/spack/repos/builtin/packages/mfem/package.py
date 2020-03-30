@@ -237,7 +237,7 @@ class Mfem(Package):
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     depends_on('raja+cuda', when='+raja+cuda')
 
-    depends_on('libceed@0.6.0:', when='+libceed')
+    depends_on('libceed@0.6:', when='+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
 
     depends_on('umpire@2.0.0:', when='+umpire')
