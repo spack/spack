@@ -65,6 +65,7 @@ class BoincClient(AutotoolsPackage):
     
     depends_on('wxwidgets@3.0.0:', when='+manager')
     depends_on('libnotify', when='+manager')
+    depends_on('sqlite@3.1:', when='+manager')
 
     patch('systemd-fix.patch')
 
