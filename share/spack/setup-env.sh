@@ -140,8 +140,8 @@ spack() {
                         # Space needed here becauses regexes start with a space
                         # and `-h` may be the only argument.
                         _a=" $@"
-                        # Space needed here to differentiate between `-h`
-                        # argument and environments with "-h" in the name.
+                        # Space needed here to differentiate between `--sh`
+                        # argument and environments with "--sh" in the name.
                         # Also see: https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html#Shell-Parameter-Expansion
                         if [ "${_a#* --sh}" != "$_a" ] || \
                            [ "${_a#* --csh}" != "$_a" ];
