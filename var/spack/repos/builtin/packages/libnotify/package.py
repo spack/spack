@@ -35,17 +35,25 @@ class Libnotify(MesonPackage):
 
     version('0.7.9', sha256='9bd4f5fa911d27567e7cc2d2d09d69356c16703c4e8d22c0b49a5c45651f3af0')
 
+    variant('docbook', default=False, description='Build docbook docs. Currently broken')
+
     depends_on('pkgconfig')
     depends_on('glib@2:')
     depends_on('gtkplus@2.90:')
     depends_on('gobject-introspection')
-    depends_on('libxslt', type='build')
-    depends_on('docbook-xsl', type='build')
-    depends_on('xmlto', type='build')
+    depends_on('libxslt', when='+docbook', type='build')
+    depends_on('docbook-xsl', when='+docbook', type='build')
+    depends_on('xmlto', when='+docbook', type='build')
 
     patch('docbook-location.patch')
 
     def meson_args(self):
-        # FIXME: If not needed delete this function
+        spec = self.spec
         args = []
+
+        if '+docbook' in spec:
+            args.append('-Ddocbook_docs=enabled')
+        else:
+            args.append('-Ddocbook_docs=disabled')
+
         return args
