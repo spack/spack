@@ -38,8 +38,7 @@ class Ceed(BundlePackage):
     # LibCEED
     # ceed-3.0
     depends_on('libceed@0.6~cuda', when='@3.0.0~cuda')
-    # TODO: add magma variant in libceed and use +magma here:
-    depends_on('libceed@0.6+cuda', when='@3.0.0+cuda')
+    depends_on('libceed@0.6+cuda+magma', when='@3.0.0+cuda')
     depends_on('libceed@0.6+occa', when='@3.0.0+occa')
     depends_on('libceed@0.6~occa', when='@3.0.0~occa')
     # ceed-2.0
