@@ -298,7 +298,7 @@ class Trilinos(CMakePackage):
 
     # MPI related dependencies
     depends_on('mpi')
-    depends_on('netcdf@:4.7.1+mpi', when="~pnetcdf")
+    depends_on('netcdf@:4.7.3+mpi', when="~pnetcdf")
     depends_on('netcdf+mpi+parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parallel-netcdf', when="+pnetcdf@master,12.12.1:")
     depends_on('parmetis', when='+metis')
