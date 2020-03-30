@@ -41,6 +41,8 @@ class Libnotify(MesonPackage):
     depends_on('libxslt')
     depends_on('docbook-xsl')
 
+    patch('docbook-location.patch')
+
     def meson_args(self):
         # FIXME: If not needed delete this function
         args = []
