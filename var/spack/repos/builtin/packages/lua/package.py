@@ -27,6 +27,9 @@ class Lua(Package):
     version('5.1.4', sha256='b038e225eaf2a5b57c9bcc35cd13aa8c6c8288ef493d52970c9545074098af3a')
     version('5.1.3', sha256='6b5df2edaa5e02bf1a2d85e1442b2e329493b30b0c0780f77199d24f087d296d')
 
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
+
     extendable = True
 
     depends_on('ncurses')
@@ -58,10 +61,11 @@ class Lua(Package):
         make('INSTALL_TOP=%s' % prefix,
              'install')
 
-        static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
-                                 arguments=['-lm', '-ldl'],
-                                 version=self.version,
-                                 compat_version=self.version.up_to(2))
+        if '+shared' in spec:
+            static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
+                                     arguments=['-lm', '-ldl'],
+                                     version=self.version,
+                                     compat_version=self.version.up_to(2))
 
         # compatibility with ax_lua.m4 from autoconf-archive
         # https://www.gnu.org/software/autoconf-archive/ax_lua.html
