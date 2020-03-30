@@ -51,7 +51,12 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
-    version('1.4.0', tag='v1.4.0', submodules=True)
+    version('1.4.1', tag='v1.4.1', submodules=True)
+    # the following v1.4.0 tag is correct.
+    # v1.4.1 contains one fix on v1.4.0 to correct
+    # a broken tag on the fbgemm submodule
+    # see https://github.com/pytorch/pytorch/issues/35149
+    version('1.4.0', tag='v1.4.1', submodules=True)
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
