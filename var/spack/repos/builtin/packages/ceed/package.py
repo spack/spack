@@ -66,12 +66,11 @@ class Ceed(BundlePackage):
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-3.0
-    # TODO: set release versions for all nek packages
-    depends_on('nek5000@develop', when='@3.0.0+nek')
-    depends_on('nektools@develop%gcc', when='@3.0.0+nek')
-    depends_on('gslib@develop', when='@3.0.0+nek')
-    depends_on('nekbone@develop', when='@3.0.0+nek')
-    depends_on('nekcem@develop', when='@3.0.0+nek')
+    depends_on('nek5000@19.0', when='@3.0.0+nek')
+    depends_on('nektools@19.0%gcc', when='@3.0.0+nek')
+    depends_on('gslib@1.0.6', when='@3.0.0+nek')
+    depends_on('nekbone@17.0', when='@3.0.0+nek')
+    depends_on('nekcem@c8db04b', when='@3.0.0+nek')
     # ceed-2.0
     depends_on('nek5000@17.0', when='@2.0.0+nek')
     depends_on('nektools@17.0%gcc', when='@2.0.0+nek')
@@ -122,7 +121,6 @@ class Ceed(BundlePackage):
 
     # MAGMA
     # ceed-3.0
-    # TODO: make sure this is the real latest version
     depends_on('magma@2.5.3', when='@3.0.0+cuda')
     # ceed-2.0
     depends_on('magma@2.5.0', when='@2.0.0+cuda')
