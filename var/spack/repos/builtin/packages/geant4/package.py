@@ -81,7 +81,8 @@ class Geant4(CMakePackage):
     # These patches can be applied independent of the cxxstd value?
     patch('cxx17.patch', when='@:10.3.99 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
-    patch('geant4-10.4.3-cxx17-removed-features.patch', level=1, when='@10.4.3 cxxstd=17')
+    patch('geant4-10.4.3-cxx17-removed-features.patch',
+          level=1, when='@10.4.3 cxxstd=17')
 
     def cmake_args(self):
         spec = self.spec
@@ -107,7 +108,8 @@ class Geant4(CMakePackage):
 
         # install the data with geant4
         datadir = spec['geant4-data'].prefix.share
-        dataver = 'geant4-data-{0}'.format(spec['geant4-data'].version)
+        dataver = '{0}-{1}'.format(spec['geant4-data'].name,
+                                   spec['geant4-data'].version.dotted)
         datapath = join_path(datadir, dataver)
         options.append('-DGEANT4_INSTALL_DATADIR={0}'.format(datapath))
 

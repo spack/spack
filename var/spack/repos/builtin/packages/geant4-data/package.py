@@ -92,5 +92,5 @@ class Geant4Data(BundlePackage):
 
         with working_dir(datadir, create=True):
             for s in spec.dependencies():
-                for d in glob.glob('{0}/share/data/*'.format(s.prefix)):
+                for d in glob.glob('{0}/data/*'.format(s.prefix.share)):
                     os.symlink(d, os.path.basename(d))
