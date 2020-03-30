@@ -16,15 +16,9 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
+    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
-
-    def url_for_version(self, version):
-        if version >= Version('3.13.0'):
-            # petsc-lite tarballs are smaller by skipping docs
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{}.tar.gz".format(version)
-        else:
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{}.tar.gz".format(version)
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -194,6 +188,13 @@ class Petsc(Package):
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
+
+    def url_for_version(self, version):
+        if version >= Version('3.13.0'):
+            # petsc-lite tarballs are smaller by skipping docs
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(version)
+        else:
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(version)
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:
