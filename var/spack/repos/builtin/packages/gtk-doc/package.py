@@ -24,10 +24,14 @@ from spack import *
 
 
 class GtkDoc(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """GtkDoc is a tool used to extract API documentation from
+    C-code like Doxygen, but handles documentation of GObject
+    (including signals and properties) that makes it very
+    suitable for GTK+ apps and libraries. It uses docbook for
+    intermediate files and can produce html by default and
+    pdf/man-pages with some extra work."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://wiki.gnome.org/DocumentationProject/GtkDoc"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
