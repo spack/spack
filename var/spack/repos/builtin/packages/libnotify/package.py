@@ -48,5 +48,4 @@ class Libnotify(MesonPackage):
         else:
             args.append('-Dgtk_doc=false')
 
-
         return args
