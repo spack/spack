@@ -37,13 +37,15 @@ class Libnotify(MesonPackage):
 
     variant('docbook', default=False, description='Build docbook docs. Currently broken')
     variant('tests', default=False, description='Build with tests. Currenlty broken')
+    variant('gtkdoc', default=False, description='Build with gtkdoc. Currently broken')
 
     depends_on('pkgconfig')
     depends_on('glib@2.26.0:')
     depends_on('gtkplus@2.90:')
     depends_on('gobject-introspection')
+    depends_on('gtk-doc', when='+gtkdoc', type='build')
     depends_on('libxslt', type='build')
-    depends_on('docbook-xsl', when='+docbook', type='build')
+    depends_on('docbook-xsl', type='build')
     depends_on('xmlto', when='+docbook', type='build')
 
     patch('docbook-location.patch')
@@ -61,5 +63,11 @@ class Libnotify(MesonPackage):
             args.append('-Dtests=true')
         else:
             args.append('-Dtests=false')
+
+        if '+gtkdoc' in spec:
+            args.append('-Dgtk_doc=true')
+        else:
+            args.append('-Dgtk_doc=false')
+
 
         return args
