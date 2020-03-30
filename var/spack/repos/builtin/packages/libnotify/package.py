@@ -38,9 +38,9 @@ class Libnotify(MesonPackage):
     depends_on('pkgconfig')
     depends_on('glib@2:')
     depends_on('gtkplus@2.90:')
+    depends_on('gobject-introspection')
     depends_on('libxslt', type='build')
     depends_on('docbook-xsl', type='build')
-    depends_on('gobject-introspection')
     depends_on('xmlto', type='build')
 
     patch('docbook-location.patch')
