@@ -26,7 +26,8 @@ class Remhos(MakefilePackage):
     depends_on('mfem+mpi+metis', when='+metis')
     depends_on('mfem+mpi~metis', when='~metis')
 
-    depends_on('mfem@develop', when='@develop')
+    # depends_on('mfem@develop', when='@develop')
+    depends_on('mfem@4.1.0:', when='@develop')
     depends_on('mfem@4.1.0:', when='@1.0')
 
     @property
