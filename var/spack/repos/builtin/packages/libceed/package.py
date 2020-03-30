@@ -23,8 +23,10 @@ class Libceed(Package):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('debug', default=False, description='Enable debug build')
     variant('libxsmm', default=False, description='Enable LIBXSMM backend')
+    variant('magma', default=False, description='Enable MAGMA backend')
 
     conflicts('+libxsmm', when='@:0.2')
+    conflicts('+magma', when='@:0.5')
 
     depends_on('cuda', when='+cuda')
 
@@ -35,6 +37,8 @@ class Libceed(Package):
     depends_on('occa~cuda', when='+occa~cuda')
 
     depends_on('libxsmm', when='+libxsmm')
+
+    depends_on('magma', when='+magma')
 
     patch('pkgconfig-version-0.4.diff', when='@0.4')
 
@@ -92,6 +96,9 @@ class Libceed(Package):
 
             if '+libxsmm' in spec:
                 makeopts += ['XSMM_DIR=%s' % spec['libxsmm'].prefix]
+
+            if '+magma' in spec:
+                makeopts += ['MAGMA_DIR=%s' % spec['magma'].prefix]
 
         return makeopts
 
