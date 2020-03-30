@@ -100,7 +100,8 @@ class Geant4(CMakePackage):
         ]
 
         # Multithreading
-        options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED', 'threads'))
+        options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',
+                                                'threads'))
         if '+threads' in spec:
             # This should be a variant
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
