@@ -6,8 +6,6 @@
 #
 from spack import *
 import glob
-import os
-import pathlib
 
 
 class Pfunit(CMakePackage):
@@ -52,8 +50,8 @@ class Pfunit(CMakePackage):
     # specific version, a patch has been
     # developed to stub deferred procedures
     # that interfere with inheritance/building
+    patch("xl-deferred.patch", when='@3.2.8.mod1 %xl_r')
     patch("xl-deferred.patch", when='@3.2.9 %xl_r')
-
 
     def patch(self):
         # The package tries to put .mod files in directory ./mod;
@@ -71,13 +69,19 @@ class Pfunit(CMakePackage):
             '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
-        if spec.satisfies('@3.2.9 %xl_r'):
+        if (spec.satisfies('@3.2.9 %xl_r') or
+            spec.satisfies('@3.2.8.mod1 %xl_r')):
             # DCMAKE_Fortran_MODULE_DIRECTORY setting is
             # not sufficient for XLF build, at least on rzansel
             # need to create the path so module files can be placed
             # appropriately
-            mkdir(self.prefix.include)
-            args.append('-DCMAKE_Fortran_STANDARD_INCLUDE_DIRECTORIES=%s' % spec.prefix.include)
+            try:
+                mkdir(self.prefix.include)
+            except FileExistsError:
+                pass
+
+            args.append('-DCMAKE_Fortran_STANDARD_INCLUDE_DIRECTORIES=%s' %
+                        spec.prefix.include)
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI=YES', '-DMPI_USE_MPIEXEC=YES',
