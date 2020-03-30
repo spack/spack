@@ -21,7 +21,7 @@ class Petsc(Package):
 
     def url_for_version(self, version):
         if version >= Version('3.13.0'):
-            # petsc-lite tarballs are smaller by skipping docs/examples (available online)
+            # petsc-lite tarballs are smaller by skipping docs
             return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{}.tar.gz".format(version)
         else:
             return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{}.tar.gz".format(version)
