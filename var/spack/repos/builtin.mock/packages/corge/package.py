@@ -11,23 +11,52 @@ class Corge(Package):
     """A toy package to test dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/corge/releases/download/v3.0.0/corge-3.0.0.tar.gz"
+    url      = "https://github.com/amundson/corge/archive/v3.0.0.tar.gz"
 
-    version(
-        '3.0.0', sha256='5d64e03c48843a9af51e81464e46b148cf0a1529977c4d0bb543daa8a906e862',
-        url="https://github.com/gartung/corge/releases/download/v3.0.0/corge-3.0.0.tar.gz")
+    version('3.0.0',
+            sha256='5058861c3b887511387c725971984cec665a8307d660158915a04d7786fed6bc')
 
     depends_on('quux')
 
     def install(self, spec, prefix):
-        install_tree(self.stage.source_path, prefix)
-        patchelf = which('patchelf')
-        rpaths = '%s:%s:%s:%s:%s:%s' % (prefix.lib, prefix.lib64,
-                                        spec['quux'].prefix.lib,
+        mkdirp('%s/bin' % self.stage.source_path)
+        mkdirp(prefix.lib64)
+        mkdirp('%s/corge' % prefix.include)
+        copy('corge/corge_version_h.in', '%s/corge_version.h' %
+             self.stage.source_path)
+        filter_file('\@CORGE_VERSION_MAJOR\@', '3', '%s/corge_version.h' %
+                    self.stage.source_path)
+        filter_file('\@CORGE_VERSION_MINOR\@', '0', '%s/corge_version.h' %
+                    self.stage.source_path)
+        gpp = which('/usr/bin/g++')
+        gpp('-Dcorge_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-I%s' % spec['quux'].prefix.include,
+            '-I%s' % spec['garply'].prefix.include,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'corge.cc.o',
+            '-c', 'corge/corge.cc')
+        gpp('-Dcorge_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-I%s' % spec['quux'].prefix.include,
+            '-I%s' % spec['garply'].prefix.include,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'corgegator.cc.o',
+            '-c', 'corge/corgegator.cc')
+        gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
+            '-Wl,-soname,libcorge.so', '-o', 'libcorge.so', 'corge.cc.o',
+            '-Wl,-rpath,%s:%s::::' %
+            (spec['quux'].prefix.lib64, spec['garply'].prefix.lib64),
+            '%s/libquux.so' % spec['quux'].prefix.lib64,
+            '%s/libgarply.so' % spec['garply'].prefix.lib64)
+        gpp('-O2', '-g', '-DNDEBUG', '-rdynamic',
+            'corgegator.cc.o', '-o', 'corgegator',
+            '-Wl,-rpath,%s:%s:%s:::' % (prefix.lib64,
                                         spec['quux'].prefix.lib64,
-                                        spec['garply'].prefix.lib,
-                                        spec['garply'].prefix.lib64)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/corgegator' %
-                 prefix.bin)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/libcorge.so' %
-                 prefix.lib64)
+                                        spec['garply'].prefix.lib64),
+            'libcorge.so',
+            '%s/libquux.so' % spec['quux'].prefix.lib64,
+            '%s/libgarply.so' % spec['garply'].prefix.lib64)
+        copy('corgegator', '%s/corgegator' % prefix.lib64)
+        copy('%s/corge/corge.h' % self.stage.source_path,
+             '%s/corge/corge.h' % prefix.include)

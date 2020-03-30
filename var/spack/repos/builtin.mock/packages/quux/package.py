@@ -11,20 +11,48 @@ class Quux(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/quux/releases/download/v3.0.0/quux-3.0.0.tar.gz"
+    url      = "https://github.com/amundson/quux/archive/v3.0.0.tar.gz"
 
-    version('3.0.0', sha256='b4fa6bc3216f490eeef93b3cf71586d8e9df30d8536fbae08b60ec1d7add4f05',
-            url="https://github.com/gartung/quux/releases/download/v3.0.0/quux-3.0.0.tar.gz")
+    version('3.0.0',
+            sha256='b91bc96fb746495786bddac2c527039177499f2f76d3fa9dcf0b393859e68484')
 
     depends_on('garply')
 
     def install(self, spec, prefix):
-        install_tree(self.stage.source_path, prefix)
-        patchelf = which('patchelf')
-        rpaths = '%s:%s:%s:%s' % (prefix.lib, prefix.lib64,
-                                  spec['garply'].prefix.lib,
-                                  spec['garply'].prefix.lib64)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/quuxifier' %
-                 prefix.lib64)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/libquux.so' %
-                 prefix.lib64)
+        mkdirp('%s/bin' % self.stage.source_path)
+        mkdirp(prefix.lib64)
+        mkdirp('%s/quux' % prefix.include)
+        copy('quux/quux_version_h.in', '%s/quux_version.h' %
+             self.stage.source_path)
+        filter_file('\@QUUX_VERSION_MAJOR\@', '3', '%s/quux_version.h' %
+                    self.stage.source_path)
+        filter_file('\@QUUX_VERSION_MINOR\@', '0', '%s/quux_version.h' %
+                    self.stage.source_path)
+        gpp = which('/usr/bin/g++')
+        gpp('-Dquux_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-I%s' % spec['garply'].prefix.include,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'quux.cc.o',
+            '-c', 'quux/quux.cc')
+        gpp('-Dquux_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-I%s' % spec['garply'].prefix.include,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'quuxifier.cc.o',
+            '-c', 'quux/quuxifier.cc')
+        gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
+            '-Wl,-soname,libquux.so', '-o', 'libquux.so', 'quux.cc.o',
+            '-Wl,-rpath,%s:%s::::' % (prefix.lib64,
+                                      spec['garply'].prefix.lib64),
+            '%s/libgarply.so' % spec['garply'].prefix.lib64)
+        gpp('-O2', '-g', '-DNDEBUG', '-rdynamic',
+            'quuxifier.cc.o', '-o', 'quuxifier',
+            '-Wl,-rpath,%s:%s::::' % (prefix.lib64,
+                                      spec['garply'].prefix.lib64),
+            'libquux.so',
+            '%s/libgarply.so' % spec['garply'].prefix.lib64)
+        copy('libquux.so', '%s/libquux.so' % prefix.lib64)
+        copy('quuxifier', '%s/quuxifier' % prefix.lib64)
+        copy('%s/quux/quux.h' % self.stage.source_path,
+             '%s/quux/quux.h' % prefix.include)

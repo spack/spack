@@ -11,17 +11,40 @@ class Garply(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/gartung/garply/releases/download/v3.0.0/garply-3.0.0.tar.gz"
+    url      = "https://github.com/amundson/garply/archive/v3.0.0.tar.gz"
 
     version(
-        '3.0.0', sha256='f3d5fbfc69f764addf472298c0af905df7255d823ddb7a79bd4c2400794b3941',
-         url="https://github.com/gartung/garply/releases/download/v3.0.0/garply-3.0.0.tar.gz")
+        '3.0.0',
+         sha256='534ac8ba7a6fed7e8bbb543bd43ca04999e65337445a531bd296939f5ac2f33d')
 
     def install(self, spec, prefix):
-        install_tree(self.stage.source_path, prefix)
-        patchelf = which('patchelf')
-        rpaths = '%s:%s' % (prefix.lib64, prefix.lib)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/garplinator' %
-                 prefix.lib64)
-        patchelf('--force-rpath', '--set-rpath', rpaths, '%s/libgarply.so' %
-                 prefix.lib64)
+        mkdirp('%s/bin' % self.stage.source_path)
+        mkdirp(prefix.lib64)
+        mkdirp('%s/garply' % prefix.include)
+        copy('garply/garply_version_h.in', '%s/garply_version.h' %
+             self.stage.source_path)
+        filter_file('\@GARPLY_VERSION_MAJOR\@', '3', '%s/garply_version.h' %
+                    self.stage.source_path)
+        filter_file('\@GARPLY_VERSION_MINOR\@', '0', '%s/garply_version.h' %
+                    self.stage.source_path)
+        gpp = which('/usr/bin/g++')
+        gpp('-Dgarply_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'garply.cc.o',
+            '-c', '%s/garply/garply.cc' % self.stage.source_path)
+        gpp('-Dgarply_EXPORTS',
+            '-I%s' % self.stage.source_path,
+            '-O2', '-g', '-DNDEBUG', '-fPIC',
+            '-o', 'garplinator.cc.o',
+            '-c', '%s/garply/garplinator.cc' % self.stage.source_path)
+        gpp('-fPIC', '-O2', '-g', '-DNDEBUG', '-shared',
+            '-Wl,-soname,libgarply.so', '-o', 'libgarply.so', 'garply.cc.o')
+        gpp('-O2', '-g', '-DNDEBUG', '-rdynamic',
+            'garplinator.cc.o', '-o', 'garplinator',
+            '-Wl,-rpath,%s' % prefix.lib64,
+            'libgarply.so')
+        copy('libgarply.so', '%s/libgarply.so' % prefix.lib64)
+        copy('garplinator', '%s/garplinator' % prefix.lib64)
+        copy('%s/garply/garply.h' % self.stage.source_path,
+             '%s/garply/garply.h' % prefix.include)
