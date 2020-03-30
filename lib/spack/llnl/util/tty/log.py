@@ -71,7 +71,7 @@ class keyboard_input(object):
 
         with keyboard_input(sys.stdin) as kb:
             while True:
-                kb.check_fg()  # poll to ensure terminal settings on fg
+                kb.check_fg_bg()  # poll to ensure terminal settings on fg
                 r, w, x = select.select([sys.stdin], [], [])
                 # ... do something with keypresses ...
 
@@ -98,7 +98,7 @@ class keyboard_input(object):
         [Running] -------- Ctrl-Z sends SIGTSTP ------------.
         [ in FG ] <------- fg sends SIGCONT --------------. |
            ^                                              | |
-           | fg (needs kb.check_fg())                     | |
+           | fg (needs kb.check_fg_bg())                  | |
            |                                              | v
         [Running] <------- bg sends SIGCONT ---------- [Stopped]
         [ in BG ]                                      [ in BG ]
@@ -172,14 +172,19 @@ class keyboard_input(object):
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
 
-    def check_fg(self):
+    def check_fg_bg(self):
         if not self.old_cfg:
             return
 
-        # fix stream settings if we need to
+        # query terminal flags and fg/bg status
         flags = self._get_canon_echo_flags()
-        if not self._is_background() and any(flags):
+        bg = self._is_background()
+
+        # restore sanity if things are amiss
+        if not bg and any(flags):    # fg, but input not enabled
             self._enable_keyboard_input()
+        elif bg and not all(flags):  # bg, but input enabled
+            self._restore_input()
 
     def _tstp_handler(self, signum, frame):
         """Handler to restore term settings before caller is backgrounded."""
@@ -576,7 +581,7 @@ class log_output(object):
             with keyboard_input(stdin) as kb:
                 while True:
                     # ensure that input settings are sane.
-                    kb.check_fg()
+                    kb.check_fg_bg()
 
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
