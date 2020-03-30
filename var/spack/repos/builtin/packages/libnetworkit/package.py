@@ -27,18 +27,18 @@ class Libnetworkit(CMakePackage):
     variant('static', default=False, description='Enables the build of shared libraries')
     variant('doc', default=False, description='Enables the build with sphinx documentation')
 
-    depends_on('libtlx build_type=Release')
+    depends_on('libtlx')
     depends_on('py-sphinx', when='+doc', type='build')
+
+    patch('0001-Name-agnostic-import-of-tlx-library.patch', when='@6.1')
 
     def cmake_args(self):
         spec = self.spec
 
         tlx_libs = spec['libtlx'].prefix
 
-        args = std_cmake_args
-        args.extend([
-            '-DNETWORKIT_EXT_TLX=%s'  % tlx_libs,
-            '-DNETWORKIT_STATIC=%s'   % ('ON' if '+static' in spec else 'OFF'),
-        ])
+        args = ['-DNETWORKIT_EXT_TLX=%s' % tlx_libs,
+                '-DNETWORKIT_STATIC=%s' %
+                ('ON' if '+static' in spec else 'OFF')]
 
         return args
