@@ -34,8 +34,9 @@ class GtkDoc(AutotoolsPackage):
     homepage = "https://wiki.gnome.org/DocumentationProject/GtkDoc"
 
     version('1.32', sha256='0890c1f00d4817279be51602e67c4805daf264092adc58f9c04338566e8225ba')
-
-    variant('pdf', default=False, description='Adds PDF support')
+    
+    # Commented out until package dblatex has been created
+    #variant('pdf', default=False, description='Adds PDF support')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -48,7 +49,7 @@ class GtkDoc(AutotoolsPackage):
     depends_on('libxslt')
     depends_on('libxml2')
     depends_on('docbook-xsl')
-    depends_on('dblatex', when='+pdf')
+    #depends_on('dblatex', when='+pdf')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
