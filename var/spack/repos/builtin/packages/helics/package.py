@@ -16,7 +16,6 @@ class Helics(CMakePackage):
 
     maintainers = ['nightlark']
 
-    version('mpi-fix', branch='fix-openmpi-cxx', submodules=True)
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
     version('2.4.2', sha256='957856f06ed6d622f05dfe53df7768bba8fe2336d841252f5fac8345070fa5cb')
@@ -40,8 +39,7 @@ class Helics(CMakePackage):
     variant('webserver', default=True, description="Enable the integrated webserver in the HELICS broker server")
 
     # Build dependency
-    for _version in ['@master', '@develop']:
-        depends_on('git', type='build', when=_version)
+    depends_on('git', type='build', when='@master:')
     depends_on('cmake@3.4:', type='build')
     depends_on('boost@1.70: ~atomic ~chrono ~date_time ~exception ~filesystem ~graph ~iostreams ~locale ~log ~math ~program_options ~random ~regex ~serialization ~signals ~system ~test ~thread ~timer ~wave', type='build', when='+boost')
     depends_on('swig@3.0:', type='build', when='+swig')
