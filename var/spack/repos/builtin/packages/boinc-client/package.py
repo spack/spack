@@ -62,7 +62,7 @@ class BoincClient(AutotoolsPackage):
     depends_on('libxi', when='+graphics')
     depends_on('libx11', when='+graphics')
     depends_on('libjpeg', when='+graphics')
-    
+
     depends_on('wxwidgets@3.0.0:', when='+manager')
     depends_on('libnotify', when='+manager')
     depends_on('sqlite@3.1:', when='+manager')
