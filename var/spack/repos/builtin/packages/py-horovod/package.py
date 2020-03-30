@@ -75,12 +75,10 @@ class PyHorovod(PythonPackage):
 
     conflicts('controllers=gloo', when='platform=darwin', msg='Gloo cannot be compiled on MacOS')
 
-    def setup_build_environment(self, env):
-        # May or may not be required:
-        # https://github.com/horovod/horovod/issues/1832
-        if self.spec.satisfies('%clang platform=darwin'):
-            env.set('HOROVOD_BUILD_ARCH_FLAGS', '-mfma')
+    # https://github.com/horovod/horovod/pull/1835
+    patch('fma.patch', when='@0.19.0:0.19.1')
 
+    def setup_build_environment(self, env):
         # Frameworks
         if 'frameworks=tensorflow' in self.spec:
             env.set('HOROVOD_WITH_TENSORFLOW', 1)
