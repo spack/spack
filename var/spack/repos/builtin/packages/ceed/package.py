@@ -127,7 +127,7 @@ class Ceed(BundlePackage):
     # MAGMA
     # ceed-3.0
     # TODO: make sure this is the real latest version
-    depends_on('magma@2.5.2', when='@3.0.0+cuda')
+    depends_on('magma@2.5.3', when='@3.0.0+cuda')
     # ceed-2.0
     depends_on('magma@2.5.0', when='@2.0.0+cuda')
     # ceed-1.0
