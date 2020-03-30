@@ -38,7 +38,7 @@ class Libnotify(MesonPackage):
     variant('docbook', default=False, description='Build docbook docs. Currently broken')
 
     depends_on('pkgconfig')
-    depends_on('glib@2:')
+    depends_on('glib@2.26.0:')
     depends_on('gtkplus@2.90:')
     depends_on('gobject-introspection')
     depends_on('libxslt', when='+docbook', type='build')
