@@ -85,18 +85,16 @@ class Ceed(BundlePackage):
     depends_on('nekbone@17.0', when='@1.0.0+nek')
     depends_on('nekcem@0b8bedd', when='@1.0.0+nek')
 
-    # PETSc, HPGMG
+    # PETSc
     # ceed-3.0
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
-    # TODO: set release versions for petsc and hpgmg
-    depends_on('petsc@develop~hdf5~superlu-dist',
+    depends_on('petsc@3.13.0:3.13.99~hdf5~superlu-dist',
                when='@3.0.0+petsc+quickbuild')
-    depends_on('petsc@develop+mpi+double~int64', when='@3.0.0+petsc~mfem')
+    depends_on('petsc@3.13.0:3.13.99+mpi+double~int64', when='@3.0.0+petsc~mfem')
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
-    depends_on('petsc@develop+mpi+hypre+suite-sparse+mumps+double~int64',
+    depends_on('petsc@3.13.0:3.13.99+mpi+hypre+suite-sparse+mumps+double~int64',
                when='@3.0.0+petsc+mfem')
-    depends_on('hpgmg@develop+fe', when='@3.0.0+petsc')
     # ceed-2.0
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     # Ideally, these can be turned into recommendations to Spack for
