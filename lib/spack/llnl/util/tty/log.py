@@ -8,6 +8,7 @@
 from __future__ import unicode_literals
 
 import atexit
+import errno
 import multiprocessing
 import os
 import re
@@ -107,8 +108,8 @@ class keyboard_input(object):
     ``SIGCONT`` handlers and adjust terminal settings without help from
     the user. For the transition from running-in-background to
     running-in-foreground, the OS doesn't send any signal, so the caller
-    needs to poll with ``kb.check_fg()`` to ensure that keyboard input is
-    re-enabled on this transition.
+    needs to poll with ``kb.check_fg_bg()`` to ensure that keyboard input
+    is re-enabled on this transition.
 
     Note: ``SIGSTOP`` can also stop a process (in the foreground or
     background), but it can't be caught. Because of this, we can't fix
@@ -579,7 +580,13 @@ class log_output(object):
 
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
-                    rlist, _, _ = select.select(istreams, [], [])
+                    try:
+                        rlist, _, _ = select.select(istreams, [], [])
+                    except select.error as e:
+                        # This happens we get a signal while in select()
+                        if e.args[0] == errno.EINTR:
+                            continue
+                        raise
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
