@@ -3,23 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install boinc-client
-#
-# You can edit this file again by typing:
-#
-#     spack edit boinc-client
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
@@ -33,10 +16,6 @@ class BoincClient(AutotoolsPackage):
 
     homepage = "https://boinc.berkeley.edu/"
     url      = "https://github.com/BOINC/boinc/archive/client_release/7.16/7.16.5.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('7.16.5', sha256='33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a')
 
@@ -68,10 +47,6 @@ class BoincClient(AutotoolsPackage):
     depends_on('sqlite@3.1:', when='+manager')
 
     patch('systemd-fix.patch')
-
-    def autoreconf(self, spec, prefix):
-        # FIXME: Modify the autoreconf method as necessary
-        autoreconf('--install', '--verbose', '--force')
 
     def configure_args(self):
         spec = self.spec
