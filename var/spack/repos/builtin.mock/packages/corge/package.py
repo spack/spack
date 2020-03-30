@@ -24,9 +24,9 @@ class Corge(Package):
         mkdirp('%s/corge' % prefix.include)
         copy('corge/corge_version_h.in', '%s/corge_version.h' %
              self.stage.source_path)
-        filter_file('\@CORGE_VERSION_MAJOR\@', '3', '%s/corge_version.h' %
+        filter_file('@CORGE_VERSION_MAJOR@', '3', '%s/corge_version.h' %
                     self.stage.source_path)
-        filter_file('\@CORGE_VERSION_MINOR\@', '0', '%s/corge_version.h' %
+        filter_file('@CORGE_VERSION_MINOR@', '0', '%s/corge_version.h' %
                     self.stage.source_path)
         gpp = which('/usr/bin/g++')
         gpp('-Dcorge_EXPORTS',

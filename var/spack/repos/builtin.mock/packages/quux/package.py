@@ -24,9 +24,9 @@ class Quux(Package):
         mkdirp('%s/quux' % prefix.include)
         copy('quux/quux_version_h.in', '%s/quux_version.h' %
              self.stage.source_path)
-        filter_file('\@QUUX_VERSION_MAJOR\@', '3', '%s/quux_version.h' %
+        filter_file('@QUUX_VERSION_MAJOR@', '3', '%s/quux_version.h' %
                     self.stage.source_path)
-        filter_file('\@QUUX_VERSION_MINOR\@', '0', '%s/quux_version.h' %
+        filter_file('@QUUX_VERSION_MINOR@', '0', '%s/quux_version.h' %
                     self.stage.source_path)
         gpp = which('/usr/bin/g++')
         gpp('-Dquux_EXPORTS',

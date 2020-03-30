@@ -23,9 +23,9 @@ class Garply(Package):
         mkdirp('%s/garply' % prefix.include)
         copy('garply/garply_version_h.in', '%s/garply_version.h' %
              self.stage.source_path)
-        filter_file('\@GARPLY_VERSION_MAJOR\@', '3', '%s/garply_version.h' %
+        filter_file('@GARPLY_VERSION_MAJOR@', '3', '%s/garply_version.h' %
                     self.stage.source_path)
-        filter_file('\@GARPLY_VERSION_MINOR\@', '0', '%s/garply_version.h' %
+        filter_file('@GARPLY_VERSION_MINOR@', '0', '%s/garply_version.h' %
                     self.stage.source_path)
         gpp = which('/usr/bin/g++')
         gpp('-Dgarply_EXPORTS',

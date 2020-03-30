@@ -36,7 +36,7 @@ def cache_directory(tmpdir):
     fsc = spack.fetch_strategy.FsCache(str(tmpdir.join('fetch_cache')))
     spack.config.caches = fsc
     yield spack.config.caches
-    #tmpdir.join('fetch_cache').remove()
+    tmpdir.join('fetch_cache').remove()
     spack.config.caches = old_cache_path
 
 
@@ -47,7 +47,7 @@ def session_mirror_def(tmpdir_factory):
     mirror_path_rel = dir
     dir.ensure('build_cache', dir=True)
     yield dir
-    #dir.join('build_cache').remove()
+    dir.join('build_cache').remove()
 
 
 @pytest.fixture(scope='function')
@@ -62,7 +62,7 @@ def session_mirror_rel(tmpdir_factory):
     mirror_path_rel = dir
     dir.ensure('build_cache', dir=True)
     yield dir
-    #dir.join('build_cache').remove()
+    dir.join('build_cache').remove()
 
 
 @pytest.fixture(scope='function')
@@ -92,7 +92,7 @@ def config_directory(tmpdir_factory):
     config_yaml.copy(tmpdir.join('site', 'config.yaml'))
     repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
     yield tmpdir
-    #tmpdir.remove()
+    tmpdir.remove()
 
 
 @pytest.fixture(scope='function')
@@ -129,7 +129,7 @@ def default_config(tmpdir_factory, config_directory, monkeypatch):
     if not timeout:
         spack.config.set('config:connect_timeout', 10, scope='user')
     yield spack.config.config
-    #mutable_dir.remove()
+    mutable_dir.remove()
 
 
 @pytest.fixture(scope='function')
