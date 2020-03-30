@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Helics(CMakePackage):
     """HELICS is a general-purpose, modular, highly-scalable co-simulation
     framework that runs cross-platform (Linux, Windows, and Mac OS X) and
