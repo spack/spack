@@ -28,7 +28,7 @@ class Lua(Package):
     version('5.1.3', sha256='6b5df2edaa5e02bf1a2d85e1442b2e329493b30b0c0780f77199d24f087d296d')
 
     variant('shared', default=True,
-        description='Builds a shared version of the library')
+            description='Builds a shared version of the library')
 
     extendable = True
 
