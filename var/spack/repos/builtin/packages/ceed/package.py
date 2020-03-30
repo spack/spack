@@ -22,7 +22,7 @@ class Ceed(BundlePackage):
 
     variant('cuda', default=False,
             description='Enable CUDA support')
-    variant('mfem', default=True, description='Build MFEM and Laghos')
+    variant('mfem', default=True, description='Build MFEM, Laghos and Remhos')
     variant('nek', default=True,
             description='Build Nek5000, GSLIB, Nekbone, and NekCEM')
     variant('occa', default=True,
@@ -139,7 +139,7 @@ class Ceed(BundlePackage):
     # ceed-1.0
     depends_on('pumi@2.1.0', when='@1.0.0+pumi')
 
-    # MFEM, Laghos
+    # MFEM, Laghos, Remhos
     # ceed-3.0
     depends_on('mfem@4.1.0+mpi+examples+miniapps', when='@3.0.0+mfem~petsc')
     depends_on('mfem@4.1.0+mpi+petsc+examples+miniapps',
@@ -150,6 +150,7 @@ class Ceed(BundlePackage):
     depends_on('mfem@4.1.0+cuda', when='@3.0.0+mfem+cuda')
     depends_on('mfem@4.1.0+occa', when='@3.0.0+mfem+occa')
     depends_on('laghos@3.0', when='@3.0.0+mfem')
+    depends_on('remhos@develop', when='@3.0.0+mfem')
     # Help the spack concretizer find a suitable version of hypre:
     # TODO: is this still necessary with the latest spack?
     depends_on('hypre~internal-superlu', when='@3.0.0+mfem')
