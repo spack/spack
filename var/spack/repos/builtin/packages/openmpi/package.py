@@ -296,19 +296,19 @@ class Openmpi(AutotoolsPackage):
     # after 2.0, CUDA-aware MPI requires UCX as fabrics
     # mark all other fabrics as conflicts
     conflicts('fabrics=none', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=auto', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=psm', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=psm2', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=verb2', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=mxm', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
     conflicts('fabrics=libmxm', when='+cuda @2.0.0:',
-            msg='CUDA-aware MPI could only be built with UCX')
+              msg='CUDA-aware MPI could only be built with UCX')
 
     conflicts('fabrics=psm2', when='@:1.8')  # PSM2 support was added in 1.10.0
     conflicts('fabrics=mxm', when='@:1.5.3')  # MXM support was added in 1.5.4
