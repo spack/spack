@@ -81,6 +81,7 @@ class Geant4(CMakePackage):
     # These patches can be applied independent of the cxxstd value?
     patch('cxx17.patch', when='@:10.3.99 cxxstd=17')
     patch('cxx17_geant4_10_0.patch', level=1, when='@10.4.0 cxxstd=17')
+    patch('geant4-10.4.3-cxx17-removed-features.patch', level=1, when='@10.4.3 cxxstd=17')
 
     def cmake_args(self):
         spec = self.spec
