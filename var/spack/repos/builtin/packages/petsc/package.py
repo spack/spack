@@ -16,14 +16,21 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url      = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-3.5.3.tar.gz"
-    git      = "https://gitlab.com/petsc/petsc.git"
-
+    git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
+
+    def url_for_version(self, version):
+        if version >= Version('3.13.0'):
+            # petsc-lite tarballs are smaller by skipping docs/examples (available online)
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{}.tar.gz".format(version)
+        else:
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{}.tar.gz".format(version)
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.13.0', sha256='f0ea543a54145c5d1387e25b121c3fd1b1ca834032c5a33f6f1d929e95bdf0e5')
+    version('3.12.5', sha256='d676eb67e79314d6cca6422d7c477d2b192c830b89d5edc6b46934f7453bcfc0')
     version('3.12.4', sha256='56a941130da93bbacb3cfa74dcacea1e3cd8e36a0341f9ced09977b1457084c3')
     version('3.12.3', sha256='91f77d7b0f54056f085b9e27938922db3d9bb1734a2e2a6d26f43d3e6c0cf631')
     version('3.12.2', sha256='d874b2e198c4cb73551c2eca1d2c5d27da710be4d00517adb8f9eb3d6d0375e8')
