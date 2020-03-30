@@ -28,13 +28,12 @@ class GtkDoc(AutotoolsPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_1_32/gtk-doc-GTK_DOC_1_32.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('1_32', sha256='0890c1f00d4817279be51602e67c4805daf264092adc58f9c04338566e8225ba')
+    version('1.32', sha256='0890c1f00d4817279be51602e67c4805daf264092adc58f9c04338566e8225ba')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -43,6 +42,11 @@ class GtkDoc(AutotoolsPackage):
 
     # FIXME: Add additional dependencies if required.
     # depends_on('foo')
+
+    def url_for_version(self, version):
+        """Handle gnome's version-based custom URLs."""
+        url = 'https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_{0}/gtk-doc-GTK_DOC_{0}.tar.gz'
+        return url.format(version.underscored)
 
     def autoreconf(self, spec, prefix):
         # FIXME: Modify the autoreconf method as necessary
