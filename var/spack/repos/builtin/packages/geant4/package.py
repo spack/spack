@@ -86,7 +86,6 @@ class Geant4(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        on_or_off = lambda opt: 'ON' if '+' + opt in spec else 'OFF'
 
         # Core options
         options = [
@@ -101,7 +100,7 @@ class Geant4(CMakePackage):
         ]
 
         # Multithreading
-        options.append('-DGEANT4_BUILD_MULTITHREADED=' + on_or_off('threads'))
+        options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED', 'threads'))
         if '+threads' in spec:
             # This should be a variant
             options.append('-DGEANT4_BUILD_TLS_MODEL=global-dynamic')
