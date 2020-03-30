@@ -119,6 +119,7 @@ before_install:
         source venv/bin/activate;
     fi
   - ccache -M 2G && ccache -z
+  - share/spack/qa/install_patchelf.sh
 
 # Install various dependencies
 install:
