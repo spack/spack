@@ -431,6 +431,15 @@ def pkg_name_from_spec_label(spec_label):
     return spec_label[:spec_label.index('/')]
 
 
+def get_all_deps(concrete_spec):
+    deps_set = set()
+    for s in concrete_spec.traverse(deptype=all_deptypes):
+        deps_set.add(s)
+        for d in s.dependencies(deptype=all_deptypes):
+            deps_set.add(d)
+    return deps_set
+
+
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             custom_spack_repo=None, custom_spack_ref=None):
     # FIXME: What's the difference between one that opens with 'spack'
@@ -538,6 +547,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     stage_names = []
 
+    max_length_needs = 0
+    max_needs_job = ''
+
     for phase in phases:
         phase_name = phase['name']
         strip_compilers = phase['strip-compilers']
@@ -605,13 +617,29 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
                 job_dependencies = []
                 if spec_label in dependencies:
-                    for dep_label in dependencies[spec_label]:
-                        dep_pkg = pkg_name_from_spec_label(dep_label)
-                        dep_spec = spec_labels[dep_label]['rootSpec'][dep_pkg]
-                        dep_job_name = get_job_name(
-                            phase_name, strip_compilers, dep_spec, osname,
-                            build_group)
-                        job_dependencies.append(dep_job_name)
+                    if enable_artifacts_buildcache:
+                        transitive_deps = get_all_deps(release_spec)
+                        for trans_dep in transitive_deps:
+                            if trans_dep is not release_spec:
+                                dep_job_name = get_job_name(
+                                    phase_name, strip_compilers, trans_dep,
+                                    osname, build_group)
+                                job_dependencies.append({
+                                    'job': dep_job_name,
+                                    'artifacts': True,
+                                })
+                    else:
+                        for dep_label in dependencies[spec_label]:
+                            dep_pkg = pkg_name_from_spec_label(dep_label)
+                            dep_root = spec_labels[dep_label]['rootSpec']
+                            dep_spec = dep_root[dep_pkg]
+                            dep_job_name = get_job_name(
+                                phase_name, strip_compilers, dep_spec, osname,
+                                build_group)
+                            job_dependencies.append({
+                                'job': dep_job_name,
+                                'artifacts': False,
+                            })
 
                 # This next section helps gitlab make sure the right
                 # bootstrapped compiler exists in the artifacts buildcache by
@@ -657,7 +685,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 ]
 
                 if enable_artifacts_buildcache:
-                    artifact_paths.append('local_mirror/build_cache')
+                    bc_root = 'local_mirror/build_cache'
+                    artifact_paths.extend([os.path.join(bc_root, p) for p in [
+                        bindist.tarball_name(release_spec, '.spec.yaml'),
+                        bindist.tarball_name(release_spec, '.cdashid'),
+                        bindist.tarball_directory_name(release_spec),
+                    ]])
 
                 job_object = {
                     'stage': stage_name,
@@ -668,8 +701,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         'paths': artifact_paths,
                         'when': 'always',
                     },
-                    'dependencies': job_dependencies,
+                    'needs': job_dependencies,
                 }
+
+                length_needs = len(job_dependencies)
+                if length_needs > max_length_needs:
+                    max_length_needs = length_needs
+                    max_needs_job = job_name
 
                 if before_script:
                     job_object['before_script'] = before_script
@@ -690,6 +728,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))
+
+    tty.debug('The max_needs_job is {0}, with {1} needs'.format(
+        max_needs_job, max_length_needs))
 
     # Use "all_job_names" to populate the build group for this set
     if enable_cdash_reporting and cdash_auth_token:
