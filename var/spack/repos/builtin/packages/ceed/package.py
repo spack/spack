@@ -54,9 +54,8 @@ class Ceed(BundlePackage):
 
     # OCCA
     # ceed-3.0
-    # TODO: set release version
-    depends_on('occa@develop~cuda', when='@3.0.0+occa~cuda')
-    depends_on('occa@develop+cuda', when='@3.0.0+occa+cuda')
+    depends_on('occa@1.0.9~cuda', when='@3.0.0+occa~cuda')
+    depends_on('occa@1.0.9+cuda', when='@3.0.0+occa+cuda')
     # ceed-2.0
     depends_on('occa@1.0.8~cuda', when='@2.0.0+occa~cuda')
     depends_on('occa@1.0.8+cuda', when='@2.0.0+occa+cuda')
@@ -86,7 +85,7 @@ class Ceed(BundlePackage):
 
     # PETSc
     # ceed-3.0
-    # depends_on('petsc+cuda', when='@3.0.0+petsc+cuda')
+    depends_on('petsc+cuda', when='@3.0.0+petsc+cuda')
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     depends_on('petsc@3.13.0:3.13.99~hdf5~superlu-dist',
                when='@3.0.0+petsc+quickbuild')
