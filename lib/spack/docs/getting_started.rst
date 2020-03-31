@@ -843,23 +843,24 @@ underlying implementation and dispatches calls to it.  See `this
 for details on loading a specific GLX implementation and `this
 <https://github.com/NVIDIA/libglvnd/blob/master/src/EGL/icd_enumeration.md>`
 page for information about EGL ICD enumeration.
-   
+
 This codependency between libglvnd and the underlying implementation is modeled
 in Spack with two packages for libglvnd: libglvnd, which provides libglvnd
 proper; and libglvnd-fe, a bundle package that depends on libglvnd and an
 implementation.  Implementations that work through libglvnd are no longer
 providers for graphics virtual dependencies, like "gl" or "glx", but instead
-provide libglvnd versions of these dependencies ("glvnd-be-gl", "glvnd-be-glx",
-etc.).  The libglvnd-fe package depends on these "glvnd-be-*" virtual packages,
-which provide the actual implementation.  It also depends on libglvnd, itself,
-and exposes its libraries to downstream applications.  For correct operation,
-the Spack package for the underlying implementation has to set the runtime
-environment to ensure that it is loaded when an application linked against
-libglvnd runs.  This last detail is important for users who want to set up an
-external OpenGL implementation that requires libglvnd to work.  This setup
-requires modifying the ``modules`` configuration so that modules generated for
-the external OpenGL implementation set the necessary environment variables.
-   
+provide libglvnd versions of these dependencies ("libglvnd-be-gl",
+"libglvnd-be-glx", etc.).  The libglvnd-fe package depends on these
+"libglvnd-be-*" virtual packages, which provide the actual implementation.  It
+also depends on libglvnd, itself, and exposes its libraries to downstream
+applications.  For correct operation, the Spack package for the underlying
+implementation has to set the runtime environment to ensure that it is loaded
+when an application linked against libglvnd runs.  This last detail is important
+for users who want to set up an external OpenGL implementation that requires
+libglvnd to work.  This setup requires modifying the ``modules`` configuration
+so that modules generated for the external OpenGL implementation set the
+necessary environment variables.
+
 .. code-block:: yaml
 
     packages:
