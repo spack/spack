@@ -51,7 +51,7 @@ class Nek5000(Package):
                 if os.access(f_size_legacy, os.F_OK):
                     copyfile(f_size_legacy, f_size)
                 else:
-                    raise RuntimeError('Can not find {}'.format(f_size))
+                    raise RuntimeError('Can not find {0}'.format(f_size))
 
             os.system(join_path(self.prefix.bin, 'makenek') + ' eddy_uv')
             if not os.path.isfile(join_path(os.getcwd(), 'nek5000')):
