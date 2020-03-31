@@ -14,6 +14,7 @@ class Openscenegraph(CMakePackage):
     homepage = "http://www.openscenegraph.org"
     url      = "https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-3.6.4.tar.gz"
 
+    version('3.6.5', sha256='aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12')
     version('3.6.4', sha256='81394d1b484c631028b85d21c5535280c21bbd911cb058e8746c87e93e7b9d33')
     version('3.2.3', sha256='a1ecc6524197024834e1277916922b32f30246cb583e27ed19bf3bf889534362')
     version('3.1.5', sha256='dddecf2b33302076712100af59b880e7647bc595a9a7cc99186e98d6e0eaeb5c')

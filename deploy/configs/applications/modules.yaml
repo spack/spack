@@ -64,6 +64,7 @@ modules:
       - py-simwriter
       - py-sonata-network-reduction
       - py-pytouchreader
+      - regiodesics
       - reportinglib
       - spatial-index
       - spykfunc

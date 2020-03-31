@@ -60,6 +60,7 @@ packages:
       - libarchive
       - morphio
       - morpho-kit
+      - openscenegraph build_type=Release
       - pugixml
       - range-v3
       - rockets
