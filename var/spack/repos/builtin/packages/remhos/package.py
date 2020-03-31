@@ -19,15 +19,14 @@ class Remhos(MakefilePackage):
     git      = "https://github.com/CEED/Remhos.git"
 
     version('develop', branch='master')
-    version('1.0', sha256='af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34')
+    version('1.0', sha256='dec48b432af810ba667b49487a8f7b8ebd16d9fa9d0046c765b9463dbb15d8c6')
 
     variant('metis', default=True, description='Enable/disable METIS support')
 
     depends_on('mfem+mpi+metis', when='+metis')
     depends_on('mfem+mpi~metis', when='~metis')
 
-    # depends_on('mfem@develop', when='@develop')
-    depends_on('mfem@4.1.0:', when='@develop')
+    depends_on('mfem@develop', when='@develop')
     depends_on('mfem@4.1.0:', when='@1.0')
 
     @property

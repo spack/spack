@@ -146,7 +146,7 @@ class Ceed(BundlePackage):
     depends_on('mfem@4.1.0+cuda', when='@3.0.0+mfem+cuda')
     depends_on('mfem@4.1.0+occa', when='@3.0.0+mfem+occa')
     depends_on('laghos@3.0', when='@3.0.0+mfem')
-    depends_on('remhos@develop', when='@3.0.0+mfem')
+    depends_on('remhos@1.0', when='@3.0.0+mfem')
     # Help the spack concretizer find a suitable version of hypre:
     # TODO: is this still necessary with the latest spack?
     depends_on('hypre~internal-superlu', when='@3.0.0+mfem')
