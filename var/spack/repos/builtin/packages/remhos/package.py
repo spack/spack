@@ -19,7 +19,7 @@ class Remhos(MakefilePackage):
     git      = "https://github.com/CEED/Remhos.git"
 
     version('develop', branch='master')
-    version('1.0', sha256='dec48b432af810ba667b49487a8f7b8ebd16d9fa9d0046c765b9463dbb15d8c6')
+    version('1.0', sha256='e60464a867fe5b1fd694fbb37bb51773723427f071c0ae26852a2804c08bbb32')
 
     variant('metis', default=True, description='Enable/disable METIS support')
 
