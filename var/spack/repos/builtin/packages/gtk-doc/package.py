@@ -28,8 +28,8 @@ class GtkDoc(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('python@3.2:')
-    depends_on('py-pygments')
+    depends_on('python@3.2:', type=('build', 'run'))
+    depends_on('py-pygments', type=('build', 'run'))
     depends_on('libxslt')
     depends_on('libxml2')
     depends_on('docbook-xsl')
