@@ -1469,7 +1469,7 @@ _spack_test() {
     then
         SPACK_COMPREPLY="-h --help --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --smoke --capability --clean --dirty"
     else
-        _all_packages
+        _installed_packages
     fi
 }
 
