@@ -194,7 +194,7 @@ all:
         spack.config.set('packages', conf, scope='concretize')
 
         # should be no error for 'all':
-        spack.package_prefs.get_packages_config()
+        spack.config.get('packages')
 
     def test_external_mpi(self):
         # make sure this doesn't give us an external first.

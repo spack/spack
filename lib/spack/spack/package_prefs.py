@@ -23,11 +23,6 @@ def _spec_type(component):
     return _lesser_spec_types.get(component, spack.spec.Spec)
 
 
-def get_packages_config():
-    """Wrapper around get_packages_config() to validate semantics."""
-    return spack.config.get('packages')
-
-
 class PackagePrefs(object):
     """Defines the sort order for a set of specs.
 
@@ -100,7 +95,7 @@ class PackagePrefs(object):
             pkglist.append('all')
 
         for pkg in pkglist:
-            pkg_entry = get_packages_config().get(pkg)
+            pkg_entry = spack.config.get('packages').get(pkg)
             if not pkg_entry:
                 continue
 
@@ -144,7 +139,8 @@ class PackagePrefs(object):
     def preferred_variants(cls, pkg_name):
         """Return a VariantMap of preferred variants/values for a spec."""
         for pkg in (pkg_name, 'all'):
-            variants = get_packages_config().get(pkg, {}).get('variants', '')
+            variants = spack.config.get('packages').get(pkg, {}).get(
+                'variants', '')
             if variants:
                 break
 
@@ -165,7 +161,7 @@ def spec_externals(spec):
     # break circular import.
     from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
 
-    allpkgs = get_packages_config()
+    allpkgs = spack.config.get('packages')
     names = [spec.name]
     names += [vspec.name for vspec in spec.package.virtuals_provided]
 
@@ -194,7 +190,7 @@ def spec_externals(spec):
 
 def is_spec_buildable(spec):
     """Return true if the spec pkgspec is configured as buildable"""
-    allpkgs = get_packages_config()
+    allpkgs = spack.config.get('packages')
     do_not_build = [name for name in allpkgs
                     if not allpkgs[name].get('buildable', True)]
     return not (spec.name in do_not_build or
