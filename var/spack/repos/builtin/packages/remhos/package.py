@@ -43,7 +43,7 @@ class Remhos(MakefilePackage):
     # See lib/spack/spack/build_systems/makefile.py
     def check(self):
         with working_dir(self.build_directory):
-            make('test', *self.build_targets)
+            make('tests', *self.build_targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
