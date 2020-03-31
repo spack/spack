@@ -16,15 +16,9 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
+    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
-
-    def url_for_version(self, version):
-        if version >= Version('3.13.0'):
-            # petsc-lite tarballs are smaller by skipping docs/examples (available online)
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{}.tar.gz".format(version)
-        else:
-            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{}.tar.gz".format(version)
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -153,7 +147,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5@:1.10.99+mpi', when='+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
+    depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
@@ -167,8 +162,8 @@ class Petsc(Package):
     depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
-    depends_on('hypre~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
-    depends_on('hypre~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
+    depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
+    depends_on('hypre@develop~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
@@ -179,6 +174,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:6.3.99~int64', when='@3.13.0:3.13.99+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:6.3.99+int64', when='@3.13.0:3.13.99+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
@@ -191,6 +188,13 @@ class Petsc(Package):
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
+
+    def url_for_version(self, version):
+        if version >= Version('3.13.0'):
+            # petsc-lite tarballs are smaller by skipping docs
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(version)
+        else:
+            return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(version)
 
     def mpi_dependent_options(self):
         if '~mpi' in self.spec:

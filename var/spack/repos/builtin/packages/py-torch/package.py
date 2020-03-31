@@ -287,9 +287,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
 
-    def test(self):
-        pass
-
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
+
+    # Tests need to be re-added since `phases` was overridden
+    run_after('install')(
+        PythonPackage._run_default_install_time_test_callbacks)
+    run_after('install')(PythonPackage.sanity_check_prefix)
