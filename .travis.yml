@@ -119,7 +119,12 @@ before_install:
         source venv/bin/activate;
     fi
   - ccache -M 2G && ccache -z
-  - share/spack/qa/install_patchelf.sh
+  - if [[ "$TRAVIS_DIST" == "trusty" ]]; then
+        share/spack/qa/install_patchelf.sh;
+    else
+        sudo apt-get update;
+        sudo apt-get -y install patchelf;
+    fi
 
 # Install various dependencies
 install:
