@@ -1,7 +1,7 @@
 # Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+# SPDX-License-Identifier: Apache-2.0 OR MIT)
 
 from __future__ import print_function
 import os
@@ -54,9 +54,7 @@ def setup_parser(subparser):
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER,
-        help="list of specs to test")
+    arguments.add_common_arguments(subparser, ['installed_specs'])
 
 
 def test(parser, args):
