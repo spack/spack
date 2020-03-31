@@ -151,8 +151,8 @@ class Llvm(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
-    depends_on("libelf")  # libomptarget
-    depends_on("libffi")  # libomptarget
+    depends_on("libelf", when="+cuda")  # libomptarget
+    depends_on("libffi", when="+cuda")  # libomptarget
 
     # ncurses dependency
     depends_on("ncurses+termlib")
