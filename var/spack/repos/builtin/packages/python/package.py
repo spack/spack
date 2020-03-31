@@ -1111,21 +1111,15 @@ class Python(AutotoolsPackage):
                 os.remove(dst)
 
     def test(self):
-        self.run_test('true', expected=['not in output'])
+        # guaranteed executable name
+        # do not use self.command because we are also testing the run env
+        exe = 'python3' if self.spec.satisfies('@3:') else 'python'
 
-        # contains python executable
-        python = which('python')
-        assert os.path.dirname(python.path) == os.path.dirname(
-            self.command.path)
+        # test hello world
+        self.run_test(exe, options=['-c', 'print("hello world!")'],
+                      expected=['hello world!'])
 
-        # run hello world
-        output = self.command('-c', 'print("hello world!")',
-                              output=str.split, error=str.split)
-        assert output == "hello world!"
-
-        self.command('-c', 'assert False', output=str.split, error=str.split)
-
-#        error = self.command('-c', 'print("Error: failed.")',
-#                             output=str.split, error=str.split)
-
-#        assert error.strip() == 'Error: failed.'
+        # check that the executable comes from the spec prefix
+        # also checks imports work
+        self.run_test(exe, options=['-c', 'import sys; print(sys.executable)'],
+                      expected=[self.spec.prefix])
