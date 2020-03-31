@@ -86,6 +86,7 @@ class Ceed(BundlePackage):
 
     # PETSc
     # ceed-3.0
+    # depends_on('petsc+cuda', when='@3.0.0+petsc+cuda')
     # For a +quickbuild we disable hdf5, and superlu-dist in PETSc.
     depends_on('petsc@3.13.0:3.13.99~hdf5~superlu-dist',
                when='@3.0.0+petsc+quickbuild')
