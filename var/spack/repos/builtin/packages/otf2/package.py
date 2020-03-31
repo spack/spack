@@ -32,6 +32,6 @@ class Otf2(AutotoolsPackage):
             'F77={0}'.format(spack_f77),
             'FC={0}'.format(spack_fc),
             'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag)
-            'PYTHON_FOR_GENERATOR=:'
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag),
+            'PYTHON_FOR_GENERATOR=:',
         ]
