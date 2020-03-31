@@ -185,17 +185,6 @@ class TestConcretizePreferences(object):
         spec.concretize()
         assert spec.version == Version('0.2.15.develop')
 
-    def test_all_is_not_a_virtual(self):
-        """Verify that `all` is allowed in packages.yaml."""
-        conf = syaml.load_config("""\
-all:
-        variants: [+mpi]
-""")
-        spack.config.set('packages', conf, scope='concretize')
-
-        # should be no error for 'all':
-        spack.config.get('packages')
-
     def test_external_mpi(self):
         # make sure this doesn't give us an external first.
         spec = Spec('mpi')
