@@ -193,8 +193,6 @@ def is_spec_buildable(spec):
     allpkgs = spack.config.get('packages')
     do_not_build = [name for name, entry in allpkgs.items()
                     if not entry.get('buildable', True)]
-    print(spec.name)
-    print(not (spec.name in do_not_build or any(spec.package.provides(name) for name in do_not_build)))
     return not (spec.name in do_not_build or
                 any(spec.package.provides(name) for name in do_not_build))
 
