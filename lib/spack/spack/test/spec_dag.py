@@ -387,7 +387,6 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
-    @pytest.mark.usefixtures('config')
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
@@ -602,7 +601,6 @@ class TestSpecDag(object):
         copy_ids = set(id(s) for s in copy.traverse())
         assert not orig_ids.intersection(copy_ids)
 
-    @pytest.mark.usefixtures('config')
     def test_copy_concretized(self):
         orig = Spec('mpileaks')
         orig.concretize()
@@ -853,14 +851,12 @@ class TestSpecDag(object):
         self.check_diamond_deptypes(s)
         self.check_diamond_normalized_dag(s)
 
-    @pytest.mark.usefixtures('config')
     def test_concretize_deptypes(self):
         """Ensure that dependency types are preserved after concretization."""
         s = Spec('dt-diamond')
         s.concretize()
         self.check_diamond_deptypes(s)
 
-    @pytest.mark.usefixtures('config')
     def test_copy_deptypes(self):
         """Ensure that dependency types are preserved by spec copy."""
         s1 = Spec('dt-diamond')
@@ -879,7 +875,6 @@ class TestSpecDag(object):
         s4 = s3.copy()
         self.check_diamond_deptypes(s4)
 
-    @pytest.mark.usefixtures('config')
     def test_getitem_query(self):
         s = Spec('mpileaks')
         s.concretize()
@@ -911,7 +906,6 @@ class TestSpecDag(object):
         assert 'fortran' in query.extra_parameters
         assert query.isvirtual
 
-    @pytest.mark.usefixtures('config')
     def test_getitem_exceptional_paths(self):
         s = Spec('mpileaks')
         s.concretize()
