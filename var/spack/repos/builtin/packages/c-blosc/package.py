@@ -26,6 +26,8 @@ class CBlosc(CMakePackage):
     version('1.8.0',  sha256='e0f8b9e12e86776a1b037385826c55006da6e2ae4973dac5b5ad3cfcf01e9043')
 
     variant('avx2', default=True, description='Enable AVX2 support')
+    variant('tests', default=False, description='Build tests')
+    variant('benchmarks', default=False, description='Build benchmarks')
 
     depends_on('cmake@2.8.10:', type='build')
     depends_on('snappy')
@@ -37,7 +39,9 @@ class CBlosc(CMakePackage):
     patch('test_forksafe.patch', when='@1.15.0:1.17.0%intel')
 
     def cmake_args(self):
-        args = []
+        define = CMakePackage.define_from_variant
+
+	args = []
 
         if '+avx2' in self.spec:
             args.append('-DDEACTIVATE_AVX2=OFF')
@@ -49,6 +53,9 @@ class CBlosc(CMakePackage):
             args.append('-DPREFER_EXTERNAL_ZLIB=ON')
             args.append('-DPREFER_EXTERNAL_ZSTD=ON')
             args.append('-DPREFER_EXTERNAL_LZ4=ON')
+
+            args.append(define('BUILD_TESTS', 'tests'))
+            args.append(define('BUILD_BENCHMARKS', 'benchmarks'))
 
         return args
 
