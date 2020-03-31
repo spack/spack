@@ -7,28 +7,29 @@
 from spack import *
 
 
-class G4saiddata(Package):
-    """Geant4 data from evaluated cross-sections in SAID data-base """
+class G4particlexs(Package):
+    """Geant4 data for evaluated particle cross-sections on
+    natural composition of elements"""
     homepage = "http://geant4.web.cern.ch"
-    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4SAIDDATA.1.1.tar.gz"
+    url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PARTICLEXS.2.1.tar.gz"
 
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added
-    version('2.0', sha256='1d26a8e79baa71e44d5759b9f55a67e8b7ede31751316a9e9037d80090c72e91')
-    version('1.1', sha256='a38cd9a83db62311922850fe609ecd250d36adf264a88e88c82ba82b7da0ed7f')
+    version('2.1', sha256='094d103372bbf8780d63a11632397e72d1191dc5027f9adabaf6a43025520b41')
+    version('1.1', sha256='100a11c9ed961152acfadcc9b583a9f649dda4e48ab314fcd4f333412ade9d62')
 
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, 'data'))
-        install_path = join_path(prefix.share, 'data', 'G4SAIDDATA{0}'
+        install_path = join_path(prefix.share, 'data', "G4PARTICLEXS{0}"
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        install_path = join_path(self.prefix.share, 'data', 'G4SAIDDATA{0}'
+        install_path = join_path(self.prefix.share, 'data', 'G4PARTICLEXS{0}'
                                  .format(self.version))
-        env.set('G4SAIDXSDATA', install_path)
+        env.set('G4PARTICLEXSDATA', install_path)
 
     def url_for_version(self, version):
         """Handle version string."""
-        return "http://geant4-data.web.cern.ch/geant4-data/datasets/G4SAIDDATA.%s.tar.gz" % version
+        return ("http://geant4-data.web.cern.ch/geant4-data/datasets/G4PARTICLEXS.%s.tar.gz" % version)
