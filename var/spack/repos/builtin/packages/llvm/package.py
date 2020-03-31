@@ -132,23 +132,16 @@ class Llvm(CMakePackage):
         description="Build with OpenMP capable thread sanitizer",
     )
     variant("python", default=False, description="Install python bindings")
-    variant(
-        "flang",
-        default=False,
-        description="Build flang branch version instead",
-    )
 
     extends("python", when="+python")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
-    depends_on("python@2.7:2.8", when="@5: ~python +flang", type="build")
     depends_on("python", when="@5: ~python", type="build")
 
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
-    depends_on("python@2.7:2.8", when="@5:+python+flang")
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
