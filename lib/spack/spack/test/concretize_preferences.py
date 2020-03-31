@@ -208,7 +208,7 @@ mpich:
         spec.concretize()
         assert spec['mpich'].external_path == '/dummy/path'
 
-    def test_external_module(self, save_module_func):
+    def test_external_module(self, monkeypatch):
         """Test that packages can find externals specified by module
 
         The specific code for parsing the module is tested elsewhere.
@@ -216,7 +216,7 @@ mpich:
         # make sure this doesn't give us an external first.
         def mock_module(cmd, module):
             return 'prepend-path PATH /dummy/path'
-        spack.util.module_cmd.module = mock_module
+        monkeypatch.setattr(spack.util.module_cmd, 'module', mock_module)
 
         spec = Spec('mpi')
         spec.concretize()

@@ -1152,16 +1152,3 @@ def clear_directive_functions():
     # proceeding with subsequent tests that may depend on the original
     # functions.
     spack.directives.DirectiveMeta._directives_to_be_executed = []
-
-
-#########
-# Fixture to cache module function
-# The test is responsible for mocking it
-#########
-@pytest.fixture
-def save_module_func():
-    old_func = spack.util.module_cmd.module
-
-    yield
-
-    spack.util.module_cmd.module = old_func
