@@ -53,6 +53,22 @@ properties = {
                     'error': False
                 },
             },
+            'install_trees': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {'type': 'string'}
+                }
+            },
+            'shared_install_trees': {
+                'type': 'object',
+                'default': {},
+                'additionalProperties': False,
+                'patternProperties': {
+                    r'\w[\w-]*': {'type': 'string'}
+                }
+            },
             'source_cache': {'type': 'string'},
             'misc_cache': {'type': 'string'},
             'connect_timeout': {'type': 'integer', 'minimum': 0},

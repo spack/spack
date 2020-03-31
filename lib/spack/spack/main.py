@@ -369,6 +369,12 @@ def make_argument_parser(**kwargs):
     parser.add_argument(
         '--pdb', action='store_true',
         help="run spack under the pdb debugger")
+    parser.add_argument(
+        '--install-root',
+        help="select which tree to install to")
+    parser.add_argument(
+        '--init-upstream'
+        help="when initializing an install tree, this names an upstream")
 
     env_group = parser.add_mutually_exclusive_group()
     env_group.add_argument(
@@ -460,6 +466,14 @@ def setup_main_options(args):
     if args.insecure:
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.config.set('config:verify_ssl', False, scope='command_line')
+
+    if args.install_tree:
+        # Note: if an install tree is named, this needs to be pulled from the
+        # configuration (maps install tree *names* to actual paths)
+        spack.store.install_tree = args.install_tree
+
+    if args.init_upstream:
+        spack.store.init_upstream = args.init_upstream
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)

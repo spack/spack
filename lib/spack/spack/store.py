@@ -26,6 +26,7 @@ configuration.
 import os
 
 import llnl.util.lang
+import llnl.util.filesystem as fs
 
 import spack.paths
 import spack.config
@@ -35,6 +36,15 @@ import spack.directory_layout
 
 #: default installation root, relative to the Spack install path
 default_root = os.path.join(spack.paths.opt_path, 'spack')
+
+
+user_install_root = os.path.expanduser('~/.spack/install-root')
+
+
+install_tree = None
+
+
+init_upstream = None
 
 
 class Store(object):
@@ -71,10 +81,35 @@ class Store(object):
 
 def _store():
     """Get the singleton store instance."""
-    root = spack.config.get('config:install_tree', default_root)
+    install_trees = spack.config.get('config:install_trees')
+    shared_install_trees = spack.config.get('config:shared_install_trees')
+
+    if install_tree:
+        # if this install tree didn't exist before, create it. if there are
+        # shared install trees available, point the new install tree at one of
+        # them.
+        root = install_trees[install_tree]
+    elif shared_install_trees:
+        # if no install tree is specified and there are shared install trees,
+        # then we are in user mode: the install tree is in ~
+        # if the ~ install tree does not yet exist, create it and automatically
+        # have it set one of the shared install trees as an upstream
+        root = user_install_root
+    else:
+        # If this is not a shared spack instance, then by default we will place
+        # the install prefix inside the Spack tree
+        root = default_root
+
+    if init_upstream:
+        init_upstream_path = shared_install_trees[init_upstream]
+        initialize_upstream_pointer_if_unset(root, init_upstream_path)
+    elif shared_install_trees and (not upstream_set(root)):
+        raise ValueError("Must specify an upstream shared install tree")
+
     root = spack.util.path.canonicalize_path(root)
 
     return Store(root,
+                 init_upstream_path,
                  spack.config.get('config:install_path_scheme'),
                  spack.config.get('config:install_hash_length'))
 
@@ -86,6 +121,21 @@ store = llnl.util.lang.Singleton(_store)
 root = llnl.util.lang.LazyReference(lambda: store.root)
 db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
+
+
+def upstream_set(root):
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    if os.path.exists(upstream_root_description)
+
+
+def initialize_upstream_pointer_if_unset(root, init_upstream_root):
+    """Set the installation to point to the specified upstream."""
+    if not os.path.exists(root):
+        fs.mkdirp(root)
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    if not os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'w') as f:
+            f.write(init_upstream_root)
 
 
 def upstream_dbs_from_pointers(root):
