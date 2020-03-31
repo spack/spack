@@ -42,16 +42,11 @@ class Remhos(MakefilePackage):
 
     # See lib/spack/spack/build_systems/makefile.py
     def check(self):
-        targets = []
-        spec = self.spec
-
-        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
-        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
-        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
-
         with working_dir(self.build_directory):
-            make('test', *targets)
+            make('test', *self.build_targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('remhos', prefix.bin)
+
+    install_time_test_callbacks = []
