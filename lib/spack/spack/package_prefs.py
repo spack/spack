@@ -162,8 +162,8 @@ def spec_externals(spec):
     from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
-    names = [spec.name]
-    names += [vspec.name for vspec in spec.package.virtuals_provided]
+    names = set([spec.name])
+    names |= set(vspec.name for vspec in spec.package.virtuals_provided)
 
     external_specs = []
     for name in names:
