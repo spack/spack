@@ -575,6 +575,9 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
+        # Update the internal state of the DB without re-reading from file
+        self._read_from_dict(database)
+
     def _read_spec_from_dict(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
@@ -656,7 +659,17 @@ class Database(object):
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
-        if fdata is None:
+        self._read_from_dict(fdata)
+
+    def _read_from_dict(self, db_data):
+        """Reads the DB from a dict-like object with appropriate fields.
+
+        Args:
+            db_data (dict): dictionary like object from which the DB
+                is read
+        """
+
+        if db_data is None:
             return
 
         def check(cond, msg):
@@ -664,10 +677,10 @@ class Database(object):
                 raise CorruptDatabaseError(
                     "Spack database is corrupt: %s" % msg, self._index_path)
 
-        check('database' in fdata, "no 'database' attribute in JSON DB.")
+        check('database' in db_data, "no 'database' attribute in JSON DB.")
 
         # High-level file checks
-        db = fdata['database']
+        db = db_data['database']
         check('installs' in db, "no 'installs' in JSON DB.")
         check('version' in db, "no 'version' in JSON DB.")
 
