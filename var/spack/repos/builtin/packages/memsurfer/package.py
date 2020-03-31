@@ -13,6 +13,7 @@ class Memsurfer(PythonPackage):
 
     homepage = "https://github.com/LLNL/MemSurfer"
     git = "https://github.com/LLNL/MemSurfer.git"
+    maintainers = ['bhatiaharsh']
 
     version('1.0',     tag='v1.0',       submodules=True)
     version('master',  branch='master',  submodules=True)
@@ -29,10 +30,10 @@ class Memsurfer(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
 
     depends_on('eigen@3.3.7')
-    depends_on('cgal@4.13 build_type=Release +shared~core~demos~imageio')
+    depends_on('cgal@4.13 +shared~core~demos~imageio')
 
     # vtk needs to know whether to build with mesa or opengl
-    vtk_conf = 'build_type=Release ~ffmpeg~mpi+opengl2~qt~xdmf+python'
+    vtk_conf = '~ffmpeg~mpi+opengl2~qt~xdmf+python'
     depends_on('vtk@8.1.2 ' + vtk_conf + ' ~osmesa', when='~osmesa')
     depends_on('vtk@8.1.2 ' + vtk_conf + ' +osmesa', when='+osmesa')
 
