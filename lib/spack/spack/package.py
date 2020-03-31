@@ -1692,7 +1692,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             for check in expected:
                 cmd = ' '.join([exe] + options)
                 msg = "Expected '%s' in output of `%s`" % (check, cmd)
-#                msg += '\n%s' % output
+                msg += '\n\nOutput: %s' % output
                 assert check in output, msg
 
         except ProcessError as err:
