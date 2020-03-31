@@ -58,8 +58,9 @@ class Store(object):
     """
     def __init__(self, root, path_scheme=None, hash_length=None):
         self.root = root
+        upstream_dbs = upstream_dbs_from_pointers(root)
         self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+            root, upstream_dbs=upstream_dbs)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, hash_len=hash_length, path_scheme=path_scheme)
 
@@ -87,7 +88,23 @@ db = llnl.util.lang.LazyReference(lambda: store.db)
 layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 
-def retrieve_upstream_dbs():
+def upstream_dbs_from_pointers(root):
+    # Each installation root directory contains a file that points to the
+    # upstream installation used (if any). This constructs a sequence of
+    # upstream installations by recursively following these references.
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    install_roots = list()
+    while os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'r') as f:
+            upstream_root = f.read()
+            install_roots.append(upstream_root)
+            upstream_root_description = os.path.join(
+                upstream_root, 'upstream-spack')
+
+    return _construct_upstream_dbs_from_install_roots(install_roots)
+
+
+def upstream_dbs_from_config():
     other_spack_instances = spack.config.get('upstreams', {})
 
     install_roots = []
