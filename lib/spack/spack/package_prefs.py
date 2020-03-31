@@ -6,7 +6,6 @@
 import stat
 
 from six import string_types
-from six import iteritems
 
 import spack.repo
 import spack.error
@@ -167,18 +166,19 @@ def spec_externals(spec):
 
     external_specs = []
     for name in names:
-        pkg_paths = allpkgs.get(name, {}).get('paths', {})
-        pkg_modules = allpkgs.get(name, {}).get('modules', {})
+        pkg_config = allpkgs.get(name, {})
+        pkg_paths = pkg_config.get('paths', {})
+        pkg_modules = pkg_config.get('modules', {})
         if (not pkg_paths) and (not pkg_modules):
             continue
 
-        for external_spec, path in iteritems(pkg_paths):
+        for external_spec, path in pkg_paths.items():
             external_spec = spack.spec.Spec(
                 external_spec, external_path=canonicalize_path(path))
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
-        for external_spec, module in iteritems(pkg_modules):
+        for external_spec, module in pkg_modules.items():
             external_spec = spack.spec.Spec(
                 external_spec, external_module=module)
             if external_spec.satisfies(spec):
