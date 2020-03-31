@@ -15,6 +15,7 @@ class GtkDoc(AutotoolsPackage):
     pdf/man-pages with some extra work."""
 
     homepage = "https://wiki.gnome.org/DocumentationProject/GtkDoc"
+    url = 'https://gitlab.gnome.org/GNOME/gtk-doc/-/archive/GTK_DOC_1_32/gtk-doc-GTK_DOC_1_32.tar.gz'
 
     version('1.32', sha256='0890c1f00d4817279be51602e67c4805daf264092adc58f9c04338566e8225ba')
 
