@@ -15,7 +15,6 @@ class Libnotify(MesonPackage):
     version('0.7.9', sha256='9bd4f5fa911d27567e7cc2d2d09d69356c16703c4e8d22c0b49a5c45651f3af0')
 
     variant('docbook', default=False, description='Build docbook docs. Currently broken')
-    variant('tests', default=False, description='Build with tests. Currenlty broken')
     variant('gtkdoc', default=False, description='Build with gtkdoc. Currently broken')
 
     depends_on('pkgconfig')
@@ -38,7 +37,7 @@ class Libnotify(MesonPackage):
         else:
             args.append('-Ddocbook_docs=disabled')
 
-        if '+tests' in spec:
+        if self.run_tests:
             args.append('-Dtests=true')
         else:
             args.append('-Dtests=false')
