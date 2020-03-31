@@ -1035,6 +1035,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             for s, constraints in self.provided.items() if s.name == vpkg_name
         )
 
+    @property
     def virtuals_provided(self):
         """
         virtual packages provided by this package with its spec

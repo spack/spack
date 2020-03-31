@@ -1043,6 +1043,7 @@ class MockPackage(object):
     def provides(self, vname):
         return vname in self.provided
 
+    @property
     def virtuals_provided(self):
         return [v.name for v, c in self.provided]
 

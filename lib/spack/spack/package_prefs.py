@@ -167,7 +167,7 @@ def spec_externals(spec):
 
     allpkgs = get_packages_config()
     names = [spec.name]
-    names += [vspec.name for vspec in spec.package.virtuals_provided()]
+    names += [vspec.name for vspec in spec.package.virtuals_provided]
 
     external_specs = []
     for name in names:
