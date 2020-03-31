@@ -50,4 +50,5 @@ class Garply(Package):
              '%s/garply/garply.h' % prefix.include)
         mkdirp(prefix.bin)
         copy('garply_version.h', '%s/garply_version.h' % prefix.bin)
-        os.symlink('%s/garplinator' % prefix.lib64, '%s/garplinator' % prefix.bin)
+        os.symlink('%s/garplinator' % prefix.lib64,
+                   '%s/garplinator' % prefix.bin)

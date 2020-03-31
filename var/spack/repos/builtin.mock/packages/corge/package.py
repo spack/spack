@@ -7,6 +7,7 @@
 from spack import *
 import os
 
+
 class Corge(Package):
     """A toy package to test dependencies"""
 
@@ -62,7 +63,8 @@ class Corge(Package):
              '%s/corge/corge.h' % prefix.include)
         mkdirp(prefix.bin)
         copy('corge_version.h', '%s/corge_version.h' % prefix.bin)
-        os.symlink('%s/corgegator' % prefix.lib64, '%s/corgegator' % prefix.bin)
+        os.symlink('%s/corgegator' % prefix.lib64,
+                   '%s/corgegator' % prefix.bin)
         os.symlink('%s/quuxifier' % spec['quux'].prefix.lib64,
                    '%s/quuxifier' % prefix.bin)
         os.symlink('%s/garplinator' % spec['garply'].prefix.lib64,
