@@ -13,7 +13,7 @@ class Libceed(Package):
     git      = "https://github.com/CEED/libCEED.git"
 
     version('develop', branch='master')
-    version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60') # tag v0.6 + small portability fixes
+    version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
     version('0.5', tag='v0.5')
     version('0.4', tag='v0.4')
     version('0.2', tag='v0.2')
