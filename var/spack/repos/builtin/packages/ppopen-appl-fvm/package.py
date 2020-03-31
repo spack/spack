@@ -59,5 +59,5 @@ class PpopenApplFvm(MakefilePackage):
 
         def install(self, spec, prefix):
             make('install')
-            copy_tree('examples', join_path(prefix, 'examples'))
-            copy_tree('doc', join_path(prefix, 'doc'))
+            install_tree('examples', prefix.examples)
+            install_tree('doc', prefix.doc)
