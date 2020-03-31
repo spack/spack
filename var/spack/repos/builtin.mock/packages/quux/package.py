@@ -5,13 +5,14 @@
 
 
 from spack import *
+import os
 
 
 class Quux(Package):
     """Toy package for testing dependencies"""
 
     homepage = "https://www.example.com"
-    url      = "https://github.com/amundson/quux/archive/v3.0.0.tar.gz"
+    url      = "https://github.com/gartung/quux/archive/v3.0.0.tar.gz"
 
     version('3.0.0',
             sha256='b91bc96fb746495786bddac2c527039177499f2f76d3fa9dcf0b393859e68484')
@@ -19,15 +20,14 @@ class Quux(Package):
     depends_on('garply')
 
     def install(self, spec, prefix):
-        mkdirp('%s/bin' % self.stage.source_path)
         mkdirp(prefix.lib64)
         mkdirp('%s/quux' % prefix.include)
         copy('quux/quux_version_h.in', '%s/quux_version.h' %
              self.stage.source_path)
-        filter_file('@QUUX_VERSION_MAJOR@', '3', '%s/quux_version.h' %
-                    self.stage.source_path)
-        filter_file('@QUUX_VERSION_MINOR@', '0', '%s/quux_version.h' %
-                    self.stage.source_path)
+        filter_file('@QUUX_VERSION_MAJOR@', '%s' % self.version[0],
+                    '%s/quux_version.h' % self.stage.source_path)
+        filter_file('@QUUX_VERSION_MINOR@', '%s' % self.version[1:],
+                    '%s/quux_version.h' % self.stage.source_path)
         gpp = which('/usr/bin/g++')
         gpp('-Dquux_EXPORTS',
             '-I%s' % self.stage.source_path,
@@ -56,3 +56,8 @@ class Quux(Package):
         copy('quuxifier', '%s/quuxifier' % prefix.lib64)
         copy('%s/quux/quux.h' % self.stage.source_path,
              '%s/quux/quux.h' % prefix.include)
+        mkdirp(prefix.bin)
+        copy('quux_version.h', '%s/quux_version.h' % prefix.bin)
+        os.symlink('%s/quuxifier' % prefix.lib64, '%s/quuxifier' % prefix.bin)
+        os.symlink('%s/garplinator' % spec['garply'].prefix.lib64,
+                   '%s/garplinator' % prefix.bin)
