@@ -581,7 +581,14 @@ class log_output(object):
                 while True:
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
-                    rlist, _, _ = select.select(istreams, [], [])
+                    try:
+                        rlist, _, _ = select.select(istreams, [], [])
+                    except select.error as e:
+                        if e.args[0] == errno.EINTR:
+                            # This happens in Python 2 when select() is
+                            # interrupted, even if we use siginterrupt()
+                            continue
+                        raise
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
