@@ -3607,7 +3607,7 @@ the command line.
     For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
     passes its flags to GCC instead of passing them directly to the linker.
     Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
-    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``$rpath_flag`` can be overridden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
 
 The compiler wrappers also pass the compiler flags specified by the user from
