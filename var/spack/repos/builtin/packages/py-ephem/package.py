@@ -11,13 +11,11 @@ class PyEphem(PythonPackage):
     performing high-precision astronomy computations."""
 
     homepage = "https://rhodesmill.org/pyephem/"
-    url      = "https://pypi.python.org/packages/source/e/ephem/ephem-3.7.6.0.tar.gz"
+    url      = "https://github.com/brandon-rhodes/pyephem/archive/v3.7.7.1.tar.gz"
 
-    version('3.7.6.0', sha256='7a4c82b1def2893e02aec0394f108d24adb17bd7b0ca6f4bc78eb7120c0212ac')
+    version('3.7.7.1', sha256='d9d05d85c0d38a79169acaef25964ac9df2d808f0d833354545b9ef681ff584d')
 
-    variant('docs', default=False, description='build documentation')
-
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
     # Prevent passing --single-version-externally-managed to
