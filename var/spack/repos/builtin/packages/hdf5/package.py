@@ -60,16 +60,15 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
-            
+
     # Build HDF5 with API compaitibility.
-    variant('api', default='none', description='choose api compatibiity',
-            values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
-    
-    conflicts('api=v114', when='@1.6:1.12.99',msg='v114 is not compatible with this release')
-    conflicts('api=v112', when='@1.6:1.10.99',msg='v112 is not compatible with this release')
-    conflicts('api=v110', when='@1.6:1.8.99',msg='v110 is not compatible with this release')
-    conflicts('api=v18', when='@1.6:1.6.99',msg='v18 is not compatible with this release')
-    
+    variant('api', default='none', description='choose api compatibiity', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+
+    conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
+    conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
+    conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
+    conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
+
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
@@ -238,22 +237,22 @@ class Hdf5(AutotoolsPackage):
 
         # Set the api version
         if 'api=none' in self.spec:
-                extra_args.append('')
+            extra_args.append('')
 
         if 'api=v114' in self.spec:
-                extra_args.append('--with-default-api-version=v114')
+            extra_args.append('--with-default-api-version=v114')
 
         if 'api=v112' in self.spec:
-                extra_args.append('--with-default-api-version=v112')
+            extra_args.append('--with-default-api-version=v112')
 
         if 'api=v110' in self.spec:
-                extra_args.append('--with-default-api-version=v110')
+            extra_args.append('--with-default-api-version=v110')
 
-	if 'api=v18' in self.spec:
-                extra_args.append('--with-default-api-version=v18')
+        if 'api=v18' in self.spec:
+            extra_args.append('--with-default-api-version=v18')
 
-	if 'api=v16' in self.spec:
-                extra_args.append('--with-default-api-version=v16')
+        if 'api=v16' in self.spec:
+            extra_args.append('--with-default-api-version=v16')
 
         if '+szip' in self.spec:
             extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
