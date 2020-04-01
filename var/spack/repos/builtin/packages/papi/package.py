@@ -37,6 +37,7 @@ class Papi(Package):
     variant('powercap', default=False, description='Enable powercap interface support')
     variant('rapl', default=False, description='Enable RAPL support')
     variant('lmsensors', default=False, description='Enable lm_sensors support')
+    variant('sde', default=False, description='Enable software defined events')
 
     depends_on('lm-sensors', when='+lmsensors')
 
