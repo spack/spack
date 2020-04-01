@@ -18,7 +18,7 @@ class Laghos(MakefilePackage):
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
     git      = "https://github.com/CEED/Laghos.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('3.0', sha256='4db56286e15b42ecdc8d540c4888a7dec698b019df9c7ccb8319b7ea1f92d8b4')
     version('2.0', sha256='dd3632d5558889beec2cd3c49eb60f633f99e6d886ac868731610dd006c44c14')
     version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
