@@ -217,7 +217,7 @@ class keyboard_input(object):
             self.old_cfg = termios.tcgetattr(self.stream)
 
             # Install a signal handler to disable/enable keyboard input
-            # when the process moves from foreground to background.
+            # when the process moves between foreground and background.
             for signum in self.signals:
                 self.old_handlers[signum] = signal.signal(
                     signum, self._bg_fg_handler)
