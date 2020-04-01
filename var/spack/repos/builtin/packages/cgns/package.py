@@ -55,19 +55,19 @@ class Cgns(CMakePackage):
             '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
                 'ON' if '+mpi' in spec else 'OFF'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
-            '-CGNS_BUILD_TESTING:BOOL=%s' % (
-		'ON' if '+testing' in spec else 'OFF')
+            '-DCGNS_BUILD_TESTING:BOOL=%s' % (
+		'ON' if '+testing' in spec else 'OFF'),
             '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF',
             '-DCGNS_BUILD_SHARED:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF')
+                'ON' if '+shared' in spec else 'OFF'),
 	    '-DCGNS_BUILD_STATIC:BOOL=%s' % (
-		'ON' if '+static' in spec else 'OFF')
+		'ON' if '+static' in spec else 'OFF'),
 	    '-DCGNS_ENABLE_BASE_SCOPE:BOOL=%s' % (
-		if '+base_scope' in spec else 'OFF')
+		if '+base_scope' in spec else 'OFF'),
 	    '-DCGNS_ENABLE_LEGACY:BOOL=%s' % (
-		if '+legacy' in spec else 'OFF')
+		if '+legacy' in spec else 'OFF'),
 	    '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
-		if '+parallel' in spec else 'OFF')
+		if '+parallel' in spec else 'OFF'),
 	    '-DCGNS_ENABLE_MEM_DEBUG:BOOL=%s' % (
 		if '+mem_debug' in spec else 'OFF')
         ])
