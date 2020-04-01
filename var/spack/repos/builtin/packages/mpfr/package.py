@@ -31,7 +31,7 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     patches = {
         '4.0.2': 'f2d2a530acb5e70e1a9d5b80881dbb4a504d56535c4bc103d83e0bb630172029',
         '4.0.1': '5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739',
-        '3.1.6': '66a5d58364113a21405fc53f4a48f4e8',
+        '3.1.6': '7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008',
         '3.1.5': '1dc5fe65feb5607b89fe0f410d53b627',
         '3.1.4': 'd124381573404fe83654c7d5a79aeabf',
         '3.1.3': 'ebd1d835e0ae2fd8a9339210ccd1d0a8',
