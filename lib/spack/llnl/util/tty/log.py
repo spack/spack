@@ -151,13 +151,8 @@ class keyboard_input(object):
         new_cfg[3] &= ~termios.ECHO
 
         # Apply new settings for terminal
-        try:
-            with ignore_signal(signal.SIGTTOU):
-                termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
-        except termios.error as e:
-            # TODO: does this happen? It was needed at one point, but I
-            # TODO: no longer see it happen.
-            tty.debug("termios error: %s" % e)
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
 
     def _restore_input(self):
         """Restore the original input configuration on ``self.stream``."""
