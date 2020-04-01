@@ -227,7 +227,7 @@ class keyboard_input(object):
 
             # this itimer handles cases where the OS doesn't notify us of
             # a background or foreground change.
-            signal.setitimer(signal.ITIMER_REAL, 1e-3, 1e-3)
+            signal.setitimer(signal.ITIMER_REAL, 1e-1, 1e-1)
 
             # enable keyboard input initially (if foreground)
             if not self._is_background():
