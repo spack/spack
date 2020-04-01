@@ -18,6 +18,7 @@ class Htop(AutotoolsPackage):
     version('2.0.2', sha256='179be9dccb80cee0c5e1a1f58c8f72ce7b2328ede30fb71dcdf336539be2f487')
 
     depends_on('ncurses')
+    depends_on('python+pythoncmd', type='build')
 
     def configure_args(self):
         return ['--enable-shared']

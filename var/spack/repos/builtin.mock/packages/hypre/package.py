@@ -16,6 +16,3 @@ class Hypre(Package):
 
     depends_on('lapack')
     depends_on('blas')
-
-    def install(self, spec, prefix):
-        pass

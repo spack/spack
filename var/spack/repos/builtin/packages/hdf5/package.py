@@ -23,6 +23,8 @@ class Hdf5(AutotoolsPackage):
 
     version('develop', branch='develop')
 
+    version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
+
     version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
@@ -116,6 +118,22 @@ class Hdf5(AutotoolsPackage):
     # libraries fail to link; see https://github.com/spack/spack/issues/12586
     patch('h5public-skip-mpicxx.patch', when='@:1.8.21,1.10.0:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
+
+    # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
+    # declared as intent(in) though it is modified by the invocation. As a
+    # result, aggressive compilers such as Fujitsu's may do a wrong
+    # optimization to cause an error.
+    def patch(self):
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff.F90',
+            string=True, ignore_absent=True)
+        filter_file(
+            'INTEGER(SIZE_T), INTENT(IN) :: buf_size',
+            'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
+            'fortran/src/H5Fff_F03.f90',
+            string=True, ignore_absent=True)
 
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 

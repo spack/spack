@@ -60,6 +60,6 @@ class Portage(CMakePackage):
                        self.spec['lapack'].libs.joined())
 
         options.append("-DLAPACKE_LIBRARY=" +
-                       self.spec["lapack"].libs.joined(";"))
+                       self.spec["lapack:c"].libs.joined(";"))
 
         return options

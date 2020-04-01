@@ -189,7 +189,7 @@ def test_conditional_dep_with_user_constraints():
         assert ('y@3' in spec)
 
 
-@pytest.mark.usefixtures('mutable_mock_repo')
+@pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):
 
     def test_conflicting_package_constraints(self, set_dependency):
@@ -387,7 +387,6 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
-    @pytest.mark.usefixtures('config')
     def test_invalid_dep(self):
         spec = Spec('libelf ^mpich')
         with pytest.raises(spack.spec.InvalidDependencyError):
@@ -602,7 +601,6 @@ class TestSpecDag(object):
         copy_ids = set(id(s) for s in copy.traverse())
         assert not orig_ids.intersection(copy_ids)
 
-    @pytest.mark.usefixtures('config')
     def test_copy_concretized(self):
         orig = Spec('mpileaks')
         orig.concretize()

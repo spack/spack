@@ -5,6 +5,8 @@
 
 from spack import *
 
+import os
+
 
 class Dealii(CMakePackage, CudaPackage):
     """C++ software library providing well-documented tools to build finite
@@ -151,6 +153,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('trilinos gotype=int', when='+trilinos')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -457,6 +460,13 @@ class Dealii(CMakePackage, CudaPackage):
                 '-DCMAKE_CXX_FLAGS:STRING=%s' % (
                     ' '.join(cxx_flags))
             ])
+
+        # Add flags for machine vectorization, used when tutorials
+        # and user code is built.
+        # See https://github.com/dealii/dealii/issues/9164
+        options.extend([
+            '-DDEAL_II_CXX_FLAGS=%s' % os.environ['SPACK_TARGET_ARGS']
+        ])
 
         return options
 

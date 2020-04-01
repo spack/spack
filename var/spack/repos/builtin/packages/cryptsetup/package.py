@@ -25,6 +25,7 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('util-linux~libuuid', type=('build', 'link'))
     depends_on('gettext', type=('build', 'link'))
 
+    depends_on('pkgconfig', type='build')
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')

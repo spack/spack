@@ -1,0 +1,13 @@
+diff --git a/bcache.c b/bcache.c
+index 8f37445..8b4b986 100644
+--- a/bcache.c
++++ b/bcache.c
+@@ -115,7 +115,7 @@ static const uint64_t crc_table[256] = {
+ 	0x9AFCE626CE85B507ULL
+ };
+ 
+-inline uint64_t crc64(const void *_data, size_t len)
++uint64_t crc64(const void *_data, size_t len)
+ {
+ 	uint64_t crc = 0xFFFFFFFFFFFFFFFFULL;
+ 	const unsigned char *data = _data;

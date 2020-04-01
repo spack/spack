@@ -12,6 +12,7 @@ class PyLlvmlite(PythonPackage):
     homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
     url = "https://pypi.io/packages/source/l/llvmlite/llvmlite-0.23.0.tar.gz"
 
+    version('0.31.0', sha256='22ab2b9d7ec79fab66ac8b3d2133347de86addc2e2df1b3793e523ac84baa3c8')
     version('0.29.0', sha256='3adb0d4c9a17ad3dca82c7e88118babd61eeee0ee985ce31fa43ec27aa98c963')
     version('0.27.1', sha256='48a1c3ae69fd8920cba153bfed8a46ac46474bc706a2100226df4abffe0000ab')
     version('0.26.0', sha256='13e84fe6ebb0667233074b429fd44955f309dead3161ec89d9169145dbad2ebf')
@@ -25,7 +26,11 @@ class PyLlvmlite(PythonPackage):
 
     # llvmlite compatibility information taken from https://github.com/numba/llvmlite#compatibility
     depends_on('llvm@7.0:8.0.99', when='@0.29.0:')
-    depends_on('llvm@7.0:7.99', when='@0.27.0:0.28.99')
-    depends_on('llvm@6.0:6.99', when='@0.23.0:0.26.99')
-    depends_on('llvm@4.0:4.99', when='@0.17.0:0.20.99')
+    depends_on('llvm@7.0:7.0.99', when='@0.27.0:0.28.99')
+    depends_on('llvm@6.0:6.0.99', when='@0.23.0:0.26.99')
+    depends_on('llvm@4.0:4.0.99', when='@0.17.0:0.20.99')
     depends_on('binutils', type='build')
+
+    def setup_build_environment(self, env):
+        # Need to set PIC flag since this is linking statically with LLVM
+        env.set('CXX_FLTO_FLAGS', '-flto {0}'.format(self.compiler.pic_flag))

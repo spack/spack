@@ -24,11 +24,7 @@ class Jdk(Package):
     # automate this process, we need to utilize these additional curl
     # command-line options. See:
     # http://stackoverflow.com/questions/10268583/how-to-automate-download-and-installation-of-java-jdk-on-linux
-    curl_options = [
-        '-j',  # junk cookies
-        '-b',  # specify required License Agreement cookie
-        'oraclelicense=accept-securebackup-cookie'
-    ]
+    fetch_options = {'cookie': 'oraclelicense=accept-securebackup-cookie'}
 
     # To add the latest version, go to the homepage listed above,
     # click "JDK Download", click "Accept License Agreement", right-click the
@@ -36,29 +32,29 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
-    version('12.0.2_10', sha256='2dde6fda89a4ec6e6560ed464e917861c9e40bf576e7a64856dafc55abaaff51', curl_options=curl_options,
+    version('12.0.2_10', sha256='2dde6fda89a4ec6e6560ed464e917861c9e40bf576e7a64856dafc55abaaff51',
             url='https://download.oracle.com/otn-pub/java/jdk/12.0.2+10/e482c34c86bd4bf8b56c0b35558996b9/jdk-12.0.2_linux-x64_bin.tar.gz')
-    version('12.0.1_12', sha256='9fd6dcdaf2cfca7da59e39b009a0f5bcd53bec2fb16105f7ca8d689cdab68d75', curl_options=curl_options,
+    version('12.0.1_12', sha256='9fd6dcdaf2cfca7da59e39b009a0f5bcd53bec2fb16105f7ca8d689cdab68d75',
             url='https://download.oracle.com/otn-pub/java/jdk/12.0.1+12/69cfe15208a647278a19ef0990eea691/jdk-12.0.1_linux-x64_bin.tar.gz')
-    version('11.0.2_9', sha256='7b4fd8ffcf53e9ff699d964a80e4abf9706b5bdb5644a765c2b96f99e3a2cdc8', curl_options=curl_options,
+    version('11.0.2_9', sha256='7b4fd8ffcf53e9ff699d964a80e4abf9706b5bdb5644a765c2b96f99e3a2cdc8',
             url='https://download.oracle.com/otn-pub/java/jdk/11.0.2+9/f51449fcd52f4d52b93a989c5c56ed3c/jdk-11.0.2_linux-x64_bin.tar.gz')
-    version('11.0.1_13', sha256='e7fd856bacad04b6dbf3606094b6a81fa9930d6dbb044bbd787be7ea93abc885', curl_options=curl_options,
+    version('11.0.1_13', sha256='e7fd856bacad04b6dbf3606094b6a81fa9930d6dbb044bbd787be7ea93abc885',
             url='https://download.oracle.com/otn-pub/java/jdk/11.0.1+13/90cf5d8f270a4347a95050320eef3fb7/jdk-11.0.1_linux-x64_bin.tar.gz')
-    version('10.0.2_13', sha256='6633c20d53c50c20835364d0f3e172e0cbbce78fff81867488f22a6298fa372b', curl_options=curl_options,
+    version('10.0.2_13', sha256='6633c20d53c50c20835364d0f3e172e0cbbce78fff81867488f22a6298fa372b',
             url='https://download.oracle.com/otn-pub/java/jdk/10.0.2+13/19aef61b38124481863b1413dce1855f/jdk-10.0.2_linux-x64_bin.tar.gz')
-    version('10.0.1_10', sha256='ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4', curl_options=curl_options,
+    version('10.0.1_10', sha256='ae8ed645e6af38432a56a847597ac61d4283b7536688dbab44ab536199d1e5a4',
             url='https://download.oracle.com/otn-pub/java/jdk/10.0.1+10/fb4372174a714e6b8c52526dc134031e/jdk-10.0.1_linux-x64_bin.tar.gz')
-    version('1.8.0_241-b07', sha256='419d32677855f676076a25aed58e79432969142bbd778ff8eb57cb618c69e8cb', curl_options=curl_options,
+    version('1.8.0_241-b07', sha256='419d32677855f676076a25aed58e79432969142bbd778ff8eb57cb618c69e8cb',
             url='https://download.oracle.com/otn-pub/java/jdk/8u241-b07/1f5b5a70bf22433b84d0e960903adac8/jdk-8u241-linux-x64.tar.gz')
-    version('1.8.0_231-b11', sha256='a011584a2c9378bf70c6903ef5fbf101b30b08937441dc2ec67932fb3620b2cf', curl_options=curl_options,
+    version('1.8.0_231-b11', sha256='a011584a2c9378bf70c6903ef5fbf101b30b08937441dc2ec67932fb3620b2cf',
             url='https://download.oracle.com/otn-pub/java/jdk/8u231-b11/5b13a193868b4bf28bcb45c792fce896/jdk-8u231-linux-x64.tar.gz')
-    version('1.8.0_212-b10', sha256='3160c50aa8d8e081c8c7fe0f859ea452922eca5d2ae8f8ef22011ae87e6fedfb', curl_options=curl_options,
+    version('1.8.0_212-b10', sha256='3160c50aa8d8e081c8c7fe0f859ea452922eca5d2ae8f8ef22011ae87e6fedfb',
             url='https://download.oracle.com/otn-pub/java/jdk/8u212-b10/59066701cf1a433da9770636fbc4c9aa/jdk-8u212-linux-x64.tar.gz')
-    version('1.8.0_202-b08', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0', curl_options=curl_options,
+    version('1.8.0_202-b08', sha256='9a5c32411a6a06e22b69c495b7975034409fa1652d03aeb8eb5b6f59fd4594e0',
             url='https://download.oracle.com/otn-pub/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz')
-    version('1.8.0_141-b15', sha256='041d5218fbea6cd7e81c8c15e51d0d32911573af2ed69e066787a8dc8a39ba4f', curl_options=curl_options,
+    version('1.8.0_141-b15', sha256='041d5218fbea6cd7e81c8c15e51d0d32911573af2ed69e066787a8dc8a39ba4f',
             url='https://download.oracle.com/otn-pub/java/jdk/8u141-b15/336fa29ff2bb4ef291e347e091f7f4a7/jdk-8u141-linux-x64.tar.gz')
-    version('1.8.0_131-b11', sha256='62b215bdfb48bace523723cdbb2157c665e6a25429c73828a32f00e587301236', curl_options=curl_options,
+    version('1.8.0_131-b11', sha256='62b215bdfb48bace523723cdbb2157c665e6a25429c73828a32f00e587301236',
             url='https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
 
     provides('java@12', when='@12.0:12.999')

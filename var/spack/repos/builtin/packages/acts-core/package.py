@@ -30,10 +30,14 @@ class ActsCore(CMakePackage):
     """
 
     homepage = "http://acts.web.cern.ch/ACTS/"
-    git      = "https://gitlab.cern.ch/acts/acts-core.git"
+    git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
     version('develop', branch='master')
+    version('0.20.0', commit='1d37a849a9c318e8ca4fa541ef8433c1f004637b')
+    version('0.19.0', commit='408335636486c421c6222a64372250ef12544df6')
+    version('0.18.0', commit='d58a68cf75b52a5e0f563bc237f09250aa9da80c')
+    version('0.17.0', commit='0789f654ff484b013fd27e5023cf342785ea8d97')
     version('0.16.0', commit='b3d965fe0b8ae335909d79114ef261c6b996773a')
     version('0.15.0', commit='267c28f69c561e64369661a6235b03b5a610d6da')
     version('0.14.0', commit='38d678fcb205b77d60326eae913fbb1b054acea1')
@@ -75,7 +79,8 @@ class ActsCore(CMakePackage):
 
     depends_on('cmake @3.11:', type='build')
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.62: +program_options +test', when='@0.10.4:')
+    depends_on('boost @1.62: +program_options +test', when='@0.10.4:0.18.0')
+    depends_on('boost @1.69: +program_options +test', when='@0.19.0:')
     depends_on('eigen @3.2.9:', type='build')
     depends_on('nlohmann-json @3.2.0:', when='@0.14.0: +json')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')

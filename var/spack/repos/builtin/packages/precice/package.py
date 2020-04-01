@@ -19,6 +19,7 @@ class Precice(CMakePackage):
     maintainers = ['fsimonis', 'MakisH']
 
     version('develop', branch='develop')
+    version('2.0.1', sha256='e4fe2d2063042761ab325f8c802f88ae088c90862af288ad1a642967d074bd50')
     version('2.0.0', sha256='c8979d366f06e35626a8da08a1c589df77ec13972eb524a1ba99a011e245701f')
     version('1.6.1', sha256='7d0c54faa2c69e52304f36608d93c408629868f16f3201f663a0f9b2008f0763')
     version('1.6.0', sha256='c3b16376fda9eb3449adb6cc3c1e267c3dc792a5d118e37d93a32a59b5a4bc6f')
