@@ -231,11 +231,11 @@ def mock_shell_v_v(proc, ctl, attrs):
     ctl.fg()
     ctl.wait_enabled()
 
-    time.sleep(.05)
+    time.sleep(.1)
     ctl.write(b'v')
-    time.sleep(.05)
+    time.sleep(.1)
     ctl.write(b'v')
-    time.sleep(.05)
+    time.sleep(.1)
 
     os.kill(proc.pid, signal.SIGUSR1)
 
@@ -244,11 +244,11 @@ def mock_shell_v_v_no_termios(proc, ctl, attrs):
     ctl.fg()
     ctl.wait_disabled_fg()
 
-    time.sleep(.2)  # allow some time to NOT print
+    time.sleep(.1)  # allow some time to NOT print
     ctl.write(b'v\n')
-    time.sleep(.2)  # allow some time to print
+    time.sleep(.1)  # allow some time to print
     ctl.write(b'v\n')
-    time.sleep(.05)
+    time.sleep(.1)
 
     os.kill(proc.pid, signal.SIGUSR1)
 
@@ -272,8 +272,10 @@ def _mock_shell_integration(proc, ctl, attrs):
     ctl.status()
     ctl.wait_enabled()
 
+    time.sleep(.1)       # allow some time to NOT print
     ctl.write(b'v')      # enable verbose output
     ctl.status()
+    time.sleep(.1)       # allow some time to print
 
     ctl.bg()             # send to background (keep running)
     ctl.status()
@@ -318,10 +320,10 @@ def _mock_shell_integration_no_termios(proc, ctl, attrs):
     ctl.status()
     ctl.wait_disabled_fg()
 
-    time.sleep(.2)       # allow some time to NOT print
+    time.sleep(.1)       # allow some time to NOT print
     ctl.write(b'v\n')    # enable verbose output
     ctl.status()
-    time.sleep(.2)       # allow time to print
+    time.sleep(.1)       # allow time to print
 
     ctl.bg()             # send to background (keep running)
     ctl.status()
@@ -447,7 +449,10 @@ def test_foreground_background_with_output(test_fn, capfd, termios_on_or_off):
     assert exitcode == 0
 
     # numbers output by logger
-    numbers = set([int(n) for n in re.split(r'\s+', out.strip())])
+    stripped = out.strip()
+    split = re.split(r'\s+', stripped) if stripped else []
+
+    numbers = set([int(n) for n in split])
     all_numbers = set(range(shell.attrs["count"]))
 
     # all numbers are really output we expect
