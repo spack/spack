@@ -575,9 +575,6 @@ class Database(object):
         except (TypeError, ValueError) as e:
             raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
-        # Update the internal state of the DB without re-reading from file
-        self._read_from_dict(database)
-
     def _read_spec_from_dict(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
 
@@ -659,17 +656,7 @@ class Database(object):
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
-        self._read_from_dict(fdata)
-
-    def _read_from_dict(self, db_data):
-        """Reads the DB from a dict-like object with appropriate fields.
-
-        Args:
-            db_data (dict): dictionary like object from which the DB
-                is read
-        """
-
-        if db_data is None:
+        if fdata is None:
             return
 
         def check(cond, msg):
@@ -677,10 +664,10 @@ class Database(object):
                 raise CorruptDatabaseError(
                     "Spack database is corrupt: %s" % msg, self._index_path)
 
-        check('database' in db_data, "no 'database' attribute in JSON DB.")
+        check('database' in fdata, "no 'database' attribute in JSON DB.")
 
         # High-level file checks
-        db = db_data['database']
+        db = fdata['database']
         check('installs' in db, "no 'installs' in JSON DB.")
         check('version' in db, "no 'version' in JSON DB.")
 
@@ -1141,6 +1128,8 @@ class Database(object):
 
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
+            if dep._dependents.get(spec.name):
+                del dep._dependents[spec.name]
             self._decrement_ref_count(dep)
 
         if rec.deprecated_for:
