@@ -242,12 +242,14 @@ class PseudoShell(object):
     ``master_function`` is spawned in its own process and passed three
     arguments:
 
-      1. ``proc``, the ``multiprocessing.Process`` object
-         representing the child;
-      2. ``ctl``, a ``ProcessController`` object tied to the child; and
-      3. ``attrs``, a ``dict`` object from ``multiprocessing.Manager``
-         that can be used to share state among the caller, master, and
-         child processes.
+    proc
+      the ``multiprocessing.Process`` object representing the child
+    ctl
+      a ``ProcessController`` object tied to the child
+    attrs
+      a ``dict`` object from ``multiprocessing.Manager``
+      that can be used to share state among the caller, master, and
+      child processes
 
     ``child_function`` is only passed the ``attrs`` dictionary.
 
