@@ -177,8 +177,10 @@ def _master_process(master_function, child_function, attrs):
 
     master_fd, child_fd = os.openpty()
     pty_name = os.ttyname(child_fd)
-    with open(pty_name, "w+b"):
-        pass  # take controlling terminal
+
+    # take controlling terminal
+    pty_fd = os.open(pty_name, os.O_RDWR)
+    os.close(pty_fd)
 
     ready = multiprocessing.Value('i', False)
     proc = multiprocessing.Process(
