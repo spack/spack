@@ -26,7 +26,6 @@ class CBlosc(CMakePackage):
     version('1.8.0',  sha256='e0f8b9e12e86776a1b037385826c55006da6e2ae4973dac5b5ad3cfcf01e9043')
 
     variant('avx2', default=True, description='Enable AVX2 support')
-    variant('benchmarks', default=False, description='Build benchmarks')
 
     depends_on('cmake@2.8.10:', type='build')
     depends_on('snappy')
