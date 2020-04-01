@@ -28,9 +28,6 @@ class Laghos(MakefilePackage):
 
     depends_on('metis@4.0.3:', when='+metis')
 
-    depends_on('mfem@develop+mpi+metis', when='@develop+metis')
-    depends_on('mfem@develop+mpi~metis', when='@develop~metis')
-
     # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
     depends_on('mfem@3.4.0:+mpi+metis', when='@2.0+metis')
     depends_on('mfem@3.4.0:+mpi~metis', when='@2.0~metis')
