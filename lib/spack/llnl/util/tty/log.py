@@ -7,6 +7,7 @@
 """
 from __future__ import unicode_literals
 
+import atexit
 import errno
 import multiprocessing
 import os
@@ -18,6 +19,8 @@ import signal
 from contextlib import contextmanager
 from six import string_types
 from six import StringIO
+
+from defer_signals import defer_signals
 
 import llnl.util.tty as tty
 
@@ -41,8 +44,7 @@ control = re.compile('(\x11\n|\x13\n)')
 @contextmanager
 def ignore_signal(signum):
     """Context manager to temporarily ignore a signal."""
-    old_handler = signal.getsignal(signum)
-    signal.signal(signum, signal.SIG_IGN)
+    old_handler = signal.signal(signum, signal.SIG_IGN)
     yield
     signal.signal(signum, old_handler)
 
@@ -68,52 +70,50 @@ class keyboard_input(object):
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
 
-        with keyboard_input(sys.stdin) as kb:
+        with keyboard_input(sys.stdin):
             while True:
-                kb.check_fg_bg()  # poll to ensure terminal settings on fg
                 r, w, x = select.select([sys.stdin], [], [])
                 # ... do something with keypresses ...
 
-    This disables canonical input so that keypresses are available on the
-    stream immediately. Typically standard input allows line editing,
-    which means keypresses won't be sent until the user hits return.
+    The ``keyboard_input`` context manager disables canonical
+    (line-based) input and echoing, so that keypresses are available on
+    the stream immediately, and they are not printed to the
+    terminal. Typically, standard input is line-buffered, which means
+    keypresses won't be sent until the user hits return. In this mode, a
+    user can hit, e.g., 'v', and it will be read on the other end of the
+    pipe immediately but not printed.
 
-    It also disables echoing, so that keys pressed aren't printed to the
-    terminal.  So, the user can hit, e.g., 'v', and it's read on the
-    other end of the pipe immediately but not printed.
+    The handler takes care to ensure that terminal changes only take
+    effect when the calling process is in the foreground. If the process
+    is backgrounded, canonical mode and echo are re-enabled. They are
+    disabled again when the calling process comes back to the foreground.
 
-    The ``keyboard_input`` handler takes care to ensure that terminal
-    changes only take effect when the calling process is in the
-    foreground. If the process is sent to the background, canonical input
-    and echo are re-enabled. They are disabled again when the calling
-    process is brought back to the foreground.
-
-    This context manager works *mostly* transparently through signal
-    handlers.  It uses the ``SIGTSTP`` handler to resotre terminal
-    settings when backgrounded, and the ``SIGCONT`` handler to re-enable
-    input when foregrounded.  Here are the three relevant states and
-    transitions::
+    This context manager works through a single signal handler for
+    ``SIGTSTP``, ``SIGCONT``, and ``SIGALRM``.  Here are the relevant
+    states, transitions, and POSIX signals::
 
         [Running] -------- Ctrl-Z sends SIGTSTP ------------.
         [ in FG ] <------- fg sends SIGCONT --------------. |
            ^                                              | |
-           | fg (needs kb.check_fg_bg())                  | |
+           | fg (no signal; we use itimer + SIGALRM)      | |
            |                                              | v
         [Running] <------- bg sends SIGCONT ---------- [Stopped]
         [ in BG ]                                      [ in BG ]
 
     For normal transitions from running-in-foreground to
-    stopped-in-background and back, we intercept the ``SIGTSTP`` and
-    ``SIGCONT`` handlers and adjust terminal settings without help from
-    the user. For the transition from running-in-background to
-    running-in-foreground, the OS doesn't send any signal, so the caller
-    needs to poll with ``kb.check_fg_bg()`` to ensure that keyboard input
-    is re-enabled on this transition.
+    stopped-in-background and back, we intercept ``SIGTSTP`` and
+    ``SIGCONT`` to adjust terminal settings. For the transition from
+    running-in-background to running-in-foreground, the OS doesn't send
+    any signal, so we install an interval timer (itimer) that generates
+    ``SIGALRM`` periodically to ensure that keyboard input is re-enabled
+    on this transition.  There is normally no transition from
+    running-in-foreground to running-in-background, but ``SIGALRM`` will
+    handle that one too.
 
-    Note: ``SIGSTOP`` can also stop a process (in the foreground or
+    Note: ``SIGSTOP`` can stop a process (in the foreground or
     background), but it can't be caught. Because of this, we can't fix
-    any terminal settings on ``SIGSTOP``, and the terminal may be left
-    with ``ICANON`` and ``ECHO`` disabled.
+    any terminal settings on ``SIGSTOP``, and the terminal will be left
+    with ``ICANON`` and ``ECHO`` disabled until it is resumes execution.
 
     Note: we rely on ``termios`` support.  Without it, or if the stream
     isn't a TTY, ``keyboard_input`` has no effect.
@@ -129,6 +129,7 @@ class keyboard_input(object):
         will do nothing.
         """
         self.stream = stream
+        self.signals = [signal.SIGALRM, signal.SIGTSTP, signal.SIGCONT]
 
     def _is_background(self):
         """True iff calling process is in the background."""
@@ -144,10 +145,6 @@ class keyboard_input(object):
 
     def _enable_keyboard_input(self):
         """Disable canonical input and echoing on ``self.stream``."""
-        assert self.old_cfg, "_enable_keyboard_input only works with termios"
-        assert not self._is_background(), \
-            "_enable_keyboard_input can only be called in foreground"
-
         # "enable" input by disabling canonical mode and echo
         new_cfg = termios.tcgetattr(self.stream)
         new_cfg[3] &= ~termios.ICANON
@@ -155,7 +152,8 @@ class keyboard_input(object):
 
         # Apply new settings for terminal
         try:
-            termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
+            with ignore_signal(signal.SIGTTOU):
+                termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
         except termios.error as e:
             # TODO: does this happen? It was needed at one point, but I
             # TODO: no longer see it happen.
@@ -163,53 +161,48 @@ class keyboard_input(object):
 
     def _restore_input(self):
         """Restore the original input configuration on ``self.stream``."""
-        assert self.old_cfg, "_restore_input only works with termios"
-
         # _restore_input Can be called in foreground or background. When called
         # in the background, tcsetattr triggers SIGTTOU, which we must ignore,
         # or the process will be stopped.
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
 
-    def check_fg_bg(self):
-        if not self.old_cfg:
-            return
+    @contextmanager
+    def defer_signals(self):
+        with defer_signals(self.signals):
+            yield
 
-        # query terminal flags and fg/bg status
-        flags = self._get_canon_echo_flags()
-        bg = self._is_background()
+    def _bg_fg_handler(self, signum, frame):
+        """Ensures that input is enabled and disabled at the right times.
 
-        # restore sanity if things are amiss
-        if not bg and any(flags):    # fg, but input not enabled
-            self._enable_keyboard_input()
-        elif bg and not all(flags):  # bg, but input enabled
-            self._restore_input()
+        We want canonical input and echo to be disabled when the calling
+        process group is in the foreground, and disabled when it is in
+        the background. This handler
 
-    def _tstp_handler(self, signum, frame):
-        """Handler to restore term settings before caller is backgrounded."""
-        # retore input settings on terminal when backgrounded, so we
-        # don't leave the user's terminal in non-canonical, non-echo mode
-        self._restore_input()
+        This is the handler for ``SIGTSTP``, ``SIGCONT``, and ``SIGALRM``.
 
-        # Run the default SIGTSTP handler for this process to actually stop it.
-        # We reinstall _tstp_handler on SIGCONT.
-        signal.signal(signal.SIGTSTP, self.old_tstp_handler)
-        os.kill(os.getpid(), signal.SIGTSTP)
+        """
+        with self.defer_signals():
+            # query terminal flags and fg/bg status
+            flags = self._get_canon_echo_flags()
+            bg = self._is_background()
 
-    def _cont_handler(self, signum, frame):
-        """Handler to restore or enable term settings on SIGCONT."""
-        # SICONT happens when started both in the foreground and background.
-        if self._is_background():
-            # restore defaults if we find ourselves in the background. This
-            # will likely have been done already by _tstp_handler, but this is
-            # *just in case* we get SIGSTOP/SIGCONT (SIGSTOP can't be caught)
-            self._restore_input()
-        else:
-            # re-enable keyboard input if we're newly running in the foreground
-            self._enable_keyboard_input()
+            # restore sanity if any flags are amiss
+            if not bg and any(flags):    # fg, but input not enabled
+                self._enable_keyboard_input()
+            elif bg and not all(flags):  # bg, but input enabled
+                self._restore_input()
 
-        # reinstall the SIGTSTP handler to disable when resuming execution
-        signal.signal(signal.SIGTSTP, self._tstp_handler)
+            # reinstall TSTP handler on CONT (see below where TSTP removes it)
+            if signum == signal.SIGCONT:
+                signal.signal(signal.SIGTSTP, self._bg_fg_handler)
+
+            # python can't block signals, so we reinstall the default TSTP
+            # handler here, which actually stops the process on kill
+            if signum == signal.SIGTSTP:
+                signal.signal(
+                    signal.SIGTSTP, self.old_handlers[signal.SIGTSTP])
+                os.kill(os.getpid(), signal.SIGTSTP)
 
     def __enter__(self):
         """Enable immediate keypress input, while this process is foreground.
@@ -218,24 +211,28 @@ class keyboard_input(object):
         do nothing.
         """
         self.old_cfg = None
-        self.old_tstp_handler = None
-        self.old_cont_handler = None
+        self.old_handlers = {}
 
         # Ignore all this if the input stream is not a tty.
         if not self.stream or not self.stream.isatty():
             return self
 
-        # If this fails, self.old_cfg will remain None
         if termios:
-            # save old termios settings and signal handlers to restore later
+            # save old termios settings to restore later
             self.old_cfg = termios.tcgetattr(self.stream)
-            self.old_tstp_handler = signal.getsignal(signal.SIGTSTP)
-            self.old_cont_handler = signal.getsignal(signal.SIGCONT)
 
-            # add handlers to disable/enable keyboard input when process
-            # moves from foreground to background.
-            signal.signal(signal.SIGTSTP, self._tstp_handler)
-            signal.signal(signal.SIGCONT, self._cont_handler)
+            # Install a signal handler to disable/enable keyboard input
+            # when the process moves from foreground to background.
+            for signum in self.signals:
+                self.old_handlers[signum] = signal.signal(
+                    signum, self._bg_fg_handler)
+
+            # add an atexit handler to ensure the terminal is restored
+            atexit.register(self._restore_input)
+
+            # this itimer handles cases where the OS doesn't notify us of
+            # a background or foreground change.
+            signal.setitimer(signal.ITIMER_REAL, 1e-3, 1e-3)
 
             # enable keyboard input initially (if foreground)
             if not self._is_background():
@@ -249,9 +246,10 @@ class keyboard_input(object):
             self._restore_input()
 
         # restore SIGSTP and SIGCONT handlers
-        if self.old_tstp_handler:
-            signal.signal(signal.SIGTSTP, self.old_tstp_handler)
-            signal.signal(signal.SIGCONT, self.old_cont_handler)
+        if self.old_handlers:
+            signal.setitimer(signal.ITIMER_REAL, 0, 0)
+            for signum, handler in self.old_handlers.items():
+                signal.signal(signum, self._bg_fg_handler)
 
 
 class Unbuffered(object):
@@ -573,11 +571,8 @@ class log_output(object):
         log_file = self.log_file
 
         try:
-            with keyboard_input(stdin) as kb:
+            with keyboard_input(stdin):
                 while True:
-                    # ensure that input settings are sane.
-                    kb.check_fg_bg()
-
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
                     try:
@@ -592,8 +587,16 @@ class log_output(object):
                     # Currently ignores other chars.
                     # only read stdin if we're in the foreground
                     if stdin in rlist and not _is_background_tty(stdin):
-                        if stdin.read(1) == 'v':
-                            echo = not echo
+                        # it's possible to be backgrounded between the above
+                        # check and the read, so we ignore SIGTTIN here.
+                        with ignore_signal(signal.SIGTTIN):
+                            try:
+                                if stdin.read(1) == 'v':
+                                    echo = not echo
+                            except IOError as e:
+                                # if SIGTTIN is ignored,
+                                if e.errno != errno.EIO:
+                                    raise
 
                     if in_pipe in rlist:
                         # Handle output from the calling process.
