@@ -240,19 +240,19 @@ class Hdf5(AutotoolsPackage):
         if 'api=none' in self.spec:
             extra_args.append('')
 
-        if 'api=v114' in self.spec:
+	if 'api=v114' in self.spec:
             extra_args.append('--with-default-api-version=v114')
-            
-        if 'api=v112' in self.spec:
+	
+	if 'api=v112' in self.spec:
             extra_args.append('--with-default-api-version=v112')
-            
-	    if 'api=v110' in self.spec:
+        
+	if 'api=v110' in self.spec:
             extra_args.append('--with-default-api-version=v110')
 
-	    if 'api=v18' in self.spec:
+	if 'api=v18' in self.spec:
             extra_args.append('--with-default-api-version=v18')
 
-	    if 'api=v16' in self.spec:
+	if 'api=v16' in self.spec:
             extra_args.append('--with-default-api-version=v16')
 
         if '+szip' in self.spec:
