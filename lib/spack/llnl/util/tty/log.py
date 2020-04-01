@@ -165,6 +165,19 @@ class keyboard_input(object):
         with defer_signals(self.signals):
             yield
 
+    def _signal_no_eintr(self, signum, handler):
+        """Register a handler so that it will not interrupt system calls.
+
+        Python's ``signal.signal()`` call sets ``SA_RESTART``, so
+        interrupted system calls will raise ``EINTR``.  This routine
+        calls ``signal.siginterrupt(signum, False)`` immediately after
+        registering to prevent this behavior.
+
+        """
+        old_handler = signal.signal(signum, handler)
+        signal.siginterrupt(signum, False)  # don't raise EINTR from syscalls
+        return old_handler
+
     def _bg_fg_handler(self, signum, frame):
         """Ensures that input is enabled and disabled at the right times.
 
@@ -188,12 +201,12 @@ class keyboard_input(object):
 
             # reinstall TSTP handler on CONT (see below where TSTP removes it)
             if signum == signal.SIGCONT:
-                signal.signal(signal.SIGTSTP, self._bg_fg_handler)
+                self._signal_no_eintr(signal.SIGTSTP, self._bg_fg_handler)
 
             # python can't block signals, so we reinstall the default TSTP
             # handler here, which actually stops the process on kill
             if signum == signal.SIGTSTP:
-                signal.signal(
+                self._signal_no_eintr(
                     signal.SIGTSTP, self.old_handlers[signal.SIGTSTP])
                 os.kill(os.getpid(), signal.SIGTSTP)
 
@@ -217,7 +230,7 @@ class keyboard_input(object):
             # Install a signal handler to disable/enable keyboard input
             # when the process moves between foreground and background.
             for signum in self.signals:
-                self.old_handlers[signum] = signal.signal(
+                self.old_handlers[signum] = self._signal_no_eintr(
                     signum, self._bg_fg_handler)
 
             # add an atexit handler to ensure the terminal is restored
@@ -241,8 +254,8 @@ class keyboard_input(object):
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
             signal.setitimer(signal.ITIMER_REAL, 0, 0)
-            for signum, handler in self.old_handlers.items():
-                signal.signal(signum, self._bg_fg_handler)
+            for signum, old_handler in self.old_handlers.items():
+                signal.signal(signum, old_handler)
 
 
 class Unbuffered(object):
@@ -568,13 +581,7 @@ class log_output(object):
                 while True:
                     # No need to set any timeout for select.select
                     # Wait until a key press or an event on in_pipe.
-                    try:
-                        rlist, _, _ = select.select(istreams, [], [])
-                    except select.error as e:
-                        if e.args[0] == errno.EINTR:
-                            # This happens we get a signal while in select()
-                            continue
-                        raise
+                    rlist, _, _ = select.select(istreams, [], [])
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
