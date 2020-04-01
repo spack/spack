@@ -60,7 +60,7 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.5.3
+      - parquet-converters@0.5.4
       - synapsetool@0.5.8
       - touchdetector@5.3.3
       - brayns +opendeck +brion ^ospray@1.7.3%intel@19.0.4
