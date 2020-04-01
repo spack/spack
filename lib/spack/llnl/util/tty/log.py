@@ -50,9 +50,7 @@ def ignore_signal(signum):
 
 
 def _is_background_tty(stream):
-    """Return True iff calling process is in the background.
-
-    If stream is not connected to a tty, this will return False.
+    """True if the stream is a tty and calling process is in the background.
     """
     return (
         stream.isatty() and
