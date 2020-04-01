@@ -132,7 +132,7 @@ A pipeline-enabled spack environment
 ------------------------------------
 
 Here's an example of a spack environment file that has been enhanced with
-sections desribing a build pipeline:
+sections describing a build pipeline:
 
 .. code-block:: yaml
 
