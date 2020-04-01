@@ -21,6 +21,7 @@ class PyPyspatialite(PythonPackage):
     depends_on('proj@:5')
     depends_on('geos')
     depends_on('freexl')
+    depends_on('python@:2.8')
 
 #    def install(self, spec, prefix):
 #        # FIXME: Unknown build system
