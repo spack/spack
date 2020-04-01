@@ -24,7 +24,7 @@ class Flit(MakefilePackage):
     depends_on('py-toml',        type='run')
     depends_on('py-pyelftools',  type='run')
 
-    depends_on('bash',           type='run')
+    #depends_on('bash',           type='run')
     depends_on('binutils@2.26:', type='run')
     depends_on('coreutils',      type='run')
     depends_on('gmake',          type=('run', 'build'))
