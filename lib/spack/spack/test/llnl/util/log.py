@@ -244,9 +244,9 @@ def mock_shell_v_v_no_termios(proc, ctl, attrs):
     ctl.fg()
     ctl.wait_disabled_fg()
 
-    time.sleep(.05)
+    time.sleep(.2)  # allow some time to NOT print
     ctl.write(b'v\n')
-    time.sleep(.1)  # allow some time to print
+    time.sleep(.2)  # allow some time to print
     ctl.write(b'v\n')
     time.sleep(.05)
 
@@ -318,9 +318,10 @@ def _mock_shell_integration_no_termios(proc, ctl, attrs):
     ctl.status()
     ctl.wait_disabled_fg()
 
+    time.sleep(.2)       # allow some time to NOT print
     ctl.write(b'v\n')    # enable verbose output
     ctl.status()
-    time.sleep(.1)       # allow time to print
+    time.sleep(.2)       # allow time to print
 
     ctl.bg()             # send to background (keep running)
     ctl.status()
@@ -352,7 +353,7 @@ def mock_shell_integration_1(proc, ctl, attrs):
 
 
 def mock_shell_integration_loop(proc, ctl, attrs):
-    for i in range(20):
+    for i in range(10):
         _mock_shell_integration(proc, ctl, attrs)
     os.kill(proc.pid, signal.SIGUSR1)
 
@@ -363,7 +364,7 @@ def mock_shell_integration_1_no_termios(proc, ctl, attrs):
 
 
 def mock_shell_integration_loop_no_termios(proc, ctl, attrs):
-    for i in range(20):
+    for i in range(10):
         _mock_shell_integration_no_termios(proc, ctl, attrs)
     os.kill(proc.pid, signal.SIGUSR1)
 
