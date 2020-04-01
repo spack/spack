@@ -26,6 +26,8 @@ class Laghos(MakefilePackage):
 
     variant('metis', default=True, description='Enable/disable METIS support')
 
+    depends_on('metis@4.0.3:', when='+metis')
+
     depends_on('mfem@develop+mpi+metis', when='@develop+metis')
     depends_on('mfem@develop+mpi~metis', when='@develop~metis')
 
