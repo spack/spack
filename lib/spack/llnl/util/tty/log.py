@@ -154,11 +154,11 @@ class keyboard_input(object):
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
 
-    def _restore_input(self):
+    def _restore_default_terminal_settings(self):
         """Restore the original input configuration on ``self.stream``."""
-        # _restore_input Can be called in foreground or background. When called
-        # in the background, tcsetattr triggers SIGTTOU, which we must ignore,
-        # or the process will be stopped.
+        # _restore_default_terminal_settings Can be called in foreground
+        # or background. When called in the background, tcsetattr triggers
+        # SIGTTOU, which we must ignore, or the process will be stopped.
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
 
@@ -182,11 +182,11 @@ class keyboard_input(object):
             flags = self._get_canon_echo_flags()
             bg = self._is_background()
 
-            # restore sanity if any flags are amiss
+            # restore sanity if flags are amiss -- see diagram in class docs
             if not bg and any(flags):    # fg, but input not enabled
                 self._enable_keyboard_input()
             elif bg and not all(flags):  # bg, but input enabled
-                self._restore_input()
+                self._restore_default_terminal_settings()
 
             # reinstall TSTP handler on CONT (see below where TSTP removes it)
             if signum == signal.SIGCONT:
@@ -223,7 +223,7 @@ class keyboard_input(object):
                     signum, self._bg_fg_handler)
 
             # add an atexit handler to ensure the terminal is restored
-            atexit.register(self._restore_input)
+            atexit.register(self._restore_default_terminal_settings)
 
             # this itimer handles cases where the OS doesn't notify us of
             # a background or foreground change.
@@ -238,7 +238,7 @@ class keyboard_input(object):
     def __exit__(self, exc_type, exception, traceback):
         """If termios was avaialble, restore old settings."""
         if self.old_cfg:
-            self._restore_input()
+            self._restore_default_terminal_settings()
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
@@ -573,8 +573,8 @@ class log_output(object):
                     try:
                         rlist, _, _ = select.select(istreams, [], [])
                     except select.error as e:
-                        # This happens we get a signal while in select()
                         if e.args[0] == errno.EINTR:
+                            # This happens we get a signal while in select()
                             continue
                         raise
 
