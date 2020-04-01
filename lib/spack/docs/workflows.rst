@@ -444,7 +444,7 @@ environment.
 
 A single-prefix filesystem view is a single directory tree that is the
 union of the directory hierarchies of a number of installed packages;
-it is similar to the directory hiearchy that might exist under
+it is similar to the directory hierarchy that might exist under
 ``/usr/local``.  The files of the view's installed packages are
 brought into the view by symbolic or hard links, referencing the
 original Spack installation.
@@ -1237,7 +1237,7 @@ you can also manually set them in your ``.bashrc``.
    2. Other package managers like Homebrew will try to install things to the
       same directory. If you plan on using Homebrew in conjunction with Spack,
       don't symlink things to ``/usr/local``.
-   3. If you are on a shared workstation, or don't have sudo priveleges, you
+   3. If you are on a shared workstation, or don't have sudo privileges, you
       can't do this.
 
    If you still want to do this anyway, there are several ways around SIP.
@@ -1467,7 +1467,7 @@ In order to build and run the image, execute:
               SPACK_ROOT=/usr/local \
               FORCE_UNSAFE_CONFIGURE=1
 
-   # install minimal spack depedencies
+   # install minimal spack dependencies
    RUN        apt-get update \
               && apt-get install -y --no-install-recommends \
                  autoconf \
