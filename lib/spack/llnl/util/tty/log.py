@@ -589,7 +589,9 @@ class log_output(object):
                                 if stdin.read(1) == 'v':
                                     echo = not echo
                             except IOError as e:
-                                # if SIGTTIN is ignored,
+                                # If SIGTTIN is ignored, the system gives EIO
+                                # to let the caller know the read failed b/c it
+                                # was in the bg. Ignore that too.
                                 if e.errno != errno.EIO:
                                     raise
 
