@@ -41,7 +41,7 @@ class CBlosc(CMakePackage):
     def cmake_args(self):
         define = CMakePackage.define_from_variant
 
-	args = []
+        args = []
 
         if '+avx2' in self.spec:
             args.append('-DDEACTIVATE_AVX2=OFF')
