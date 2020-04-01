@@ -174,7 +174,6 @@ def _master_process(master_function, child_function, attrs):
 
     """
     os.setsid()   # new session; this process is the controller
-    os.setpgrp()  # new process group for this process
 
     master_fd, child_fd = os.openpty()
     pty_name = os.ttyname(child_fd)
