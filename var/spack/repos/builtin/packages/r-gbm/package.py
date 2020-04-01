@@ -1,37 +1,22 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGbm(RPackage):
     """Generalized Boosted Regression Models."""
 
-    homepage = "https://cran.rstudio.com/web/packages/gbm/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/gbm_2.1.3.tar.gz"
+    homepage = "https://cloud.r-project.org/package=gbm"
+    url      = "https://cloud.r-project.org/src/contrib/gbm_2.1.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gbm"
 
-    version('2.1.3', '9b2f32c892c6e31b01c1162e3b16b3f4')
+    version('2.1.5', sha256='06fbde10639dfa886554379b40a7402d1f1236a9152eca517e97738895a4466f')
+    version('2.1.3', sha256='eaf24be931d762f1ccca4f90e15997719d01005f152160a3d20d858a0bbed92b')
 
+    depends_on('r@2.9.0:', type=('build', 'run'))
+    depends_on('r-gridextra', when='@2.1.5:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

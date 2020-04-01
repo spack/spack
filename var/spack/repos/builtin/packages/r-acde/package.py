@@ -1,46 +1,33 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAcde(RPackage):
-    """This package provides a multivariate inferential analysis method
-    for detecting differentially expressed genes in gene expression data.
-    It uses artificial components, close to the data's principal
-    components but with an exact interpretation in terms of differential
-    genetic expression, to identify differentially expressed genes while
-    controlling the false discovery rate (FDR). The methods on this
-    package are described in the vignette or in the article
-    'Multivariate Method for Inferential Identification of
-    Differentially Expressed Genes in Gene Expression Experiments' by
-    J. P. Acosta, L. Lopez-Kleine and S. Restrepo
-    (2015, pending publication)."""
+    """Artificial Components Detection of Differentially Expressed Genes.
 
-    homepage = "https://www.bioconductor.org/packages/acde/"
-    url      = "https://www.bioconductor.org/packages/release/bioc/src/contrib/acde_1.6.0.tar.gz"
+       This package provides a multivariate inferential analysis method for
+       detecting differentially expressed genes in gene expression data. It
+       uses artificial components, close to the data's principal components but
+       with an exact interpretation in terms of differential genetic
+       expression, to identify differentially expressed genes while controlling
+       the false discovery rate (FDR). The methods on this package are
+       described in the vignette or in the article 'Multivariate Method for
+       Inferential Identification of Differentially Expressed Genes in Gene
+       Expression Experiments' by J. P. Acosta, L. Lopez-Kleine and S. Restrepo
+       (2015, pending publication)."""
 
-    version('1.6.0', 'e92ce91f75bab3bb1d79995bec1b42cc')
+    homepage = "https://bioconductor.org/packages/acde"
+    git      = "https://git.bioconductor.org/packages/acde.git"
 
-    depends_on('r-boot', type=('build', 'run'))
+    version('1.14.0', commit='6017c7436a46f186b2a3cea9d2b93274f6dd3417')
+    version('1.12.0', commit='f6ce5926ac915c2d73436f47daf7f9791645dad4')
+    version('1.10.0', commit='2c303dec45f3c70bf333a6eacae568a08d5ca010')
+    version('1.8.0', commit='f7fc3e1dce958445f920d3b28b56abde70bfb9de')
+    version('1.6.0', commit='244c81f435a077bf7895ea565fa6695e8b079f67')
+
+    depends_on('r@3.3:', type=('build', 'run'))
+    depends_on('r-boot@1.3:', type=('build', 'run'))

@@ -1,42 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyEnum34(PythonPackage):
     """Python 3.4 Enum backported to 3.3, 3.2, 3.1, 2.7, 2.6, 2.5, and 2.4."""
 
-    homepage = "https://pypi.python.org/pypi/enum34"
+    homepage = "https://bitbucket.org/stoneleaf/enum34/src"
     url      = "https://pypi.io/packages/source/e/enum34/enum34-1.1.6.tar.gz"
 
-    version('1.1.6', '5f13a0841a61f7fc295c514490d120d0')
+    version('1.1.6', sha256='8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1')
 
-    depends_on('python')
-    conflicts('python@3.4:')
-
-    # This dependency breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
+    # enum34 is a backport of the enum library from Python 3.4. It is not
+    # intended to be used with Python 3.4+. In fact, it won't build at all
+    # for Python 3.6+, as new constructs were added to the builtin enum
+    # library that aren't present in enum34. See:
+    # https://bitbucket.org/stoneleaf/enum34/issues/19
+    depends_on('python@:3.5', type=('build', 'run'))
+    depends_on('py-ordereddict', when='^python@:2.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import sys
 from spack import *
@@ -34,7 +15,7 @@ class Qrupdate(MakefilePackage):
     homepage = "http://sourceforge.net/projects/qrupdate/"
     url      = "https://downloads.sourceforge.net/qrupdate/qrupdate-1.1.2.tar.gz"
 
-    version('1.1.2', '6d073887c6e858c24aeda5b54c57a8c4')
+    version('1.1.2', sha256='e2a1c711dc8ebc418e21195833814cb2f84b878b90a2774365f0166402308e08')
 
     depends_on("blas")
     depends_on("lapack")
@@ -48,17 +29,31 @@ class Qrupdate(MakefilePackage):
         return
 
     def install(self, spec, prefix):
+
         lapack_blas = spec['lapack'].libs + spec['blas'].libs
-        # Build static and dynamic libraries
-        make('lib', 'solib',
-             'BLAS={0}'.format(lapack_blas.ld_flags),
-             'LAPACK={0}'.format(lapack_blas.ld_flags))
-        # "INSTALL" confuses "make install" on case-insensitive filesystems
+
+        make_args = [
+            'BLAS={0}'.format(lapack_blas.ld_flags),
+            'LAPACK={0}'.format(lapack_blas.ld_flags)
+        ]
+
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            make_args.append('FFLAGS=-fdefault-integer-8')
+
+        # Build static and dynamic libraries:
+        make('lib', 'solib', *make_args)
+
+        # "INSTALL" confuses "make install" on case-insensitive filesystems:
         if os.path.isfile("INSTALL"):
             os.remove("INSTALL")
-        # create lib folder:
+
+        # Create lib folder:
         if (sys.platform == 'darwin'):
             mkdirp(prefix.lib)
+
         make("install", "PREFIX=%s" % prefix)
 
     @run_after('install')

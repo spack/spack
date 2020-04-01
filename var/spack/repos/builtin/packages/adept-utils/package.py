@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,8 @@ class AdeptUtils(CMakePackage):
     homepage = "https://github.com/llnl/adept-utils"
     url      = "https://github.com/llnl/adept-utils/archive/v1.0.tar.gz"
 
-    version('1.0.1', '731a310717adcb004d9d195130efee7d')
-    version('1.0',   '5c6cd9badce56c945ac8551e34804397')
+    version('1.0.1', sha256='259f777aeb368ede3583d3617bb779f0fde778319bf2122fdd216bdf223c015e')
+    version('1.0',   sha256='fed29366c9bcf5f3799220ae3b351d2cb338e2aa42133d61584ea650aa8d6ff7')
 
     depends_on('boost')
     depends_on('mpi')

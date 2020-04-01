@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,9 +16,10 @@ class RPlyr(RPackage):
     Dickinson'."""
 
     homepage = "http://had.co.nz/plyr"
-    url      = "https://cran.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plyr"
+    url      = "https://cloud.r-project.org/src/contrib/plyr_1.8.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plyr"
 
-    version('1.8.4', 'ef455cf7fc06e34837692156b7b2587b')
+    version('1.8.4', sha256='60b522d75961007658c9806f8394db27989f1154727cb0bb970062c96ec9eac5')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

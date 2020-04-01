@@ -1,38 +1,20 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Gettext(AutotoolsPackage):
+class Gettext(AutotoolsPackage, GNUMirrorPackage):
     """GNU internationalization (i18n) and localization (l10n) library."""
 
     homepage = "https://www.gnu.org/software/gettext/"
-    url      = "http://ftpmirror.gnu.org/gettext/gettext-0.19.7.tar.xz"
+    gnu_mirror_path = "gettext/gettext-0.20.1.tar.xz"
 
-    version('0.19.8.1', 'df3f5690eaa30fd228537b00cb7b7590')
-    version('0.19.7',   'f81e50556da41b44c1d59ac93474dca5')
+    version('0.20.1', sha256='53f02fbbec9e798b0faaf7c73272f83608e835c6288dd58be6c9bb54624a3800')
+    version('0.19.8.1', sha256='105556dbc5c3fbbc2aa0edb46d22d055748b6f5c7cd7a8d99f8e7eb84e938be4')
+    version('0.19.7',   sha256='378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934')
 
     # Recommended variants
     variant('curses',   default=True, description='Use libncurses')
@@ -53,7 +35,7 @@ class Gettext(AutotoolsPackage):
     depends_on('tar',      when='+tar')
     # depends_on('gzip',     when='+gzip')
     depends_on('bzip2',    when='+bzip2')
-    depends_on('xz',       when='+xz')
+    depends_on('xz',       when='+xz', type=('build', 'link', 'run'))
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?
@@ -84,8 +66,10 @@ class Gettext(AutotoolsPackage):
             config_args.append('--disable-curses')
 
         if '+libxml2' in spec:
-            config_args.append('--with-libxml2-prefix={0}'.format(
+            config_args.append('CPPFLAGS=-I{0}/include'.format(
                 spec['libxml2'].prefix))
+            config_args.append('LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(
+                spec['libxml2'].libs.directories[0]))
         else:
             config_args.append('--with-included-libxml')
 
@@ -102,3 +86,11 @@ class Gettext(AutotoolsPackage):
             config_args.append('--with-included-libunistring')
 
         return config_args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ["libasprintf", "libgettextlib", "libgettextpo", "libgettextsrc",
+                "libintl"],
+            root=self.prefix, recursive=True
+        )

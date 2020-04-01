@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,10 +13,12 @@ class RDeldir(RPackage):
     tessellations to sub-windows. Calculates perimeters of tessellations.
     Summarises information about the tiles of the tessellation."""
 
-    homepage = "https://CRAN.R-project.org/package=deldir"
-    url      = "https://cran.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/deldir"
+    homepage = "https://cloud.r-project.org/package=deldir"
+    url      = "https://cloud.r-project.org/src/contrib/deldir_0.1-14.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/deldir"
 
-    version('0.1-14', '6a22b13d962615cd9d51b6eae403409f')
+    version('0.1-23', sha256='e0112bce9fc94daf73596a0fff9b3958b80872e3bbb487be73e157b13a6f201d')
+    version('0.1-21', sha256='b9dabcc1813c7a0f8edaf720a94bdd611a83baf3d3e52e861d352369e815690c')
+    version('0.1-14', sha256='89d365a980ef8589971e5d311c6bd59fe32c48dbac8000a880b9655032c99289')
 
-    depends_on('r@0.99:')
+    depends_on('r@0.99:', type=('build', 'run'))

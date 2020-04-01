@@ -1,0 +1,578 @@
+From c8467e905debeff23b8403aab7184e128decbba3 Mon Sep 17 00:00:00 2001
+From: Geoffrey Malcolm Oxberry <goxberry@gmail.com>
+Date: Tue, 11 Sep 2018 17:46:30 -0700
+Subject: [PATCH] build system: patch to build macOS shared libs
+
+---
+ src/FEI_mv/fei-hypre/Makefile         | 4 ++--
+ src/FEI_mv/femli/Makefile             | 4 ++--
+ src/IJ_mv/Makefile                    | 4 ++--
+ src/config/configure.in               | 9 +++++++--
+ src/configure                         | 9 +++++++--
+ src/distributed_ls/Euclid/Makefile    | 4 ++--
+ src/distributed_ls/ParaSails/Makefile | 4 ++--
+ src/distributed_ls/pilut/Makefile     | 4 ++--
+ src/distributed_matrix/Makefile       | 4 ++--
+ src/krylov/Makefile                   | 4 ++--
+ src/lib/Makefile                      | 4 ++--
+ src/matrix_matrix/Makefile            | 4 ++--
+ src/multivector/Makefile              | 4 ++--
+ src/parcsr_block_mv/Makefile          | 4 ++--
+ src/parcsr_ls/Makefile                | 4 ++--
+ src/parcsr_mv/Makefile                | 4 ++--
+ src/seq_mv/Makefile                   | 4 ++--
+ src/sstruct_ls/Makefile               | 4 ++--
+ src/sstruct_mv/Makefile               | 4 ++--
+ src/struct_ls/Makefile                | 4 ++--
+ src/struct_mv/Makefile                | 4 ++--
+ src/test/Makefile                     | 8 +++++---
+ src/utilities/Makefile                | 4 ++--
+ 23 files changed, 59 insertions(+), 47 deletions(-)
+
+diff --git a/src/FEI_mv/fei-hypre/Makefile b/src/FEI_mv/fei-hypre/Makefile
+index 09cad91df..68e5b394b 100644
+--- a/src/FEI_mv/fei-hypre/Makefile
++++ b/src/FEI_mv/fei-hypre/Makefile
+@@ -159,7 +159,7 @@ OBJSC = ${FILESC:.c=.o}
+ OBJSCXX = ${FILESCXX:.cxx=.o}
+ OBJS = ${OBJSC} ${OBJSCXX}
+ 
+-SONAME = libHYPRE_FEI-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_FEI-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -211,7 +211,7 @@ libHYPRE_FEI.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_FEI.so: ${OBJS}
++libHYPRE_FEI.so libHYPRE_FEI.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/FEI_mv/femli/Makefile b/src/FEI_mv/femli/Makefile
+index eac52137f..2beea900e 100644
+--- a/src/FEI_mv/femli/Makefile
++++ b/src/FEI_mv/femli/Makefile
+@@ -128,7 +128,7 @@ OBJSC = ${FILES:.c=.o}
+ OBJSCXX = ${OBJSC:.cxx=.o}
+ OBJS = ${OBJSCXX:.f=.o}
+ 
+-SONAME = libHYPRE_mli-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_mli-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -156,7 +156,7 @@ libHYPRE_mli.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_mli.so: ${OBJS}
++libHYPRE_mli.so libHYPRE_mli.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/IJ_mv/Makefile b/src/IJ_mv/Makefile
+index ab014ff7d..4f92e717a 100644
+--- a/src/IJ_mv/Makefile
++++ b/src/IJ_mv/Makefile
+@@ -53,7 +53,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_IJ_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_IJ_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -84,7 +84,7 @@ libHYPRE_IJ_mv.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_IJ_mv.so: ${OBJS}
++libHYPRE_IJ_mv.so libHYPRE_IJ_mv.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/config/configure.in b/src/config/configure.in
+index de8a10255..8f2d2c90e 100644
+--- a/src/config/configure.in
++++ b/src/config/configure.in
+@@ -1383,6 +1383,8 @@ dnl *********************************************************************
+ if test "$hypre_using_shared" = "yes"
+ then
+    HYPRE_LIBSUFFIX=".so"
++   SHARED_SET_SONAME="-Wl,-soname,"
++   SHARED_OPTIONS="-Wl,-z,defs"
+    case $hypre_platform in
+       AIX* | aix* | Aix*) SHARED_COMPILE_FLAG="-qmkshrobj"
+                           SHARED_BUILD_FLAG="-G"
+@@ -1390,6 +1392,11 @@ dnl                          LINK_F77="${F77} -brtl"
+                           LINK_FC="${FC} -brtl"
+                           LINK_CC="${CC} -brtl"
+                           LINK_CXX="${CXX} -brtl" ;;
++      DARWIN* | darwin* | Darwin*) SHARED_COMPILE_FLAG="-fPIC"
++                                   SHARED_BUILD_FLAG="-dynamiclib -undefined dynamic_lookup"
++				   HYPRE_LIBSUFFIX=".dylib"
++				   SHARED_SET_SONAME="-install_name @rpath/"
++				   SHARED_OPTIONS="-undefined error" ;;
+                        *) SHARED_COMPILE_FLAG="-fPIC"
+                           SHARED_BUILD_FLAG="-shared" ;;
+    esac
+@@ -1405,8 +1412,6 @@ dnl   BUILD_F77_SHARED="${F77} ${SHARED_BUILD_FLAG}"
+       BUILD_CC_SHARED="${CC} ${SHARED_BUILD_FLAG}"
+    fi
+    BUILD_CXX_SHARED="${CXX} ${SHARED_BUILD_FLAG}"
+-   SHARED_SET_SONAME="-Wl,-soname,"
+-   SHARED_OPTIONS="-Wl,-z,defs"
+ fi
+ 
+ BUILD_PYTHON=0
+diff --git a/src/configure b/src/configure
+index fa3d0717a..763a62dc5 100755
+--- a/src/configure
++++ b/src/configure
+@@ -7676,12 +7676,19 @@ HYPRE_LIBSUFFIX=".a"
+ if test "$hypre_using_shared" = "yes"
+ then
+    HYPRE_LIBSUFFIX=".so"
++   SHARED_SET_SONAME="-Wl,-soname,"
++   SHARED_OPTIONS="-Wl,-z,defs"
+    case $hypre_platform in
+       AIX* | aix* | Aix*) SHARED_COMPILE_FLAG="-qmkshrobj"
+                           SHARED_BUILD_FLAG="-G"
+                           LINK_FC="${FC} -brtl"
+                           LINK_CC="${CC} -brtl"
+                           LINK_CXX="${CXX} -brtl" ;;
++      DARWIN* | darwin* | Darwin*) SHARED_COMPILE_FLAG="-fPIC"
++                                   SHARED_BUILD_FLAG="-dynamiclib -undefined dynamic_lookup"
++				   HYPRE_LIBSUFFIX=".dylib"
++				   SHARED_SET_SONAME="-install_name @rpath/"
++				   SHARED_OPTIONS="-undefined error" ;;
+                        *) SHARED_COMPILE_FLAG="-fPIC"
+                           SHARED_BUILD_FLAG="-shared" ;;
+    esac
+@@ -7696,8 +7703,6 @@ then
+       BUILD_CC_SHARED="${CC} ${SHARED_BUILD_FLAG}"
+    fi
+    BUILD_CXX_SHARED="${CXX} ${SHARED_BUILD_FLAG}"
+-   SHARED_SET_SONAME="-Wl,-soname,"
+-   SHARED_OPTIONS="-Wl,-z,defs"
+ fi
+ 
+ BUILD_PYTHON=0
+diff --git a/src/distributed_ls/Euclid/Makefile b/src/distributed_ls/Euclid/Makefile
+index 03d9db355..b8b71dddd 100644
+--- a/src/distributed_ls/Euclid/Makefile
++++ b/src/distributed_ls/Euclid/Makefile
+@@ -87,7 +87,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_Euclid-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_Euclid-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -114,7 +114,7 @@ libHYPRE_Euclid.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_Euclid.so: ${OBJS}
++libHYPRE_Euclid.so libHYPRE_Euclid.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/distributed_ls/ParaSails/Makefile b/src/distributed_ls/ParaSails/Makefile
+index fe881b1f3..78091ad88 100644
+--- a/src/distributed_ls/ParaSails/Makefile
++++ b/src/distributed_ls/ParaSails/Makefile
+@@ -59,7 +59,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_ParaSails-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_ParaSails-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -86,7 +86,7 @@ libHYPRE_ParaSails.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_ParaSails.so: ${OBJS}
++libHYPRE_ParaSails.so libHYPRE_ParaSails.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/distributed_ls/pilut/Makefile b/src/distributed_ls/pilut/Makefile
+index 2ed918e2c..333edbafa 100644
+--- a/src/distributed_ls/pilut/Makefile
++++ b/src/distributed_ls/pilut/Makefile
+@@ -49,7 +49,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_DistributedMatrixPilutSolver-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_DistributedMatrixPilutSolver-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -78,7 +78,7 @@ libHYPRE_DistributedMatrixPilutSolver.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_DistributedMatrixPilutSolver.so: ${OBJS}
++libHYPRE_DistributedMatrixPilutSolver.so libHYPRE_DistributedMatrixPilutSolver.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/distributed_matrix/Makefile b/src/distributed_matrix/Makefile
+index b8d42944c..d30908fa2 100644
+--- a/src/distributed_matrix/Makefile
++++ b/src/distributed_matrix/Makefile
+@@ -40,7 +40,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_DistributedMatrix-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_DistributedMatrix-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -69,7 +69,7 @@ libHYPRE_DistributedMatrix.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_DistributedMatrix.so: ${OBJS}
++libHYPRE_DistributedMatrix.so libHYPRE_DistributedMatrix.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/krylov/Makefile b/src/krylov/Makefile
+index 152d5153a..63d085431 100644
+--- a/src/krylov/Makefile
++++ b/src/krylov/Makefile
+@@ -55,7 +55,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_krylov-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_krylov-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -88,7 +88,7 @@ libHYPRE_krylov.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_krylov.so: ${OBJS}
++libHYPRE_krylov.so libHYPRE_krylov.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/lib/Makefile b/src/lib/Makefile
+index 72875e2c1..f49d16838 100644
+--- a/src/lib/Makefile
++++ b/src/lib/Makefile
+@@ -57,7 +57,7 @@ $(UTILITIESFILES)\
+ $(BLASFILES)\
+ $(LAPACKFILES)
+ 
+-SONAME = libHYPRE-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ SOLIBS = ${MPILIBDIRS} ${MPILIBS} ${LAPACKLIBDIRS} ${LAPACKLIBS}\
+  ${BLASLIBDIRS} ${BLASLIBS} ${LIBS} ${FLIBS}
+ 
+@@ -103,7 +103,7 @@ libHYPRE.a: ${FILES_HYPRE}
+ 	${AR} $@ $(UTILITIESFILES) $(BLASFILES) $(LAPACKFILES)
+ 	${RANLIB} $@
+ 
+-libHYPRE.so: ${FILES_HYPRE}
++libHYPRE.so libHYPRE.dylib: ${FILES_HYPRE}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${FILES_HYPRE} ${SOLIBS} ${SHARED_SET_SONAME}${SONAME} ${SHARED_OPTIONS} ${LDFLAGS}
+ 	ln -s ${SONAME} $@
+diff --git a/src/matrix_matrix/Makefile b/src/matrix_matrix/Makefile
+index 1da8ced0e..a611bee51 100644
+--- a/src/matrix_matrix/Makefile
++++ b/src/matrix_matrix/Makefile
+@@ -35,7 +35,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_MatrixMatrix-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_MatrixMatrix-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -64,7 +64,7 @@ libHYPRE_MatrixMatrix.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_MatrixMatrix.so: ${OBJS}
++libHYPRE_MatrixMatrix.so libHYPRE_MatrixMatrix.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/multivector/Makefile b/src/multivector/Makefile
+index 915cf5e0e..fce270f13 100644
+--- a/src/multivector/Makefile
++++ b/src/multivector/Makefile
+@@ -31,7 +31,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_multivector-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_multivector-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -60,7 +60,7 @@ libHYPRE_multivector.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_multivector.so: ${OBJS}
++libHYPRE_multivector.so libHYPRE_multivector.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/parcsr_block_mv/Makefile b/src/parcsr_block_mv/Makefile
+index 3f1e33db1..b7559d39e 100644
+--- a/src/parcsr_block_mv/Makefile
++++ b/src/parcsr_block_mv/Makefile
+@@ -59,7 +59,7 @@ DRIVER_FILES =
+ OBJS = ${FILES:.c=.o}
+ DRIVER_OBJS = ${DRIVER_FILES:.c=.o}
+ 
+-SONAME = libHYPRE_parcsr_block_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_parcsr_block_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -114,7 +114,7 @@ libHYPRE_parcsr_block_mv.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_parcsr_block_mv.so: ${OBJS}
++libHYPRE_parcsr_block_mv.so libHYPRE_parcsr_block_mv.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/parcsr_ls/Makefile b/src/parcsr_ls/Makefile
+index 74972be17..7670387e0 100644
+--- a/src/parcsr_ls/Makefile
++++ b/src/parcsr_ls/Makefile
+@@ -133,7 +133,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_parcsr_ls-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_parcsr_ls-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -165,7 +165,7 @@ libHYPRE_parcsr_ls.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_parcsr_ls.so: ${OBJS}
++libHYPRE_parcsr_ls.so libHYPRE_parcsr_ls.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/parcsr_mv/Makefile b/src/parcsr_mv/Makefile
+index 99b4f7ba8..ff027bb30 100644
+--- a/src/parcsr_mv/Makefile
++++ b/src/parcsr_mv/Makefile
+@@ -71,7 +71,7 @@ DRIVER_FILES =\
+ OBJS = ${FILES:.c=.o}
+ DRIVER_OBJS = ${DRIVER_FILES:.c=.o}
+ 
+-SONAME = libHYPRE_parcsr_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_parcsr_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -127,7 +127,7 @@ libHYPRE_parcsr_mv.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_parcsr_mv.so: ${OBJS}
++libHYPRE_parcsr_mv.so libHYPRE_parcsr_mv.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/seq_mv/Makefile b/src/seq_mv/Makefile
+index 6982fa067..b0692cd26 100644
+--- a/src/seq_mv/Makefile
++++ b/src/seq_mv/Makefile
+@@ -49,7 +49,7 @@ FILES =\
+ OBJS = ${FILES:.c=.o}
+ CUOBJS = ${FILES_NVCC:.cu=.o}
+ 
+-SONAME = libHYPRE_seq_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_seq_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -80,7 +80,7 @@ libHYPRE_seq_mv.a: ${OBJS} ${CUOBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_seq_mv.so: ${OBJS} ${CUOBJS}
++libHYPRE_seq_mv.so libHYPRE_seq_mv.dylib: ${OBJS} ${CUOBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/sstruct_ls/Makefile b/src/sstruct_ls/Makefile
+index 28811f8bf..463843d9a 100644
+--- a/src/sstruct_ls/Makefile
++++ b/src/sstruct_ls/Makefile
+@@ -109,7 +109,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_sstruct_ls-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_sstruct_ls-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -140,7 +140,7 @@ libHYPRE_sstruct_ls.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_sstruct_ls.so: ${OBJS}
++libHYPRE_sstruct_ls.so libHYPRE_sstruct_ls.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/sstruct_mv/Makefile b/src/sstruct_mv/Makefile
+index d9adda815..1f4dfc029 100644
+--- a/src/sstruct_mv/Makefile
++++ b/src/sstruct_mv/Makefile
+@@ -59,7 +59,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_sstruct_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_sstruct_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -90,7 +90,7 @@ libHYPRE_sstruct_mv.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_sstruct_mv.so: ${OBJS}
++libHYPRE_sstruct_mv.so libHYPRE_sstruct_mv.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/struct_ls/Makefile b/src/struct_ls/Makefile
+index 4653b733d..007529823 100644
+--- a/src/struct_ls/Makefile
++++ b/src/struct_ls/Makefile
+@@ -104,7 +104,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_struct_ls-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_struct_ls-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -135,7 +135,7 @@ libHYPRE_struct_ls.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_struct_ls.so: ${OBJS}
++libHYPRE_struct_ls.so libHYPRE_struct_ls.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/struct_mv/Makefile b/src/struct_mv/Makefile
+index eabf9b00f..349947a4f 100644
+--- a/src/struct_mv/Makefile
++++ b/src/struct_mv/Makefile
+@@ -66,7 +66,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_struct_mv-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_struct_mv-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -97,7 +97,7 @@ libHYPRE_struct_mv.a: ${OBJS}
+ 	${AR} $@ ${OBJS}
+ 	${RANLIB} $@
+ 
+-libHYPRE_struct_mv.so: ${OBJS}
++libHYPRE_struct_mv.so libHYPRE_struct_mv.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+diff --git a/src/test/Makefile b/src/test/Makefile
+index 17e8f465d..4616c6de4 100644
+--- a/src/test/Makefile
++++ b/src/test/Makefile
+@@ -40,7 +40,7 @@ F77_COMPILE_FLAGS = \
+  -I${HYPRE_BUILD_DIR}/include\
+  ${CINCLUDES}
+ 
+-MPILIBFLAGS = ${MPILIBDIRS} ${MPILIBS} ${MPIFLAGS} 
++MPILIBFLAGS = ${MPILIBDIRS} ${MPILIBS} ${MPIFLAGS}
+ LAPACKLIBFLAGS = ${LAPACKLIBDIRS} ${LAPACKLIBS}
+ BLASLIBFLAGS = ${BLASLIBDIRS} ${BLASLIBS}
+ LIBFLAGS = ${LDFLAGS} ${LIBS}
+@@ -48,6 +48,9 @@ LIBFLAGS = ${LDFLAGS} ${LIBS}
+ LFLAGS =\
+  -L${HYPRE_BUILD_DIR}/lib\
+  -lHYPRE\
++ -Wl,-rpath,${HYPRE_BUILD_DIR}/lib\
++ ${DSUPERLU_LIBS}\
++ ${SUPERLU_LIBS}\
+  ${MPILIBFLAGS}\
+  ${LAPACKLIBFLAGS}\
+  ${BLASLIBFLAGS}\
+@@ -265,7 +268,7 @@ fparcsr_mv: fparcsr_mv.f
+ 	@echo  "Building" $@ "... "
+ 	${LINK_FC} -c $@
+ 
+-fsstruct_ls: fsstruct_ls.f 
++fsstruct_ls: fsstruct_ls.f
+ 	@echo  "Building" $@ "... "
+ 	${LINK_FC} -c $@
+ 
+@@ -280,4 +283,3 @@ fstruct_ls: fstruct_ls.f
+ fstruct_mv: fstruct_mv.f
+ 	@echo  "Building" $@ "... "
+ 	${LINK_FC} -c $@
+-
+diff --git a/src/utilities/Makefile b/src/utilities/Makefile
+index 512e6d0be..c1710766a 100644
+--- a/src/utilities/Makefile
++++ b/src/utilities/Makefile
+@@ -66,7 +66,7 @@ FILES =\
+ 
+ OBJS = ${FILES:.c=.o}
+ 
+-SONAME = libHYPRE_utilities-${HYPRE_RELEASE_VERSION}.so
++SONAME = libHYPRE_utilities-${HYPRE_RELEASE_VERSION}${HYPRE_LIB_SUFFIX}
+ 
+ ##################################################################
+ # Targets
+@@ -100,7 +100,7 @@ libHYPRE_utilities.a: ${OBJS}
+ 	${AR} $@ *.o
+ 	${RANLIB} $@
+ 
+-libHYPRE_utilities.so: ${OBJS}
++libHYPRE_utilities.so libHYPRE_utilities.dylib: ${OBJS}
+ 	@echo  "Building $@ ... "
+ 	${BUILD_CC_SHARED} -o ${SONAME} ${OBJS} ${SHARED_SET_SONAME}${SONAME}
+ 	ln -s ${SONAME} $@
+-- 
+2.19.0
+

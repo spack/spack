@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,11 +10,21 @@ class PyPytestXdist(PythonPackage):
     """py.test xdist plugin for distributed testing and loop-on-failing mode"""
 
     homepage = "https://github.com/pytest-dev/pytest-xdist"
-    url      = "https://pypi.io/packages/source/p/pytest-xdist/pytest-xdist-1.16.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest-xdist/pytest-xdist-1.30.0.tar.gz"
 
-    version('1.16.0', '68dabf856981ad93b14960b098b05bff')
+    version('1.30.0', sha256='5d1b1d4461518a6023d56dab62fb63670d6f7537f23e2708459a557329accf48')
+    version('1.29.0', sha256='3489d91516d7847db5eaecff7a2e623dba68984835dbe6cedb05ae126c4fb17f')
+    version('1.27.0', sha256='a96ed691705882560fa3fc95531fbd4c224896c827f4004817eb2dcac4ba41a2')
+    version('1.24.0', sha256='8e188d13ce6614c7a678179a76f46231199ffdfe6163de031c17e62ffa256917')
+    version('1.17.0', sha256='e7e48c111677af23078b1ed23501e493e12c4b6d91657f6884a64e4ce0f14144')
+    version('1.16.0', sha256='42e5a1e5da9d7cff3e74b07f8692598382f95624f234ff7e00a3b1237e0feba2')
 
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools',    type='build')
     depends_on('py-execnet@1.1:',  type=('build', 'run'))
-    depends_on('py-pytest@2.7.0:', type=('build', 'run'))
-    depends_on('py-py@1.4.22:',    type=('build', 'run'))
+    depends_on('py-pytest@4.4.0:', type=('build', 'run'), when='@1.28.0:')
+    depends_on('py-pytest@3.6.0:', type=('build', 'run'), when='@1.25.0:1.27.0')
+    depends_on('py-pytest@3.0.0:', type=('build', 'run'), when='@1.18.0:1.24.0')
+    depends_on('py-pytest@2.7.0:', type=('build', 'run'), when='@1.16.0:1.17.0')
+    depends_on('py-pytest-forked', type=('build', 'run'), when='@1.19.0:')
+    depends_on('py-six', type=('build', 'run'), when='@1.23.0:')

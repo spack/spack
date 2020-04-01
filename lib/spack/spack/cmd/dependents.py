@@ -1,35 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import argparse
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
-import spack
-import spack.store
 import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.repo
+import spack.store
 
 description = "show packages that depend on another"
 section = "basic"
@@ -44,27 +25,26 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-t', '--transitive', action='store_true', default=False,
         help="Show all transitive dependents.")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER, help="spec or package name")
+    arguments.add_common_arguments(subparser, ['spec'])
 
 
 def inverted_dependencies():
     """Iterate through all packages and return a dictionary mapping package
-       names to possible dependnecies.
+       names to possible dependencies.
 
        Virtual packages are included as sources, so that you can query
        dependents of, e.g., `mpi`, but virtuals are not included as
        actual dependents.
     """
     dag = {}
-    for pkg in spack.repo.all_packages():
+    for pkg in spack.repo.path.all_packages():
         dag.setdefault(pkg.name, set())
         for dep in pkg.dependencies:
             deps = [dep]
 
             # expand virtuals if necessary
-            if spack.repo.is_virtual(dep):
-                deps += [s.name for s in spack.repo.providers_for(dep)]
+            if spack.repo.path.is_virtual(dep):
+                deps += [s.name for s in spack.repo.path.providers_for(dep)]
 
             for d in deps:
                 dag.setdefault(d, set()).add(pkg.name)
@@ -100,9 +80,11 @@ def dependents(parser, args):
         tty.die("spack dependents takes only one spec.")
 
     if args.installed:
-        spec = spack.cmd.disambiguate_spec(specs[0])
+        env = ev.get_env(args, 'dependents')
+        spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        tty.msg("Dependents of %s" % spec.cformat('$_$@$%@$/'))
+        format_string = '{name}{@version}{%compiler}{/hash:7}'
+        tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.db.installed_relatives(
             spec, 'parents', args.transitive)
         if deps:

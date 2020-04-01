@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,11 @@ class PyFuture(PythonPackage):
     homepage = "https://python-future.org/"
     url = "https://pypi.io/packages/source/f/future/future-0.16.0.tar.gz"
 
-    version('0.16.0', '3e8e88a2bda48d54b1da7634d04760d7')
-    version('0.15.2', 'a68eb3c90b3b76714c5ceb8c09ea3a06')
+    version('0.17.1', sha256='67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8')
+    version('0.17.0', sha256='eb6d4df04f1fb538c99f69c9a28b255d1ee4e825d479b9c62fc38c0cf38065a4')
+    version('0.16.0', sha256='e39ced1ab767b5936646cedba8bcce582398233d6a627067d4c6a454c90cfedb')
+    version('0.15.2', sha256='3d3b193f20ca62ba7d8782589922878820d0a023b885882deec830adbf639b97')
 
     depends_on('py-setuptools', type='build')
-    # depends_on('py-importlib', type=('build', 'run'), when='^python@2.6')
-    # depends_on('py-argparse', type=('build', 'run'), when='^python@2.6')
+    depends_on('py-importlib', type=('build', 'run'), when='^python@:2.6')
+    depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')

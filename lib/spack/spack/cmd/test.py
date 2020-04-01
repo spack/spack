@@ -1,42 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from __future__ import print_function
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from __future__ import print_function
+from __future__ import division
+
+import collections
 import sys
-import os
 import re
 import argparse
 import pytest
 from six import StringIO
 
+import llnl.util.tty.color as color
 from llnl.util.filesystem import working_dir
 from llnl.util.tty.colify import colify
 
-import spack
+import spack.paths
 
-description = "run spack's unit tests"
+description = "run spack's unit tests (wrapper around pytest)"
 section = "developer"
 level = "long"
 
@@ -44,69 +27,143 @@ level = "long"
 def setup_parser(subparser):
     subparser.add_argument(
         '-H', '--pytest-help', action='store_true', default=False,
-        help="print full pytest help message, showing advanced options")
+        help="show full pytest help, with advanced options")
 
-    list_group = subparser.add_mutually_exclusive_group()
-    list_group.add_argument(
-        '-l', '--list', action='store_true', default=False,
-        help="list basic test names")
-    list_group.add_argument(
-        '-L', '--long-list', action='store_true', default=False,
-        help="list the entire hierarchy of tests")
+    # extra spack arguments to list tests
+    list_group = subparser.add_argument_group("listing tests")
+    list_mutex = list_group.add_mutually_exclusive_group()
+    list_mutex.add_argument(
+        '-l', '--list', action='store_const', default=None,
+        dest='list', const='list', help="list test filenames")
+    list_mutex.add_argument(
+        '-L', '--list-long', action='store_const', default=None,
+        dest='list', const='long', help="list all test functions")
+    list_mutex.add_argument(
+        '-N', '--list-names', action='store_const', default=None,
+        dest='list', const='names', help="list full names of all tests")
+
+    # use tests for extension
     subparser.add_argument(
-        'tests', nargs=argparse.REMAINDER,
-        help="list of tests to run (will be passed to pytest -k)")
+        '--extension', default=None,
+        help="run test for a given spack extension")
+
+    # spell out some common pytest arguments, so they'll show up in help
+    pytest_group = subparser.add_argument_group(
+        "common pytest arguments (spack test --pytest-help for more details)")
+    pytest_group.add_argument(
+        "-s", action='append_const', dest='parsed_args', const='-s',
+        help="print output while tests run (disable capture)")
+    pytest_group.add_argument(
+        "-k", action='store', metavar="EXPRESSION", dest='expression',
+        help="filter tests by keyword (can also use w/list options)")
+    pytest_group.add_argument(
+        "--showlocals", action='append_const', dest='parsed_args',
+        const='--showlocals', help="show local variable values in tracebacks")
+
+    # remainder is just passed to pytest
+    subparser.add_argument(
+        'pytest_args', nargs=argparse.REMAINDER, help="arguments for pytest")
 
 
-def do_list(args, unknown_args):
+def do_list(args, extra_args):
     """Print a lists of tests than what pytest offers."""
     # Run test collection and get the tree out.
     old_output = sys.stdout
     try:
         sys.stdout = output = StringIO()
-        pytest.main(['--collect-only'])
+        pytest.main(['--collect-only'] + extra_args)
     finally:
         sys.stdout = old_output
 
-    # put the output in a more readable tree format.
     lines = output.getvalue().split('\n')
-    output_lines = []
+    tests = collections.defaultdict(lambda: set())
+    prefix = []
+
+    # collect tests into sections
     for line in lines:
         match = re.match(r"(\s*)<([^ ]*) '([^']*)'", line)
         if not match:
             continue
         indent, nodetype, name = match.groups()
 
-        # only print top-level for short list
-        if args.list:
-            if not indent:
-                output_lines.append(
-                    os.path.basename(name).replace('.py', ''))
-        else:
-            print(indent + name)
+        # strip parametrized tests
+        if "[" in name:
+            name = name[:name.index("[")]
 
-    if args.list:
-        colify(output_lines)
+        depth = len(indent) // 2
+
+        if nodetype.endswith("Function"):
+            key = tuple(prefix)
+            tests[key].add(name)
+        else:
+            prefix = prefix[:depth]
+            prefix.append(name)
+
+    def colorize(c, prefix):
+        if isinstance(prefix, tuple):
+            return "::".join(
+                color.colorize("@%s{%s}" % (c, p))
+                for p in prefix if p != "()"
+            )
+        return color.colorize("@%s{%s}" % (c, prefix))
+
+    if args.list == "list":
+        files = set(prefix[0] for prefix in tests)
+        color_files = [colorize("B", file) for file in sorted(files)]
+        colify(color_files)
+
+    elif args.list == "long":
+        for prefix, functions in sorted(tests.items()):
+            path = colorize("*B", prefix) + "::"
+            functions = [colorize("c", f) for f in sorted(functions)]
+            color.cprint(path)
+            colify(functions, indent=4)
+            print()
+
+    else:  # args.list == "names"
+        all_functions = [
+            colorize("*B", prefix) + "::" + colorize("c", f)
+            for prefix, functions in sorted(tests.items())
+            for f in sorted(functions)
+        ]
+        colify(all_functions)
+
+
+def add_back_pytest_args(args, unknown_args):
+    """Add parsed pytest args, unknown args, and remainder together.
+
+    We add some basic pytest arguments to the Spack parser to ensure that
+    they show up in the short help, so we have to reassemble things here.
+    """
+    result = args.parsed_args or []
+    result += unknown_args or []
+    result += args.pytest_args or []
+    if args.expression:
+        result += ["-k", args.expression]
+    return result
 
 
 def test(parser, args, unknown_args):
     if args.pytest_help:
         # make the pytest.main help output more accurate
         sys.argv[0] = 'spack test'
-        pytest.main(['-h'])
-        return
+        return pytest.main(['-h'])
+
+    # add back any parsed pytest args we need to pass to pytest
+    pytest_args = add_back_pytest_args(args, unknown_args)
+
+    # The default is to test the core of Spack. If the option `--extension`
+    # has been used, then test that extension.
+    pytest_root = spack.paths.spack_root
+    if args.extension:
+        target = args.extension
+        extensions = spack.config.get('config:extensions')
+        pytest_root = spack.extensions.path_for_extension(target, *extensions)
 
     # pytest.ini lives in the root of the spack repository.
-    with working_dir(spack.prefix):
-        # --list and --long-list print the test output better.
-        if args.list or args.long_list:
-            do_list(args, unknown_args)
+    with working_dir(pytest_root):
+        if args.list:
+            do_list(args, pytest_args)
             return
 
-        # Allow keyword search without -k if no options are specified
-        if (args.tests and not unknown_args and
-            not any(arg.startswith('-') for arg in args.tests)):
-            return pytest.main(['-k'] + args.tests)
-
-        # Just run the pytest command
-        return pytest.main(unknown_args + args.tests)
+        return pytest.main(pytest_args)

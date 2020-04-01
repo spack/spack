@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 import fnmatch
@@ -38,8 +19,8 @@ class Cosmomc(Package):
     homepage = "http://cosmologist.info/cosmomc/"
     url      = "https://github.com/cmbant/CosmoMC/archive/Nov2016.tar.gz"
 
-    version('2016.11', '98620cb746352f68fb0c1196e9a070ac')
-    version('2016.06', '92dc651d1407cca6ea9228992165f5cb')
+    version('2016.11', sha256='b83edbf043ff83a4dde9bc14c56a09737dbc41ffe247a8e9c9a26892ed8745ba')
+    version('2016.06', sha256='23fa23eef40846c17d3740be63a7fefde13880cbb81545a44d14034277d9ffc0')
 
     def url_for_version(self, version):
         names = {'2016.11': "Nov2016",

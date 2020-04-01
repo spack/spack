@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,9 +16,10 @@ class RFftwtools(RPackage):
        the redundant complex conjugate when the input is real data."""
 
     homepage = "https://github.com/krahim/fftwtools"
-    url      = "https://cran.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/fftwtools"
+    url      = "https://cloud.r-project.org/src/contrib/fftwtools_0.9-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/fftwtools"
 
-    version('0.9-8', '2d1258fbaf0940b57ed61c8d6cd6694d')
+    version('0.9-8', sha256='4641c8cd70938c2a8bde0b6da6cf7f83e96175ef52f1ca42ec3920a1dabf1bdb')
 
-    depends_on('fftw')
+    depends_on('r@2.15.2:', type=('build', 'run'))
+    depends_on('fftw@3.1.2:')

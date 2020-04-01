@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,13 @@ class PyTraceback2(PythonPackage):
     homepage = "https://github.com/testing-cabal/traceback2"
     url      = "https://pypi.io/packages/source/t/traceback2/traceback2-1.4.0.tar.gz"
 
-    version('1.4.0', '9e9723f4d70bfc6308fa992dd193c400')
+    version('1.4.0', sha256='05acc67a09980c2ecfedd3423f7ae0104839eccb55fc645773e1caa0951c3030')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-linecache2', type=('build', 'run'))
-    depends_on('py-pbr', type=('build', 'run'))
+    depends_on('py-pbr', type='build')
+
+    # test-requirements.txt
+    depends_on('py-contextlib2', type='test')
+    depends_on('py-fixtures', type='test')
+    depends_on('py-testtools', type='test')
+    depends_on('py-unittest2', type='test')

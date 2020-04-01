@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -34,9 +15,10 @@ class NetlibScalapack(CMakePackage):
     homepage = "http://www.netlib.org/scalapack/"
     url = "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz"
 
-    version('2.0.2', '2f75e600a2ba155ed9ce974a1c4b536f')
-    version('2.0.1', '17b8cde589ea0423afe1ec43e7499161')
-    version('2.0.0', '9e76ae7b291be27faaad47cfc256cbfe')
+    version('2.1.0', sha256='61d9216cf81d246944720cfce96255878a3f85dec13b9351f1fa0fd6768220a6')
+    version('2.0.2', sha256='0c74aeae690fe5ee4db7926f49c5d0bb69ce09eea75beb915e00bba07530395c')
+    version('2.0.1', sha256='a9b34278d4e10b40cbe084c6d87d09af8845e874250719bfbbc497b2a88bfde1')
+    version('2.0.0', sha256='e51fbd9c3ef3a0dbd81385b868e2355900148eea689bf915c5383d72daf73114')
     # versions before 2.0.0 are not using cmake and requires blacs as
     # a separated package
 
@@ -58,13 +40,20 @@ class NetlibScalapack(CMakePackage):
     depends_on('blas')
     depends_on('cmake', when='@2.0.0:', type='build')
 
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
+    patch("cmake_fortran_mangle.patch", when='@2.0.2:@2.0.99')
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/10
+    patch("mpi2-compatibility.patch", when='@2.0.2:@2.0.99')
+    # See: https://github.com/Reference-ScaLAPACK/scalapack/pull/16
+    patch("int_overflow.patch", when='@2.0.0:@2.1.0')
+
     @property
-    def scalapack_libs(self):
+    def libs(self):
         # Note that the default will be to search
         # for 'libnetlib-scalapack.<suffix>'
         shared = True if '+shared' in self.spec else False
         return find_libraries(
-            'libscalapack', root=self.prefix, shared=shared, recurse=True
+            'libscalapack', root=self.prefix, shared=shared, recursive=True
         )
 
     def cmake_args(self):

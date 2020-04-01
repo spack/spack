@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,8 +13,8 @@ class Serf(SConsPackage):
     homepage  = 'https://serf.apache.org/'
     url       = 'https://archive.apache.org/dist/serf/serf-1.3.9.tar.bz2'
 
-    version('1.3.9', '26015c63e3bbb108c1689bf2090e4c26351db674')
-    version('1.3.8', '1d45425ca324336ce2f4ae7d7b4cfbc5567c5446')
+    version('1.3.9', sha256='549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc')
+    version('1.3.8', sha256='e0500be065dbbce490449837bb2ab624e46d64fc0b090474d9acaa87c82b2590')
 
     variant('debug', default=False,
             description='Enable debugging info and strict compile warnings')
@@ -45,6 +26,8 @@ class Serf(SConsPackage):
     depends_on('openssl')
     depends_on('zlib')
 
+    patch('py3syntax.patch')
+
     def build_args(self, spec, prefix):
         args = [
             'PREFIX={0}'.format(prefix),
@@ -53,6 +36,19 @@ class Serf(SConsPackage):
             'OPENSSL={0}'.format(spec['openssl'].prefix),
             'ZLIB={0}'.format(spec['zlib'].prefix),
         ]
+
+        # ZLIB variable is ignored on non-Windows platforms before and
+        # including the version 1.3.9:
+        # https://www.mail-archive.com/dev@serf.apache.org/msg01359.html
+        # The issue is fixed in the trunk. Hopefully, the next stable version
+        # will work properly.
+        if '@:1.3.9' in self.spec:
+            zlib_spec = self.spec['zlib']
+            link_flags = [zlib_spec.libs.search_flags]
+            link_flags.extend([self.compiler.cc_rpath_arg + d
+                               for d in zlib_spec.libs.directories])
+            args.append('LINKFLAGS=' + ' '.join(link_flags))
+            args.append('CPPFLAGS=' + zlib_spec.headers.cpp_flags)
 
         if '+debug' in spec:
             args.append('DEBUG=yes')

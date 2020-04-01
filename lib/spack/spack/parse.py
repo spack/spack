@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 import shlex
 import sys
@@ -31,7 +12,7 @@ from six import string_types
 import spack.error
 
 
-class Token:
+class Token(object):
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
     def __init__(self, type, value='', start=0, end=0):
@@ -44,7 +25,7 @@ class Token:
         return str(self)
 
     def __str__(self):
-        return "'%s'" % self.value
+        return "<%d: '%s'>" % (self.type, self.value)
 
     def is_a(self, type):
         return self.type == type
@@ -147,7 +128,7 @@ class Parser(object):
         raise ParseError(message, self.text, self.token.start)
 
     def unexpected_token(self):
-        self.next_token_error("Unexpected token")
+        self.next_token_error("Unexpected token: '%s'" % self.next.value)
 
     def expect(self, id):
         """Like accept(), but fails if we don't like the next token."""
@@ -162,7 +143,7 @@ class Parser(object):
 
     def setup(self, text):
         if isinstance(text, string_types):
-            text = shlex.split(text)
+            text = shlex.split(str(text))
         self.text = text
         self.push_tokens(self.lexer.lex(text))
 

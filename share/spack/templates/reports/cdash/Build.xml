@@ -1,0 +1,27 @@
+  <Build>
+    <StartBuildTime>{{ build.starttime }}</StartBuildTime>
+    <BuildCommand>{{ install_command }}</BuildCommand>
+{% for warning in build.warnings %}
+    <Warning>
+      <BuildLogLine>{{ warning.line_no }}</BuildLogLine>
+      <Text>{{ warning.text }}</Text>
+      <SourceFile>{{ warning.source_file }}</SourceFile>
+      <SourceLineNumber>{{ warning.source_line_no }}</SourceLineNumber>
+      <PreContext>{{ warning.pre_context }}</PreContext>
+      <PostContext>{{ warning.post_context }}</PostContext>
+    </Warning>
+{% endfor %}
+{% for error in build.errors %}
+    <Error>
+      <BuildLogLine>{{ error.line_no }}</BuildLogLine>
+      <Text>{{ error.text }}</Text>
+      <SourceFile>{{ error.source_file }}</SourceFile>
+      <SourceLineNumber>{{ error.source_line_no }}</SourceLineNumber>
+      <PreContext>{{ error.pre_context }}</PreContext>
+      <PostContext>{{ error.post_context }}</PostContext>
+    </Error>
+{% endfor %}
+    <EndBuildTime>{{ build.endtime }}</EndBuildTime>
+    <ElapsedMinutes>0</ElapsedMinutes>
+  </Build>
+</Site>

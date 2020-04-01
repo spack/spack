@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,9 @@ class RBase64enc(RPackage):
     flexible than the orphaned base64 package."""
 
     homepage = "http://www.rforge.net/base64enc"
-    url      = "https://cran.r-project.org/src/contrib/base64enc_0.1-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/base64enc"
+    url      = "https://cloud.r-project.org/src/contrib/base64enc_0.1-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/base64enc"
 
-    version('0.1-3', '0f476dacdd11a3e0ad56d13f5bc2f190')
+    version('0.1-3', sha256='6d856d8a364bcdc499a0bf38bfd283b7c743d08f0b288174fba7dbf0a04b688d')
+
+    depends_on('r@2.9.0:', type=('build', 'run'))

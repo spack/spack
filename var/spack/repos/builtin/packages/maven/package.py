@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from distutils.dir_util import copy_tree
 
 
 class Maven(Package):
@@ -32,11 +12,15 @@ class Maven(Package):
     homepage = "https://maven.apache.org/index.html"
     url = "https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"
 
-    version('3.5.0', '35c39251d2af99b6624d40d801f6ff02')
-    version('3.3.9', '516923b3955b6035ba6b0a5b031fbd8b')
+    version('3.6.3', sha256='26ad91d751b3a9a53087aefa743f4e16a17741d3915b219cf74112bf87a438c5')
+    version('3.6.2', sha256='3fbc92d1961482d6fbd57fbf3dd6d27a4de70778528ee3fb44aa7d27eb32dfdc')
+    version('3.6.1', sha256='2528c35a99c30f8940cc599ba15d34359d58bec57af58c1075519b8cd33b69e7')
+    version('3.6.0', sha256='6a1b346af36a1f1a491c1c1a141667c5de69b42e6611d3687df26868bc0f4637')
+    version('3.5.0', sha256='beb91419245395bd69a4a6edad5ca3ec1a8b64e41457672dc687c173a495f034')
+    version('3.3.9', sha256='6e3e9c949ab4695a204f74038717aa7b2689b1be94875899ac1b3fe42800ff82')
 
     depends_on('java')
 
     def install(self, spec, prefix):
         # install pre-built distribution
-        copy_tree('.', prefix)
+        install_tree('.', prefix)

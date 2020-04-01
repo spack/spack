@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,12 +12,17 @@ class PyBabel(PythonPackage):
     emphasis on web-based applications."""
 
     homepage = "http://babel.pocoo.org/en/latest/"
-    url      = "https://pypi.io/packages/source/B/Babel/Babel-2.4.0.tar.gz"
+    url      = "https://pypi.io/packages/source/B/Babel/Babel-2.7.0.tar.gz"
 
     import_modules = ['babel', 'babel.localtime', 'babel.messages']
 
-    version('2.4.0', '90e7a0add19b2036a9b415630a0d9388')
-    version('2.3.4', 'afa20bc55b0e991833030129ad498f35')
+    version('2.7.0', sha256='e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28')
+    version('2.6.0', sha256='8cba50f48c529ca3fa18cf81fa9403be176d374ac4d60738b839122dfaaa3d23')
+    version('2.4.0', sha256='8c98f5e5f8f5f088571f2c6bd88d530e331cbbcb95a7311a0db69d3dca7ec563')
+    version('2.3.4', sha256='c535c4403802f6eb38173cd4863e419e2274921a01a8aad8a5b497c131c62875')
 
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytz',       type=('build', 'run'))
+    depends_on('py-pytz@2015.7:', type=('build', 'run'))
+    depends_on('py-pytest', type='test')
+    depends_on('py-freezegun', type='test')

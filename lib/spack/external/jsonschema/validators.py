@@ -4,10 +4,7 @@ import contextlib
 import json
 import numbers
 
-try:
-    import requests
-except ImportError:
-    requests = None
+requests = None
 
 from jsonschema import _utils, _validators
 from jsonschema.compat import (

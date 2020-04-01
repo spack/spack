@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -36,12 +17,11 @@ class Astyle(MakefilePackage):
     # Gentoo alternative
     # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
-    maintainers = ['davydden']
-
-    version('3.0.1',  'c301f09679efa2e1eb6e6b5fd33788b4')
-    version('2.06',   'ff588e7fcede824591cf5b9085df109d')
-    version('2.05.1', '4142d178047d7040da3e0e2f1b030a1a')
-    version('2.04',   '30b1193a758b0909d06e7ee8dd9627f6')
+    version('3.1',    sha256='cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7')
+    version('3.0.1',  sha256='6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd')
+    version('2.06',   sha256='3b7212210dc139e8f648e004b758c0be1b3ceb1694b22a879202d2b833db7c7e')
+    version('2.05.1', sha256='fbdfc6f1966a972d19a215927266c76d4183eee235ed1e2bd7ec551c2a270eac')
+    version('2.04',   sha256='70b37f4853c418d1e2632612967eebf1bdb93dfbe558c51d7d013c9b4e116b60')
 
     parallel = False
 

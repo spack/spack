@@ -1,47 +1,70 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import re
 
-import spack
-from spack.util.executable import Executable
+import spack.error
+import spack.paths
+import spack.version
+from spack.util.executable import which
+
+_gnupg_version_re = r"^gpg \(GnuPG\) (.*)$"
+
+GNUPGHOME = spack.paths.gpg_path
 
 
-GNUPGHOME = spack.gpg_path
+def parse_keys_output(output):
+    keys = []
+    found_sec = False
+    for line in output.split('\n'):
+        if found_sec:
+            if line.startswith('fpr'):
+                keys.append(line.split(':')[9])
+                found_sec = False
+            elif line.startswith('ssb'):
+                found_sec = False
+        elif line.startswith('sec'):
+            found_sec = True
+    return keys
 
 
 class Gpg(object):
+    _gpg = None
+
     @staticmethod
     def gpg():
         # TODO: Support loading up a GPG environment from a built gpg.
-        gpg = Executable('gpg2')
-        if not os.path.exists(GNUPGHOME):
-            os.makedirs(GNUPGHOME)
-            os.chmod(GNUPGHOME, 0o700)
-        gpg.add_default_env('GNUPGHOME', GNUPGHOME)
-        return gpg
+        if Gpg._gpg is None:
+            gpg = which('gpg2', 'gpg')
+
+            if not gpg:
+                raise SpackGPGError("Spack requires gpg version 2 or higher.")
+
+            # ensure that the version is actually >= 2 if we find 'gpg'
+            if gpg.name == 'gpg':
+                output = gpg('--version', output=str)
+                match = re.search(_gnupg_version_re, output, re.M)
+
+                if not match:
+                    raise SpackGPGError("Couldn't determine version of gpg")
+
+                v = spack.version.Version(match.group(1))
+                if v < spack.version.Version('2'):
+                    raise SpackGPGError("Spack requires GPG version >= 2")
+
+            # make the GNU PG path if we need to
+            # TODO: does this need to be in the spack directory?
+            # we should probably just use GPG's regular conventions
+            if not os.path.exists(GNUPGHOME):
+                os.makedirs(GNUPGHOME)
+                os.chmod(GNUPGHOME, 0o700)
+            gpg.add_default_env('GNUPGHOME', GNUPGHOME)
+
+            Gpg._gpg = gpg
+        return Gpg._gpg
 
     @classmethod
     def create(cls, **kwargs):
@@ -65,13 +88,9 @@ class Gpg(object):
 
     @classmethod
     def signing_keys(cls):
-        keys = []
         output = cls.gpg()('--list-secret-keys', '--with-colons',
-                           '--fingerprint', output=str)
-        for line in output.split('\n'):
-            if line.startswith('fpr'):
-                keys.append(line.split(':')[9])
-        return keys
+                           '--fingerprint', '--fingerprint', output=str)
+        return parse_keys_output(output)
 
     @classmethod
     def export_keys(cls, location, *keys):
@@ -109,8 +128,11 @@ class Gpg(object):
         cls.gpg()(*args)
 
     @classmethod
-    def verify(cls, signature, file):
-        cls.gpg()('--verify', signature, file)
+    def verify(cls, signature, file, suppress_warnings=False):
+        if suppress_warnings:
+            cls.gpg()('--verify', signature, file, error=str)
+        else:
+            cls.gpg()('--verify', signature, file)
 
     @classmethod
     def list(cls, trusted, signing):
@@ -118,3 +140,7 @@ class Gpg(object):
             cls.gpg()('--list-public-keys')
         if signing:
             cls.gpg()('--list-secret-keys')
+
+
+class SpackGPGError(spack.error.SpackError):
+    """Class raised when GPG errors are detected."""

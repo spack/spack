@@ -1,0 +1,16 @@
+diff -ur spack-src/Makefile new/Makefile
+--- spack-src/Makefile	2015-04-28 02:21:27.000000000 +0900
++++ new/Makefile	2019-07-01 15:12:04.985193793 +0900
+@@ -186,10 +186,10 @@
+ else
+ DEFINES = $(DEFINESLINUX) $(DEFINESCOMMON)
+ ifndef CM64
+-CM64 = -m64
++CM64 =
+ endif
+ ifndef FM64
+-FM64 = -m64
++FM64 =
+ endif
+ endif
+ 

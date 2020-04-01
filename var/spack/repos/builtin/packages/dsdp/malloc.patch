@@ -1,0 +1,16 @@
+malloc.h does not exist on macOS. The same functionality is
+already provided by stdlib.h, so there's no need for it.
+Patch stolen from:
+https://github.com/sjackman/homebrew-science-deprecated/blob/master/dsdp.rb
+
+diff --git a/src/sys/dsdploginfo.c b/src/sys/dsdploginfo.c
+index 9313549..cee4f93 100644
+--- a/src/sys/dsdploginfo.c
++++ b/src/sys/dsdploginfo.c
+@@ -6,7 +6,6 @@
+ #include <stdarg.h>
+ #include <sys/types.h>
+ #include <stdlib.h>
+-#include <malloc.h>
+ #include "dsdpsys.h"
+ #include "dsdpbasictypes.h"

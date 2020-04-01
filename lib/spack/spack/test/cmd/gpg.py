@@ -1,66 +1,75 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 import pytest
-import spack
-import spack.util.gpg as gpg_util
+
+import llnl.util.filesystem as fs
+
+import spack.util.executable
+import spack.util.gpg
+
+from spack.paths import mock_gpg_data_path, mock_gpg_keys_path
 from spack.main import SpackCommand
 from spack.util.executable import ProcessError
 
 
-@pytest.fixture(scope='function')
-def testing_gpg_directory(tmpdir):
-    old_gpg_path = gpg_util.GNUPGHOME
-    gpg_util.GNUPGHOME = str(tmpdir.join('gpg'))
-    yield
-    gpg_util.GNUPGHOME = old_gpg_path
+#: spack command used by tests below
+gpg = SpackCommand('gpg')
 
 
-@pytest.fixture(scope='function')
-def gpg():
-    return SpackCommand('gpg')
+# test gpg command detection
+@pytest.mark.parametrize('cmd_name,version', [
+    ('gpg',  'undetectable'),        # undetectable version
+    ('gpg',  'gpg (GnuPG) 1.3.4'),   # insufficient version
+    ('gpg',  'gpg (GnuPG) 2.2.19'),  # sufficient version
+    ('gpg2', 'gpg (GnuPG) 2.2.19'),  # gpg2 command
+])
+def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
+    with tmpdir.as_cwd():
+        with open(cmd_name, 'w') as f:
+            f.write("""\
+#!/bin/sh
+echo "{version}"
+""".format(version=version))
+        fs.set_executable(cmd_name)
+
+    monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
+    if version == 'undetectable' or version.endswith('1.3.4'):
+        with pytest.raises(spack.util.gpg.SpackGPGError):
+            exe = spack.util.gpg.Gpg.gpg()
+    else:
+        exe = spack.util.gpg.Gpg.gpg()
+        assert isinstance(exe, spack.util.executable.Executable)
 
 
-def has_gnupg2():
+def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
+    monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
+    with pytest.raises(spack.util.gpg.SpackGPGError):
+        spack.util.gpg.Gpg.gpg()
+
+
+def has_gpg():
     try:
-        gpg_util.Gpg.gpg()('--version', output=os.devnull)
-        return True
-    except Exception:
-        return False
+        gpg = spack.util.gpg.Gpg.gpg()
+    except spack.util.gpg.SpackGPGError:
+        gpg = None
+    return bool(gpg)
 
 
-@pytest.mark.skipif(not has_gnupg2(),
+@pytest.mark.maybeslow
+@pytest.mark.skipif(not has_gpg(),
                     reason='These tests require gnupg2')
-def test_gpg(gpg, tmpdir, testing_gpg_directory):
+def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Import the default key.
-    gpg('init', '--from', spack.mock_gpg_keys_path)
+    gpg('init', '--from', mock_gpg_keys_path)
 
     # List the keys.
     # TODO: Test the output here.
@@ -68,14 +77,14 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory):
     gpg('list', '--signing')
 
     # Verify the file now that the key has been trusted.
-    gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+    gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Untrust the default key.
     gpg('untrust', 'Spack testing')
 
     # Now that the key is untrusted, verification should fail.
     with pytest.raises(ProcessError):
-        gpg('verify', os.path.join(spack.mock_gpg_data_path, 'content.txt'))
+        gpg('verify', os.path.join(mock_gpg_data_path, 'content.txt'))
 
     # Create a file to test signing.
     test_path = tmpdir.join('to-sign.txt')
@@ -94,7 +103,7 @@ def test_gpg(gpg, tmpdir, testing_gpg_directory):
         '--export', str(keypath),
         'Spack testing 1',
         'spack@googlegroups.com')
-    keyfp = gpg_util.Gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.Gpg.signing_keys()[0]
 
     # List the keys.
     # TODO: Test the output here.

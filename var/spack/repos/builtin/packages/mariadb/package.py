@@ -1,54 +1,61 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Mariadb(CMakePackage):
-    """MariaDB turns data into structured information in a wide array of
+    """MariaDB Server is one of the most popular database servers
+    in the world.
+
+    MariaDB turns data into structured information in a wide array of
     applications, ranging from banking to websites. It is an enhanced, drop-in
     replacement for MySQL. MariaDB is used because it is fast, scalable and
     robust, with a rich ecosystem of storage engines, plugins and many other
-    tools make it very versatile for a wide variety of use cases."""
+    tools make it very versatile for a wide variety of use cases.
+    """
 
     homepage = "https://mariadb.org/about/"
-    url      = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
+    url = "http://ftp.hosteurope.de/mirror/archive.mariadb.org/mariadb-10.2.8/source/mariadb-10.2.8.tar.gz"
 
-    version('10.2.8', 'f93cbd5bfde3c0d082994764ff7db580')
-    version('10.1.23', '1a7392cc05c7c249acd4495022719ca8')
-    version('5.5.56', '8bc7772fea3e11b0bc1a09d2278e2e32')
-    version('10.1.14', '294925531e0fd2f0461e3894496a5adc')
-    version('5.5.49', '67b5a499a5f158b2a586e6e3bfb4f304')
+    version('10.4.8', sha256='10cc2c3bdb76733c9c6fd1e3c6c860d8b4282c85926da7d472d2a0e00fffca9b')
+    version('10.4.7', sha256='c8e6a6d0bb4f22c416ed675d24682a3ecfa383c5283efee70c8edf131374d817')
+    version('10.2.8', sha256='8dd250fe79f085e26f52ac448fbdb7af2a161f735fae3aed210680b9f2492393')
+    version('10.1.23', sha256='54d8114e24bfa5e3ebdc7d69e071ad1471912847ea481b227d204f9d644300bf')
+    version('5.5.56', sha256='950c3422cb262b16ce133caadbc342219f50f9b45dcc71b8db78fc376a971726')
+    version('10.1.14', sha256='18e71974a059a268a3f28281599607344d548714ade823d575576121f76ada13')
+    version('5.5.49', sha256='2c82f2af71b88a7940d5ff647498ed78922c92e88004942caa213131e20f4706')
 
     variant('nonblocking', default=True, description='Allow non blocking '
             'operations in the mariadb client library.')
 
+    provides('mariadb-client')
+
     depends_on('boost')
     depends_on('cmake@2.6:', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('bison', type='build')
     depends_on('jemalloc')
-    depends_on('libaio')
+    depends_on('libaio', when='platform=linux')
     depends_on('libedit')
     depends_on('libevent', when='+nonblocking')
     depends_on('ncurses')
     depends_on('zlib')
+    depends_on('curl')
+    depends_on('libxml2')
+    depends_on('lz4')
+    depends_on('libzmq')
+    depends_on('msgpack-c')
+    depends_on('openssl')
+    depends_on('openssl@:1.0', when='@:10.1')
+
+    conflicts('%gcc@9.1.0:', when='@:5.5')
+
+    def cmake_args(self):
+        args = []
+
+        args.append('-DENABLE_DTRACE:BOOL=OFF')
+
+        return args

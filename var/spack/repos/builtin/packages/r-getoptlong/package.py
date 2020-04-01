@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,12 +12,17 @@ class RGetoptlong(RPackage):
        use in R. It also provides a simple way for variable interpolation in
        R."""
 
-    homepage = "https://cran.rstudio.com/web/packages/GetoptLong/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/GetoptLong_0.1.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GetoptLong"
+    homepage = "https://cloud.r-project.org/package=GetoptLong"
+    url      = "https://cloud.r-project.org/src/contrib/GetoptLong_0.1.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GetoptLong"
 
-    version('0.1.6', 'e4b964d0817cb6c6a707297b21405749')
+    version('0.1.7', sha256='b9a98881db407eae9b711c4fa9170168fd5f3be1f8485cd8f28d0a60ace083ba')
+    version('0.1.6', sha256='f526f006e3ed8507f1f236430ac9e97341c1ee9c207fbb68f936dd4d377b28b5')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-rjson', type=('build', 'run'))
-    depends_on('r-globaloptions', type=('build', 'run'))
+    depends_on('r-globaloptions@0.1.0:', type=('build', 'run'))
+
+    # The CRAN site lists SystemRequirments as: Perl, Getopt::Long. The
+    # Getop::Long package will be installed with Perl so just depend on perl.
     depends_on('perl')

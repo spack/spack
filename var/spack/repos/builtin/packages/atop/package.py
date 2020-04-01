@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,11 @@ class Atop(Package):
     homepage = "http://www.atoptool.nl/index.php"
     url      = "http://www.atoptool.nl/download/atop-2.2-3.tar.gz"
 
-    version('2.2-3', '034dc1544f2ec4e4d2c739d320dc326d')
+    version('2.5.0', sha256='4b911057ce50463b6e8b3016c5963d48535c0cddeebc6eda817e292b22f93f33')
+    version('2.4.0', sha256='be1c010a77086b7d98376fce96514afcd73c3f20a8d1fe01520899ff69a73d69')
+    version('2.3.0', sha256='73e4725de0bafac8c63b032e8479e2305e3962afbe977ec1abd45f9e104eb264')
+    version('2.2.6', sha256='d0386840ee4df36e5d0ad55f144661b434d9ad35d94deadc0405b514485db615')
+    version('2.2-3', sha256='c785b8a2355be28b3de6b58a8ea4c4fcab8fadeaa57a99afeb03c66fac8e055d')
 
     depends_on('zlib')
     depends_on('ncurses')

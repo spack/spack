@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,9 +13,14 @@ class PyCutadapt(PythonPackage):
 
     homepage = "https://cutadapt.readthedocs.io"
     url      = "https://pypi.io/packages/source/c/cutadapt/cutadapt-1.13.tar.gz"
+    git      = "https://github.com/marcelm/cutadapt.git"
 
-    version('1.13', '2d2d14e0c20ad53d7d84b57bc3e63b4c')
+    version('2.5', sha256='ced79e49b93e922e579d0bb9d21298dcb2d7b7b1ea721feed484277e08b1660b')
+    version('1.13', sha256='aa9f2c1f33dc081fe94f42b1250e4382b8fb42cabbf6e70a76ff079f211d5fc0')
 
-    depends_on('python@2.6:', type=('build', 'run'))
-    depends_on('py-setuptools',        type=('build'))
-    depends_on('py-xopen@0.1.1:', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'), when='@1.13')
+    depends_on('python@3.4:', type=('build', 'run'), when='@2.5:')
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-xopen@0.1.1:', type=('build', 'run'), when='@1.13')
+    depends_on('py-xopen@0.8.1:', type=('build', 'run'), when='@2.5:')
+    depends_on('py-dnaio', type=('build', 'run'), when='@2.5:')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,13 +10,13 @@ class Libconfig(AutotoolsPackage):
     """C/C++ Configuration File Library"""
 
     homepage = "http://www.hyperrealm.com/libconfig/"
-    url      = "https://github.com/hyperrealm/libconfig/archive/v1.6.tar.gz"
+    url      = "https://github.com/hyperrealm/libconfig/archive/v1.5.tar.gz"
 
     force_autoreconf = True
-    # there is currently a build error with version 1.6, see:
-    # https://github.com/hyperrealm/libconfig/issues/47
-    # version('1.6', '2ccd24b6a2ee39f7ff8a3badfafb6539')
-    version('1.5', 'e92a91c2ddf3bf77bea0f5ed7f09e492', preferred=True)
+
+    version('1.7.2', sha256='f67ac44099916ae260a6c9e290a90809e7d782d96cdd462cac656ebc5b685726')
+    version('1.7.1', sha256='d288e6ae817f4ef78df43cdb2647f768dc97899ee82fcc41f857e8eb9fd7fbdb')
+    version('1.5',   sha256='cae5c02361d8a9b2bb26946c64f089d2e5e599972f386203fbc48975c0d885c8')
 
     depends_on('m4', type=('build'))
     depends_on('autoconf', type=('build'))

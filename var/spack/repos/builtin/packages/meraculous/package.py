@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,10 @@ class Meraculous(CMakePackage):
 
     homepage = "http://jgi.doe.gov/data-and-tools/meraculous/"
     url      = "https://downloads.sourceforge.net/project/meraculous20/Meraculous-v2.2.4.tar.gz"
+    git      = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
-    version('2.2.4', '349feb6cb178643a46e4b092c87bad3a')
+    version('2.2.5.1', branch='release-2.2.5.1')
+    version('2.2.4', sha256='3b4b8848232be902af9ebc77b38b83bcc531f12120115be089bdd6371ad2bf5b')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('boost@1.5.0:')
@@ -43,8 +26,8 @@ class Meraculous(CMakePackage):
 
     def patch(self):
         edit = FileFilter('CMakeLists.txt')
-        edit.filter("-static-libstdc\+\+", "")
+        edit.filter(r"-static-libstdc\+\+", "")
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('MERACULOUS_ROOT', self.prefix)
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.set('MERACULOUS_ROOT', self.prefix)
+        env.prepend_path('PERL5LIB', self.prefix.lib)

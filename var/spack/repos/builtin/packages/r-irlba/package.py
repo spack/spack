@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,11 +11,13 @@ class RIrlba(RPackage):
     decompositions and principal component analysis of large sparse or dense
     matrices."""
 
-    homepage = "https://cran.r-project.org/web/packages/irlba/index.html"
-    url      = "https://cran.r-project.org/src/contrib/irlba_2.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/irlba"
+    homepage = "https://cloud.r-project.org/package=irlba"
+    url      = "https://cloud.r-project.org/src/contrib/irlba_2.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/irlba"
 
-    version('2.1.2', '290940abf6662ed10c0c5a8db1bc6e88')
-    version('2.0.0', '557674cf8b68fea5b9f231058c324d26')
+    version('2.3.3', sha256='6ee233697bcd579813bd0af5e1f4e6dd1eea971e8919c748408130d970fef5c0')
+    version('2.3.2', sha256='3fdf2d8fefa6ab14cd0992740de7958f9f501c71aca93229f5eb03c54558fc38')
+    version('2.1.2', sha256='5183e8dd7943df11c0f44460566adf06c03d5320f142699298f516d423b06ce1')
+    version('2.0.0', sha256='15f8d6c1107d6bb872411efd61e6077d9d7ac826f4da2d378999889a7b1ebabe')
 
     depends_on('r-matrix', type=('build', 'run'))

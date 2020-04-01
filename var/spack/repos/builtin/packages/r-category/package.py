@@ -1,39 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RCategory(RPackage):
-    """A collection of tools for performing category analysis."""
+    """Category Analysis.
 
-    homepage = "https://www.bioconductor.org/packages/Category/"
-    url      = "https://git.bioconductor.org/packages/Category"
+       A collection of tools for performing category (gene set enrichment)
+       analysis."""
 
-    version('2.42.1', git='https://git.bioconductor.org/packages/Category', commit='382c817a2371671a72f8f949dfb4050361ebabcd')
+    homepage = "https://bioconductor.org/packages/Category"
+    git      = "https://git.bioconductor.org/packages/Category.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@2.42.1')
+    version('2.50.0', commit='d96f0b29cb778f6697b44d7ba7b0abd7086074a9')
+    version('2.48.1', commit='941819a3d9dd129f47b4ea00fa74032e405be3a5')
+    version('2.46.0', commit='c8aeee4dee3fb120f25e0647dd06e895a3ffbc2a')
+    version('2.44.0', commit='eaba50c1a801ba7983e6ffdf41ab0fc9cfe5a626')
+    version('2.42.1', commit='382c817a2371671a72f8f949dfb4050361ebabcd')
+
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

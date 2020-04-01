@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,12 +11,22 @@ class PyLxml(PythonPackage):
     XML and HTML in the Python language."""
 
     homepage = "http://lxml.de/"
-    url      = "https://pypi.io/packages/source/l/lxml/lxml-2.3.tar.gz"
+    url      = "https://pypi.io/packages/source/l/lxml/lxml-4.4.1.tar.gz"
 
-    version('3.7.3', '075692ce442e69bbd604d44e21c02753')
-    version('2.3', 'a245a015fd59b63e220005f263e1682a')
+    version('4.4.1', sha256='c81cb40bff373ab7a7446d6bbca0190bccc5be3448b47b51d729e37799bb5692')
+    version('4.3.3', sha256='4a03dd682f8e35a10234904e0b9508d705ff98cf962c5851ed052e9340df3d90')
+    version('4.2.5', sha256='36720698c29e7a9626a0dc802ef8885f8f0239bfd1689628ecd459a061f2807f')
+    version('3.7.3', sha256='aa502d78a51ee7d127b4824ff96500f0181d3c7826e6ee7b800d068be79361c7')
+    version('2.3', sha256='eea1b8d29532739c1383cb4794c5eacd6176f0972b59e8d29348335b87ff2e66')
 
-    depends_on('py-setuptools@0.6c5:', type='build')
-    depends_on('py-cython@0.20:', type='build')
+    variant('html5', default=False, description='Enable html5lib backend')
+    variant('htmlsoup',  default=False, description='Enable BeautifulSoup4 backend')
+    variant('cssselect',   default=False, description='Enable cssselect module')
+
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('libxml2', type=('build', 'run'))
     depends_on('libxslt', type=('build', 'run'))
+    depends_on('py-html5lib', when='+html5', type=('build', 'run'))
+    depends_on('py-beautifulsoup4', when='+htmlsoup', type=('build', 'run'))
+    depends_on('py-cssselect@0.7:', when='+cssselect', type=('build', 'run'))

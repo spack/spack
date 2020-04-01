@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,9 +13,9 @@ class Sas(CMakePackage):
     homepage = "https://github.com/dpiparo/SAS"
     url      = "https://github.com/dpiparo/SAS/archive/0.1.3.tar.gz"
 
-    version('0.2.0', 'e6fecfb71d9cdce342c8593f4728c9f0')
-    version('0.1.4', '20d7311258f2a59c9367ae1576c392b6')
-    version('0.1.3', '1e6572afcc03318d16d7321d40eec0fd')
+    version('0.2.0', sha256='a369e56f8edc61dbf59ae09dbb11d98bc05fd337c5e47e13af9c913bf7bfc538')
+    version('0.1.4', sha256='9b2a3436efe3c8060ee4882f3ed37d848ee79a63d6055a71a23fad6409559f40')
+    version('0.1.3', sha256='93c3194bb7d518c215e79436bfb43304683832b3cc66bfc838f6195ce4574943')
 
     depends_on('python@2.7:')
     depends_on('llvm@3.5:')

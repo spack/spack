@@ -1,34 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import stat
 import re
+import sys
 
 import llnl.util.tty as tty
 
-import spack
+import spack.paths
 import spack.modules
 
 # Character limit for shebang line.  Using Linux's 127 characters
@@ -52,11 +34,15 @@ def shebang_too_long(path):
 
 def filter_shebang(path):
     """Adds a second shebang line, using sbang, at the beginning of a file."""
-    with open(path, 'r') as original_file:
+    with open(path, 'rb') as original_file:
         original = original_file.read()
+        if sys.version_info >= (2, 7):
+            original = original.decode(encoding='UTF-8')
+        else:
+            original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.spack_root
+    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):
@@ -80,15 +66,19 @@ def filter_shebang(path):
         saved_mode = st.st_mode
         os.chmod(path, saved_mode | stat.S_IWRITE)
 
-    with open(path, 'w') as new_file:
-        new_file.write(new_sbang_line)
-        new_file.write(original)
+    with open(path, 'wb') as new_file:
+        if sys.version_info >= (2, 7):
+            new_file.write(new_sbang_line.encode(encoding='UTF-8'))
+            new_file.write(original.encode(encoding='UTF-8'))
+        else:
+            new_file.write(new_sbang_line.encode('UTF-8'))
+            new_file.write(original.encode('UTF-8'))
 
     # Restore original permissions.
     if saved_mode is not None:
         os.chmod(path, saved_mode)
 
-    tty.warn("Patched overlong shebang in %s" % path)
+    tty.debug("Patched overlong shebang in %s" % path)
 
 
 def filter_shebangs_in_directory(directory, filenames=None):

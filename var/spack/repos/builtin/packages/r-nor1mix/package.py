@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,8 +13,9 @@ class RNor1mix(RPackage):
        generation and graphics; now fitting to data by ML (Maximum Likelihood)
        or EM estimation."""
 
-    homepage = "https://CRAN.R-project.org/package=nor1mix"
-    url      = "https://cran.rstudio.com/src/contrib/nor1mix_1.2-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nor1mix"
+    homepage = "https://cloud.r-project.org/package=nor1mix"
+    url      = "https://cloud.r-project.org/src/contrib/nor1mix_1.2-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nor1mix"
 
-    version('1.2-3', '60eb5cc1ea6b366f53042087a080b105')
+    version('1.3-0', sha256='9ce4ee92f889a4a4041b5ea1ff09396780785a9f12ac46f40647f74a37e327a0')
+    version('1.2-3', sha256='435e6519e832ef5229c51ccb2619640e6b50dfc7470f70f0c938d18a114273af')

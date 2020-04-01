@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,16 +10,26 @@ class Prank(Package):
     """A powerful multiple sequence alignment browser."""
 
     homepage = "http://wasabiapp.org/software/prank/"
-    url      = "http://wasabiapp.org/download/prank/prank.source.150803.tgz"
+    url      = "http://wasabiapp.org/download/prank/prank.source.170427.tgz"
 
-    version('150803', '71ac2659e91c385c96473712c0a23e8a')
+    version('170427', sha256='623eb5e9b5cb0be1f49c3bf715e5fabceb1059b21168437264bdcd5c587a8859')
 
     depends_on('mafft')
     depends_on('exonerate')
     depends_on('bpp-suite')      # for bppancestor
+    conflicts('%gcc@7.2.0', when='@:150803')
 
     def install(self, spec, prefix):
         with working_dir('src'):
+
+            filter_file('gcc', '{0}'.format(spack_cc),
+                        'Makefile', string=True)
+            filter_file('g++', '{0}'.format(spack_cxx),
+                        'Makefile', string=True)
+            if not spec.target.family == 'x86_64':
+                filter_file('-m64', '', 'Makefile', string=True)
+                filter_file('-pipe', '', 'Makefile', string=True)
+
             make()
             mkdirp(prefix.bin)
             install('prank', prefix.bin)

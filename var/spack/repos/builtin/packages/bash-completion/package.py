@@ -1,38 +1,21 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class BashCompletion(AutotoolsPackage):
     """Programmable completion functions for bash."""
-    homepage = "https://github.com/scop/bash-completion"
-    url = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
 
-    version('2.7', 'f72c9e2e877d188c3159956a3496a450e7279b76')
-    version('2.3', '67e50f5f3c804350b43f2b664c33dde811d24292')
-    version('develop',  git='https://github.com/scop/bash-completion.git')
+    homepage = "https://github.com/scop/bash-completion"
+    url      = "https://github.com/scop/bash-completion/archive/2.3.tar.gz"
+    git      = "https://github.com/scop/bash-completion.git"
+
+    version('develop', branch='master')
+    version('2.7', sha256='dba2b88c363178622b61258f35d82df64dc8d279359f599e3b93eac0375a416c')
+    version('2.3', sha256='d92fcef5f6e3bbc68a84f0a7b063a1cd07b4000cc6e275cd1ff83863ab3b322a')
 
     # Build dependencies
     depends_on('automake', type='build')

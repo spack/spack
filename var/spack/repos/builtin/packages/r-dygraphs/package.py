@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,13 +13,17 @@ class RDygraphs(RPackage):
     axis-display and interactive features like zoom/pan and series/point
     highlighting."""
 
-    homepage = "https://cran.r-project.org/web/packages/dygraphs/index.html"
-    url      = "https://cran.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/dygraphs"
+    homepage = "https://cloud.r-project.org/package=dygraphs"
+    url      = "https://cloud.r-project.org/src/contrib/dygraphs_0.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/dygraphs"
 
-    version('0.9', '7f0ce4312bcd3f0a58b8c03b2772f833')
+    version('1.1.1.6', sha256='c3d331f30012e721a048e04639f60ea738cd7e54e4f930ac9849b95f0f005208')
+    version('1.1.1.5', sha256='274035988fdd6833121fd5831692355d383acc828d540788dbcecaf88eb2d72d')
+    version('0.9', sha256='2aa4754a7d824d8994c2a97ee02bab163319f065b4d10d289337dc8398c0646c')
 
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-htmlwidgets', type=('build', 'run'))
-    depends_on('r-zoo', type=('build', 'run'))
-    depends_on('r-xts', type=('build', 'run'))
+    depends_on('r-htmlwidgets@0.6:', type=('build', 'run'))
+    depends_on('r-zoo@1.7-10:', type=('build', 'run'))
+    depends_on('r-xts@0.9-7:', type=('build', 'run'))
+    depends_on('r-htmltools@0.3.5:', when='@1.1.1.0:', type=('build', 'run'))

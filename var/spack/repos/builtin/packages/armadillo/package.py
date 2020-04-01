@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,15 +12,11 @@ class Armadillo(CMakePackage):
     ease of use."""
 
     homepage = "http://arma.sourceforge.net/"
-    url = "http://sourceforge.net/projects/arma/files/armadillo-7.200.1.tar.xz"
+    url = "http://sourceforge.net/projects/arma/files/armadillo-8.100.1.tar.xz"
 
-    version('8.100.1', 'd9762d6f097e0451d0cfadfbda295e7c')
-    version('7.950.1', 'c06eb38b12cae49cab0ce05f96147147')
-    # NOTE: v7.900.1 download url seems broken is no v7.950.1?
-    version('7.900.1', '5ef71763bd429a3d481499878351f3be')
-    version('7.500.0', '7d316fdf3c3c7ea92b64704180ae315d')
-    version('7.200.2', 'b21585372d67a8876117fd515d8cf0a2')
-    version('7.200.1', 'ed86d6df0058979e107502e1fe3e469e')
+    version('9.800.3', sha256='a481e1dc880b7cb352f8a28b67fe005dc1117d4341277f12999a2355d40d7599')
+    version('8.100.1', sha256='54773f7d828bd3885c598f90122b530ded65d9b195c9034e082baea737cd138d')
+    version('7.950.1', sha256='a32da32a0ea420b8397a53e4b40ed279c1a5fc791dd492a2ced81ffb14ad0d1b')
 
     variant('hdf5', default=False, description='Include HDF5 support')
 

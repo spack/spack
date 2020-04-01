@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack.compiler import Compiler, get_compiler_version
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack.compiler import Compiler, UnsupportedCompilerFlag
+from spack.version import ver
 
 
 class Cce(Compiler):
@@ -45,14 +27,17 @@ class Cce(Compiler):
     PrgEnv = 'PrgEnv-cray'
     PrgEnv_compiler = 'cce'
 
-    link_paths = {'cc': 'cc',
-                  'cxx': 'c++',
-                  'f77': 'f77',
-                  'fc': 'fc'}
+    link_paths = {'cc': 'cce/cc',
+                  'cxx': 'cce/case-insensitive/CC',
+                  'f77': 'cce/ftn',
+                  'fc': 'cce/ftn'}
+
+    version_argument = '-V'
+    version_regex = r'[Vv]ersion.*?(\d+(\.\d+)+)'
 
     @classmethod
-    def default_version(cls, comp):
-        return get_compiler_version(comp, '-V', r'[Vv]ersion.*?(\d+(\.\d+)+)')
+    def verbose_flag(cls):
+        return "-v"
 
     @property
     def openmp_flag(self):
@@ -61,6 +46,26 @@ class Cce(Compiler):
     @property
     def cxx11_flag(self):
         return "-h std=c++11"
+
+    @property
+    def c99_flag(self):
+        if self.version >= ver('8.4'):
+            return '-h stc=c99,noconform,gnu'
+        if self.version >= ver('8.1'):
+            return '-h c99,noconform,gnu'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C99 standard',
+                                      'c99_flag',
+                                      '< 8.1')
+
+    @property
+    def c11_flag(self):
+        if self.version >= ver('8.5'):
+            return '-h std=c11,noconform,gnu'
+        raise UnsupportedCompilerFlag(self,
+                                      'the C11 standard',
+                                      'c11_flag',
+                                      '< 8.5')
 
     @property
     def pic_flag(self):

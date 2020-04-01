@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,8 +11,19 @@ class Libcircle(AutotoolsPackage):
        using self-stabilizing work stealing."""
 
     homepage = "https://github.com/hpc/libcircle"
+    git      = "https://github.com/hpc/libcircle.git"
+    url      = "https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz"
 
-    version('0.2.1-rc.1', '2b1369a5736457239f908abf88143ec2',
-            url='https://github.com/hpc/libcircle/releases/download/0.2.1-rc.1/libcircle-0.2.1-rc.1.tar.gz')
+    version('master', branch='master')
+    version('0.3.0',      sha256='5ce38eb5b3c2b394bca1316310758f276c893dd3f4c15d7bc14ea05d3110ce58', url='https://github.com/hpc/libcircle/releases/download/v0.3/libcircle-0.3.0.tar.gz')
+    version('0.2.1-rc.1', sha256='5747f91cf4417023304dcc92fd07e3617ac712ca1eeb698880979bbca3f54865')
 
     depends_on('mpi')
+    depends_on('pkgconfig', type='build')
+
+    @when('@master')
+    def autoreconf(self, spec, prefix):
+        with working_dir(self.configure_directory):
+            # Bootstrap with autotools
+            bash = which('bash')
+            bash('./autogen.sh')

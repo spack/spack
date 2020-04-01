@@ -1,0 +1,68 @@
+diff -ur bowtie-1.2.3.org/Makefile bowtie-1.2.3/Makefile
+--- bowtie-1.2.3.org/Makefile	2019-09-26 12:14:35.498557693 +0900
++++ bowtie-1.2.3/Makefile	2019-09-26 12:15:17.262960932 +0900
+@@ -174,14 +174,22 @@
+     ifeq (x86_64, $(shell uname -p))
+         BITS=64
+     endif
++    ifeq (aarch64, $(shell uname -p))
++        BITS=64
++    endif
+ endif
+ 
+ ifeq (32,$(BITS))
+     $(error bowtie2 compilation requires a 64-bit platform )
+ endif
+ 
+-DEBUG_FLAGS = -O0 -g3 -m64
+-RELEASE_FLAGS = -O3 -m64
++ifeq (aarch64, $(shell uname -p))
++    DEBUG_FLAGS = -O0 -g3
++    RELEASE_FLAGS = -O3
++else
++    DEBUG_FLAGS = -O0 -g3 -m64
++    RELEASE_FLAGS = -O3 -m64
++endif
+ NOASSERT_FLAGS = -DNDEBUG
+ FILE_FLAGS = -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
+ 
+diff -ur bowtie-1.2.3.org/ebwt.h bowtie-1.2.3/ebwt.h
+--- bowtie-1.2.3.org/ebwt.h	2019-09-26 12:14:35.518559804 +0900
++++ bowtie-1.2.3/ebwt.h	2019-09-26 14:13:12.142637470 +0900
+@@ -1957,7 +1957,11 @@
+     struct USE_POPCNT_INSTRUCTION {
+         inline static int pop64(uint64_t x) {
+             int64_t count;
++#ifdef __aarch64__
++            count = __builtin_popcount(x);
++#else
+             asm ("popcntq %[x],%[count]\n": [count] "=&r" (count): [x] "r" (x));
++#endif
+             return count;
+         }
+     };
+diff -ur bowtie-1.2.3.org/third_party/cpuid.h bowtie-1.2.3/third_party/cpuid.h
+--- bowtie-1.2.3.org/third_party/cpuid.h	2019-09-26 12:14:35.548562971 +0900
++++ bowtie-1.2.3/third_party/cpuid.h	2019-09-26 12:17:41.677842567 +0900
+@@ -65,6 +65,7 @@
+ #define bit_FSGSBASE	(1 << 0)
+ #define bit_BMI		(1 << 3)
+ 
++#ifndef __aarch64__
+ #if defined(__i386__) && defined(__PIC__)
+ /* %ebx may be the PIC register.  */
+ #if __GNUC__ >= 3
+@@ -185,3 +186,13 @@
+   __cpuid (__level, *__eax, *__ebx, *__ecx, *__edx);
+   return 1;
+ }
++#endif
++#ifdef __aarch64__ 
++static __inline int
++__get_cpuid (unsigned int __level,
++             unsigned int *__eax, unsigned int *__ebx,
++             unsigned int *__ecx, unsigned int *__edx)
++{
++  return 1;
++}
++#endif

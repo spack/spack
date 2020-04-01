@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,10 +15,15 @@ class Denovogear(CMakePackage):
     homepage = "https://github.com/denovogear/denovogear"
     url      = "https://github.com/denovogear/denovogear/archive/v1.1.1.tar.gz"
 
-    version('1.1.1', 'da30e46851c3a774653e57f98fe62e5f')
-    version('1.1.0', '7d441d56462efb7ff5d3a6f6bddfd8b9')
+    version('1.1.1', sha256='799fe99193e9cf12320893cf020a3251022f60a49de8677a1c5a18c578fe4be2')
+    version('1.1.0', sha256='f818f80cd67183294c8aae312cad8311e6a9abede1f687567bb079d29f79c005')
 
     depends_on('cmake@3.1:', type=('build'))
     depends_on('boost@1.47:1.60', type=('build'))
     depends_on('htslib@1.2:', type=('build'))
     depends_on('eigen', type=('build'))
+    depends_on('zlib', type=('link'))
+
+    patch('stream-open.patch', when='@:1.1.1')
+    # fix: ordered comparison between pointer and zero.
+    patch('newmat6.cpp.patch')

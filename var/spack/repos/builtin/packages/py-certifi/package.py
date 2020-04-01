@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,12 +10,16 @@ class PyCertifi(PythonPackage):
     """Certifi: A carefully curated collection of Root Certificates for validating
     the trustworthiness of SSL certificates while verifying the identity of TLS
     hosts."""
+
     homepage = "http://certifi.io/"
-    url      = "https://pypi.io/packages/source/c/certifi/certifi-2017.1.23.tar.gz"
+    url      = "https://pypi.io/packages/source/c/certifi/certifi-2019.6.16.tar.gz"
 
     import_modules = ['certifi']
 
-    version('2017.1.23',  'b72521a8badff5e89a8eabea586d79ab')
-    version('2016.02.28', '5ccfc23bd5e931863f0b01ef3e9d2dbd3bef0e1b')
+    version('2019.9.11', sha256='e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50')
+    version('2019.6.16', sha256='945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695')
+    version('2019.3.9',  sha256='b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae')
+    version('2017.4.17', sha256='f7527ebf7461582ce95f7a9e03dd141ce810d40590834f4ec20cddd54234c10a')
+    version('2017.1.23', sha256='81877fb7ac126e9215dfb15bfef7115fdc30e798e0013065158eed0707fd99ce')
 
     depends_on('py-setuptools', type='build')

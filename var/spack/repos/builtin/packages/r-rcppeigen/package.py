@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -41,11 +22,15 @@ class RRcppeigen(RPackage):
     GNU GPL version 2 or later, as is the rest of 'Rcpp'."""
 
     homepage = "http://eigen.tuxfamily.org/"
-    url      = "https://cran.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppEigen"
+    url      = "https://cloud.r-project.org/src/contrib/RcppEigen_0.3.2.9.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppEigen"
 
-    version('0.3.2.9.0', '14a7786882a5d9862d53c4b2217df318')
-    version('0.3.2.8.1', '4146e06e4fdf7f4d08db7839069d479f')
+    version('0.3.3.5.0', sha256='e5c6af17770c5f57b7cf2fba04ad1a519901b446e8138bfff221952458207f05')
+    version('0.3.3.4.0', sha256='11020c567b299b1eac95e8a4d57abf0315931286907823dc7b66c44d0dd6dad4')
+    version('0.3.3.3.1', sha256='14fdd2cb764d0a822e11b8f09dcf1c3c8580d416f053404732064d8f2b176f24')
+    version('0.3.2.9.0', sha256='25affba9065e3c12d67b1934d1ce97a928a4011a7738f7b90f0e9830409ec93b')
+    version('0.3.2.8.1', sha256='ceccb8785531c5c23f9232b594e5372c214a114a08ec759115e946badd08d681')
 
-    depends_on('r-matrix', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@2.15.1:', type=('build', 'run'))
+    depends_on('r-matrix@1.1-0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

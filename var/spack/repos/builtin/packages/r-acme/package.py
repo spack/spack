@@ -1,46 +1,33 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAcme(RPackage):
-    """ACME (Algorithms for Calculating Microarray Enrichment) is a set
-    of tools for analysing tiling array ChIP/chip, DNAse hypersensitivity,
-    or other experiments that result in regions of the genome showing
-    "enrichment". It does not rely on a specific array technology
-    (although the array should be a "tiling" array), is very general
-    (can be applied in experiments resulting in regions of enrichment),
-    and is very insensitive to array noise or normalization methods.
-    It is also very fast and can be applied on whole-genome tiling array
-    experiments quite easily with enough memory."""
+    """Algorithms for Calculating Microarray Enrichment (ACME).
 
-    homepage = "https://www.bioconductor.org/packages/ACME/"
-    url      = "https://git.bioconductor.org/packages/ACME"
+       ACME (Algorithms for Calculating Microarray Enrichment) is a set of
+       tools for analysing tiling array ChIP/chip, DNAse hypersensitivity, or
+       other experiments that result in regions of the genome showing
+       "enrichment". It does not rely on a specific array technology (although
+       the array should be a "tiling" array), is very general (can be applied
+       in experiments resulting in regions of enrichment), and is very
+       insensitive to array noise or normalization methods. It is also very
+       fast and can be applied on whole-genome tiling array experiments quite
+       easily with enough memory."""
 
-    version('2.32.0', git='https://git.bioconductor.org/packages/ACME', commit='76372255d7714a0c8128a11c028bf70214dac407')
+    homepage = "https://bioconductor.org/packages/ACME"
+    git      = "https://git.bioconductor.org/packages/ACME.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@2.32.0')
-    depends_on('r-biobase', type=('build', 'run'))
+    version('2.40.0', commit='38499e512998d54d874a0bfdc173f4ba5de5f01a')
+    version('2.38.0', commit='cd03196428e8adf62e84f25c4d4545429e2c908b')
+    version('2.36.0', commit='39e056435b9775d35e7f7fc5446c2c3cafe15670')
+    version('2.34.0', commit='1f53d43e420e245423fdf2711d0dcb345f829469')
+    version('2.32.0', commit='76372255d7714a0c8128a11c028bf70214dac407')
+
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-biobase@2.5.5:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))

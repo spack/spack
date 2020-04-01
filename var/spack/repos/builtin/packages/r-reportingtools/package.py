@@ -1,67 +1,51 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RReportingtools(RPackage):
-    """The ReportingTools software package enables users to easily
-    display reports of analysis results generated from sources such
-    as microarray and sequencing data. The package allows users to
-    create HTML pages that may be viewed on a web browser such as
-    Safari, or in other formats readable by programs such as Excel.
-    Users can generate tables with sortable and filterable columns,
-    make and display plots, and link table entries to other data
-    sources such as NCBI or larger plots within the HTML page. Using
-    the package, users can also produce a table of contents page to
-    link various reports together for a particular project that can
-    be viewed in a web browser. For more examples, please visit our
-    site: http:// research-pub.gene.com/ReportingTools."""
+    """Tools for making reports in various formats.
 
-    homepage = "https://bioconductor.org/packages/ReportingTools/"
-    url      = "https://git.bioconductor.org/packages/ReportingTools"
+       The ReportingTools software package enables users to easily display
+       reports of analysis results generated from sources such as microarray
+       and sequencing data. The package allows users to create HTML pages that
+       may be viewed on a web browser such as Safari, or in other formats
+       readable by programs such as Excel. Users can generate tables with
+       sortable and filterable columns, make and display plots, and link table
+       entries to other data sources such as NCBI or larger plots within the
+       HTML page. Using the package, users can also produce a table of contents
+       page to link various reports together for a particular project that can
+       be viewed in a web browser. For more examples, please visit our site:
+       http:// research-pub.gene.com/ReportingTools."""
 
-    version('2.16.0', git='https://git.bioconductor.org/packages/ReportingTools', commit='b1aa0ea302da7f2993ce8087b1d09c11ddf03663')
+    homepage = "https://bioconductor.org/packages/ReportingTools"
+    git      = "https://git.bioconductor.org/packages/ReportingTools.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@2.16.0')
+    version('2.24.0', commit='d114c658affba9b682a37b4e2caf4341cf8da6cf')
+    version('2.22.1', commit='dce6af6c6a1cddff077fe61368f2c13e5a0e7bab')
+    version('2.20.0', commit='77e14ae13fdc16654300852dfd94e6cef58009da')
+    version('2.17.3', commit='b2e379cd5b813d8ccca37ec25f0660deec943622')
+    version('2.16.0', commit='b1aa0ea302da7f2993ce8087b1d09c11ddf03663')
+
     depends_on('r-knitr', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-hwriter', type=('build', 'run'))
     depends_on('r-category', type=('build', 'run'))
     depends_on('r-gostats', type=('build', 'run'))
-    depends_on('r-limma', type=('build', 'run'))
-    depends_on('r-limma', type=('build', 'run'))
+    depends_on('r-limma@3.17.5:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-edger', type=('build', 'run'))
     depends_on('r-annotate', type=('build', 'run'))
     depends_on('r-pfam-db', type=('build', 'run'))
     depends_on('r-gseabase', type=('build', 'run'))
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.1.6:', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-utils', type=('build', 'run'))
-    depends_on('r-deseq2', type=('build', 'run'))
+    depends_on('r-r-utils', type=('build', 'run'))
+    depends_on('r-deseq2@1.3.41:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
     depends_on('r-ggbio', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))

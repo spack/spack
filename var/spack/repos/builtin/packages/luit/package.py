@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Luit(Package):
+class Luit(AutotoolsPackage):
     """Luit is a filter that can be run between an arbitrary application and
     a UTF-8 terminal emulator such as xterm.  It will convert application
     output from the locale's encoding into UTF-8, and convert terminal
@@ -34,7 +15,7 @@ class Luit(Package):
     homepage = "http://cgit.freedesktop.org/xorg/app/luit"
     url      = "https://www.x.org/archive/individual/app/luit-1.1.1.tar.gz"
 
-    version('1.1.1', '04128a52f68c05129f709196819ddad3')
+    version('1.1.1', sha256='87b0be0bd01f3b857a53e6625bdd31cef18418c95394b7f4387f8ecef78e45da')
 
     depends_on('libfontenc')
     depends_on('libx11')
@@ -42,10 +23,6 @@ class Luit(Package):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
-    def install(self, spec, prefix):
-        configure('--prefix={0}'.format(prefix),
-                  # see http://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/  # noqa
-                  'CFLAGS=-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600')
-
-        make()
-        make('install')
+  # see http://www.linuxquestions.org/questions/linux-from-scratch-13/can't-compile-luit-xorg-applications-4175476308/  # noqa
+    def configure_args(self):
+        return ['CFLAGS=-U_XOPEN_SOURCE -D_XOPEN_SOURCE=600']

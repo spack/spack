@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,7 +13,12 @@ class RHighr(RPackage):
     Andre Simon's highlight package."""
 
     homepage = "https://github.com/yihui/highr"
-    url      = "https://cran.r-project.org/src/contrib/highr_0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/highr"
+    url      = "https://cloud.r-project.org/src/contrib/highr_0.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/highr"
 
-    version('0.6', 'bf47388c5f57dc61962362fb7e1d8b16')
+    version('0.8', sha256='4bd01fba995f68c947a99bdf9aca15327a5320151e10bd0326fad50a6d8bc657')
+    version('0.7', sha256='cabba5b6f2ea82024a49c5ced5f1aa476f864bc52bc129038e319e4e26b6f3b7')
+    version('0.6', sha256='43e152b2dea596df6e14c44398c74fcd438ece15eaae5bdb84aef8d61b213b59')
+
+    depends_on('r@3.0.2:', when='@:0.7', type=('build', 'run'))
+    depends_on('r@3.2.3:', when='@0.8:', type=('build', 'run'))

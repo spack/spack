@@ -1,41 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyFlask(PythonPackage):
-    """A microframework based on Werkzeug, Jinja2 and good intentions"""
+    """A simple framework for building complex web applications."""
 
-    homepage = "http://github.com/pallets/flask"
-    url      = "https://pypi.io/packages/source/F/Flask/Flask-0.11.1.tar.gz"
+    homepage = "https://palletsprojects.com/p/flask/"
+    url      = "https://pypi.io/packages/source/F/Flask/Flask-1.1.1.tar.gz"
 
-    version('0.12.1', '76e9fee5c3afcf4634b9baf96c578207')
-    version('0.11.1', 'd2af95d8fe79cf7da099f062dd122a08')
+    version('1.1.1',  sha256='13f9f196f330c7c2c5d7a5cf91af894110ca0215ac051b5844701f2bfd934d52')
+    version('0.12.2', sha256='49f44461237b69ecd901cc7ce66feea0319b9158743dd27a2899962ab214dac1')
+    version('0.12.1', sha256='9dce4b6bfbb5b062181d3f7da8f727ff70c1156cbb4024351eafd426deb5fb88')
+    version('0.11.1', sha256='b4713f2bfb9ebc2966b8a49903ae0d3984781d5c878591cf2f7b484d28756b0e')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools',         type='build')
-    depends_on('py-werkzeug@0.7:',      type=('build', 'run'))
-    depends_on('py-jinja2@2.4:',        type=('build', 'run'))
-    depends_on('py-itsdangerous@0.21:', type=('build', 'run'))
-    depends_on('py-click@2.0:',         type=('build', 'run'))
+    depends_on('py-werkzeug@0.15:',     type=('build', 'run'))
+    depends_on('py-jinja2@2.10.1:',     type=('build', 'run'))
+    depends_on('py-itsdangerous@0.24:', type=('build', 'run'))
+    depends_on('py-click@5.1:',         type=('build', 'run'))

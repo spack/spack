@@ -1,33 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class ArpackNg(Package):
-    """ARPACK-NG is a collection of Fortran77 subroutines designed to solve large
-    scale eigenvalue problems.
+    """ARPACK-NG is a collection of Fortran77 subroutines designed to solve
+    large scale eigenvalue problems.
 
     Important Features:
 
@@ -54,11 +35,17 @@ class ArpackNg(Package):
     """
 
     homepage = 'https://github.com/opencollab/arpack-ng'
-    url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
+    url      = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
+    git      = 'https://github.com/opencollab/arpack-ng.git'
 
-    version('3.5.0', '9762c9ae6d739a9e040f8201b1578874')
-    version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
-    version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
+    version('develop', branch='master')
+    version('3.7.0', sha256='972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6')
+    version('3.6.3', sha256='64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453')
+    version('3.6.2', sha256='673c8202de996fd3127350725eb1818e534db4e79de56d5dcee8c00768db599a')
+    version('3.6.0', sha256='3c88e74cc10bba81dc2c72c4f5fff38a800beebaa0b4c64d321c28c9203b37ea')
+    version('3.5.0', sha256='50f7a3e3aec2e08e732a487919262238f8504c3ef927246ec3495617dde81239')
+    version('3.4.0', sha256='69e9fa08bacb2475e636da05a6c222b17c67f1ebeab3793762062248dd9d842f')
+    version('3.3.0', sha256='ad59811e7d79d50b8ba19fd908f92a3683d883597b2c7759fdcc38f6311fe5b3')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -71,6 +58,10 @@ class ArpackNg(Package):
 
     patch('make_install.patch', when='@3.4.0')
     patch('parpack_cmake.patch', when='@3.4.0')
+
+    # Fujitsu compiler does not support 'isnan' function.
+    # isnan: function that determines whether it is NaN.
+    patch('incompatible_isnan_fix.patch', when='%fj')
 
     depends_on('blas')
     depends_on('lapack')
@@ -91,7 +82,7 @@ class ArpackNg(Package):
             libraries = ['libparpack'] + libraries
 
         return find_libraries(
-            libraries, root=self.prefix, shared=True, recurse=True
+            libraries, root=self.prefix, shared=True, recursive=True
         )
 
     @when('@3.4.0:')
@@ -117,7 +108,11 @@ class ArpackNg(Package):
         if '+mpi' in spec:
             options.append('-DMPI=ON')
 
-        # TODO: -DINTERFACE64=ON
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DINTERFACE64=1')
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,12 +14,14 @@ class RMultcomp(RPackage):
     (Bretz, Hothorn, Westfall, 2010, CRC Press)."""
 
     homepage = "http://multcomp.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/multcomp"
+    url      = "https://cloud.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/multcomp"
 
-    version('1.4-6', 'f1353ede2ed78b23859a7f1f1f9ebe88')
+    version('1.4-10', sha256='29bcc635c0262e304551b139cd9ee655ab25a908d9693e1cacabfc2a936df5cf')
+    version('1.4-8', sha256='a20876619312310e9523d67e9090af501383ce49dc6113c6b4ca30f9c943a73a')
+    version('1.4-6', sha256='fe9efbe671416a49819cbdb9137cc218faebcd76e0f170fd1c8d3c84c42eeda2')
 
-    depends_on('r-mvtnorm@1.0-3:', type=('build', 'run'))
+    depends_on('r-mvtnorm@1.0-10:', type=('build', 'run'))
     depends_on('r-survival@2.39-4:', type=('build', 'run'))
     depends_on('r-th-data@1.0-2:', type=('build', 'run'))
     depends_on('r-sandwich@2.3-0:', type=('build', 'run'))

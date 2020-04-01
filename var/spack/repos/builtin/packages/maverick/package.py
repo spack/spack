@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,7 @@ class Maverick(MakefilePackage):
     homepage = "https://github.com/bobverity/MavericK"
     url      = "https://github.com/bobverity/MavericK/archive/v1.0.4.tar.gz"
 
-    version('1.0.4', '0c17c9a73fd0ac0aef17339173ddedc2')
+    version('1.0.4', sha256='d4634c1b3f09cec9eb60d72348e2f479d74220ecbdebd940bb18b480db8df8cb')
 
     conflicts('%gcc@:6.0')
     conflicts('%cce')
@@ -41,7 +22,7 @@ class Maverick(MakefilePackage):
     conflicts('%nag')
     conflicts('%pgi')
     conflicts('%xl')
-    conflicts('%xl_r')    
+    conflicts('%xl_r')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

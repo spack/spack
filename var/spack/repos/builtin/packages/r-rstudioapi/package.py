@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,9 +10,12 @@ class RRstudioapi(RPackage):
     """Access the RStudio API (if available) and provide informative error
     messages when it's not."""
 
-    homepage = "https://cran.r-project.org/web/packages/rstudioapi/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rstudioapi_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rstudioapi"
+    homepage = "https://cloud.r-project.org/package=rstudioapi"
+    url      = "https://cloud.r-project.org/src/contrib/rstudioapi_0.7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rstudioapi"
 
-    version('0.6', 'fdb13bf46aab02421557e713fceab66b')
-    version('0.5', '6ce1191da74e7bcbf06b61339486b3ba')
+    version('0.10', sha256='80c5aa3063bcab649904cb92f0b164edffa2f6b0e6a8f7ea28ae317b80e1ab96')
+    version('0.9.0', sha256='5149a2830ae7134c396ce64764b263cf9f348d4399f53da3804f40d7d5bec13e')
+    version('0.7', sha256='a541bc76ef082d2c27e42fd683f8262cb195b1497af3509178d2642870397a8c')
+    version('0.6', sha256='da24c6cdb13af1bdf4261671a065dcca4c1b7af1412cb810eb805bf3c5f97bfe')
+    version('0.5', sha256='d5f35bf9614ca2a4bc5333bac7a494d81fbe72b34783304f811f8e0abac3f669')

@@ -1,54 +1,36 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import glob
 
 
 class Igv(Package):
-    """The Integrative Genomics Viewer (IGV) is a high-performance
-       visualization tool for interactive exploration of large,
-       integrated genomic datasets."""
+    """The Integrative Genomics Viewer (IGV) is a high-performance visualization
+    tool for interactive exploration of large, integrated genomic datasets.
+    It supports a wide variety of data types, including array-based and
+    next-generation sequence data, and genomic annotations."""
 
-    homepage = "http://software.broadinstitute.org/software/igv/"
+    homepage = "https://software.broadinstitute.org/software/igv/home"
+    url      = "https://data.broadinstitute.org/igv/projects/downloads/2.8/IGV_Linux_2.8.0.zip"
 
-    version('2.4.5', '4c45e1b281d8e3d8630aa485c5df6949',
-        url='http://data.broadinstitute.org/igv/projects/downloads/2.4/IGVSource_2.4.5.zip')
-    version('2.3.50', '7fdb903a59d556fad25e668b38e860f8',
-        url='http://data.broadinstitute.org/igv/projects/downloads/2.3/IGVSource_2.3.50.zip')
+    maintainers = ['snehring']
 
-    depends_on('jdk@8:', type=('build', 'run'), when='@2.4:')
-    depends_on('jdk@7u0:7u999', type=('build', 'run'), when='@2.3:2.3.999')
-    depends_on('ant', type='build')
+    version('2.8.0', sha256='897f683645b02c4da55424110b885071c2b9dd51bc180174e2a9b10788bf3257')
+
+    # They ship with 11, out of an abundance of caution I'm going to restrict
+    # it to just 11.
+
+    depends_on('java@11:11.99', type='run')
 
     def install(self, spec, prefix):
-        ant = self.spec['ant'].command
-        ant('all')
+        # Binary dist, just copy what we need, which should be the lib
+        # directory, the two script, and the arg file
+        install_tree('lib', prefix.lib)
         mkdirp(prefix.bin)
+        filter_file('^prefix=.*$', 'prefix=' + prefix,
+                    'igv.sh', 'igv_hidpi.sh')
         install('igv.sh', prefix.bin)
-        install('igv.jar', prefix.bin)
-        mkdirp(prefix.lib)
-        files = [x for x in glob.glob("lib/*jar")]
-        for f in files:
-            install(f, prefix.lib)
+        install('igv_hidpi.sh', prefix.bin)
+        install('igv.args', prefix)

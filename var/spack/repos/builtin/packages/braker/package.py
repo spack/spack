@@ -1,28 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import os
+import glob
 
 
 class Braker(Package):
@@ -30,23 +13,54 @@ class Braker(Package):
        that combines the advantages of GeneMark-ET and AUGUSTUS"""
 
     homepage = "http://exon.gatech.edu/braker1.html"
-    url      = "http://bioinf.uni-greifswald.de/augustus/binaries/BRAKER1_v1.11.tar.gz"
+    url      = "https://github.com/Gaius-Augustus/BRAKER/archive/v2.1.4.tar.gz"
+    list_url = "http://bioinf.uni-greifswald.de/augustus/binaries/old"
 
-    version('1.11', '297efe4cabdd239b710ac2c45d81f6a5')
+    version('2.1.4', sha256='d48af5649cc879343046f9ddf180fe2c709b5810e0b78cf314bf298514d31d52')
+    version('1.11', sha256='cb2d9abe1720ed58753d362eee4af3791007efc617754804882d31f9fe2eab00',
+            url='http://bioinf.uni-greifswald.de/augustus/binaries/old/BRAKER1_v1.11.tar.gz')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('perl-scalar-util-numeric', type=('build', 'run'))
+    depends_on('perl-parallel-forkmanager', type=('build', 'run'))
+    depends_on('perl-file-which', type=('build', 'run'))
+    depends_on('perl-yaml', type=('build', 'run'))
+    depends_on('perl-hash-merge', type=('build', 'run'))
+    depends_on('perl-logger-simple', type=('build', 'run'))
+    depends_on('perl-file-homedir', when='@2.1.4:', type=('build', 'run'))
     depends_on('augustus')
+    depends_on('augustus@3.2.3', when='@:2.1.0')
     depends_on('genemark-et')
     depends_on('bamtools')
     depends_on('samtools')
+    depends_on('diamond')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.lib)
-        install('braker.pl', prefix.bin)
-        install('filterGenemark.pl', prefix.bin)
-        install('filterIntronsFindStrand.pl', prefix.bin)
-        install('helpMod.pm', prefix.lib)
+        if self.version < Version('2.1.2'):
+            install('braker.pl', prefix.bin)
+            install('filterGenemark.pl', prefix.bin)
+            install('filterIntronsFindStrand.pl', prefix.bin)
+            install('helpMod.pm', prefix.lib)
+        else:
+            install_tree('docs', prefix.docs)
+            install_tree('example', prefix.example)
+            with working_dir('scripts'):
+                install('helpMod.pm', prefix.lib)
+                files = glob.iglob('*.pl')
+                for file in files:
+                    if os.path.isfile(file):
+                        install(file, prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', prefix.lib)
+    @run_after('install')
+    def filter_sbang(self):
+        with working_dir(self.prefix.bin):
+            pattern = '^#!.*/usr/bin/env perl'
+            repl = '#!{0}'.format(self.spec['perl'].command.path)
+            files = glob.iglob("*.pl")
+            for file in files:
+                filter_file(pattern, repl, *files, backup=False)
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix.lib)

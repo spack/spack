@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,16 +15,17 @@ class RNmf(RPackage):
     computations on multicore machines.."""
 
     homepage = "http://renozao.github.io/NMF"
-    url      = "https://cran.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
+    url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 
-    version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
+    version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
 
-    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
     depends_on('r-registry', type=('build', 'run'))
-    depends_on('r-rngtools', type=('build', 'run'))
+    depends_on('r-rngtools@1.2.3:', type=('build', 'run'))
     depends_on('r-cluster', type=('build', 'run'))
-    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-stringr@1.0.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gridbase', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))

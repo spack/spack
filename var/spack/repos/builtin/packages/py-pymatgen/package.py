@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,8 +15,8 @@ class PyPymatgen(PythonPackage):
     homepage = "http://www.pymatgen.org/"
     url      = "https://pypi.io/packages/source/p/pymatgen/pymatgen-4.7.2.tar.gz"
 
-    version('4.7.2', '9c3a6e8608671c216e4ef89778646fd6')
-    version('4.6.2', '508f77fdc3e783587348e93e4dfed1b8')
+    version('4.7.2', sha256='e439b78cc3833a03963c3c3efe349d8a0e52a1550c8a05c56a89aa1b86657436')
+    version('4.6.2', sha256='f34349090c6f604f7d402cb09cd486830b38523639d7160d7fd282d504036a0e')
 
     extends('python', ignore='bin/tabulate')
 

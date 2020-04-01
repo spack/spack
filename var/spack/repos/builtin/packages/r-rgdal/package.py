@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,12 +17,16 @@ class RRgdal(RPackage):
     Windows and Mac Intel OS X binaries (including 'GDAL', 'PROJ.4' and
     'Expat') are provided on 'CRAN'."""
 
-    homepage = "https://cran.r-project.org/package=rgdal"
-    url      = "https://cran.rstudio.com/src/contrib/rgdal_1.2-16.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/rgdal"
+    homepage = "https://cloud.r-project.org/package=rgdal"
+    url      = "https://cloud.r-project.org/src/contrib/rgdal_1.3-9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rgdal"
 
-    version('1.2-16', 'de83bf08519a53de68a7632ecb7f2dc9')
+    version('1.4-4', sha256='2532e76e0af27d145f799d70006a5dbecb2d3be698e3d0bbf580f4c41a34c5d7')
+    version('1.3-9', sha256='3e44f88d09894be4c0abd8874d00b40a4a5f4542b75250d098ffbb3ba41e2654')
+    version('1.2-16', sha256='017fefea4f9a6d4540d128c707197b7025b55e4aff98fc763065366b025b03c9')
 
-    depends_on('r-sp', type=('build', 'run'))
-    depends_on('gdal')
-    depends_on('proj')
+    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r-sp@1.1-0:', type=('build', 'run'))
+    depends_on('gdal@1.11.4:')
+    depends_on('proj@4.8.0:5', when='@:1.3-9')
+    depends_on('proj@4.8.0:', when='@1.4-2:')

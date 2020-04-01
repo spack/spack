@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,12 @@ class RQuadprog(RPackage):
     """This package contains routines and documentation for solving
        quadratic programming problems."""
 
-    homepage = "https://cran.r-project.org/web/packages/quadprog/index.html"
-    url      = "https://cran.r-project.org/src/contrib/quadprog_1.5-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/quadprog"
+    homepage = "https://cloud.r-project.org/package=quadprog"
+    url      = "https://cloud.r-project.org/src/contrib/quadprog_1.5-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/quadprog"
 
-    version('1.5-5', '8442f37afd8d0b19b12e77d63e6515ad')
+    version('1.5-7', sha256='1af41e57df6f2d08ee8b72a1a5ada137beadb36c7ec9ab9bdb7c05226e8ae76d')
+    version('1.5-6', sha256='1443e5ffdf884b13dd454e4f6aa260fce6ec47e6845d85b62238c206ce57dcba')
+    version('1.5-5', sha256='d999620688354c283de5bb305203f5db70271b4dfdc23577cae8c2ba94c9e349')
+
+    depends_on('r@3.1.0:', type=('build', 'run'))

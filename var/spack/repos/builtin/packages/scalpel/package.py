@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,11 +13,11 @@ class Scalpel(MakefilePackage):
     """
 
     homepage = "http://scalpel.sourceforge.net/index.html"
-    url      = "https://downloads.sourceforge.net/project/scalpel/scalpel-0.5.3.tar.gz"
+    url      = "https://downloads.sourceforge.net/project/scalpel/scalpel-0.5.4.tar.gz"
 
-    version('0.5.3', '682c9f1cd6ab2cb11c6866f303c673f0')
+    version('0.5.4', sha256='506f731b3886def158c15fd8b74fa98390f304a507d2040972e6b09ddefac8f0')
+    version('0.5.3', sha256='d45b569fe3aa5934883bc7216c243d53168351c23e020d96a46fa77a1563b65e')
 
-    depends_on('cmake')
     depends_on('perl@5.10.0:')
 
     # bamtools needs to build before the others.

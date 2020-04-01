@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,13 @@ class RHms(RPackage):
     """Implements an S3 class for storing and formatting time-of-day values,
        based on the 'difftime' class."""
 
-    homepage = "https://cran.rstudio.com/web/packages/hms/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/hms_0.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/hms"
+    homepage = "https://cloud.r-project.org/package=hms"
+    url      = "https://cloud.r-project.org/src/contrib/hms_0.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/hms"
 
-    version('0.3', '92c4a0cf0c402a35145b5bb57212873e')
+    version('0.5.0', sha256='a87872665c3bf3901f597d78c152e7805f7129e4dbe27397051de4cf1a76561b')
+    version('0.3', sha256='9368259cbc1094ce0e4cf61544875ec30088ef690d6667e6b0b564218ab3ff88')
+
+    depends_on('r-pkgconfig', when='@0.5.0:', type=('build', 'run'))
+    depends_on('r-rlang', when='@0.5.0:', type=('build', 'run'))
+    depends_on('r-vctrs@0.2.0:', when='@0.5.0:', type=('build', 'run'))

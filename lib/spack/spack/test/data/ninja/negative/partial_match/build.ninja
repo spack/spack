@@ -1,0 +1,16 @@
+# Tests that Spack ignores targets that contain a partial match
+
+cflags = -Wall
+
+rule cc
+  command = gcc $cflags -c $in -o $out
+
+build installcheck: cc foo.c
+
+build checkinstall: cc foo.c
+
+build foo-check-bar: cc foo.c
+
+build foo_check_bar: cc foo.c
+
+build foo/check/bar: cc foo.c

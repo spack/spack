@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Geos(Package):
+class Geos(AutotoolsPackage):
     """GEOS (Geometry Engine - Open Source) is a C++ port of the Java
        Topology Suite (JTS). As such, it aims to contain the complete
        functionality of JTS in C++. This includes all the OpenGIS
@@ -33,38 +14,59 @@ class Geos(Package):
        operators, as well as specific JTS enhanced topology functions."""
 
     homepage = "http://trac.osgeo.org/geos/"
-    url      = "http://download.osgeo.org/geos/geos-3.4.2.tar.bz2"
+    url      = "https://download.osgeo.org/geos/geos-3.7.2.tar.bz2"
 
-    # Verison 3.5.0 supports Autotools and CMake
-    version('3.5.0', '136842690be7f504fba46b3c539438dd')
+    maintainers = ['adamjstewart']
 
-    # Versions through 3.4.2 have CMake, but only Autotools is supported
-    version('3.4.2', 'fc5df2d926eb7e67f988a43a92683bae')
-    version('3.4.1', '4c930dec44c45c49cd71f3e0931ded7e')
-    version('3.4.0', 'e41318fc76b5dc764a69d43ac6b18488')
-    version('3.3.9', '4794c20f07721d5011c93efc6ccb8e4e')
-    version('3.3.8', '75be476d0831a2d14958fed76ca266de')
-    version('3.3.7', '95ab996d22672b067d92c7dee2170460')
-    version('3.3.6', '6fadfb941541875f4976f75fb0bbc800')
-    version('3.3.5', '2ba61afb7fe2c5ddf642d82d7b16e75b')
-    version('3.3.4', '1bb9f14d57ef06ffa41cb1d67acb55a1')
-    version('3.3.3', '8454e653d7ecca475153cc88fd1daa26')
+    version('3.7.2', sha256='2166e65be6d612317115bfec07827c11b403c3f303e0a7420a2106bc999d7707')
+    version('3.6.2', sha256='045a13df84d605a866602f6020fc6cbf8bf4c42fb50de237a08926e1d7d7652a')
+    version('3.6.1', sha256='4a2e4e3a7a09a7cfda3211d0f4a235d9fd3176ddf64bd8db14b4ead266189fc5')
+    version('3.6.0', sha256='1fe7644f3240c8422b0143830ff142e44e8b01333c12f67681ccaab92142f2ea')
+    version('3.5.1', sha256='e6bb0a7ba0e142b1e952fae9d946b2b532fa05a5c384e458f7cb8990e1fcac32')
+    version('3.5.0', sha256='49982b23bcfa64a53333dab136b82e25354edeb806e5a2e2f5b8aa98b1d0ae02')
+    version('3.4.3', sha256='cfbf68079117c1c2b76411636444ff41d73c31093c4cab9dcc9a8c1bbe7e3897')
+    version('3.4.2', sha256='15e8bfdf7e29087a957b56ac543ea9a80321481cef4d4f63a7b268953ad26c53')
+    version('3.4.1', sha256='d07ac375f3edd12425d6ce5a96db9739d5ff358cbdf60c6804f7a9e565af8ff2')
+    version('3.4.0', sha256='3b2106d9baeede39d70e22672598d40cb63ee901f54436c774b250726d7bbdd5')
+    version('3.3.9', sha256='3e2156165d593f3e85df9ac223170b2c11de3cb4697e4c7a761c3ffbf04fe0ee')
+    version('3.3.8', sha256='ebecd4d1a71bcc28e5e883296cd8c52a80d5596335e74728f320989734fa503b')
+    version('3.3.7', sha256='fd01c21b54a3c48cac3e7885f26d4ca10ea9944238776b8ce03489e5e45c592b')
+    version('3.3.6', sha256='7ee6c1da9a1b87a3e29209e7cddbf19d36f9689d8e44fec2c9bcf6a1b1be3898')
+    version('3.3.5', sha256='3b513fbe2d155364d61e76d9c250d6d8e75b5166783a233596c744373cb5874f')
+    version('3.3.4', sha256='cd5400aa5f3fe32246dfed5d238c5017e1808162c865c016480b3e6c07271904')
+    version('3.3.3', sha256='dfcf4bd70ab212a5b7bad21d01b84748f101a545092b56dafdc3882ef3bddec9')
 
-#    # Python3 is not supported.
-#    variant('python', default=False, description='Enable Python support')
+    # Ruby bindings are fully supported
+    variant('ruby',   default=False, description='Enable Ruby support')
 
-#    extends('python', when='+python')
-#    depends_on('python', when='+python')
-#    depends_on('swig', when='+python')
+    # Since version 3.0, the Python bindings are unsupported
+    variant('python', default=False, description='Enable Python support')
 
-    def install(self, spec, prefix):
-        args = ["--prefix=%s" % prefix]
-#        if '+python' in spec:
-#            os.environ['PYTHON'] = spec['python'].command.path
-#            os.environ['SWIG'] = spec['swig'].command.path
-#
-#            args.append("--enable-python")
+    extends('ruby', when='+ruby')
+    extends('python', when='+python')
 
-        configure(*args)
-        make()
-        make("install")
+    # Python 3 is supposedly supported, but I couldn't get it to work
+    # https://trac.osgeo.org/geos/ticket/774
+    depends_on('python@:2', when='@:3.5')
+
+    depends_on('swig', type='build', when='+ruby')
+    depends_on('swig', type='build', when='+python')
+
+    # I wasn't able to get the ruby bindings working.
+    # It resulted in "Undefined symbols for architecture x86_64".
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+
+        if '+ruby' in spec:
+            args.append('--enable-ruby')
+        else:
+            args.append('--disable-ruby')
+
+        if '+python' in spec:
+            args.append('--enable-python')
+        else:
+            args.append('--disable-python')
+
+        return args

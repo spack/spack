@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -36,10 +17,14 @@ class RPbdzmq(RPackage):
     functions compatible with 'rzmq' are also provided."""
 
     homepage = "http://r-pbd.org/"
-    url      = "https://cran.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pbdZMQ"
+    url      = "https://cloud.r-project.org/src/contrib/pbdZMQ_0.2-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbdZMQ"
 
-    version('0.2-4', 'e5afb70199aa54d737ee7a0e26bde060')
+    version('0.3-3', sha256='ae26c13400e2acfb6463ff9b67156847a22ec79f3b53baf65119efaba1636eca')
+    version('0.3-2', sha256='ece2a2881c662f77126e4801ba4e01c991331842b0d636ce5a2b591b9de3fc37')
+    version('0.2-4', sha256='bfacac88b0d4156c70cf63fc4cb9969a950693996901a4fa3dcd59949ec065f6')
 
-    depends_on('r-r6', type=('build', 'run'))
-    depends_on('zeromq')
+    depends_on('r@3.0.0:', when='@:0.2-5', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@0.2-6:', type=('build', 'run'))
+    depends_on('r-r6', when='@:0.2-6', type=('build', 'run'))
+    depends_on('libzmq@4.0.4:')

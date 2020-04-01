@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,10 +10,23 @@ class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
     homepage = "http://scons.org"
-    url      = "https://pypi.io/packages/source/s/scons/scons-2.5.1.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scons/scons-3.1.1.tar.gz"
 
-    version('2.5.1', '3eac81e5e8206304a9b4683c57665aa4')
-    version('2.5.0', 'bda5530a70a41a7831d83c8b191c021e')
+    version('3.1.2', sha256='8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f')
+    version('3.1.1', sha256='fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3')
+    version('3.1.0', sha256='94e0d0684772d3e6d9368785296716e0ed6ce757270b3ed814e5aa72d3163890')
+    version('3.0.5', sha256='e95eaae17d9e490cf12cd37f091a6cbee8a628b5c8dbd3cab1f348f602f46462')
+    version('3.0.4', sha256='72c0b56db84f40d3558f351918a0ab98cb4345e8696e879d3e271f4df4a5913c')
+    version('3.0.1', sha256='24475e38d39c19683bc88054524df018fe6949d70fbd4c69e298d39a0269f173')
+    version('2.5.1', sha256='c8de85fc02ed1a687b1f2ac791eaa0c1707b4382a204f17d782b5b111b9fdf07')
+    version('2.5.0', sha256='01f1b3d6023516a8e1b5e77799e5a82a23b32953b1102d339059ffeca8600493')
 
-    # Python 3 is not supported
-    depends_on('python@:2.8', type=('build', 'run'))
+    # Python 3 support was added in SCons 3.0.0
+    depends_on('python@:2', when='@:2', type=('build', 'run'))
+    depends_on('py-setuptools', when='@3.0.2:', type='build')
+
+    # Prevent passing --single-version-externally-managed to
+    # setup.py, which it does not support.
+    @when('@3.0.2:')
+    def install_args(self, spec, prefix):
+        return ['--prefix={0}'.format(prefix), '--root=/']

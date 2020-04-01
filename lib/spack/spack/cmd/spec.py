@@ -1,33 +1,21 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
-import argparse
+import contextlib
+import sys
+
+import llnl.util.tty as tty
+
 import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.spec
+import spack.store
+import spack.hash_types as ht
 
 description = "show what would be installed, given a spec"
 section = "build"
@@ -35,10 +23,18 @@ level = "short"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['long', 'very_long'])
+    subparser.epilog = """\
+for further documentation regarding the spec syntax, see:
+    spack help --spec
+"""
+    arguments.add_common_arguments(
+        subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
-        '-y', '--yaml', action='store_true', default=False,
-        help='print concrete spec as YAML')
+        '-y', '--yaml', action='store_const', dest='format', default=None,
+        const='yaml', help='print concrete spec as YAML')
+    subparser.add_argument(
+        '-j', '--json', action='store_const', dest='format', default=None,
+        const='json', help='print concrete spec as YAML')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -46,41 +42,63 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-    subparser.add_argument(
-        '-I', '--install-status', action='store_true', default=False,
-        help='show install status of packages. packages can be: '
-             'installed [+], missing and needed by an installed package [-], '
-             'or not installed (no annotation)')
+
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages")
+    arguments.add_common_arguments(subparser, ['specs'])
+
+
+@contextlib.contextmanager
+def nullcontext():
+    """Empty context manager.
+    TODO: replace with contextlib.nullcontext() if we ever require python 3.7.
+    """
+    yield
 
 
 def spec(parser, args):
-    name_fmt = '$.' if args.namespaces else '$_'
-    kwargs = {'cover': args.cover,
-              'format': name_fmt + '$@$%@+$+$=',
-              'hashlen': None if args.very_long else 7,
-              'show_types': args.types,
-              'install_status': args.install_status}
+    name_fmt = '{namespace}.{name}' if args.namespaces else '{name}'
+    fmt = '{@version}{%compiler}{compiler_flags}{variants}{arch=architecture}'
+    install_status_fn = spack.spec.Spec.install_status
+    kwargs = {
+        'cover': args.cover,
+        'format': name_fmt + fmt,
+        'hashlen': None if args.very_long else 7,
+        'show_types': args.types,
+        'status_fn': install_status_fn if args.install_status else None
+    }
+
+    # use a read transaction if we are getting install status for every
+    # spec in the DAG.  This avoids repeatedly querying the DB.
+    tree_context = nullcontext
+    if args.install_status:
+        tree_context = spack.store.db.read_transaction
+
+    if not args.specs:
+        tty.die("spack spec requires at least one spec")
 
     for spec in spack.cmd.parse_specs(args.specs):
         # With -y, just print YAML to output.
-        if args.yaml:
-            if spec.name in spack.repo or spec.virtual:
+        if args.format:
+            if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            print(spec.to_yaml())
+
+            if args.format == 'yaml':
+                # use write because to_yaml already has a newline.
+                sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
+            else:
+                print(spec.to_json(hash=ht.build_hash))
             continue
 
-        kwargs['hashes'] = False  # Always False for input spec
-        print("Input spec")
-        print("--------------------------------")
-        print(spec.tree(**kwargs))
+        with tree_context():
+            kwargs['hashes'] = False  # Always False for input spec
+            print("Input spec")
+            print("--------------------------------")
+            print(spec.tree(**kwargs))
 
-        kwargs['hashes'] = args.long or args.very_long
-        print("Concretized")
-        print("--------------------------------")
-        spec.concretize()
-        print(spec.tree(**kwargs))
+            kwargs['hashes'] = args.long or args.very_long
+            print("Concretized")
+            print("--------------------------------")
+            spec.concretize()
+            print(spec.tree(**kwargs))

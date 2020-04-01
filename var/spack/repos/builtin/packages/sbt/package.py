@@ -1,41 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import shutil
 
 
 class Sbt(Package):
     """Scala Build Tool"""
 
-    homepage = "http://www.scala-sbt.org"
-    url      = "https://dl.bintray.com/sbt/native-packages/sbt/0.13.12/sbt-0.13.12.tgz"
+    homepage = 'http://www.scala-sbt.org'
+    url      = "https://github.com/sbt/sbt/releases/download/v1.1.4/sbt-1.1.4.tgz"
 
-    version('0.13.12', 'cec3071d46ef13334c8097cc3467ff28')
+    version('1.1.6', sha256='f545b530884e3abbca026df08df33d5a15892e6d98da5b8c2297413d1c7b68c1')
+    version('1.1.5', sha256='8303d7496bc70eb441e8136bd29ffc295c629dadecefa4e7a475176ab4d282d5')
+    version('1.1.4', sha256='2fbd592b1cfd7bc3612154a32925d5843b602490e8c8977a53fa86b35e308341')
+    version('0.13.17', sha256='25f782ccb2ad6d54e13ce6cec0afa3d2328874c508d68ee34e2f742e99f2c847')
 
     depends_on('java')
 
     def install(self, spec, prefix):
-        shutil.copytree('bin', join_path(prefix, 'bin'), symlinks=True)
-        shutil.copytree('conf', join_path(prefix, 'conf'), symlinks=True)
+        install_tree('bin',  prefix.bin)
+        install_tree('conf', prefix.conf)

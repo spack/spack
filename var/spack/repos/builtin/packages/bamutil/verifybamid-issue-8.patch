@@ -1,0 +1,27 @@
+From 29805376613c680dee344726ce5c583daf11872f Mon Sep 17 00:00:00 2001
+From: mktrost <mktrost@umich.edu>
+Date: Tue, 3 Mar 2015 13:30:21 -0500
+Subject: [PATCH] VCF - add missing include for c++11
+
+---
+ vcf/VcfRecordDiscardRules.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/vcf/VcfRecordDiscardRules.h b/vcf/VcfRecordDiscardRules.h
+index 1cc6fa7..53d2509 100644
+--- a/libStatGen/vcf/VcfRecordDiscardRules.h
++++ b/libStatGen/vcf/VcfRecordDiscardRules.h
+@@ -19,7 +19,13 @@
+ #define __VCF_RECORD_DISCARD_RULES_H__
+ 
+ #include <vector>
++
++#ifdef __GXX_EXPERIMENTAL_CXX0X__
++#include <unordered_set>
++#else
+ #include <set>
++#endif
++
+ #include <string>
+ #include "VcfHeader.h"
+ 

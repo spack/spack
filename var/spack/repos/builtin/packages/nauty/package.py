@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import os
 from spack import *
@@ -33,7 +14,7 @@ class Nauty(AutotoolsPackage):
     homepage = "http://pallini.di.uniroma1.it/index.html"
     url      = "http://pallini.di.uniroma1.it/nauty26r7.tar.gz"
 
-    version('2.6r7', 'b2b18e03ea7698db3fbe06c5d76ad8fe')
+    version('2.6r7', sha256='97b5648de17645895cbd56a9a0b3e23cf01f5332c476d013ea459f1a0363cdc6')
 
     # Debian/ Fedora patches for @2.6r7:
     urls_for_patches = {
@@ -66,9 +47,9 @@ class Nauty(AutotoolsPackage):
         ]
     }
     # Iterate over patches
-    for condition, urls in urls_for_patches.items():
-        for url, sha256 in urls:
-            patch(url, when=condition, level=1, sha256=sha256)
+    for condition, url_and_sha256 in urls_for_patches.items():
+        for path, sha256 in url_and_sha256:
+            patch(path, when=condition, level=1, sha256=sha256)
 
     depends_on('m4',  type='build', when='@2.6r7')
     depends_on('autoconf',  type='build', when='@2.6r7')

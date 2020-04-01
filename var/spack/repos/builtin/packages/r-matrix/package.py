@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,10 +11,15 @@ class RMatrix(RPackage):
     using 'LAPACK' and 'SuiteSparse'."""
 
     homepage = "http://matrix.r-forge.r-project.org/"
-    url      = "https://cran.rstudio.com/src/contrib/Matrix_1.2-11.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Matrix"
-    version('1.2-11', 'a8c1a893f36d7ea918ddbf8cb8d10b43')
-    version('1.2-8', '4a6406666bf97d3ec6b698eea5d9c0f5')
-    version('1.2-6', 'f545307fb1284861e9266c4e9712c55e')
+    url      = "https://cloud.r-project.org/src/contrib/Matrix_1.2-14.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Matrix"
 
+    version('1.2-17', sha256='db43e6f0196fd5dfd05a7e88cac193877352c60d771d4ec8772763e645723fcc')
+    version('1.2-14', sha256='49a6403547b66675cb44c1afb04bb87130c054510cb2b94971435a826ab41396')
+    version('1.2-11', sha256='ba8cd6565612552fe397e909721817b6cc0604a91299d56d118208006888dc0b')
+    version('1.2-8',  sha256='3cd2a187c45fc18a0766dc148b7f83dbf6f2163c256e887c41cbaa7c9a20dbb7')
+    version('1.2-6',  sha256='4b49b639b7bf612fa3d1c1b1c68125ec7859c8cdadae0c13f499f24099fd5f20')
+
+    depends_on('r@3.0.1:', when='@:1.2-12', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@1.2.13:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

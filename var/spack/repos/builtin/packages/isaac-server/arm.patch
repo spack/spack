@@ -1,0 +1,18 @@
+diff -ru spack-src/server/CMakeLists.txt spack-src.new/server/CMakeLists.txt
+--- spack-src/server/CMakeLists.txt	2018-06-12 23:00:55.000000000 +0900
++++ spack-src.new/server/CMakeLists.txt	2019-07-16 19:05:23.842478919 +0900
+@@ -84,7 +84,13 @@
+ 	add_definitions(-DISAAC_JPEG)
+ endif (ISAAC_JPEG)
+ 
+-add_definitions(-std=c++11 -march=native -mtune=native)
++if (CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 AND
++    CMAKE_C_COMPILER_ID STREQUAL GNU AND
++    CMAKE_C_COMPILER_VERSION VERSION_LESS 6.0)
++    add_definitions(-std=c++11)
++else ()
++    add_definitions(-std=c++11 -march=native -mtune=native)
++endif ()
+ 
+ add_executable(isaac ${HDRS} ${SRCS})
+ 

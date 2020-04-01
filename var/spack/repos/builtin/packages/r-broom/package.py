@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,14 +17,22 @@ class RBroom(RPackage):
        model-level statistics."""
 
     homepage = "http://github.com/tidyverse/broom"
-    url      = "https://cran.r-project.org/src/contrib/broom_0.4.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/broom"
-    version('0.4.2', '6eabab1f2eaec10f93cf9aa56d6a61de')
+    url      = "https://cloud.r-project.org/src/contrib/broom_0.4.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/broom"
 
-    depends_on('r-plyr', type=('build', 'run'))
+    version('0.5.2', sha256='16af7b446b24bc14461efbda9bea1521cf738c778c5e48fcc7bad45660a4ac62')
+    version('0.5.1', sha256='da9e6bf7cb8f960b83309cf107743976cc32b54524675f6471982abe3d1aae2e')
+    version('0.4.2', sha256='9f409413623cf25e7110452e6215353af5114f7044d73af182bd6c10971c5a44')
+
+    depends_on('r@3.1:', type=('build', 'run'))
+    depends_on('r-plyr', when='@:0.4.2', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
     depends_on('r-tidyr', type=('build', 'run'))
-    depends_on('r-psych', type=('build', 'run'))
+    depends_on('r-psych', when='@:0.4.2', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-backports', when='@0.5.0:', type=('build', 'run'))
+    depends_on('r-generics@0.0.2:', when='@0.5.1:', type=('build', 'run'))
+    depends_on('r-purrr', when='@0.5.0:', type=('build', 'run'))
+    depends_on('r-tibble', when='@0.5.0:', type=('build', 'run'))

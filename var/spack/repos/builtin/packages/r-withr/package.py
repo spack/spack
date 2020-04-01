@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,10 +13,11 @@ class RWithr(RPackage):
     dependencies to provide access to these functions."""
 
     homepage = "http://github.com/jimhester/withr"
-    url      = "https://cran.r-project.org/src/contrib/withr_1.0.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/withr"
+    url      = "https://cloud.r-project.org/src/contrib/withr_1.0.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/withr"
 
-    version('1.0.2', 'ca52b729af9bbaa14fc8b7bafe38663c')
-    version('1.0.1', 'ac38af2c6f74027c9592dd8f0acb7598')
+    version('2.1.2', sha256='41366f777d8adb83d0bdbac1392a1ab118b36217ca648d3bb9db763aa7ff4686')
+    version('1.0.2', sha256='2391545020adc4256ee7c2e31c30ff6f688f0b6032e355e1ce8f468cab455f10')
+    version('1.0.1', sha256='7e245fdd17d290ff9e7c237159804dd06e1c6a3efe7855ed641eb0765a1e727d')
 
-    depends_on('r@3.0.2:')
+    depends_on('r@3.0.2:', type=('build', 'run'))

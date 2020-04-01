@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,12 +11,14 @@ class XcbProto(AutotoolsPackage):
     generate the majority of its code and API."""
 
     homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/xcb-proto-1.11.tar.gz"
+    url      = "http://xcb.freedesktop.org/dist/xcb-proto-1.13.tar.gz"
 
-    version('1.12', '5ee1ec124ea8d56bd9e83b8e9e0b84c4')
-    version('1.11', 'c8c6cb72c84f58270f4db1f39607f66a')
+    version('1.13', sha256='0698e8f596e4c0dbad71d3dc754d95eb0edbb42df5464e0f782621216fa33ba7')
+    version('1.12', sha256='cfa49e65dd390233d560ce4476575e4b76e505a0e0bacdfb5ba6f8d0af53fd59')
+    version('1.11', sha256='d12152193bd71aabbdbb97b029717ae6d5d0477ab239614e3d6193cc0385d906')
 
     # TODO: uncomment once build deps can be resolved separately
+    # See #7646, #4145, #4063, and #2548 for details
     # extends('python')
 
     patch('xcb-proto-1.12-schema-1.patch', when='@1.12')

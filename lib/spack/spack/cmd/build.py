@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import spack.cmd.configure as cfg
+import llnl.util.tty as tty
 
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
@@ -31,8 +13,10 @@ from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.perl import PerlPackage
+from spack.build_systems.meson import MesonPackage
+from spack.build_systems.sip import SIPPackage
 
-description = 'stops at build stage when installing a package, if possible'
+description = 'DEPRECATED: stops at build stage when installing a package'
 section = "build"
 level = "long"
 
@@ -45,6 +29,8 @@ build_system_to_phase = {
     WafPackage: 'build',
     PythonPackage: 'build',
     PerlPackage: 'build',
+    MesonPackage: 'build',
+    SIPPackage: 'build',
 }
 
 
@@ -53,4 +39,7 @@ def setup_parser(subparser):
 
 
 def build(parser, args):
+    tty.warn("This command is deprecated. Use `spack install --until` to"
+             " select an end phase instead. The `spack build` command will be"
+             " removed in a future version of Spack")
     cfg._stop_at_phase_during_install(args, build, build_system_to_phase)

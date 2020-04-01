@@ -1,49 +1,36 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAllelicimbalance(RPackage):
-    """Provides a framework for allelic specific expression
-    investigation using RNA-seq data."""
+    """Investigates Allele Specific Expression.
 
-    homepage = "http://bioconductor.org/packages/AllelicImbalance/"
-    url      = "https://git.bioconductor.org/packages/AllelicImbalance"
+       Provides a framework for allelic specific expression investigation using
+       RNA-seq data."""
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/AllelicImbalance', commit='35958534945819baafde0e13d1eb4d05a514142c')
+    homepage = "https://bioconductor.org/packages/AllelicImbalance"
+    git      = "https://git.bioconductor.org/packages/AllelicImbalance.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0')
+    version('1.22.0', commit='04692e367e8c6aac475d06adfd7cfa629baab05a')
+    version('1.20.0', commit='4cd3a789d872151b0d906ec419677271fecdf7c3')
+    version('1.18.0', commit='6d6eed7487e9207dba556bc76283bcc7745808ea')
+    version('1.16.0', commit='85f652ae8a0dd15535819b6e934065182df5544a')
+    version('1.14.0', commit='35958534945819baafde0e13d1eb4d05a514142c')
+
+    depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
-    depends_on('r-summarizedexperiment', type=('build', 'run'))
+    depends_on('r-summarizedexperiment@0.2.0:', type=('build', 'run'))
     depends_on('r-genomicalignments', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-bsgenome', type=('build', 'run'))
     depends_on('r-variantannotation', type=('build', 'run'))
     depends_on('r-biostrings', type=('build', 'run'))
-    depends_on('r-s4vectors', type=('build', 'run'))
+    depends_on('r-s4vectors@0.9.25:', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
     depends_on('r-genomicfeatures', type=('build', 'run'))
@@ -54,3 +41,15 @@ class RAllelicimbalance(RPackage):
     depends_on('r-seqinr', type=('build', 'run'))
     depends_on('r-genomeinfodb', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
+
+    depends_on('r-genomicranges@1.31.8:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-genomicalignments@1.15.6:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-bsgenome@1.47.3:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-variantannotation@1.25.11:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-biostrings@2.47.6:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-s4vectors@0.17.25:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-iranges@2.13.12:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-rsamtools@1.31.2:', when='@1.18.0:', type=('build', 'run'))
+    depends_on('r-genomicfeatures@1.31.3:', when='@1.18.0:', type=('build', 'run'))
+
+    depends_on('r-rsamtools@1.99.3:', when='@1.22.0:', type=('build', 'run'))

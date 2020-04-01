@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,13 @@ class PyChardet(PythonPackage):
     """Universal encoding detector for Python 2 and 3"""
 
     homepage = "https://github.com/chardet/chardet"
-    url      = "https://pypi.io/packages/source/c/chardet/chardet-2.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/c/chardet/chardet-3.0.4.tar.gz"
 
-    version('2.3.0', '25274d664ccb5130adae08047416e1a8')
+    version('3.0.4', sha256='84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae')
+    version('3.0.2', sha256='4f7832e7c583348a9eddd927ee8514b3bf717c061f57b21dbe7697211454d9bb')
+    version('2.3.0', sha256='e53e38b3a4afe6d1132de62b7400a4ac363452dc5dfcf8d88e8e0cce663c68aa')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest-runner', type='build')
+    depends_on('py-pytest', type='test')
+    depends_on('py-hypothesis', type='test')

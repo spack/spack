@@ -1,37 +1,32 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os
 import platform
+import re
 
 import spack.build_environment
-from llnl.util.filesystem import working_dir, join_path
+from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, InstallError, run_after
+
+# Regex to extract the primary generator from the CMake generator
+# string.
+_primary_generator_extractor = re.compile(r'(?:.* - )?(.*)')
+
+
+def _extract_primary_generator(generator):
+    """Use the compiled regex _primary_generator_extractor to extract the
+    primary generator from the generator string which may contain an
+    optional secondary generator.
+    """
+    primary_generator = _primary_generator_extractor.match(generator).group(1)
+    return primary_generator
 
 
 class CMakePackage(PackageBase):
@@ -61,6 +56,17 @@ class CMakePackage(PackageBase):
         +-----------------------------------------------+--------------------+
 
 
+    The generator used by CMake can be specified by providing the
+    generator attribute. Per
+    https://cmake.org/cmake/help/git-master/manual/cmake-generators.7.html,
+    the format is: [<secondary-generator> - ]<primary_generator>. The
+    full list of primary and secondary generators supported by CMake may
+    be found in the documentation for the version of CMake used;
+    however, at this time Spack supports only the primary generators
+    "Unix Makefiles" and "Ninja." Spack's CMake support is agnostic with
+    respect to primary generators. Spack will generate a runtime error
+    if the generator string does not follow the prescribed format, or if
+    the primary generator is not supported.
     """
     #: Phases of a CMake package
     phases = ['cmake', 'build', 'install']
@@ -89,6 +95,11 @@ class CMakePackage(PackageBase):
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
     depends_on('cmake', type='build')
+
+    @property
+    def archive_files(self):
+        """Files to archive for packages based on CMake"""
+        return [os.path.join(self.build_directory, 'CMakeCache.txt')]
 
     @property
     def root_cmakelists_dir(self):
@@ -122,11 +133,13 @@ class CMakePackage(PackageBase):
             generator = 'Unix Makefiles'
 
         # Make sure a valid generator was chosen
-        valid_generators = ['Unix Makefiles', 'Ninja']
-        if generator not in valid_generators:
+        valid_primary_generators = ['Unix Makefiles', 'Ninja']
+        primary_generator = _extract_primary_generator(generator)
+        if primary_generator not in valid_primary_generators:
             msg  = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
-            msg += "generators: '{0}'".format("', '".join(valid_generators))
+            msg += "primary generators: '{0}'".\
+                   format("', '".join(valid_primary_generators))
             raise InstallError(msg)
 
         try:
@@ -134,30 +147,128 @@ class CMakePackage(PackageBase):
         except KeyError:
             build_type = 'RelWithDebInfo'
 
+        define = CMakePackage.define
         args = [
             '-G', generator,
-            '-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(pkg.prefix),
-            '-DCMAKE_BUILD_TYPE:STRING={0}'.format(build_type),
-            '-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON'
+            define('CMAKE_INSTALL_PREFIX', pkg.prefix),
+            define('CMAKE_BUILD_TYPE', build_type),
         ]
+
+        if primary_generator == 'Unix Makefiles':
+            args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
 
         if platform.mac_ver()[0]:
             args.extend([
-                '-DCMAKE_FIND_FRAMEWORK:STRING=LAST',
-                '-DCMAKE_FIND_APPBUNDLE:STRING=LAST'
+                define('CMAKE_FIND_FRAMEWORK', "LAST"),
+                define('CMAKE_FIND_APPBUNDLE', "LAST"),
             ])
 
         # Set up CMake rpath
-        args.append('-DCMAKE_INSTALL_RPATH_USE_LINK_PATH:BOOL=FALSE')
-        rpaths = ';'.join(spack.build_environment.get_rpaths(pkg))
-        args.append('-DCMAKE_INSTALL_RPATH:STRING={0}'.format(rpaths))
+        args.extend([
+            define('CMAKE_INSTALL_RPATH_USE_LINK_PATH', False),
+            define('CMAKE_INSTALL_RPATH',
+                   spack.build_environment.get_rpaths(pkg)),
+        ])
         # CMake's find_package() looks in CMAKE_PREFIX_PATH first, help CMake
         # to find immediate link dependencies in right places:
         deps = [d.prefix for d in
                 pkg.spec.dependencies(deptype=('build', 'link'))]
         deps = filter_system_paths(deps)
-        args.append('-DCMAKE_PREFIX_PATH:STRING={0}'.format(';'.join(deps)))
+        args.append(define('CMAKE_PREFIX_PATH', deps))
         return args
+
+    @staticmethod
+    def define(cmake_var, value):
+        """Return a CMake command line argument that defines a variable.
+
+        The resulting argument will convert boolean values to OFF/ON
+        and lists/tuples to CMake semicolon-separated string lists. All other
+        values will be interpreted as strings.
+
+        Examples:
+
+            .. code-block:: python
+
+                [define('BUILD_SHARED_LIBS', True),
+                 define('CMAKE_CXX_STANDARD', 14),
+                 define('swr', ['avx', 'avx2'])]
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                ["-DBUILD_SHARED_LIBS:BOOL=ON",
+                 "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DSWR:STRING=avx;avx2]
+
+        """
+        # Create a list of pairs. Each pair includes a configuration
+        # option and whether or not that option is activated
+        if isinstance(value, bool):
+            kind = 'BOOL'
+            value = "ON" if value else "OFF"
+        else:
+            kind = 'STRING'
+            if isinstance(value, (list, tuple)):
+                value = ";".join(str(v) for v in value)
+            else:
+                value = str(value)
+
+        return "".join(["-D", cmake_var, ":", kind, "=", value])
+
+    def define_from_variant(self, cmake_var, variant=None):
+        """Return a CMake command line argument from the given variant's value.
+
+        The optional ``variant`` argument defaults to the lower-case transform
+        of ``cmake_var``.
+
+        This utility function is similar to
+        :py:meth:`~.AutotoolsPackage.with_or_without`.
+
+        Examples:
+
+            Given a package with:
+
+            .. code-block:: python
+
+                variant('cxxstd', default='11', values=('11', '14'),
+                        multi=False, description='')
+                variant('shared', default=True, description='')
+                variant('swr', values=any_combination_of('avx', 'avx2'),
+                        description='')
+
+            calling this function like:
+
+            .. code-block:: python
+
+                [define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+                 define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
+                 define_from_variant('SWR')]
+
+            will generate the following configuration options:
+
+            .. code-block:: console
+
+                ["-DBUILD_SHARED_LIBS:BOOL=ON",
+                 "-DCMAKE_CXX_STANDARD:STRING=14",
+                 "-DSWR:STRING=avx;avx2]
+
+            for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+        """
+
+        if variant is None:
+            variant = cmake_var.lower()
+
+        if variant not in self.variants:
+            raise KeyError(
+                '"{0}" is not a variant of "{1}"'.format(variant, self.name))
+
+        value = self.spec.variants[variant].value
+        if isinstance(value, (tuple, list)):
+            # Sort multi-valued variants for reproducibility
+            value = sorted(value)
+
+        return self.define(cmake_var, value)
 
     def flags_to_build_system_args(self, flags):
         """Produces a list of all command line arguments to pass the specified
@@ -203,7 +314,7 @@ class CMakePackage(PackageBase):
 
         :return: directory where to build the package
         """
-        return join_path(self.stage.source_path, 'spack-build')
+        return os.path.join(self.stage.path, 'spack-build')
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to
@@ -232,6 +343,7 @@ class CMakePackage(PackageBase):
             if self.generator == 'Unix Makefiles':
                 inspect.getmodule(self).make(*self.build_targets)
             elif self.generator == 'Ninja':
+                self.build_targets.append("-v")
                 inspect.getmodule(self).ninja(*self.build_targets)
 
     def install(self, spec, prefix):
@@ -250,9 +362,13 @@ class CMakePackage(PackageBase):
         """
         with working_dir(self.build_directory):
             if self.generator == 'Unix Makefiles':
-                self._if_make_target_execute('test')
+                self._if_make_target_execute('test',
+                                             jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_make_target_execute('check')
             elif self.generator == 'Ninja':
-                self._if_ninja_target_execute('test')
+                self._if_ninja_target_execute('test',
+                                              jobs_env='CTEST_PARALLEL_LEVEL')
+                self._if_ninja_target_execute('check')
 
     # Check that self.prefix is there after installation
     run_after('install')(PackageBase.sanity_check_prefix)

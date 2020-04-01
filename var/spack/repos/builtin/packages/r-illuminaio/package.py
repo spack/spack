@@ -1,39 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RIlluminaio(RPackage):
-    """Tools for parsing Illumina's microarray output files, including
-       IDAT."""
+    """Parsing Illumina Microarray Output Files.
 
-    homepage = "http://bioconductor.org/packages/illuminaio/"
-    url      = "https://git.bioconductor.org/packages/illuminaio"
-    list_url = homepage
+       Tools for parsing Illumina's microarray output files, including IDAT."""
 
-    version('0.18.0', git='https://git.bioconductor.org/packages/illuminaio', commit='e6b8ab1f8eacb760aebdb4828e9cfbf07da06eda')
+    homepage = "https://bioconductor.org/packages/illuminaio"
+    git      = "https://git.bioconductor.org/packages/illuminaio.git"
+
+    version('0.26.0', commit='40c2f94df2ea64d745d25aadd2bfb33ac3e02f81')
+    version('0.24.0', commit='47953c77713c2da00a610f39308f86c5b44f6c59')
+    version('0.22.0', commit='dbd842340999569975ea593f47d70a729b3f68f2')
+    version('0.20.0', commit='d226628133b2396be9e7a6bf043f0309bd70c4ec')
+    version('0.18.0', commit='e6b8ab1f8eacb760aebdb4828e9cfbf07da06eda')
 
     depends_on('r-base64', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@0.18.0')

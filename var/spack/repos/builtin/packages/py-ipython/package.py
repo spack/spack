@@ -1,30 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import sys
-import platform
 
 
 class PyIpython(PythonPackage):
@@ -33,27 +12,24 @@ class PyIpython(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ipython"
     url      = "https://pypi.io/packages/source/i/ipython/ipython-2.3.1.tar.gz"
 
-    version('5.1.0', '47c8122420f65b58784cb4b9b4af35e3')
-    version('3.1.0', 'a749d90c16068687b0ec45a27e72ef8f')
-    version('2.3.1', '2b7085525dac11190bfb45bb8ec8dcbf')
+    version('7.3.0', sha256='06de667a9e406924f97781bda22d5d76bfb39762b678762d86a466e63f65dc39')
+    version('5.8.0', sha256='4bac649857611baaaf76bc82c173aa542f7486446c335fe1a6c05d0d491c8906')
+    version('5.1.0', sha256='7ef4694e1345913182126b219aaa4a0047e191af414256da6772cf249571b961')
+    version('3.1.0', sha256='532092d3f06f82b1d8d1e5c37097eae19fcf025f8f6a4b670dd49c3c338d5624')
+    version('2.3.1', sha256='3e98466aa2fe54540bcba9aa6e01a39f40110d67668c297340c4b9514b7cc49c')
 
-    depends_on('python@2.7:2.8,3.3:')
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'), when='@:6')
+    depends_on('python@3.5:', type=('build', 'run'), when='@7:')
 
-    # These dependencies breaks concretization
-    # See https://github.com/spack/spack/issues/2793
-    # depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")  # noqa
-    # depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
-    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'))
-    depends_on('py-pathlib2',                   type=('build', 'run'))
-
+    depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
+    depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-pygments',                   type=('build', 'run'))
     depends_on('py-pickleshare',                type=('build', 'run'))
     depends_on('py-simplegeneric@0.8:',         type=('build', 'run'))
-    depends_on('py-prompt-toolkit@1.0.4:1.999', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@1.0.4:1.999', when='@:7.0.0', type=('build', 'run'))
+    depends_on('py-prompt-toolkit@2.0.0:2.999', when='@7.0.0:', type=('build', 'run'))
     depends_on('py-traitlets@4.2:',             type=('build', 'run'))
     depends_on('py-decorator',                  type=('build', 'run'))
     depends_on('py-pexpect',                    type=('build', 'run'))
-
-    depends_on('py-appnope', type=('build', 'run'),
-                    when=sys.platform == 'darwin' and
-                            int(platform.mac_ver()[0].split('.')[1]) >= 9)
+    depends_on('py-backcall',                   type=('build', 'run'), when="^python@3.3:")
+    depends_on('py-appnope', type=('build', 'run'), when='platform=darwin')

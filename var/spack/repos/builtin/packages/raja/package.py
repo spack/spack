@@ -1,34 +1,50 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Raja(CMakePackage):
     """RAJA Parallel Framework."""
+
     homepage = "http://software.llnl.gov/RAJA/"
+    git      = "https://github.com/LLNL/RAJA.git"
 
-    version('develop', git='https://github.com/LLNL/RAJA.git', branch="master", submodules="True")
+    version('develop', branch='develop', submodules='True')
+    version('master',  branch='master',  submodules='True')
+    version('0.11.0', tag='v0.11.0', submodules="True")
+    version('0.10.0', tag='v0.10.0', submodules="True")
+    version('0.9.0', tag='v0.9.0', submodules="True")
+    version('0.8.0', tag='v0.8.0', submodules="True")
+    version('0.7.0', tag='v0.7.0', submodules="True")
+    version('0.6.0', tag='v0.6.0', submodules="True")
+    version('0.5.3', tag='v0.5.3', submodules="True")
+    version('0.5.2', tag='v0.5.2', submodules="True")
+    version('0.5.1', tag='v0.5.1', submodules="True")
+    version('0.5.0', tag='v0.5.0', submodules="True")
+    version('0.4.1', tag='v0.4.1', submodules="True")
+    version('0.4.0', tag='v0.4.0', submodules="True")
 
-    depends_on('cmake@3.3:', type='build')
+    variant('cuda', default=False, description='Build with CUDA backend')
+    variant('openmp', default=True, description='Build OpenMP backend')
+
+    depends_on('cuda', when='+cuda')
+
+    depends_on('cmake@3.8:', type='build')
+    depends_on('cmake@3.9:', when='+cuda', type='build')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        options = []
+        options.append('-DENABLE_OPENMP={0}'.format(
+            'On' if '+openmp' in spec else 'Off'))
+
+        if '+cuda' in spec:
+            options.extend([
+                '-DENABLE_CUDA=On',
+                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+
+        return options

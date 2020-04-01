@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack import *
@@ -40,11 +21,19 @@ class CmakeClient(CMakePackage):
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
 
+    variant(
+        'multi', description='',
+        values=any_combination_of('up', 'right', 'back').with_default('up')
+    )
+    variant('single', description='', default='blue',
+            values=('blue', 'red', 'green'), multi=False)
+    variant('truthy', description='', default=True)
+
     callback_counter = 0
 
     flipped = False
     run_this = True
-    check_this_is_None = None
+    check_this_is_none = None
     did_something = False
 
     @run_after('cmake')
@@ -53,7 +42,7 @@ class CmakeClient(CMakePackage):
         self.callback_counter += 1
 
     @run_after('cmake')
-    @on_package_attributes(run_this=True, check_this_is_None=None)
+    @on_package_attributes(run_this=True, check_this_is_none=None)
     def flip(self):
         self.flipped = True
 
@@ -62,7 +51,7 @@ class CmakeClient(CMakePackage):
     def do_not_execute(self):
         self.did_something = True
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, spack_env):
         spack_cc    # Ensure spack module-scope variable is avaiabl
         check(from_cmake == "from_cmake",
               "setup_environment couldn't read global set by cmake.")
@@ -71,7 +60,7 @@ class CmakeClient(CMakePackage):
               "link arg on dependency spec not readable from "
               "setup_environment.")
 
-    def setup_dependent_environment(self, spack_env, run_env, dspec):
+    def setup_dependent_build_environment(self, spack_env, dspec):
         spack_cc    # Ensure spack module-scope variable is avaiable
         check(from_cmake == "from_cmake",
               "setup_dependent_environment couldn't read global set by cmake.")

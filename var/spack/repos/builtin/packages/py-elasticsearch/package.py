@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,10 @@ class PyElasticsearch(PythonPackage):
     homepage = "https://github.com/elastic/elasticsearch-py"
     url = "https://pypi.io/packages/source/e/elasticsearch/elasticsearch-5.2.0.tar.gz"
 
-    version('5.2.0', '66692fd1b4189039206c2fde4a4d616a')
-    version('2.3.0', '2550f3b51629cf1ef9636608af92c340')
+    version('7.5.1', sha256='2a0ca516378ae9b87ac840e7bb529ec508f3010360dd9feed605dff2a898aff5')
+    version('6.4.0', sha256='fb5ab15ee283f104b5a7a5695c7e879cb2927e4eb5aed9c530811590b41259ad')
+    version('5.2.0', sha256='45d9f8fbe0878a1b7493afeb20f4f6677a43982776ed1a77d9373e9c5b9de966')
+    version('2.3.0', sha256='be3080a2bf32dff0a9f9fcc1c087515a25a357645673a976d25ef77166134d81')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-urllib3@1.8:1.999', type=('build', 'run'))

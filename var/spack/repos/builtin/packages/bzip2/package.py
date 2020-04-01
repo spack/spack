@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,20 +13,26 @@ class Bzip2(Package):
     compressors), whilst being around twice as fast at compression
     and six times faster at decompression."""
 
-    homepage = "http://www.bzip.org"
-    url      = "http://www.bzip.org/1.0.6/bzip2-1.0.6.tar.gz"
-    list_url = "http://www.bzip.org/downloads.html"
+    homepage = "https://sourceware.org/bzip2/"
+    url      = "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
 
-    version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
+    # The server is sometimes a bit slow to respond
+    fetch_options = {'timeout': 60}
+
+    version('1.0.8', sha256='ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
+    version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
+    version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
+
+    depends_on('diffutils', type='build')
 
     # override default implementation
     @property
     def libs(self):
         shared = '+shared' in self.spec
         return find_libraries(
-            'libbz2', root=self.prefix, shared=shared, recurse=True
+            'libbz2', root=self.prefix, shared=shared, recursive=True
         )
 
     def patch(self):

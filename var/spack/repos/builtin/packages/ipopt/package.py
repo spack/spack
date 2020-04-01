@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,21 +12,24 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
-    version('3.12.9', '8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
-    version('3.12.8', '62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
-    version('3.12.7', '2a36e4a04717a8ed7012ac7d1253ae4ffbc1a8fd')
-    version('3.12.6', 'ed4072427fab786fcf6082fe7e6f6c2ed9b5e6f8')
-    version('3.12.5', '3f63ddfff517235ead17af6cceb426ca858dda37')
-    version('3.12.4', '12a8ecaff8dd90025ddea6c65b49cb03')
-    version('3.12.3', 'c560cbfa9cbf62acf8b485823c255a1b')
-    version('3.12.2', 'ec1e855257d7de09e122c446506fb00d')
-    version('3.12.1', 'ceaf895ce80c77778f2cab68ba9f17f3')
-    version('3.12.0', 'f7dfc3aa106a6711a85214de7595e827')
+    version('3.12.10', sha256='e1a3ad09e41edbfe41948555ece0bdc78757a5ca764b6be5a9a127af2e202d2e')
+    version('3.12.9', sha256='8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
+    version('3.12.8', sha256='62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
+    version('3.12.7', sha256='9c8b02149fa4f0cdf63e838ae68f86aa41a577d7f05932139eede9179f314861')
+    version('3.12.6', sha256='6aaa6bd862d54eba6fb966950fa6928ca01d66cf4cb842b2f41a7ebfa61eee2b')
+    version('3.12.5', sha256='53e7af6eefcb6de1f8e936c9c887c7bcb5a9fa4fcf7673a227f16de131147325')
+    version('3.12.4', sha256='292afd952c25ec9fe6225041683dcbd3cb76e15a128764671927dbaf881c2e89')
+    version('3.12.3', sha256='754fb9473bc683b59a53d2057ff852d0a8d56198bcdba2e2529ce299243fdaa5')
+    version('3.12.2', sha256='3903657788bff7d7743f8bb25c34ccf91c445e72a4710cb821c024107bd1b474')
+    version('3.12.1', sha256='d6c18f7c5bf486712b493167d27ec6e940ad376c5b903b97acc5a3ade1c0a3ef')
+    version('3.12.0', sha256='ed19e5e7174355e93c93c798b5056036e2fd2ec78cf0f3954876483f74fe618b')
 
     variant('coinhsl', default=False,
             description="Build with Coin Harwell Subroutine Libraries")
     variant('metis', default=False,
             description="Build with METIS partitioning support")
+    variant('debug', default=False,
+            description="Build debug instead of optimized version")
 
     depends_on("blas")
     depends_on("lapack")
@@ -55,8 +39,9 @@ class Ipopt(AutotoolsPackage):
     depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
+    patch('ipopt_aarch64_build.patch', when='arch=aarch64')
 
-    flag_handler = AutotoolsPackage.build_system_flags
+    flag_handler = build_system_flags
     build_directory = 'spack-build'
 
     # IPOPT does not build correctly in parallel on OS X
@@ -78,7 +63,7 @@ class Ipopt(AutotoolsPackage):
         lapack_lib = spec['lapack'].libs.ld_flags
 
         args = [
-            "--prefix=%s" % prefix,
+            "--prefix=%s" % self.prefix,
             "--with-mumps-incdir=%s" % mumps_dir.include,
             "--with-mumps-lib=%s" % mumps_libcmd,
             "--enable-shared",
@@ -98,5 +83,13 @@ class Ipopt(AutotoolsPackage):
             args.extend([
                 '--with-metis-lib=%s' % spec['metis'].libs.ld_flags,
                 '--with-metis-incdir=%s' % spec['metis'].prefix.include])
+
+        # The IPOPT configure file states that '--enable-debug' implies
+        # '--disable-shared', but adding '--enable-shared' overrides
+        # '--disable-shared' and builds a shared library with debug symbols
+        if '+debug' in spec:
+            args.append('--enable-debug')
+        else:
+            args.append('--disable-debug')
 
         return args

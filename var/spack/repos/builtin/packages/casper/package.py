@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import distutils.dir_util
 
 
 class Casper(MakefilePackage):
@@ -35,7 +15,7 @@ class Casper(MakefilePackage):
     homepage = "http://best.snu.ac.kr/casper/index.php?name=main"
     url      = "http://best.snu.ac.kr/casper/program/casper_v0.8.2.tar.gz"
 
-    version('0.8.2', '9e83d32ff46b876f33eb1d7b545ec9c2')
+    version('0.8.2', sha256='3005e165cebf8ce4e12815b7660a833e0733441b5c7e5ecbfdccef7414b0c914')
 
     depends_on('jellyfish@2.2.3:')
     depends_on('boost')
@@ -43,7 +23,7 @@ class Casper(MakefilePackage):
     conflicts('%gcc@7.1.0')
 
     def install(self, spec, prefix):
-        distutils.dir_util.copy_tree(".", prefix)
+        install_tree('.', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix)

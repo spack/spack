@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -33,11 +14,11 @@ class Minismac2d(MakefilePackage):
     """
 
     homepage = "http://mantevo.org"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniSMAC2D/miniSMAC2D-2.0.tgz"
+    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/miniSMAC2D-2.0.tgz"
 
     tags = ['proxy-app']
 
-    version('2.0', '1bb1a52cea21bc9162bf7a71a6ddf37d')
+    version('2.0', sha256='ec01b74c06a2c0386efbbb61b14305327342a08fb92bf52e76f60a2063adf065')
 
     depends_on('mpi')
 
@@ -49,7 +30,7 @@ class Minismac2d(MakefilePackage):
             'CPP=cpp',
             'FC={0}'.format(self.spec['mpi'].mpifc),
             'LD={0}'.format(self.spec['mpi'].mpifc),
-            'MPIDIR=-I{0}/include'.format(self.spec['mpi'].prefix),
+            'MPIDIR=-I{0}'.format(self.spec['mpi'].headers.directories[0]),
             'CPPFLAGS=-P -traditional  -DD_PRECISION',
             'FFLAGS=-O3 -c -g -DD_PRECISION',
             'LDFLAGS=-O3',

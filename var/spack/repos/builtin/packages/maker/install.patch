@@ -1,0 +1,10 @@
+--- a/src/Build.PL	2019-09-18 21:00:16.900047731 -0500
++++ b/src/Build.PL	2019-09-18 21:10:41.058957500 -0500
+@@ -91,7 +91,6 @@
+ 	'Carp'               => '1.24',
+ 	#'Other::Module' => '>= 1.2, != 1.5, < 2.0',
+     },
+-    install_base => "$FindBin::RealBin/../",
+     install_base_relpaths => {
+ 	arch   => [qw(perl/lib)],
+ 	lib    => [qw(perl/lib)],

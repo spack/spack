@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,13 +13,26 @@ class Pkgconf(AutotoolsPackage):
     maintaining compatibility."""
 
     homepage = "http://pkgconf.org/"
-    url      = "https://distfiles.dereferenced.org/pkgconf/pkgconf-1.3.10.tar.xz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://distfiles.dereferenced.org/pkgconf/pkgconf-1.6.3.tar.xz"
 
-    version('1.4.0', 'c509c0dad5a70aa4bc3210557b7eafce')
-    version('1.3.10', '9b63707bf6f8da6efb3868101d7525fe')
-    version('1.3.8', '484ba3360d983ce07416843d5bc916a8')
+    version('1.6.3',  sha256='61f0b31b0d5ea0e862b454a80c170f57bad47879c0c42bd8de89200ff62ea210')
+    version('1.6.1',  sha256='22b9ee38438901f9d60f180e5182821180854fa738fd071f593ea26a81da208c')
+    version('1.6.0',  sha256='6135a3abb576672ba54a899860442ba185063f0f90dae5892f64f7bae8e1ece5')
+    version('1.5.4',  sha256='9c5864a4e08428ef52f05a41c948529555458dec6d283b50f8b7d32463c54664')
+    version('1.4.2',  sha256='bab39371d4ab972be1d539a8b10b6cc21f8eafc97f617102e667e82bd32eb234')
+    version('1.4.0',  sha256='1d112ff35dad516ffbfbdb013df3a035140618fe7632ec44ffa894a9c713301b')
+    version('1.3.10', sha256='62577d265fa9415a57a77a59dede5526b7ece3ef59a750434b281b262f0c1da9')
+    version('1.3.8',  sha256='fc06f058e6905435481f649865ca51000192c91808f307b1053ca5e859cb1488')
 
     provides('pkgconfig')
+
+    # TODO: Add a package for the kyua testing framework
+    # depends_on('kyua', type='test')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        """Adds the ACLOCAL path for autotools."""
+        env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
 
     @run_after('install')
     def link_pkg_config(self):

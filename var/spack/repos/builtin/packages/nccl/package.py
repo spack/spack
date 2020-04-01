@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,12 +10,23 @@ class Nccl(MakefilePackage):
     """Optimized primitives for collective multi-GPU communication."""
 
     homepage = "https://github.com/NVIDIA/nccl"
-    url      = "https://github.com/NVIDIA/nccl/archive/v1.3.4-1.tar.gz"
+    url      = "https://github.com/NVIDIA/nccl/archive/v2.4.8-1.tar.gz"
 
-    version('1.3.4-1', '5b9ce7fbdce0fde68e0f66318e6ff422')
-    version('1.3.0-1', 'f6fb1d56913a7d212ca0c300e76f01fb')
+    version('2.5.7-1', sha256='781a6bb2278566be4abbdf22b2fa19afc7306cff4b312c82bd782979b368014e')
+    version('2.5.6-2', sha256='8a30e0b4813a825592872fcbeeede22a659e2c399074dcce02960591dc81387d')
+    version('2.5.6-1', sha256='38a37d98be11f43232b988719226866b407f08b9666dcaf345796bd8f354ef54')
+    version('2.4.8-1', sha256='e2260da448ebbebe437f74768a346d28c74eabdb92e372a3dc6652a626318924')
+    version('2.4.6-1', sha256='ea4421061a7b9c454f2e088f68bfdbbcefab80ce81cafc70ee6c7742b1439591')
+    version('2.4.2-1', sha256='e3dd04b22eb541394bd818e5f78ac23a09cc549690d5d55d6fccc1a36155385a')
+    version('2.3.7-1', sha256='e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b')
+    version('2.3.5-5', sha256='bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f')
+    version('1.3.4-1', sha256='11e4eb44555bb28b9cbad973dacb4640b82710c9769e719afc2013b63ffaf884')
+    version('1.3.0-1', sha256='53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003')
 
     depends_on('cuda')
+
+    # https://github.com/NVIDIA/nccl/issues/244
+    patch('so_reuseport.patch', when='@2.3.7-1:2.4.8-1')
 
     @property
     def build_targets(self):
@@ -42,4 +34,7 @@ class Nccl(MakefilePackage):
 
     @property
     def install_targets(self):
-        return ['PREFIX={0}'.format(self.prefix), 'install']
+        if self.version >= Version('2.3.5-5'):
+            return ['PREFIX={0}'.format(self.prefix), 'src.install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

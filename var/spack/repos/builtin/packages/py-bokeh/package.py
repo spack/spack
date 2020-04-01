@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,15 +12,18 @@ class PyBokeh(PythonPackage):
     homepage = "http://github.com/bokeh/bokeh"
     url      = "https://pypi.io/packages/source/b/bokeh/bokeh-0.12.2.tar.gz"
 
-    version('0.12.2', '2d1621bffe6e2ab9d42efbf733861c4f')
+    version('1.3.4', sha256='e2d97bed5b199a10686486001fed5c854e4c04ebe28859923f27c52b93904754')
+    version('0.12.2', sha256='0a840f6267b6d342e1bd720deee30b693989538c49644142521d247c0f2e6939')
 
-    depends_on('python@2.6:')
-    depends_on('py-six@1.5.2:',       type=('build', 'run'))
-    depends_on('py-requests@1.2.3:',  type=('build', 'run'))
-    depends_on('py-pyyaml@3.10:',     type=('build', 'run'))
-    depends_on('py-dateutil@2.1:',    type=('build', 'run'))
-    depends_on('py-jinja2@2.7:',      type=('build', 'run'))
-    depends_on('py-numpy@1.7.1:',     type=('build', 'run'))
-    depends_on('py-tornado@4.3:',     type=('build', 'run'))
-    depends_on('py-futures@3.0.3:',   type=('build', 'run'),
-        when='^python@2.7:2.8')
+    depends_on('python@2.6:',             type=('build', 'run'), when='@0.12.2')
+    depends_on('python@2.7:',             type=('build', 'run'), when='@1.3.4:')
+    depends_on('py-requests@1.2.3:',      type=('build', 'run'), when='@0.12.2')
+    depends_on('py-pillow@4.0:',          type=('build', 'run'), when='@1.3.4:')
+    depends_on('py-packaging@16.8:',      type=('build', 'run'), when='@1.3.4:')
+    depends_on('py-six@1.5.2:',           type=('build', 'run'))
+    depends_on('py-pyyaml@3.10:',         type=('build', 'run'))
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
+    depends_on('py-jinja2@2.7:',          type=('build', 'run'))
+    depends_on('py-numpy@1.7.1:',         type=('build', 'run'))
+    depends_on('py-tornado@4.3:',         type=('build', 'run'))
+    depends_on('py-futures@3.0.3:',       type=('build', 'run'), when='^python@2.7:2.8')

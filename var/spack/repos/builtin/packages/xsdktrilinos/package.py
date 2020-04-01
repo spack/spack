@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -33,18 +14,16 @@ class Xsdktrilinos(CMakePackage):
     """
     homepage = "https://trilinos.org/"
     url      = "https://github.com/trilinos/xSDKTrilinos/archive/trilinos-release-12-8-1.tar.gz"
+    git      = "https://github.com/trilinos/xSDKTrilinos.git"
 
-    version('develop', git='https://github.com/trilinos/xSDKTrilinos.git', tag='master')
-    version('xsdk-0.2.0', git='https://github.com/trilinos/xSDKTrilinos.git', tag='xsdk-0.2.0')
-    version('12.8.1', '9cc338ded17d1e10ea6c0dc18b22dcd4')
-    version('12.6.4', '44c4c54ccbac73bb8939f68797b9454a')
+    version('develop', tag='master')
+    version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('12.8.1', sha256='f545c0821743f23af3b48f242c66bbc4593e3804436336db4eb3bb08622ad794')
+    version('12.6.4', sha256='a7664afeab37ccfcbb5aae0bb03cb73ca8e511e0fecc365b9ccd32ba208318e3')
 
-    variant('hypre',        default=True,
-            description='Compile with Hypre preconditioner')
-    variant('petsc',        default=True,
-            description='Compile with PETSc solvers')
-    variant('shared',       default=True,
-            description='Enables the build of shared libraries')
+    variant('hypre',  default=True, description='Compile with Hypre preconditioner')
+    variant('petsc',  default=True, description='Compile with PETSc solvers')
+    variant('shared', default=True, description='Enables the build of shared libraries')
 
     # MPI related dependencies
     depends_on('mpi')

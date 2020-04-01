@@ -1,51 +1,38 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RPathview(RPackage):
-    """Pathview is a tool set for pathway based data integration and
-    visualization. It maps and renders a wide variety of biological data on
-    relevant pathway graphs. All users need is to supply their data and
-    specify the target pathway. Pathview automatically downloads the pathway
-    graph data, parses the data file, maps user data to the pathway, and
-    render pathway graph with the mapped data. In addition, Pathview also
-    seamlessly integrates with pathway and gene set (enrichment) analysis
-    tools for large-scale and fully automated analysis."""
+    """a tool set for pathway based data integration and visualization.
 
-    homepage = "https://www.bioconductor.org/packages/pathview/"
-    url      = "https://git.bioconductor.org/packages/pathview"
+       Pathview is a tool set for pathway based data integration and
+       visualization. It maps and renders a wide variety of biological data on
+       relevant pathway graphs. All users need is to supply their data and
+       specify the target pathway. Pathview automatically downloads the pathway
+       graph data, parses the data file, maps user data to the pathway, and
+       render pathway graph with the mapped data. In addition, Pathview also
+       seamlessly integrates with pathway and gene set (enrichment) analysis
+       tools for large-scale and fully automated analysis."""
 
-    version('1.16.7', git='https://git.bioconductor.org/packages/pathview', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
+    homepage = "https://bioconductor.org/packages/pathview"
+    git      = "https://git.bioconductor.org/packages/pathview.git"
 
-    depends_on('r-keggrest', type=('build', 'run'))
+    version('1.24.0', commit='e4401c1425c980ce2e6e478a4602a9f6d36ccd8d')
+    version('1.22.3', commit='ff86f9e166a5b03bbed1a0ad276778958c3045ce')
+    version('1.20.0', commit='a195afa6ba6c7917af2c7f77170f0644c46880c7')
+    version('1.18.2', commit='d2048981696564ec75f661ed665977d3a6e09188')
+    version('1.16.7', commit='fc560ed15ef7393a73d35e714716cc24dc835339')
+
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-org-hs-eg-db', type=('build', 'run'))
+    depends_on('r-kegggraph', type=('build', 'run'))
+    depends_on('r-xml', type=('build', 'run'))
+    depends_on('r-rgraphviz', type=('build', 'run'))
+    depends_on('r-graph', type=('build', 'run'))
     depends_on('r-png', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-graph', type=('build', 'run'))
-    depends_on('r-rgraphviz', type=('build', 'run'))
-    depends_on('r-xml', type=('build', 'run'))
-    depends_on('r-kegggraph', type=('build', 'run'))
-    depends_on('r-org-hs-eg-db', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.16.7')
+    depends_on('r-keggrest', type=('build', 'run'))

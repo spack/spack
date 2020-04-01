@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -44,11 +25,14 @@ class RPsych(RPackage):
        page."""
 
     homepage = "http://personality-project.org/r/psych"
-    url      = "https://cran.r-project.org/src/contrib/psych_1.7.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/psych"
+    url      = "https://cloud.r-project.org/src/contrib/psych_1.7.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/psych"
 
-    version('1.7.8', 'db37f2f85ff5470ee40bbc0a58ebe22b')
+    version('1.8.12', sha256='6e175e049bc1ee5b79a9e51ccafb22b962b4e6c839ce5c9cfa1ad83967037743')
+    version('1.8.10', sha256='e8901ddab14729bfccbd82a8824fbb6523c10c2cd8fb7199b1ca56a7ffcb6e58')
+    version('1.7.8', sha256='f328ea602e22b0e7e5f310a8d19f305d8e0a3a86040cdfb64863b68b56d55135')
 
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-mnormt', type=('build', 'run'))
     depends_on('r-foreign', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

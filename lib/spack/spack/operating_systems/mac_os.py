@@ -1,38 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import platform as py_platform
 
 from spack.architecture import OperatingSystem
 from spack.version import Version
+from spack.util.executable import Executable
 
 
 # FIXME: store versions inside OperatingSystem as a Version instead of string
-def macOS_version():
+def macos_version():
     """temporary workaround to return a macOS version as a Version object
     """
-    return Version('.'.join(py_platform.mac_ver()[0].split('.')[:2]))
+    return Version(py_platform.mac_ver()[0])
+
+
+def macos_sdk_path():
+    """Return SDK path
+    """
+    xcrun = Executable('xcrun')
+    return xcrun('--show-sdk-path', output=str, error=str).rstrip()
 
 
 class MacOs(OperatingSystem):
@@ -43,20 +32,31 @@ class MacOs(OperatingSystem):
     """
 
     def __init__(self):
-        """ Autodetects the mac version from a dictionary. Goes back as
-            far as 10.6 snowleopard. If the user has an older mac then
-            the version will just be a generic mac_os.
-        """
-        mac_releases = {'10.6': "snowleopard",
-                        "10.7": "lion",
-                        "10.8": "mountainlion",
-                        "10.9": "mavericks",
-                        "10.10": "yosemite",
-                        "10.11": "elcapitan",
-                        "10.12": "sierra",
-                        "10.13": "highsierra"}
+        """Autodetects the mac version from a dictionary.
 
-        mac_ver = '.'.join(py_platform.mac_ver()[0].split('.')[:2])
+        If the mac version is too old or too new for Spack to recognize,
+        will use a generic "macos" version string until Spack is updated.
+        """
+        mac_releases = {
+            '10.0':  'cheetah',
+            '10.1':  'puma',
+            '10.2':  'jaguar',
+            '10.3':  'panther',
+            '10.4':  'tiger',
+            '10.5':  'leopard',
+            '10.6':  'snowleopard',
+            '10.7':  'lion',
+            '10.8':  'mountainlion',
+            '10.9':  'mavericks',
+            '10.10': 'yosemite',
+            '10.11': 'elcapitan',
+            '10.12': 'sierra',
+            '10.13': 'highsierra',
+            '10.14': 'mojave',
+            '10.15': 'catalina',
+        }
+
+        mac_ver = str(macos_version().up_to(2))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 

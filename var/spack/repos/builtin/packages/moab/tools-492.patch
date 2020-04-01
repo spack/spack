@@ -1,0 +1,11 @@
+--- a/tools/mbpart.cpp	2019-03-22 10:10:23.242049300 -0400
++++ b/tools/mbpart.cpp	2019-03-22 10:10:26.354738990 -0400
+@@ -491,7 +491,7 @@
+       rval = mb.write_file(tmp_output_file.str().c_str());
+       if (MB_SUCCESS != rval)
+       {
+-        std::cerr << tmp_output_file << " : failed to write file." << std::endl;
++        std::cerr << tmp_output_file.str() << " : failed to write file." << std::endl;
+         std::cerr << "  Error code: " << mb.get_error_string(rval) << " ("
+                   << rval << ")" << std::endl;
+         std::string errstr;

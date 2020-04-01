@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -36,13 +17,13 @@ class Vcftools(AutotoolsPackage):
     url      = "https://github.com/vcftools/vcftools/releases/download/v0.1.14/vcftools-0.1.14.tar.gz"
 
     # this is "a pre-release"
-    # version('0.1.15', '61045197848dea20a0158d2faf02e5be')
-    version('0.1.14', 'a110662535651caa6cc8c876216a9f77')
+    # version('0.1.15', sha256='31e47afd5be679d89ece811a227525925b6907cce4af2c86f10f465e080383e3')
+    version('0.1.14', sha256='76d799dd9afcb12f1ed42a07bc2886cd1a989858a4d047f24d91dcf40f608582')
 
     depends_on('perl', type=('build', 'run'))
     depends_on('zlib')
 
-    # this needs to be in sync with what setup_environment adds to
+    # this needs to be in sync with what setup_run_environment adds to
     # PERL5LIB below
     def configure_args(self):
         return ['--with-pmdir={0}'.format(self.prefix.lib)]
@@ -70,5 +51,5 @@ class Vcftools(AutotoolsPackage):
             kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
             filter_file(match, substitute, *files, **kwargs)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PERL5LIB', self.prefix.lib)
+    def setup_run_environment(self, env):
+        env.prepend_path('PERL5LIB', self.prefix.lib)

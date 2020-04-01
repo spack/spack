@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,15 +14,32 @@ class Laghos(MakefilePackage):
     """
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    homepage = "https://codesign.llnl.gov/laghos.php"
-    git      = "https://github.com/CEED/Laghos"
+    homepage = "https://computing.llnl.gov/projects/co-design/laghos"
     url      = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"
+    git      = "https://github.com/CEED/Laghos.git"
 
-    version('1.0', '4c091e115883c79bed81c557ef16baff')
-    version('develop', git=git, branch='master')
+    version('master', branch='master')
+    version('3.0', sha256='4db56286e15b42ecdc8d540c4888a7dec698b019df9c7ccb8319b7ea1f92d8b4')
+    version('2.0', sha256='dd3632d5558889beec2cd3c49eb60f633f99e6d886ac868731610dd006c44c14')
+    version('1.1', sha256='53b9bfe2af263c63eb4544ca1731dd26f40b73a0d2775a9883db51821bf23b7f')
+    version('1.0', sha256='af50a126355a41c758fcda335a43fdb0a3cd97e608ba51c485afda3dd84a5b34')
 
-    depends_on('mpi')
-    depends_on('mfem@laghos-v1.0', when='@1.0')
+    variant('metis', default=True, description='Enable/disable METIS support')
+
+    depends_on('metis@4.0.3:', when='+metis')
+
+    # Recommended mfem version for laghos v2.0 is: ^mfem@3.4.1-laghos-v2.0
+    depends_on('mfem@3.4.0:+mpi+metis', when='@2.0+metis')
+    depends_on('mfem@3.4.0:+mpi~metis', when='@2.0~metis')
+
+    # Recommended mfem version for laghos v1.x is: ^mfem@3.3.1-laghos-v1.0
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi+metis', when='@1.0,1.1+metis')
+    depends_on('mfem@3.3.1-laghos-v1.0:+mpi~metis', when='@1.0,1.1~metis')
+
+    # 3.0 requirements
+    depends_on('hypre@2.11.2', when='@3.0:')
+    depends_on('mfem@develop+mpi+metis', when='@3.0:+metis')
+    depends_on('mfem@develop+mpi~metis', when='@3.0:~metis')
 
     @property
     def build_targets(self):
@@ -49,13 +47,28 @@ class Laghos(MakefilePackage):
         spec = self.spec
 
         targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
-        targets.append('CONFIG_MK=%s' % join_path(spec['mfem'].prefix,
-                       'share/mfem/config.mk'))
-        targets.append('TEST_MK=%s' % join_path(spec['mfem'].prefix,
-                       'share/mfem/test.mk'))
+        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
+        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
         targets.append('CXX=%s' % spec['mpi'].mpicxx)
 
+        if self.version >= ver('3.0'):
+            targets.append('HYPRE_DIR=%s' % spec['hypre'].prefix)
+            if '+metis' in self.spec:
+                targets.append('METIS_DIR=%s' % spec['metis'].prefix)
+
         return targets
+
+    # See lib/spack/spack/build_systems/makefile.py
+    def check(self):
+        targets = []
+        spec = self.spec
+
+        targets.append('MFEM_DIR=%s' % spec['mfem'].prefix)
+        targets.append('CONFIG_MK=%s' % spec['mfem'].package.config_mk)
+        targets.append('TEST_MK=%s' % spec['mfem'].package.test_mk)
+
+        with working_dir(self.build_directory):
+            make('test', *targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

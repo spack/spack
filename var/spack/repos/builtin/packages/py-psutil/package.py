@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,16 @@ class PyPsutil(PythonPackage):
     in Python."""
 
     homepage = "https://pypi.python.org/pypi/psutil"
-    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.6.3.tar.gz"
 
-    version('5.0.1', '153dc8be94badc4072016ceeac7808dc')
+    version('5.6.3', sha256='863a85c1c0a5103a12c05a35e59d336e1d665747e531256e061213e2e90f63f3')
+    version('5.6.2', sha256='828e1c3ca6756c54ac00f1427fdac8b12e21b8a068c3bb9b631a1734cada25ed')
+    version('5.5.1', sha256='72cebfaa422b7978a1d3632b65ff734a34c6b34f4578b68a5c204d633756b810')
+    version('5.4.5', sha256='ebe293be36bb24b95cdefc5131635496e88b17fabbcf1e4bc9b5c01f5e489cfe')
+    version('5.0.1', sha256='9d8b7f8353a2b2eb6eb7271d42ec99d0d264a9338a37be46424d56b4e473b39e')
 
-    depends_on('python@2.6:')
+    depends_on('python@2.6:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-unittest2', when='^python@:2.6', type='test')
+    depends_on('py-mock', when='^python@:2.7', type='test')
+    depends_on('py-ipaddress', when='^python@:3.2', type='test')

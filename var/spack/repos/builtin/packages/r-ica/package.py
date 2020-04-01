@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,10 +11,10 @@ class RIca(RPackage):
     Information-Maximization (Infomax), and Joint Approximate Diagonalization
     of Eigenmatrices (JADE)."""
 
-    homepage = "https://cran.r-project.org/web/packages/ica/index.html"
-    url      = "https://cran.r-project.org/src/contrib/ica_1.0-1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/ica"
+    homepage = "https://cloud.r-project.org/package=ica"
+    url      = "https://cloud.r-project.org/src/contrib/ica_1.0-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ica"
 
-    depends_on('r@3.4.0:3.4.9')
-    version('1.0-1', '15c8d5afeec2804beec55dd14abc585d')
-    version('1.0-0', '3ade2b3b00eb39c348d802f24d2afd1d')
+    version('1.0-2', sha256='e721596fc6175d3270a60d5e0b5b98be103a8fd0dd93ef16680af21fe0b54179')
+    version('1.0-1', sha256='98559a8bb12dd134a40ce8fd133803e2a38456b45d0e2a507d66022a8e2274ae')
+    version('1.0-0', sha256='9ff4ec7f4525bdce9d7859b22a1a170a1f6f9f7fb9f3d0b537dcaec77cd83d01')

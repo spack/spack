@@ -1,0 +1,29 @@
+From 3a10afe08c209dbacc3eca7794a5a8c0a42ee566 Mon Sep 17 00:00:00 2001
+From: jonathonl <jonathonl@users.noreply.github.com>
+Date: Thu, 20 Sep 2018 11:57:06 -0400
+Subject: [PATCH] Removes erroneous deletes in Chromosome constructor.
+
+---
+ general/Chromosome.cpp | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/general/Chromosome.cpp b/general/Chromosome.cpp
+index ac2ff5c..2d773e8 100644
+--- a/libStatGen/general/Chromosome.cpp
++++ b/libStatGen/general/Chromosome.cpp
+@@ -27,7 +27,6 @@ Chromosome::Chromosome(GenomeSequence* gs, const char* chromosomeName)
+ Chromosome::Chromosome(const char* genomseSequenceFileName, unsigned int chromosomeIndex, bool isColorSpace) 
+ {
+     std::string s(genomseSequenceFileName);
+-    if (this->gs) delete gs;
+     gs = new GenomeSequence;
+     assert(gs);
+     gs->setReferenceName(s);
+@@ -39,7 +38,6 @@ Chromosome::Chromosome(const char* genomseSequenceFileName, unsigned int chromos
+ 
+ Chromosome::Chromosome(const std::string& genomseSequenceFileName, unsigned int chromosomeIndex, bool isColorSpace) 
+ {
+-    if (this->gs) delete gs;
+     gs = new GenomeSequence;
+     assert(gs);
+     gs->setReferenceName(genomseSequenceFileName);

@@ -1,3 +1,8 @@
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. Spack documentation master file, created by
    sphinx-quickstart on Mon Dec  9 15:32:41 2013.
    You can adapt this file completely to your liking, but it should at least
@@ -50,7 +55,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    workflows
-   tutorial
+   Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
    known_issues
 
 .. toctree::
@@ -60,12 +65,17 @@ or refer to the full manual below.
    configuration
    config_yaml
    build_settings
+   environments
+   containers
    mirrors
    module_file_support
    repositories
    binary_caches
    command_index
    package_list
+   chain
+   extensions
+   pipelines
 
 .. toctree::
    :maxdepth: 2
@@ -73,7 +83,14 @@ or refer to the full manual below.
 
    contribution_guide
    packaging_guide
+   build_systems
    developer_guide
+   docker_for_developers
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Docs
+
    Spack API Docs <spack>
    LLNL API Docs <llnl>
 

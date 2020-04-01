@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,16 +12,19 @@ class Jemalloc(Package):
     homepage = "http://www.canonware.com/jemalloc/"
     url      = "https://github.com/jemalloc/jemalloc/releases/download/4.0.4/jemalloc-4.0.4.tar.bz2"
 
-    version('4.5.0', 'a5624318fbf5bf653697306642683a11')
-    version('4.4.0', '81b59778e19696d99e2f7922820671b0')
-    version('4.3.1', 'f204c0ea1aef92fbb339dc640de338a6')
-    version('4.2.1', '094b0a7b8c77c464d0dc8f0643fd3901')
-    version('4.2.0', 'e6b5d5a1ea93a04207528d274efdd144')
-    version('4.1.0', 'c4e53c947905a533d5899e5cc3da1f94')
-    version('4.0.4', '687c5cc53b9a7ab711ccd680351ff988')
+    version('5.2.1', sha256='34330e5ce276099e2e8950d9335db5a875689a4c6a56751ef3b1d8c537f887f6')
+    version('5.2.0', sha256='74be9f44a60d2a99398e706baa921e4efde82bf8fd16e5c0643c375c5851e3b4')
+    version('4.5.0', sha256='9409d85664b4f135b77518b0b118c549009dc10f6cba14557d170476611f6780')
+    version('4.4.0', sha256='a7aea63e9718d2f1adf81d87e3df3cb1b58deb86fc77bad5d702c4c59687b033')
+    version('4.3.1', sha256='f7bb183ad8056941791e0f075b802e8ff10bd6e2d904e682f87c8f6a510c278b')
+    version('4.2.1', sha256='5630650d5c1caab95d2f0898de4fe5ab8519dc680b04963b38bb425ef6a42d57')
+    version('4.2.0', sha256='b216ddaeb901697fe38bd30ea02d7505a4b60e8979092009f95cfda860d46acb')
+    version('4.1.0', sha256='fad06d714f72adb4265783bc169c6d98eeb032d57ba02d87d1dcb4a2d933ec8e')
+    version('4.0.4', sha256='3fda8d8d7fcd041aa0bebbecd45c46b28873cf37bd36c56bf44961b36d0f42d0')
 
     variant('stats', default=False, description='Enable heap statistics')
     variant('prof', default=False, description='Enable heap profiling')
+    variant('je', default=False, description='Prepend the public API functions with "je_"')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix=%s' % prefix, ]
@@ -49,6 +33,8 @@ class Jemalloc(Package):
             configure_args.append('--enable-stats')
         if '+prof' in spec:
             configure_args.append('--enable-prof')
+        if '+je' in spec:
+            configure_args.append('--with-jemalloc-prefix=je_')
 
         configure(*configure_args)
 

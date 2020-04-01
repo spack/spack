@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import glob
 import os
@@ -34,7 +15,7 @@ class Expect(AutotoolsPackage):
     homepage = "http://expect.sourceforge.net/"
     url      = "https://sourceforge.net/projects/expect/files/Expect/5.45/expect5.45.tar.gz/download"
 
-    version('5.45', '44e1a4f4c877e9ddc5a542dfa7ecc92b')
+    version('5.45', sha256='b28dca90428a3b30e650525cdc16255d76bb6ccd65d448be53e620d95d5cc040')
 
     depends_on('tcl')
 
@@ -77,3 +58,16 @@ class Expect(AutotoolsPackage):
         link_name = join_path(self.prefix.lib, link_name)
 
         symlink(target, link_name)
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(
+                join_path(self.prefix.lib, 'expect{0}'.format(self.version)))
+
+            old = 'libexpect{0}.dylib'.format(self.version)
+            new = glob.glob(join_path(self.prefix.lib, 'expect*',
+                                      'libexpect*'))[0]
+            install_name_tool = Executable('install_name_tool')
+            install_name_tool('-change', old, new, self.prefix.bin.expect)

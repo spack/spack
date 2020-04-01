@@ -1,27 +1,8 @@
-###############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -44,12 +25,20 @@ class Mono(AutotoolsPackage):
     # Spack's openssl interacts badly with mono's vendored
     # "boringssl", don't drag it in w/ cmake
     depends_on('cmake~openssl', type=('build'))
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('perl', type=('build'))
 
-    version('5.4.0.167', '103c7a737632046a9e9a0b039d752ee1')
-    version('5.0.1.1', '17692c7a797f95ee6f9a0987fda3d486')
-    version('4.8.0.524', 'baeed5b8139a85ad7e291d402a4bcccb')
+    version('6.8.0.105', sha256='578799c44c3c86a9eb5daf6dec6c60a24341940fd376371956d4a46cf8612178',
+            url='https://download.mono-project.com/sources/mono/mono-6.8.0.105.tar.xz')
+    version('5.18.0.240', sha256='143e80eb00519ff496742e78ee07403a3c3629437f3a498eee539de8108da895')
+    version('5.16.0.220', sha256='f420867232b426c062fa182256a66b29efa92992c119847359cdd1ab75af8de3')
+    version('5.14.0.177', sha256='d4f5fa2e8188d66fbc8054f4145711e45c1faa6d070e63600efab93d1d189498')
+    version('5.12.0.309', sha256='7c4738c91187bfcea7b40f9e7a4bf3a0e4f54fdc0f4472612f84803e8bed368f')
+    version('5.10.1.57',  sha256='76cbd8545db6adc5a1738c343d957a7015c95e1439c461ea4f2bd56bd6337ab4')
+    version('5.4.1.7', sha256='543d9ec2ccebad9bb8425b22e10271f13d9512487c0e1578eeccdb1b8dc6a055')
+    version('5.4.0.167', sha256='c2afe51b0fb074936a8e7eaee805c352f37cbf1093bb41c5345078f77d913ce0')
+    version('5.0.1.1', sha256='48d6ae71d593cd01bf0f499de569359d45856cda325575e1bacb5fabaa7e9718')
+    version('4.8.0.524', sha256='ca02614cfc9fe65e310631cd611d7b07d1ff205ce193006d4be0f9919c26bdcf')
 
     def patch(self):
         if '+patch-folder-path' in self.spec:
@@ -61,6 +50,6 @@ class Mono(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-        li = self.spec['libiconv'].prefix
+        li = self.spec['iconv'].prefix
         args.append('--with-libiconv-prefix={p}'.format(p=li))
         return args

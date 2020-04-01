@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,13 +15,14 @@ class Lrzip(Package):
     but not both."""
 
     homepage = 'http://lrzip.kolivas.org'
-    url = 'https://github.com/ckolivas/lrzip/archive/v0.630.tar.gz'
+    url      = 'https://github.com/ckolivas/lrzip/archive/v0.630.tar.gz'
+    git      = 'https://github.com/ckolivas/lrzip.git'
 
-    version('master', git='https://github.com/ckolivas/lrzip.git')
-    version('0.630', '3ca7f1d1365aa105089d1fbfc6b0924a')
-    version('0.621', '1f07227b39ae81a98934411e8611e341')
-    version('0.616', 'd40bdb046d0807ef602e36b1e9782cc0')
-    version('0.615', 'f1c01e7f3de07f54d916b61c989dfaf2')
+    version('master', branch='master')
+    version('0.630', sha256='7b9bf6415fb2294a8e83a5a1c6a8d7da17a19f4730567c8fa16e3016d79250a6')
+    version('0.621', sha256='4bf93c1df076b6e6a57f32c0c4b7790b4d25d724c259394e1d32b680c0657121')
+    version('0.616', sha256='6ef50bfec15d7585e5b085067c9fe91a87246ccd14a3165acd08b147bba26a2e')
+    version('0.615', sha256='45bc3e09a9c467c9331499e4e7919ea97d0824d24a1f2c3ec9548bb2b9d14898')
 
     # depends_on('coreutils')
     depends_on('lzo')

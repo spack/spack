@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,10 +16,17 @@ class Qwt(QMakePackage):
     homepage = "http://qwt.sourceforge.net/"
     url      = "https://sourceforge.net/projects/qwt/files/qwt/6.1.3/qwt-6.1.3.tar.bz2"
 
-    version('6.1.3', '19d1f5fa5e22054d22ee3accc37c54ba')
-    version('5.2.2', '70d77e4008a6cc86763737f0f24726ca')
+    version('6.1.4', sha256='1529215329e51fc562e0009505a838f427919a18b362afff441f035b2d9b5bd9')
+    version('6.1.3', sha256='f3ecd34e72a9a2b08422fb6c8e909ca76f4ce5fa77acad7a2883b701f4309733')
+    version('5.2.2', sha256='36bf2ee51ca9c74fde1322510ffd39baac0db60d5d410bb157968a78d9c1464b')
+
+    variant('designer', default=False,
+            description="Build extensions to QT designer")
+
+    patch('no-designer.patch', when='~designer')
 
     depends_on('qt+opengl')
+    depends_on('qt+tools', when='+designer')
     # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
     # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213
     depends_on('qt@:5.3', when='@:6.1.1')

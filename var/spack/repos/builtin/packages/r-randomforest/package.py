@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,11 @@ class RRandomforest(RPackage):
     inputs."""
 
     homepage = "https://www.stat.berkeley.edu/~breiman/RandomForests/"
-    url      = "https://cran.r-project.org/src/contrib/randomForest_4.6-12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/randomForest"
+    url      = "https://cloud.r-project.org/src/contrib/randomForest_4.6-12.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/randomForest"
 
-    version('4.6-12', '071c03af974198e861f1475c5bab9e7a')
+    version('4.6-14', sha256='f4b88920419eb0a89d0bc5744af0416d92d112988702dc726882394128a8754d')
+    version('4.6-12', sha256='6e512f8f88a51c01a918360acba61f1f39432f6e690bc231b7864218558b83c4')
+
+    depends_on('r@2.5.0:', when='@:4.6-12', type=('build', 'run'))
+    depends_on('r@3.2.2:', when='@4.6-14:', type=('build', 'run'))

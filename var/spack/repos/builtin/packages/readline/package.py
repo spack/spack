@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Readline(AutotoolsPackage):
+class Readline(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Readline library provides a set of functions for use by
     applications that allow users to edit command lines as they are typed in.
     Both Emacs and vi editing modes are available. The Readline library
@@ -34,10 +15,12 @@ class Readline(AutotoolsPackage):
     csh-like history expansion on previous commands."""
 
     homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
-    url      = "https://ftp.gnu.org/gnu/readline/readline-7.0.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    gnu_mirror_path = "readline/readline-8.0.tar.gz"
 
-    version('7.0', '205b03a87fc83dab653b628c59b9fc91')
-    version('6.3', '33c8fb279e981274f485fd91da77e94a')
+    version('8.0', sha256='e339f51971478d369f8a053a330a190781acb9864cf4c541060f12078948e461')
+    version('7.0', sha256='750d437185286f40a369e1e4f4764eda932b9459b5ec9a731628393dd3d32334')
+    version('6.3', sha256='56ba6071b9462f980c5a72ab0023893b65ba6debb4eeb475d7a563dc65cafd43')
 
     depends_on('ncurses')
     # from url=http://www.linuxfromscratch.org/patches/downloads/readline/readline-6.3-upstream_fixes-1.patch

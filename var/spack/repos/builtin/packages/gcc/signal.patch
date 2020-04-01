@@ -1,0 +1,28 @@
+From 6c709b6262e8b6441b1e94526d6d65d4ce7a7dec Mon Sep 17 00:00:00 2001
+From: doko <doko@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Thu, 7 Sep 2017 07:18:57 +0000
+Subject: [PATCH] 2017-09-07  Matthias Klose  <doko@ubuntu.com>
+
+        * asan/asan_linux.cc: Include <signal.h>
+
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/branches/gcc-5-branch@251830 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ libsanitizer/asan/asan_linux.cc | 1 +
+ 2 files changed, 5 insertions(+)
+
+diff --git a/libsanitizer/asan/asan_linux.cc b/libsanitizer/asan/asan_linux.cc
+index c504168..59087b9 100644
+--- a/libsanitizer/asan/asan_linux.cc
++++ b/libsanitizer/asan/asan_linux.cc
+@@ -29,6 +29,7 @@
+ #include <dlfcn.h>
+ #include <fcntl.h>
+ #include <pthread.h>
++#include <signal.h>
+ #include <stdio.h>
+ #include <unistd.h>
+ #include <unwind.h>
+-- 
+2.9.3
+

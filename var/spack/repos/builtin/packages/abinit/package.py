@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 # Author: Matteo Giantomassi <matteo.giantomassiNOSPAM AT uclouvain.be>
 # Date: October 11, 2016
@@ -49,10 +30,12 @@ class Abinit(AutotoolsPackage):
     homepage = 'http://www.abinit.org'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
-    version('8.6.3', '6c34d2cec0cf0008dd25b8ec1b6d3ee8')
-    version('8.2.2', '5f25250e06fdc0815c224ffd29858860')
+    version('8.10.3', sha256='ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75')
+    version('8.8.2', sha256='15216703bd56a799a249a112b336d07d733627d3756487a4b1cb48ebb625c3e7')
+    version('8.6.3', sha256='82e8d071088ab8dc1b3a24380e30b68c544685678314df1213180b449c84ca65')
+    version('8.2.2', sha256='e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1')
     # Versions before 8.0.8b are not supported.
-    version('8.0.8b', 'abc9e303bfa7f9f43f95598f87d84d5d')
+    version('8.0.8b', sha256='37ad5f0f215d2a36e596383cb6e54de3313842a0390ce8d6b48a423d3ee25af2')
 
     variant('mpi', default=True,
             description='Builds with MPI support. Requires MPI2+')
@@ -88,8 +71,9 @@ class Abinit(AutotoolsPackage):
     # depends_on('elpa~openmp', when='+elpa+mpi~openmp')
     # depends_on('elpa+openmp', when='+elpa+mpi+openmp')
 
-    depends_on('fftw+float', when='~openmp')
-    depends_on('fftw+float+openmp', when='+openmp')
+    depends_on('fftw precision=float,double')
+    depends_on('fftw~openmp', when='~openmp')
+    depends_on('fftw+openmp', when='+openmp')
 
     depends_on('netcdf-fortran', when='+hdf5')
     depends_on('hdf5+mpi', when='+mpi+hdf5')  # required for NetCDF-4 support

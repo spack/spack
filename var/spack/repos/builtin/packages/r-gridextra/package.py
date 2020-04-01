@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,11 +10,11 @@ class RGridextra(RPackage):
     """Provides a number of user-level functions to work with "grid" graphics,
     notably to arrange multiple grid-based plots on a page, and draw tables."""
 
-    homepage = "https://cran.r-project.org/package=gridExtra"
-    url      = "https://cran.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gridExtras"
+    homepage = "https://cloud.r-project.org/package=gridExtra"
+    url      = "https://cloud.r-project.org/src/contrib/gridExtra_2.2.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gridExtras"
 
-    version('2.3', '01e0ea88610756a0fd3b260e83c9bd43')
-    version('2.2.1', '7076c2122d387c7ef3add69a1c4fc1b2')
+    version('2.3', sha256='81b60ce6f237ec308555471ae0119158b115463df696d2eca9b177ded8988e3b')
+    version('2.2.1', sha256='44fe455a5bcdf48a4ece7a542f83e7749cf251dc1df6ae7634470240398c6818')
 
     depends_on('r-gtable', type=('build', 'run'))

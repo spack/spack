@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -31,11 +12,15 @@ class Symengine(CMakePackage):
 
     homepage = "https://github.com/symengine/symengine"
     url      = "https://github.com/symengine/symengine/archive/v0.2.0.tar.gz"
+    git      = "https://github.com/symengine/symengine.git"
 
-    version('0.3.0', 'e61d7513cca4963cd062616891de54c6')
-    version('0.2.0', '45401561add36a13c1f0b0c5f8d7422d')
-    version('0.1.0', '41ad7daed61fc5a77c285eb6c7303425')
-    version('develop', git='https://github.com/symengine/symengine.git')
+    version('master', branch='master')
+    version('0.6.0', sha256='4d2caa86c03eaaa8ed004084d02f87b5c51b6229f8ba70d161227e22d6302f0a')
+    version('0.5.0', sha256='5d02002f00d16a0928d1056e6ecb8f34fd59f3bfd8ed0009a55700334dbae29b')
+    version('0.4.0', sha256='dd755901a9e2a49e53ba3bbe3f565f94265af05299e57a7b592186dd35916a1b')
+    version('0.3.0', sha256='591463cb9e741d59f6dfd39a7943e3865d3afe9eac47d1a9cbf5ca74b9c49476')
+    version('0.2.0', sha256='64d050b0b9decd12bf4ea3b7d18d3904dd7cb8baaae9fbac1b8068e3c59709be')
+    version('0.1.0', sha256='daba3ba0ae91983a772f66bf755b1953c354fe6dc353588b23705d9a79b011fc')
 
     variant('boostmp',      default=False,
             description='Compile with Boost multi-precision integer library')

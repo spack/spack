@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,14 @@ class RBlob(RPackage):
     package provides the blob object, a list of raw vectors, suitable
     for use as a column in data frame."""
 
-    homepage = "https://cran.rstudio.com/web/packages/blob/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/blob_1.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/blob"
-    version('1.1.0', '1c729aca36fd5193d81b1cd5ed9d8a00')
+    homepage = "https://cloud.r-project.org/package=blob"
+    url      = "https://cloud.r-project.org/src/contrib/blob_1.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/blob"
 
-    depends_on('r-tibble', type=('build', 'run'))
+    version('1.2.0', sha256='1af1cfa28607bc0e2f1f01598a00a7d5d1385ef160a9e79e568f30f56538e023')
+    version('1.1.0', sha256='16d6603df3ddba177f0ac4d9469c938f89131c4bf8834345db838defd9ffea16')
+
+    depends_on('r-tibble', when='@:1.1.0', type=('build', 'run'))
+    depends_on('r-prettyunits', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-rlang', when='@1.2.0:', type=('build', 'run'))
+    depends_on('r-vctrs@0.2.0:', when='@1.2.0:', type=('build', 'run'))

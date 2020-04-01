@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,8 +15,10 @@ class Lmdb(MakefilePackage):
     homepage = "https://lmdb.tech/"
     url      = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.21.tar.gz"
 
-    version('0.9.21', '41a4f7b63212a00e53fabd8159008201')
-    version('0.9.16', '0de89730b8f3f5711c2b3a4ba517b648')
+    version('0.9.24', sha256='44602436c52c29d4f301f55f6fd8115f945469b868348e3cddaf91ab2473ea26')
+    version('0.9.22', sha256='f3927859882eb608868c8c31586bb7eb84562a40a6bf5cc3e13b6b564641ea28')
+    version('0.9.21', sha256='1187b635a4cc415bb6972bba346121f81edd996e99b8f0816151d4090f90b559')
+    version('0.9.16', sha256='49d7b40949f2ced9bc8b23ea6a89e75471a1c9126537a8b268c318a00b84322b')
 
     build_directory = 'libraries/liblmdb'
 

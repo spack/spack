@@ -1,0 +1,289 @@
+--- a/packages/tpetra/core/src/Tpetra_Details_libGemm.cpp
++++ b/packages/tpetra/core/src/Tpetra_Details_libGemm.cpp
+@@ -108,19 +108,19 @@
+ namespace Impl {
+ 
+ void
+-cgemm (const char transA,
+-       const char transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const ::Kokkos::complex<float>& alpha,
+-       const ::Kokkos::complex<float> A[],
+-       const int lda,
+-       const ::Kokkos::complex<float> B[],
+-       const int ldb,
+-       const ::Kokkos::complex<float>& beta,
+-       ::Kokkos::complex<float> C[],
+-       const int ldc)
++cgemm_fwrap (const char transA,
++             const char transB,
++             const int m,
++             const int n,
++             const int k,
++             const ::Kokkos::complex<float>& alpha,
++             const ::Kokkos::complex<float> A[],
++             const int lda,
++             const ::Kokkos::complex<float> B[],
++             const int ldb,
++             const ::Kokkos::complex<float>& beta,
++             ::Kokkos::complex<float> C[],
++             const int ldc)
+ {
+ #ifdef HAVE_TPETRA_INST_COMPLEX_FLOAT
+   TPETRACORE_CGEMM (&transA, &transB, &m, &n, &k, &alpha, A, &lda, B, &ldb, &beta, C, &ldc);
+@@ -131,55 +131,55 @@
+ }
+ 
+ void
+-dgemm (const char transA,
+-       const char transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const double alpha,
+-       const double A[],
+-       const int lda,
+-       const double B[],
+-       const int ldb,
+-       const double beta,
+-       double C[],
+-       const int ldc)
++dgemm_fwrap (const char transA,
++             const char transB,
++             const int m,
++             const int n,
++             const int k,
++             const double alpha,
++             const double A[],
++             const int lda,
++             const double B[],
++             const int ldb,
++             const double beta,
++             double C[],
++             const int ldc)
+ {
+   TPETRACORE_DGEMM (&transA, &transB, &m, &n, &k, &alpha, A, &lda, B, &ldb, &beta, C, &ldc);
+ }
+ 
+ void
+-sgemm (const char transA,
+-       const char transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const float alpha,
+-       const float A[],
+-       const int lda,
+-       const float B[],
+-       const int ldb,
+-       const float beta,
+-       float C[],
+-       const int ldc)
++sgemm_fwrap (const char transA,
++             const char transB,
++             const int m,
++             const int n,
++             const int k,
++             const float alpha,
++             const float A[],
++             const int lda,
++             const float B[],
++             const int ldb,
++             const float beta,
++             float C[],
++             const int ldc)
+ {
+   TPETRACORE_SGEMM (&transA, &transB, &m, &n, &k, &alpha, A, &lda, B, &ldb, &beta, C, &ldc);
+ }
+ 
+ void
+-zgemm (const char transA,
+-       const char transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const ::Kokkos::complex<double>& alpha,
+-       const ::Kokkos::complex<double> A[],
+-       const int lda,
+-       const ::Kokkos::complex<double> B[],
+-       const int ldb,
+-       const ::Kokkos::complex<double>& beta,
+-       ::Kokkos::complex<double> C[],
+-       const int ldc)
++zgemm_fwrap (const char transA,
++             const char transB,
++             const int m,
++             const int n,
++             const int k,
++             const ::Kokkos::complex<double>& alpha,
++             const ::Kokkos::complex<double> A[],
++             const int lda,
++             const ::Kokkos::complex<double> B[],
++             const int ldb,
++             const ::Kokkos::complex<double>& beta,
++             ::Kokkos::complex<double> C[],
++             const int ldc)
+ {
+ #ifdef HAVE_TPETRA_INST_COMPLEX_DOUBLE
+   TPETRACORE_ZGEMM (&transA, &transB, &m, &n, &k, &alpha, A, &lda, B, &ldb, &beta, C, &ldc);
+ 
+--- a/packages/tpetra/core/src/Tpetra_Details_libGemm.hpp
++++ b/packages/tpetra/core/src/Tpetra_Details_libGemm.hpp
+@@ -99,67 +99,67 @@
+ 
+ /// \brief Wrapped version of the BLAS library's cgemm.
+ void
+-cgemm (const char char_transA,
+-       const char char_transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const ::Kokkos::complex<float>& alpha,
+-       const ::Kokkos::complex<float> A[],
+-       const int lda,
+-       const ::Kokkos::complex<float> B[],
+-       const int ldb,
+-       const ::Kokkos::complex<float>& beta,
+-       ::Kokkos::complex<float> C[],
+-       const int ldc);
++cgemm_fwrap (const char char_transA,
++             const char char_transB,
++             const int m,
++             const int n,
++             const int k,
++             const ::Kokkos::complex<float>& alpha,
++             const ::Kokkos::complex<float> A[],
++             const int lda,
++             const ::Kokkos::complex<float> B[],
++             const int ldb,
++             const ::Kokkos::complex<float>& beta,
++             ::Kokkos::complex<float> C[],
++             const int ldc);
+ 
+ /// \brief Wrapped version of the BLAS library's dgemm.
+ void
+-dgemm (const char char_transA,
+-       const char char_transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const double alpha,
+-       const double A[],
+-       const int lda,
+-       const double B[],
+-       const int ldb,
+-       const double beta,
+-       double C[],
+-       const int ldc);
++dgemm_fwrap (const char char_transA,
++             const char char_transB,
++             const int m,
++             const int n,
++             const int k,
++             const double alpha,
++             const double A[],
++             const int lda,
++             const double B[],
++             const int ldb,
++             const double beta,
++             double C[],
++             const int ldc);
+ 
+ /// \brief Wrapped version of the BLAS library's sgemm.
+ void
+-sgemm (const char char_transA,
+-       const char char_transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const float alpha,
+-       const float A[],
+-       const int lda,
+-       const float B[],
+-       const int ldb,
+-       const float beta,
+-       float C[],
+-       const int ldc);
++sgemm_fwrap (const char char_transA,
++             const char char_transB,
++             const int m,
++             const int n,
++             const int k,
++             const float alpha,
++             const float A[],
++             const int lda,
++             const float B[],
++             const int ldb,
++             const float beta,
++             float C[],
++             const int ldc);
+ 
+ /// \brief Wrapped version of the BLAS library's zgemm.
+ void
+-zgemm (const char char_transA,
+-       const char char_transB,
+-       const int m,
+-       const int n,
+-       const int k,
+-       const ::Kokkos::complex<double>& alpha,
+-       const ::Kokkos::complex<double> A[],
+-       const int lda,
+-       const ::Kokkos::complex<double> B[],
+-       const int ldb,
+-       const ::Kokkos::complex<double>& beta,
+-       ::Kokkos::complex<double> C[],
+-       const int ldc);
++zgemm_fwrap (const char char_transA,
++             const char char_transB,
++             const int m,
++             const int n,
++             const int k,
++             const ::Kokkos::complex<double>& alpha,
++             const ::Kokkos::complex<double> A[],
++             const int lda,
++             const ::Kokkos::complex<double> B[],
++             const int ldb,
++             const ::Kokkos::complex<double>& beta,
++             ::Kokkos::complex<double> C[],
++             const int ldc);
+ 
+ /// \brief Wrapper for the above wrappers, templated on scalar type
+ ///   (the type of each entry in the matrices).
+@@ -184,7 +184,7 @@
+         scalar_type C[],
+         const int ldc)
+   {
+-    return cgemm (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
++    return cgemm_fwrap (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+   }
+ };
+ 
+@@ -207,7 +207,7 @@
+         scalar_type C[],
+         const int ldc)
+   {
+-    return dgemm (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
++    return dgemm_fwrap (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+   }
+ };
+ 
+@@ -230,7 +230,7 @@
+         scalar_type C[],
+         const int ldc)
+   {
+-    return sgemm (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
++    return sgemm_fwrap (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+   }
+ };
+ 
+@@ -253,7 +253,7 @@
+         scalar_type C[],
+         const int ldc)
+   {
+-    return zgemm (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
++    return zgemm_fwrap (transA, transB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+   }
+ };
+ 

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -30,19 +11,25 @@ class RRmarkdown(RPackage):
     """Convert R Markdown documents into a variety of formats."""
 
     homepage = "http://rmarkdown.rstudio.com/"
-    url      = "https://cran.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rmarkdown"
+    url      = "https://cloud.r-project.org/src/contrib/rmarkdown_1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rmarkdown"
 
-    version('1.7', '477c50840581ba7947b3d905c67a511b')
-    version('1.0', '264aa6a59e9680109e38df8270e14c58')
+    version('1.14', sha256='f636b1048c5be56e06aa0b2b4342ad5c8192734f1e9b27468fef62be672edc61')
+    version('1.13', sha256='96fb6b08d27bbb8054145e0a55721f905341941d4f6691480a2a234e2d5a63ef')
+    version('1.7', sha256='c3191db65b9ad41b6dbb77aff53487701032d306e92b208ef7515b747931fe63')
+    version('1.0', sha256='ff1ecb74ebc444b9b0b7b547adc512daefe1ee08d06bc0e3ee4eb68e58d2ef30')
 
-    depends_on('r-knitr@1.14:', type=('build', 'run'))
-    depends_on('r-yaml@2.1.5:', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))
+    depends_on('r-knitr@1.22:', type=('build', 'run'))
+    depends_on('r-yaml@2.1.19:', type=('build', 'run'))
     depends_on('r-htmltools@0.3.5:', type=('build', 'run'))
-    depends_on('r-evaluate@0.8:', type=('build', 'run'))
+    depends_on('r-evaluate@0.13:', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
     depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-rprojroot', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-stringr@1.2.0:', type=('build', 'run'))
-    depends_on('r@3.0:')
+    depends_on('r-rprojroot', when='@1.3:1.7', type=('build', 'run'))
+    depends_on('r-mime', when='@1.8:', type=('build', 'run'))
+    depends_on('r-stringr@1.2.0:', when='@1.6:', type=('build', 'run'))
+    depends_on('r-catools', when='@:1.7', type=('build', 'run'))
+    depends_on('r-tinytex@0.11:', when='@1.10:', type=('build', 'run'))
+    depends_on('r-xfun', when='@1.13:', type=('build', 'run'))
+    depends_on('pandoc@1.12.3:')

@@ -1,0 +1,96 @@
+diff --git a/include/meta/meta_fwd.hpp b/include/meta/meta_fwd.hpp
+index edfb9068..ac041999 100644
+--- a/include/meta/meta_fwd.hpp
++++ b/include/meta/meta_fwd.hpp
+@@ -152,6 +152,13 @@
+ #define META_TYPE_CONSTRAINT(...) typename
+ #endif
+ 
++#if (defined(__cpp_lib_type_trait_variable_templates) && \
++     __cpp_lib_type_trait_variable_templates > 0)
++#define META_CXX_TRAIT_VARIABLE_TEMPLATES 1
++#else
++#define META_CXX_TRAIT_VARIABLE_TEMPLATES 0
++#endif
++
+ namespace meta
+ {
+ #if META_CXX_INTEGER_SEQUENCE
+@@ -208,8 +215,10 @@ namespace meta
+         META_CONCEPT_BARRIER(__is_same(T, U));
+ #elif defined(__GNUC__) && __GNUC__ >= 6
+         META_CONCEPT_BARRIER(__is_same_as(T, U));
+-#else
++#elif defined(META_CXX_TRAIT_VARIABLE_TEMPLATES)
+         META_CONCEPT_BARRIER(std::is_same_v<T, U>);
++#else
++        META_CONCEPT_BARRIER(std::is_same<T, U>::value);
+ #endif
+ 
+     template <template <typename...> class C, typename... Ts>
+@@ -248,7 +257,11 @@ namespace meta
+         typename T::type::value_type;
+     }
+     && Same<typename T::value_type, typename T::type::value_type>
++#if META_CXX_TRAIT_VARIABLE_TEMPLATES
+     && std::is_integral_v<typename T::value_type>
++#else
++    && std::is_integral<typename T::value_type>::value
++#endif
+     && requires
+     {
+         // { T::value } -> Same<const typename T::value_type&>;
+diff --git a/include/range/v3/range_fwd.hpp b/include/range/v3/range_fwd.hpp
+index 0378a0bd..2fabf26c 100644
+--- a/include/range/v3/range_fwd.hpp
++++ b/include/range/v3/range_fwd.hpp
+@@ -247,6 +247,16 @@ namespace ranges
+             struct priority_tag<0>
+             {};
+ 
++        template<typename T>
++        using is_trivial = meta::bool_<
++#if META_CXX_TRAIT_VARIABLE_TEMPLATES
++            std::is_trivially_copyable_v<T> &&
++            std::is_trivially_default_constructible_v<T>>;
++#else
++            std::is_trivially_copyable<T>::value &&
++            std::is_trivially_default_constructible<T>::value>;
++#endif
++
+         #if defined(__clang__) && !defined(_LIBCPP_VERSION)
+             template<typename T, typename... Args>
+             using is_trivially_constructible =
+@@ -272,19 +282,6 @@ namespace ranges
+             template<typename T>
+             using is_trivially_copyable =
+                 meta::bool_<__is_trivially_copyable(T)>;
+-        #elif defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 5
+-            template<typename T>
+-            using is_trivially_default_constructible = std::is_trivial<T>;
+-            template<typename T>
+-            using is_trivially_copy_constructible = std::is_trivial<T>;
+-            template<typename T>
+-            using is_trivially_move_constructible = std::is_trivial<T>;
+-            template<typename T>
+-            using is_trivially_copy_assignable = std::is_trivial<T>;
+-            template<typename T>
+-            using is_trivially_move_assignable = std::is_trivial<T>;
+-            template<typename T>
+-            using is_trivially_copyable = std::is_trivial<T>;
+         #else
+             template<typename T>
+             using is_trivially_default_constructible =
+diff --git a/include/range/v3/utility/box.hpp b/include/range/v3/utility/box.hpp
+index 5e8b90dd..33d674df 100644
+--- a/include/range/v3/utility/box.hpp
++++ b/include/range/v3/utility/box.hpp
+@@ -128,7 +128,7 @@ namespace ranges
+             // MSVC pukes passing non-constant-expression objects to constexpr
+             // functions, so do not coalesce.
+             template<typename T, typename = meta::if_<
+-                meta::strict_and<std::is_empty<T>, std::is_trivial<T>>>>
++                meta::strict_and<std::is_empty<T>, detail::is_trivial<T>>>>
+             constexpr box_compress box_compression_(int)
+             {
+                 return box_compress::coalesce;

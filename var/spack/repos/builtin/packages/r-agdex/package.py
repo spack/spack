@@ -1,39 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAgdex(RPackage):
-    """A tool to evaluate agreement of differential expression
-    for cross-species genomics."""
+    """Agreement of Differential Expression Analysis.
 
-    homepage = "http://bioconductor.org/packages/AGDEX/"
-    url      = "https://git.bioconductor.org/packages/AGDEX"
+       A tool to evaluate agreement of differential expression for cross-
+       species genomics"""
 
-    version('1.24.0', git='https://git.bioconductor.org/packages/AGDEX', commit='29c6bcfa6919a5c6d8bcb36b44e75145a60ce7b5')
+    homepage = "https://bioconductor.org/packages/AGDEX"
+    git      = "https://git.bioconductor.org/packages/AGDEX.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0')
+    version('1.32.0', commit='254ad2c876ab9ac48c3c3b395160dccabc084acf')
+    version('1.30.0', commit='d6cc21ed7e11e6644399495fa5f8b36368625d4b')
+    version('1.28.0', commit='7d78ee424485018b73cd019ceaed7a2ed53adf3f')
+    version('1.26.0', commit='260bc641111770176707d4d43e67b5877bf5eb82')
+    version('1.24.0', commit='29c6bcfa6919a5c6d8bcb36b44e75145a60ce7b5')
+
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-gseabase', type=('build', 'run'))

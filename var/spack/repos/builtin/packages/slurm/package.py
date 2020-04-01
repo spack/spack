@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -43,7 +24,10 @@ class Slurm(AutotoolsPackage):
     homepage = 'https://slurm.schedmd.com'
     url = 'https://github.com/SchedMD/slurm/archive/slurm-17-02-6-1.tar.gz'
 
-    version('17-02-6-1', '8edbb9ad41819464350d9de013367020')
+    version('18-08-9-1', sha256='32eb0b612ca18ade1e35c3c9d3b4d71aba2b857446841606a9e54d0a417c3b03')
+    version('18-08-0-1', sha256='62129d0f2949bc8a68ef86fe6f12e0715cbbf42f05b8da6ef7c3e7e7240b50d9')
+    version('17-11-9-2', sha256='6e34328ed68262e776f524f59cca79ac75bcd18030951d45ea545a7ba4c45906')
+    version('17-02-6-1', sha256='97b3a3639106bd6d44988ed018e2657f3d640a3d5c105413d05b4721bc8ee25e')
 
     variant('gtk', default=False, description='Enable GTK+ support')
     variant('mariadb', default=False, description='Use MariaDB instead of MySQL')
@@ -51,6 +35,9 @@ class Slurm(AutotoolsPackage):
     variant('hwloc', default=False, description='Enable hwloc support')
     variant('hdf5', default=False, description='Enable hdf5 support')
     variant('readline', default=True, description='Enable readline support')
+    variant('pmix', default=False, description='Enable PMIx support')
+    variant('sysconfdir', default='PREFIX/etc', values=any,
+            description='Set system configuration path (possibly /etc/slurm)')
 
     # TODO: add variant for BG/Q and Cray support
 
@@ -72,6 +59,7 @@ class Slurm(AutotoolsPackage):
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc', when='+hwloc')
     depends_on('mariadb', when='+mariadb')
+    depends_on('pmix', when='+pmix')
 
     def configure_args(self):
 
@@ -104,4 +92,17 @@ class Slurm(AutotoolsPackage):
         else:
             args.append('--without-hwloc')
 
+        if '+pmix' in spec:
+            args.append('--with-pmix={0}'.format(spec['pmix'].prefix))
+        else:
+            args.append('--without-pmix')
+
+        sysconfdir = spec.variants['sysconfdir'].value
+        if sysconfdir != 'PREFIX/etc':
+            args.append('--sysconfdir={0}'.format(sysconfdir))
+
         return args
+
+    def install(self, spec, prefix):
+        make('install')
+        make('-C', 'contribs/pmi2', 'install')

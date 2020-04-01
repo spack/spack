@@ -1,46 +1,32 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RSimpleaffy(RPackage):
-    """Provides high level functions for reading Affy .CEL files,
-       phenotypic data, and then computing simple things with it, such as
-       t-tests, fold changes and the like. Makes heavy use of the affy
-       library. Also has some basic scatter plot functions and mechanisms
-       for generating high resolution journal figures..."""
+    """Very simple high level analysis of Affymetrix data.
 
-    homepage = "http://bioconductor.org/packages/simpleaffy/"
-    url      = "https://git.bioconductor.org/packages/simpleaffy"
-    list_url = homepage
+       Provides high level functions for reading Affy .CEL files, phenotypic
+       data, and then computing simple things with it, such as t-tests, fold
+       changes and the like. Makes heavy use of the affy library. Also has some
+       basic scatter plot functions and mechanisms for generating high
+       resolution journal figures..."""
 
-    version('2.52.0', git='https://git.bioconductor.org/packages/simpleaffy', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
+    homepage = "https://bioconductor.org/packages/simpleaffy"
+    git      = "https://git.bioconductor.org/packages/simpleaffy.git"
 
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    version('2.60.0', commit='b32b5e7d5c65e43c10f98ab8684a1086a06d04f9')
+    version('2.58.0', commit='70cf1199bad620f60eaa288279632110bb571200')
+    version('2.56.0', commit='a05d768180b8713ad9e1dc46d491b7ef389b299d')
+    version('2.54.0', commit='6876e028d412b14504ad3915cbec1a189e9c6478')
+    version('2.52.0', commit='f2b43fb9b8e6fa4c03fe28b4efb3144a0a42a385')
+
+    depends_on('r@2.0.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.1.12:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r-affy@1.33.6:', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-gcrma', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.52.0')

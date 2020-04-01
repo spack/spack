@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,18 +13,23 @@ class Cdhit(MakefilePackage):
     homepage = "http://cd-hit.org/"
     url      = "https://github.com/weizhongli/cdhit/archive/V4.6.8.tar.gz"
 
-    version('4.6.8', 'bdd73ec0cceab6653aab7b31b57c5a8b')
+    version('4.8.1', sha256='f8bc3cdd7aebb432fcd35eed0093e7a6413f1e36bbd2a837ebc06e57cdb20b70')
+    version('4.6.8', sha256='37d685e4aa849314401805fe4d4db707e1d06070368475e313d6f3cb8fb65949')
 
     variant('openmp', default=True, description='Compile with multi-threading support')
+    variant('zlib', default=True, description='Compile with zlib')
 
     depends_on('perl', type=('build', 'run'))
+    depends_on('zlib', when='+zlib', type='link')
 
     def build(self, spec, prefix):
         mkdirp(prefix.bin)
+        make_args = []
         if '~openmp' in spec:
-            make('openmp=no')
-        else:
-            make()
+            make_args.append('openmp=no')
+        if '~zlib' in spec:
+            make_args.append('zlib=no')
+        make(*make_args)
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PREFIX', prefix.bin)
+    def setup_build_environment(self, env):
+        env.set('PREFIX', self.prefix.bin)

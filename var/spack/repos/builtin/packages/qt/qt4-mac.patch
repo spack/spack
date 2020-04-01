@@ -1,0 +1,631 @@
+diff --git a/src/gui/painting/qpaintengine_mac.cpp b/src/gui/painting/qpaintengine_mac.cpp
+index 4aa0668..63b646d 100644
+--- a/src/gui/painting/qpaintengine_mac.cpp
++++ b/src/gui/painting/qpaintengine_mac.cpp
+@@ -340,13 +340,7 @@ CGColorSpaceRef QCoreGraphicsPaintEngine::macDisplayColorSpace(const QWidget *wi
+     }
+ 
+     // Get the color space from the display profile.
+-    CGColorSpaceRef colorSpace = 0;
+-    CMProfileRef displayProfile = 0;
+-    CMError err = CMGetProfileByAVID((CMDisplayIDType)displayID, &displayProfile);
+-    if (err == noErr) {
+-        colorSpace = CGColorSpaceCreateWithPlatformColorSpace(displayProfile);
+-        CMCloseProfile(displayProfile);
+-    }
++    CGColorSpaceRef colorSpace = CGDisplayCopyColorSpace(displayID);
+ 
+     // Fallback: use generic DeviceRGB
+     if (colorSpace == 0)
+diff -r -u a/src/gui/kernel/qt_cocoa_helpers_mac.mm b/src/gui/kernel/qt_cocoa_helpers_mac.mm
+--- a/src/gui/kernel/qt_cocoa_helpers_mac.mm	2015-05-07 10:14:43.000000000 -0400
++++ b/src/gui/kernel/qt_cocoa_helpers_mac.mm	2019-03-20 09:30:22.000000000 -0400
+@@ -73,6 +73,9 @@
+ **
+ ****************************************************************************/
+ 
++// Needed for macOS 10.13 (High Sierra)
++#define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 1
++
+ #include <private/qcore_mac_p.h>
+ #include <qaction.h>
+ #include <qwidget.h>
+diff -r -u a/src/gui/text/qfontengine_coretext.mm b/src/gui/text/qfontengine_coretext.mm
+--- a/src/gui/text/qfontengine_coretext.mm	2015-05-07 10:14:43.000000000 -0400
++++ b/src/gui/text/qfontengine_coretext.mm	2019-03-20 09:30:22.000000000 -0400
+@@ -886,7 +886,7 @@
+ 
+ QFixed QCoreTextFontEngine::emSquareSize() const
+ {
+-    return QFixed::QFixed(int(CTFontGetUnitsPerEm(ctfont)));
++    return QFixed(int(CTFontGetUnitsPerEm(ctfont)));
+ }
+ 
+ QFontEngine *QCoreTextFontEngine::cloneWithSize(qreal pixelSize) const
+diff -r -u a/config.tests/unix/compile.test b/config.tests/unix/compile.test
+--- a/config.tests/unix/compile.test	2015-05-07 10:14:42.000000000 -0400
++++ b/config.tests/unix/compile.test	2019-03-20 09:30:21.000000000 -0400
+@@ -73,7 +73,7 @@
+ rm -f "$EXE" "${EXE}.exe"
+ 
+ echo "QT_BUILD_TREE = $OUTDIR" > "$OUTDIR/$TEST/.qmake.cache"
+-"$OUTDIR/bin/qmake" -spec "$QMKSPEC" "CONFIG+=$QMAKE_CONFIG" "CONFIG-=debug_and_release" "LIBS*=$LFLAGS" "LIBS+=$MAC_ARCH_LFLAGS" "INCLUDEPATH*=$INCLUDEPATH" "QMAKE_CXXFLAGS*=$CXXFLAGS" "QMAKE_CXXFLAGS+=$MAC_ARCH_CXXFLAGS" "$SRCDIR/$TEST/$EXE.pro" -o "$OUTDIR/$TEST/Makefile"
++"$OUTDIR/bin/qmake" -spec "$QMKSPEC" "CONFIG+=$QMAKE_CONFIG" "CONFIG-=debug_and_release app_bundle" "LIBS*=$LFLAGS" "LIBS+=$MAC_ARCH_LFLAGS" "INCLUDEPATH*=$INCLUDEPATH" "QMAKE_CFLAGS*=$CXXFLAGS" "QMAKE_CFLAGS+=$MAC_ARCH_CXXFLAGS" "QMAKE_OBJECTIVE_CFLAGS*=$CXXFLAGS" "QMAKE_OBJECTIVE_CFLAGS+=$MAC_ARCH_CXXFLAGS" "QMAKE_OBJECTIVE_CXXFLAGS*=$CXXFLAGS" "QMAKE_OBJECTIVE_CXXFLAGS+=$MAC_ARCH_CXXFLAGS" "QMAKE_CXXFLAGS*=$CXXFLAGS" "QMAKE_CXXFLAGS+=$MAC_ARCH_CXXFLAGS" "$SRCDIR/$TEST/$EXE.pro" -o "$OUTDIR/$TEST/Makefile"
+ 
+ if [ "$VERBOSE" = "yes" ]; then
+     $MAKE
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/configure qt-everywhere-opensource-src-4.8.7/configure
+--- qt-everywhere-opensource-src-4.8.7.orig/configure	2019-04-04 15:44:58.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/configure	2019-04-04 16:50:38.000000000 -0400
+@@ -3472,9 +3472,8 @@
+ # auto-detect support for -Xarch on the mac
+ if [ "$PLATFORM_MAC" = "yes" ] && [ "$CFG_MAC_XARCH" = "auto" ]; then
+     if "$mactests/xarch.test" "$TEST_COMPILER" "$OPT_VERBOSE" "$mactests" ; then
+-        CFG_MAC_XARCH=no
+-    else
+-        CFG_MAC_XARCH=yes
++      echo >&2 "error: -Xarch flag support is required to build on macOS."
++      exit 1
+     fi
+ fi
+ 
+@@ -5013,8 +5012,8 @@
+                 # Avoid overriding the default configuration settings when building with clang/libc++
+                 ;;
+             *)
+-                # For all other configurations require a minimum of 10.5
+-                echo "export MACOSX_DEPLOYMENT_TARGET = 10.5" >> "$mkfile"
++                # For all other configurations require a minimum of 10.13
++                echo "export MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@" >> "$mkfile"
+                 ;;
+             esac
+ 
+@@ -5025,20 +5024,11 @@
+             EXTRA_CXXFLAGS="$EXTRA_CXXFLAGS \$(CARBON_CFLAGS)"
+             EXTRA_OBJS="qsettings_mac.o qcore_mac.o"
+             EXTRA_SRCS="\"$relpath/src/corelib/io/qsettings_mac.cpp\" \"$relpath/src/corelib/kernel/qcore_mac.cpp\""
+-	    if echo "$CFG_MAC_ARCHS" | grep x86 > /dev/null 2>&1; then # matches both x86 and x86_64
+-		X86_CFLAGS="-arch i386"
+-		X86_LFLAGS="-arch i386"
+-		EXTRA_CFLAGS="$X86_CFLAGS $EXTRA_CFLAGS"
+-		EXTRA_CXXFLAGS="$X86_CFLAGS $EXTRA_CXXFLAGS"
+-                EXTRA_LFLAGS="$EXTRA_LFLAGS $X86_LFLAGS"
+-            fi
+-	    if echo "$CFG_MAC_ARCHS" | grep ppc > /dev/null 2>&1; then # matches both ppc and ppc64
+-		PPC_CFLAGS="-arch ppc"
+-		PPC_LFLAGS="-arch ppc"
+-		EXTRA_CFLAGS="$PPC_CFLAGS $EXTRA_CFLAGS"
+-		EXTRA_CXXFLAGS="$PPC_CFLAGS $EXTRA_CXXFLAGS"
+-                EXTRA_LFLAGS="$EXTRA_LFLAGS $PPC_LFLAGS"
+-            fi
++            ARCH_CFLAGS="-arch x86_64"
++            ARCH_LFLAGS="-arch x86_64"
++            EXTRA_CFLAGS="$ARCH_CFLAGS $EXTRA_CFLAGS"
++            EXTRA_CXXFLAGS="$ARCH_CFLAGS $EXTRA_CXXFLAGS"
++            EXTRA_LFLAGS="$EXTRA_LFLAGS $ARCH_LFLAGS"
+ 	    if [ '!' -z "$CFG_SDK" ]; then
+ 		echo "SDK_LFLAGS =-Wl,-syslibroot,$CFG_SDK" >>"$mkfile"
+ 		echo "SDK_CFLAGS =-isysroot $CFG_SDK" >>"$mkfile"
+@@ -7224,19 +7214,7 @@
+ 
+ # set the global Mac deployment target. This is overridden on an arch-by-arch basis
+ # in some cases, see code further down
+-case "$PLATFORM,$CFG_MAC_COCOA" in
+-*macx-clang-libc++,yes)
+-    # Avoid overriding the default configuration setting when building with clang/libc++
+-    ;;
+-macx*,yes)
+-    # Cocoa
+-    QMakeVar set QMAKE_MACOSX_DEPLOYMENT_TARGET 10.5
+-    ;;
+-macx*,no)
+-    # gcc, Carbon
+-    QMakeVar set QMAKE_MACOSX_DEPLOYMENT_TARGET 10.4
+-    ;;
+-esac
++QMakeVar set QMAKE_MACOSX_DEPLOYMENT_TARGET @MACOSX_DEPLOYMENT_TARGET@
+ 
+ # disable Qt 3 support on VxWorks, Symbian and INTEGRITY
+ case "$XPLATFORM" in
+@@ -7515,7 +7493,6 @@
+     QCONFIG_FLAGS="$QCONFIG_FLAGS QT_NO_GUI"
+ fi
+ 
+-
+ if [ "x$PLATFORM_MAC" = "xyes" ] && [ "$XPLATFORM_MINGW" != "yes" ] && [ "$XPLATFORM_SYMBIAN" != "yes" ]; then
+     #On Mac we implicitly link against libz, so we
+     #never use the 3rdparty stuff.
+@@ -7975,39 +7952,19 @@
+     QMAKE_CONFIG="$QMAKE_CONFIG exceptions_off"
+ fi
+ 
+-# On Mac, set the minimum deployment target for the different architechtures 
+-# using the Xarch compiler option when supported (10.5 and up).  On 10.4 the
+-# deployment version is set to 10.4 globally using the QMAKE_MACOSX_DEPLOYMENT_TARGET
+-# env. variable.
++# On Mac, set the minimum deployment target for the different architectures 
+ if [ "$PLATFORM_MAC" = "yes" ] && [ "$CFG_MAC_XARCH" != "no" ]; then
+     case "$PLATFORM" in
+     *macx-clang-libc++)
+         # Avoid overriding the default settings when building clang/libc++.
+         ;;
+     *)
+-        if echo "$CFG_MAC_ARCHS" | grep '\<x86\>' > /dev/null 2>&1; then
+-            QMakeVar add QMAKE_CFLAGS "-Xarch_i386 -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_CXXFLAGS "-Xarch_i386 -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_LFLAGS "-Xarch_i386 -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_OBJECTIVE_CFLAGS_X86 "-arch i386 -Xarch_i386 -mmacosx-version-min=10.4"
+-        fi
+-        if echo "$CFG_MAC_ARCHS" | grep '\<ppc\>' > /dev/null 2>&1; then
+-            QMakeVar add QMAKE_CFLAGS "-Xarch_ppc -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_CXXFLAGS "-Xarch_ppc -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_LFLAGS "-Xarch_ppc -mmacosx-version-min=10.4"
+-            QMakeVar add QMAKE_OBJECTIVE_CFLAGS_PPC "-arch ppc -Xarch_ppc -mmacosx-version-min=10.4"
+-        fi
+         if echo "$CFG_MAC_ARCHS" | grep '\<x86_64\>' > /dev/null 2>&1; then
+-            QMakeVar add QMAKE_CFLAGS "-Xarch_x86_64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_CXXFLAGS "-Xarch_x86_64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_LFLAGS "-Xarch_x86_64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_OBJECTIVE_CFLAGS_X86_64 "-arch x86_64 -Xarch_x86_64 -mmacosx-version-min=10.5"
+-        fi
+-        if echo "$CFG_MAC_ARCHS" | grep '\<ppc64\>' > /dev/null 2>&1; then
+-            QMakeVar add QMAKE_CFLAGS "-Xarch_ppc64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_CXXFLAGS "-Xarch_ppc64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_LFLAGS "-Xarch_ppc64 -mmacosx-version-min=10.5"
+-            QMakeVar add QMAKE_OBJECTIVE_CFLAGS_PPC_64 "-arch ppc64 -Xarch_ppc64 -mmacosx-version-min=10.5"
++            QMakeVar add QMAKE_CFLAGS "-Xarch_x86_64 -mmacosx-version-min=@MACOSX_DEPLOYMENT_TARGET@"
++            QMakeVar add QMAKE_CXXFLAGS "-Xarch_x86_64 -mmacosx-version-min=@MACOSX_DEPLOYMENT_TARGET@"
++            QMakeVar add QMAKE_OBJECTIVE_CFLAGS_X86_64 "-arch x86_64 -Xarch_x86_64 -mmacosx-version-min=@MACOSX_DEPLOYMENT_TARGET@"
++            QMakeVar add QMAKE_OBJECTIVE_CXXFLAGS_X86_64 "-arch x86_64 -Xarch_x86_64 -mmacosx-version-min=@MACOSX_DEPLOYMENT_TARGET@"
++            QMakeVar add QMAKE_LFLAGS "-Xarch_x86_64 -mmacosx-version-min=@MACOSX_DEPLOYMENT_TARGET@"
+         fi
+         ;;
+     esac
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/clang.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/clang.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/clang.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/clang.conf	2019-04-04 15:59:33.000000000 -0400
+@@ -2,8 +2,8 @@
+ # Qmake configuration for Clang on Linux and Mac
+ #
+ 
+-QMAKE_CC  = clang
+-QMAKE_CXX = clang++
++QMAKE_CC  = cc
++QMAKE_CXX = c++
+ 
+ QMAKE_LINK       = $$QMAKE_CXX
+ QMAKE_LINK_SHLIB = $$QMAKE_CXX
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/g++-base.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/g++-base.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/g++-base.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/g++-base.conf	2019-04-04 15:59:15.000000000 -0400
+@@ -8,14 +8,14 @@
+ # you can use the manual test in tests/manual/mkspecs.
+ #
+ 
+-QMAKE_CC = gcc
++QMAKE_CC = cc
+ 
+ QMAKE_LINK_C       = $$QMAKE_CC
+ QMAKE_LINK_C_SHLIB = $$QMAKE_CC
+ 
+ QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO += -O2 -g
+ 
+-QMAKE_CXX = g++
++QMAKE_CXX = c++
+ 
+ QMAKE_LINK       = $$QMAKE_CXX
+ QMAKE_LINK_SHLIB = $$QMAKE_CXX
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base-macx.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base-macx.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base-macx.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base-macx.conf	2019-04-04 15:47:55.000000000 -0400
+@@ -29,12 +29,21 @@
+ QMAKE_OBJECTIVE_CFLAGS_WARN_OFF = $$QMAKE_CFLAGS_WARN_OFF
+ QMAKE_OBJECTIVE_CFLAGS_DEBUG    = $$QMAKE_CFLAGS_DEBUG
+ QMAKE_OBJECTIVE_CFLAGS_RELEASE  = $$QMAKE_CFLAGS_RELEASE
+-QMAKE_OBJECTIVE_CFLAGS_HIDESYMS = $$QMAKE_CXXFLAGS_HIDESYMS
++QMAKE_OBJECTIVE_CFLAGS_HIDESYMS = $$QMAKE_CFLAGS_HIDESYMS
+ QMAKE_OBJECTIVE_CFLAGS_X86      = $$QMAKE_CFLAGS_X86
+ QMAKE_OBJECTIVE_CFLAGS_X86_64   = $$QMAKE_CFLAGS_X86_64
+ QMAKE_OBJECTIVE_CFLAGS_PPC      = $$QMAKE_CFLAGS_PPC
+ QMAKE_OBJECTIVE_CFLAGS_PPC_64   = $$QMAKE_CFLAGS_PPC_64
+ 
++QMAKE_OBJECTIVE_CXXFLAGS          = $$QMAKE_CXXFLAGS
++QMAKE_OBJECTIVE_CXXFLAGS_WARN_ON  = $$QMAKE_CXXFLAGS_WARN_ON
++QMAKE_OBJECTIVE_CXXFLAGS_WARN_OFF = $$QMAKE_CXXFLAGS_WARN_OFF
++QMAKE_OBJECTIVE_CXXFLAGS_DEBUG    = $$QMAKE_CXXFLAGS_DEBUG
++QMAKE_OBJECTIVE_CXXFLAGS_RELEASE  = $$QMAKE_CXXFLAGS_RELEASE
++QMAKE_OBJECTIVE_CXXFLAGS_HIDESYMS = $$QMAKE_CXXFLAGS_HIDESYMS
++QMAKE_OBJECTIVE_CXXFLAGS_X86      = $$QMAKE_CXXFLAGS_X86
++QMAKE_OBJECTIVE_CXXFLAGS_X86_64   = $$QMAKE_CXXFLAGS_X86_64
++
+ QMAKE_LFLAGS_X86    += $$QMAKE_CFLAGS_X86
+ QMAKE_LFLAGS_X86_64 += $$QMAKE_CFLAGS_X86_64
+ QMAKE_LFLAGS_PPC    += $$QMAKE_CFLAGS_PPC
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/gcc-base.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/gcc-base.conf	2019-04-04 16:00:32.000000000 -0400
+@@ -42,7 +42,7 @@
+ QMAKE_CFLAGS_YACC           += -Wno-unused -Wno-parentheses
+ QMAKE_CFLAGS_HIDESYMS       += -fvisibility=hidden
+ 
+-QMAKE_CXXFLAGS            += $$QMAKE_CFLAGS
++QMAKE_CXXFLAGS            += -std=gnu++98 $$QMAKE_CFLAGS
+ QMAKE_CXXFLAGS_DEPS       += $$QMAKE_CFLAGS_DEPS
+ QMAKE_CXXFLAGS_WARN_ON    += $$QMAKE_CFLAGS_WARN_ON
+ QMAKE_CXXFLAGS_WARN_OFF   += $$QMAKE_CFLAGS_WARN_OFF
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/mac.conf qt-everywhere-opensource-src-4.8.7/mkspecs/common/mac.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/common/mac.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/common/mac.conf	2019-04-04 15:50:20.000000000 -0400
+@@ -9,15 +9,14 @@
+ QMAKE_LIBDIR		=
+ QMAKE_INCDIR_QT		= $$[QT_INSTALL_HEADERS]
+ QMAKE_LIBDIR_QT		= $$[QT_INSTALL_LIBS]
+-QMAKE_INCDIR_OPENGL	= /System/Library/Frameworks/OpenGL.framework/Headers \
+-	/System/Library/Frameworks/AGL.framework/Headers/
++QMAKE_INCDIR_OPENGL	= @OPENGL_INCDIR@
+ 
+ QMAKE_FIX_RPATH         = install_name_tool -id 
+ 
+ QMAKE_LFLAGS_RPATH	=
+ 
+ QMAKE_LIBS_DYNLOAD	=
+-QMAKE_LIBS_OPENGL	= -framework OpenGL -framework AGL
++QMAKE_LIBS_OPENGL	= @OPENGL_LIBS@
+ QMAKE_LIBS_OPENGL_QT	= $$QMAKE_LIBS_OPENGL
+ QMAKE_LIBS_THREAD	=
+ 
+@@ -38,7 +37,6 @@
+ QMAKE_DEL_DIR		= rmdir
+ QMAKE_CHK_DIR_EXISTS	= test -d
+ QMAKE_MKDIR		= mkdir -p
+-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.4 # overridden to 10.5 for Cocoa on the compiler command line
+-
++QMAKE_MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@
+ 
+ include(unix.conf)
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/debug.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/debug.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/debug.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/debug.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -3,6 +3,7 @@
+ QMAKE_CFLAGS += $$QMAKE_CFLAGS_DEBUG
+ QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_DEBUG
+ QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_DEBUG
++QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_DEBUG
+ QMAKE_LFLAGS += $$QMAKE_LFLAGS_DEBUG
+ QMAKE_LIBFLAGS += $$QMAKE_LIBFLAGS_DEBUG
+ !debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(debug, release)
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/default_post.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/default_post.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/default_post.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/default_post.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -1,5 +1,5 @@
+ load(default_post)
+-!no_objective_c:CONFIG += objective_c
++!no_objective_c:CONFIG += split_sources objective_c objective_cxx
+ 
+ # Pick a suitable default architecture for qmake-based applications.
+ # If the Qt package contains one of x86 and x86_64, pick that one. If it
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/objective_c.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_c.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/objective_c.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_c.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -1,23 +1,18 @@
+-
+-for(source, SOURCES) {
+-    contains(source,.*\\.mm?$) {
+-        warning(Objective-C source \'$$source\' found in SOURCES but should be in OBJECTIVE_SOURCES)
+-        SOURCES -= $$source
+-        OBJECTIVE_SOURCES += $$source
+-    }
+-}
++# Add compiler directives for Objective C (.m) only
++#
++# OBJECTIVE_C_SOURCES has already been set in "split_sources"
+ 
+ isEmpty(QMAKE_OBJECTIVE_CC):QMAKE_OBJECTIVE_CC = $$QMAKE_CC
+ 
+ OBJECTIVE_C_OBJECTS_DIR = $$OBJECTS_DIR
+ isEmpty(OBJECTIVE_C_OBJECTS_DIR):OBJECTIVE_C_OBJECTS_DIR = .
+-isEmpty(QMAKE_EXT_OBJECTIVE_C):QMAKE_EXT_OBJECTIVE_C = .mm .m
++isEmpty(QMAKE_EXT_OBJECTIVE_C):QMAKE_EXT_OBJECTIVE_C = .m
+ 
+ objective_c.dependency_type = TYPE_C
+ objective_c.variables = QMAKE_OBJECTIVE_CFLAGS
+-objective_c.commands = $$QMAKE_OBJECTIVE_CC -c $(QMAKE_COMP_QMAKE_OBJECTIVE_CFLAGS) $(DEFINES) $(INCPATH) ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
++objective_c.commands = $$QMAKE_OBJECTIVE_CC -c $(QMAKE_COMP_QMAKE_OBJECTIVE_CFLAGS) $(DEFINES) $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
+ objective_c.output = $$OBJECTIVE_C_OBJECTS_DIR/${QMAKE_FILE_BASE}$${first(QMAKE_EXT_OBJ)}
+-objective_c.input = OBJECTIVE_SOURCES
++objective_c.input = OBJECTIVE_C_SOURCES
+ objective_c.name = Compile ${QMAKE_FILE_IN}
+ silent:objective_c.commands = @echo objective-c ${QMAKE_FILE_IN} && $$objective_c.commands
+ QMAKE_EXTRA_COMPILERS += objective_c
+diff -N -r -u qt-orig/mkspecs/features/mac/objective_cxx.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_cxx.prf
+--- qt-orig/mkspecs/features/mac/objective_cxx.prf	1969-12-31 19:00:00.000000000 -0500
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/objective_cxx.prf	2019-03-29 09:52:51.000000000 -0400
+@@ -0,0 +1,18 @@
++# Add compiler directives for Objective C (.mm) only
++#
++# OBJECTIVE_CXX_SOURCES has already been set in "split_sources"
++
++isEmpty(QMAKE_OBJECTIVE_CXX):QMAKE_OBJECTIVE_CXX = $$QMAKE_CC
++
++OBJECTIVE_CXX_OBJECTS_DIR = $$OBJECTS_DIR
++isEmpty(OBJECTIVE_CXX_OBJECTS_DIR):OBJECTIVE_CXX_OBJECTS_DIR = .
++isEmpty(QMAKE_EXT_OBJECTIVE_CXX):QMAKE_EXT_OBJECTIVE_CXX = .mm
++
++objective_cxx.dependency_type = TYPE_C
++objective_cxx.variables = QMAKE_OBJECTIVE_CXXFLAGS
++objective_cxx.commands = $$QMAKE_OBJECTIVE_CXX -c $(QMAKE_COMP_QMAKE_OBJECTIVE_CXXFLAGS) $(DEFINES) $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
++objective_cxx.output = $$OBJECTIVE_CXX_OBJECTS_DIR/${QMAKE_FILE_BASE}$${first(QMAKE_EXT_OBJ)}
++objective_cxx.input = OBJECTIVE_CXX_SOURCES
++objective_cxx.name = Compile ${QMAKE_FILE_IN}
++silent:objective_cxx.commands = @echo objective-cxx ${QMAKE_FILE_IN} && $$objective_cxx.commands
++QMAKE_EXTRA_COMPILERS += objective_cxx
+diff -N -r -u qt-orig/mkspecs/features/mac/split_sources.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/split_sources.prf
+--- qt-orig/mkspecs/features/mac/split_sources.prf	1969-12-31 19:00:00.000000000 -0500
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/split_sources.prf	2019-03-29 09:52:51.000000000 -0400
+@@ -0,0 +1,52 @@
++# move Objective C and C++ files from SOURCES to OBJECTIVE_SOURCES
++
++for(source, SOURCES) {
++    contains(source,.*\\.m$) {
++        warning(Objective-C source \'$$source\' found in SOURCES but should be in OBJECTIVE_SOURCES)
++        SOURCES -= $$source
++        OBJECTIVE_SOURCES += $$source
++    } else {
++        contains(source,.*\\.mm$) {
++            warning(Objective-C++ source \'$$source\' found in SOURCES but should be in OBJECTIVE_SOURCES)
++            SOURCES -= $$source
++            OBJECTIVE_SOURCES += $$source
++ 	}
++    }
++}
++
++# move C and C++ files from OBJECTIVE_SOURCES to SOURCES
++
++for(source, OBJECTIVE_SOURCES) {
++    contains(source,.*\\.c$) {
++        warning(C source \'$$source\' found in SOURCES but should be in SOURCES)
++        OBJECTIVE_SOURCES -= $$source
++        SOURCES += $$source
++    } else {
++      	contains(source,.*\\.cc$) {
++            warning(C++ source \'$$source\' found in SOURCES but should be in SOURCES)
++            OBJECTIVE_SOURCES -= $$source
++            SOURCES += $$source
++        } else {
++    	    contains(source,.*\\.cpp$) {
++	        warning(C++ source \'$$source\' found in SOURCES but should be in SOURCES)
++		OBJECTIVE_SOURCES -= $$source
++		SOURCES += $$source
++            }
++        }
++    }
++}
++
++# split Objective C and C++ sources into their own variables
++
++for(source, OBJECTIVE_SOURCES) {
++    contains(source,.*\\.mm$) {
++        OBJECTIVE_CXX_SOURCES += $$source
++    } else {
++        contains(source,.*\\.m$) {
++            OBJECTIVE_C_SOURCES += $$source
++        } else {
++            warning(Source \'$$source\' was found in OBJECTIVE_SOURCES but its file extension is not a typical objective C (\'.m\') or C++ (\'.mm\') extension; assuming Objective C.)
++            OBJECTIVE_C_SOURCES += $$source
++	}
++    }
++}
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/sdk.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/sdk.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/sdk.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/sdk.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -2,6 +2,7 @@
+     !macx-xcode:!macx-pbuilder {
+         QMAKE_CFLAGS += -isysroot $$QMAKE_MAC_SDK
+         QMAKE_OBJECTIVE_CFLAGS += -isysroot $$QMAKE_MAC_SDK
++        QMAKE_OBJECTIVE_CXXFLAGS += -isysroot $$QMAKE_MAC_SDK
+         QMAKE_CXXFLAGS += -isysroot $$QMAKE_MAC_SDK
+         QMAKE_LFLAGS += -Wl,-syslibroot,$$QMAKE_MAC_SDK
+     }
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -2,6 +2,7 @@
+ } else {
+    QMAKE_CFLAGS += $$QMAKE_CFLAGS_X86
+    QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_X86
++   QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_X86
+    QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_X86
+    QMAKE_LFLAGS += $$QMAKE_LFLAGS_X86
+ }
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86_64.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86_64.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/mac/x86_64.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/mac/x86_64.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -2,6 +2,7 @@
+ } else {
+    QMAKE_CFLAGS += $$QMAKE_CFLAGS_X86_64
+    QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_X86_64
++   QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_X86_64
+    QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_X86_64
+    QMAKE_LFLAGS += $$QMAKE_LFLAGS_X86_64
+ }
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/release.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/release.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/release.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/release.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -2,6 +2,7 @@
+ QMAKE_CFLAGS += $$QMAKE_CFLAGS_RELEASE
+ QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_RELEASE
+ QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_RELEASE
++QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_RELEASE
+ QMAKE_LFLAGS += $$QMAKE_LFLAGS_RELEASE
+ QMAKE_LIBFLAGS += $$QMAKE_LIBFLAGS_RELEASE
+-!debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(release, debug)
+\ No newline at end of file
++!debug_and_release:fix_output_dirs:fixExclusiveOutputDirs(release, debug)
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/unix/hide_symbols.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/unix/hide_symbols.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/unix/hide_symbols.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/unix/hide_symbols.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -1,4 +1,5 @@
+ QMAKE_CFLAGS += $$QMAKE_CFLAGS_HIDESYMS
+ QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_HIDESYMS
+ QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_HIDESYMS
++QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_HIDESYMS
+ QMAKE_LFLAGS += $$QMAKE_LFLAGS_HIDESYMS
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_off.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_off.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_off.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_off.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -1,4 +1,5 @@
+ CONFIG -= warn_on
+ QMAKE_CFLAGS += $$QMAKE_CFLAGS_WARN_OFF
+ QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_WARN_OFF
+-QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_WARN_OFF
+\ No newline at end of file
++QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_WARN_OFF
++QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_WARN_OFF
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_on.prf qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_on.prf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/features/warn_on.prf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/features/warn_on.prf	2019-04-04 15:47:55.000000000 -0400
+@@ -2,4 +2,4 @@
+ QMAKE_CFLAGS += $$QMAKE_CFLAGS_WARN_ON
+ QMAKE_CXXFLAGS += $$QMAKE_CXXFLAGS_WARN_ON
+ QMAKE_OBJECTIVE_CFLAGS += $$QMAKE_OBJECTIVE_CFLAGS_WARN_ON
+-
++QMAKE_OBJECTIVE_CXXFLAGS += $$QMAKE_OBJECTIVE_CXXFLAGS_WARN_ON
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang/qmake.conf qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang/qmake.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang/qmake.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang/qmake.conf	2019-04-04 16:10:40.000000000 -0400
+@@ -13,6 +13,13 @@
+ include(../../common/gcc-base-macx.conf)
+ include(../../common/clang.conf)
+ 
++QMAKE_MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@
++
++QMAKE_CFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++QMAKE_CXXFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++QMAKE_OBJECTIVE_CXXFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++QMAKE_LFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++
+ QMAKE_OBJCFLAGS_PRECOMPILE       = -x objective-c-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
+ QMAKE_OBJCFLAGS_USE_PRECOMPILE   = $$QMAKE_CFLAGS_USE_PRECOMPILE
+ QMAKE_OBJCXXFLAGS_PRECOMPILE     = -x objective-c++-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang-libc++/qmake.conf qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang-libc++/qmake.conf
+--- qt-everywhere-opensource-src-4.8.7.orig/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2015-05-07 10:14:42.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/mkspecs/unsupported/macx-clang-libc++/qmake.conf	2019-04-04 16:10:36.000000000 -0400
+@@ -13,10 +13,11 @@
+ include(../../common/gcc-base-macx.conf)
+ include(../../common/clang.conf)
+ 
+-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.7 # Libc++ is available from 10.7 onwards
++QMAKE_MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@
+ 
+ QMAKE_CFLAGS += -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+ QMAKE_CXXFLAGS += -stdlib=libc++ -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
++QMAKE_OBJECTIVE_CXXFLAGS += -stdlib=libc++ -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+ QMAKE_LFLAGS += -stdlib=libc++ -mmacosx-version-min=$$QMAKE_MACOSX_DEPLOYMENT_TARGET
+ 
+ QMAKE_OBJCFLAGS_PRECOMPILE       = -x objective-c-header -c ${QMAKE_PCH_INPUT} -o ${QMAKE_PCH_OUTPUT}
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/qmake/qmake.pri qt-everywhere-opensource-src-4.8.7/qmake/qmake.pri
+--- qt-everywhere-opensource-src-4.8.7.orig/qmake/qmake.pri	2019-04-04 15:46:06.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/qmake/qmake.pri	2019-04-04 15:47:55.000000000 -0400
+@@ -135,7 +135,7 @@
+         SOURCES += qfilesystemengine_unix.cpp qfilesystemiterator_unix.cpp qfsfileengine_unix.cpp
+         mac {
+           SOURCES += qcore_mac.cpp qsettings_mac.cpp
+-          QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.4 #enables weak linking for 10.4 (exported)
++          QMAKE_MACOSX_DEPLOYMENT_TARGET = @MACOSX_DEPLOYMENT_TARGET@
+           LIBS += -framework ApplicationServices
+         }
+     } else:win32 {
+diff -r -u qt-everywhere-opensource-src-4.8.7.orig/src/tools/bootstrap/bootstrap.pro qt-everywhere-opensource-src-4.8.7/src/tools/bootstrap/bootstrap.pro
+--- qt-everywhere-opensource-src-4.8.7.orig/src/tools/bootstrap/bootstrap.pro	2019-04-04 16:54:09.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.7/src/tools/bootstrap/bootstrap.pro	2019-04-04 16:54:16.000000000 -0400
+@@ -103,7 +103,7 @@
+ else:win32:SOURCES += ../../corelib/tools/qlocale_win.cpp
+ 
+ macx: {
+-   QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.4 #enables weak linking for 10.4 (exported)
++   QMAKE_MACOSX_DEPLOYMENT_TARGET = @QMAKE_MACOSX_DEPLOYMENT_TARGET@
+    SOURCES += ../../corelib/kernel/qcore_mac.cpp
+    LIBS += -framework CoreServices -framework ApplicationServices
+ }
+diff -r -u a/tools/macdeployqt/shared/shared.cpp b/tools/macdeployqt/shared/shared.cpp
+--- a/tools/macdeployqt/shared/shared.cpp	2015-05-07 10:14:40.000000000 -0400
++++ b/tools/macdeployqt/shared/shared.cpp	2019-03-20 09:30:21.000000000 -0400
+@@ -141,7 +141,7 @@
+                 state = DylibName;
+                 continue;
+             } else if (part < parts.count() && parts.at(part).endsWith(".framework")) {
+-                info.installName += "/" + (qtPath + "lib/").simplified();
++                info.installName += "/" + (qtPath + "Frameworks/").simplified();
+                 info.frameworkDirectory = info.installName;
+                 state = FrameworkName;
+                 continue;
+diff -r -u a/tools/qtconfig/main.cpp b/tools/qtconfig/main.cpp
+--- a/tools/qtconfig/main.cpp	2015-05-07 10:14:41.000000000 -0400
++++ b/tools/qtconfig/main.cpp	2019-03-20 09:30:22.000000000 -0400
+@@ -51,6 +51,13 @@
+ {
+     Q_INIT_RESOURCE(qtconfig);
+ 
++    const QByteArray graphicsSystem = qgetenv("QT_GRAPHICSSYSTEM");
++    if (graphicsSystem.isNull() || graphicsSystem.isEmpty()) {
++        // force native graphics mode unless the user set one via QT_GRAPHICSSYSTEM.
++        // We have to use QT_GRAPHICSSYSTEM because that will override any previous
++        // settings stored in our own settings store.
++        qputenv("QT_GRAPHICSSYSTEM", "Native");
++    }
+     QApplication app(argc, argv);
+ 
+     QTranslator translator;
+diff -r -u a/tools/qtconfig/mainwindow.cpp b/tools/qtconfig/mainwindow.cpp
+--- a/tools/qtconfig/mainwindow.cpp	2015-05-07 10:14:41.000000000 -0400
++++ b/tools/qtconfig/mainwindow.cpp	2019-03-20 09:30:22.000000000 -0400
+@@ -227,6 +227,7 @@
+     connect(ui->rtlExtensionsCheckBox, SIGNAL(toggled(bool)), SLOT(somethingModified()));
+     connect(ui->inputStyleCombo, SIGNAL(activated(int)), SLOT(somethingModified()));
+     connect(ui->inputMethodCombo, SIGNAL(activated(int)), SLOT(somethingModified()));
++    connect(ui->graphicsSystemCombo, SIGNAL(activated(int)), SLOT(somethingModified()));
+     connect(ui->guiStyleCombo, SIGNAL(activated(QString)), SLOT(styleSelected(QString)));
+     connect(ui->familySubstitutionCombo, SIGNAL(activated(QString)), SLOT(substituteSelected(QString)));
+     connect(ui->tunePaletteButton, SIGNAL(clicked()), SLOT(tunePalette()));
+@@ -416,7 +417,26 @@
+     ui->inputMethodCombo->hide();
+     ui->inputMethodLabel->hide();
+ #endif
+-
++#ifdef Q_OS_MAC
++    ui->graphicsSystemCombo->setToolTip(tr("Select the graphicsssystem to be used by default.\n"
++        "Native: use native CoreGraphics rendering\n"
++        "Raster: use raster graphics\n"
++        "OpenGL: use OpenGL (experimental!)\n"
++        "Raster mode is the preferred default except on Mac OS 10.14 and newer where it causes flickering.\n"
++        "Use Native rendering on those newer OS versions (or if you experience other graphics glitches).\n"
++        "Note that Raster mode is not compatible with certain built-in widget styles like CDE or Plastique."));
++    QStringList graphicsSystems;
++    QString defaultGraphicsSystem = settings.value(QLatin1String("DefaultGraphicsSystem"), QLatin1String("(unset)")).toString();
++
++    graphicsSystems << "(unset)" << "Native" << "Raster" << "OpenGL";
++    ui->graphicsSystemCombo->addItems(graphicsSystems);
++    if (!defaultGraphicsSystem.isNull() && !defaultGraphicsSystem.isEmpty()) {
++        ui->graphicsSystemCombo->setCurrentIndex(graphicsSystems.indexOf(QRegExp(defaultGraphicsSystem, Qt::CaseInsensitive)));
++    }
++#else
++    ui->graphicsSystemLabel->hide();
++    ui->graphicsSystemCombo->hide();
++#endif
+     ui->fontEmbeddingCheckBox->setChecked(settings.value(QLatin1String("embedFonts"), true)
+                                           .toBool());
+     fontpaths = settings.value(QLatin1String("fontPath")).toStringList();
+@@ -573,6 +593,13 @@
+ #if defined(Q_WS_X11) && !defined(QT_NO_XIM)
+         settings.setValue(QLatin1String("DefaultInputMethod"), ui->inputMethodCombo->currentText());
+ #endif
++#ifdef Q_OS_MAC
++        if (ui->graphicsSystemCombo->currentIndex() > 0) {
++            settings.setValue(QLatin1String("DefaultGraphicsSystem"), ui->graphicsSystemCombo->currentText());
++        } else {
++            settings.remove(QLatin1String("DefaultGraphicsSystem"));
++        }
++#endif
+ 
+         QString audioSink = settings.value(QLatin1String("audiosink"), QLatin1String("Auto")).toString();
+         QString videoMode = settings.value(QLatin1String("videomode"), QLatin1String("Auto")).toString();

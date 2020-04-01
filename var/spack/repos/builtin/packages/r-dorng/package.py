@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,13 +15,15 @@ class RDorng(RPackage):
        independently of the number of workers, the task scheduling strategy,
        or the chosen parallel environment and associated foreach backend."""
 
-    homepage = "https://cran.rstudio.com/web/packages/doRNG/index.html"
-    url      = "https://cran.rstudio.com/src/contrib/doRNG_1.6.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/doRNG"
+    homepage = "https://cloud.r-project.org/package=doRNG"
+    url      = "https://cloud.r-project.org/src/contrib/doRNG_1.6.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/doRNG"
 
-    version('1.6.6', 'ffb26024c58c8c99229470293fbf35cf')
+    version('1.7.1', sha256='27533d54464889d1c21301594137fc0f536574e3a413d61d7df9463ab12a67e9')
+    version('1.6.6', sha256='939c2282c72c0b89fc7510f4bff901a4e99007dc006f46762c8f594c0ecbd876')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-rngtools', type=('build', 'run'))
+    depends_on('r-rngtools@1.3:', type=('build', 'run'))
     depends_on('r-iterators', type=('build', 'run'))
-    depends_on('r-pkgmaker', type=('build', 'run'))
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))

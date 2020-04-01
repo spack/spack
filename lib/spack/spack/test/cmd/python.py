@@ -1,27 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import pytest
+
 import spack
 from spack.main import SpackCommand
 
@@ -30,4 +13,18 @@ python = SpackCommand('python')
 
 def test_python():
     out = python('-c', 'import spack; print(spack.spack_version)')
-    assert out.strip() == str(spack.spack_version)
+    assert out.strip() == spack.spack_version
+
+
+def test_python_with_module():
+    # pytest rewrites a lot of modules, which interferes with runpy, so
+    # it's hard to test this.  Trying to import a module like sys, that
+    # has no code associated with it, raises an error reliably in python
+    # 2 and 3, which indicates we successfully ran runpy.run_module.
+    with pytest.raises(ImportError, match="No code object"):
+        python('-m', 'sys')
+
+
+def test_python_raises():
+    out = python('--foobar', fail_on_error=False)
+    assert "Error: Unknown arguments" in out

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,12 +12,15 @@ class PyIminuit(PythonPackage):
     homepage = "https://pypi.python.org/pypi/iminuit"
     url      = "https://pypi.io/packages/source/i/iminuit/iminuit-1.2.tar.gz"
 
-    version('1.2', '4701ec472cae42015e26251703e6e984')
+    version('1.3.6', sha256='d79a197f305d4708a0e3e52b0a6748c1a6997360d2fbdfd09c022995a6963b5e')
+    version('1.2', sha256='7651105fc3f186cfb5742f075ffebcc5088bf7797d8ed124c00977eebe0d1c64')
 
     # Required dependencies
     depends_on('py-setuptools', type='build')
+    depends_on('py-numpy', type=('build', 'run'), when='@1.3:')
 
     # Optional dependencies
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-cython', type='build')
+    depends_on('py-matplotlib', type='test', when='@1.3:')
+    depends_on('py-cython', type='test', when='@1.3:')
+    depends_on('py-pytest', type='test', when='@1.3:')
+    depends_on('py-scipy', type='test', when='@1.3:')

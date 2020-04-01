@@ -1,30 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -37,8 +17,8 @@ class Wannier90(MakefilePackage):
     homepage = 'http://wannier.org'
     url = 'http://wannier.org/code/wannier90-2.0.1.tar.gz'
 
-    version('2.1.0', '07a81c002b41d6d0f97857e55c57d769')
-    version('2.0.1', '4edd742506eaba93317249d33261fb22')
+    version('2.1.0', sha256='ee90108d4bc4aa6a1cf16d72abebcb3087cf6c1007d22dda269eb7e7076bddca')
+    version('2.0.1', sha256='05ea7cd421a219ce19d379ad6ae3d9b1a84be4ffb367506ffdfab1e729309e94')
 
     depends_on('mpi')
     depends_on('lapack')
@@ -77,7 +57,7 @@ class Wannier90(MakefilePackage):
             'make.sys'
         )
 
-        shutil.copy(template, self.makefile_name)
+        copy(template, self.makefile_name)
         for key, value in substitutions.items():
             filter_file(key, value, self.makefile_name)
 

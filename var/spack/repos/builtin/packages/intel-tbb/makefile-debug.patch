@@ -1,0 +1,42 @@
+The debug targets were removed starting with rev 2020.
+This patch restores them.
+
+
+--- tbb-2020/Makefile.orig	2019-12-18 02:42:41.000000000 -0600
++++ tbb-2020/Makefile	2020-02-09 00:27:17.058452442 -0600
+@@ -26,15 +26,19 @@
+ all: tbb tbbmalloc tbbproxy test examples
+ 
+ tbb: mkdir
++	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.tbb cfg=debug
+ 	$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.tbb cfg=release
+ 
+ tbbmalloc: mkdir
++	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.tbbmalloc cfg=debug malloc
+ 	$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.tbbmalloc cfg=release malloc
+ 
+ tbbproxy: mkdir
++	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.tbbproxy cfg=debug tbbproxy
+ 	$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.tbbproxy cfg=release tbbproxy
+ 
+ tbbbind: mkdir
++	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.tbbbind cfg=debug tbbbind
+ 	$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.tbbbind cfg=release tbbbind
+ 
+ test: tbb tbbmalloc $(if $(use_proxy),tbbproxy)
+@@ -42,6 +46,7 @@
+ 	-$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.test cfg=release
+ 
+ rml: mkdir
++	$(MAKE) -C "$(work_dir)_debug"  -r -f $(tbb_root)/build/Makefile.rml cfg=debug
+ 	$(MAKE) -C "$(work_dir)_release"  -r -f $(tbb_root)/build/Makefile.rml cfg=release
+ 
+ examples: tbb tbbmalloc
+@@ -64,6 +69,7 @@
+ 	$(shell $(MAKE) -s -i -r -C examples -f Makefile tbb_root=.. clean >$(NUL) 2>$(NUL))
+ 
+ mkdir:
++	$(shell $(MD) "$(work_dir)_debug" >$(NUL) 2>$(NUL))
+ 	$(shell $(MD) "$(work_dir)_release" >$(NUL) 2>$(NUL))
+ 	@echo Created the $(work_dir)_release directory
+ 

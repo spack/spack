@@ -1,36 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RImpute(RPackage):
-    """Imputation for microarray data (currently KNN only)."""
+    """impute: Imputation for microarray data.
 
-    homepage = "https://www.bioconductor.org/packages/impute/"
-    url      = "https://git.bioconductor.org/packages/impute"
+       Imputation for microarray data (currently KNN only)"""
 
-    version('1.50.1', git='https://git.bioconductor.org/packages/impute', commit='31d1cc141797afdc83743e1d95aab8a90ee19b71')
+    homepage = "https://bioconductor.org/packages/impute"
+    git      = "https://git.bioconductor.org/packages/impute.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.50.1')
+    version('1.58.0', commit='dc17173df08d965a0d0aac9fa4ad519bd99d127e')
+    version('1.56.0', commit='6c037ed4dffabafceae684265f86f2a18751b559')
+    version('1.54.0', commit='efc61f5197e8c4baf4ae881fb556f0312beaabd8')
+    version('1.52.0', commit='7fa1b917a5dd60f2aaf52d9aae1fcd2c93511d63')
+    version('1.50.1', commit='31d1cc141797afdc83743e1d95aab8a90ee19b71')
+
+    depends_on('r@2.10:', type=('build', 'run'))

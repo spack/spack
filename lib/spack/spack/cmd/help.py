@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
 from llnl.util.tty.color import colorize
 
@@ -38,7 +19,9 @@ spec expression syntax:
 
   package [constraints] [^dependency [constraints] ...]
 
-  package                           any package from 'spack list'
+  package                           any package from 'spack list', or
+  @K{/hash}                             unique prefix or full hash of
+                                    installed package
 
   constraints:
     versions:
@@ -59,9 +42,9 @@ spec expression syntax:
       @B{variant=value1,value2,value3}  set multi-value <variant> values
 
     architecture variants:
-      @m{target=target}                 specific <target> processor
-      @m{os=operating_system}           specific <operating_system>
       @m{platform=platform}             linux, darwin, cray, bgq, etc.
+      @m{os=operating_system}           specific <operating_system>
+      @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above
 
     cross-compiling:
@@ -70,6 +53,8 @@ spec expression syntax:
 
     dependencies:
       ^dependency [constraints]     specify constraints on dependencies
+      ^@K{/hash}                        build with a specific installed
+                                    dependency
 
   examples:
       hdf5                          any hdf5 configuration
@@ -101,12 +86,12 @@ def setup_parser(subparser):
     help_all_group = subparser.add_mutually_exclusive_group()
     help_all_group.add_argument(
         '-a', '--all', action='store_const', const='long', default='short',
-        help='print all available commands')
+        help='list all available commands and options')
 
     help_spec_group = subparser.add_mutually_exclusive_group()
     help_spec_group.add_argument(
         '--spec', action='store_const', dest='guide', const='spec',
-        default=None, help='print all available commands')
+        default=None, help='help on the package specification syntax')
 
 
 def help(parser, args):

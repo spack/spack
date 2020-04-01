@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
 
-class Texinfo(AutotoolsPackage):
+class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     """Texinfo is the official documentation format of the GNU project.
 
     It was invented by Richard Stallman and Bob Chassell many years ago,
@@ -34,11 +15,24 @@ class Texinfo(AutotoolsPackage):
     of the time. It is used by many non-GNU projects as well."""
 
     homepage = "https://www.gnu.org/software/texinfo/"
-    url      = "http://ftp.gnu.org/gnu/texinfo/texinfo-6.0.tar.gz"
+    gnu_mirror_path = "texinfo/texinfo-6.0.tar.gz"
 
-    version('6.5', '94e8f7149876793030e5518dd8d6e956')
-    version('6.3', '9b08daca9bf8eccae9b0f884aba41f9e')
-    version('6.0', 'e1a2ef5dce5018b53f0f6eed45b247a7')
-    version('5.2', '1b8f98b80a8e6c50422125e07522e8db')
-    version('5.1', '54e250014fe698fb4832016158747c03')
-    version('5.0', '918432285abe6fe96c98355594c5656a')
+    version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
+    version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')
+    version('6.0', sha256='83d3183290f34e7f958d209d0b20022c6fe9e921eb6fe94c27d988827d4878d2')
+    version('5.2', sha256='6b8ca30e9b6f093b54fe04439e5545e564c63698a806a48065c0bba16994cf74')
+    version('5.1', sha256='50e8067f9758bb2bf175b69600082ac4a27c464cb4bcd48a578edd3127216600')
+    version('5.0', sha256='2c579345a39a2a0bb4b8c28533f0b61356504a202da6a25d17d4d866af7f5803')
+
+    depends_on('perl')
+
+    # Fix unescaped braces in regexps.
+    # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=898994
+    patch('fix_unescaped_braces.patch', when='@6.3:')
+    patch('fix_unescaped_braces_2.patch', when='@5.1:6.0')
+    patch('fix_unescaped_braces_3.patch', when='@5.0')
+
+    # Apply this fix to perform thread-safe processing in code
+    # that uses the global locale.
+    # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
+    patch('update_locale_handling.patch', when='@6.3:')

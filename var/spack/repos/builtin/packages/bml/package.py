@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,13 +13,17 @@ class Bml(CMakePackage):
 
     homepage = "http://lanl.github.io/bml/"
     url      = "https://github.com/lanl/bml/tarball/v1.2.2"
+    git      = "https://github.com/lanl/bml.git"
 
-    version('1.2.2', 'c86959cb0188e9d0a9a2cbad03b2782d')
-    version('1.1.0', '271adecee08aee678be9eeceee06b6fb')
-    version('develop', git='https://github.com/lanl/bml', branch='master')
+    version('develop', branch='master')
+    version('1.3.1', sha256='17145eda96aa5e550dcbff1ee7ce62b45723af8210b1ab70c5975ec792fa3d13')
+    version('1.3.0', sha256='d9465079fe77210eb2af2dcf8ed96802edf5bb76bfbfdbcc97e206c8cd460b07')
+    version('1.2.3', sha256='9a2ee6c47d2445bfdb34495497ea338a047e9e4767802af47614d9ff94b0c523')
+    version('1.2.2', sha256='89ab78f9fe8395fe019cc0495a1d7b69875b5708069faeb831ddb9a6a9280a8a')
+    version('1.1.0', sha256='29162f1f7355ad28b44d3358206ccd3c7ac7794ee13788483abcbd2f8063e7fc')
 
     variant('shared', default=True, description='Build shared libs')
-    variant('mpi', default=False, description='Build with MPI Support')
+    variant('mpi', default=True, description='Build with MPI Support')
 
     conflicts('+mpi', when='@:1.2.2')
 

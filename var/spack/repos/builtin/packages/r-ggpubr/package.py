@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,13 +10,27 @@ class RGgpubr(RPackage):
     """ggpubr: 'ggplot2' Based Publication Ready Plots"""
 
     homepage = "http://www.sthda.com/english/rpkgs/ggpubr"
-    url      = "https://cran.r-project.org/src/contrib/ggpubr_0.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggpubr"
+    url      = "https://cloud.r-project.org/src/contrib/ggpubr_0.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggpubr"
 
-    version('0.1.2', '42a5749ae44121597ef511a7424429d1')
+    version('0.2.2', sha256='1c93dc6d1f08680dd00a10b6842445700d1fccb11f18599fbdf51e70c6b6b364')
+    version('0.2.1', sha256='611e650da9bd15d7157fdcdc4e926fee3b88df3aba87410fdb1c8a7294d98d28')
+    version('0.2', sha256='06c3075d8c452840662f5d041c3d966494b87254a52a858c849b9e1e96647766')
+    version('0.1.2', sha256='9b4749fe1a6e0e4c5201a587c57c1b4bed34253f95ab4fb365f7e892b86003fe')
 
-    depends_on('r@3.1.0:')
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-ggrepel', type=('build', 'run'))
     depends_on('r-ggsci', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-plyr', when='@:0.1.2', type=('build', 'run'))
+    depends_on('r-tidyr', when='@0.2:', type=('build', 'run'))
+    depends_on('r-purrr', when='@0.2:', type=('build', 'run'))
+    depends_on('r-dplyr@0.7.1:', when='@0.2:', type=('build', 'run'))
+    depends_on('r-cowplot', when='@0.2:', type=('build', 'run'))
+    depends_on('r-ggsignif', when='@0.2:', type=('build', 'run'))
+    depends_on('r-scales', when='@0.2:', type=('build', 'run'))
+    depends_on('r-gridextra', when='@0.2:', type=('build', 'run'))
+    depends_on('r-glue', when='@0.2:', type=('build', 'run'))
+    depends_on('r-polynom', when='@0.2:', type=('build', 'run'))
+    depends_on('r-rlang', when='@0.2.2:', type=('build', 'run'))

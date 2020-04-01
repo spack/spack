@@ -36,8 +36,7 @@ RUN spack install lmod && spack clean -a
 # Build a compiler
 RUN spack install gcc@7.2.0 && spack clean -a
 RUN /bin/bash -l -c ' \
-    spack load gcc@7.2.0 \
-    && spack compiler add'
+    spack compiler add $(spack location -i gcc@7.2.0)/bin'
 
 # Build the software on top of the compiler
 RUN spack install netlib-scalapack ^openmpi ^openblas %gcc@7.2.0 \

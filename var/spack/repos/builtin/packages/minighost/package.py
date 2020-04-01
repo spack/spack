@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import tarfile
 
@@ -35,11 +16,11 @@ class Minighost(MakefilePackage):
     """
 
     homepage = "http://mantevo.org"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniGhost/miniGhost_1.0.1.tar.gz"
+    url      = "https://github.com/Mantevo/mantevo.github.io/raw/master/download_files/miniGhost_1.0.1.tar.gz"
 
     tags = ['proxy-app']
 
-    version('1.0.1', '2a4ac4383e9be00f87b6067c3cfe6463')
+    version('1.0.1', sha256='713f305559d892923cde0ad3cbc53c7cefc52a684f65275ccc9fb0b1d049cccc')
 
     variant('mpi', default=True, description='Enable MPI Support')
 
@@ -54,17 +35,16 @@ class Minighost(MakefilePackage):
         if '+mpi' in self.spec:
             targets.append('PROTOCOL=-D_MG_MPI')
             targets.append('FC={0}'.format(self.spec['mpi'].mpif77))
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-            targets.append(
-                'LIBS=-lm -lgfortran -lmpi_usempi -lmpi_mpifh -lmpi')
+            # CC is only used for linking, use it to pull in the right f77 libs
+            targets.append('CC={0}'.format(self.spec['mpi'].mpif77))
         else:
             targets.append('PROTOCOL=-D_MG_SERIAL')
             targets.append('FC=f77')
             targets.append('CC=cc')
-            targets.append('LIBS=-lm -lgfortran')
 
         if '%gcc' in self.spec:
             targets.append('COMPILER_SUITE=gnu')
+            targets.append('LIBS=-lm -lgfortran')
         elif '%cce' in self.spec:
             targets.append('COMPILER_SUITE=cray')
         elif '%intel' in self.spec:

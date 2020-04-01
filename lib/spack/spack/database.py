@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Spack's installation tracking database.
 
 The database serves two purposes:
@@ -37,43 +18,78 @@ Prior to the implementation of this store, a directory layout served
 as the authoritative database of packages in Spack.  This module
 provides a cache and a sanity checking mechanism for what is in the
 filesystem.
-
 """
-import os
-import sys
-import socket
-import contextlib
-from six import string_types
-from six import iteritems
 
-from yaml.error import MarkedYAMLError, YAMLError
+import contextlib
+import datetime
+import os
+import socket
+import sys
+import time
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import join_path, mkdirp
-from llnl.util.lock import Lock, WriteTransaction, ReadTransaction
-
-import spack.store
-import spack.repository
+import six
+import spack.repo
 import spack.spec
-import spack.util.spack_yaml as syaml
+import spack.store
+import spack.util.lock as lk
 import spack.util.spack_json as sjson
-from spack.util.crypto import bit_length
+from llnl.util.filesystem import mkdirp
 from spack.directory_layout import DirectoryLayoutError
 from spack.error import SpackError
+from spack.filesystem_view import YamlFilesystemView
+from spack.util.crypto import bit_length
 from spack.version import Version
 
+# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: clearing a failure.
 
 # DB goes in this directory underneath the root
 _db_dirname = '.spack-db'
 
 # DB version.  This is stuck in the DB file to track changes in format.
-_db_version = Version('0.9.3')
+# Increment by one when the database format changes.
+# Versions before 5 were not integers.
+_db_version = Version('5')
 
-# Timeout for spack database locks in seconds
-_db_lock_timeout = 60
+# For any version combinations here, skip reindex when upgrading.
+# Reindexing can take considerable time and is not always necessary.
+_skip_reindex = [
+    # reindexing takes a significant amount of time, and there's
+    # no reason to do it from DB version 0.9.3 to version 5. The
+    # only difference is that v5 can contain "deprecated_for"
+    # fields.  So, skip the reindex for this transition. The new
+    # version is saved to disk the first time the DB is written.
+    (Version('0.9.3'), Version('5')),
+]
+
+# Default timeout for spack database locks in seconds or None (no timeout).
+# A balance needs to be struck between quick turnaround for parallel installs
+# (to avoid excess delays) and waiting long enough when the system is busy
+# (to ensure the database is updated).
+_db_lock_timeout = 120
+
+# Default timeout for spack package locks in seconds or None (no timeout).
+# A balance needs to be struck between quick turnaround for parallel installs
+# (to avoid excess delays when performing a parallel installation) and waiting
+# long enough for the next possible spec to install (to avoid excessive
+# checking of the last high priority package) or holding on to a lock (to
+# ensure a failed install is properly tracked).
+_pkg_lock_timeout = None
 
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
+
+
+def _now():
+    """Returns the time since the epoch"""
+    return time.time()
 
 
 def _autospec(function):
@@ -86,6 +102,36 @@ def _autospec(function):
         return function(self, spec_like, *args, **kwargs)
 
     return converter
+
+
+class InstallStatus(str):
+    pass
+
+
+class InstallStatuses(object):
+    INSTALLED = InstallStatus('installed')
+    DEPRECATED = InstallStatus('deprecated')
+    MISSING = InstallStatus('missing')
+
+    @classmethod
+    def canonicalize(cls, query_arg):
+        if query_arg is True:
+            return [cls.INSTALLED]
+        elif query_arg is False:
+            return [cls.MISSING]
+        elif query_arg is any:
+            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
+        elif isinstance(query_arg, InstallStatus):
+            return [query_arg]
+        else:
+            try:  # Try block catches if it is not an iterable at all
+                if any(type(x) != InstallStatus for x in query_arg):
+                    raise TypeError
+            except TypeError:
+                raise TypeError(
+                    'installation query must be `any`, boolean, '
+                    'InstallStatus, or iterable of InstallStatus')
+            return query_arg
 
 
 class InstallRecord(object):
@@ -103,29 +149,120 @@ class InstallRecord(object):
     actually remove from the database until a spec has no installed
     dependents left.
 
+    Args:
+        spec (Spec): spec tracked by the install record
+        path (str): path where the spec has been installed
+        installed (bool): whether or not the spec is currently installed
+        ref_count (int): number of specs that depend on this one
+        explicit (bool, optional): whether or not this spec was explicitly
+            installed, or pulled-in as a dependency of something else
+        installation_time (time, optional): time of the installation
     """
 
-    def __init__(self, spec, path, installed, ref_count=0, explicit=False):
+    def __init__(
+            self,
+            spec,
+            path,
+            installed,
+            ref_count=0,
+            explicit=False,
+            installation_time=None,
+            deprecated_for=None
+    ):
         self.spec = spec
-        self.path = str(path)
+        self.path = str(path) if path else None
         self.installed = bool(installed)
         self.ref_count = ref_count
         self.explicit = explicit
+        self.installation_time = installation_time or _now()
+        self.deprecated_for = deprecated_for
+
+    def install_type_matches(self, installed):
+        installed = InstallStatuses.canonicalize(installed)
+        if self.installed:
+            return InstallStatuses.INSTALLED in installed
+        elif self.deprecated_for:
+            return InstallStatuses.DEPRECATED in installed
+        else:
+            return InstallStatuses.MISSING in installed
 
     def to_dict(self):
-        return {
+        rec_dict = {
             'spec': self.spec.to_node_dict(),
             'path': self.path,
             'installed': self.installed,
             'ref_count': self.ref_count,
-            'explicit': self.explicit
+            'explicit': self.explicit,
+            'installation_time': self.installation_time,
         }
+        if self.deprecated_for:
+            rec_dict.update({'deprecated_for': self.deprecated_for})
+        return rec_dict
 
     @classmethod
     def from_dict(cls, spec, dictionary):
-        d = dictionary
-        return InstallRecord(spec, d['path'], d['installed'], d['ref_count'],
-                             d.get('explicit', False))
+        d = dict(dictionary.items())
+        d.pop('spec', None)
+
+        # Old databases may have "None" for path for externals
+        if d['path'] == 'None':
+            d['path'] = None
+
+        return InstallRecord(spec, **d)
+
+
+class ForbiddenLockError(SpackError):
+    """Raised when an upstream DB attempts to acquire a lock"""
+
+
+class ForbiddenLock(object):
+    def __getattribute__(self, name):
+        raise ForbiddenLockError(
+            "Cannot access attribute '{0}' of lock".format(name))
+
+
+_query_docstring = """
+
+        Args:
+            query_spec: queries iterate through specs in the database and
+                return those that satisfy the supplied ``query_spec``. If
+                query_spec is `any`, This will match all specs in the
+                database.  If it is a spec, we'll evaluate
+                ``spec.satisfies(query_spec)``
+
+            known (bool or any, optional): Specs that are "known" are those
+                for which Spack can locate a ``package.py`` file -- i.e.,
+                Spack "knows" how to install them.  Specs that are unknown may
+                represent packages that existed in a previous version of
+                Spack, but have since either changed their name or
+                been removed
+
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: True)
+
+            explicit (bool or any, optional): A spec that was installed
+                following a specific user request is marked as explicit. If
+                instead it was pulled-in as a dependency of a user requested
+                spec it's considered implicit.
+
+            start_date (datetime, optional): filters the query discarding
+                specs that have been installed before ``start_date``.
+
+            end_date (datetime, optional): filters the query discarding
+                specs that have been installed after ``end_date``.
+
+            hashes (container): list or set of hashes that we can use to
+                restrict the search
+
+        Returns:
+            list of specs that match the query
+
+        """
 
 
 class Database(object):
@@ -133,7 +270,11 @@ class Database(object):
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}
 
-    def __init__(self, root, db_dir=None):
+    """Per-process failure (lock) objects for each install prefix."""
+    _prefix_failures = {}
+
+    def __init__(self, root, db_dir=None, upstream_dbs=None,
+                 is_upstream=False):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -144,54 +285,208 @@ class Database(object):
         exist.  This is the ``db_dir``.
 
         The Database will attempt to read an ``index.json`` file in
-        ``db_dir``.  If it does not find one, it will fall back to read
-        an ``index.yaml`` if one is present.  If that does not exist, it
-        will create a database when needed by scanning the entire
-        Database root for ``spec.yaml`` files according to Spack's
-        ``DirectoryLayout``.
+        ``db_dir``.  If that does not exist, it will create a database
+        when needed by scanning the entire Database root for ``spec.yaml``
+        files according to Spack's ``DirectoryLayout``.
 
         Caller may optionally provide a custom ``db_dir`` parameter
-        where data will be stored.  This is intended to be used for
+        where data will be stored. This is intended to be used for
         testing the Database class.
-
         """
         self.root = root
 
-        if db_dir is None:
-            # If the db_dir is not provided, default to within the db root.
-            self._db_dir = join_path(self.root, _db_dirname)
-        else:
-            # Allow customizing the database directory location for testing.
-            self._db_dir = db_dir
+        # If the db_dir is not provided, default to within the db root.
+        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
 
         # Set up layout of database files within the db dir
-        self._old_yaml_index_path = join_path(self._db_dir, 'index.yaml')
-        self._index_path = join_path(self._db_dir, 'index.json')
-        self._lock_path = join_path(self._db_dir, 'lock')
+        self._index_path = os.path.join(self._db_dir, 'index.json')
+        self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
+        self._lock_path = os.path.join(self._db_dir, 'lock')
 
         # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = join_path(self._db_dir, 'prefix_lock')
+        self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
+
+        # Ensure a persistent location for dealing with parallel installation
+        # failures (e.g., across near-concurrent processes).
+        self._failure_dir = os.path.join(self._db_dir, 'failures')
+
+        # Support special locks for handling parallel installation failures
+        # of a spec.
+        self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
 
         # Create needed directories and files
         if not os.path.exists(self._db_dir):
             mkdirp(self._db_dir)
 
+        if not os.path.exists(self._failure_dir) and not is_upstream:
+            mkdirp(self._failure_dir)
+
+        self.is_upstream = is_upstream
+        self.last_seen_verifier = ''
+
         # initialize rest of state.
-        self.lock = Lock(self._lock_path)
+        self.db_lock_timeout = (
+            spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
+        self.package_lock_timeout = (
+            spack.config.get('config:package_lock_timeout') or
+            _pkg_lock_timeout)
+        tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
+                  str(self.db_lock_timeout)))
+        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
+                              if self.package_lock_timeout else 'No timeout')
+        tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
+                  str(timeout_format_str)))
+
+        if self.is_upstream:
+            self.lock = ForbiddenLock()
+        else:
+            self.lock = lk.Lock(self._lock_path,
+                                default_timeout=self.db_lock_timeout,
+                                desc='database')
         self._data = {}
+
+        self.upstream_dbs = list(upstream_dbs) if upstream_dbs else []
 
         # whether there was an error at the start of a read transaction
         self._error = None
 
-    def write_transaction(self, timeout=_db_lock_timeout):
+        # For testing: if this is true, an exception is thrown when missing
+        # dependencies are detected (rather than just printing a warning
+        # message)
+        self._fail_when_missing_deps = False
+
+    def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
-        return WriteTransaction(self.lock, self._read, self._write, timeout)
+        return lk.WriteTransaction(
+            self.lock, acquire=self._read, release=self._write)
 
-    def read_transaction(self, timeout=_db_lock_timeout):
+    def read_transaction(self):
         """Get a read lock context manager for use in a `with` block."""
-        return ReadTransaction(self.lock, self._read, timeout=timeout)
+        return lk.ReadTransaction(self.lock, acquire=self._read)
 
-    def prefix_lock(self, spec):
+    def _failed_spec_path(self, spec):
+        """Return the path to the spec's failure file, which may not exist."""
+        if not spec.concrete:
+            raise ValueError('Concrete spec required for failure path for {0}'
+                             .format(spec.name))
+
+        return os.path.join(self._failure_dir,
+                            '{0}-{1}'.format(spec.name, spec.full_hash()))
+
+    def clear_failure(self, spec, force=False):
+        """
+        Remove any persistent and cached failure tracking for the spec.
+
+        see `mark_failed()`.
+
+        Args:
+            spec (Spec): the spec whose failure indicators are being removed
+            force (bool): True if the failure information should be cleared
+                when a prefix failure lock exists for the file or False if
+                the failure should not be cleared (e.g., it may be
+                associated with a concurrent build)
+
+        """
+        failure_locked = self.prefix_failure_locked(spec)
+        if failure_locked and not force:
+            tty.msg('Retaining failure marking for {0} due to lock'
+                    .format(spec.name))
+            return
+
+        if failure_locked:
+            tty.warn('Removing failure marking despite lock for {0}'
+                     .format(spec.name))
+
+        lock = self._prefix_failures.pop(spec.prefix, None)
+        if lock:
+            lock.release_write()
+
+        if self.prefix_failure_marked(spec):
+            try:
+                path = self._failed_spec_path(spec)
+                tty.debug('Removing failure marking for {0}'.format(spec.name))
+                os.remove(path)
+            except OSError as err:
+                tty.warn('Unable to remove failure marking for {0} ({1}): {2}'
+                         .format(spec.name, path, str(err)))
+
+    def mark_failed(self, spec):
+        """
+        Mark a spec as failing to install.
+
+        Prefix failure marking takes the form of a byte range lock on the nth
+        byte of a file for coordinating between concurrent parallel build
+        processes and a persistent file, named with the full hash and
+        containing the spec, in a subdirectory of the database to enable
+        persistence across overlapping but separate related build processes.
+
+        The failure lock file, ``spack.store.db.prefix_failures``, lives
+        alongside the install DB. ``n`` is the sys.maxsize-bit prefix of the
+        associated DAG hash to make the likelihood of collision very low with
+        no cleanup required.
+        """
+        # Dump the spec to the failure file for (manual) debugging purposes
+        path = self._failed_spec_path(spec)
+        with open(path, 'w') as f:
+            spec.to_json(f)
+
+        # Also ensure a failure lock is taken to prevent cleanup removal
+        # of failure status information during a concurrent parallel build.
+        err = 'Unable to mark {0.name} as failed.'
+
+        prefix = spec.prefix
+        if prefix not in self._prefix_failures:
+            mark = lk.Lock(
+                self.prefix_fail_path,
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=self.package_lock_timeout, desc=spec.name)
+
+            try:
+                mark.acquire_write()
+            except lk.LockTimeoutError:
+                # Unlikely that another process failed to install at the same
+                # time but log it anyway.
+                tty.debug('PID {0} failed to mark install failure for {1}'
+                          .format(os.getpid(), spec.name))
+                tty.warn(err.format(spec))
+
+            # Whether we or another process marked it as a failure, track it
+            # as such locally.
+            self._prefix_failures[prefix] = mark
+
+        return self._prefix_failures[prefix]
+
+    def prefix_failed(self, spec):
+        """Return True if the prefix (installation) is marked as failed."""
+        # The failure was detected in this process.
+        if spec.prefix in self._prefix_failures:
+            return True
+
+        # The failure was detected by a concurrent process (e.g., an srun),
+        # which is expected to be holding a write lock if that is the case.
+        if self.prefix_failure_locked(spec):
+            return True
+
+        # Determine if the spec may have been marked as failed by a separate
+        # spack build process running concurrently.
+        return self.prefix_failure_marked(spec)
+
+    def prefix_failure_locked(self, spec):
+        """Return True if a process has a failure lock on the spec."""
+        check = lk.Lock(
+            self.prefix_fail_path,
+            start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+            length=1,
+            default_timeout=self.package_lock_timeout, desc=spec.name)
+
+        return check.is_write_locked()
+
+    def prefix_failure_marked(self, spec):
+        """Determine if the spec has a persistent failure marking."""
+        return os.path.exists(self._failed_spec_path(spec))
+
+    def prefix_lock(self, spec, timeout=None):
         """Get a lock on a particular spec's installation directory.
 
         NOTE: The installation directory **does not** need to exist.
@@ -206,34 +501,56 @@ class Database(object):
         readers-writer lock semantics with just a single lockfile, so no
         cleanup required.
         """
+        timeout = timeout or self.package_lock_timeout
         prefix = spec.prefix
         if prefix not in self._prefix_locks:
-            self._prefix_locks[prefix] = Lock(
+            self._prefix_locks[prefix] = lk.Lock(
                 self.prefix_lock_path,
-                spec.dag_hash_bit_prefix(bit_length(sys.maxsize)), 1)
+                start=spec.dag_hash_bit_prefix(bit_length(sys.maxsize)),
+                length=1,
+                default_timeout=timeout, desc=spec.name)
+        elif timeout != self._prefix_locks[prefix].default_timeout:
+            self._prefix_locks[prefix].default_timeout = timeout
 
         return self._prefix_locks[prefix]
 
     @contextlib.contextmanager
     def prefix_read_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
+        prefix_lock.acquire_read()
+
         try:
-            prefix_lock.acquire_read(60)
             yield self
-        finally:
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            prefix_lock.release_read()
+            raise
+        else:
             prefix_lock.release_read()
 
     @contextlib.contextmanager
     def prefix_write_lock(self, spec):
         prefix_lock = self.prefix_lock(spec)
+        prefix_lock.acquire_write()
+
         try:
-            prefix_lock.acquire_write(60)
             yield self
-        finally:
+        except lk.LockError:
+            # This addresses the case where a nested lock attempt fails inside
+            # of this context manager
+            raise
+        except (Exception, KeyboardInterrupt):
+            prefix_lock.release_write()
+            raise
+        else:
             prefix_lock.release_write()
 
     def _write_to_file(self, stream):
-        """Write out the databsae to a JSON file.
+        """Write out the database in JSON format to the stream passed
+        as argument.
 
         This function does not do any locking or transactions.
         """
@@ -255,9 +572,8 @@ class Database(object):
 
         try:
             sjson.dump(database, stream)
-        except YAMLError as e:
-            raise syaml.SpackYAMLError(
-                "error writing YAML database:", str(e))
+        except (TypeError, ValueError) as e:
+            raise sjson.SpackJSONError("error writing JSON database:", str(e))
 
     def _read_spec_from_dict(self, hash_key, installs):
         """Recursively construct a spec from a hash in a YAML database.
@@ -275,47 +591,68 @@ class Database(object):
         spec = spack.spec.Spec.from_node_dict(spec_dict)
         return spec
 
+    def db_for_spec_hash(self, hash_key):
+        with self.read_transaction():
+            if hash_key in self._data:
+                return self
+
+        for db in self.upstream_dbs:
+            if hash_key in db._data:
+                return db
+
+    def query_by_spec_hash(self, hash_key, data=None):
+        if data and hash_key in data:
+            return False, data[hash_key]
+        if not data:
+            with self.read_transaction():
+                if hash_key in self._data:
+                    return False, self._data[hash_key]
+        for db in self.upstream_dbs:
+            if hash_key in db._data:
+                return True, db._data[hash_key]
+        return False, None
+
     def _assign_dependencies(self, hash_key, installs, data):
         # Add dependencies from other records in the install DB to
         # form a full spec.
         spec = data[hash_key].spec
         spec_dict = installs[hash_key]['spec']
-
         if 'dependencies' in spec_dict[spec.name]:
             yaml_deps = spec_dict[spec.name]['dependencies']
             for dname, dhash, dtypes in spack.spec.Spec.read_yaml_dep_specs(
                     yaml_deps):
-                if dhash not in data:
-                    tty.warn("Missing dependency not in database: ",
-                             "%s needs %s-%s" % (
-                                 spec.cformat('$_$/'), dname, dhash[:7]))
+                # It is important that we always check upstream installations
+                # in the same order, and that we always check the local
+                # installation first: if a downstream Spack installs a package
+                # then dependents in that installation could be using it.
+                # If a hash is installed locally and upstream, there isn't
+                # enough information to determine which one a local package
+                # depends on, so the convention ensures that this isn't an
+                # issue.
+                upstream, record = self.query_by_spec_hash(dhash, data=data)
+                child = record.spec if record else None
+
+                if not child:
+                    msg = ("Missing dependency not in database: "
+                           "%s needs %s-%s" % (
+                               spec.cformat('{name}{/hash:7}'),
+                               dname, dhash[:7]))
+                    if self._fail_when_missing_deps:
+                        raise MissingDependenciesError(msg)
+                    tty.warn(msg)
                     continue
 
-                child = data[dhash].spec
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_file(self, stream, format='json'):
-        """
-        Fill database from file, do not maintain old data
-        Translate the spec portions from node-dict form to spec form
+    def _read_from_file(self, filename):
+        """Fill database from file, do not maintain old data.
+        Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
-        if format.lower() == 'json':
-            load = sjson.load
-        elif format.lower() == 'yaml':
-            load = syaml.load
-        else:
-            raise ValueError("Invalid database format: %s" % format)
-
         try:
-            if isinstance(stream, string_types):
-                with open(stream, 'r') as f:
-                    fdata = load(f)
-            else:
-                fdata = load(stream)
-        except MarkedYAMLError as e:
-            raise syaml.SpackYAMLError("error parsing YAML database:", str(e))
+            with open(filename, 'r') as f:
+                fdata = sjson.load(f)
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
@@ -327,12 +664,12 @@ class Database(object):
                 raise CorruptDatabaseError(
                     "Spack database is corrupt: %s" % msg, self._index_path)
 
-        check('database' in fdata, "No 'database' attribute in YAML.")
+        check('database' in fdata, "no 'database' attribute in JSON DB.")
 
         # High-level file checks
         db = fdata['database']
-        check('installs' in db, "No 'installs' in YAML DB.")
-        check('version' in db, "No 'version' in YAML DB.")
+        check('installs' in db, "no 'installs' in JSON DB.")
+        check('version' in db, "no 'version' in JSON DB.")
 
         installs = db['installs']
 
@@ -341,13 +678,24 @@ class Database(object):
         if version > _db_version:
             raise InvalidDatabaseVersionError(_db_version, version)
         elif version < _db_version:
-            self.reindex(spack.store.layout)
-            installs = dict((k, v.to_dict()) for k, v in self._data.items())
+            if not any(
+                    old == version and new == _db_version
+                    for old, new in _skip_reindex
+            ):
+                tty.warn(
+                    "Spack database version changed from %s to %s. Upgrading."
+                    % (version, _db_version)
+                )
+
+                self.reindex(spack.store.layout)
+                installs = dict(
+                    (k, v.to_dict()) for k, v in self._data.items()
+                )
 
         def invalid_record(hash_key, error):
             msg = ("Invalid record in Spack database: "
                    "hash: %s, cause: %s: %s")
-            msg %= (hash_key, type(e).__name__, str(e))
+            msg %= (hash_key, type(error).__name__, str(error))
             raise CorruptDatabaseError(msg, self._index_path)
 
         # Build up the database in three passes:
@@ -371,7 +719,6 @@ class Database(object):
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
                 data[hash_key] = InstallRecord.from_dict(spec, rec)
-
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -379,6 +726,8 @@ class Database(object):
         for hash_key in data:
             try:
                 self._assign_dependencies(hash_key, installs, data)
+            except MissingDependenciesError:
+                raise
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -396,8 +745,11 @@ class Database(object):
         """Build database index from scratch based on a directory layout.
 
         Locks the DB if it isn't locked already.
-
         """
+        if self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "Cannot reindex an upstream database")
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
@@ -408,8 +760,8 @@ class Database(object):
                 self._error = e
                 self._data = {}
 
-        transaction = WriteTransaction(
-            self.lock, _read_suppress_error, self._write, _db_lock_timeout
+        transaction = lk.WriteTransaction(
+            self.lock, acquire=_read_suppress_error, release=self._write
         )
 
         with transaction:
@@ -420,81 +772,103 @@ class Database(object):
                 )
                 self._error = None
 
-            # Read first the `spec.yaml` files in the prefixes. They should be
-            # considered authoritative with respect to DB reindexing, as
-            # entries in the DB may be corrupted in a way that still makes
-            # them readable. If we considered DB entries authoritative
-            # instead, we would perpetuate errors over a reindex.
-
             old_data = self._data
             try:
-                # Initialize data in the reconstructed DB
-                self._data = {}
-
-                # Start inspecting the installed prefixes
-                processed_specs = set()
-
-                for spec in directory_layout.all_specs():
-                    # Try to recover explicit value from old DB, but
-                    # default it to True if DB was corrupt. This is
-                    # just to be conservative in case a command like
-                    # "autoremove" is run by the user after a reindex.
-                    tty.debug(
-                        'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
-                    explicit = True
-                    if old_data is not None:
-                        old_info = old_data.get(spec.dag_hash())
-                        if old_info is not None:
-                            explicit = old_info.explicit
-
-                    self._add(spec, directory_layout, explicit=explicit)
-
-                    processed_specs.add(spec)
-
-                for key, entry in old_data.items():
-                    # We already took care of this spec using
-                    # `spec.yaml` from its prefix.
-                    if entry.spec in processed_specs:
-                        msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
-                        msg += ' [already reconstructed from spec.yaml]'
-                        tty.debug(msg.format(entry.spec))
-                        continue
-
-                    # If we arrived here it very likely means that
-                    # we have external specs that are not dependencies
-                    # of other specs. This may be the case for externally
-                    # installed compilers or externally installed
-                    # applications.
-                    tty.debug(
-                        'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
-                    try:
-                        layout = spack.store.layout
-                        if entry.spec.external:
-                            layout = None
-                            install_check = True
-                        else:
-                            install_check = layout.check_installed(entry.spec)
-
-                        if install_check:
-                            kwargs = {
-                                'spec': entry.spec,
-                                'directory_layout': layout,
-                                'explicit': entry.explicit
-                            }
-                            self._add(**kwargs)
-                            processed_specs.add(entry.spec)
-                    except Exception as e:
-                        # Something went wrong, so the spec was not restored
-                        # from old data
-                        tty.debug(e.message)
-                        pass
-
-                self._check_ref_counts()
-
+                self._construct_from_directory_layout(
+                    directory_layout, old_data)
             except BaseException:
                 # If anything explodes, restore old data, skip write.
                 self._data = old_data
                 raise
+
+    def _construct_entry_from_directory_layout(self, directory_layout,
+                                               old_data, spec,
+                                               deprecator=None):
+        # Try to recover explicit value from old DB, but
+        # default it to True if DB was corrupt. This is
+        # just to be conservative in case a command like
+        # "autoremove" is run by the user after a reindex.
+        tty.debug(
+            'RECONSTRUCTING FROM SPEC.YAML: {0}'.format(spec))
+        explicit = True
+        inst_time = os.stat(spec.prefix).st_ctime
+        if old_data is not None:
+            old_info = old_data.get(spec.dag_hash())
+            if old_info is not None:
+                explicit = old_info.explicit
+                inst_time = old_info.installation_time
+
+        extra_args = {
+            'explicit': explicit,
+            'installation_time': inst_time
+        }
+        self._add(spec, directory_layout, **extra_args)
+        if deprecator:
+            self._deprecate(spec, deprecator)
+
+    def _construct_from_directory_layout(self, directory_layout, old_data):
+        # Read first the `spec.yaml` files in the prefixes. They should be
+        # considered authoritative with respect to DB reindexing, as
+        # entries in the DB may be corrupted in a way that still makes
+        # them readable. If we considered DB entries authoritative
+        # instead, we would perpetuate errors over a reindex.
+        with directory_layout.disable_upstream_check():
+            # Initialize data in the reconstructed DB
+            self._data = {}
+
+            # Start inspecting the installed prefixes
+            processed_specs = set()
+
+            for spec in directory_layout.all_specs():
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec)
+                processed_specs.add(spec)
+
+            for spec, deprecator in directory_layout.all_deprecated_specs():
+                self._construct_entry_from_directory_layout(directory_layout,
+                                                            old_data, spec,
+                                                            deprecator)
+                processed_specs.add(spec)
+
+            for key, entry in old_data.items():
+                # We already took care of this spec using
+                # `spec.yaml` from its prefix.
+                if entry.spec in processed_specs:
+                    msg = 'SKIPPING RECONSTRUCTION FROM OLD DB: {0}'
+                    msg += ' [already reconstructed from spec.yaml]'
+                    tty.debug(msg.format(entry.spec))
+                    continue
+
+                # If we arrived here it very likely means that
+                # we have external specs that are not dependencies
+                # of other specs. This may be the case for externally
+                # installed compilers or externally installed
+                # applications.
+                tty.debug(
+                    'RECONSTRUCTING FROM OLD DB: {0}'.format(entry.spec))
+                try:
+                    layout = spack.store.layout
+                    if entry.spec.external:
+                        layout = None
+                        install_check = True
+                    else:
+                        install_check = layout.check_installed(entry.spec)
+
+                    if install_check:
+                        kwargs = {
+                            'spec': entry.spec,
+                            'directory_layout': layout,
+                            'explicit': entry.explicit,
+                            'installation_time': entry.installation_time  # noqa: E501
+                        }
+                        self._add(**kwargs)
+                        processed_specs.add(entry.spec)
+                except Exception as e:
+                    # Something went wrong, so the spec was not restored
+                    # from old data
+                    tty.debug(e)
+
+            self._check_ref_counts()
 
     def _check_ref_counts(self):
         """Ensure consistency of reference counts in the DB.
@@ -510,6 +884,10 @@ class Database(object):
                 dep_key = dep.dag_hash()
                 counts.setdefault(dep_key, 0)
                 counts[dep_key] += 1
+
+            if rec.deprecated_for:
+                counts.setdefault(rec.deprecated_for, 0)
+                counts[rec.deprecated_for] += 1
 
         for rec in self._data.values():
             key = rec.spec.dag_hash()
@@ -530,7 +908,6 @@ class Database(object):
         after the start of the next transaction, when it read from disk again.
 
         This routine does no locking.
-
         """
         # Do not write if exceptions were raised
         if type is not None:
@@ -544,7 +921,13 @@ class Database(object):
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
             os.rename(temp_file, self._index_path)
-        except BaseException:
+            if _use_uuid:
+                with open(self._verifier_path, 'w') as f:
+                    new_verifier = str(uuid.uuid4())
+                    f.write(new_verifier)
+                    self.last_seen_verifier = new_verifier
+        except BaseException as e:
+            tty.debug(e)
             # Clean up temp file if something goes wrong.
             if os.path.exists(temp_file):
                 os.remove(temp_file)
@@ -554,50 +937,86 @@ class Database(object):
         """Re-read Database from the data in the set location.
 
         This does no locking, with one exception: it will automatically
-        migrate an index.yaml to an index.json if possible. This requires
-        taking a write lock.
-
+        try to regenerate a missing DB if local. This requires taking a
+        write lock.
         """
         if os.path.isfile(self._index_path):
-            # Read from JSON file if a JSON database exists
-            self._read_from_file(self._index_path, format='json')
+            current_verifier = ''
+            if _use_uuid:
+                try:
+                    with open(self._verifier_path, 'r') as f:
+                        current_verifier = f.read()
+                except BaseException:
+                    pass
+            if ((current_verifier != self.last_seen_verifier) or
+                    (current_verifier == '')):
+                self.last_seen_verifier = current_verifier
+                # Read from file if a database exists
+                self._read_from_file(self._index_path)
+            return
+        elif self.is_upstream:
+            raise UpstreamDatabaseLockingError(
+                "No database index file is present, and upstream"
+                " databases cannot generate an index file")
 
-        elif os.path.isfile(self._old_yaml_index_path):
-            if os.access(self._db_dir, os.R_OK | os.W_OK):
-                # if we can write, then read AND write a JSON file.
-                self._read_from_file(self._old_yaml_index_path, format='yaml')
-                with WriteTransaction(self.lock, timeout=_db_lock_timeout):
-                    self._write(None, None, None)
-            else:
-                # Read chck for a YAML file if we can't find JSON.
-                self._read_from_file(self._old_yaml_index_path, format='yaml')
+        # The file doesn't exist, try to traverse the directory.
+        # reindex() takes its own write lock, so no lock here.
+        with lk.WriteTransaction(self.lock):
+            self._write(None, None, None)
+        self.reindex(spack.store.layout)
 
-        else:
-            # The file doesn't exist, try to traverse the directory.
-            # reindex() takes its own write lock, so no lock here.
-            with WriteTransaction(self.lock, timeout=_db_lock_timeout):
-                self._write(None, None, None)
-            self.reindex(spack.store.layout)
-
-    def _add(self, spec, directory_layout=None, explicit=False):
+    def _add(
+            self,
+            spec,
+            directory_layout=None,
+            explicit=False,
+            installation_time=None
+    ):
         """Add an install record for this spec to the database.
 
         Assumes spec is installed in ``layout.path_for_spec(spec)``.
 
         Also ensures dependencies are present and updated in the DB as
-        either intsalled or missing.
+        either installed or missing.
+
+        Args:
+            spec: spec to be added
+            directory_layout: layout of the spec installation
+            **kwargs:
+
+                explicit
+                    Possible values: True, False, any
+
+                    A spec that was installed following a specific user
+                    request is marked as explicit. If instead it was
+                    pulled-in as a dependency of a user requested spec
+                    it's considered implicit.
+
+                installation_time
+                    Date and time of installation
 
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError(
                 "Specs added to DB must be concrete.")
 
+        key = spec.dag_hash()
+        upstream, record = self.query_by_spec_hash(key)
+        if upstream:
+            return
+
+        # Retrieve optional arguments
+        installation_time = installation_time or _now()
+
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
             if dkey not in self._data:
-                self._add(dep, directory_layout, explicit=False)
+                extra_args = {
+                    'explicit': False,
+                    'installation_time': installation_time
+                }
+                self._add(dep, directory_layout, **extra_args)
 
-        key = spec.dag_hash()
         if key not in self._data:
             installed = bool(spec.external)
             path = None
@@ -608,19 +1027,30 @@ class Database(object):
                     installed = True
                 except DirectoryLayoutError as e:
                     tty.warn(
-                        'Dependency missing due to corrupt install directory:',
+                        'Dependency missing: may be deprecated or corrupted:',
                         path, str(e))
+            elif spec.external_path:
+                path = spec.external_path
 
             # Create a new install record with no deps initially.
             new_spec = spec.copy(deps=False)
+            extra_args = {
+                'explicit': explicit,
+                'installation_time': installation_time
+            }
             self._data[key] = InstallRecord(
-                new_spec, path, installed, ref_count=0, explicit=explicit)
+                new_spec, path, installed, ref_count=0, **extra_args
+            )
 
             # Connect dependencies from the DB to the new copy.
-            for name, dep in iteritems(spec.dependencies_dict(_tracked_deps)):
+            for name, dep in six.iteritems(
+                    spec.dependencies_dict(_tracked_deps)
+            ):
                 dkey = dep.spec.dag_hash()
-                new_spec._add_dependency(self._data[dkey].spec, dep.deptypes)
-                self._data[dkey].ref_count += 1
+                upstream, record = self.query_by_spec_hash(dkey)
+                new_spec._add_dependency(record.spec, dep.deptypes)
+                if not upstream:
+                    record.ref_count += 1
 
             # Mark concrete once everything is built, and preserve
             # the original hash of concrete specs.
@@ -648,7 +1078,8 @@ class Database(object):
     def _get_matching_spec_key(self, spec, **kwargs):
         """Get the exact spec OR get a single spec that matches."""
         key = spec.dag_hash()
-        if key not in self._data:
+        upstream, record = self.query_by_spec_hash(key)
+        if not record:
             match = self.query_one(spec, **kwargs)
             if match:
                 return match.dag_hash()
@@ -658,7 +1089,8 @@ class Database(object):
     @_autospec
     def get_record(self, spec, **kwargs):
         key = self._get_matching_spec_key(spec, **kwargs)
-        return self._data[key]
+        upstream, record = self.query_by_spec_hash(key)
+        return record
 
     def _decrement_ref_count(self, spec):
         key = spec.dag_hash()
@@ -676,9 +1108,17 @@ class Database(object):
             for dep in spec.dependencies(_tracked_deps):
                 self._decrement_ref_count(dep)
 
+    def _increment_ref_count(self, spec):
+        key = spec.dag_hash()
+
+        if key not in self._data:
+            return
+
+        rec = self._data[key]
+        rec.ref_count += 1
+
     def _remove(self, spec):
-        """Non-locking version of remove(); does real work.
-        """
+        """Non-locking version of remove(); does real work."""
         key = self._get_matching_spec_key(spec)
         rec = self._data[key]
 
@@ -689,6 +1129,10 @@ class Database(object):
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             self._decrement_ref_count(dep)
+
+        if rec.deprecated_for:
+            new_spec = self._data[rec.deprecated_for].spec
+            self._decrement_ref_count(new_spec)
 
         # Returns the concrete spec so we know it in the case where a
         # query spec was passed in.
@@ -710,8 +1154,49 @@ class Database(object):
         with self.write_transaction():
             return self._remove(spec)
 
+    def deprecator(self, spec):
+        """Return the spec that the given spec is deprecated for, or None"""
+        with self.read_transaction():
+            spec_key = self._get_matching_spec_key(spec)
+            spec_rec = self._data[spec_key]
+
+            if spec_rec.deprecated_for:
+                return self._data[spec_rec.deprecated_for].spec
+            else:
+                return None
+
+    def specs_deprecated_by(self, spec):
+        """Return all specs deprecated in favor of the given spec"""
+        with self.read_transaction():
+            return [rec.spec for rec in self._data.values()
+                    if rec.deprecated_for == spec.dag_hash()]
+
+    def _deprecate(self, spec, deprecator):
+        spec_key = self._get_matching_spec_key(spec)
+        spec_rec = self._data[spec_key]
+
+        deprecator_key = self._get_matching_spec_key(deprecator)
+
+        self._increment_ref_count(deprecator)
+
+        # If spec was already deprecated, update old deprecator's ref count
+        if spec_rec.deprecated_for:
+            old_repl_rec = self._data[spec_rec.deprecated_for]
+            self._decrement_ref_count(old_repl_rec.spec)
+
+        spec_rec.deprecated_for = deprecator_key
+        spec_rec.installed = False
+        self._data[spec_key] = spec_rec
+
     @_autospec
-    def installed_relatives(self, spec, direction='children', transitive=True):
+    def deprecate(self, spec, deprecator):
+        """Marks a spec as deprecated in favor of its deprecator"""
+        with self.write_transaction():
+            return self._deprecate(spec, deprecator)
+
+    @_autospec
+    def installed_relatives(self, spec, direction='children', transitive=True,
+                            deptype='all'):
         """Return installed specs related to this one."""
         if direction not in ('parents', 'children'):
             raise ValueError("Invalid direction: %s" % direction)
@@ -719,22 +1204,27 @@ class Database(object):
         relatives = set()
         for spec in self.query(spec):
             if transitive:
-                to_add = spec.traverse(direction=direction, root=False)
+                to_add = spec.traverse(
+                    direction=direction, root=False, deptype=deptype)
             elif direction == 'parents':
-                to_add = spec.dependents()
+                to_add = spec.dependents(deptype=deptype)
             else:  # direction == 'children'
-                to_add = spec.dependencies()
+                to_add = spec.dependencies(deptype=deptype)
 
             for relative in to_add:
                 hash_key = relative.dag_hash()
-                if hash_key not in self._data:
+                upstream, record = self.query_by_spec_hash(hash_key)
+                if not record:
                     reltype = ('Dependent' if direction == 'parents'
                                else 'Dependency')
-                    tty.warn("Inconsistent state! %s %s of %s not in DB"
-                             % (reltype, hash_key, spec.dag_hash()))
+                    msg = ("Inconsistent state! %s %s of %s not in DB"
+                           % (reltype, hash_key, spec.dag_hash()))
+                    if self._fail_when_missing_deps:
+                        raise MissingDependenciesError(msg)
+                    tty.warn(msg)
                     continue
 
-                if not self._data[hash_key].installed:
+                if not record.installed:
                     continue
 
                 relatives.add(relative)
@@ -757,7 +1247,8 @@ class Database(object):
         the given spec
         """
         if extensions_layout is None:
-            extensions_layout = spack.store.extensions
+            view = YamlFilesystemView(extendee_spec.prefix, spack.store.layout)
+            extensions_layout = view.extensions_layout
         for spec in self.query():
             try:
                 extensions_layout.check_activated(extendee_spec, spec)
@@ -766,67 +1257,174 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def query(self, query_spec=any, known=any, installed=True, explicit=any):
-        """Run a query on the database.
+    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+        # hash is a full hash and is in the data somewhere
+        if dag_hash in self._data:
+            rec = self._data[dag_hash]
+            if rec.install_type_matches(installed):
+                return [rec.spec]
+            else:
+                return default
 
-        ``query_spec``
-            Queries iterate through specs in the database and return
-            those that satisfy the supplied ``query_spec``.  If
-            query_spec is `any`, This will match all specs in the
-            database.  If it is a spec, we'll evaluate
-            ``spec.satisfies(query_spec)``.
+        # check if hash is a prefix of some installed (or previously
+        # installed) spec.
+        matches = [record.spec for h, record in self._data.items()
+                   if h.startswith(dag_hash) and
+                   record.install_type_matches(installed)]
+        if matches:
+            return matches
 
-        The query can be constrained by two additional attributes:
+        # nothing found
+        return default
 
-        ``known``
-            Possible values: True, False, any
+    def get_by_hash_local(self, *args, **kwargs):
+        """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
-            Specs that are "known" are those for which Spack can
-            locate a ``package.py`` file -- i.e., Spack "knows" how to
-            install them.  Specs that are unknown may represent
-            packages that existed in a previous version of Spack, but
-            have since either changed their name or been removed.
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
-        ``installed``
-            Possible values: True, False, any
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
 
-            Specs for which a prefix exists are "installed". A spec
-            that is NOT installed will be in the database if some
-            other spec depends on it but its installation has gone
-            away since Spack installed it.
-
-        TODO: Specs are a lot like queries.  Should there be a
-              wildcard spec object, and should specs have attributes
-              like installed and known that can be queried?  Or are
-              these really special cases that only belong here?
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
 
         """
         with self.read_transaction():
-            # Just look up concrete specs with hashes; no fancy search.
-            if (isinstance(query_spec, spack.spec.Spec) and
-                query_spec._concrete):
+            return self._get_by_hash_local(*args, **kwargs)
 
-                hash_key = query_spec.dag_hash()
-                if hash_key in self._data:
-                    return [self._data[hash_key].spec]
-                else:
-                    return []
+    def get_by_hash(self, dag_hash, default=None, installed=any):
+        """Look up a spec by DAG hash, or by a DAG hash prefix.
 
-            # Abstract specs require more work -- currently we test
-            # against everything.
-            results = []
-            for key, rec in self._data.items():
-                if installed is not any and rec.installed != installed:
-                    continue
-                if explicit is not any and rec.explicit != explicit:
-                    continue
-                if known is not any and spack.repo.exists(
-                        rec.spec.name) != known:
-                    continue
-                if query_spec is any or rec.spec.satisfies(query_spec):
-                    results.append(rec.spec)
+        Arguments:
+            dag_hash (str): hash (or hash prefix) to look up
+            default (object, optional): default value to return if dag_hash is
+                not in the DB (default: None)
+            installed (bool or any, or InstallStatus or iterable of
+                InstallStatus, optional): if ``True``, includes only installed
+                specs in the search; if ``False`` only missing specs, and if
+                ``any``, all specs in database. If an InstallStatus or iterable
+                of InstallStatus, returns specs whose install status
+                (installed, deprecated, or missing) matches (one of) the
+                InstallStatus. (default: any)
 
-            return sorted(results)
+        ``installed`` defaults to ``any`` so that we can refer to any
+        known hash.  Note that ``query()`` and ``query_one()`` differ in
+        that they only return installed specs by default.
+
+        Returns:
+            (list): a list of specs matching the hash or hash prefix
+
+        """
+
+        spec = self.get_by_hash_local(
+            dag_hash, default=default, installed=installed)
+        if spec is not None:
+            return spec
+
+        for upstream_db in self.upstream_dbs:
+            spec = upstream_db._get_by_hash_local(
+                dag_hash, default=default, installed=installed)
+            if spec is not None:
+                return spec
+
+        return default
+
+    def _query(
+            self,
+            query_spec=any,
+            known=any,
+            installed=True,
+            explicit=any,
+            start_date=None,
+            end_date=None,
+            hashes=None
+    ):
+        """Run a query on the database."""
+
+        # TODO: Specs are a lot like queries.  Should there be a
+        # TODO: wildcard spec object, and should specs have attributes
+        # TODO: like installed and known that can be queried?  Or are
+        # TODO: these really special cases that only belong here?
+
+        # Just look up concrete specs with hashes; no fancy search.
+        if isinstance(query_spec, spack.spec.Spec) and query_spec.concrete:
+            # TODO: handling of hashes restriction is not particularly elegant.
+            hash_key = query_spec.dag_hash()
+            if (hash_key in self._data and
+                    (not hashes or hash_key in hashes)):
+                return [self._data[hash_key].spec]
+            else:
+                return []
+
+        # Abstract specs require more work -- currently we test
+        # against everything.
+        results = []
+        start_date = start_date or datetime.datetime.min
+        end_date = end_date or datetime.datetime.max
+
+        for key, rec in self._data.items():
+            if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if not rec.install_type_matches(installed):
+                continue
+
+            if explicit is not any and rec.explicit != explicit:
+                continue
+
+            if known is not any and spack.repo.path.exists(
+                    rec.spec.name) != known:
+                continue
+
+            inst_date = datetime.datetime.fromtimestamp(
+                rec.installation_time
+            )
+            if not (start_date < inst_date < end_date):
+                continue
+
+            if (query_spec is any or
+                rec.spec.satisfies(query_spec, strict=True)):
+                results.append(rec.spec)
+
+        return results
+
+    _query.__doc__ += _query_docstring
+
+    def query_local(self, *args, **kwargs):
+        """Query only the local Spack database."""
+        with self.read_transaction():
+            return sorted(self._query(*args, **kwargs))
+
+    query_local.__doc__ += _query_docstring
+
+    def query(self, *args, **kwargs):
+        """Query the Spack database including all upstream databases."""
+        upstream_results = []
+        for upstream_db in self.upstream_dbs:
+            # queries for upstream DBs need to *not* lock - we may not
+            # have permissions to do this and the upstream DBs won't know about
+            # us anyway (so e.g. they should never uninstall specs)
+            upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
+
+        local_results = set(self.query_local(*args, **kwargs))
+
+        results = list(local_results) + list(
+            x for x in upstream_results if x not in local_results)
+
+        return sorted(results)
+
+    query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.
@@ -835,14 +1433,43 @@ class Database(object):
         query. Returns None if no installed package matches.
 
         """
-        concrete_specs = self.query(query_spec, known, installed)
+        concrete_specs = self.query(
+            query_spec, known=known, installed=installed)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 
     def missing(self, spec):
+        key = spec.dag_hash()
+        upstream, record = self.query_by_spec_hash(key)
+        return record and not record.installed
+
+    @property
+    def unused_specs(self):
+        """Return all the specs that are currently installed but not needed
+        at runtime to satisfy user's requests.
+
+        Specs in the return list are those which are not either:
+            1. Installed on an explicit user request
+            2. Installed as a "run" or "link" dependency (even transitive) of
+               a spec at point 1.
+        """
+        needed, visited = set(), set()
         with self.read_transaction():
-            key = spec.dag_hash()
-            return key in self._data and not self._data[key].installed
+            for key, rec in self._data.items():
+                if rec.explicit:
+                    # recycle `visited` across calls to avoid
+                    # redundantly traversing
+                    for spec in rec.spec.traverse(visited=visited):
+                        needed.add(spec.dag_hash())
+
+            unused = [rec.spec for key, rec in self._data.items()
+                      if key not in needed and rec.installed]
+
+        return unused
+
+
+class UpstreamDatabaseLockingError(SpackError):
+    """Raised when an operation would need to lock an upstream database"""
 
 
 class CorruptDatabaseError(SpackError):
@@ -851,6 +1478,10 @@ class CorruptDatabaseError(SpackError):
 
 class NonConcreteSpecAddError(SpackError):
     """Raised when attemptint to add non-concrete spec to DB."""
+
+
+class MissingDependenciesError(SpackError):
+    """Raised when DB cannot find records for dependencies"""
 
 
 class InvalidDatabaseVersionError(SpackError):

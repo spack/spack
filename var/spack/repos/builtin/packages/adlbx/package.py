@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -30,11 +11,34 @@ class Adlbx(AutotoolsPackage):
     """ADLB/X: Master-worker library + work stealing and data dependencies"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/adlbx-0.8.0.tar.gz'
-    version('0.8.0', '34ade59ce3be5bc296955231d47a27dd')
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/adlbx-0.9.2.tar.gz'
+    git      = "https://github.com/swift-lang/swift-t.git"
 
-    depends_on('exmcutils')
+    version('master', branch='master')
+    version('0.9.2', sha256='524902d648001b689a98492402d754a607b8c1d0734699154063c1a4f3410d4a')
+    version('0.9.1', sha256='8913493fe0c097ff13c721ab057514e5bdb55f6318d4e3512692ab739c3190b3')
+
+    depends_on('exmcutils@master', when='@master')
+    depends_on('exmcutils@:0.5.3', when='@:0.8.0')
+    depends_on('exmcutils', when='@0.9.1:')
+    depends_on('autoconf', type='build', when='@master')
+    depends_on('automake', type='build', when='@master')
+    depends_on('libtool', type='build', when='@master')
+    depends_on('m4', type='build', when='@master')
     depends_on('mpi')
+
+    def setup_build_environment(self, env):
+        spec = self.spec
+        env.set('CC', spec['mpi'].mpicc)
+        env.set('CXX', spec['mpi'].mpicxx)
+        env.set('CXXLD', spec['mpi'].mpicxx)
+
+    @property
+    def configure_directory(self):
+        if self.version == Version('master'):
+            return 'lb/code'
+        else:
+            return '.'
 
     def configure_args(self):
         args = ['--with-c-utils=' + self.spec['exmcutils'].prefix]

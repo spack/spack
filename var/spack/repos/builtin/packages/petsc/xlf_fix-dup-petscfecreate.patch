@@ -1,0 +1,31 @@
+commit 5849cfbb8c629127894f722457da7b2cbb7f6a0b
+Author: Satish Balay <balay@mcs.anl.gov>
+Date:   Sun Mar 31 21:43:12 2019 -0500
+
+    dm: remove duplicate PetscFECreate() definition from f90 modules. This fixes IBM xlf build.
+    
+    "/tmp/dobrev1/spack-stage/spack-stage-Vp2QRG/petsc-3.11.0/src/tao/f90-mod/petsctaomod.F", line 38.13: 1514-264 (S) Procedure petscfecreate has more than one interface accessible by use association. The interfaces are assumed to be the same.
+    1501-511  Compilation failed for file petsctaomod.F.
+    
+    Reported-by: "Dobrev, Veselin A." <dobrev1@llnl.gov>
+
+diff --git a/src/dm/f90-mod/petscdt.h90 b/src/dm/f90-mod/petscdt.h90
+index 339f7fd41e..766f0e37dc 100644
+--- a/src/dm/f90-mod/petscdt.h90
++++ b/src/dm/f90-mod/petscdt.h90
+@@ -49,15 +49,6 @@
+         End Subroutine
+       End Interface
+ 
+-      Interface
+-        Subroutine PetscFECreate(c,f,ierr)
+-          use petscdmdef
+-          MPI_Comm, intent(in) :: c
+-          PetscFE, intent(out) :: f
+-          PetscErrorCode, intent(out) ::  ierr
+-        End Subroutine
+-      End Interface
+-
+       Interface
+         Subroutine PetscFECreateDefault(c,d,n,i,str,o,f,ierr)
+           use petscdmdef

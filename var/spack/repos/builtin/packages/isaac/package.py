@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,16 +11,17 @@ class Isaac(CMakePackage):
 
     homepage = "http://computationalradiationphysics.github.io/isaac/"
     url      = "https://github.com/ComputationalRadiationPhysics/isaac/archive/v1.3.0.tar.gz"
+    git      = "https://github.com/ComputationalRadiationPhysics/isaac.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='dev',
-            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
-    version('master', branch='master',
-            git='https://github.com/ComputationalRadiationPhysics/isaac.git')
-    version('1.3.3', '7aeebaf0c5a77e2cb9bea066750e369b')
-    version('1.3.2', 'c557daa74de52fd79e734c9758fca38b')
-    version('1.3.1', '7fe075f9af68d05355eaba0e224f20ca')
-    version('1.3.0', 'c8a794da9bb998ef0e75449bfece1a12')
+    version('develop', branch='dev')
+    version('master', branch='master')
+    version('1.4.0', sha256='6cbd4cc54a22de5e5a3427e44141db6e7b80b33fe7a0c707390a113655bf344e')
+    version('1.3.3', sha256='92a972d05d315ad66546671c047b7edf8ed0e05d64d2b8d77ababb5bb9b93d8e')
+    version('1.3.2', sha256='e6eedc641de5b0a7c5ea5cda6b11e9b6d4a78dfac8be90302147b26d09859a68')
+    version('1.3.1', sha256='7dead8f3d5467cbd2cde8187e7b860a4ab7796348895d18291f97a76e28757cf')
+    version('1.3.0', sha256='fcf10f4738e7790ef6604e1e2cdd052a129ba4e53a439deaafa9fb2a70585574')
 
     variant('cuda', default=True,
             description='Generate CUDA kernels for Nvidia GPUs')
@@ -52,7 +34,7 @@ class Isaac(CMakePackage):
     depends_on('boost@1.56.0:', type='link')
     depends_on('boost@1.65.1:', type='link', when='^cuda@9:')
     depends_on('cuda@7.0:', type='link', when='+cuda')
-    # depends_on('alpaka', when='+alpaka')
+    # depends_on('alpaka@0.3', when='+alpaka')
     depends_on('icet', type='link')
     depends_on('mpi', type='link')
 

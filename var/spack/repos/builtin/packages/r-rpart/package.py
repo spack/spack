@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,11 +10,13 @@ class RRpart(RPackage):
     """Recursive partitioning for classification, regression and
     survival trees."""
 
-    homepage = "https://cran.r-project.org/package=rpart"
-    url      = "https://cran.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rpart"
+    homepage = "https://cloud.r-project.org/package=rpart"
+    url      = "https://cloud.r-project.org/src/contrib/rpart_4.1-10.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rpart"
 
-    version('4.1-11', 'f77b37cddf7e9a7b5993a52a750b8817')
-    version('4.1-10', '15873cded4feb3ef44d63580ba3ca46e')
+    version('4.1-15', sha256='2b8ebe0e9e11592debff893f93f5a44a6765abd0bd956b0eb1f70e9394cfae5c')
+    version('4.1-13', sha256='8e11a6552224e0fbe23a85aba95acd21a0889a3fe48277f3d345de3147c7494c')
+    version('4.1-11', sha256='38ab80959f59bcdd2c4c72860e8dd0deab0307668cbbf24f96014d7a2496ad98')
+    version('4.1-10', sha256='c5ddaed288d38118876a94c7aa5000dce0070b8d736dba12de64a9cb04dc2d85')
 
-    depends_on('r@2.15.0:')
+    depends_on('r@2.15.0:', type=('build', 'run'))

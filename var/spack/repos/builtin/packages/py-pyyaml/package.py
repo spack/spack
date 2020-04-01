@@ -1,33 +1,22 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyPyyaml(PythonPackage):
     """PyYAML is a YAML parser and emitter for Python."""
-    homepage = "http://pyyaml.org/wiki/PyYAML"
-    url      = "http://pyyaml.org/download/pyyaml/PyYAML-3.11.tar.gz"
 
-    version('3.11', 'f50e08ef0fe55178479d3a618efe21db')
+    homepage = "http://pyyaml.org/wiki/PyYAML"
+    url      = "https://pypi.io/packages/source/P/PyYAML/PyYAML-5.1.2.tar.gz"
+
+    version('5.1.2', sha256='01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4')
+    version('5.1',   sha256='436bc774ecf7c103814098159fbb84c2715d25980175292c648f2da143909f95')
+    version('3.13',  sha256='3ef3092145e9b70e3ddd2c7ad59bdd0252a94dfe3949721633e41344de00a6bf')
+    version('3.12',  sha256='592766c6303207a20efc445587778322d7f73b161bd994f227adaa341ba212ab')
+    version('3.11',  sha256='c36c938a872e5ff494938b33b14aaa156cb439ec67548fcab3535bb78b0846e8')
+
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('libyaml')

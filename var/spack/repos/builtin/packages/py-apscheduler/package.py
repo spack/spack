@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,8 @@ class PyApscheduler(PythonPackage):
     homepage = "https://github.com/agronholm/apscheduler"
     url      = "https://pypi.io/packages/source/A/APScheduler/APScheduler-3.3.1.tar.gz"
 
-    version('3.3.1', '6342b3b78b41920a8aa54fd3cd4a299d')
-    version('2.1.0', 'b837d23822fc46651862dd2186ec361a')
+    version('3.3.1', sha256='f68874dff1bdffcc6ce3adb7840c1e4d162c609a3e3f831351df30b75732767b')
+    version('2.1.0', sha256='3b4b44387616902ad6d13122961013630eb25519937e5aa7c450de85656c9753')
 
     depends_on('py-setuptools@0.7:', type='build')
 

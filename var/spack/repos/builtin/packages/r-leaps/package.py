@@ -1,35 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RLeaps(RPackage):
     """leaps: Regression Subset Selection"""
 
-    homepage = "https://CRAN.R-project.org/package=leaps"
-    url      = "https://cran.r-project.org/src/contrib/leaps_3.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/leaps"
+    homepage = "https://cloud.r-project.org/package=leaps"
+    url      = "https://cloud.r-project.org/src/contrib/leaps_3.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/leaps"
 
-    version('3.0', '30823138890680e0493d1491c8f43edc')
+    version('3.0', sha256='55a879cdad5a4c9bc3b5697dd4d364b3a094a49d8facb6692f5ce6af82adf285')

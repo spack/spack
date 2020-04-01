@@ -1,49 +1,31 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 from spack import *
 
 
 class Neuron(Package):
+    """NEURON is a simulation environment for single and networks of neurons.
 
-    """NEURON is a simulation environment for modeling individual
-    and networks of neurons. NEURON models individual neurons via
-    the use of sections that are automatically subdivided into individual
-    compartments, instead of requiring the user to manually create
-    compartments. The primary scripting language is hoc but a Python
-    interface is also available."""
+    NEURON is a simulation environment for modeling individual and networks of
+    neurons. NEURON models individual neurons via the use of sections that are
+    automatically subdivided into individual compartments, instead of
+    requiring the user to manually create compartments. The primary scripting
+    language is hoc but a Python interface is also available.
+    """
 
     homepage = "https://www.neuron.yale.edu/"
     url      = "http://www.neuron.yale.edu/ftp/neuron/versions/v7.5/nrn-7.5.tar.gz"
-    github   = "https://github.com/nrnhines/nrn"
+    git      = "https://github.com/nrnhines/nrn.git"
 
-    version('7.5', '1641ae7a7cd02728e5ae4c8aa93b3749')
-    version('7.4', '2c0bbee8a9e55d60fa26336f4ab7acbf')
-    version('7.3', '993e539cb8bf102ca52e9fefd644ab61')
-    version('7.2', '5486709b6366add932e3a6d141c4f7ad')
-    version('develop', git=github)
+    version('develop', branch='master')
+    version('7.5', sha256='67642216a969fdc844da1bd56643edeed5e9f9ab8c2a3049dcbcbcccba29c336')
+    version('7.4', sha256='1403ba16b2b329d2376f4bf007d96e6bf2992fa850f137f1068ad5b22b432de6')
+    version('7.3', sha256='71cff5962966c5cd5d685d90569598a17b4b579d342126b31e2d431128cc8832')
+    version('7.2', sha256='c777d73a58ff17a073e8ea25f140cb603b8b5f0df3c361388af7175e44d85b0e')
 
     variant('mpi',           default=True,  description='Enable MPI parallelism')
     variant('python',        default=True,  description='Enable python')
@@ -58,15 +40,35 @@ class Neuron(Package):
     depends_on('automake',   type='build')
     depends_on('autoconf',   type='build')
     depends_on('libtool',    type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig',  type='build')
 
     depends_on('mpi',         when='+mpi')
     depends_on('python@2.6:', when='+python')
     depends_on('ncurses',     when='~cross-compile')
 
+    conflicts('~shared', when='+python')
+
+    filter_compiler_wrappers('*/bin/nrniv_makefile')
+
+    def get_neuron_archdir(self):
+        """Determine the architecture-specific neuron base directory.
+
+        Instead of recreating the logic of the neuron's configure
+        we dynamically find the architecture-specific directory by
+        looking for a specific binary.
+        """
+        file_list = find(self.prefix, '*/bin/nrniv_makefile')
+        # check needed as when initially evaluated the prefix is empty
+        if file_list:
+            neuron_archdir = os.path.dirname(os.path.dirname(file_list[0]))
+        else:
+            neuron_archdir = self.prefix
+
+        return neuron_archdir
+
     def patch(self):
         # aclocal need complete include path (especially on os x)
-        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkg-config'].prefix)
+        pkgconf_inc = '-I %s/share/aclocal/' % (self.spec['pkgconfig'].prefix)
         libtool_inc = '-I %s/share/aclocal/' % (self.spec['libtool'].prefix)
         newpath = 'aclocal -I m4 %s %s' % (pkgconf_inc, libtool_inc)
         filter_file(r'aclocal -I m4', r'%s' % newpath, "build.sh")
@@ -89,18 +91,6 @@ class Neuron(Package):
             options.append('macdarwin=no')
 
         return options
-
-    def get_arch_dir(self):
-        if 'bgq' in self.spec.architecture:
-            arch = 'powerpc64'
-        elif 'cray' in self.spec.architecture:
-            arch = 'x86_64'
-        elif 'ppc64le' in self.spec.architecture:
-            arch = 'powerpc64le'
-        else:
-            arch = self.spec.architecture.target
-
-        return arch
 
     def get_python_options(self, spec):
         options = []
@@ -199,26 +189,12 @@ class Neuron(Package):
             make('VERBOSE=1')
             make('install')
 
-    @run_after('install')
-    def filter_compilers(self):
-        """run after install to avoid spack compiler wrappers
-        getting embded into nrnivmodl script"""
+    def setup_run_environment(self, env):
+        neuron_archdir = self.get_neuron_archdir()
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))
 
-        arch = self.get_arch_dir()
-        nrnmakefile = join_path(self.prefix, arch, 'bin/nrniv_makefile')
-
-        kwargs = {
-            'backup': False,
-            'string': True
-        }
-
-        filter_file(env['CC'],  self.compiler.cc, nrnmakefile, **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, nrnmakefile, **kwargs)
-
-    def setup_environment(self, spack_env, run_env):
-        arch = self.get_arch_dir()
-        run_env.prepend_path('PATH', join_path(self.prefix, arch, 'bin'))
-
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        arch = self.get_arch_dir()
-        spack_env.prepend_path('PATH', join_path(self.prefix, arch, 'bin'))
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        neuron_archdir = self.get_neuron_archdir()
+        env.prepend_path('PATH', join_path(neuron_archdir, 'bin'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(neuron_archdir, 'lib'))

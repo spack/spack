@@ -1,28 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+
+import os
 
 
 class Nghttp2(AutotoolsPackage):
@@ -32,23 +15,23 @@ class Nghttp2(AutotoolsPackage):
     homepage = "https://nghttp2.org/"
     url      = "https://github.com/nghttp2/nghttp2/releases/download/v1.26.0/nghttp2-1.26.0.tar.gz"
 
-    version('1.26.0', '83fa813b22bacbc6ea80dfb24847569f')
+    version('1.26.0', sha256='daf7c0ca363efa25b2cbb1e4bd925ac4287b664c3d1465f6a390359daa3f0cf1')
 
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-cython@0.19:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
 
-    def setup_environment(self, spack_env, run_env):
-        site_packages_dir = '/'.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
-        spack_env.prepend_path('PYTHONPATH', site_packages_dir)
+    def setup_build_environment(self, env):
+        site_packages_dir = os.path.join(
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
+        env.prepend_path('PYTHONPATH', site_packages_dir)
 
     @run_before('install')
     def ensure_install_dir_exists(self):
-        site_packages_dir = '/'.join(
-            [self.spec.prefix.lib,
-             ('python' + str(self.spec['python'].version.up_to(2))),
-             'site-packages'])
+        site_packages_dir = os.path.join(
+            self.spec.prefix.lib,
+            'python' + str(self.spec['python'].version.up_to(2)),
+            'site-packages')
         mkdirp(site_packages_dir)

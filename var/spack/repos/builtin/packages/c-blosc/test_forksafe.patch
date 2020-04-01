@@ -1,0 +1,10 @@
+--- a/tests/test_forksafe.c	2019-07-30 15:01:36.208670230 -0500
++++ b/tests/test_forksafe.c	2019-07-30 15:02:27.475543401 -0500
+@@ -43,5 +43,6 @@
+   int success = 0;
+   int status = 0;
+-  for(float sec = 0; sec < 1; ) {
++  float sec = 0;
++  while (sec < 1) {
+     if(waitpid(newpid, &status, WNOHANG) != 0) {
+       success = 1;

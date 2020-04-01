@@ -1,43 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import sys
 
 
-class Lz4(Package):
+class Lz4(MakefilePackage):
     """LZ4 is lossless compression algorithm, providing compression speed
     at 400 MB/s per core, scalable with multi-cores CPU. It also features
     an extremely fast decoder, with speed in multiple GB/s per core,
     typically reaching RAM speed limits on multi-core systems."""
 
     homepage = "http://lz4.github.io/lz4/"
-    url      = "https://github.com/lz4/lz4/archive/v1.7.5.tar.gz"
+    url      = "https://github.com/lz4/lz4/archive/v1.9.2.tar.gz"
 
-    version('1.7.5', 'c9610c5ce97eb431dddddf0073d919b9')
-    version('1.3.1', '42b09fab42331da9d3fb33bd5c560de9')
+    version('1.9.2',   sha256='658ba6191fa44c92280d4aa2c271b0f4fbc0e34d249578dd05e50e76d0e5efcc')
+    version('1.9.0',   sha256='f8b6d5662fa534bd61227d313535721ae41a68c9d84058b7b7d86e143572dcfb')
+    version('1.8.3',   sha256='33af5936ac06536805f9745e0b6d61da606a1f8b4cc5c04dd3cbaca3b9b4fc43')
+    version('1.8.1.2', sha256='12f3a9e776a923275b2dc78ae138b4967ad6280863b77ff733028ce89b8123f9')
+    version('1.7.5',   sha256='0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e')
+    version('1.3.1',   sha256='9d4d00614d6b9dec3114b33d1224b6262b99ace24434c53487a0c8fd0b18cfed')
 
-    # depends_on('valgrind', type='test')
+    depends_on('valgrind', type='test')
 
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"
@@ -47,8 +33,16 @@ class Lz4(Package):
         else:
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
+    def build(self, spec, prefix):
+        if sys.platform != "darwin":
+            make('MOREFLAGS=-lrt')  # fixes make error on CentOS6
+        else:
+            make()
+
     def install(self, spec, prefix):
-        make()
-        if self.run_tests:
-            make('test')  # requires valgrind to be installed
         make('install', 'PREFIX={0}'.format(prefix))
+
+    @run_after('install')
+    def darwin_fix(self):
+        if sys.platform == 'darwin':
+            fix_darwin_install_name(self.prefix.lib)

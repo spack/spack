@@ -1,29 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from spack.operating_systems.mac_os import macOS_version
+from spack.operating_systems.mac_os import macos_version
 import platform
 
 
@@ -35,14 +16,15 @@ class Oce(Package):
     homepage = "https://github.com/tpaviot/oce"
     url = "https://github.com/tpaviot/oce/archive/OCE-0.18.tar.gz"
 
-    version('0.18.2', '6dfd68e459e2c62387579888a867281f')
-    version('0.18.1', '2a7597f4243ee1f03245aeeb02d00956')
-    version('0.18',   '226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
-    version('0.17.2', 'bf2226be4cd192606af677cf178088e5')
-    version('0.17.1', '36c67b87093c675698b483454258af91')
-    version('0.17',   'f1a89395c4b0d199bea3db62b85f818d')
-    version('0.16.1', '4d591b240c9293e879f50d86a0cb2bb3')
-    version('0.16',   '7a4b4df5a104d75a537e25e7dd387eca')
+    version('0.18.3', sha256='c553d6a7bf52f790abc3b6bb7a1e91a65947e92a426bb1a88a11960c31f0966c')
+    version('0.18.2', sha256='dc21ddea678a500ad87c773e9a502ed7a71768cf83d9af0bd4c43294186a7fef')
+    version('0.18.1', sha256='1acf5da4bffa3592ca9f3535af9b927b79fcfeadcb81e9963e89aec192929a6c')
+    version('0.18',   sha256='226e45e77c16a4a6e127c71fefcd171410703960ae75c7ecc7eb68895446a993')
+    version('0.17.2', sha256='8d9995360cd531cbd4a7aa4ca5ed969f08ec7c7a37755e2f3d4ef832c1b2f56e')
+    version('0.17.1', sha256='b1ff0cb8cf31339bbb30ac7ed2415d376b9b75810279d2f497e115f08c090928')
+    version('0.17',   sha256='9ab0dc2a2d125b46cef458b56c6d171dfe2218d825860d616c5ab17994b8f74d')
+    version('0.16.1', sha256='d31030c8da4a1b33f767d0d59895a995c8eabc8fc65cbe0558734f6021ea2f57')
+    version('0.16',   sha256='841fe4337a5a4e733e36a2efc4fe60a4e6e8974917028df05d47a02f59787515')
 
     variant('tbb', default=True,
             description='Build with Intel Threading Building Blocks')
@@ -62,12 +44,12 @@ class Oce(Package):
 
     # OCE depends on xlocale.h from glibc-headers but it was removed in 2.26,
     # see https://github.com/tpaviot/oce/issues/675
-    patch('xlocale.patch', level=0, when='@0.18.1:')
+    patch('xlocale.patch', level=0, when='@0.18.1:0.18.2')
 
     # fix build with Xcode 8 "previous definition of CLOCK_REALTIME"
     # reported 27 Sep 2016 https://github.com/tpaviot/oce/issues/643
     if (platform.system() == "Darwin") and (
-       macOS_version() == Version('10.12')):
+       macos_version() == Version('10.12')):
         patch('sierra.patch', when='@0.17.2:0.18.0')
 
     def install(self, spec, prefix):
@@ -98,7 +80,7 @@ class Oce(Package):
             ])
 
         if platform.system() == 'Darwin' and (
-           macOS_version() >= Version('10.12')):
+           macos_version() >= Version('10.12')):
             # use @rpath on Sierra due to limit of dynamic loader
             options.append('-DCMAKE_MACOSX_RPATH=ON')
         else:

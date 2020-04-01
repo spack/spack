@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,7 +10,12 @@ class RRda(RPackage):
     """Shrunken Centroids Regularized Discriminant Analysis for the
     classification purpose in high dimensional data."""
 
-    homepage = "https://cran.r-project.org/web/packages/rda/index.html"
-    url      = "https://cran.r-project.org/src/contrib/rda_1.0.2-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rda"
-    version('1.0.2-1', '78060c5e054a63a2df4ae4002d7247bc')
+    homepage = "https://cloud.r-project.org/package=rda"
+    url      = "https://cloud.r-project.org/src/contrib/rda_1.0.2-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rda"
+
+    version('1.0.2-2.1', sha256='6918b62f51252b57f2c05b99debef6136b370f594dc3ae6466268e4c35578ef8')
+    version('1.0.2-2', sha256='52ee41249b860af81dc692eee38cd4f8f26d3fbe34cb274f4e118de0013b58bc')
+    version('1.0.2-1', sha256='e5b96610ec9e82f12efe5dbb9a3ec9ecba9aaddfad1d6ab3f8c37d15fc2b42b7')
+
+    depends_on('r@2.10:', type=('build', 'run'))

@@ -1,0 +1,35 @@
+From Ferenbaugh, Charles <cferenba@lanl.gov>
+
+This patch modifies pfunit to be usable by codes that have MPI_COMM_WORLD hardcoded
+as their communicator, by skipping over any tests whose PE count does not match the
+size of the current MPI_COMM_WORLD.
+--- pFUnit-3.2.8/source/TestSuite.F90	2016-09-05 17:55:26.000000000 -0600
++++ pFUnit-3.2.8.mod1/source/TestSuite.F90	2017-01-04 12:41:24.818441000 -0700
+@@ -117,6 +117,9 @@
+    end subroutine run
+ 
+    recursive subroutine addTest(this, aTest)
++#ifdef USE_MPI
++      use MpiTestCase_mod
++#endif
+       class (TestSuite), intent(inout) :: this
+       class (Test), intent(in) :: aTest
+ #ifdef DEFERRED_LENGTH_CHARACTER
+@@ -129,6 +134,17 @@
+       integer                    :: suiteNameLength
+       integer                    :: testNameLength
+ #endif
++#ifdef USE_MPI
++      integer                    :: numpe, error
++      include 'mpif.h'
++
++      select type (t => aTest)
++      class is (MpiTestCase)
++         call MPI_Comm_size(MPI_COMM_WORLD, numpe, error)
++         if (t%getNumProcessesRequested() /= numpe) return
++      end select
++#endif
++
+       call extend(this%tests)
+       allocate(this%tests(this%getNumTests())%pTest, source=aTest)
+ #ifdef DEFERRED_LENGTH_CHARACTER

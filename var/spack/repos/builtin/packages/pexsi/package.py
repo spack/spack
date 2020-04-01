@@ -1,31 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os.path
-import shutil
 
 from spack import *
 
@@ -46,15 +26,15 @@ class Pexsi(MakefilePackage):
     homepage = 'https://math.berkeley.edu/~linlin/pexsi/index.html'
     url = 'https://math.berkeley.edu/~linlin/pexsi/download/pexsi_v0.9.0.tar.gz'
 
-    # version('1.0', '4600b03e235935fe623acf500df0edfa')
-    version('0.10.2', '012f6800098671ec39c2ed7b38935e27')
-    version('0.9.2', '0ce491a3a922d271c4edf9b20aa93076')
-    version('0.9.0', '0c1a2de891ba1445dfc184b2fa270ed8')
+    # version('1.0', sha256='1574c66fd69ff2a37c6250d65c4df43b57c79822b49bd65662582a0cd5d82f54')
+    version('0.10.2', sha256='8714c71b76542e096211b537a9cb1ffb2c28f53eea4f5a92f94cc1ca1e7b499f')
+    version('0.9.2', sha256='9dc0fb66fc52c2b68e8fe485bbf4354ab0d9a548a4eaf7211eb4174c51bcf1de')
+    version('0.9.0', sha256='e5efe0c129013392cdac3234e37f1f4fea641c139b1fbea47618b4b839d05029')
 
     depends_on('parmetis')
     depends_on('superlu-dist@3.3:3.999', when='@:0.9.0')
     depends_on('superlu-dist@4.3:4.999', when='@0.9.2')
-    depends_on('superlu-dist@5.1.2:', when='@0.10.2:')
+    depends_on('superlu-dist@5.1.2:5.3.999', when='@0.10.2:')
 
     variant(
         'fortran', default=False, description='Builds the Fortran interface'
@@ -64,27 +44,32 @@ class Pexsi(MakefilePackage):
 
     def edit(self, spec, prefix):
 
-        substitutions = {
-            '@MPICC': self.spec['mpi'].mpicc,
-            '@MPICXX': self.spec['mpi'].mpicxx,
-            '@MPIFC': self.spec['mpi'].mpifc,
-            '@MPICXX_LIB': self.spec['mpi:cxx'].libs.joined(),
-            '@RANLIB': 'ranlib',
-            '@PEXSI_STAGE': self.stage.source_path,
-            '@SUPERLU_PREFIX': self.spec['superlu-dist'].prefix,
-            '@METIS_PREFIX': self.spec['metis'].prefix,
-            '@PARMETIS_PREFIX': self.spec['parmetis'].prefix,
-            '@LAPACK_PREFIX': self.spec['lapack'].prefix,
-            '@BLAS_PREFIX': self.spec['blas'].prefix,
-            '@LAPACK_LIBS': self.spec['lapack'].libs.joined(),
-            '@BLAS_LIBS': self.spec['blas'].libs.joined(),
+        substitutions = [
+            ('@MPICC', self.spec['mpi'].mpicc),
+            ('@MPICXX_LIB', self.spec['mpi:cxx'].libs.joined()),
+            ('@MPICXX', self.spec['mpi'].mpicxx),
+            ('@MPIFC', self.spec['mpi'].mpifc),
+            ('@RANLIB', 'ranlib'),
+            ('@PEXSI_STAGE', self.stage.source_path),
+            ('@SUPERLU_PREFIX', self.spec['superlu-dist'].prefix),
+            ('@METIS_PREFIX', self.spec['metis'].prefix),
+            ('@PARMETIS_PREFIX', self.spec['parmetis'].prefix),
+            ('@LAPACK_PREFIX', self.spec['lapack'].prefix),
+            ('@BLAS_PREFIX', self.spec['blas'].prefix),
+            ('@LAPACK_LIBS', self.spec['lapack'].libs.joined()),
+            ('@BLAS_LIBS', self.spec['blas'].libs.joined()),
             # FIXME : what to do with compiler provided libraries ?
-            '@STDCXX_LIB': ' '.join(self.compiler.stdcxx_libs),
-            '@FLDFLAGS': ''
-        }
+            ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
+        ]
 
         if '@0.9.2' in self.spec:
-            substitutions['@FLDFLAGS'] = '-Wl,--allow-multiple-definition'
+            substitutions.append(
+                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
+            )
+        else:
+            substitutions.append(
+                ('@FLDFLAGS', '')
+            )
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),
@@ -94,8 +79,8 @@ class Pexsi(MakefilePackage):
             self.stage.source_path,
             'make.inc'
         )
-        shutil.copy(template, makefile)
-        for key, value in substitutions.items():
+        copy(template, makefile)
+        for key, value in substitutions:
             filter_file(key, value, makefile)
 
     def build(self, spec, prefix):

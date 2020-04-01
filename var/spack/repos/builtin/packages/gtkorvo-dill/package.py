@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,12 +13,27 @@ class GtkorvoDill(CMakePackage):
     """
 
     homepage = "https://github.com/GTkorvo/dill"
-    url = "https://github.com/GTkorvo/dill/archive/v2.1.tar.gz"
+    url      = "https://github.com/GTkorvo/dill/archive/v2.1.tar.gz"
+    git      = "https://github.com/GTkorvo/dill.git"
 
-    version('develop', git='https://github.com/GTkorvo/dill.git',
-            branch='master')
-    version('2.1', '14c835e79b66c9acd2beee01d56e6200')
+    version('develop', branch='master')
+    version('2.4', sha256='ed7745d13e8c6a556f324dcc0e48a807fc993bdd5bb1daa94c1df116cb7e81fa')
+    version('2.1', sha256='7671e1f3c25ac6a4ec2320cec2c342a2f668efb170e3dba186718ed17d2cf084')
+
+    # Ref: https://github.com/GTkorvo/dill/commit/dac6dfcc7fdaceeb4c157f9ecdf5ecc28f20477f
+    patch('2.4-fix-clear_cache.patch', when='@2.4')
+    patch('2.1-fix-clear_cache.patch', when='@2.1')
 
     def cmake_args(self):
-        args = ["-DENABLE_TESTING=0", "-DBUILD_SHARED_STATIC=STATIC"]
+        args = []
+        if self.spec.satisfies('@2.4:'):
+            args.append("-DBUILD_SHARED_LIBS=OFF")
+        else:
+            args.append("-DENABLE_BUILD_STATIC=STATIC")
+
+        if self.run_tests:
+            args.append('-DENABLE_TESTING=1')
+        else:
+            args.append('-DENABLE_TESTING=0')
+
         return args

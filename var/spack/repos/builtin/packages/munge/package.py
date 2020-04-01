@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -29,13 +10,28 @@ import os
 class Munge(AutotoolsPackage):
     """ MUNGE Uid 'N' Gid Emporium """
     homepage = "https://code.google.com/p/munge/"
-    url      = "https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2"
+    url      = "https://github.com/dun/munge/releases/download/munge-0.5.14/munge-0.5.14.tar.xz"
+    maintainers = ['ChristianTackeGSI']
 
-    version('0.5.11', 'bd8fca8d5f4c1fcbef1816482d49ee01',
+    version('0.5.14', sha256='6606a218f18090fa1f702e3f6fb608073eb6aafed534cf7dd81b67b2e0d30640')
+    version('0.5.13', sha256='99753dfd06a4f063c36f3fb0eb1964f394feb649937d94c4734d85b7964144da')
+    version('0.5.12', sha256='e972e3c3e947995a99e023f5758047db16cfe2f0c2c9ca76399dc1511fa71be8')
+    version('0.5.11', sha256='8e075614f81cb0a6df21a0aafdc825498611a04429d0876f074fc828739351a5',
             url='https://github.com/dun/munge/releases/download/munge-0.5.11/munge-0.5.11.tar.bz2')
+
+    variant('localstatedir', default='PREFIX/var', values=any,
+            description='Set local state path (possibly to /var)')
 
     depends_on('openssl')
     depends_on('libgcrypt')
+    depends_on('bzip2')
+
+    def configure_args(self):
+        args = []
+        localstatedir = self.spec.variants['localstatedir'].value
+        if localstatedir != 'PREFIX/var':
+            args.append('--localstatedir={0}'.format(localstatedir))
+        return args
 
     def install(self, spec, prefix):
         os.makedirs(os.path.join(prefix, "lib/systemd/system"))

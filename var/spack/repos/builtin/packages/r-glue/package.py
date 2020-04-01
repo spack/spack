@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,11 @@ class RGlue(RPackage):
        manual/strings/#triple-quoted-string-literals>."""
 
     homepage = "https://github.com/tidyverse/glue"
-    url      = "https://cran.r-project.org/src/contrib/glue_1.2.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/glue"
+    url      = "https://cloud.r-project.org/src/contrib/glue_1.2.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/glue"
 
-    version('1.2.0', '77d06b6d86abc882fa1c0599e457c5e2')
+    version('1.3.1', sha256='4fc1f2899d71a634e1f0adb7942772feb5ac73223891abe30ea9bd91d3633ea8')
+    version('1.3.0', sha256='789e5a44c3635c3d3db26666e635e88adcf61cd02b75465125d95d7a12291cee')
+    version('1.2.0', sha256='19275b34ee6a1bcad05360b7eb996cebaa1402f189a5dfb084e695d423f2296e')
+
+    depends_on('r@3.1:', type=('build', 'run'))

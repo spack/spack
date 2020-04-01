@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -33,6 +14,8 @@ class F90cache(AutotoolsPackage):
        great speedup in common compilations.
     """
     homepage = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/"
-    url      = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/f90cache-0.99.tar.bz2"
+    url      = "https://perso.univ-rennes1.fr/edouard.canot/f90cache/f90cache-0.99c.tar.gz"
 
-    version('0.99', 'e4767ae876203ed4f3e118e22204cdec')
+    version('0.99c', sha256='13f8297ecba73671d43376b71ef0e453bd9d6677a901d1c95f01f16cc33776e1')
+    version('0.99', sha256='be3fe77b676bc784dd45b3f65b4a5db34d858ed29156b29d8da38b24585bda7d',
+            url='http://distfiles.exherbo.org/distfiles/f90cache-0.99.tar.bz2')

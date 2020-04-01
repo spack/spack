@@ -1,45 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
 
 class Brigand(Package):
-    """
-    Brigand Meta-programming library
-    """
+    """Brigand Meta-programming library"""
 
     homepage = "https://github.com/edouarda/brigand"
     url      = "https://github.com/edouarda/brigand/archive/1.0.0.tar.gz"
+    git      = "https://github.com/edouarda/brigand.git"
 
-    version('master', git='https://github.com/edouarda/brigand.git',
-            branch='master')
-    version('1.3.0', '0bea9713b3b712229aed289e218d577b')
-    version('1.2.0', '32c0f73e7e666d33ff123334f5c9c92f')
-    version('1.1.0', '073b7c8e2cbda3a81bbeb1ea5b9ca0eb')
-    version('1.0.0', 'eeab3d437090f0bb7bc4eb69a5cd9c49')
+    version('master', branch='master')
+    version('1.3.0', sha256='2468107c5b9ab0b56d84797dfc6636d0aae0507ae9cd6cb1acc1de85e5787acd')
+    version('1.2.0', sha256='4287fa7278cc000a63e90f1a1b903952b7f606b1a3cf95c23a422d2fe96ca50d')
+    version('1.1.0', sha256='afdcc6909ebff6994269d3039c31698c2b511a70280072f73382b26855221f64')
+    version('1.0.0', sha256='8daf7686ff39792f851ef1977323808b80aab31c5f38ef0ba4e6a8faae491f8d')
 
     def install(self, spec, prefix):
         install_tree('include', prefix.include)

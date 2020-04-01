@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,12 +10,15 @@ class RXml2(RPackage):
     """Work with XML files using a simple, consistent interface. Built on top
        of the 'libxml2' C library."""
 
-    homepage = "https://cran.r-project.org/package=xml2"
-    url      = "https://cran.r-project.org/src/contrib/xml2_1.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/xml2"
+    homepage = "https://cloud.r-project.org/package=xml2"
+    url      = "https://cloud.r-project.org/src/contrib/xml2_1.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/xml2"
 
-    version('1.1.1', '768f7edc39c4baab6b6b9e7c7ec79fee')
+    version('1.2.2', sha256='3050f147c4335be2925a576557bbda36bd52a5bba3110d47b740a2dd811a78f4')
+    version('1.2.1', sha256='5615bbc94607efc3bc192551992b349091df802ae34b855cfa817733f2690605')
+    version('1.1.1', sha256='00f3e3b66b76760c19da5f6dddc98e6f30de36a96b211e59e1a3f4ff58763116')
 
-    depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-bh', type=('build', 'run'))
+    depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.12:', type=('build', 'run'))
+    depends_on('r-bh', when='@:1.1.1', type=('build', 'run'))
     depends_on('libxml2')

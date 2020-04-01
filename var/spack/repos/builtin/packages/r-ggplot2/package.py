@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,19 +16,25 @@ class RGgplot2(RPackage):
     documentation and examples."""
 
     homepage = "http://ggplot2.org/"
-    url      = "https://cran.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ggplot2"
+    url      = "https://cloud.r-project.org/src/contrib/ggplot2_2.2.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggplot2"
 
-    version('2.2.1', '14c5a3507bc123c6e7e9ad3bef7cee5c')
-    version('2.1.0', '771928cfb97c649c720423deb3ec7fd3')
+    version('3.2.0', sha256='31b6897fb65acb37913ff6e2bdc1b57f652360098ae3aa660abdcf54f84d73b3')
+    version('3.1.1', sha256='bfde297f3b4732e7f560078f4ce131812a70877e6b5b1d41a772c394939e0c79')
+    version('2.2.1', sha256='5fbc89fec3160ad14ba90bd545b151c7a2e7baad021c0ab4b950ecd6043a8314')
+    version('2.1.0', sha256='f2c323ae855d6c089e3a52138aa7bc25b9fe1429b8df9eae89d28ce3c0dd3969')
 
-    depends_on('r@3.1:')
-
+    depends_on('r@3.1:', when='@:3.1.1', type=('build', 'run'))
+    depends_on('r@3.2:', when='@3.2.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-gtable@0.1.1:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
-    depends_on('r-plyr@1.7.1:', type=('build', 'run'))
+    depends_on('r-plyr@1.7.1:', when='@:3.1.1', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
-    depends_on('r-scales@0.4.1:', type=('build', 'run'))
+    depends_on('r-scales@0.5.0:', type=('build', 'run'))
     depends_on('r-tibble', type=('build', 'run'))
     depends_on('r-lazyeval', type=('build', 'run'))
+    depends_on('r-mgcv', when='@3.2.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.3.0:', when='@3.0.0:', type=('build', 'run'))
+    depends_on('r-viridislite', when='@3.0.0:', type=('build', 'run'))
+    depends_on('r-withr@2.0.0:', when='@3.0.0:', type=('build', 'run'))

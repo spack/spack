@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -37,13 +18,17 @@ class RCurl(RPackage):
     package with http specific tools and logic."""
 
     homepage = "https://github.com/jeroenooms/curl"
-    url      = "https://cran.r-project.org/src/contrib/curl_2.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/curl"
+    url      = "https://cloud.r-project.org/src/contrib/curl_2.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/curl"
 
-    version('3.0', '741202626eacd1f9c022b0a4d7be6d6a')
-    version('2.3',   '7250ee8caed98ba76906ab4d32da60f8')
-    version('1.0',   '93d34926d6071e1fba7e728b482f0dd9')
-    version('0.9.7', 'a101f7de948cb828fef571c730f39217')
+    version('4.3', sha256='7406d485bb50a6190e3ed201e3489063fd249b8b3b1b4f049167ac405a352edb')
+    version('4.0', sha256='09a99c9c86666449188fbb211cb1e9fbdb5108ab56f0d09322cd0ae50e926171')
+    version('3.3', sha256='0cb0b9a9280edc42ebed94708541ec86b4f48779e722171e45227eab8a88a5bd')
+    version('3.0', sha256='7bf8e3ae7cc77802ae300277e85d925d4c0611a9b7dad5c5601e0d2cbe14a506')
+    version('2.3', sha256='f901dad6bb70a6875a85da75bcbb42afffdcdf4ef221909733826bcb012d7c3d')
+    version('1.0', sha256='f8927228754fdfb21dbf08b9e67c5f97e06764c4adf327a4126eed84b1508f3d')
+    version('0.9.7', sha256='46e150998723fd1937da598f47f49fe47e40c1f57ec594436c6ef1e0145b44dc')
 
-    depends_on('r@3.0.0:')
-    depends_on('curl')
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('curl', when='@4.3:')
+    depends_on('curl@:7.63', when='@:4.0')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,7 @@ class Tppred(Package):
     homepage = "https://tppred2.biocomp.unibo.it/tppred2/default/software"
     url      = "http://biocomp.unibo.it/savojard/tppred2.tar.gz"
 
-    version('2.0', 'cd848569f6a8aa51d18fbe55fe45d624')
+    version('2.0', sha256='0e180d5ce1f0bccfdbc3dbf9981b3fbe2101c85491c58c58c88856861688a4f5')
 
     depends_on('python@2.7:2.999', type='run')
     depends_on('py-scikit-learn@0.13.1', type='run')
@@ -50,5 +31,5 @@ class Tppred(Package):
         install_tree('example', prefix.example)
         install_tree('tppred2modules', prefix.modules)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('TPPRED_ROOT', prefix)
+    def setup_run_environment(self, env):
+        env.set('TPPRED_ROOT', self.prefix)

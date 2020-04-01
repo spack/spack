@@ -1,45 +1,34 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGosemsim(RPackage):
-    """The semantic comparisons of Gene Ontology (GO) annotations provide
-    quantitative ways to compute similarities between genes and gene
-    groups, and have became important basis for many bioinformatics
-    analysis approaches. GOSemSim is an R package for semantic similarity
-    computation among GO terms, sets of GO terms, gene products and gene
-    clusters. GOSemSim implemented five methods proposed by Resnik,
-    Schlicker, Jiang, Lin and Wang respectively."""
+    """GO-terms Semantic Similarity Measures.
 
-    homepage = "https://www.bioconductor.org/packages/GOSemSim/"
-    url      = "https://git.bioconductor.org/packages/GOSemSim"
+       The semantic comparisons of Gene Ontology (GO) annotations provide
+       quantitative ways to compute similarities between genes and gene groups,
+       and have became important basis for many bioinformatics analysis
+       approaches. GOSemSim is an R package for semantic similarity computation
+       among GO terms, sets of GO terms, gene products and gene clusters.
+       GOSemSim implemented five methods proposed by Resnik, Schlicker, Jiang,
+       Lin and Wang respectively."""
 
-    version('2.2.0', git='https://git.bioconductor.org/packages/GOSemSim', commit='247434790e6c8cf99e5643f569390362b8c87c52')
+    homepage = "https://bioconductor.org/packages/GOSemSim"
+    git      = "https://git.bioconductor.org/packages/GOSemSim.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@2.2.0')
+    version('2.10.0', commit='5db1ecbf2f8d870430d6e587609327d05ba3ad7b')
+    version('2.8.0', commit='c8c985b2a814cc2365c7f05b2509205e1b6b7f58')
+    version('2.6.2', commit='2ffe78e89276e804306554965fc0799318ec56ed')
+    version('2.4.1', commit='0656e845860d14e054670ffc246a1c53f699299c')
+    version('2.2.0', commit='247434790e6c8cf99e5643f569390362b8c87c52')
+
+    depends_on('r@3.3.2:', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-go-db', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
+
+    depends_on('r@3.4.0:', when='@2.8.0:', type=('build', 'run'))

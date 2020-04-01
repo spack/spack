@@ -1,6 +1,7 @@
 /db
 /var/spack/stage
 /var/spack/cache
+/var/spack/environments
 /var/spack/repos/*/index.yaml
 /var/spack/repos/*/lock
 *.pyc
@@ -19,9 +20,16 @@
 *.swp
 /htmlcov
 .coverage
-#*
+\#*
 .#*
-/.cache
+.cache
+lib/spack/spack/test/.cache
 /bin/spackc
 *.in.log
 *.out.log
+*.orig
+
+# Eclipse files
+.project
+.cproject
+.pydevproject

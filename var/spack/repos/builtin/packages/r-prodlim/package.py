@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,14 +11,15 @@ class RProdlim(RPackage):
     user friendly implementation of nonparametric estimators for censored event
     history (survival) analysis. Kaplan-Meier and Aalen-Johansen method."""
 
-    homepage = "https://cran.r-project.org/package=prodlim"
-    url      = "https://cran.r-project.org/src/contrib/prodlim_1.5.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/prodlim"
+    homepage = "https://cloud.r-project.org/package=prodlim"
+    url      = "https://cloud.r-project.org/src/contrib/prodlim_1.5.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/prodlim"
 
-    version('1.5.9', 'e0843053c9270e41b657a733d6675dc9')
+    version('2018.04.18', sha256='4b22b54fdf712439309be0ff74f63cde9080464667b00e19823372ac0fc254ab')
+    version('1.6.1', sha256='3f2665257118a3db8682731a500b1ae4d669af344672dc2037f987bee3cca154')
+    version('1.5.9', sha256='853644886c57102e7f6dd26b6e03e54bf3f9e126f54c76f8d63a3324811f7b42')
 
-    depends_on('r@2.9.0:')
-
+    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.5:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
     depends_on('r-kernsmooth', type=('build', 'run'))

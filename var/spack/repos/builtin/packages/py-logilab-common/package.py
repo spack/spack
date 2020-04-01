@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,8 +11,11 @@ class PyLogilabCommon(PythonPackage):
     homepage = "https://www.logilab.org/project/logilab-common"
     url      = "https://pypi.io/packages/source/l/logilab-common/logilab-common-1.2.0.tar.gz"
 
-    version('1.2.0', 'f7b51351b7bfe052746fa04c03253c0b')
+    version('1.4.2', sha256='cdda9ed0deca7c68f87f7a404ad742e47aaa1ca5956d12988236a5ec3bda13a0')
+    version('1.2.0', sha256='d4e5cec3be3a89f06ff05e359a221e69bd1da33cb7096cad648ddcccea8465b7')
 
     extends('python', ignore=r'bin/pytest')
-    depends_on("py-setuptools", type='build')
-    depends_on("py-six", type=('build', 'run'))
+    depends_on("py-setuptools", type=('build', 'run'))
+    depends_on("py-six@1.4.0:", type=('build', 'run'))
+    depends_on("py-unittest2@0.5.1:", type=('build', 'run'), when='^python@:2.7')
+    depends_on("py-pytz", type='test')

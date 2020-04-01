@@ -1,0 +1,11 @@
+.git/*
+opt/spack/*
+
+/etc/spack/*
+!/etc/spack/defaults
+
+share/spack/dotkit/*
+share/spack/lmod/*
+share/spack/modules/*
+lib/spack/spack/test/*
+

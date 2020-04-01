@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,14 @@ class PyAse(PythonPackage):
     homepage = "https://wiki.fysik.dtu.dk/ase/"
     url      = "https://pypi.io/packages/source/a/ase/ase-3.13.0.tar.gz"
 
-    version('3.13.0', 'e946a0addc5b61e5e2e75857e0f99b89')
+    version('3.18.0',
+            sha256='39d45f12def2669605bffc82926acfb13a0d0610e6d82740fa316aafa70f97f9')
+    version('3.15.0', sha256='5e22d961b1311ef4ba2d83527f7cc7448abac8cf9bddd1593bee548459263fe8')
+    version('3.13.0', sha256='c4046c50debac28415b36616d79aa28e68ae2cd03c013c2aed6a1e3d465c0ee1')
 
-    depends_on('python@2.6:')
+    depends_on('python@2.6:', type=('build', 'run'), when='@:3.15.0')
+    depends_on('python@3.5:', type=('build', 'run'), when='@3.18.0:')
     depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-flask', type=('build', 'run'))

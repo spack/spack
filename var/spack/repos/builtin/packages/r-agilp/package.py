@@ -1,36 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAgilp(RPackage):
-    """Agilent expression array processing package."""
+    """Agilent expression array processing package.
 
-    homepage = "http://bioconductor.org/packages/agilp/"
-    url      = "https://git.bioconductor.org/packages/agilp"
+       More about what it does (maybe more than one line)"""
 
-    version('3.8.0', git='https://git.bioconductor.org/packages/agilp', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
+    homepage = "https://bioconductor.org/packages/agilp"
+    git      = "https://git.bioconductor.org/packages/agilp.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@3.8.0')
+    version('3.16.0', commit='2900d6066317f21d076b3a043b16f32eca168c47')
+    version('3.14.0', commit='8feb047d70216013462ea7806e9227d192b60c61')
+    version('3.12.0', commit='a86dea1b03b2b56c2c8317d4b10903fb8948ffcb')
+    version('3.10.0', commit='cffec1004704a0c5119a50e3ad474897978981be')
+    version('3.8.0', commit='c772a802af1b4c0741f2edd78053a0425160ea53')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))

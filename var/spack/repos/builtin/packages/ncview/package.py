@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,10 +11,10 @@ class Ncview(AutotoolsPackage):
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
     url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    version('2.1.7', sha256='a14c2dddac0fc78dad9e4e7e35e2119562589738f4ded55ff6e0eca04d682c82')
 
-    depends_on('netcdf')
-    depends_on('udunits2')
+    depends_on('netcdf-c')
+    depends_on('udunits')
     depends_on('libpng')
     depends_on('libxaw')
 
@@ -42,7 +23,7 @@ class Ncview(AutotoolsPackage):
 
         config_args = []
 
-        if spec.satisfies('^netcdf+mpi'):
+        if spec.satisfies('^netcdf-c+mpi'):
             config_args.append('CC={0}'.format(spec['mpi'].mpicc))
 
         return config_args

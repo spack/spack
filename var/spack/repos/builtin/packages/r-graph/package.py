@@ -1,37 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGraph(RPackage):
-    """A package that implements some simple graph handling capabilities."""
+    """graph: A package to handle graph data structures.
 
-    homepage = "https://www.bioconductor.org/packages/graph/"
-    url      = "https://git.bioconductor.org/packages/graph"
+       A package that implements some simple graph handling capabilities."""
 
-    version('1.54.0', git='https://git.bioconductor.org/packages/graph', commit='2a8b08520096241620421078fc1098f4569c7301')
+    homepage = "https://bioconductor.org/packages/graph"
+    git      = "https://git.bioconductor.org/packages/graph.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.54.0')
-    depends_on('r-biocgenerics', type=('build', 'run'))
+    version('1.62.0', commit='95223bd63ceb66cfe8d881f992a441de8b8c89a3')
+    version('1.60.0', commit='e2aecb0a862f32091b16e0036f53367d3edf4c1d')
+    version('1.58.2', commit='6455d8e7a5a45dc733915942cb71005c1016b6a0')
+    version('1.56.0', commit='c4abe227dac525757679743e6fb4f49baa34acad')
+    version('1.54.0', commit='2a8b08520096241620421078fc1098f4569c7301')
+
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.13.11:', type=('build', 'run'))

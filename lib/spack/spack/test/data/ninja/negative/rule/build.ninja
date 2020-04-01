@@ -1,0 +1,8 @@
+# Tests that Spack ignores rule names
+
+cflags = -Wall
+
+rule check
+  command = gcc $cflags -c $in -o $out
+
+build foo: check foo.c

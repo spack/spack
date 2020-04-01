@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,10 @@ class RPfamDb(RPackage):
     homepage = "https://www.bioconductor.org/packages/PFAM.db/"
     url      = "https://www.bioconductor.org/packages/3.5/data/annotation/src/contrib/PFAM.db_3.4.1.tar.gz"
 
-    version('3.4.1', '65ed35887ecc44f5ac9f9c8563e03f44')
+    version('3.10.0', sha256='038888f95ce69230ac0e0b08aa3bcb09965682415520d437a7fb0a031eefe158')
+    version('3.4.1', sha256='fc45a0d53139daf85873f67bd3f1b68f2d883617f4447caddbd2d7dcc58a393f')
 
-    depends_on('r@3.4.0:3.4.9', when='@3.4.1')
-    depends_on('r-annotationdbi', type=('build', 'run'))
+    depends_on('r@2.7.0:', when='@3.4.1:', type=('build', 'run'))
+    depends_on('r-annotationdbi@1.37.4:', when='@3.4.1:', type=('build', 'run'))
+
+    depends_on('r-annotationdbi@1.47.1:', when='@3.10.0:', type=('build', 'run'))

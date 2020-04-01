@@ -1,44 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import shutil
 
 
-class Libiconv(AutotoolsPackage):
+class Libiconv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libiconv provides an implementation of the iconv() function
     and the iconv program for character set conversion."""
 
     homepage = "https://www.gnu.org/software/libiconv/"
-    url      = "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.15.tar.gz"
+    gnu_mirror_path = "libiconv/libiconv-1.16.tar.gz"
 
-    version('1.15', 'ace8b5f2db42f7b3b3057585e80d9808')
-    version('1.14', 'e34509b1623cec449dfeb73d7ce9c6c6')
+    version('1.16', sha256='e6a1b1b589654277ee790cce3734f07876ac4ccfaecbee8afa0b649cf529cc04')
+    version('1.15', sha256='ccf536620a45458d26ba83887a983b96827001e92a13847b45e4925cc8913178')
+    version('1.14', sha256='72b24ded17d687193c3366d0ebe7cde1e6b18f0df8c55438ac95be39e8a30613')
 
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
     patch('gets.patch', when='@1.14')
+    provides('iconv')
 
     conflicts('@1.14', when='%gcc@5:')
 
@@ -46,6 +28,6 @@ class Libiconv(AutotoolsPackage):
         args = ['--enable-extra-encodings']
 
         # A hack to patch config.guess in the libcharset sub directory
-        shutil.copyfile('./build-aux/config.guess',
-                        'libcharset/build-aux/config.guess')
+        copy('./build-aux/config.guess',
+             'libcharset/build-aux/config.guess')
         return args

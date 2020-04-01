@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -37,10 +18,17 @@ class RPartykit(RPackage):
     provided based on the new infrastructure."""
 
     homepage = "http://partykit.r-forge.r-project.org/partykit"
-    url      = "https://cran.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/partykit"
+    url      = "https://cloud.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/partykit"
 
-    version('1.1-1', '8fcb31d73ec1b8cd3bcd9789639a9277')
+    version('1.2-5', sha256='f48e30790f93fa5d03e68e8ce71ce33d009d107d46d45d85da2016b38b27629c')
+    version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
+    version('1.1-1', sha256='d9f4762690cd85ee4e3dc44f5a14069d10a1900afdfbcdc284d2a94b4a8e8332')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-survival', type=('build', 'run'))
-    depends_on('r-formula', type=('build', 'run'))
+    depends_on('r-formula@1.2-1:', type=('build', 'run'))
+    depends_on('r-libcoin@1.0-0:', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-mvtnorm', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-inum@1.0-0:', when='@1.2-0:', type=('build', 'run'))
+    depends_on('r-rpart@4.1-11:', when='@1.2-0:', type=('build', 'run'))

@@ -1,46 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyPyparsing(PythonPackage):
     """A Python Parsing Module."""
     homepage = "http://pyparsing.wikispaces.com/"
-    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyparsing/pyparsing-2.4.2.tar.gz"
 
     import_modules = ['pyparsing']
 
-    version('2.2.0',  '0214e42d63af850256962b6744c948d9')
-    version('2.1.10', '065908b92904e0d3634eb156f44cc80e')
-    version('2.0.3',  '0fe479be09fc2cf005f753d3acc35939')
+    version('2.4.2',  sha256='6f98a7b9397e206d78cc01df10131398f1c8b8510a2f4d97d9abd82e1aacdd80')
+    version('2.4.0',  sha256='1873c03321fc118f4e9746baf201ff990ceb915f433f23b395f5580d1840cb2a')
+    version('2.3.1',  sha256='66c9268862641abcac4a96ba74506e594c884e3f57690a696d21ad8210ed667a')
+    version('2.2.0',  sha256='0832bcf47acd283788593e7a0f542407bd9550a55a8a8435214a1960e04bcb04')
+    version('2.1.10', sha256='811c3e7b0031021137fc83e051795025fcb98674d07eb8fe922ba4de53d39188')
+    version('2.0.3',  sha256='06e729e1cbf5274703b1f47b6135ed8335999d547f9d8cf048b210fb8ebf844f')
 
     patch('setuptools-import.patch', when='@:2.1.10')
 
+    depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     # Newer versions of setuptools require pyparsing. Although setuptools is an
     # optional dependency of pyparsing, if it is not found, setup.py will
     # fallback on distutils.core instead. Don't add a setuptools dependency
     # or we won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build', when='@2.3.1:')

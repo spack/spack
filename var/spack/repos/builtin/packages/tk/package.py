@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import os
 
 
 class Tk(AutotoolsPackage):
@@ -35,24 +17,70 @@ class Tk(AutotoolsPackage):
     homepage = "http://www.tcl.tk"
     url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
 
-    version('8.6.6', 'dd7dbb3a6523c42d05f6ab6e86096e99')
-    version('8.6.5', '11dbbd425c3e0201f20d6a51482ce6c4')
-    version('8.6.3', '85ca4dbf4dcc19777fd456f6ee5d0221')
+    version('8.6.8', sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
+    version('8.6.6', sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
+    version('8.6.5', sha256='fbbd93541b4cd467841208643b4014c4543a54c3597586727f0ab128220d7946')
+    version('8.6.3', sha256='ba15d56ac27d8c0a7b1a983915a47e0f635199b9473cf6e10fbce1fc73fd8333')
+    version('8.5.19', sha256='407af1de167477d598bd6166d84459a3bdccc2fb349360706154e646a9620ffa')
 
-    depends_on('tcl')
+    variant('xft', default=True,
+            description='Enable X FreeType')
+    variant('xss', default=True,
+            description='Enable X Screen Saver')
+
+    extends('tcl')
+
+    depends_on('tcl@8.6:', when='@8.6:')
     depends_on('libx11')
+    depends_on('libxft', when='+xft')
+    depends_on('libxscrnsaver', when='+xss')
 
     configure_directory = 'unix'
 
-    def setup_environment(self, spack_env, run_env):
-        # When using Tkinter from within spack provided python+tk, python
+    def install(self, spec, prefix):
+        with working_dir(self.build_directory):
+            make('install')
+
+            # Some applications like Expect require private Tk headers.
+            make('install-private-headers')
+
+            # Copy source to install tree
+            installed_src = join_path(
+                self.spec.prefix, 'share', self.name, 'src')
+            stage_src = os.path.realpath(self.stage.source_path)
+            install_tree(stage_src, installed_src)
+
+            # Replace stage dir -> installed src dir in tkConfig
+            filter_file(
+                stage_src, installed_src,
+                join_path(self.spec.prefix, 'lib', 'tkConfig.sh'))
+
+    @property
+    def libs(self):
+        return find_libraries(['libtk{0}'.format(self.version.up_to(2))],
+                              root=self.prefix, recursive=True)
+
+    def setup_run_environment(self, env):
+        # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        run_env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
+            self.spec.version.up_to(2))))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
             self.spec.version.up_to(2))))
 
     def configure_args(self):
         spec = self.spec
-        return ['--with-tcl={0}'.format(spec['tcl'].prefix.lib)]
+        config_args = [
+            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
+            '--x-includes={0}'.format(spec['libx11'].prefix.include),
+            '--x-libraries={0}'.format(spec['libx11'].prefix.lib)
+        ]
+        config_args += self.enable_or_disable('xft')
+        config_args += self.enable_or_disable('xss')
+
+        return config_args
 
     @run_after('install')
     def symlink_wish(self):

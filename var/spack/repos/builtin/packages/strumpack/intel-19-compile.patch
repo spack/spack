@@ -1,0 +1,46 @@
+commit 1b0c5884856709077d1130384ab0841f44f0f07b
+Author: Pieter Ghysels <pghysels@lbl.gov>
+Date:   Mon Apr 8 11:09:37 2019 -0700
+
+    Fix for openmp collapse(2), the loop bounds should be constants,
+    cannot be functions.
+    
+    This fixes a compilation issue with the Intel 19 compiler.
+    Thanks to Satish for reporting.
+
+diff --git a/src/BLR/BLRMatrix.hpp b/src/BLR/BLRMatrix.hpp
+index 75eb817..3b6b803 100644
+--- a/src/BLR/BLRMatrix.hpp
++++ b/src/BLR/BLRMatrix.hpp
+@@ -461,11 +461,13 @@ namespace strumpack {
+ 
+       DenseM_t dense() const {
+         DenseM_t A(rows(), cols());
++        auto cb = colblocks();
++        auto rb = rowblocks();
+ #if defined(STRUMPACK_USE_OPENMP_TASKLOOP)
+ #pragma omp taskloop collapse(2) default(shared)
+ #endif
+-        for (std::size_t j=0; j<colblocks(); j++)
+-          for (std::size_t i=0; i<rowblocks(); i++) {
++        for (std::size_t j=0; j<cb; j++)
++          for (std::size_t i=0; i<rb; i++) {
+             DenseMW_t Aij = tile(A, i, j);
+             tile(i, j).dense(Aij);
+           }
+@@ -473,11 +475,13 @@ namespace strumpack {
+       }
+ 
+       void draw(std::ostream& of, std::size_t roff, std::size_t coff) const {
++        auto cb = colblocks();
++        auto rb = rowblocks();
+ #if defined(STRUMPACK_USE_OPENMP_TASKLOOP)
+ #pragma omp taskloop collapse(2) default(shared)
+ #endif
+-        for (std::size_t j=0; j<colblocks(); j++)
+-          for (std::size_t i=0; i<rowblocks(); i++) {
++        for (std::size_t j=0; j<cb; j++)
++          for (std::size_t i=0; i<rb; i++) {
+             tile(i, j).draw(of, roff+tileroff(i), coff+tilecoff(j));
+           }
+       }

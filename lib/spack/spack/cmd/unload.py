@@ -1,42 +1,73 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import argparse
-from spack.cmd.common import print_module_placeholder_help
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-description = "remove package from environment using `module unload`"
-section = "environment"
+import sys
+import os
+
+import llnl.util.tty as tty
+
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.util.environment
+import spack.user_environment as uenv
+import spack.error
+
+description = "remove package from the user environment"
+section = "user environment"
 level = "short"
 
 
 def setup_parser(subparser):
     """Parser is only constructed so that this prints a nice help
        message with -h. """
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help='spec of package to unload with modules')
+    arguments.add_common_arguments(subparser, ['installed_specs'])
+
+    shells = subparser.add_mutually_exclusive_group()
+    shells.add_argument(
+        '--sh', action='store_const', dest='shell', const='sh',
+        help="print sh commands to activate the environment")
+    shells.add_argument(
+        '--csh', action='store_const', dest='shell', const='csh',
+        help="print csh commands to activate the environment")
+
+    subparser.add_argument('-a', '--all', action='store_true',
+                           help='unload all loaded Spack packages.')
 
 
 def unload(parser, args):
-    print_module_placeholder_help()
+    """Unload spack packages from the user environment."""
+    if args.specs and args.all:
+        raise spack.error.SpackError("Cannot specify specs on command line"
+                                     " when unloading all specs with '--all'")
+
+    hashes = os.environ.get(uenv.spack_loaded_hashes_var, '').split(':')
+    if args.specs:
+        specs = [spack.cmd.disambiguate_spec_from_hashes(spec, hashes)
+                 for spec in spack.cmd.parse_specs(args.specs)]
+    else:
+        specs = spack.store.db.query(hashes=hashes)
+
+    if not args.shell:
+        msg = [
+            "This command works best with Spack's shell support",
+            ""
+        ] + spack.cmd.common.shell_init_instructions + [
+            'Or, if you want to use `spack unload` without initializing',
+            'shell support, you can run one of these:',
+            '',
+            '    eval `spack unload --sh %s`   # for bash/sh' % args.specs,
+            '    eval `spack unload --csh %s`  # for csh/tcsh' % args.specs,
+        ]
+        tty.msg(*msg)
+        return 1
+
+    env_mod = spack.util.environment.EnvironmentModifications()
+    for spec in specs:
+        env_mod.extend(
+            uenv.environment_modifications_for_spec(spec).reversed())
+        env_mod.remove_path(uenv.spack_loaded_hashes_var, spec.dag_hash())
+    cmds = env_mod.shell_modifications(args.shell)
+
+    sys.stdout.write(cmds)

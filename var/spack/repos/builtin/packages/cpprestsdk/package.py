@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,8 +15,13 @@ class Cpprestsdk(CMakePackage):
     homepage = "https://github.com/Microsoft/cpprestsdk"
     url      = "https://github.com/Microsoft/cpprestsdk/archive/v2.9.1.tar.gz"
 
-    version('2.9.1', 'c3dd67d8cde8a65c2e994e2ede4439a2')
+    version('2.9.1', sha256='537358760acd782f4d2ed3a85d92247b4fc423aff9c85347dc31dbb0ab9bab16')
 
-    depends_on('boost')
+    depends_on('boost@:1.69.0')
+
+    # Ref: https://github.com/microsoft/cpprestsdk/commit/f9f518e4ad84577eb684ad8235181e4495299af4
+    # Ref: https://github.com/Microsoft/cpprestsdk/commit/6b2e0480018530b616f61d5cdc786c92ba148bb7
+    # Ref: https://github.com/microsoft/cpprestsdk/commit/70c1b14f39f5d47984fdd8a31fc357ebb5a37851
+    patch('Release.patch')
 
     root_cmakelists_dir = 'Release'

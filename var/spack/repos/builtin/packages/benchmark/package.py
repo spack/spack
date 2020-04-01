@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,20 +11,33 @@ class Benchmark(CMakePackage):
 
     homepage = "https://github.com/google/benchmark"
     url      = "https://github.com/google/benchmark/archive/v1.1.0.tar.gz"
-
-    version('develop', branch='master',
-            git='https://github.com/google/benchmark.git')
+    git      = "https://github.com/google/benchmark.git"
 
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
-    version('1.2.0', '48d0b090cd7a84af2c4a28c8dc963c74')
-    version('1.1.0', '66b2a23076cf70739525be0092fc3ae3')
-    version('1.0.0', '1474ff826f8cd68067258db75a0835b8')
+
+    version('develop', branch='master')
+    version('1.5.0', sha256='3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a')
+    version('1.4.1', sha256='f8e525db3c42efc9c7f3bc5176a8fa893a9a9920bbd08cef30fb56a51854d60d')
+    version('1.4.0', sha256='616f252f37d61b15037e3c2ef956905baf9c9eecfeab400cb3ad25bae714e214')
+    version('1.3.0', sha256='f19559475a592cbd5ac48b61f6b9cedf87f0b6775d1443de54cfe8f53940b28d')
+    version('1.2.0', sha256='3dcc90c158838e2ac4a7ad06af9e28eb5877cf28252a81e55eb3c836757d3070')
+    version('1.1.0', sha256='e7334dd254434c6668e33a54c8f839194c7c61840d52f4b6258eee28e9f3b20e')
+    version('1.0.0', sha256='d2206c263fc1a7803d4b10e164e0c225f6bcf0d5e5f20b87929f137dee247b54')
 
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'MinSizeRel', 'Coverage'))
+
+    depends_on("cmake@2.8.11:", type="build", when="@:1.1.0")
+    depends_on("cmake@2.8.12:", type="build", when="@1.2.0:1.4")
+    depends_on("cmake@3.5.1:",  type="build", when="@1.5.0:")
+
+    def cmake_args(self):
+        # No need for testing for the install
+        args = ["-DBENCHMARK_ENABLE_TESTING=OFF"]
+        return args
 
     def patch(self):
         filter_file(

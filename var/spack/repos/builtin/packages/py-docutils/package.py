@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,7 @@ class PyDocutils(PythonPackage):
     markup language."""
 
     homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.io/packages/source/d/docutils/docutils-0.13.1.tar.gz"
+    url      = "https://pypi.io/packages/source/d/docutils/docutils-0.15.2.tar.gz"
 
     import_modules = [
         'docutils', 'docutils.languages', 'docutils.parsers',
@@ -46,5 +27,15 @@ class PyDocutils(PythonPackage):
         'docutils.writers.s5_html', 'docutils.writers.xetex'
     ]
 
-    version('0.13.1', 'ea4a893c633c788be9b8078b6b305d53')
-    version('0.12',   '4622263b62c5c771c03502afa3157768')
+    version('0.15.2', sha256='a2aeea129088da402665e92e0b25b04b073c04b2dce4ab65caaa38b7ce2e1a99')
+    version('0.14',   sha256='51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274')
+    version('0.13.1', sha256='718c0f5fb677be0f34b781e04241c4067cbd9327b66bdd8e763201130f5175be')
+    version('0.12',   sha256='c7db717810ab6965f66c8cf0398a98c9d8df982da39b4cd7f162911eb89596fa')
+
+    depends_on('py-setuptools',       when='@0.15:',         type='build')
+    depends_on('python@2.7:2.8,3.5:', when='@0.16:',         type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.3:', when='@0.14:0.15',     type=('build', 'run'))
+    depends_on('python@2.4:3',        when='@0.10:0.13',     type=('build', 'run'))
+    depends_on('python@2.2.1:3',      when='@0.6:0.9',       type=('build', 'run'))
+    depends_on('python@2.2.1:2.8',    when='@0.5.0:0.5.999', type=('build', 'run'))
+    depends_on('python@2.1:2.8',      when='@:0.4',          type=('build', 'run'))

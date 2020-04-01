@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,7 @@ class DialignTx(MakefilePackage):
     homepage = "http://dialign-tx.gobics.de/"
     url      = "http://dialign-tx.gobics.de/DIALIGN-TX_1.0.2.tar.gz"
 
-    version('1.0.2', '8ccfb1d91136157324d1e513f184ca29')
+    version('1.0.2', sha256='fb3940a48a12875332752a298f619f0da62593189cd257d28932463c7cebcb8f')
 
     build_directory = 'source'
 
@@ -43,6 +24,8 @@ class DialignTx(MakefilePackage):
             makefile = FileFilter('Makefile')
             makefile.filter(' -march=i686 ', ' ')
             makefile.filter('CC=gcc', 'CC=%s' % spack_cc)
+            if spec.target.family == 'aarch64':
+                makefile.filter('-mfpmath=sse -msse  -mmmx', ' ')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
@@ -50,5 +33,3 @@ class DialignTx(MakefilePackage):
             install('dialign-tx', prefix.bin)
             # t-coffee recognizes as dialign-t
             install('dialign-tx', join_path(prefix.bin, 'dialign-t'))
-
-    patch('dialign-1-0-2-gcc-5-4-0.patch', when='%gcc@5.4.0')

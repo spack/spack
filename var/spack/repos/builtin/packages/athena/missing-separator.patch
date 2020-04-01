@@ -1,0 +1,13 @@
+diff --git a/Makeoptions.in b/Makeoptions.in
+index b680132..4d1aa4e 100644
+--- a/Makeoptions.in
++++ b/Makeoptions.in
+@@ -96,7 +96,7 @@ ifeq ($(MACHINE),macosx)
+   FFTWLIB = -L/opt/local/lib -lfftw3
+   FFTWINC = -I/opt/local/include
+ else
+-  abort Unsupported MACHINE=$(MACHINE)
++  $(abort Unsupported MACHINE=$(MACHINE))
+ endif
+ endif
+ endif

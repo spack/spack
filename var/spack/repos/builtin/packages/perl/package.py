@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 # Author: Milton Woods <milton.woods@bom.gov.au>
 # Date: March 22, 2017
@@ -30,11 +11,12 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
-from spack import *
 import os
 from contextlib import contextmanager
-import spack
+
 from llnl.util.lang import match_predicate
+
+from spack import *
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
@@ -45,22 +27,29 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
-    # Development releases
-    version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
+    # see http://www.cpan.org/src/README.html for
+    # explanation of version numbering scheme
 
-    # Maintenance releases (recommended)
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c', preferred=True)
-    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
+    # Development releases (odd numbers)
+    version('5.31.7', sha256='d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d')
+    version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
-    # Misc releases that people need
-    version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
-    version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
-    version('5.22.0', 'e32cb6a8dda0084f2a43dac76318d68d')
+    # Maintenance releases (even numbers, recommended)
+    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964', preferred=True)
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2')
 
     # End of life releases
-    version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
-    version('5.18.4', '1f9334ff730adc05acd3dd7130d295db')
-    version('5.16.3', 'eb5c40f2575df6c155bc99e3fe0a9d82')
+    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
+    version('5.26.2', sha256='572f9cea625d6062f8a63b5cee9d3ee840800a001d2bb201a41b9a177ab7f70d')
+    version('5.24.1', sha256='e6c185c9b09bdb3f1b13f678999050c639859a7ef39c8cad418448075f5918af')
+    version('5.22.4', sha256='ba9ef57c2b709f2dad9c5f6acf3111d9dfac309c484801e0152edbca89ed61fa')
+    version('5.22.3', sha256='1b351fb4df7e62ec3c8b2a9f516103595b2601291f659fef1bbe3917e8410083')
+    version('5.22.2', sha256='81ad196385aa168cb8bd785031850e808c583ed18a7901d33e02d4f70ada83c2')
+    version('5.22.1', sha256='2b475d0849d54c4250e9cba4241b7b7291cffb45dfd083b677ca7b5d38118f27')
+    version('5.22.0', sha256='0c690807f5426bbd1db038e833a917ff00b988bf03cbf2447fa9ffdb34a2ab3c')
+    version('5.20.3', sha256='3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a')
+    version('5.18.4', sha256='01a4e11a9a34616396c4a77b3cef51f76a297e1a2c2c490ae6138bf0351eb29f')
+    version('5.16.3', sha256='69cf08dca0565cec2c5c6c2f24b87f986220462556376275e5431cc2204dedb6')
 
     extendable = True
 
@@ -70,6 +59,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
     patch('protect-quotes-in-ccflags.patch', when='@5.22.0')
+
+    # Fix build on Fedora 28
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
+    patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -81,15 +74,30 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     variant('shared', default=True,
             description='Build a shared libperl.so library')
 
+    variant('threads', default=True,
+            description='Build perl with threads support')
+
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
-        md5="e87f55fbcb3c13a4754500c18e89219f",
+        sha256="9da50e155df72bce55cb69f51f1dbb4b62d23740fb99f6178bb27f22ebdf8a46",
         destination="cpanm",
         placement="cpanm"
     )
 
     phases = ['configure', 'build', 'install']
+
+    # On a lustre filesystem, patch may fail when files
+    # aren't writeable so make pp.c user writeable
+    # before patching. This should probably walk the
+    # source and make everything writeable in the future.
+    def do_stage(self, mirror_only=False):
+        # Do Spack's regular stage
+        super(Perl, self).do_stage(mirror_only)
+        # Add write permissions on file to be patched
+        filename = join_path(self.stage.source_path, 'pp.c')
+        perm = os.stat(filename).st_mode
+        os.chmod(filename, perm | 0o200)
 
     def configure_args(self):
         spec = self.spec
@@ -128,6 +136,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
 
+        if '+threads' in spec:
+            config_args.append('-Dusethreads')
+
+        if spec.satisfies('@5.31'):
+            config_args.append('-Dusedevel')
+
         return config_args
 
     def configure(self, spec, prefix):
@@ -156,25 +170,24 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def _setup_dependent_env(self, env, dependent_spec, deptypes):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        perl_bin_dirs = []
-        for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+        for d in dependent_spec.traverse(deptype=deptypes):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
-                perl_bin_dirs.append(d.prefix.bin)
-        if perl_bin_dirs:
-            perl_bin_path = ':'.join(perl_bin_dirs)
-            spack_env.prepend_path('PATH', perl_bin_path)
-            run_env.prepend_path('PATH', perl_bin_path)
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
-            spack_env.prepend_path('PERL5LIB', perl_lib_path)
-            run_env.prepend_path('PERL5LIB', perl_lib_path)
+            env.prepend_path('PERL5LIB', perl_lib_path)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec,
+                                  deptypes=('build', 'run'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec, deptypes=('run',))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -182,15 +195,19 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
            perl('Makefile.PL','INSTALL_BASE=%s' % self.prefix)
         """
 
-        # perl extension builds can have a global perl executable function
-        module.perl = self.spec['perl'].command
-
-        # Add variables for library directory
-        module.perl_lib_dir = dependent_spec.prefix.lib.perl5
-
-        # Make the site packages directory for extensions,
-        # if it does not exist already.
+        # If system perl is used through packages.yaml
+        # there cannot be extensions.
         if dependent_spec.package.is_extension:
+
+            # perl extension builds can have a global perl
+            # executable function
+            module.perl = self.spec['perl'].command
+
+            # Add variables for library directory
+            module.perl_lib_dir = dependent_spec.prefix.lib.perl5
+
+            # Make the site packages directory for extensions,
+            # if it does not exist already.
             mkdirp(module.perl_lib_dir)
 
     @run_after('install')
@@ -227,6 +244,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             substitute = "ld='{ld}'".format(ld=self.compiler.cc)
             filter_file(match, substitute, config_heavy, **kwargs)
 
+            match = "^ccflags='"
+            substitute = "ccflags='%s " % ' '\
+                         .join(self.spec.compiler_flags['cflags'])
+            filter_file(match, substitute, config_heavy, **kwargs)
+
     @contextmanager
     def make_briefly_writable(self, path):
         """Temporarily make a file writable, then reset"""
@@ -252,28 +274,42 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         return match_predicate(ignore_arg, patterns)
 
-    def activate(self, ext_pkg, **args):
+    def activate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).activate(ext_pkg, **args)
+        super(Perl, self).activate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         exts[ext_pkg.name] = ext_pkg.spec
 
-    def deactivate(self, ext_pkg, **args):
+    def deactivate(self, ext_pkg, view, **args):
         ignore = self.perl_ignore(ext_pkg, args)
         args.update(ignore=ignore)
 
-        super(Perl, self).deactivate(ext_pkg, **args)
+        super(Perl, self).deactivate(ext_pkg, view, **args)
 
-        extensions_layout = args.get("extensions_layout",
-                                     spack.store.extensions)
-
+        extensions_layout = view.extensions_layout
         exts = extensions_layout.extension_map(self.spec)
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
+
+    @property
+    def command(self):
+        """Returns the Perl command, which may vary depending on the version
+        of Perl. In general, Perl comes with a ``perl`` command. However,
+        development releases have a ``perlX.Y.Z`` command.
+
+        Returns:
+            Executable: the Perl command
+        """
+        for ver in ('', self.spec.version):
+            path = os.path.join(self.prefix.bin, '{0}{1}'.format(
+                self.spec.name, ver))
+            if os.path.exists(path):
+                return Executable(path)
+        else:
+            msg = 'Unable to locate {0} command in {1}'
+            raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))

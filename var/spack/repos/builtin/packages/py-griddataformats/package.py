@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,9 +13,11 @@ class PyGriddataformats(PythonPackage):
     data again."""
 
     homepage = "http://www.mdanalysis.org/GridDataFormats"
-    url      = "https://pypi.io/packages/source/G/GridDataFormats/GridDataFormats-0.3.3.tar.gz"
+    url      = "https://pypi.io/packages/source/G/GridDataFormats/GridDataFormats-0.5.0.tar.gz"
 
-    version('0.3.3', '5c83d3bdd421eebcee10111942c5a21f')
+    version('0.5.0', sha256='f317ed60708de22d1b2a76ce89a00f722d903291b1055ff1018d441870c39d69')
+    version('0.4.1', sha256='b362662c2dc475e2a3895fe044eaaa9a707bd660fd109a63dac84a47236690a3')
+    version('0.3.3', sha256='938f0efcb3bc2f58ec85048b933942da8a52c134170acc97cb095f09d3698fbd')
 
     depends_on('python@2.7:')
     depends_on('py-setuptools', type='build')

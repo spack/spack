@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,11 +16,13 @@ class Cgal(CMakePackage):
     homepage = 'http://www.cgal.org/'
     url      = 'https://github.com/CGAL/cgal/releases/download/releases/CGAL-4.11/CGAL-4.11.tar.xz'
 
-    version('4.11',  '0e9566046e402f8dc514caef11155864')
-    version('4.9.1', '820ef17ffa7ed87af6cc9918a961d966')
-    version('4.9',   'ee31343dbc4bf7b5b7501ec1650e9233')
-    version('4.7',   '623d91fb2ab0a35049dc6098a0f235cc')
-    version('4.6.3', '6953897544d41ffcc63ffe58b32a688f')
+    version('4.13',  sha256='3e3dd7a64febda58be54c3cbeba329ab6a73b72d4d7647ba4931ecd1fad0e3bc')
+    version('4.12', sha256='442ef4fffb2ad6e4141e5a7902993ae6a4e73f7cb641fae1010bb586f6ca5e3f')
+    version('4.11',  sha256='27a7762e5430f5392a1fe12a3a4abdfe667605c40224de1c6599f49d66cfbdd2')
+    version('4.9.1', sha256='56557da971b5310c2678ffc5def4109266666ff3adc7babbe446797ee2b90cca')
+    version('4.9',   sha256='63ac5df71f912f34f2f0f2e54a303578df51f4ec2627db593a65407d791f9039')
+    version('4.7',   sha256='50bd0a1cad7a8957b09012f831eebaf7d670e2a3467e8f365ec0c71fa5436369')
+    version('4.6.3', sha256='e338027b8767c0a7a6e4fd8679182d1b83b5b1a0da0a1fe4546e7c0ca094fc21')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

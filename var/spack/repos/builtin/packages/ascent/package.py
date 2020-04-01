@@ -1,83 +1,72 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
-import socket
+import sys
 import os
+import socket
+import glob
+import shutil
 
 import llnl.util.tty as tty
 from os import environ as env
 
 
-def cmake_cache_entry(name, value):
+def cmake_cache_entry(name, value, vtype=None):
     """
     Helper that creates CMake cache entry strings used in
     'host-config' files.
     """
-    return 'set({0} "{1}" CACHE PATH "")\n\n'.format(name, value)
+    if vtype is None:
+        if value == "ON" or value == "OFF":
+            vtype = "BOOL"
+        else:
+            vtype = "PATH"
+    return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
-class Ascent(Package):
+class Ascent(Package, CudaPackage):
     """Ascent is an open source many-core capable lightweight in situ
     visualization and analysis infrastructure for multi-physics HPC
     simulations."""
 
     homepage = "https://github.com/Alpine-DAV/ascent"
-    url      = "https://github.com/Alpine-DAV/ascent"
+    git      = "https://github.com/Alpine-DAV/ascent.git"
+    url      = "https://github.com/Alpine-DAV/ascent/releases/download/v0.5.0/ascent-v0.5.0-src-with-blt.tar.gz"
 
     maintainers = ['cyrush']
 
     version('develop',
-            git='https://github.com/Alpine-DAV/ascent.git',
             branch='develop',
             submodules=True)
+
+    version('0.5.0', sha256='2837b7371db3ac1bcc31a479d7cf0eb62a503cacadfa4187061502b3c4a89fa0')
 
     ###########################################################################
     # package variants
     ###########################################################################
 
-    variant("shared", default=True, description="Build Conduit as shared libs")
-
-    variant("cmake", default=True,
-            description="Build CMake (if off, attempt to use cmake from PATH)")
+    variant("shared", default=True, description="Build Ascent as shared libs")
+    variant('test', default=True, description='Enable Ascent unit tests')
 
     variant("mpi", default=True, description="Build Ascent MPI Support")
+    variant("serial", default=True, description="build serial (non-mpi) libraries")
 
-    # variants for python support
-    variant("python", default=True, description="Build Conduit Python support")
+    # variants for language support
+    variant("python", default=True, description="Build Ascent Python support")
+    variant("fortran", default=True, description="Build Ascent Fortran support")
 
     # variants for runtime features
-
     variant("vtkh", default=True,
             description="Build VTK-h filter and rendering support")
 
-    variant("tbb", default=True, description="Build tbb support")
+    variant("openmp", default=(sys.platform != 'darwin'),
+            description="build openmp support")
     variant("cuda", default=False, description="Build cuda support")
-
+    variant("mfem", default=False, description="Build MFEM filter support")
     variant("adios", default=False, description="Build Adios filter support")
 
     # variants for dev-tools (docs, etc)
@@ -87,42 +76,67 @@ class Ascent(Package):
     # package dependencies
     ###########################################################################
 
-    depends_on("cmake", when="+cmake")
-    depends_on("conduit@master")
+    # use cmake 3.14, newest that provides proper cuda support
+    # and we have seen errors with cuda in 3.15
+    depends_on("cmake@3.14.1:3.14.99", type='build')
+    depends_on("conduit~python", when="~python")
+    depends_on("conduit+python", when="+python+shared")
+    depends_on("conduit~shared~python", when="~shared")
+    depends_on("conduit~python~mpi", when="~python~mpi")
+    depends_on("conduit+python~mpi", when="+python+shared~mpi")
+    depends_on("conduit~shared~python~mpi", when="~shared~mpi")
 
     #######################
     # Python
     #######################
     # we need a shared version of python b/c linking with static python lib
     # causes duplicate state issues when running compiled python modules.
-    depends_on("python+shared")
-    extends("python", when="+python")
-    # TODO: blas and lapack are disabled due to build
-    # issues Cyrus experienced on OSX 10.11.6
-    depends_on("py-numpy~blas~lapack", when="+python", type=('build', 'run'))
+    depends_on("python+shared", when="+python+shared")
+    extends("python", when="+python+shared")
+    depends_on("py-numpy", when="+python+shared", type=('build', 'run'))
+    depends_on("py-pip", when="+python+shared", type=('build', 'run'))
 
     #######################
     # MPI
     #######################
     depends_on("mpi", when="+mpi")
-    depends_on("py-mpi4py", when="+python+mpi")
+    depends_on("py-mpi4py", when="+mpi+python+shared")
 
     #############################
     # TPLs for Runtime Features
     #############################
 
-    depends_on("vtkh", when="+vtkh")
-    depends_on("vtkh+cuda", when="+vtkh+cuda")
+    depends_on("vtk-h@0.5.0",             when="+vtkh")
+    depends_on("vtk-h@0.5.0~openmp",      when="+vtkh~openmp")
+    depends_on("vtk-h@0.5.0+cuda+openmp", when="+vtkh+cuda+openmp")
+    depends_on("vtk-h@0.5.0+cuda~openmp", when="+vtkh+cuda~openmp")
+
+    depends_on("vtk-h@0.5.0~shared",             when="~shared+vtkh")
+    depends_on("vtk-h@0.5.0~shared~openmp",      when="~shared+vtkh~openmp")
+    depends_on("vtk-h@0.5.0~shared+cuda",        when="~shared+vtkh+cuda")
+    depends_on("vtk-h@0.5.0~shared+cuda~openmp", when="~shared+vtkh+cuda~openmp")
+
+    # mfem
+    depends_on("mfem+threadsafe+shared+mpi+conduit", when="+shared+mfem+mpi")
+    depends_on("mfem+threadsafe~shared+mpi+conduit", when="~shared+mfem+mpi")
+
+    depends_on("mfem+threadsafe+shared~mpi+conduit", when="+shared+mfem~mpi")
+    depends_on("mfem+threadsafe~shared~mpi+conduit", when="~shared+mfem~mpi")
+
     depends_on("adios", when="+adios")
 
     #######################
     # Documentation related
     #######################
     depends_on("py-sphinx", when="+python+doc", type='build')
+    depends_on("py-sphinx-rtd-theme", when="+python+doc", type='build')
+
+    def setup_build_environment(self, env):
+        env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
     def install(self, spec, prefix):
         """
-        Build and install Conduit.
+        Build and install Ascent.
         """
         with working_dir('spack-build', create=True):
             py_site_pkgs_dir = None
@@ -143,11 +157,58 @@ class Ascent(Package):
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
+            print("Configuring Ascent...")
             cmake(*cmake_args)
+            print("Building Ascent...")
             make()
+            # run unit tests if requested
+            if "+test" in spec and self.run_tests:
+                print("Running Ascent Unit Tests...")
+                make("test")
+            print("Installing Ascent...")
             make("install")
             # install copy of host config for provenance
             install(host_cfg_fname, prefix)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """
+        Checks the spack install of ascent using ascents's
+        using-with-cmake example
+        """
+        print("Checking Ascent installation...")
+        spec = self.spec
+        install_prefix = spec.prefix
+        example_src_dir = join_path(install_prefix,
+                                    "examples",
+                                    "ascent",
+                                    "using-with-cmake")
+        print("Checking using-with-cmake example...")
+        with working_dir("check-ascent-using-with-cmake-example",
+                         create=True):
+            cmake_args = ["-DASCENT_DIR={0}".format(install_prefix),
+                          "-DCONDUIT_DIR={0}".format(spec['conduit'].prefix),
+                          "-DVTKM_DIR={0}".format(spec['vtk-m'].prefix),
+                          "-DVTKH_DIR={0}".format(spec['vtk-h'].prefix),
+                          example_src_dir]
+            cmake(*cmake_args)
+            make()
+            example = Executable('./ascent_render_example')
+            example()
+        print("Checking using-with-make example...")
+        example_src_dir = join_path(install_prefix,
+                                    "examples",
+                                    "ascent",
+                                    "using-with-make")
+        example_files = glob.glob(join_path(example_src_dir, "*"))
+        with working_dir("check-ascent-using-with-make-example",
+                         create=True):
+            for example_file in example_files:
+                shutil.copy(example_file, ".")
+            make("ASCENT_DIR={0}".format(install_prefix))
+            example = Executable('./ascent_render_example')
+            example()
 
     def create_host_config(self, spec, prefix, py_site_pkgs_dir=None):
         """
@@ -177,8 +238,7 @@ class Ascent(Package):
 
         if self.compiler.fc:
             # even if this is set, it may not exist so do one more sanity check
-            if os.path.isfile(env["SPACK_FC"]):
-                f_compiler = env["SPACK_FC"]
+            f_compiler = env["SPACK_FC"]
 
         #######################################################################
         # By directly fetching the names of the actual compilers we appear
@@ -222,7 +282,6 @@ class Ascent(Package):
         #######################
         # Compiler Settings
         #######################
-
         cfg.write("#######\n")
         cfg.write("# using %s compiler spec\n" % spec.compiler)
         cfg.write("#######\n\n")
@@ -232,12 +291,27 @@ class Ascent(Package):
         cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER", cpp_compiler))
 
         cfg.write("# fortran compiler used by spack\n")
-        if f_compiler is not None:
+        if "+fortran" in spec and f_compiler is not None:
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "ON"))
-            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER", f_compiler))
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER",
+                                        f_compiler))
         else:
             cfg.write("# no fortran compiler found\n\n")
             cfg.write(cmake_cache_entry("ENABLE_FORTRAN", "OFF"))
+
+        # shared vs static libs
+        if "+shared" in spec:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("BUILD_SHARED_LIBS", "OFF"))
+
+        #######################
+        # Unit Tests
+        #######################
+        if "+test" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         #######################################################################
         # Core Dependencies
@@ -260,7 +334,7 @@ class Ascent(Package):
 
         cfg.write("# Python Support\n")
 
-        if "+python" in spec:
+        if "+python" in spec and "+shared" in spec:
             cfg.write("# Enable python module builds\n")
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "ON"))
             cfg.write("# python from spack \n")
@@ -273,7 +347,7 @@ class Ascent(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
-        if "+doc" in spec:
+        if "+doc" in spec and "+python" in spec:
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "ON"))
 
             cfg.write("# sphinx from spack \n")
@@ -284,22 +358,46 @@ class Ascent(Package):
             cfg.write(cmake_cache_entry("ENABLE_DOCS", "OFF"))
 
         #######################
+        # Serial
+        #######################
+
+        if "+serial" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_SERIAL", "OFF"))
+
+        #######################
         # MPI
         #######################
 
         cfg.write("# MPI Support\n")
 
         if "+mpi" in spec:
+            mpicc_path = spec['mpi'].mpicc
+            mpicxx_path = spec['mpi'].mpicxx
+            mpifc_path = spec['mpi'].mpifc
+            # if we are using compiler wrappers on cray systems
+            # use those for mpi wrappers, b/c  spec['mpi'].mpicxx
+            # etc make return the spack compiler wrappers
+            # which can trip up mpi detection in CMake 3.14
+            if cpp_compiler == "CC":
+                mpicc_path = "cc"
+                mpicxx_path = "CC"
+                mpifc_path = "ftn"
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
-            cfg.write(cmake_cache_entry("MPI_C_COMPILER", spec['mpi'].mpicc))
-            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER",
-                                        spec['mpi'].mpicxx))
-            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                        spec['mpi'].mpifc))
+            cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
+            cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
+            cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
             mpiexe_bin = join_path(spec['mpi'].prefix.bin, 'mpiexec')
             if os.path.isfile(mpiexe_bin):
-                cfg.write(cmake_cache_entry("MPIEXEC",
-                                            mpiexe_bin))
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE",
+                                                mpiexe_bin))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC",
+                                                mpiexe_bin))
         else:
             cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
 
@@ -314,23 +412,42 @@ class Ascent(Package):
         else:
             cfg.write(cmake_cache_entry("ENABLE_CUDA", "OFF"))
 
+        if "+openmp" in spec:
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
+
         #######################
-        # VTK-h
+        # VTK-h (and deps)
         #######################
 
         cfg.write("# vtk-h support \n")
 
         if "+vtkh" in spec:
-            cfg.write("# tbb from spack\n")
-            cfg.write(cmake_cache_entry("TBB_DIR", spec['tbb'].prefix))
-
             cfg.write("# vtk-m from spack\n")
-            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtkm'].prefix))
+            cfg.write(cmake_cache_entry("VTKM_DIR", spec['vtk-m'].prefix))
 
             cfg.write("# vtk-h from spack\n")
-            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtkh'].prefix))
+            cfg.write(cmake_cache_entry("VTKH_DIR", spec['vtk-h'].prefix))
+
+            if "+cuda" in spec:
+                cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "ON"))
+                cfg.write(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
+                          env["SPACK_CXX"]))
+            else:
+                cfg.write(cmake_cache_entry("VTKm_ENABLE_CUDA", "OFF"))
+
         else:
             cfg.write("# vtk-h not built by spack \n")
+
+        #######################
+        # MFEM
+        #######################
+        if "+mfem" in spec:
+            cfg.write("# mfem from spack \n")
+            cfg.write(cmake_cache_entry("MFEM_DIR", spec['mfem'].prefix))
+        else:
+            cfg.write("# mfem not built by spack \n")
 
         #######################
         # Adios

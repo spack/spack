@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,20 +15,26 @@ class RHmisc(RPackage):
     code, and recoding variables."""
 
     homepage = "http://biostat.mc.vanderbilt.edu/Hmisc"
-    url      = "https://cran.rstudio.com/src/contrib/Hmisc_4.0-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Hmisc"
+    url      = "https://cloud.r-project.org/src/contrib/Hmisc_4.1-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Hmisc"
 
-    version('4.0-3', '7091924db1e473419d8116c3335f82da')
+    version('4.2-0', sha256='9e9614673288dd00295f250fa0bf96fc9e9fed692c69bf97691081c1a01411d9')
+    version('4.1-1', sha256='991db21cdf73ffbf5b0239a4876b2e76fd243ea33528afd88dc968792f281498')
 
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-survival', type=('build', 'run'))
+    depends_on('r-survival@2.40-1:', type=('build', 'run'))
     depends_on('r-formula', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-ggplot2@2.2:', type=('build', 'run'))
     depends_on('r-latticeextra', type=('build', 'run'))
     depends_on('r-acepack', type=('build', 'run'))
     depends_on('r-gridextra', type=('build', 'run'))
     depends_on('r-data-table', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
     depends_on('r-base64enc', type=('build', 'run'))
-    depends_on('r-htmltable', type=('build', 'run'))
+    depends_on('r-htmltable@1.11.0:', type=('build', 'run'))
     depends_on('r-viridis', type=('build', 'run'))
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-rpart', type=('build', 'run'))
+    depends_on('r-nnet', type=('build', 'run'))
+    depends_on('r-foreign', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))

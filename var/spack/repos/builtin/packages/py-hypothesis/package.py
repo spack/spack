@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,17 +10,23 @@ class PyHypothesis(PythonPackage):
     """A library for property based testing."""
 
     homepage = "https://github.com/HypothesisWorks/hypothesis-python"
-    url      = "https://pypi.io/packages/source/h/hypothesis/hypothesis-3.7.0.tar.gz"
+    url      = "https://pypi.io/packages/source/h/hypothesis/hypothesis-4.41.2.tar.gz"
 
     import_modules = [
         'hypothesis', 'hypothesis.searchstrategy', 'hypothesis.extra',
-        'hypothesis.tools', 'hypothesis.utils', 'hypothesis.vendor',
-        'hypothesis.internal', 'hypothesis.internal.conjecture'
+        'hypothesis.utils', 'hypothesis.vendor', 'hypothesis.internal',
+        'hypothesis.internal.conjecture'
     ]
 
     # TODO: Add missing dependency required to import hypothesis.extra.django
 
-    version('3.7.0', '4afb25fa6785fceac034b63eaa2dfe28')
+    version('4.41.2', sha256='6847df3ffb4aa52798621dd007e6b61dbcf2d76c30ba37dc2699720e2c734b7a')
+    version('4.24.3', sha256='fd90a319f409f34a173156ca704d6c0c6c0bb30a2e43dbf26aced2c75569e5d5')
+    version('4.7.2',  sha256='87944c6379f77634474b88abbf1e5ed5fe966637cc926131eda5e2af5b54a608')
+    version('3.7.0',  sha256='0fea49d08f2d5884f014151a5af6fb48d862f6ad567ffc4a2e84abf2f186c423')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-attrs@19.2.0:', when='@4.38.2:', type=('build', 'run'))
+    depends_on('py-attrs@16.0.0:', when='@3.44.22:', type=('build', 'run'))
+    depends_on('py-attrs', when='@3.28.0:', type=('build', 'run'))
     depends_on('py-enum34', type=('build', 'run'), when='^python@:2')

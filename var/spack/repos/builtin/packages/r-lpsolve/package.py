@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,8 +14,10 @@ class RLpsolve(RPackage):
        problems, and transportation problems. This version calls
        lp_solve"""
 
-    homepage = "https://cran.r-project.org/web/packages/lpSolve/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lpSolve_5.6.13.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lpSolve"
+    homepage = "https://cloud.r-project.org/package=lpSolve"
+    url      = "https://cloud.r-project.org/src/contrib/lpSolve_5.6.13.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lpSolve"
 
-    version('5.6.13', '8471654d9ae76e0f85ff3449433d4bc1')
+    version('5.6.13.2', sha256='75f0c0af5cbdc219ac29c792342ecd625903632ad86e581c408879958aa88539')
+    version('5.6.13.1', sha256='6ad8dc430f72a4698fc4a615bb5ecb73690b3c4520e84d9094af51a528f720b8')
+    version('5.6.13', sha256='d5d41c53212dead4fd8e6425a9d3c5767cdc5feb19d768a4704116d791cf498d')

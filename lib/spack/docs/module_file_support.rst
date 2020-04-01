@@ -1,3 +1,8 @@
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _modules:
 
 =======
@@ -8,8 +13,8 @@ The use of module systems to manage user environment in a controlled way
 is a common practice at HPC centers that is often embraced also by individual
 programmers on their development machines. To support this common practice
 Spack integrates with `Environment Modules
-<http://modules.sourceforge.net/>`_ ,  `LMod
-<http://lmod.readthedocs.io/en/latest/>`_ and `Dotkit <https://computing.llnl.gov/?set=jobs&page=dotkit>`_ by
+<http://modules.sourceforge.net/>`_  and  `LMod
+<http://lmod.readthedocs.io/en/latest/>`_ by
 providing post-install hooks that generate module files and commands to manipulate them.
 
 .. note::
@@ -62,7 +67,7 @@ to load the ``cmake`` module:
    $ module load cmake-3.7.2-gcc-6.3.0-fowuuby
 
 Neither of these is particularly pretty, easy to remember, or
-easy to type. Luckily, Spack has its own interface for using modules and dotkits.
+easy to type. Luckily, Spack has its own interface for using modules.
 
 ^^^^^^^^^^^^^
 Shell support
@@ -103,18 +108,10 @@ that the startup time may be slightly increased because of that.
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Once you have shell support enabled you can use the same spec syntax
-you're used to:
+you're used to and you can use the same shortened names you use
+everywhere else in Spack.
 
-=========================  ==========================
-Modules                    Dotkit
-=========================  ==========================
-``spack load <spec>``      ``spack use <spec>``
-``spack unload <spec>``    ``spack unuse <spec>``
-=========================  ==========================
-
-And you can use the same shortened names you use everywhere else in
-Spack.  For example, this will add the ``mpich`` package built with
-``gcc`` to your path:
+For example this will add the ``mpich`` package built with ``gcc`` to your path:
 
 .. code-block:: console
 
@@ -122,16 +119,9 @@ Spack.  For example, this will add the ``mpich`` package built with
 
    # ... wait for install ...
 
-   $ spack use mpich %gcc@4.4.7
-   Prepending: mpich@3.0.4%gcc@4.4.7 (ok)
+   $ spack load mpich %gcc@4.4.7
    $ which mpicc
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
-
-Or, similarly with modules, you could type:
-
-.. code-block:: console
-
-   $ spack load mpich %gcc@4.4.7
 
 These commands will add appropriate directories to your ``PATH``,
 ``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer
@@ -139,28 +129,29 @@ want to use a package, you can type unload or unuse similarly:
 
 .. code-block:: console
 
-   $ spack unload mpich %gcc@4.4.7  # modules
-   $ spack unuse  mpich %gcc@4.4.7  # dotkit
+   $ spack unload mpich %gcc@4.4.7
 
 .. note::
 
-   These ``use``, ``unuse``, ``load``, and ``unload`` subcommands are
-   only available if you have enabled Spack's shell support *and* you
-   have dotkit or modules installed on your machine.
+   The ``load`` and ``unload`` subcommands are only available if you
+   have enabled Spack's shell support. These command DO NOT use the
+   underlying Spack-generated module files.
 
-^^^^^^^^^^^^^^^^^^^^^^
-Ambiguous module names
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+Ambiguous specs
+^^^^^^^^^^^^^^^
 
-If a spec used with load/unload or use/unuse is ambiguous (i.e. more
-than one installed package matches it), then Spack will warn you:
+If a spec used with load/unload or is ambiguous (i.e. more than one
+installed package matches it), then Spack will warn you:
 
 .. code-block:: console
 
    $ spack load libelf
-   ==> Error: Multiple matches for spec libelf.  Choose one:
-   libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
-   libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   ==> Error: libelf matches multiple packages.
+   Matching packages:
+     libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
+     libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
+   Use a more specific spec
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
@@ -178,12 +169,19 @@ To identify just the one built with the Intel compiler.
 
 .. _cmd-spack-module-loads:
 
-^^^^^^^^^^^^^^^^^^^^^^
-``spack module loads``
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack module tcl loads``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In some cases, it is desirable to load not just a module, but also all
-the modules it depends on.  This is not required for most modules
+In some cases, it is desirable to use a Spack-generated module, rather
+than relying on Spack's built-in user-environment modification
+capabilities. To translate a spec into a module name, use ``spack
+module tcl loads`` or ``spack module lmod loads`` depending on the
+module system desired.
+
+
+To load not just a module, but also all the modules it depends on, use
+the ``--dependencies`` option. This is not required for most modules
 because Spack builds binaries with RPATH support.  However, not all
 packages use RPATH to find their dependencies: this can be true in
 particular for Python extensions, which are currently *not* built with
@@ -193,21 +191,13 @@ Scripts to load modules recursively may be made with the command:
 
 .. code-block:: console
 
-    $ spack module loads --dependencies <spec>
+    $ spack module tcl loads --dependencies <spec>
 
 An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
 
 .. code-block :: console
 
-    $ source <( spack module loads --dependencies <spec> )
-
-.. warning::
-
-    The ``spack load`` command does not currently accept the
-    ``--dependencies`` flag.  Use ``spack module loads`` instead, for
-    now.
-
-.. See #1662
+    $ source <( spack module tcl loads --dependencies <spec> )
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -216,13 +206,13 @@ Module Commands for Shell Scripts
 
 Although Spack is flexible, the ``module`` command is much faster.
 This could become an issue when emitting a series of ``spack load``
-commands inside a shell script.  By adding the ``--shell`` flag,
-``spack module find`` may also be used to generate code that can be
+commands inside a shell script.  By adding the ``--dependencies`` flag,
+``spack module tcl loads`` may also be used to generate code that can be
 cut-and-pasted into a shell script.  For example:
 
 .. code-block:: console
 
-    $ spack module loads --dependencies py-numpy git
+    $ spack module tcl loads --dependencies py-numpy git
     # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
     module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
     # ncurses@6.0%gcc@4.9.3=linux-x86_64
@@ -262,9 +252,9 @@ Module Prefixes
 ^^^^^^^^^^^^^^^
 
 On some systems, modules are automatically prefixed with a certain
-string; ``spack module loads`` needs to know about that prefix when it
+string; ``spack module tcl loads`` needs to know about that prefix when it
 issues ``module load`` commands.  Add the ``--prefix`` option to your
-``spack module loads`` commands if this is necessary.
+``spack module tcl loads`` commands if this is necessary.
 
 For example, consider the following on one system:
 
@@ -273,11 +263,11 @@ For example, consider the following on one system:
     $ module avail
     linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
 
-    $ spack module loads antlr    # WRONG!
+    $ spack module tcl loads antlr    # WRONG!
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
     module load antlr-2.7.7-gcc-5.3.0-bdpl46y
 
-    $ spack module loads --prefix linux-SuSE11-x86_64/ antlr
+    $ spack module tcl loads --prefix linux-SuSE11-x86_64/ antlr
     # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
     module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
 
@@ -290,15 +280,13 @@ installation of a package. The table below summarizes the essential
 information associated with the different file formats
 that can be generated by Spack:
 
-  +-----------------------------+--------------------+-------------------------------+----------------------------------+----------------------+
-  |                             | **Hook name**      |  **Default root directory**   | **Default template file**        | **Compatible tools** |
-  +=============================+====================+===============================+==================================+======================+
-  |  **Dotkit**                 | ``dotkit``         |  share/spack/dotkit           | templates/modules/modulefile.dk  | DotKit               |
-  +-----------------------------+--------------------+-------------------------------+----------------------------------+----------------------+
-  |  **TCL - Non-Hierarchical** | ``tcl``            |  share/spack/modules          | templates/modules/modulefile.tcl | Env. Modules/LMod    |
-  +-----------------------------+--------------------+-------------------------------+----------------------------------+----------------------+
-  |  **Lua - Hierarchical**     | ``lmod``           |  share/spack/lmod             | templates/modules/modulefile.lua | LMod                 |
-  +-----------------------------+--------------------+-------------------------------+----------------------------------+----------------------+
+  +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
+  |                             | **Hook name**      |  **Default root directory**   | **Default template file**                    | **Compatible tools** |
+  +=============================+====================+===============================+==============================================+======================+
+  |  **TCL - Non-Hierarchical** | ``tcl``            |  share/spack/modules          | share/spack/templates/modules/modulefile.tcl | Env. Modules/LMod    |
+  +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
+  |  **Lua - Hierarchical**     | ``lmod``           |  share/spack/lmod             | share/spack/templates/modules/modulefile.lua | LMod                 |
+  +-----------------------------+--------------------+-------------------------------+----------------------------------------------+----------------------+
 
 
 Spack ships with sensible defaults for the generation of module files, but
@@ -324,8 +312,7 @@ content of the module files generated by Spack. The first one:
 
 .. code-block:: python
 
-   def setup_environment(self, spack_env, run_env):
-       """Set up the compile and runtime environments for a package."""
+   def setup_run_environment(self, env):
        pass
 
 can alter the content of the module file associated with the same package where it is overridden.
@@ -333,16 +320,15 @@ The second method:
 
 .. code-block:: python
 
-   def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-       """Set up the environment of packages that depend on this one"""
+   def setup_dependent_run_environment(self, env, dependent_spec):
        pass
 
 can instead inject run-time environment modifications in the module files of packages
 that depend on it. In both cases you need to fill ``run_env`` with the desired
 list of environment modifications.
 
-.. note::
- The ``r`` package and callback APIs
+.. admonition:: The ``r`` package and callback APIs
+
   An example in which it is crucial to override both methods
   is given by the ``r`` package. This package installs libraries and headers
   in non-standard locations and it is possible to prepend the appropriate directory
@@ -356,15 +342,15 @@ list of environment modifications.
 
   with the following snippet:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
-     :pyobject: R.setup_environment
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
+     :pyobject: R.setup_run_environment
 
   The ``r`` package also knows which environment variable should be modified
   to make language extensions provided by other packages available, and modifies
   it appropriately in the override of the second method:
 
-  .. literalinclude:: ../../../var/spack/repos/builtin/packages/r/package.py
-     :pyobject: R.setup_dependent_environment
+  .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/r/package.py
+     :pyobject: R.setup_dependent_run_environment
 
 .. _modules-yaml:
 
@@ -375,10 +361,10 @@ Write a configuration file
 The configuration files that control module generation behavior
 are named ``modules.yaml``. The default configuration:
 
-.. literalinclude:: ../../../etc/spack/defaults/modules.yaml
+.. literalinclude:: _spack_root/etc/spack/defaults/modules.yaml
    :language: yaml
 
-activates the hooks to generate ``tcl`` and ``dotkit`` module files and inspects
+activates the hooks to generate ``tcl`` module files and inspects
 the installation folder of each package for the presence of a set of subdirectories
 (``bin``, ``man``, ``share/man``, etc.). If any is found its full path is prepended
 to the environment variables listed below the folder name.
@@ -400,12 +386,9 @@ to the generator being customized:
    modules:
      enable:
        - tcl
-       - dotkit
        - lmod
      tcl:
        # contains environment modules specific customizations
-     dotkit:
-       # contains dotkit specific customizations
      lmod:
        # contains lmod specific customizations
 
@@ -485,6 +468,9 @@ you will prevent the generation of module files for any package that
 is compiled with ``gcc@4.4.7``, with the only exception of any ``gcc``
 or any ``llvm`` installation.
 
+
+.. _modules-naming-scheme:
+
 """""""""""""""""""""""""""
 Customize the naming scheme
 """""""""""""""""""""""""""
@@ -533,17 +519,17 @@ most likely via the ``+blas`` variant specification.
 
        modules:
          tcl:
-           naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}-${COMPILERVER}'
+           naming_scheme: '{name}/{version}-{compiler.name}-{compiler.version}'
            all:
              conflict:
-               - '${PACKAGE}'
+               - '{name}'
                - 'intel/14.0.1'
 
      will create module files that will conflict with ``intel/14.0.1`` and with the
      base directory of the same module, effectively preventing the possibility to
      load two or more versions of the same software at the same time. The tokens
      that are available for use in this directive are the same understood by
-     the ``Spec.format`` method.
+     the :meth:`~spack.spec.Spec.format` method.
 
 
 .. note::
@@ -588,15 +574,17 @@ do so by using the environment blacklist:
 .. code-block:: yaml
 
    modules:
-     dotkit:
+     tcl:
        all:
          filter:
            # Exclude changes to any of these variables
            environment_blacklist: ['CPATH', 'LIBRARY_PATH']
 
-The configuration above will generate dotkit module files that will not contain
-modifications to either ``CPATH`` or ``LIBRARY_PATH`` and environment module
-files that instead will contain these modifications.
+The configuration above will generate module files that will not contain
+modifications to either ``CPATH`` or ``LIBRARY_PATH``.
+
+
+.. _autoloading-dependencies:
 
 """""""""""""""""""""
 Autoload dependencies
@@ -616,7 +604,21 @@ activated using ``spack activate``:
 The configuration file above will produce module files that will
 load their direct dependencies if the package installed depends on ``python``.
 The allowed values for the ``autoload`` statement are either ``none``,
-``direct`` or ``all``.
+``direct`` or ``all``.  The default is ``none``.
+
+.. tip::
+  Building external software
+     Setting ``autoload`` to ``direct`` for all packages can be useful
+     when building software outside of a Spack installation that depends on
+     artifacts in that installation.  E.g. (adjust ``lmod`` vs ``tcl``
+     as appropriate):
+
+  .. code-block:: yaml
+
+     modules:
+       lmod:
+         all:
+           autoload: 'direct'
 
 .. note::
   TCL prerequisites
@@ -629,39 +631,38 @@ The allowed values for the ``autoload`` statement are either ``none``,
 Maintaining Module Files
 ------------------------
 
-Spack not only provides great flexibility in the generation of module files
-and in the customization of both their layout and content, but also ships with
-a tool to ease the burden of their maintenance in production environments.
-This tool is the ``spack module`` command:
+Each type of module file has a command with the same name associated
+with it. The actions these commands permit are usually associated
+with the maintenance of a production environment. Here's, for instance,
+a sample of the features of the ``spack module tcl`` command:
 
-.. command-output:: spack module --help
+.. command-output:: spack module tcl --help
 
 .. _cmd-spack-module-refresh:
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-``spack module refresh``
-^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Refresh the set of modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The command that regenerates module files to update their content or
-their layout is ``module refresh``:
+The subcommand that regenerates module files to update their content or
+their layout is ``refresh``:
 
-.. command-output:: spack module refresh --help
+.. command-output:: spack module tcl refresh --help
 
 A set of packages can be selected using anonymous specs for the optional
-``constraint`` positional argument. The argument ``--module-type`` identifies
-the type of module files to refresh. Optionally the entire tree can be deleted
+``constraint`` positional argument. Optionally the entire tree can be deleted
 before regeneration if the change in layout is radical.
 
 .. _cmd-spack-module-rm:
 
 ^^^^^^^^^^^^^^^^^^^
-``spack module rm``
+Delete module files
 ^^^^^^^^^^^^^^^^^^^
 
 If instead what you need is just to delete a few module files, then the right
-command is ``module rm``:
+subcommand is ``rm``:
 
-.. command-output:: spack module rm --help
+.. command-output:: spack module tcl rm --help
 
 .. note::
   We care about your module files!

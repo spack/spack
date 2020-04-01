@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from spack.util.prefix import Prefix
 import os
@@ -39,13 +20,13 @@ class Pgi(Package):
 
     homepage = "http://www.pgroup.com/"
 
-    version('17.10', '85ad6506e7ada610ab11ddb35d697efa')
-    version('17.4',  'a311d2756ddda657860bad8e5725597b')
-    version('17.3',  '6eefc42f85e756cbaba76467ed640902')
-    version('16.10', '9bb6bfb7b1052f9e6a45829ba7a24e47')
-    version('16.5',  'a40e8852071b5d600cb42f31631b3de1')
-    version('16.3',  '618cb7ddbc57d4e4ed1f21a0ab25f427')
-    version('15.7',  '84a689217b17cdaf78c39270c70bea5d')
+    version('19.10', sha256='ac9db73ba80a66fe3bc875f63aaa9e16f54674a4e88b25416432430ba8cf203d')
+    version('19.4',  sha256='23eee0d4da751dd6f247d624b68b03538ebd172e63a053c41bb67013f07cf68e')
+    version('19.1',  sha256='3e05a6db2bf80b5d15f6ff83188f20cb89dc23e233417921e5c0822e7e57d34f')
+    version('18.10', sha256='4b3ff83d2a13de6001bed599246eff8e63ef711b8952d4a9ee12efd666b3e326')
+    version('18.4',  sha256='81e0dcf6000b026093ece180d42d77854c23269fb8409cedcf51c674ca580a0f')
+    version('17.10', sha256='9da8f869fb9b70c0c4423c903d40a9e22d54b997af359a43573c0841165cd1b6')
+    version('17.4',  sha256='115c212d526695fc116fe44f1e722793e60b6f7d1b341cd7e77a95da8e7f6c34')
 
     variant('network', default=True,
             description="Perform a network install")
@@ -68,8 +49,12 @@ class Pgi(Package):
     license_url = 'http://www.pgroup.com/doc/pgiinstall.pdf'
 
     def url_for_version(self, version):
-        return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
-            os.getcwd(), version.up_to(1), version.joined)
+        if int(str(version.up_to(1))) <= 17:
+            return "file://{0}/pgilinux-20{1}-{2}-x86_64.tar.gz".format(
+                os.getcwd(), version.up_to(1), version.joined)
+        else:
+            return "file://{0}/pgilinux-20{1}-{2}-x86-64.tar.gz".format(
+                os.getcwd(), version.up_to(1), version.joined)
 
     def install(self, spec, prefix):
         # Enable the silent installation feature
@@ -103,16 +88,13 @@ class Pgi(Package):
         # Run install script
         os.system("./install")
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix, 'linux86-64', self.version))
 
-        run_env.set('CC',  join_path(prefix.bin, 'pgcc'))
-        run_env.set('CXX', join_path(prefix.bin, 'pgc++'))
-        run_env.set('F77', join_path(prefix.bin, 'pgfortran'))
-        run_env.set('FC',  join_path(prefix.bin, 'pgfortran'))
-
-        run_env.prepend_path('PATH',            prefix.bin)
-        run_env.prepend_path('CPATH',           prefix.include)
-        run_env.prepend_path('LIBRARY_PATH',    prefix.lib)
-        run_env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
-        run_env.prepend_path('MANPATH',         prefix.man)
+        env.prepend_path('PATH', prefix.bin)
+        env.prepend_path('MANPATH', prefix.man)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+        env.set('CC',  join_path(prefix.bin, 'pgcc'))
+        env.set('CXX', join_path(prefix.bin, 'pgc++'))
+        env.set('F77', join_path(prefix.bin, 'pgfortran'))
+        env.set('FC',  join_path(prefix.bin, 'pgfortran'))

@@ -1,0 +1,52 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 810d5d1..d6ba3e9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -49,7 +49,33 @@ message(STATUS "xeus binary version: v${XEUS_BINARY_VERSION}")
+ find_package(nlohmann_json 3.2.0 REQUIRED)
+ find_package(xtl 0.4 REQUIRED)
+ find_package(cppzmq 4.3.0 REQUIRED)
+-find_package(cryptopp REQUIRED)
++
++# cryptopp isn't built with cmake, find it manually
++find_path(cryptopp_ROOT_DIR
++  NAMES include/cryptopp/cryptlib.h
++  PATHS ENV cryptopp_ROOT)
++
++find_path(cryptopp_INCLUDE_DIR
++  NAMES cryptopp/cryptlib.h
++  HINTS ${cryptopp_ROOT_DIR}
++  PATH_SUFFIXES include)
++
++find_library(cryptopp_STATIC_LIB
++  NAMES libcryptopp.a
++  HINTS ${cryptopp_ROOT_DIR}
++  PATH_SUFFIXES lib)
++
++if (NOT cryptopp_INCLUDE_DIR OR NOT cryptopp_STATIC_LIB)
++  message(FATAL_ERROR "cannot find cryptopp, missing include dir or static lib")
++else()
++  message("Found cryptopp: ${cryptopp_ROOT_DIR}")
++endif()
++
++add_library(cryptopp-static STATIC IMPORTED)
++set_target_properties(cryptopp-static
++  PROPERTIES
++    IMPORTED_LOCATION ${cryptopp_STATIC_LIB}
++    INTERFACE_INCLUDE_DIRECTORIES ${cryptopp_INCLUDE_DIR})
+ 
+ # On Unix platforms, ZeroMQ is built with autotools and pkg-config is
+ # required to locate it.
+@@ -157,10 +183,11 @@ get_target_property(cryptopp_INCLUDE_DIR cryptopp-static INTERFACE_INCLUDE_DIREC
+ get_target_property(cryptopp_LIBRARY cryptopp-static LOCATION)
+ set(CMAKE_REQUIRED_LIBRARIES ${cryptopp_LIBRARY})
+ set(CMAKE_REQUIRED_INCLUDES ${cryptopp_INCLUDE_DIR})
++set(CMAKE_REQUIRED_FLAGS "--std=c++11")
+ check_cxx_source_compiles("
+ #include \"cryptopp/config.h\"
+ int main(){
+-  [[maybe_unused]] CryptoPP::byte b = CryptoPP::byte{0x36};
++  CryptoPP::byte b = CryptoPP::byte{0x36};
+ }" HAVE_CRYPTOPP_BYTE_T)
+ 
+ cmake_pop_check_state()

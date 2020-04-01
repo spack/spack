@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,12 +14,16 @@ class Ninja(Package):
 
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
+    git      = "https://github.com/Kitware/ninja.git"
 
-    version('1.8.2', '5fdb04461cc7f5d02536b3bfc0300166')
-    version('1.7.2', '7b482218757acbaeac4d4d54a3cd94e1')
-    version('1.6.0', '254133059f2da79d8727f654d7198f43')
+    version('kitware', branch='features-for-fortran')
+    version('1.10.0', sha256='3810318b08489435f8efc19c05525e80a993af5a55baa0dfeae0465a9d45f99f')
+    version('1.9.0', sha256='5d7ec75828f8d3fd1a0c2f31b5b0cea780cdfe1031359228c428c1a48bfcd5b9')
+    version('1.8.2', sha256='86b8700c3d0880c2b44c2ff67ce42774aaf8c28cbf57725cb881569288c1c6f4')
+    version('1.7.2', sha256='2edda0a5421ace3cf428309211270772dd35a91af60c96f93f90df6bc41b16d9')
+    version('1.6.0', sha256='b43e88fb068fe4d92a3dfd9eb4d19755dae5c33415db2e9b7b61b4659009cde7')
 
-    depends_on('python', type=('build', 'run'))
+    depends_on('python', type='build')
 
     phases = ['configure', 'install']
 
