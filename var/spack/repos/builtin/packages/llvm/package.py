@@ -19,7 +19,7 @@ class Llvm(CMakePackage):
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
     list_url = "http://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
-    maintainers = ['trws']
+    maintainers = ['trws', 'naromero77']
 
     family = "compiler"  # Used by lmod
 
@@ -132,23 +132,16 @@ class Llvm(CMakePackage):
         description="Build with OpenMP capable thread sanitizer",
     )
     variant("python", default=False, description="Install python bindings")
-    variant(
-        "flang",
-        default=False,
-        description="Build flang branch version instead",
-    )
 
     extends("python", when="+python")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
-    depends_on("python@2.7:2.8", when="@5: ~python +flang", type="build")
     depends_on("python", when="@5: ~python", type="build")
 
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
-    depends_on("python@2.7:2.8", when="@5:+python+flang")
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
@@ -158,8 +151,8 @@ class Llvm(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
-    depends_on("libelf")  # libomptarget
-    depends_on("libffi")  # libomptarget
+    depends_on("libelf", when="+cuda")  # libomptarget
+    depends_on("libffi", when="+cuda")  # libomptarget
 
     # ncurses dependency
     depends_on("ncurses+termlib")
