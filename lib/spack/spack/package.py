@@ -1670,7 +1670,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test(self):
         pass
 
-    def run_test(self, exe, options=[], expected=[], status=None):
+    def run_test(self, exe, options=[], expected=[], status=None,
+                 installed=False, purpose=''):
         """Run the test and confirm obtain the expected results
 
         Args:
@@ -1679,11 +1680,22 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             expected (list of str): list of expected output strings
             status (int or None): the expected process status if int or None
                 if the test is expected to succeed
+            installed (bool): the executable should be in the install prefix
+            purpose (str): message to display before running test
         """
         result = 'fail with status {0}'.format(status) if status else 'succeed'
         tty.debug('test: {0}: expect to {1}'.format(exe, result))
+
+        if purpose:
+            tty.msg(purpose)
+
         runner = which(exe)
-        assert runner is not None
+        assert runner is not None, "Failed to find executable '%s'" % exe
+
+        if installed:
+            msg = "Executable '%s' expected in prefix" % exe
+            msg += ", found in %s instead" % runner.path
+            assert self.spec.prefix in runner.path, msg
 
         try:
             output = runner(*options, output=str.split, error=str.split)
