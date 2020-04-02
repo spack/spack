@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPywcs(PythonPackage):
-    """pywcs is a set of routines for 
+    """pywcs is a set of routines for
     handling the FITS World Coordinate System (WCS) standard."""
 
     homepage = "https://github.com/spacetelescope/pywcs"
