@@ -2,12 +2,8 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
-
 import os
-
-import llnl.util.tty as tty
 
 
 class Patchelf(AutotoolsPackage):
@@ -24,21 +20,20 @@ class Patchelf(AutotoolsPackage):
     version('0.8',  sha256='14af06a2da688d577d64ff8dac065bb8903bbffbe01d30c62df7af9bf4ce72fe')
 
     def test(self):
-        patchelf = which('patchelf')
-        assert patchelf is not None
+        # Check patchelf in prefix and reports correct version
+        purpose_str = 'test patchelf is in prefix and reports correct version'
+        self.run_test('patchelf',
+                      options=['--version'],
+                      expected=['patchelf %s' % self.spec.version],
+                      installed=True,
+                      purpose=purpose_str)
 
-        tty.msg('test: Ensuring use of the installed executable')
-        patchelf_dir = os.path.dirname(patchelf.path)
-        assert patchelf_dir == self.prefix.bin
-
-        tty.msg('test: Checking version')
-        output = patchelf('--version', output=str.split, error=str.split)
-        assert output.strip() == 'patchelf {0}'.format(self.spec.version)
-
-        tty.msg('test: Ensuring the rpath is changed')
+        # Check the rpath is changed
         currdir = os.getcwd()
         hello_file = os.path.join(currdir, 'data', 'hello')
-        patchelf('--set-rpath', currdir, hello_file)
-        output = patchelf('--print-rpath', hello_file,
-                          output=str.split, error=str.split)
-        assert output.strip() == currdir
+        self.run_test('patchelf', ['--set-rpath', currdir, hello_file],
+                      purpose='test that patchelf can change rpath')
+        self.run_test('patchelf',
+                      options=['--print-rpath', hello_file],
+                      expected=[currdir],
+                      purpose='test that patchelf actually changed rpath')
