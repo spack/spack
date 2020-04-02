@@ -42,6 +42,7 @@ class Qthreads(AutotoolsPackage):
         multi=False,
         description='Specify which scheduler policy to use')
     variant('static', default=True, description='Build static library')
+    variant('stack_size', default='4096', description='Specify number of bytes to use in a stack. Default is 4096')
 
     depends_on("hwloc@1.0:1.99", when="+hwloc")
 
@@ -63,6 +64,8 @@ class Qthreads(AutotoolsPackage):
         else:
             args.append('--enable-static=no')
 
-        args.append('--with-scheduler=%s', self.spec.variants['scheduler'].value)
+        args.append('--with-default-stack-size=%s' % self.spec.variants['stack_size'].value)
+
+        args.append('--with-scheduler=%s' % self.spec.variants['scheduler'].value)
 
         return args
