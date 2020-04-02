@@ -11,10 +11,11 @@ class IntelMklDnn(CMakePackage):
     (Intel(R) MKL-DNN)."""
 
     homepage = "https://intel.github.io/mkl-dnn/"
-    url      = "https://github.com/intel/mkl-dnn/archive/v1.2.2.tar.gz"
+    url      = "https://github.com/intel/mkl-dnn/archive/v1.3.tar.gz"
 
     maintainers = ['adamjstewart']
 
+    version('1.3',    sha256='7396c20bd0c2dcf71cec84422bd6f9b91778938c10a7578424a7681fb822b077')
     version('1.2.2',  sha256='a71ec1f27c30b8a176605e8a78444f1f12301a3c313b70ff93290926c140509c')
     version('1.2.1',  sha256='c69544783c453ab3fbf14c7a5b9a512561267690c9fc3e7fc3470f04756e0ab3')
     version('1.2',    sha256='30979a09753e8e35d942446c3778c9f0eba543acf2fb0282af8b9c89355d0ddf')
