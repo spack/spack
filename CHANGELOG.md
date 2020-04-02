@@ -25,7 +25,7 @@ This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
 
 2.  **Build pipelines.** You can also build in parallel through Gitlab
    CI. Simply create a Spack environment and push it to Gitlab to build
-   on Gitlab runners. Pipeline support is now integreated into a single
+   on Gitlab runners. Pipeline support is now integrated into a single
    `spack ci` command, so setting it up is easier than ever.  See the
    [Pipelines section](https://spack.readthedocs.io/en/v0.14.0/pipelines.html)
    in the docs.
@@ -125,8 +125,8 @@ RHEL8.
 * mirror bugfixes: symlinks, duplicate patches, and exception handling (#13789)
 * don't try to fetch `BundlePackages` (#13908)
 * avoid re-fetching patches already added to a mirror (#13908)
-* avoid re-fetching alread added patches (#13908)
-* avoid re-fetching alread added patches (#13908)
+* avoid re-fetching already added patches (#13908)
+* avoid re-fetching already added patches (#13908)
 * allow repeated invocations of `spack mirror create` on the same dir (#13908)
 * bugfix for RHEL8 when `python` is unavailable (#14252)
 * improve concretization performance in environments (#14190)
