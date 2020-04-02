@@ -31,7 +31,7 @@ $ spack --debug --stacktrace <command>
 ### Additional information
 
 <!-- These boxes can be checked by replacing [ ] with [x] or by clicking them after submitting the issue. -->
-- [ ] I have run `spack --version` and reported the version of Spack
+- [ ] I have run `spack debug report` and reported the version of Spack/Python/Platform
 - [ ] I have searched the issues of this repo and believe this is not a duplicate
 - [ ] I have run the failing commands in debug mode and reported the output
 
