@@ -16,4 +16,4 @@ class PyPyfits(PythonPackage):
     version('3.5', sha256='fd32596ee09170a70ddc87d0dfc5503d860ef6b68abcff486d7aa6993dff6162')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
