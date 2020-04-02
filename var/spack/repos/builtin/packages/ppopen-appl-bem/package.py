@@ -8,10 +8,11 @@ import os
 
 
 class PpopenApplBem(MakefilePackage):
-    """
-    ppOpen-APPL/BEM is software used to support a boundary element analysis
-    executed on a parallel computer. The current version includes a software
-    framework for a parallel BEM analysis and an H-matrix library.
+    """ppOpen-APPL/BEM is software used to support a boundary element analysis
+    executed on a parallel computer.
+
+    The current version includes a software framework for a parallel BEM
+    analysis and an H-matrix library.
     If you want to use the framework based on dense matrix computations,
     please move to the directory 'src/framework' and
     'src/framework_with_template'.
