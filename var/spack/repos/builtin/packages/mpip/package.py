@@ -20,7 +20,7 @@ class Mpip(AutotoolsPackage):
     variant('demangling', default=False, description="Build with demangling support")
     variant('setjmp',
             default=False,
-            description="Use setjmp instead of glic backtrace() to generate stack traces")
+            description="Replace glic backtrace() with setjmp for stack trace")
 
     depends_on("elf")
     depends_on("libdwarf")
