@@ -16,6 +16,9 @@ class Cryptsetup(AutotoolsPackage):
 
     # If you're adding newer versions, check whether the patch below
     # still needs to be applied.
+    version('2.3.1', sha256='92aba4d559a2cf7043faed92e0f22c5addea36bd63f8c039ba5a8f3a159fe7d2')
+    version('2.2.3', sha256='2af0ec9551ab9c870074cae9d3f68d82cab004f4095fa89db0e4413713424a46')
+    version('2.2.2', sha256='2af0ec9551ab9c870074cae9d3f68d82cab004f4095fa89db0e4413713424a46')
     version('2.2.1', sha256='94e79a31ed38bdb0acd9af7ccca1605a2ac62ca850ed640202876b1ee11c1c61')
 
     depends_on('libuuid', type=('build', 'link'))
@@ -36,7 +39,7 @@ class Cryptsetup(AutotoolsPackage):
     # the LDFLAGS. See https://gitlab.com/cryptsetup/cryptsetup/issues/479
     # This *should* be unnecessary starting with release 2.2.2, see
     # https://gitlab.com/cryptsetup/cryptsetup/issues/479#note_227617031
-    patch('autotools-libintl.patch')
+    patch('autotools-libintl.patch', when='@:2.2.1')
 
     def url_for_version(self, version):
         url = "https://www.kernel.org/pub/linux/utils/cryptsetup/v{0}/cryptsetup-{1}.tar.xz"
