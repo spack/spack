@@ -12,10 +12,16 @@ class Openjdk(Package):
 
     homepage = "https://jdk.java.net"
 
+    # openjdk 11  for aarch64
+    version("11.0.0-2020-01-01", sha256='05c7d9c90edacd853850fbb0f52f8aa482809d0452c599cb9fe0b28b3b4bf329',
+            url="https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk11u-2020-01-01-06-13/OpenJDK11U-jdk_aarch64_linux_hotspot_2020-01-01-06-13.tar.gz",)
     version("11.0.2", sha256="99be79935354f5c0df1ad293620ea36d13f48ec3ea870c838f20c504c9668b57",
             url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz")
     version("11.0.1", sha256="7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd",
             url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz")
+    # openjdk 1.8 for aarch64
+    version("1.8.0_191-b12", sha256="8eee0aede947b804f9a5f49c8a38b52aace8a30a9ebd9383b7d06042fb5a237c",
+            url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u191-b12/OpenJDK8U-jdk_aarch64_linux_hotspot_8u191b12.tar.gz",)
     version("1.8.0_222-b10", sha256="20cff719c6de43f8bb58c7f59e251da7c1fa2207897c9a4768c8c669716dc819",
             url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u222-b10_openj9-0.15.1/OpenJDK8U-jdk_x64_linux_openj9_8u222b10_openj9-0.15.1.tar.gz")
     version("1.8.0_202-b08", sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
@@ -23,11 +29,16 @@ class Openjdk(Package):
     version('1.8.0_40-b25', sha256='79e96dce03a14271040023231a7d0ae374b755d48adf68bbdaec30294e4e2b88',
             url='https://download.java.net/openjdk/jdk8u40/ri/jdk_ri-8u40-b25-linux-x64-10_feb_2015.tar.gz')
 
-    provides('java@11', when='@11.0:11.99')
-    provides('java@8', when='@1.8.0:1.8.999')
+    if 'aarch64' in spack.architecture.sys_type():
+        provides('java@8', when='@1.8.0_191-b12')
+        provides('java@11', when='@11.0.0-2020-01-01')
 
-    conflicts('target=ppc64:', msg='openjdk is only available for x86_64')
-    conflicts('target=ppc64le:', msg='openjdk is only available for x86_64')
+    else:
+        provides('java@8', when='@1.8.0:1.8.999')
+        provides('java@11', when='@11.0:11.99')
+
+    conflicts('target=ppc64:', msg='openjdk is only available for x86_64 and aarch64')
+    conflicts('target=ppc64le:', msg='openjdk is only available for x86_64 and aarch64')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`
