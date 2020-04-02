@@ -49,7 +49,7 @@ class Hdf5(AutotoolsPackage):
             description='Builds a debug version of the library')
     variant('shared', default=True,
             description='Builds a shared version of the library')
-    variant('static', default=False,
+    variant('static', default=True,
             description='Enable static building')
 
     variant('hl', default=False, description='Enable the high-level library')
@@ -258,7 +258,9 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--enable-static-exec')
 
         if '+static' in self.spec:
-            extra_args.append('--enable-static')
+            extra_args.append('--enable-static=yes')
+        else:
+            extra_args.append('--enable-static=no')
 
         if '+pic' in self.spec:
             extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
