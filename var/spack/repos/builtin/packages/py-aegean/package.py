@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyAegean(PythonPackage):
-    """py-aegean (Aegean software tools) is a Aegean source finding package 
+    """py-aegean (Aegean software tools) is a Aegean source finding package
     for radio astronomy researchers."""
 
     homepage = "https://github.com/PaulHancock/Aegean"
