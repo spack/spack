@@ -26,12 +26,18 @@ class Cgns(CMakePackage):
     version('3.3.1',   sha256='81093693b2e21a99c5640b82b267a495625b663d7b8125d5f1e9e7aaa1f8d469')
     version('3.3.0',   sha256='8422c67994f8dc6a2f201523a14f6c7d7e16313bdd404c460c16079dbeafc662')
 
-    variant('hdf5',    default=True,  description='Enable HDF5 interface')
-    variant('fortran', default=False, description='Enable Fortran interface')
-    variant('scoping', default=True,  description='Enable scoping')
-    variant('mpi',     default=True,  description='Enable parallel cgns')
-    variant('int64',   default=False, description='Build with 64-bit integers')
-    variant('shared',  default=True,  description='Enable shared library')
+    variant('hdf5',       default=True,  description='Enable HDF5 interface')
+    variant('fortran',    default=False, description='Enable Fortran interface')
+    variant('base_scope', default=False, description='Enable base scope')
+    variant('scoping',    default=True,  description='Enable scoping')
+    variant('mpi',        default=True,  description='Enable parallel cgns')
+    variant('int64',      default=False, description='Build with 64-bit integers')
+    variant('shared',     default=True,  description='Enable shared library')
+    variant('static',     default=False, description='Build static libraries')
+    variant('testing',    default=False, description='Build CGNS testing')
+    variant('legacy',     default=False, description='Enable legacy options')
+    variant('parallel',   default=False, description='Enable parallel features')
+    variant('mem_debug',  default=False, description='Enable memory debugging option')
 
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
@@ -49,9 +55,21 @@ class Cgns(CMakePackage):
             '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
                 'ON' if '+mpi' in spec else 'OFF'),
             '-DCGNS_ENABLE_TESTS:BOOL=OFF',
+            '-DCGNS_BUILD_TESTING:BOOL=%s' % (
+                'ON' if '+testing' in spec else 'OFF'),
             '-DCGNS_BUILD_CGNSTOOLS:BOOL=OFF',
             '-DCGNS_BUILD_SHARED:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF')
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DCGNS_BUILD_STATIC:BOOL=%s' % (
+                'ON' if '+static' in spec else 'OFF'),
+            '-DCGNS_ENABLE_BASE_SCOPE:BOOL=%s' % (
+                'ON' if '+base_scope' in spec else 'OFF'),
+            '-DCGNS_ENABLE_LEGACY:BOOL=%s' % (
+                'ON' if '+legacy' in spec else 'OFF'),
+            '-DCGNS_ENABLE_PARALLEL:BOOL=%s' % (
+                'ON' if '+parallel' in spec else 'OFF'),
+            '-DCGNS_ENABLE_MEM_DEBUG:BOOL=%s' % (
+                'ON' if '+mem_debug' in spec else 'OFF')
         ])
 
         if '+mpi' in spec:
