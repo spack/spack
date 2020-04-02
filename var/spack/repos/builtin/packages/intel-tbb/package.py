@@ -23,6 +23,7 @@ class IntelTbb(Package):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
+    version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
     version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
     version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
     version('2019.9', sha256='3f5ea81b9caa195f1967a599036b473b2e7c347117330cda99b79cfcf5b77c84')
