@@ -17,9 +17,11 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
+    version('3.12.1', sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0', sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
-    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7', preferred=True)
+    version('3.10.4', sha256='a032e2b8144c2fd825bc26766f586cfb1bd8574bc72efd1aa8ce18dfff8b6c9f', preferred=True)
+    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7')
     version('3.10.2', sha256='381cb01a8ac2f5379a915b124e9c830d727d2c67775ec49609c7153fe765a6f7')
     version('3.10.1', sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
     version('3.10.0', sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
@@ -63,28 +65,28 @@ class Qgis(CMakePackage):
     # Ref. for dependencies:
     # http://htmlpreview.github.io/?https://raw.github.com/qgis/QGIS/master/doc/INSTALL.html
     # https://github.com/qgis/QGIS/blob/master/INSTALL
-    depends_on('qt+dbus')
-    depends_on('proj@4.4.0:')
-    depends_on('geos@3.4.0:')
-    depends_on('sqlite@3.0.0: +column_metadata')
-    depends_on('libspatialite@4.2.0:')
-    depends_on('libspatialindex')
+    depends_on('exiv2')
+    depends_on('expat@1.95:')
     depends_on('gdal@2.1.0: +python', type=('build', 'link', 'run'))
+    depends_on('geos@3.4.0:')
+    depends_on('libspatialindex')
+    depends_on('libspatialite@4.2.0:')
+    depends_on('libzip')
+    depends_on('proj@4.4.0:')
+    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
+    depends_on('py-pyqt4', when='@2')
+    depends_on('py-pyqt5@5.3:', when='@3')
+    depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
+    depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
+    depends_on('qca@2.2.1')
+    depends_on('qjson')
+    depends_on('qscintilla +python')
+    depends_on('qt+dbus')
+    depends_on('qtkeychain@0.5:', when='@3:')
     depends_on('qwt@5:')
     depends_on('qwtpolar')
-    depends_on('expat@1.95:')
-    depends_on('qca@2.2.1')
-    depends_on('py-pyqt4 +qsci', when='@2')
-    depends_on('py-pyqt5@5.3: +qsci', when='@3')
-    depends_on('qscintilla')
-    depends_on('qjson')
-    depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
-    depends_on('qtkeychain@0.5:', when='@3:')
-    depends_on('libzip')
-    depends_on('exiv2')
-    depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
-    depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
+    depends_on('sqlite@3.0.0: +column_metadata')
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
@@ -113,6 +115,8 @@ class Qgis(CMakePackage):
     depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
     depends_on('qt@:4', when='@2')
+
+    patch('pyqt5.patch', when='^qt@5')
 
     def cmake_args(self):
         spec = self.spec

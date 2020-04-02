@@ -174,3 +174,11 @@ class Mesa(AutotoolsPackage):
         args.append('--with-dri-drivers=' + ','.join(args_dri_drivers))
 
         return args
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGL', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs

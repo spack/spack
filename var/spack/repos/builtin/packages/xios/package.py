@@ -13,9 +13,13 @@ class Xios(Package):
 
     homepage = "https://forge.ipsl.jussieu.fr/ioserver/wiki"
 
+    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
+    version('2.5', revision=1860,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.5')
+    version('2.0', revision=1627,
+            svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-2.0')
     version('1.0', revision=910,
             svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/branchs/xios-1.0')
-    version('develop', svn='http://forge.ipsl.jussieu.fr/ioserver/svn/XIOS/trunk')
 
     variant('mode', values=('debug', 'dev', 'prod'), default='dev',
             description='Build for debugging, development or production')
@@ -24,7 +28,6 @@ class Xios(Package):
     # Use spack versions of blitz and netcdf-c for compatibility
     # with recent compilers and optimised platform libraries:
     patch('bld_extern_1.0.patch', when='@:1.0')
-    patch('bld_extern_1.x.patch', when='@1.1:')
 
     # Workaround bug #17782 in llvm, where reading a double
     # followed by a character is broken (e.g. duration '1d'):

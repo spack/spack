@@ -15,6 +15,7 @@ class Amdblis(BlisBase):
     computationally intensive operations.
     """
 
+    _name = 'amdblis'
     homepage = "https://developer.amd.com/amd-aocl/blas-library/"
     url = "https://github.com/amd/blis/archive/2.1.tar.gz"
     git = "https://github.com/amd/blis.git"

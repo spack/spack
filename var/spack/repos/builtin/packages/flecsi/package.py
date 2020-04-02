@@ -20,12 +20,14 @@ class Flecsi(CMakePackage):
     homepage = 'http://flecsi.org/'
     git      = 'https://github.com/laristra/flecsi.git'
 
-    version('master', branch='master', submodules=False, preferred=True)
+    version('devel', branch='devel', submodules=False, preferred=False)
+    version('1', branch='1', submodules=False, preferred=True)
+    version('1.4', branch='1.4', submodules=False, preferred=False)
 
     variant('build_type', default='Release',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
             description='The build type to build', multi=False)
-    variant('backend', default='mpi', values=('serial', 'mpi', 'legion', 'hpx'),
+    variant('backend', default='mpi', values=('serial', 'mpi', 'legion', 'hpx', 'charmpp'),
             description='Backend to use for distributed memory', multi=False)
     variant('debug_backend', default=False,
             description='Build Backend with Debug Mode')
@@ -64,8 +66,8 @@ class Flecsi(CMakePackage):
     depends_on('legion@ctrl-rep+shared+mpi build_type=Debug', when='backend=legion +debug_backend ~hdf5')
     depends_on('legion@ctrl-rep+shared+mpi+hdf5 build_type=Release', when='backend=legion ~debug_backend +hdf5')
     depends_on('legion@ctrl-rep+shared+mpi build_type=Release', when='backend=legion ~debug_backend ~hdf5')
-    depends_on('hpx@1.3.0 cxxstd=14 build_type=Debug', when='backend=hpx +debug_backend')
-    depends_on('hpx@1.3.0 cxxstd=14 build_type=Release', when='backend=hpx ~debug_backend')
+    depends_on('hpx@1.3.0 cxxstd=14 malloc=system build_type=Debug', when='backend=hpx +debug_backend')
+    depends_on('hpx@1.3.0 cxxstd=14 malloc=system build_type=Release', when='backend=hpx ~debug_backend')
     depends_on('boost@1.70.0: cxxstd=14 +program_options')
     depends_on('metis@5.1.0:')
     depends_on('parmetis@4.0.3:')

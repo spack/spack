@@ -55,7 +55,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('readline')
     depends_on('pkgconfig', type='build')
     depends_on('libxpm')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     # optional dependencies:
     depends_on('libcerf', when='+libcerf')

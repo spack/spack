@@ -24,6 +24,7 @@ class Qt(Package):
 
     phases = ['configure', 'build', 'install']
 
+    version('5.14.2', sha256='c6fcd53c744df89e7d3223c02838a33309bd1c291fcb6f9341505fe99f7f19fa')
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8')
     version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba')
     version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
@@ -128,13 +129,13 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
-    depends_on("sqlite", when='+sql', type=('build', 'run'))
-    depends_on("sqlite+column_metadata", when='+sql%intel', type=('build', 'run'))
+    depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
+    depends_on("libsm", when='@3')
     depends_on("pcre+multibyte", when='@5.0:5.8')
     depends_on("inputproto", when='@:5.8')
-    depends_on("openssl@:1.0.999", when='@:5.9+ssl')
+    depends_on("openssl@:1.0.999", when='@4:5.9+ssl')
 
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')

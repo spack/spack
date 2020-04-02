@@ -24,6 +24,7 @@ class Lmod(AutotoolsPackage):
     version('8.1.5',  sha256='3e5846d3d8e593cbcdfa0aed1474569bf5b5cfd19fd288de22051823d449d344')
     version('8.0.9',  sha256='9813c22ae4dd21eb3dc480f6ce307156512092b4bca954bf8aacc15944f23673')
     version('7.8.15', sha256='00a257f5073d656adc73045997c28f323b7a4f6d901f1c57b7db2b0cd6bee6e6')
+    version('7.8.1',  sha256='74244c22cecd72777e75631f357d2e20ff7f2b9c2ef59e4e38b5a171b7b6eeea')
     version('7.8',    sha256='40388380a36a00c3ce929a9f88c8fffc93deeabf87a7c3f8864a82acad38c3ba')
     version('7.7.29', sha256='269235d07d8ea387a2578f90bb64cf8ad16b4f28dcce196b293eb48cf1f71fb4')
     version('7.7.13', sha256='6145f075e5d49e12fcf0e75bb38afb27f205d23ba3496c1ff6c8b2cbaa9908be')
@@ -45,6 +46,9 @@ class Lmod(AutotoolsPackage):
     depends_on('lua-luafilesystem', type=('build', 'run'))
     depends_on('tcl', type=('build', 'link', 'run'))
 
+    variant('auto_swap', default=False, description='Enable auto swapping conflicting modules')
+    variant('redirect', default=True, description='Enables redirect instead of pager')
+
     patch('fix_tclsh_paths.patch', when='@:6.4.3')
     patch('0001-fix-problem-with-MODULESHOME-and-issue-271.patch', when='@7.3.28:7.4.10')
 
@@ -64,3 +68,18 @@ class Lmod(AutotoolsPackage):
         if self.spec.version <= Version('6.4.3'):
             for tclscript in glob('src/*.tcl'):
                 filter_file(r'^#!.*tclsh', '#!@path_to_tclsh@', tclscript)
+
+    def configure_args(self):
+        args = []
+
+        if '+auto_swap' in self.spec:
+            args.append('--with-autoSwap=yes')
+        else:
+            args.append('--with-autoSwap=no')
+
+        if '+redirect' in self.spec:
+            args.append('--with-redirect=yes')
+        else:
+            args.append('--with-redirect=no')
+
+        return args
