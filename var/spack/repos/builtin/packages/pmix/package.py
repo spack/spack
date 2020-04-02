@@ -50,8 +50,8 @@ class Pmix(AutotoolsPackage):
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
     depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
 
-    variant('pmi_backwards_compatibility', 
-            default=True, 
+    variant('pmi_backwards_compatibility',
+            default=True,
             description="Toggle pmi backwards compatibility")
 
     def configure_args(self):
