@@ -37,8 +37,6 @@ class CBlosc(CMakePackage):
     patch('test_forksafe.patch', when='@1.15.0:1.17.0%intel')
 
     def cmake_args(self):
-        define = CMakePackage.define_from_variant
-
         args = []
 
         if '+avx2' in self.spec:
