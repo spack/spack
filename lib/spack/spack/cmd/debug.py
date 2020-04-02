@@ -83,9 +83,9 @@ def create_db_tarball(args):
 
 
 def report(args):
-    print('* Spack:', get_version())
-    print('* Python:', platform.python_version())
-    print('* Platform:', architecture.Arch(
+    print('* **Spack:**', get_version())
+    print('* **Python:**', platform.python_version())
+    print('* **Platform:**', architecture.Arch(
         architecture.platform(), 'frontend', 'frontend'))
 
 def debug(parser, args):
