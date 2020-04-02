@@ -15,10 +15,3 @@ class PyEphem(PythonPackage):
 
     version('3.7.7.1', sha256='d9d05d85c0d38a79169acaef25964ac9df2d808f0d833354545b9ef681ff584d')
 
-    depends_on('python', type=('build', 'run'))
-
-    # Prevent passing --single-version-externally-managed to
-    # setup.py, which it does not support.
-    # code copied from scons/package.py
-    def install_args(self, spec, prefix):
-        return ['--prefix={0}'.format(prefix), '--root=/']
