@@ -33,6 +33,15 @@ class Qthreads(AutotoolsPackage):
         default=True,
         description='hwloc support'
     )
+    variant('spawn_cache',
+            default=True,
+            description='sets if qthreads should use a worker specific cache of spawns')
+    variant('scheduler', default='nemesis',
+        values=('nemesis', 'lifo', 'mutexfifo', 'mtsfifo',
+                'sherwood', 'distrib', 'nottingham'),
+        multi=False,
+        description='Specify which scheduler policy to use')
+    variant('static', default=True, description='Build static library')
 
     depends_on("hwloc@1.0:1.99", when="+hwloc")
 
@@ -45,4 +54,15 @@ class Qthreads(AutotoolsPackage):
                 "--with-hwloc=%s" % spec["hwloc"].prefix]
         else:
             args = ["--with-topology=no"]
+
+        if '~spawn_cache' in self.spec:
+            args.append('--disable-spawn-cache')
+
+        if '+static' in self.spec:
+            args.append('--enable-static=yes')
+        else:
+            args.append('--enable-static=no')
+
+        args.append('--with-scheduler=%s', self.spec.variants['scheduler'].value)
+
         return args
