@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.compiler
+import re
 
 
 class Arm(spack.compiler.Compiler):
@@ -36,7 +37,7 @@ class Arm(spack.compiler.Compiler):
     # /opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin
     version_argument = '--version'
     version_regex = r'Arm C\/C\+\+\/Fortran Compiler version ([\d\.]+) '\
-                    '\(build number (\d+)\) '
+                    r'\(build number (\d+)\) '
 
     @classmethod
     def extract_version_from_output(cls, output):
