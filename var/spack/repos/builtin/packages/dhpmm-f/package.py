@@ -47,6 +47,5 @@ class DhpmmF(MakefilePackage):
                             'CXX={0}'.format(spack_cxx))
 
     def install(self, spec, prefix):
-        make()
         mkdirp(prefix.bin)
         install('test/source4_SpMV', prefix.bin)
