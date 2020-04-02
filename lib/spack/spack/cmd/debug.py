@@ -88,6 +88,7 @@ def report(args):
     print('* **Platform:**', architecture.Arch(
         architecture.platform(), 'frontend', 'frontend'))
 
+
 def debug(parser, args):
     action = {
         'create-db-tarball': create_db_tarball,
