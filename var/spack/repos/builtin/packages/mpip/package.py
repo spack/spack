@@ -17,7 +17,10 @@ class Mpip(AutotoolsPackage):
     version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
     variant('shared', default=False, description="Build the shared library")
-    variant('demangling', default=False)
+    variant('demangling', default=False, description="Build with demangling support")
+    variant('setjmp',
+            default=False,
+            description="Use setjmp instead of glic backtrace() to generate stack traces")
 
     depends_on("elf")
     depends_on("libdwarf")
@@ -41,5 +44,10 @@ class Mpip(AutotoolsPackage):
             config_args.append('--enable-demangling')
         else:
             config_args.append('--disable-demangling')
+
+        if '+setjmp' in self.spec:
+            config_args.append('--enable-setjmp')
+        else:
+            config_args.append('--disable-setjmp')
 
         return config_args
