@@ -7,12 +7,13 @@ from spack import *
 
 
 def is_integer(x):
-     """Any integer value"""
+    """Any integer value"""
 
-     try:
+    try:
         return float(x).is_integer()
-     except ValueError:
-         return False
+    except ValueError:
+        return False
+
 
 class Qthreads(AutotoolsPackage):
     """The qthreads API is designed to make using large numbers of
@@ -42,7 +43,7 @@ class Qthreads(AutotoolsPackage):
         description='hwloc support'
     )
     variant('spawn_cache',
-            default=True,
+            default=False,
             description='enables worker specific cache of spawns')
     variant('scheduler', default='nemesis',
             values=('nemesis', 'lifo', 'mutexfifo', 'mtsfifo',
@@ -50,12 +51,10 @@ class Qthreads(AutotoolsPackage):
             multi=False,
             description='Specify which scheduler policy to use')
     variant('static', default=True, description='Build static library')
-    variant(
-         'stack_size',
-         default=4096,
-         description='Specify number of bytes to use in a stack',
-         values=is_integer
-     )
+    variant('stack_size',
+            default=4096,
+            description='Specify number of bytes to use in a stack',
+            values=is_integer)
 
     depends_on("hwloc@1.0:1.99", when="+hwloc")
 
