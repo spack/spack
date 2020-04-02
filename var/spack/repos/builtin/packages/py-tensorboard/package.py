@@ -10,10 +10,11 @@ class PyTensorboard(Package):
     graphs."""
 
     homepage = "https://pypi.python.org/project/tensorboard"
-    url      = "https://github.com/tensorflow/tensorboard/archive/1.12.2.tar.gz"
+    url      = "https://github.com/tensorflow/tensorboard/archive/2.2.0.tar.gz"
 
     version('2.2.0', sha256='d0dfbf0e4b3b5ebbc3fafa6d281d4b9aa5478eac6bac3330652ab6674278ab77')
 
+    depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('bazel@0.26.1:', type='build')
     depends_on('py-setuptools@41.0.0:', type='build')
     depends_on('py-absl-py@0.4:', type=('build', 'run'))
