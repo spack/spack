@@ -12,6 +12,8 @@ class Libceed(Package):
     homepage = "https://github.com/CEED/libCEED"
     git      = "https://github.com/CEED/libCEED.git"
 
+    maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
+
     version('develop', branch='master')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
     version('0.5', tag='v0.5')

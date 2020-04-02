@@ -16,6 +16,8 @@ class Ceed(BundlePackage):
 
     homepage = "https://ceed.exascaleproject.org"
 
+    maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
+
     version('3.0.0')
     version('2.0.0')
     version('1.0.0')

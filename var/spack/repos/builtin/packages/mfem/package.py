@@ -16,8 +16,8 @@ class Mfem(Package):
     homepage = 'http://www.mfem.org'
     git      = 'https://github.com/mfem/mfem.git'
 
-    maintainers = ['goxberry', 'tzanio', 'markcmiller86', 'acfisher',
-                   'v-dobrev']
+    maintainers = ['v-dobrev', 'tzanio', 'acfisher',
+                   'goxberry', 'markcmiller86']
 
     # Recommended mfem builds to test when updating this file: see the shell
     # script 'test_builds.sh' in the same directory as this file.
