@@ -35,14 +35,16 @@ class Qthreads(AutotoolsPackage):
     )
     variant('spawn_cache',
             default=True,
-            description='sets if qthreads should use a worker specific cache of spawns')
+            description='enables worker specific cache of spawns')
     variant('scheduler', default='nemesis',
-        values=('nemesis', 'lifo', 'mutexfifo', 'mtsfifo',
-                'sherwood', 'distrib', 'nottingham'),
-        multi=False,
-        description='Specify which scheduler policy to use')
+            values=('nemesis', 'lifo', 'mutexfifo', 'mtsfifo',
+                    'sherwood', 'distrib', 'nottingham'),
+            multi=False,
+            description='Specify which scheduler policy to use')
     variant('static', default=True, description='Build static library')
-    variant('stack_size', default='4096', description='Specify number of bytes to use in a stack. Default is 4096')
+    variant('stack_size',
+            default='4096',
+            description='Specify number of bytes to use in a stack')
 
     depends_on("hwloc@1.0:1.99", when="+hwloc")
 
@@ -64,8 +66,10 @@ class Qthreads(AutotoolsPackage):
         else:
             args.append('--enable-static=no')
 
-        args.append('--with-default-stack-size=%s' % self.spec.variants['stack_size'].value)
+        args.append('--with-default-stack-size=%s'
+                    % self.spec.variants['stack_size'].value)
 
-        args.append('--with-scheduler=%s' % self.spec.variants['scheduler'].value)
+        args.append('--with-scheduler=%s'
+                    % self.spec.variants['scheduler'].value)
 
         return args
