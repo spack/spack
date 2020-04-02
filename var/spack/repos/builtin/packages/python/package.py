@@ -1111,9 +1111,8 @@ class Python(AutotoolsPackage):
                 os.remove(dst)
 
     def test(self):
-        # guaranteed executable name
         # do not use self.command because we are also testing the run env
-        exe = 'python3' if self.spec.satisfies('@3:') else 'python'
+        exe = self.command.name
 
         # test hello world
         self.run_test(exe, options=['-c', 'print("hello world!")'],
