@@ -241,7 +241,7 @@ class Mumps(Package):
         else:
             makefile_conf.extend([
                 'LIBEXT  = .a',
-                'AR = ar vr',
+                'AR = ar vr ',
                 'RANLIB = ranlib'
             ])
 

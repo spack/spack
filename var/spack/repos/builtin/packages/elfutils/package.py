@@ -21,6 +21,9 @@ class Elfutils(AutotoolsPackage):
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    # Sourceware is often slow to respond.
+    fetch_options = {'timeout': 60}
+
     version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
     version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
     version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')

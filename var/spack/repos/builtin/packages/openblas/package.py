@@ -18,6 +18,8 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.9', sha256='17d4677264dfbc4433e97076220adc79b050e4f8a083ea3f853a53af253bc380')
+    version('0.3.8', sha256='8f86ade36f0dbed9ac90eb62575137388359d97d8f93093b38abe166ad7ef3a8')
     version('0.3.7', sha256='bde136122cef3dd6efe2de1c6f65c10955bbb0cc01a520c2342f5287c28f9379')
     version('0.3.6', sha256='e64c8fe083832ffbc1459ab6c72f71d53afd3b36e8497c922a15a06b72e9002f')
     version('0.3.5', sha256='0950c14bd77c90a6427e26210d6dab422271bc86f9fc69126725833ecdaa0e85')
@@ -36,6 +38,7 @@ class Openblas(MakefilePackage):
     variant('ilp64', default=False, description='Force 64-bit Fortran native integers')
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
+    variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
 
     variant(
         'threads', default='none',
@@ -57,6 +60,8 @@ class Openblas(MakefilePackage):
     patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
     patch('openblas_icc_fortran.patch', when='%intel@16.0:')
     patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
+    # See https://github.com/spack/spack/issues/15385
+    patch('lapack-0.3.9-xerbl.patch', when='@0.3.8: %intel')
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/xianyi/OpenBLAS/pull/1098
@@ -84,10 +89,17 @@ class Openblas(MakefilePackage):
           sha256='f1b066a4481a50678caeb7656bf3e6764f45619686ac465f257c8017a2dc1ff0',
           when='@0.3.0:0.3.3')
 
+    # Fix https://github.com/xianyi/OpenBLAS/issues/2431
+    # Patch derived from https://github.com/xianyi/OpenBLAS/pull/2424
+    patch('openblas-0.3.8-darwin.patch', when='@0.3.8 platform=darwin')
+
     # Add conditions to f_check to determine the Fujitsu compiler
     patch('openblas_fujitsu.patch', when='%fj')
 
+    # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
+    conflicts('+consistent_fpcsr', when='threads=none',
+              msg='FPCSR consistency only applies to multithreading')
 
     @property
     def parallel(self):
@@ -130,12 +142,23 @@ class Openblas(MakefilePackage):
 
         return micros
 
-    @staticmethod
-    def _microarch_target_args(microarch, available_targets):
+    def _microarch_target_args(self):
         """Given a spack microarchitecture and a list of targets found in
         OpenBLAS' TargetList.txt, determine the best command-line arguments.
         """
-        args = []  # Return value
+        # Read available openblas targets
+        targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
+        if os.path.exists(targetlist_name):
+            with open(targetlist_name) as f:
+                available_targets = self._read_targets(f)
+        else:
+            available_targets = []
+
+        # Get our build microarchitecture
+        microarch = self.spec.target
+
+        # List of arguments returned by this function
+        args = []
 
         # List of available architectures, and possible aliases
         openblas_arch = set(['alpha', 'arm', 'ia64', 'mips', 'mips64',
@@ -159,11 +182,14 @@ class Openblas(MakefilePackage):
                 if microarch.name in available_targets:
                     break
 
-        arch_name = microarch.family.name
-        if arch_name in openblas_arch:
-            # Apply possible spack->openblas arch name mapping
-            arch_name = openblas_arch_map.get(arch_name, arch_name)
-            args.append('ARCH=' + arch_name)
+        if self.version >= Version("0.3"):
+            # 'ARCH' argument causes build errors in older OpenBLAS
+            # see https://github.com/spack/spack/issues/15385
+            arch_name = microarch.family.name
+            if arch_name in openblas_arch:
+                # Apply possible spack->openblas arch name mapping
+                arch_name = openblas_arch_map.get(arch_name, arch_name)
+                args.append('ARCH=' + arch_name)
 
         if microarch.vendor == 'generic':
             # User requested a generic platform, or we couldn't find a good
@@ -183,8 +209,6 @@ class Openblas(MakefilePackage):
 
     @property
     def make_defs(self):
-        spec = self.spec
-
         # Configure fails to pick up fortran from FC=/abs/path/to/fc, but
         # works fine with FC=/abs/path/to/gfortran.
         # When mixing compilers make sure that
@@ -202,13 +226,7 @@ class Openblas(MakefilePackage):
             make_defs.append('MAKE_NB_JOBS=0')  # flag provided by OpenBLAS
 
         # Add target and architecture flags
-        targetlist_name = join_path(self.stage.source_path, "TargetList.txt")
-        if os.path.exists(targetlist_name):
-            with open(targetlist_name) as f:
-                avail_targets = self._read_targets(f)
-        else:
-            avail_targets = []
-        make_defs += self._microarch_target_args(spec.target, avail_targets)
+        make_defs += self._microarch_target_args()
 
         if '~shared' in self.spec:
             if '+pic' in self.spec:
@@ -232,6 +250,11 @@ class Openblas(MakefilePackage):
         # 64bit ints
         if '+ilp64' in self.spec:
             make_defs += ['INTERFACE64=1']
+
+        # Synchronize floating-point control and status register (FPCSR)
+        # between threads (x86/x86_64 only).
+        if '+consistent_fpcsr' in self.spec:
+            make_defs += ['CONSISTENT_FPCSR=1']
 
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):

@@ -20,28 +20,11 @@ test_module_lines = ['prepend-path LD_LIBRARY_PATH /path/to/lib',
                      'setenv LDFLAGS -L/path/to/lib',
                      'prepend-path PATH /path/to/bin']
 
-
-@pytest.fixture
-def module_function_test_mode():
-    old_mode = spack.util.module_cmd._test_mode
-    spack.util.module_cmd._test_mode = True
-
-    yield
-
-    spack.util.module_cmd._test_mode = old_mode
+_test_template = "'. %s 2>&1' % args[1]"
 
 
-@pytest.fixture
-def save_module_func():
-    old_func = spack.util.module_cmd.module
-
-    yield
-
-    spack.util.module_cmd.module = old_func
-
-
-def test_module_function_change_env(tmpdir, working_env,
-                                    module_function_test_mode):
+def test_module_function_change_env(tmpdir, working_env, monkeypatch):
+    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('export TEST_MODULE_ENV_VAR=TEST_SUCCESS\n')
@@ -53,7 +36,8 @@ def test_module_function_change_env(tmpdir, working_env,
     assert os.environ['NOT_AFFECTED'] == "NOT_AFFECTED"
 
 
-def test_module_function_no_change(tmpdir, module_function_test_mode):
+def test_module_function_no_change(tmpdir, monkeypatch):
+    monkeypatch.setattr(spack.util.module_cmd, '_cmd_template', _test_template)
     src_file = str(tmpdir.join('src_me'))
     with open(src_file, 'w') as f:
         f.write('echo TEST_MODULE_FUNCTION_PRINT')
@@ -65,11 +49,11 @@ def test_module_function_no_change(tmpdir, module_function_test_mode):
     assert os.environ == old_env
 
 
-def test_get_path_from_module_faked(save_module_func):
+def test_get_path_from_module_faked(monkeypatch):
     for line in test_module_lines:
         def fake_module(*args):
             return line
-        spack.util.module_cmd.module = fake_module
+        monkeypatch.setattr(spack.util.module_cmd, 'module', fake_module)
 
         path = get_path_from_module('mod')
         assert path == '/path/to'

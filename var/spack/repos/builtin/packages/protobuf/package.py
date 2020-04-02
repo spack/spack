@@ -39,6 +39,9 @@ class Protobuf(CMakePackage):
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     depends_on('zlib')
 
@@ -48,7 +51,10 @@ class Protobuf(CMakePackage):
     # first fixed in 3.4.0: https://github.com/google/protobuf/pull/3406
     patch('pkgconfig.patch', when='@:3.3.2')
 
-    patch('intel_inline.patch', when='@3.2.0: %intel')
+    patch('intel-v1.patch', when='@3.2:@3.6 %intel')
+
+    # See https://github.com/protocolbuffers/protobuf/pull/7197
+    patch('intel-v2.patch', when='@3.7:@3.11.4 %intel')
 
     def fetch_remote_versions(self):
         """Ignore additional source artifacts uploaded with releases,

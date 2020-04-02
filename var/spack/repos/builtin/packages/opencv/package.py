@@ -25,8 +25,11 @@ class Opencv(CMakePackage, CudaPackage):
     git      = 'https://github.com/opencv/opencv.git'
 
     version('master', branch='master')
+    version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
+    version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
+    version('4.1.1', sha256='5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217')
     version('4.1.0-openvino', sha256='58764d2487c6fb4cd950fb46483696ae7ae28e257223d6e44e162caa22ee9e5c')
-    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7', preferred=True)
+    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7')
     version('4.0.1-openvino', sha256='8cbe32d12a70decad7a8327eb4fba46016a9c47ff3ba6e114d27b450f020716f')
     version('4.0.1',          sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
     version('4.0.0-openvino', sha256='aa910078ed0b7e17bd10067e04995c131584a6ed6d0dcc9ca44a292aa8e296fc')
@@ -102,8 +105,7 @@ class Opencv(CMakePackage, CudaPackage):
     # the current development branch of OpenCV. See #8461 for more information.
     patch('dnn_cuda.patch', when='@3.3.0:3.4.1+cuda+dnn')
 
-    depends_on('eigen~mpfr', when='+eigen', type='build')
-
+    depends_on('eigen', when='+eigen')
     depends_on('zlib', when='+zlib')
     depends_on('libpng', when='+png')
     depends_on('jpeg', when='+jpeg')

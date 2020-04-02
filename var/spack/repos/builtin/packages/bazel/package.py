@@ -92,6 +92,7 @@ class Bazel(Package):
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
     depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
+    depends_on('zip', type=('build', 'run'))
 
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')

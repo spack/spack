@@ -226,7 +226,7 @@ _config_sections() {
 _extensions() {
     if [[ -z "${SPACK_EXTENSIONS:-}" ]]
     then
-        SPACK_EXTENSIONS="aspell go-bootstrap go icedtea jdk kim-api lua matlab mofem-cephas octave openjdk perl python r ruby rust tcl yorick"
+        SPACK_EXTENSIONS="$(spack extensions)"
     fi
     SPACK_COMPREPLY="$SPACK_EXTENSIONS"
 }
@@ -382,7 +382,7 @@ _spack_buildcache() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory --no-rebuild-index -y --spec-yaml --no-deps"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --no-rebuild-index -y --spec-yaml --only"
     else
         _all_packages
     fi
@@ -391,7 +391,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
     else
         _all_packages
     fi
@@ -945,7 +945,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --no-check-signature --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1025,7 +1025,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1272,7 +1272,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c"
+        SPACK_COMPREPLY="-h --help -c -m"
     else
         SPACK_COMPREPLY=""
     fi

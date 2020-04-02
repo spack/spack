@@ -7,7 +7,7 @@ import os
 import pytest
 import shutil
 
-from llnl.util.filesystem import mkdirp, touch, working_dir
+import llnl.util.filesystem as fs
 
 from spack.package import InstallError, PackageBase, PackageStillNeededError
 import spack.error
@@ -15,7 +15,8 @@ import spack.patch
 import spack.repo
 import spack.store
 from spack.spec import Spec
-from spack.package import _spack_build_envfile, _spack_build_logfile
+from spack.package import (_spack_build_envfile, _spack_build_logfile,
+                           _spack_configure_argsfile)
 
 
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
@@ -99,6 +100,9 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
         spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+
+        # must clear failure markings for the package before re-installing it
+        spack.store.db.clear_failure(spec, True)
 
         pkg.succeed = True
         pkg.stage = MockStage(pkg.stage)
@@ -264,6 +268,9 @@ def test_partial_install_keep_prefix(install_mockery, mock_fetch):
             pkg.do_install(keep_prefix=True)
         assert os.path.exists(pkg.prefix)
 
+        # must clear failure markings for the package before re-installing it
+        spack.store.db.clear_failure(spec, True)
+
         pkg.succeed = True   # make the build succeed
         pkg.stage = MockStage(pkg.stage)
         pkg.do_install(keep_prefix=True)
@@ -300,12 +307,13 @@ def test_store(install_mockery, mock_fetch):
 
 
 @pytest.mark.disable_clean_stage_check
-def test_failing_build(install_mockery, mock_fetch):
+def test_failing_build(install_mockery, mock_fetch, capfd):
     spec = Spec('failing-build').concretized()
     pkg = spec.package
 
     with pytest.raises(spack.build_environment.ChildError):
         pkg.do_install()
+        assert 'InstallError: Expected Failure' in capfd.readouterr()[0]
 
 
 class MockInstallError(spack.error.SpackError):
@@ -372,11 +380,11 @@ def test_pkg_build_paths(install_mockery):
 
     # Backward compatibility checks
     log_dir = os.path.dirname(log_path)
-    mkdirp(log_dir)
-    with working_dir(log_dir):
+    fs.mkdirp(log_dir)
+    with fs.working_dir(log_dir):
         # Start with the older of the previous log filenames
         older_log = 'spack-build.out'
-        touch(older_log)
+        fs.touch(older_log)
         assert spec.package.log_path.endswith(older_log)
 
         # Now check the newer log filename
@@ -403,13 +411,16 @@ def test_pkg_install_paths(install_mockery):
     env_path = os.path.join(spec.prefix, '.spack', _spack_build_envfile)
     assert spec.package.install_env_path == env_path
 
+    args_path = os.path.join(spec.prefix, '.spack', _spack_configure_argsfile)
+    assert spec.package.install_configure_args_path == args_path
+
     # Backward compatibility checks
     log_dir = os.path.dirname(log_path)
-    mkdirp(log_dir)
-    with working_dir(log_dir):
+    fs.mkdirp(log_dir)
+    with fs.working_dir(log_dir):
         # Start with the older of the previous install log filenames
         older_log = 'build.out'
-        touch(older_log)
+        fs.touch(older_log)
         assert spec.package.install_log_path.endswith(older_log)
 
         # Now check the newer install log filename
@@ -426,29 +437,70 @@ def test_pkg_install_paths(install_mockery):
     shutil.rmtree(log_dir)
 
 
-def test_pkg_install_log(install_mockery):
+def test_log_install_without_build_files(install_mockery):
+    """Test the installer log function when no build files are present."""
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package').concretized()
 
     # Attempt installing log without the build log file
     with pytest.raises(IOError, match="No such file or directory"):
-        spec.package.log()
+        spack.installer.log(spec.package)
 
-    # Set up mock build files and try again
+
+def test_log_install_with_build_files(install_mockery, monkeypatch):
+    """Test the installer's log function when have build files."""
+    config_log = 'config.log'
+
+    # Retain the original function for use in the monkey patch that is used
+    # to raise an exception under the desired condition for test coverage.
+    orig_install_fn = fs.install
+
+    def _install(src, dest):
+        orig_install_fn(src, dest)
+        if src.endswith(config_log):
+            raise Exception('Mock log install error')
+
+    monkeypatch.setattr(fs, 'install', _install)
+
+    spec = Spec('trivial-install-test-package').concretized()
+
+    # Set up mock build files and try again to include archive failure
     log_path = spec.package.log_path
     log_dir = os.path.dirname(log_path)
-    mkdirp(log_dir)
-    with working_dir(log_dir):
-        touch(log_path)
-        touch(spec.package.env_path)
+    fs.mkdirp(log_dir)
+    with fs.working_dir(log_dir):
+        fs.touch(log_path)
+        fs.touch(spec.package.env_path)
+        fs.touch(spec.package.configure_args_path)
 
     install_path = os.path.dirname(spec.package.install_log_path)
-    mkdirp(install_path)
+    fs.mkdirp(install_path)
 
-    spec.package.log()
+    source = spec.package.stage.source_path
+    config = os.path.join(source, 'config.log')
+    fs.touchp(config)
+    spec.package.archive_files = ['missing', '..', config]
+
+    spack.installer.log(spec.package)
 
     assert os.path.exists(spec.package.install_log_path)
     assert os.path.exists(spec.package.install_env_path)
+    assert os.path.exists(spec.package.install_configure_args_path)
+
+    archive_dir = os.path.join(install_path, 'archived-files')
+    source_dir = os.path.dirname(source)
+    rel_config = os.path.relpath(config, source_dir)
+
+    assert os.path.exists(os.path.join(archive_dir, rel_config))
+    assert not os.path.exists(os.path.join(archive_dir, 'missing'))
+
+    expected_errs = [
+        'OUTSIDE SOURCE PATH',   # for '..'
+        'FAILED TO ARCHIVE'      # for rel_config
+    ]
+    with open(os.path.join(archive_dir, 'errors.txt'), 'r') as fd:
+        for ln, expected in zip(fd, expected_errs):
+            assert expected in ln
 
     # Cleanup
     shutil.rmtree(log_dir)
@@ -469,3 +521,14 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
 
     with pytest.raises(ValueError, match="only patch concrete packages"):
         spec.package.do_patch()
+
+
+def test_install_error():
+    try:
+        msg = 'test install error'
+        long_msg = 'this is the long version of test install error'
+        raise InstallError(msg, long_msg=long_msg)
+    except Exception as exc:
+        assert exc.__class__.__name__ == 'InstallError'
+        assert exc.message == msg
+        assert exc.long_message == long_msg

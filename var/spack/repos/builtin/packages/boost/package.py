@@ -96,8 +96,12 @@ class Boost(Package):
     # mpi/python are not installed by default because they pull in many
     # dependencies and/or because there is a great deal of customization
     # possible (and it would be difficult to choose sensible defaults)
+    #
+    # Boost.Container can be both header-only and compiled. '+container'
+    # indicates the compiled version which requires Extended Allocator
+    # support. The header-only library is installed when no variant is given.
     default_noinstall_libs\
-        = set(['context', 'coroutine', 'fiber', 'mpi', 'python'])
+        = set(['container', 'context', 'coroutine', 'fiber', 'mpi', 'python'])
 
     all_libs = default_install_libs | default_noinstall_libs
 
@@ -173,6 +177,9 @@ class Boost(Package):
 
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
+
+    # Container's Extended Allocators were not added until 1.56.0
+    conflicts('+container', when='@:1.55.99')
 
     # Patch fix from https://svn.boost.org/trac/boost/ticket/11856
     patch('boost_11856.patch', when='@1.60.0%gcc@4.4.7')
@@ -405,15 +412,6 @@ class Boost(Package):
         for lib in Boost.all_libs:
             if "+{0}".format(lib) in spec:
                 with_libs.append(lib)
-        if not with_libs:
-            # if no libraries are specified for compilation, then you dont have
-            # to configure/build anything, just copy over to the prefix
-            # directory.
-            src = join_path(self.stage.source_path, 'boost')
-            mkdirp(join_path(prefix, 'include'))
-            dst = join_path(prefix, 'include', 'boost')
-            install_tree(src, dst)
-            return
 
         # Remove libraries that the release version does not support
         if spec.satisfies('@1.69.0:') and 'signals' in with_libs:
@@ -432,6 +430,16 @@ class Boost(Package):
             with_libs.remove('exception')
         if '+graph' in spec and '+mpi' in spec:
             with_libs.append('graph_parallel')
+
+        if not with_libs:
+            # if no libraries are specified for compilation, then you dont have
+            # to configure/build anything, just copy over to the prefix
+            # directory.
+            src = join_path(self.stage.source_path, 'boost')
+            mkdirp(join_path(prefix, 'include'))
+            dst = join_path(prefix, 'include', 'boost')
+            install_tree(src, dst)
+            return
 
         # to make Boost find the user-config.jam
         env['BOOST_BUILD_PATH'] = self.stage.source_path

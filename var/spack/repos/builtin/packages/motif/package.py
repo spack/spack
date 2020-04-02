@@ -33,6 +33,7 @@ class Motif(AutotoolsPackage):
     depends_on("autoconf", type="build")
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
+    depends_on("pkgconfig", type="build")
 
     patch('add_xbitmaps_dependency.patch')
 
