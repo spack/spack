@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pytest
 from spack.main import SpackCommand
 import spack.spec
 import spack.user_environment as uenv
@@ -88,8 +89,8 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     install('libelf@0.8.12')
     install('libelf@0.8.13')
     # Now there are two versions of libelf; This should cause an error
-    out = load('--sh', 'libelf', fail_on_error=False)
-    assert 'export' not in out
+    with pytest.raises(spack.main.SpackCommandError):
+        load('--sh', 'libelf')
     # This should not cause an error
     assert load('--sh', '--first', 'libelf')
 

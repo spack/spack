@@ -284,8 +284,10 @@ have some drawbacks:
    The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module tcl loads`` will
-   fail. This may change in the future.  For now, the workaround is to
-   be more specific on any ``spack load`` commands that fail.
+   fail. This default behavior may change in the future.  For now, 
+   the workaround is to either be more specific on any failing ``spack load`` 
+   commands or to use ``spack load --first`` to allow spack to load the 
+   first matching spec.
 
 
 """"""""""""""""""""""
