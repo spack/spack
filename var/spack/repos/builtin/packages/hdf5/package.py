@@ -63,6 +63,8 @@ class Hdf5(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
 
+    conflicts('~static', when='~shared')
+
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
