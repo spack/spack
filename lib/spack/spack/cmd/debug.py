@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import platform
 import re
 from datetime import datetime
 from glob import glob
@@ -11,7 +12,9 @@ from glob import glob
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack.architecture as architecture
 import spack.paths
+from spack.main import get_version
 from spack.util.executable import which
 
 description = "debugging commands for troubleshooting Spack"
@@ -23,6 +26,7 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='debug_command')
     sp.add_parser('create-db-tarball',
                   help="create a tarball of Spack's installation metadata")
+    sp.add_parser('report', help='print information useful for bug reports')
 
 
 def _debug_tarball_suffix():
@@ -78,6 +82,15 @@ def create_db_tarball(args):
     tty.msg('Created %s' % tarball_name)
 
 
+def report(args):
+    print('* Spack:', get_version())
+    print('* Python:', platform.python_version())
+    print('* Platform:', architecture.Arch(
+        architecture.platform(), 'frontend', 'frontend'))
+
 def debug(parser, args):
-    action = {'create-db-tarball': create_db_tarball}
+    action = {
+        'create-db-tarball': create_db_tarball,
+        'report': report,
+    }
     action[args.debug_command](args)

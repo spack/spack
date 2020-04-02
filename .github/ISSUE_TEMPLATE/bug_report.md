@@ -24,15 +24,7 @@ $ spack --debug --stacktrace <command>
 
 ### Information on your system
 
-<!-- Please include the output of the following commands: -->
-```console
-$ spack --version
-
-$ spack python --version
-
-$ spack arch
-
-```
+<!-- Please include the output of `spack debug report` -->
 
 <!-- If you have any relevant configuration detail (custom `packages.yaml` or `modules.yaml`, etc.) you can add that here as well. -->
 
