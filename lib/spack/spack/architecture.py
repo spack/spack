@@ -59,6 +59,7 @@ will be responsible for compiler detection.
 import functools
 import inspect
 import warnings
+import os
 
 import six
 
@@ -216,7 +217,11 @@ class Target(object):
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
-                compiler_version = compiler.cc_version(compiler.cc)
+                path = os.path.dirname(compiler.cc)
+                default_compilers = spack.compilers.find_compilers(path)
+                default_compiler = [c for c in default_compilers
+                                    if c.cc == compiler.cc][0]
+                compiler_version = default_compiler.version
             except spack.util.executable.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
