@@ -655,11 +655,15 @@ _spack_debug() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create-db-tarball"
+        SPACK_COMPREPLY="create-db-tarball report"
     fi
 }
 
 _spack_debug_create_db_tarball() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_debug_report() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -1272,7 +1276,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -m"
     else
         SPACK_COMPREPLY=""
     fi
