@@ -36,25 +36,6 @@ class CrayLibsci(Package):
     }
 
     @property
-    def fetcher(self):
-        raise NoBuildError("""This package is intended to be a placeholder for Cray's
-libsci, usually provided via the module system as 'cray-libsci'.
-
-Add to your packages.yaml:
-
-    packages:
-        cray-libsci:
-            buildable: false
-            modules:
-                cray-libsci+mpi+openmp@18.07.1: cray-libsci/18.07.1
-                cray-libsci+mpi~openmp@18.07.1: cray-libsci/18.07.1
-                cray-libsci~mpi+openmp@18.07.1: cray-libsci/18.07.1
-                cray-libsci~mpi~openmp@18.07.1: cray-libsci/18.07.1
-
-Replace the version numbers with the ones matching the module(s).
-        """)
-
-    @property
     def modname(self):
         return "cray-libsci/{0}".format(self.version)
 
@@ -97,4 +78,4 @@ Replace the version numbers with the ones matching the module(s).
         return self.blas_libs
 
     def install(self, spec, prefix):
-        pass
+        NoBuildError()
