@@ -46,15 +46,24 @@ class Papi(Package):
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
+    def setup_build_environment(self, env):
+        if '+lmsensors' in self.spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+
+    def setup_run_environment(self, env):
+        if '+lmsensors' in self.spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+
     def install(self, spec, prefix):
         if '+lmsensors' in spec:
-            with working_dir("src/components/lmsensors"):
-                configure_args = [
-                    "--with-sensors_incdir=%s/sensors" %
-                    spec['lm-sensors'].headers.directories[0],
-                    "--with-sensors_libdir=%s" %
-                    spec['lm-sensors'].libs.directories[0]]
-                configure(*configure_args)
+            if self.version < Version('6'):
+                with working_dir("src/components/lmsensors"):
+                    configure_args = [
+                        "--with-sensors_incdir=%s/sensors" %
+                        spec['lm-sensors'].headers.directories[0],
+                        "--with-sensors_libdir=%s" %
+                        spec['lm-sensors'].libs.directories[0]]
+                    configure(*configure_args)
         with working_dir("src"):
 
             configure_args = ["--prefix=%s" % prefix]
