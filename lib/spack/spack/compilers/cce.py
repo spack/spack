@@ -71,7 +71,7 @@ class Cce(Compiler):
 
     @property
     def c11_flag(self):
-        if self.verions >= ver('9.0'):
+        if self.version >= ver('9.0'):
             return '-std=c11'
         if self.version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
