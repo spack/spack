@@ -206,7 +206,9 @@ class keyboard_input(object):
             os.kill(os.getpid(), signal.SIGTSTP)
 
     def check_fg_bg(self):
-        if not termios or not self.stream.isatty():
+        # old_cfg is set up in __enter__ and indicates that we have
+        # termios and a valid stream.
+        if not self.old_cfg:
             return
 
         # query terminal flags and fg/bg status
