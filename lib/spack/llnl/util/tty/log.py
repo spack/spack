@@ -20,14 +20,13 @@ from contextlib import contextmanager
 from six import string_types
 from six import StringIO
 
-from defer_signals import defer_signals
-
 import llnl.util.tty as tty
 
 try:
     import termios
 except ImportError:
     termios = None
+
 
 # Use this to strip escape sequences
 _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
@@ -39,6 +38,12 @@ _escape = re.compile(r'\x1b[^m]*m|\x1b\[?1034h')
 # one per line the following newline is ignored in output.
 xon, xoff = '\x11\n', '\x13\n'
 control = re.compile('(\x11\n|\x13\n)')
+
+
+def signal_no_eintr(signum, handler):
+    old_handler = signal.signal(signum, handler)
+    signal.siginterrupt(signum, False)
+    return old_handler
 
 
 @contextmanager
@@ -68,8 +73,9 @@ class keyboard_input(object):
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
 
-        with keyboard_input(sys.stdin):
+        with keyboard_input(sys.stdin) as kb:
             while True:
+                kb.check_fg_bg()
                 r, w, x = select.select([sys.stdin], [], [])
                 # ... do something with keypresses ...
 
@@ -87,13 +93,13 @@ class keyboard_input(object):
     disabled again when the calling process comes back to the foreground.
 
     This context manager works through a single signal handler for
-    ``SIGTSTP``, ``SIGCONT``, and ``SIGALRM``.  Here are the relevant
-    states, transitions, and POSIX signals::
+    ``SIGTSTP`` and ``SIGCONT``.  Here are the relevant states,
+    transitions, and POSIX signals::
 
         [Running] -------- Ctrl-Z sends SIGTSTP ------------.
         [ in FG ] <------- fg sends SIGCONT --------------. |
            ^                                              | |
-           | fg (no signal; we use itimer + SIGALRM)      | |
+           | fg (no signal; poll with kb.check_fg_bg())   | |
            |                                              | v
         [Running] <------- bg sends SIGCONT ---------- [Stopped]
         [ in BG ]                                      [ in BG ]
@@ -102,11 +108,20 @@ class keyboard_input(object):
     stopped-in-background and back, we intercept ``SIGTSTP`` and
     ``SIGCONT`` to adjust terminal settings. For the transition from
     running-in-background to running-in-foreground, the OS doesn't send
-    any signal, so we install an interval timer (itimer) that generates
-    ``SIGALRM`` periodically to ensure that keyboard input is re-enabled
-    on this transition.  There is normally no transition from
-    running-in-foreground to running-in-background, but ``SIGALRM`` will
-    handle that one too.
+    any signal, so the caller must poll inside their loop with the
+    ``check_fg_bg()`` function if they want to handle this case.
+
+    Note: We use polling here instead of a SIGARLM timer or a
+    thread. This is to avoid the complexities of many interrupts, which
+    seem to make system calls (like I/O) unreliable in older Python
+    versions (2.6 and 2.7).  See these issues for details:
+
+    1. https://www.python.org/dev/peps/pep-0475/
+    2. https://bugs.python.org/issue8354
+
+    There are essentially too many ways for asynchronous signals to go
+    wrong if we also have to support older Python versions, so we opt not
+    to use them.
 
     Note: ``SIGSTOP`` can stop a process (in the foreground or
     background), but it can't be caught. Because of this, we can't fix
@@ -127,7 +142,7 @@ class keyboard_input(object):
         will do nothing.
         """
         self.stream = stream
-        self.signals = [signal.SIGALRM, signal.SIGTSTP, signal.SIGCONT]
+        self.signals = [signal.SIGTSTP, signal.SIGCONT]
 
     def _is_background(self):
         """True iff calling process is in the background."""
@@ -160,24 +175,6 @@ class keyboard_input(object):
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
 
-    @contextmanager
-    def defer_signals(self):
-        with defer_signals(self.signals):
-            yield
-
-    def _signal_no_eintr(self, signum, handler):
-        """Register a handler so that it will not interrupt system calls.
-
-        Python's ``signal.signal()`` call sets ``SA_RESTART``, so
-        interrupted system calls will raise ``EINTR``.  This routine
-        calls ``signal.siginterrupt(signum, False)`` immediately after
-        registering to prevent this behavior.
-
-        """
-        old_handler = signal.signal(signum, handler)
-        signal.siginterrupt(signum, False)  # don't raise EINTR from syscalls
-        return old_handler
-
     def _bg_fg_handler(self, signum, frame):
         """Ensures that input is enabled and disabled at the right times.
 
@@ -185,30 +182,42 @@ class keyboard_input(object):
         process group is in the foreground, and disabled when it is in
         the background. This handler
 
-        This is the handler for ``SIGTSTP``, ``SIGCONT``, and ``SIGALRM``.
+        This is the handler for ``SIGTSTP`` and ``SIGCONT``.
 
         """
-        with self.defer_signals():
-            # query terminal flags and fg/bg status
-            flags = self._get_canon_echo_flags()
-            bg = self._is_background()
+        # Have to call this *again* for Python 2.6, as it is # reset when
+        # the signal is received!
+        signal.siginterrupt(signum, False)
 
-            # restore sanity if flags are amiss -- see diagram in class docs
-            if not bg and any(flags):    # fg, but input not enabled
-                self._enable_keyboard_input()
-            elif bg and not all(flags):  # bg, but input enabled
-                self._restore_default_terminal_settings()
+        self.check_fg_bg()
 
-            # reinstall TSTP handler on CONT (see below where TSTP removes it)
-            if signum == signal.SIGCONT:
-                self._signal_no_eintr(signal.SIGTSTP, self._bg_fg_handler)
+        # reinstall TSTP handler on CONT (see below where TSTP removes it)
+        if signum == signal.SIGCONT:
+            signal_no_eintr(signal.SIGTSTP, self._bg_fg_handler)
 
-            # python can't block signals, so we reinstall the default TSTP
-            # handler here, which actually stops the process on kill
-            if signum == signal.SIGTSTP:
-                self._signal_no_eintr(
-                    signal.SIGTSTP, self.old_handlers[signal.SIGTSTP])
-                os.kill(os.getpid(), signal.SIGTSTP)
+        # python can't block signals, so we reinstall the default TSTP
+        # handler here, which actually stops the process on kill
+        if signum == signal.SIGTSTP:
+            # ensure that this is called directly in the TSTP handler,
+            # as check_fg_bg may not get consistent flags/bg values
+            self._restore_default_terminal_settings()
+            signal_no_eintr(
+                signal.SIGTSTP, self.old_handlers[signal.SIGTSTP])
+            os.kill(os.getpid(), signal.SIGTSTP)
+
+    def check_fg_bg(self):
+        if not termios:
+            return
+
+        # query terminal flags and fg/bg status
+        flags = self._get_canon_echo_flags()
+        bg = self._is_background()
+
+        # restore sanity if flags are amiss -- see diagram in class docs
+        if not bg and any(flags):    # fg, but input not enabled
+            self._enable_keyboard_input()
+        elif bg and not all(flags):  # bg, but input enabled
+            self._restore_default_terminal_settings()
 
     def __enter__(self):
         """Enable immediate keypress input, while this process is foreground.
@@ -230,15 +239,11 @@ class keyboard_input(object):
             # Install a signal handler to disable/enable keyboard input
             # when the process moves between foreground and background.
             for signum in self.signals:
-                self.old_handlers[signum] = self._signal_no_eintr(
+                self.old_handlers[signum] = signal_no_eintr(
                     signum, self._bg_fg_handler)
 
             # add an atexit handler to ensure the terminal is restored
             atexit.register(self._restore_default_terminal_settings)
-
-            # this itimer handles cases where the OS doesn't notify us of
-            # a background or foreground change.
-            signal.setitimer(signal.ITIMER_REAL, 1e-1, 1e-1)
 
             # enable keyboard input initially (if foreground)
             if not self._is_background():
@@ -253,7 +258,6 @@ class keyboard_input(object):
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
-            signal.setitimer(signal.ITIMER_REAL, 0, 0)
             for signum, old_handler in self.old_handlers.items():
                 signal.signal(signum, old_handler)
 
@@ -577,18 +581,11 @@ class log_output(object):
         log_file = self.log_file
 
         try:
-            with keyboard_input(stdin):
+            with keyboard_input(stdin) as kb:
                 while True:
-                    # No need to set any timeout for select.select
-                    # Wait until a key press or an event on in_pipe.
-                    try:
-                        rlist, _, _ = select.select(istreams, [], [])
-                    except select.error as e:
-                        if e.args[0] == errno.EINTR:
-                            # This happens in Python 2 when select() is
-                            # interrupted, even if we use siginterrupt()
-                            continue
-                        raise
+                    kb.check_fg_bg()
+
+                    rlist, _, _ = _retry(select.select)(istreams, [], [])
 
                     # Allow user to toggle echo with 'v' key.
                     # Currently ignores other chars.
@@ -609,7 +606,7 @@ class log_output(object):
 
                     if in_pipe in rlist:
                         # Handle output from the calling process.
-                        line = in_pipe.readline()
+                        line = _retry(in_pipe.readline)()
                         if not line:
                             break
 
@@ -643,3 +640,40 @@ class log_output(object):
 
         # send echo value back to the parent so it can be preserved.
         self.child.send(echo)
+
+
+def _retry(function):
+    """Retry a call if errors indicating an interrupted system call occur.
+
+    Interrupted system calls return -1 and set ``errno`` to ``EINTR`` if
+    certain flags are not set.  Older Pythons make it very hard to set
+    these flags consistently, and longer-running system calls seem to
+    fail with ``EINTR``, even when we use mechanisms like
+    ``signal.siginterrupt(signum, False)``.
+
+    This function converts a call like this:
+
+        syscall(args)
+
+    and makes it retry by wrapping the function like this:
+
+        _retry(syscall)(args)
+
+    This is a private function because EINTR is unfortunately raised in
+    different ways from different functions, and we only handle the ones
+    relevant for this file.
+
+    """
+    def wrapped(*args, **kwargs):
+        while True:
+            try:
+                return function(*args, **kwargs)
+            except IOError as e:
+                if e.errno == errno.EINTR:
+                    continue
+                raise
+            except select.error as e:
+                if e.args[0] == errno.EINTR:
+                    continue
+                raise
+    return wrapped
