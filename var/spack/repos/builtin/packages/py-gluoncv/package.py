@@ -18,7 +18,6 @@ class PyGluoncv(PythonPackage):
 
     version('0.6.0', sha256='5ac89d73f34d02b2e60595a5cc35f46d0a69376567fae3a9518005dd89161305')
 
-    depends_on('python',         type=('build', 'run'))
     depends_on('py-setuptools',  type='build')
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-tqdm',        type=('build', 'run'))
