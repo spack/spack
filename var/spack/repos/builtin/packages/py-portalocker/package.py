@@ -36,10 +36,8 @@ class PyPortalocker(PythonPackage):
 
     version('1.6.0', sha256='084ff315ccb9fb38a7c06155d409da5df29647da7c6d2bc2b24637f9f79001ff')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-setuptools@38.3.0:', type='build')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
