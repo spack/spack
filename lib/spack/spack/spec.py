@@ -2249,7 +2249,7 @@ class Spec(object):
                 try:
                     s.external_path = s.package.external_prefix
                 except AttributeError:
-                    s.external_path = get_path_from_module(s.external_module)
+                    s.external_path = md.get_path_from_module(s.external_module)
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
