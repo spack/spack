@@ -24,10 +24,10 @@ from spack import *
 
 
 class PyPortalocker(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Portalocker is a library to provide an easy API to file
+    locking."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/WoLpH/portalocker"
     url      = "https://github.com/WoLpH/portalocker/archive/v1.6.0.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
