@@ -139,6 +139,42 @@ def mock_shell_fg_no_termios(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
+def mock_shell_fg_tstp_cont(proc, ctl, attrs):
+    ctl.fg()
+    ctl.status()
+    ctl.wait_enabled()
+
+    ctl.tstp()           # stop in fg
+    ctl.status()
+    ctl.wait_stopped()
+    ctl.wait_disabled_fg()
+
+    ctl.cont()           # stop in fg
+    ctl.status()
+    ctl.wait_running()
+    ctl.wait_enabled()
+
+    os.kill(proc.pid, signal.SIGUSR1)
+
+
+def mock_shell_fg_tstp_cont_no_termios(proc, ctl, attrs):
+    ctl.fg()
+    ctl.status()
+    ctl.wait_disabled_fg()
+
+    ctl.tstp()           # stop in fg
+    ctl.status()
+    ctl.wait_stopped()
+    ctl.wait_disabled_fg()
+
+    ctl.cont()           # stop in fg
+    ctl.status()
+    ctl.wait_running()
+    ctl.wait_disabled_fg()
+
+    os.kill(proc.pid, signal.SIGUSR1)
+
+
 def mock_shell_bg(proc, ctl, attrs):
     ctl.bg()
     ctl.status()
@@ -291,13 +327,25 @@ def _mock_shell_integration(proc, ctl, attrs):
     ctl.tstp()           # stop in bg
     ctl.status()
     ctl.wait_stopped()
+    ctl.wait_disabled()
 
     ctl.cont()           # continue in bg for a bit
     ctl.status()
     ctl.wait_running()
+    ctl.wait_disabled()
 
     ctl.fg()             # bring to foreground
     ctl.status()
+    ctl.wait_enabled()
+
+    ctl.tstp()           # stop in fg
+    ctl.status()
+    ctl.wait_stopped()
+    ctl.wait_disabled_fg()
+
+    ctl.cont()           # cont in fg
+    ctl.status()
+    ctl.wait_running()
     ctl.wait_enabled()
 
     ctl.write(b'v')      # disable verbose and wait a bit
@@ -339,13 +387,25 @@ def _mock_shell_integration_no_termios(proc, ctl, attrs):
     ctl.tstp()           # stop in bg
     ctl.status()
     ctl.wait_stopped()
+    ctl.wait_disabled()
 
     ctl.cont()           # continue in bg for a bit
     ctl.status()
     ctl.wait_running()
+    ctl.wait_disabled()
 
     ctl.fg()             # bring to foreground
     ctl.status()
+    ctl.wait_disabled_fg()
+
+    ctl.tstp()           # stop in fg
+    ctl.status()
+    ctl.wait_stopped()
+    ctl.wait_disabled_fg()
+
+    ctl.cont()           # cont in fg
+    ctl.status()
+    ctl.wait_running()
     ctl.wait_disabled_fg()
 
     ctl.write(b'v\n')    # disable verbose and wait a bit
@@ -399,6 +459,7 @@ def nullcontext():
     (mock_shell_bg, nullcontext),
     (mock_shell_bg_fg, nullcontext),
     (mock_shell_fg_bg, nullcontext),
+    (mock_shell_fg_tstp_cont, nullcontext),
     (mock_shell_tstp_cont, nullcontext),
     (mock_shell_tstp_tstp_cont, nullcontext),
     (mock_shell_tstp_tstp_cont_cont, nullcontext),
@@ -407,6 +468,7 @@ def nullcontext():
     (mock_shell_bg, no_termios),
     (mock_shell_bg_fg_no_termios, no_termios),
     (mock_shell_fg_bg_no_termios, no_termios),
+    (mock_shell_fg_tstp_cont_no_termios, no_termios),
     (mock_shell_tstp_cont, no_termios),
     (mock_shell_tstp_tstp_cont, no_termios),
     (mock_shell_tstp_tstp_cont_cont, no_termios),
