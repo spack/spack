@@ -18,6 +18,10 @@ class PpopenApplBemAt(MakefilePackage):
     url = "file://{0}/ppohBEM_AT_0.1.0.tar.gz".format(os.getcwd())
 
     version('0.1.0', sha256='215034fea7d9f64e6361d8e605e04c7f5d302c87ce048dcd6d146b14d22c17f9')
+    # In OAT_bem-bb-fw-dense-0.1.0.f90 the 2 variables are defined.
+    # But ame variables are already defined in include file DAT.h.
+    # This patch is deleted the variables definitions
+    # in OAT_bem-bb-fw-dense-0.1.0.f90.
     patch('duplicate_defs.patch', when="@0.1.0")
 
     depends_on('mpi')
