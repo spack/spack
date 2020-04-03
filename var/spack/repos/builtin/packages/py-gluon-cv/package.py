@@ -24,10 +24,13 @@ from spack import *
 
 
 class PyGluonCv(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """GluonCV provides implementations of state-of-the-art
+    (SOTA) deep learning algorithms in computer vision. It aims
+    to help engineers, researchers, and students quickly
+    prototype products, validate new ideas and learn computer
+    vision."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://gluon-cv.mxnet.io/"
     url      = "https://github.com/dmlc/gluon-cv/archive/v0.6.0.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
