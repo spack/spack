@@ -39,10 +39,15 @@ class PyGluonCv(PythonPackage):
 
     version('0.6.0', sha256='5ac89d73f34d02b2e60595a5cc35f46d0a69376567fae3a9518005dd89161305')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python',         type=('build', 'run'))
+    depends_on('py-setuptools',  type='build')
+    depends_on('py-numpy',       type=('build', 'run'))
+    depends_on('py-tqdm',        type=('build', 'run'))
+    depends_on('py-requests',    type=('build', 'run'))
+    depends_on('py-matplotlib',  type=('build', 'run'))
+    depends_on('py-portalocker', type=('build', 'run'))
+    depends_on('py-pillow',      type=('build', 'run'))
+    depends_on('py-scipy',       type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
