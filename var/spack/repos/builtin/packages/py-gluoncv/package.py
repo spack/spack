@@ -49,6 +49,8 @@ class PyGluoncv(PythonPackage):
     depends_on('py-pillow',      type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'))
 
+    patch('no-unicode-readme.patch')
+
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
