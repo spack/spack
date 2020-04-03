@@ -26,5 +26,11 @@ class PyGluoncv(PythonPackage):
     depends_on('py-portalocker', type=('build', 'run'))
     depends_on('py-pillow',      type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'))
+    depends_on('py-cython',      type='build')
 
     patch('no-unicode-readme.patch')
+
+    def build_args(self, spec, prefix):
+        args = []
+        args.append('--with-cython')
+        return args
