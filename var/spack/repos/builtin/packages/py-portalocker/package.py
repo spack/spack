@@ -15,5 +15,4 @@ class PyPortalocker(PythonPackage):
 
     version('1.6.0', sha256='084ff315ccb9fb38a7c06155d409da5df29647da7c6d2bc2b24637f9f79001ff')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools@38.3.0:', type='build')
