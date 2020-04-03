@@ -673,16 +673,13 @@ def _config():
         # The user configuration will store the install trees that are used
         # by this spack instance
         install_trees = cfg.get('config:install_trees')
+
         if not install_trees:
             if shared_install_trees:
-                if install_tree and not (install_tree == 'home'):
-                    raise ValueError("The specified install tree does not exist")
-
+                # If this is a shared spack instance, then the default for
+                # users is to put new installations in the home directory
                 install_trees = {'home': '~/.spack/installs'}
             else:
-                if install_tree and not (install_tree == 'spack'):
-                    raise ValueError("The specified install tree does not exist")
-
                 install_trees = {'spack': spack.paths.opt_path}
             cfg.set('config:install_trees', install_trees, 'user')
 
@@ -691,6 +688,9 @@ def _config():
                 install_tree = 'home'
             else:
                 install_tree = 'spack'
+
+        if install_tree not in install_trees:
+            raise ValueError("The specified install tree does not exist")
 
         install_root = install_trees[install_tree]
 
