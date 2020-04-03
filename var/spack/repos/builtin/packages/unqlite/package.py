@@ -17,6 +17,7 @@ class Unqlite(CMakePackage):
     version('master', branch='master')
     version('1.1.9', sha256='33d5b5e7b2ca223942e77d31112d2e20512bc507808414451c8a98a7be5e15c0')
 
+    # This patch corresponds to https://github.com/symisc/unqlite/pull/99
     patch('0001-Removed-the-STATIC-key-word-to-enable-building-a-sha.patch', when='@1.1.9')
 
     def cmake_args(self):
