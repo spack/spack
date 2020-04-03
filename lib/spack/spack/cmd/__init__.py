@@ -177,7 +177,7 @@ def elide_list(line_list, max_num=10):
         return line_list
 
 
-def disambiguate_spec(spec, env, local=False, installed=True):
+def disambiguate_spec(spec, env, local=False, installed=True, first=False):
     """Given a spec, figure out which installed package it refers to.
 
     Arguments:
@@ -190,10 +190,11 @@ def disambiguate_spec(spec, env, local=False, installed=True):
             database query. See ``spack.database.Database._query`` for details.
     """
     hashes = env.all_hashes() if env else None
-    return disambiguate_spec_from_hashes(spec, hashes, local, installed)
+    return disambiguate_spec_from_hashes(spec, hashes, local, installed, first)
 
 
-def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True):
+def disambiguate_spec_from_hashes(spec, hashes, local=False,
+                                  installed=True, first=False):
     """Given a spec and a list of hashes, get concrete spec the spec refers to.
 
     Arguments:
@@ -212,6 +213,9 @@ def disambiguate_spec_from_hashes(spec, hashes, local=False, installed=True):
                                               installed=installed)
     if not matching_specs:
         tty.die("Spec '%s' matches no installed packages." % spec)
+
+    elif first:
+        return matching_specs[0]
 
     elif len(matching_specs) > 1:
         format_string = '{name}{@version}{%compiler}{arch=architecture}'

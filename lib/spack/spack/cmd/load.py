@@ -34,6 +34,14 @@ def setup_parser(subparser):
         help="print csh commands to load the package")
 
     subparser.add_argument(
+        '--first',
+        action='store_true',
+        default=False,
+        dest='load_first',
+        help="load the first match if multiple packages match the spec"
+    )
+
+    subparser.add_argument(
         '--only',
         default='package,dependencies',
         dest='things_to_load',
@@ -47,7 +55,7 @@ the dependencies"""
 
 def load(parser, args):
     env = ev.get_env(args, 'load')
-    specs = [spack.cmd.disambiguate_spec(spec, env)
+    specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
              for spec in spack.cmd.parse_specs(args.specs)]
 
     if not args.shell:
