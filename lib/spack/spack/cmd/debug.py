@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from __future__ import print_function
+
 import os
 import platform
 import re
