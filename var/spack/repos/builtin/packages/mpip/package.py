@@ -17,6 +17,10 @@ class Mpip(AutotoolsPackage):
     version("3.4.1", sha256="688bf37d73211e6a915f9fc59c358282a266d166c0a10af07a38a01a473296f0")
 
     variant('shared', default=False, description="Build the shared library")
+    variant('demangling', default=False, description="Build with demangling support")
+    variant('setjmp',
+            default=False,
+            description="Replace glic backtrace() with setjmp for stack trace")
 
     depends_on("elf")
     depends_on("libdwarf")
@@ -35,5 +39,15 @@ class Mpip(AutotoolsPackage):
         config_args = ['--without-f77']
         config_args.append("--with-cc=%s" % self.spec['mpi'].mpicc)
         config_args.append("--with-cxx=%s" % self.spec['mpi'].mpicxx)
+
+        if '+demangling' in self.spec:
+            config_args.append('--enable-demangling')
+        else:
+            config_args.append('--disable-demangling')
+
+        if '+setjmp' in self.spec:
+            config_args.append('--enable-setjmp')
+        else:
+            config_args.append('--disable-setjmp')
 
         return config_args
