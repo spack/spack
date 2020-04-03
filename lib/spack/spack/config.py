@@ -86,10 +86,12 @@ configuration_paths = (
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
     ('site', os.path.join(spack.paths.etc_path, 'spack')),
-
-    # User configuration can override both spack defaults and site config
-    ('user', spack.paths.user_config_path)
 )
+
+
+# User configuration can override both spack defaults and site config
+user_configuration_path = ('user', spack.paths.user_config_path)
+
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -651,6 +653,33 @@ def _config():
 
         # Each scope can have per-platfom overrides in subdirectories
         _add_platform_scope(cfg, ConfigScope, name, path)
+
+    shared_install_trees = cfg.get('config:shared_install_trees')
+    install_tree = spack.store.install_tree
+    shared_tree_scope = False
+    if install_tree in shared_install_trees:
+        shared_tree_scope = True
+        scope_name = 'install_tree:' + install_tree
+        shared_install_root = shared_install_trees[install_tree]
+        shared_install_config_path = os.path.join(
+            shared_install_root, 'config')
+        cfg.push_scope(
+            ConfigScope(scope_name, shared_install_config_path))
+    else:
+        # User configuration is only used when we are not using a shared
+        # install tree
+        cfg.push_scope(ConfigScope(*user_configuration_path))
+
+        # The user configuration will store the install trees that are used
+        # by this spack instance
+        install_trees = cfg.get('config:install_trees')
+        default_install_tree = next(install_trees.keys())
+        install_tree = install_tree or default_install_tree
+
+        scope_name = 'install_tree:' + install_tree
+        install_root = install_trees[install_tree]
+        install_config_path = os.path.join(install_root, 'config')
+        cfg.push_scope(ConfigScope(scope_name, install_config_path))
 
     # add command-line scopes
     _add_command_line_scopes(cfg, command_line_scopes)
