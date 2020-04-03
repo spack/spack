@@ -370,7 +370,7 @@ def make_argument_parser(**kwargs):
         '--pdb', action='store_true',
         help="run spack under the pdb debugger")
     parser.add_argument(
-        '--install-root',
+        '--install-tree',
         help="select which tree to install to")
     parser.add_argument(
         '--init-upstream',
