@@ -2,12 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os
-from llnl.util.filesystem import LibraryList
 from spack.concretize import NoBuildError
-from spack.util.module_cmd import load_module, module
+from spack.util.module_cmd import module
 from spack.util.module_cmd import get_path_args_from_module_line
-from spack.util.prefix import Prefix
 
 
 class CrayLibsci(Package):
