@@ -206,7 +206,7 @@ class keyboard_input(object):
             os.kill(os.getpid(), signal.SIGTSTP)
 
     def check_fg_bg(self):
-        if not termios:
+        if not termios or not self.stream.isatty():
             return
 
         # query terminal flags and fg/bg status
