@@ -17,8 +17,7 @@ class PyAipy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-basemap', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-astropy', type=('build', 'run'))
-    depends_on('py-matplotlib@:2.9.9', type=('build', 'run'), when='^python@2.7:2.9')
-    depends_on('py-matplotlib', type=('build', 'run'), when='^python@3.4:')
+    depends_on('py-numpy@1.2:', type=('build', 'run'))
+    depends_on('py-astropy@1:', type=('build', 'run'))
+    depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-ephem@3.7.3.2:', type=('build', 'run'))
