@@ -21,6 +21,8 @@ import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.string as string
 
+from spack.util.editor import editor
+
 
 description = "manage virtual environments"
 section = "environments"
@@ -35,6 +37,7 @@ subcommands = [
     ['remove', 'rm'],
     ['list', 'ls'],
     ['status', 'st'],
+    'edit',
     'loads',
     'view',
 ]
@@ -341,6 +344,21 @@ def env_status(args):
                     % (ev.manifest_name, env.path))
         else:
             tty.msg('In environment %s' % env.name)
+    else:
+        tty.msg('No active environment')
+
+
+#
+# env edit
+#
+def env_edit_setup_parser(subparser):
+    """edit spack.yaml for the active environment"""
+
+
+def env_edit(args):
+    env = ev.get_env(args, 'env edit')
+    if env:
+        editor(env.manifest_path)
     else:
         tty.msg('No active environment')
 
