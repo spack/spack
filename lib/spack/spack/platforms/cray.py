@@ -104,7 +104,9 @@ class Cray(Platform):
 
     @classmethod
     def detect(cls):
-        return 'CRAYPE_VERSION' in os.environ or os.path.exists('/opt/cray/pe')
+        # If the cray module-based programming environment is available in
+        # MODULEPATH, then this is a cray platform.
+        return 'opt/cray' in os.environ.get('MODULEPATH', '')
 
     def _default_target_from_env(self):
         '''Set and return the default CrayPE target loaded in a clean login
