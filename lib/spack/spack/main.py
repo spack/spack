@@ -373,7 +373,7 @@ def make_argument_parser(**kwargs):
         '--install-root',
         help="select which tree to install to")
     parser.add_argument(
-        '--init-upstream'
+        '--init-upstream',
         help="when initializing an install tree, this names an upstream")
 
     env_group = parser.add_mutually_exclusive_group()

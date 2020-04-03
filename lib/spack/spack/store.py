@@ -109,7 +109,6 @@ def _store():
     root = spack.util.path.canonicalize_path(root)
 
     return Store(root,
-                 init_upstream_path,
                  spack.config.get('config:install_path_scheme'),
                  spack.config.get('config:install_hash_length'))
 
@@ -125,7 +124,7 @@ layout = llnl.util.lang.LazyReference(lambda: store.layout)
 
 def upstream_set(root):
     upstream_root_description = os.path.join(root, 'upstream-spack')
-    if os.path.exists(upstream_root_description)
+    return os.path.exists(upstream_root_description)
 
 
 def initialize_upstream_pointer_if_unset(root, init_upstream_root):
