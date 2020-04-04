@@ -210,8 +210,8 @@ def test_optimization_flags_with_custom_versions(
     target = spack.architecture.Target(target_str)
     if real_version:
         monkeypatch.setattr(
-            spack.compiler.Compiler, 'cc_version', lambda x, y: real_version
-        )
+            spack.compiler.Compiler, 'compute_real_version', 
+            lambda x: real_version)
     opt_flags = target.optimization_flags(compiler)
     assert opt_flags == expected_flags
 

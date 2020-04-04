@@ -407,6 +407,41 @@ class Compiler(object):
                                       "c11_flag")
 
     #
+    # Recompute the compiler version for a compiler
+    # Take advantage of modules to be cross-platform
+    # Not a class method
+    def compute_real_version(self):
+        """Recompute the compiler version for a compiler.
+
+        This method takes advantage of compiler modules to be cross-platform.
+        """
+        # store environment to replace later
+        backup_env = os.environ
+
+        # load modules and set env variables
+        # See build_environment.py for comments on this code
+        for module in compiler.modules:
+            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                load_module('cce')
+            load_module(mod)
+
+        # apply other compiler environment changes
+        env = spack.util.environment.EnvironmentModifications()
+        env.extend(spack.schema.environment.parse(compiler.environment))
+        env.apply_modifications()
+
+        cc = spack.util.executable.Executable(self.cc)
+        output = cc(self.version_argument,
+                    output=str, error=str,
+                    ignore_errors = type(self.ignore_version_errors)
+        )
+
+        # restore environment
+        os.environ = backup_env
+
+        return self.extract_version_from_output(output)
+
+    #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.
     #
