@@ -694,6 +694,7 @@ def _config():
                 install_trees = {'spack': '$spack/opt/spack'}
             cfg.set('config:install_trees', install_trees, 'user')
 
+        default_install_tree = (not install_tree)
         if not install_tree:
             if shared_install_trees:
                 install_tree = 'home'
@@ -701,6 +702,13 @@ def _config():
                 install_tree = 'spack'
 
         if install_tree not in install_trees:
+            if default_install_tree:
+                # In this case, we have either (a) added a shared install tree
+                # or (b) removed all shared install trees, the former is
+                # unexpected, and the latter will likely result in serious
+                # issues (e.g. missing dependencies for locally-installed
+                # packages)
+                pass
             raise ValueError("The specified install tree does not exist")
 
         install_root = install_trees[install_tree]
