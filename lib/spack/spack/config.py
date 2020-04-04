@@ -680,7 +680,7 @@ def _config():
                 # users is to put new installations in the home directory
                 install_trees = {'home': '~/.spack/installs'}
             else:
-                install_trees = {'spack': spack.paths.opt_path}
+                install_trees = {'spack': '$spack/opt/spack'}
             cfg.set('config:install_trees', install_trees, 'user')
 
         if not install_tree:
