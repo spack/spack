@@ -3,14 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
 
 
-class IntelMklDnn(CMakePackage):
-    """Intel(R) Math Kernel Library for Deep Neural Networks
-    (Intel(R) MKL-DNN)."""
+class Dnnl(CMakePackage):
+    """Deep Neural Network Library (DNNL).
 
-    homepage = "https://intel.github.io/mkl-dnn/"
+    Formerly known as Intel MKL-DNN."""
+
+    homepage = "https://01.org/dnnl"
     url      = "https://github.com/intel/mkl-dnn/archive/v1.3.tar.gz"
 
     maintainers = ['adamjstewart']
@@ -46,15 +47,38 @@ class IntelMklDnn(CMakePackage):
     version('0.10',   sha256='59828764ae43f1151f77b8997012c52e0e757bc50af1196b86fce8934178c570')
     version('0.9',    sha256='8606a80851c45b0076f7d4047fbf774ce13d6b6d857cb2edf95c7e1fd4bca1c7')
 
+    default_cpu_runtime = 'omp'
+    if sys.platform == 'darwin':
+        default_cpu_runtime = 'tbb'
+
+    variant('cpu_runtime', default=default_cpu_runtime,
+            description='CPU threading runtime to use',
+            values=('omp', 'tbb', 'seq'), multi=False)
+    variant('gpu_runtime', default='none',
+            description='Runtime to use for GPU engines',
+            values=('ocl', 'none'), multi=False)
+
+    # https://github.com/intel/mkl-dnn#requirements-for-building-from-source
     depends_on('cmake@2.8.11:', type='build')
-    depends_on('intel-mkl')
-    depends_on('llvm-openmp', when='%clang platform=darwin')
+    depends_on('tbb@2017:', when='cpu_runtime=tbb')
+    depends_on('llvm-openmp', when='%clang platform=darwin cpu_runtime=omp')
+    depends_on('opencl@1.2:', when='gpu_runtime=ocl')
 
     def cmake_args(self):
-        args = []
+        args = [
+            '-DDNNL_CPU_RUNTIME={0}'.format(
+                self.spec.variants['cpu_runtime'].value.upper()),
+            '-DDNNL_GPU_RUNTIME={0}'.format(
+                self.spec.variants['gpu_runtime'].value.upper()),
+        ]
+
+        if self.run_tests:
+            args.append('-DDNNL_BUILD_TESTS=ON')
+        else:
+            args.append('-DDNNL_BUILD_TESTS=OFF')
 
         # https://github.com/intel/mkl-dnn/issues/591
-        if self.spec.satisfies('%clang platform=darwin'):
+        if self.spec.satisfies('%clang platform=darwin cpu_runtime=omp'):
             args.extend([
                 '-DOpenMP_CXX_FLAGS={0}'.format(self.compiler.openmp_flag),
                 '-DOpenMP_C_FLAGS={0}'.format(self.compiler.openmp_flag),
@@ -67,5 +91,10 @@ class IntelMklDnn(CMakePackage):
                     self.spec['llvm-openmp'].libs.ld_flags
                 ),
             ])
+        elif self.spec.satisfies('cpu_runtime=tbb'):
+            args.append('-DTBBROOT=' + self.spec['tbb'].prefix)
+
+        if self.spec.satisfies('gpu_runtime=ocl'):
+            args.append('-DOPENCLROOT=' + self.spec['opencl'].prefix)
 
         return args
