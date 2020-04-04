@@ -15,8 +15,8 @@ class PyPywcs(PythonPackage):
 
     version('1.12.1', sha256='efd4e0ea190e3a2521ebcde583452e126acdeac85cc8a9c78c8a96f10805b5e1')
 
-    depends_on('py-d2to1', type='run')
-    depends_on('py-stsci-distutils', type='run')
+    depends_on('py-d2to1', type='build')
+    depends_on('py-stsci-distutils', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-pyfits', type=('build', 'run'))
     depends_on('py-astropy', type=('build', 'run'))
