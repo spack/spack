@@ -420,21 +420,20 @@ class Compiler(object):
 
         # load modules and set env variables
         # See build_environment.py for comments on this code
-        for module in compiler.modules:
+        for module in self.modules:
             if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
                 load_module('cce')
-            load_module(mod)
+            load_module(module)
 
         # apply other compiler environment changes
         env = spack.util.environment.EnvironmentModifications()
-        env.extend(spack.schema.environment.parse(compiler.environment))
+        env.extend(spack.schema.environment.parse(self.environment))
         env.apply_modifications()
 
         cc = spack.util.executable.Executable(self.cc)
         output = cc(self.version_argument,
                     output=str, error=str,
-                    ignore_errors = type(self.ignore_version_errors)
-        )
+                    ignore_errors=type(self.ignore_version_errors))
 
         # restore environment
         os.environ = backup_env

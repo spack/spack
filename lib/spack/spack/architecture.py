@@ -59,7 +59,6 @@ will be responsible for compiler detection.
 import functools
 import inspect
 import warnings
-import os
 
 import six
 
