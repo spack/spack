@@ -670,6 +670,17 @@ def _config():
         # install tree
         cfg.push_scope(ConfigScope(*user_configuration_path))
 
+    # add command-line scopes
+    _add_command_line_scopes(cfg, command_line_scopes)
+
+    # we make a special scope for spack commands so that they can
+    # override configuration options.
+    cfg.push_scope(InternalConfigScope('command_line'))
+
+    # TODO: this allows command-line scopes to specify new install trees.
+    # The added install_tree_scope needs to be lower precedence than all
+    # command line scopes.
+    if not shared_tree_scope:
         # The user configuration will store the install trees that are used
         # by this spack instance
         install_trees = cfg.get('config:install_trees')
@@ -698,13 +709,6 @@ def _config():
         install_root = install_trees[install_tree]
         install_config_path = os.path.join(install_root, 'config')
         cfg.push_scope(ConfigScope(scope_name, install_config_path))
-
-    # add command-line scopes
-    _add_command_line_scopes(cfg, command_line_scopes)
-
-    # we make a special scope for spack commands so that they can
-    # override configuration options.
-    cfg.push_scope(InternalConfigScope('command_line'))
 
     return cfg
 
