@@ -49,7 +49,7 @@ def setup_parser(subparser):
 
     # spell out some common pytest arguments, so they'll show up in help
     pytest_group = subparser.add_argument_group(
-        "common pytest arguments (spack test --pytest-help for more details)")
+        "common pytest arguments (spack unit-test --pytest-help for more)")
     pytest_group.add_argument(
         "-s", action='append_const', dest='parsed_args', const='-s',
         help="print output while tests run (disable capture)")
