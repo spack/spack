@@ -20,7 +20,6 @@ properties = {
                 'type': 'string',
                 'enum': ['rpath', 'runpath']
             },
-            'install_tree': {'type': 'string'},
             'install_hash_length': {'type': 'integer', 'minimum': 1},
             'install_path_scheme': {'type': 'string'},
             'build_stage': {
