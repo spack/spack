@@ -77,6 +77,7 @@ class Llvm(CMakePackage):
     )
     variant("lldb", default=True, description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
+    variant("mlir", default=False, description="Build with MLIR support")
     variant(
         "internal_unwind",
         default=True,
@@ -181,6 +182,9 @@ class Llvm(CMakePackage):
 
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5.99")
+
+    # MLIR exists in > 10.x
+    conflicts("+mlir", when="@:9")
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
@@ -299,6 +303,8 @@ class Llvm(CMakePackage):
             projects.append("libcxxabi")
             if spec.satisfies("@3.9.0:"):
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
+        if "+mlir" in spec:
+            projects.append("mlir")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
         if "+polly" in spec:
