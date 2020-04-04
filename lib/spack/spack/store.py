@@ -137,7 +137,7 @@ def initialize_upstream_pointer_if_unset(root, init_upstream_root):
             f.write(init_upstream_root)
 
 
-def upstream_dbs_from_pointers(root):
+def upstream_install_roots(root):
     # Each installation root directory contains a file that points to the
     # upstream installation used (if any). This constructs a sequence of
     # upstream installations by recursively following these references.
@@ -150,7 +150,10 @@ def upstream_dbs_from_pointers(root):
             upstream_root_description = os.path.join(
                 upstream_root, 'upstream-spack')
 
-    return _construct_upstream_dbs_from_install_roots(install_roots)
+
+def upstream_dbs_from_pointers(root):
+    return _construct_upstream_dbs_from_install_roots(
+        upstream_install_roots(root))
 
 
 def upstream_dbs_from_config():
