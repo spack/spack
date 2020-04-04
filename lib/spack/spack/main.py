@@ -655,10 +655,12 @@ def print_setup_info(*info):
         path = spack.util.path.canonicalize_path(path)
         module_to_roots[name].append(path)
 
-    other_spack_instances = spack.config.get(
-        'upstreams') or {}
+    # Get all upstream directories here
     for install_properties in other_spack_instances.values():
-        upstream_module_roots = install_properties.get('modules', {})
+        # For each upstream install root, if there is a 'modules' directory,
+        # then create a dictionary: each subdir of that directory should be
+        # 'tcl' or etc. and the dictionary is from subdir name to full path
+        upstream_module_roots = None
         upstream_module_roots = dict(
             (k, v) for k, v in upstream_module_roots.items()
             if k in module_to_roots
