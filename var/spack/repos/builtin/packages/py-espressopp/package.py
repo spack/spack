@@ -35,7 +35,7 @@ class PyEspressopp(CMakePackage):
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
     depends_on("py-sphinx", when="+pdf", type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@:1.16.6', type=('build', 'run'))
     depends_on('py-matplotlib', when="+ug", type='build')
     depends_on('py-matplotlib', when="+pdf", type='build')
     depends_on("texlive", when="+pdf", type='build')
