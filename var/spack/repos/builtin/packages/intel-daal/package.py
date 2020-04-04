@@ -11,6 +11,8 @@ class IntelDaal(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/daal"
 
+    version('2020.1.217', sha256='3f84dea0ce1038ac1b9c25b3e2c02e9fac440fa36cc8adfce69edfc06fe0edda',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16536/l_daal_2020.1.217.tgz')
     version('2020.0.166', sha256='695166c9ab32ac5d3006d6d35162db3c98734210507144e315ed7c3b7dbca9c1',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16234/l_daal_2020.0.166.tgz')
     version('2019.5.281', sha256='e92aaedbe35c9daf1c9483260cb2363da8a85fa1aa5566eb38cf4b1f410bc368',

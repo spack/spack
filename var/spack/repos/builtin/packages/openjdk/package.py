@@ -16,6 +16,8 @@ class Openjdk(Package):
             url="https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz")
     version("11.0.1", sha256="7a6bb980b9c91c478421f865087ad2d69086a0583aeeb9e69204785e8e97dcfd",
             url="https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.1_linux-x64_bin.tar.gz")
+    version("1.8.0_222-b10", sha256="20cff719c6de43f8bb58c7f59e251da7c1fa2207897c9a4768c8c669716dc819",
+            url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u222-b10_openj9-0.15.1/OpenJDK8U-jdk_x64_linux_openj9_8u222b10_openj9-0.15.1.tar.gz")
     version("1.8.0_202-b08", sha256="533dcd8d9ca15df231a1eb392fa713a66bca85a8e76d9b4ee30975f3823636b7",
             url="https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u202-b08/OpenJDK8U-jdk_x64_linux_openj9_8u202b08_openj9-0.12.0.tar.gz")
     version('1.8.0_40-b25', sha256='79e96dce03a14271040023231a7d0ae374b755d48adf68bbdaec30294e4e2b88',

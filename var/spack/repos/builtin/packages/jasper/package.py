@@ -10,13 +10,11 @@ class Jasper(Package):
     """Library for manipulating JPEG-2000 images"""
 
     homepage = "https://www.ece.uvic.ca/~frodo/jasper/"
-    url      = "https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz"
-    list_url = homepage
+    url      = "https://github.com/mdadams/jasper/archive/version-2.0.16.tar.gz"
 
-    version('2.0.14',  sha256='2a1f61e55afe8b4ce8115e1508c5d7cb314d56dfcc2dd323f90c072f88ccf57b',
-            url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-2.0.14.tar.gz")
-    version('1.900.1', sha256='6b905a9c2aca2e275544212666eefc4eb44d95d0a57e4305457b407fe63f9494',
-            url="https://www.ece.uvic.ca/~frodo/jasper/software/jasper-1.900.1.zip")
+    version('2.0.16',  sha256='f1d8b90f231184d99968f361884e2054a1714fdbbd9944ba1ae4ebdcc9bbfdb1')
+    version('2.0.14',  sha256='85266eea728f8b14365db9eaf1edc7be4c348704e562bb05095b9a077cf1a97b')
+    version('1.900.1', sha256='c2b03f28166f9dc8ae434918839ae9aa9962b880fcfd24eebddd0a2daeb9192c')
 
     variant('jpeg',   default=True,  description='Enable the use of the JPEG library')
     variant('opengl', default=False, description='Enable the use of the OpenGL and GLUT libraries')

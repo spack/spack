@@ -17,7 +17,7 @@ mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
 mpi_deps = ['fake']
 
 
-def test_immediate_dependencies(mock_packages):
+def test_direct_dependencies(mock_packages):
     out = dependencies('mpileaks')
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(['callpath'] + mpis)
@@ -47,7 +47,7 @@ def test_transitive_dependencies_with_deptypes(mock_packages):
 
 
 @pytest.mark.db
-def test_immediate_installed_dependencies(mock_packages, database):
+def test_direct_installed_dependencies(mock_packages, database):
     with color_when(False):
         out = dependencies('--installed', 'mpileaks^mpich')
 

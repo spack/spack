@@ -23,6 +23,8 @@ class Papi(Package):
     maintainers = ['G-Ragghianti']
 
     url = "http://icl.cs.utk.edu/projects/papi/downloads/papi-5.4.1.tar.gz"
+    version('6.0.0.1', sha256='3cd7ed50c65b0d21d66e46d0ba34cd171178af4bbf9d94e693915c1aca1e287f')
+    version('6.0.0', sha256='3442709dae3405c2845b304c06a8b15395ecf4f3899a89ceb4d715103cb4055f')
     version('5.7.0', sha256='d1a3bb848e292c805bc9f29e09c27870e2ff4cda6c2fba3b7da8b4bba6547589')
     version('5.6.0', sha256='49b7293f9ca2d74d6d80bd06b5c4be303663123267b4ac0884cbcae4c914dc47')
     version('5.5.1', sha256='49dc2c2323f6164c4a7e81b799ed690ee73158671205e71501f849391dd2c2d4')
@@ -36,6 +38,7 @@ class Papi(Package):
     variant('powercap', default=False, description='Enable powercap interface support')
     variant('rapl', default=False, description='Enable RAPL support')
     variant('lmsensors', default=False, description='Enable lm_sensors support')
+    variant('sde', default=False, description='Enable software defined events')
 
     depends_on('lm-sensors', when='+lmsensors')
 
@@ -43,15 +46,24 @@ class Papi(Package):
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
     patch('https://bitbucket.org/icl/papi/commits/53de184a162b8a7edff48fed01a15980664e15b1/raw', sha256='64c57b3ad4026255238cc495df6abfacc41de391a0af497c27d0ac819444a1f8', when='@5.4.0:5.6.99%gcc@8:')
 
+    def setup_build_environment(self, env):
+        if '+lmsensors' in self.spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+
+    def setup_run_environment(self, env):
+        if '+lmsensors' in self.spec and self.version >= Version('6'):
+            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+
     def install(self, spec, prefix):
         if '+lmsensors' in spec:
-            with working_dir("src/components/lmsensors"):
-                configure_args = [
-                    "--with-sensors_incdir=%s/sensors" %
-                    spec['lm-sensors'].headers.directories[0],
-                    "--with-sensors_libdir=%s" %
-                    spec['lm-sensors'].libs.directories[0]]
-                configure(*configure_args)
+            if self.version < Version('6'):
+                with working_dir("src/components/lmsensors"):
+                    configure_args = [
+                        "--with-sensors_incdir=%s/sensors" %
+                        spec['lm-sensors'].headers.directories[0],
+                        "--with-sensors_libdir=%s" %
+                        spec['lm-sensors'].libs.directories[0]]
+                    configure(*configure_args)
         with working_dir("src"):
 
             configure_args = ["--prefix=%s" % prefix]

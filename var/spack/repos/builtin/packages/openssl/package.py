@@ -25,6 +25,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
+    version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe')
     version('1.1.1d', sha256='1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2')
     version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90')
     version('1.1.1b', sha256='5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b')
@@ -45,6 +47,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     # Our previous LTS version (1.0.2 series) will continue to be supported
     # until 31st December 2019 (security fixes only during the last year of
     # support).
+    version('1.0.2u', sha256='ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16')
     version('1.0.2t', sha256='14cb464efe7ac6b54799b34456bd69558a749a4931ecfd9cf9f71d7881cac7bc')
     version('1.0.2s', sha256='cabd5c9492825ce5bd23f3c3aeed6a97f8142f606d893df216411f07d1abab96')
     version('1.0.2r', sha256='ae51d08bba8a83958e894946f15303ff894d75c2b8bbd44a852b64e3fe11d0d6')

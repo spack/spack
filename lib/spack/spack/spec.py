@@ -3120,7 +3120,7 @@ class Spec(object):
             A copy of this spec.
 
         Examples:
-            Deep copy with dependnecies::
+            Deep copy with dependencies::
 
                 spec.copy()
                 spec.copy(deps=True)

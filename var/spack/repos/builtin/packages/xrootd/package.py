@@ -13,6 +13,7 @@ class Xrootd(CMakePackage):
     homepage = "http://xrootd.org"
     url      = "http://xrootd.org/download/v4.6.0/xrootd-4.6.0.tar.gz"
 
+    version('4.11.2', sha256='4620824db97fcc37dc3dd26110da8e5c3aab1d8302e4921d4f32e83207060603')
     version('4.10.0', sha256='f07f85e27d72e9e8ff124173c7b53619aed8fcd36f9d6234c33f8f7fd511995b')
     version('4.8.5',  sha256='42e4d2cc6f8b442135f09bcc12c7be38b1a0c623a005cb5e69ff3d27997bdf73')
     version('4.8.4',  sha256='f148d55b16525567c0f893edf9bb2975f7c09f87f0599463e19e1b456a9d95ba')

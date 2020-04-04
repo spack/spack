@@ -35,6 +35,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
+    variant('lto', default=False, description='Enable lto.')
+    variant('ld', default=False, description='Enable ld.')
+    variant('interwork', default=False, description='Enable interwork.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -46,6 +49,10 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # thus needs bison, even for a one-time build.
     depends_on('m4', type='build', when='@:2.29.99 +gold')
     depends_on('bison', type='build', when='@:2.29.99 +gold')
+
+    # 2.34 needs makeinfo due to a bug, see:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
+    depends_on('texinfo', type='build', when='@2.34')
 
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
@@ -63,6 +70,15 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             '--with-system-zlib',
             '--with-sysroot=/',
         ]
+
+        if '+lto' in spec:
+            configure_args.append('--enable-lto')
+
+        if '+ld' in spec:
+            configure_args.append('--enable-ld')
+
+        if '+interwork' in spec:
+            configure_args.append('--enable-interwork')
 
         if '+gold' in spec:
             configure_args.append('--enable-gold')

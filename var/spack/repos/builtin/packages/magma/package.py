@@ -7,10 +7,10 @@
 from spack import *
 
 
-class Magma(CMakePackage):
-    """The MAGMA project aims to develop a dense linear algebra library similar to
-       LAPACK but for heterogeneous/hybrid architectures, starting with current
-       "Multicore+GPU" systems.
+class Magma(CMakePackage, CudaPackage):
+    """The MAGMA project aims to develop a dense linear algebra library similar
+       to LAPACK but for heterogeneous/hybrid architectures, starting with
+       current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
@@ -28,13 +28,15 @@ class Magma(CMakePackage):
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
+    variant('cuda', default=True, description='Build with CUDA')
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cuda')
+    depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
-    conflicts('%gcc@6:', when='^cuda@:8')
-    conflicts('%gcc@7:', when='^cuda@:9')
+    conflicts('~cuda', msg='Magma requires cuda')
+    conflicts('cuda_arch=none',
+              msg='Please indicate a CUDA arch value or values')
 
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
     patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
@@ -69,11 +71,14 @@ class Magma(CMakePackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
 
-        if spec.satisfies('^cuda@9.0:'):
+        if spec.satisfies('^cuda'):
+            cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
-                options.extend(['-DGPU_TARGET=sm30'])
+                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
             else:
-                options.extend(['-DGPU_TARGET=sm_30'])
+                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
 
         if '@2.5.0' in spec:
             options.extend(['-DMAGMA_SPARSE=OFF'])

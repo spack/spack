@@ -91,6 +91,9 @@ class Pgi(Package):
     def setup_run_environment(self, env):
         prefix = Prefix(join_path(self.prefix, 'linux86-64', self.version))
 
+        env.prepend_path('PATH', prefix.bin)
+        env.prepend_path('MANPATH', prefix.man)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
         env.set('CC',  join_path(prefix.bin, 'pgcc'))
         env.set('CXX', join_path(prefix.bin, 'pgc++'))
         env.set('F77', join_path(prefix.bin, 'pgfortran'))

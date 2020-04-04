@@ -1,3 +1,15 @@
+# v0.14.1 (2019-03-20)
+
+This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
+
+* several bugfixes for parallel installation (#15339, #15341, #15220, #15197)
+* `spack load` now works with packages that have been renamed (#14348)
+* bugfix for `suite-sparse` installation (#15326)
+* deduplicate identical suffixes added to module names (#14920)
+* fix issues with `configure_args` during module refresh (#11084)
+* increased test coverage and test fixes (#15237, #15354, #15346)
+* remove some unused code (#15431)
+
 # v0.14.0 (2020-02-23)
 
 `v0.14.0` is a major feature release, with 3 highlighted features:
@@ -13,7 +25,7 @@
 
 2.  **Build pipelines.** You can also build in parallel through Gitlab
    CI. Simply create a Spack environment and push it to Gitlab to build
-   on Gitlab runners. Pipeline support is now integreated into a single
+   on Gitlab runners. Pipeline support is now integrated into a single
    `spack ci` command, so setting it up is easier than ever.  See the
    [Pipelines section](https://spack.readthedocs.io/en/v0.14.0/pipelines.html)
    in the docs.
@@ -113,8 +125,8 @@ RHEL8.
 * mirror bugfixes: symlinks, duplicate patches, and exception handling (#13789)
 * don't try to fetch `BundlePackages` (#13908)
 * avoid re-fetching patches already added to a mirror (#13908)
-* avoid re-fetching alread added patches (#13908)
-* avoid re-fetching alread added patches (#13908)
+* avoid re-fetching already added patches (#13908)
+* avoid re-fetching already added patches (#13908)
 * allow repeated invocations of `spack mirror create` on the same dir (#13908)
 * bugfix for RHEL8 when `python` is unavailable (#14252)
 * improve concretization performance in environments (#14190)

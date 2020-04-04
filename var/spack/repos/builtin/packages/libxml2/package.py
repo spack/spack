@@ -23,7 +23,7 @@ class Libxml2(AutotoolsPackage):
     variant('python', default=False, description='Enable Python support')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('zlib')
     depends_on('xz')
 
@@ -49,7 +49,7 @@ class Libxml2(AutotoolsPackage):
         spec = self.spec
 
         args = ['--with-lzma={0}'.format(spec['xz'].prefix),
-                '--with-iconv={0}'.format(spec['libiconv'].prefix)]
+                '--with-iconv={0}'.format(spec['iconv'].prefix)]
 
         if '+python' in spec:
             args.extend([

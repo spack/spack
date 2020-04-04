@@ -19,7 +19,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on('ncurses')
     depends_on('readline@5.0:')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     patches = [
         ('5.0', '001', 'f2fe9e1f0faddf14ab9bfa88d450a75e5d028fedafad23b88716bd657c737289'),
@@ -33,6 +33,11 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ('5.0', '009', 'ed3ca21767303fc3de93934aa524c2e920787c506b601cc40a4897d4b094d903'),
         ('5.0', '010', 'd6fbc325f0b5dc54ddbe8ee43020bced8bd589ddffea59d128db14b2e52a8a11'),
         ('5.0', '011', '2c4de332b91eaf797abbbd6c79709690b5cbd48b12e8dfe748096dbd7bf474ea'),
+        ('5.0', '012', '2943ee19688018296f2a04dbfe30b7138b889700efa8ff1c0524af271e0ee233'),
+        ('5.0', '013', 'f5d7178d8da30799e01b83a0802018d913d6aa972dd2ddad3b927f3f3eb7099a'),
+        ('5.0', '014', '5d6eee6514ee6e22a87bba8d22be0a8621a0ae119246f1c5a9a35db1f72af589'),
+        ('5.0', '015', 'a517df2dda93b26d5cbf00effefea93e3a4ccd6652f152f4109170544ebfa05e'),
+        ('5.0', '016', 'ffd1d7a54a99fa7f5b1825e4f7e95d8c8876bc2ca151f150e751d429c650b06d'),
     ]
 
     # TODO: patches below are not managed by the GNUMirrorPackage base class
@@ -49,7 +54,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
             '--with-curses',
             '--enable-readline',
             '--with-installed-readline',
-            '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix),
+            '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix),
         ]
 
     def check(self):
