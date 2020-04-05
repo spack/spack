@@ -10,7 +10,7 @@ class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
 
     homepage = "http://sphinx-doc.org"
-    url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-2.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-3.0.0.tar.gz"
 
     import_modules = [
         'sphinx', 'sphinx.testing', 'sphinx.ext', 'sphinx.pycode',
@@ -22,6 +22,7 @@ class PySphinx(PythonPackage):
         'sphinx.environment.collectors', 'sphinx.environment.adapters'
     ]
 
+    version('3.0.0', sha256='6a099e6faffdc3ceba99ca8c2d09982d43022245e409249375edf111caf79ed3')
     version('2.2.0', sha256='0d586b0f8c2fc3cc6559c5e8fd6124628110514fda0e5d7c82e682d749d2e845')
     version('1.8.4', sha256='c1c00fc4f6e8b101a0d037065043460dffc2d507257f2f11acaed71fd2b0c83c')
     version('1.8.2', sha256='120732cbddb1b2364471c3d9f8bfd4b0c5b550862f99a65736c77f970b142aea')
