@@ -11,7 +11,7 @@ class AdolC(AutotoolsPackage):
     derivatives of vector functions in C and C++ programs by operator
     overloading."""
 
-    homepage = "https://projects.coin-or.org/ADOL-C"
+    homepage = "https://github.com/coin-or/ADOL-C"
     url      = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
     git      = "https://github.com/coin-or/ADOL-C.git"
     version('master',  branch='master')

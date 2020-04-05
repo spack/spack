@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import platform
+
 import pytest
 
 import spack
@@ -14,6 +16,11 @@ python = SpackCommand('python')
 def test_python():
     out = python('-c', 'import spack; print(spack.spack_version)')
     assert out.strip() == spack.spack_version
+
+
+def test_python_version():
+    out = python('-V')
+    assert platform.python_version() in out
 
 
 def test_python_with_module():

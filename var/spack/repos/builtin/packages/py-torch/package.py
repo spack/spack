@@ -154,7 +154,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # TODO: See if there is a way to use an external mkldnn installation.
     # Currently, only older versions of py-torch use an external mkldnn
     # library.
-    depends_on('intel-mkl-dnn', when='@0.4:0.4.1+mkldnn')
+    depends_on('dnnl', when='@0.4:0.4.1+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
@@ -287,9 +287,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
 
-    def test(self):
-        pass
-
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')
+
+    # Tests need to be re-added since `phases` was overridden
+    run_after('install')(
+        PythonPackage._run_default_install_time_test_callbacks)
+    run_after('install')(PythonPackage.sanity_check_prefix)

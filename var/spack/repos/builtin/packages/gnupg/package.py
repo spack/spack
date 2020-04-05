@@ -25,7 +25,7 @@ class Gnupg(AutotoolsPackage):
     depends_on('libassuan@2.4:', when='@:2.2.3')
     depends_on('libassuan@2.5:', when='@2.2.15:')
     depends_on('pinentry', type='run')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('zlib')
 
     def configure_args(self):
@@ -42,7 +42,7 @@ class Gnupg(AutotoolsPackage):
             '--with-libassuan-prefix='    + self.spec['libassuan'].prefix,
             '--with-ksba-prefix='         + self.spec['libksba'].prefix,
             '--with-npth-prefix='         + self.spec['npth'].prefix,
-            '--with-libiconv-prefix='     + self.spec['libiconv'].prefix,
+            '--with-libiconv-prefix='     + self.spec['iconv'].prefix,
             '--with-zlib='                + self.spec['zlib'].prefix,
             '--without-tar',
             '--without-libiconv-prefix',

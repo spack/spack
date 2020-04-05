@@ -903,7 +903,7 @@ def get_keys(install=False, trust=False, force=False):
                     url_util.format(fetch_url_build_cache))
             # For s3 mirror need to request index.html directly
             p, links = web_util.spider(
-                url_util.join(fetch_url_build_cache, 'index.html'), depth=1)
+                url_util.join(fetch_url_build_cache, 'index.html'))
 
             for link in links:
                 if re.search(r'\.key', link) or re.search(r'\.pub', link):

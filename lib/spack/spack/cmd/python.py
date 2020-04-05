@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from __future__ import print_function
+
 import os
 import sys
 import code
@@ -21,6 +23,9 @@ level = "long"
 
 def setup_parser(subparser):
     subparser.add_argument(
+        '-V', '--version', action='store_true',
+        help='print the Python version number and exit')
+    subparser.add_argument(
         '-c', dest='python_command', help='command to execute')
     subparser.add_argument(
         '-m', dest='module', action='store',
@@ -31,6 +36,10 @@ def setup_parser(subparser):
 
 
 def python(parser, args, unknown_args):
+    if args.version:
+        print('Python', platform.python_version())
+        return
+
     if args.module:
         sys.argv = ['spack-python'] + unknown_args + args.python_args
         runpy.run_module(args.module, run_name="__main__", alter_sys=True)
