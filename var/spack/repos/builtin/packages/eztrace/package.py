@@ -12,6 +12,7 @@ class Eztrace(AutotoolsPackage):
 
     homepage = "http://eztrace.gforge.inria.fr"
     url      = "https://gitlab.com/eztrace/eztrace/-/archive/eztrace-1.1-10/eztrace-eztrace-1.1-10.tar.gz"
+    maintainers = ['trahay']
 
     version('1.1-10', sha256='97aba8f3b3b71e8e2f7ef47e00c262234e27b9cb4a870c85c525317a83a3f0d4')
 
