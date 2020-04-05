@@ -22,3 +22,15 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
     version('8.23', sha256='ec43ca5bcfc62242accb46b7f121f6b684ee21ecd7d075059bf650ff9e37b82d')
 
     build_directory = 'spack-build'
+
+    def configure_args(self):
+       spec = self.spec
+       
+       configure_args = []
+       
+       if spec.satisfies('platform=darwin'):
+          configure_args.append('--without-gmp')
+          configure_args.append('gl_cv_func_ftello_works=yes')
+          configure_args.append('FORCE_UNSAFE_CONFIGURE=1')
+          
+          return configure_args
