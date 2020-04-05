@@ -10,7 +10,7 @@ class PyJprops(PythonPackage):
     """Java properties file parser for Python"""
 
     homepage = "https://github.com/mgood/jprops/"
-    url      = "https://pypi.org/packages/source/j/jprops/jprops-2.0.2.tar.gz"
+    url      = "https://pypi.io/packages/source/j/jprops/jprops-2.0.2.tar.gz"
 
     version('2.0.2', sha256='d297231833b6cd0a3f982a48fe148a7f9817f2895661743d166b267e4d3d5b2c')
 
