@@ -59,7 +59,7 @@ class Slepc(Package):
 
     # Arpack can not be used with 64bit integers.
     conflicts('+arpack', when='@:3.12.99 ^petsc+int64')
-    conflicts('+blopex', when='@:3.12.99 ^petsc+int64')
+    conflicts('+blopex', when='^petsc+int64')
 
     resource(name='blopex',
              url='http://slepc.upv.es/download/external/blopex-1.1.2.tar.gz',
