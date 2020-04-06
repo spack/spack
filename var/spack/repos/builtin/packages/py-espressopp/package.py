@@ -27,7 +27,7 @@ class PyEspressopp(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     depends_on("mpi")
-    depends_on("boost+serialization+filesystem+system+python+mpi", when='@1.9.4:')
+    depends_on("boost+serialization+filesystem+system+python+mpi cxxstd=11", when='@1.9.4:')
     extends("python")
     depends_on("python@2:2.8")
     depends_on("py-mpi4py@2.0.0:", when='@1.9.4', type=('build', 'run'))
