@@ -597,7 +597,9 @@ class EnvironmentModifications(object):
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
             'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
-            'MODULES_(.*)', r'(\w*)_mod(quar|share)'
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)',
+            # Lmod configuration
+            r'LMOD_(.*)', 'MODULERCFILE'
         ])
 
         # Compute the environments before and after sourcing
