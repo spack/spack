@@ -18,7 +18,7 @@ class PyNeuronReduce(PythonPackage):
     version('0.0.7', commit='1bad597f2faa5ff6aa8c94b6f326f86a02e656d7')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-numpy@1.17:', type='run')
+    depends_on('py-numpy@1.14:', type='run')
     depends_on('neuron+python', type='run')
 
     def setup_run_environment(self, env):

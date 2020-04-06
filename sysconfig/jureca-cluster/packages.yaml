@@ -14,6 +14,9 @@ packages:
             bison@3.0.4: /usr/local/software/jureca/Stages/2019a/software/Bison/3.3.2
         version: [3.0.4]
         buildable: False
+    boost:
+        variants: +python
+        version: [1.70.0]
     cmake:
         paths:
             cmake@3.13.0: /usr/local/software/jureca/Stages/2019a/software/CMake/3.14.0-GCCcore-8.3.0
@@ -42,6 +45,11 @@ packages:
         paths:
             mpich@3.10: /usr/local/software/jureca/Stages/2019a/software/psmpi/5.2.2-1-iccifort-2019.3.199-GCC-8.3.0-mt
         version: [3.10]
+        buildable: False
+    intel-mpi-external:
+        paths:
+            intel-mpi-external@2019.6.154: /usr/local/software/jureca/Stages/2019a/software/impi/2019.6.154-iccifort-2019.5.281-GCC-8.3.0
+        version: [2019.6.154]
         buildable: False
     intel-mkl:
         paths:
@@ -85,31 +93,17 @@ packages:
     python:
         paths:
             python@2.7.15: /usr/local/software/jureca/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
-        version: [2.7.15]
+            python@3.6.8: /usr/local/software/jureca/Stages/2019a/software/Python/3.6.8-GCCcore-8.3.0
+        version: [2.7.15, 3.6.8]
         buildable: False    
-    py-cython:
-        paths:
-            py-cython@0.29.6: /usr/local/software/jureca/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
-        version: [0.29.6]
-        buildable: False    
-    py-ipyparallel:
-        paths:
-            py-ipyparallel@6.1.1: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
-        version: [6.1.1]
-        buildable: False
     py-matplotlib:
         paths:
-            py-matplotlib@2.2.2: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
-        version: [2.2.2]
-        buildable: False
-    py-pandas:
-        paths:
-            py-pandas@0.22.0: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
-        version: [0.22.0]
+            py-matplotlib@3.0.3: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
+        version: [3.0.3]
         buildable: False
     py-scipy:
         paths:
-            py-scipy@1.2.1: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-2.7.16
+            py-scipy@1.2.1: /usr/local/software/jureca/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
         version: [1.2.1]
         buildable: False
     zlib:
@@ -117,4 +111,4 @@ packages:
     all:
         compiler: [intel]
         providers:
-            mpi: [mpich]
+            mpi: [intel-mpi-external]

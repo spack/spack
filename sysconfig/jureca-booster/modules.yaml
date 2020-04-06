@@ -26,6 +26,7 @@ modules:
       suffixes:
           '+profile': 'profile'
           '^coreneuron+knl': 'knl'
+          '^python@2.7.15': 'python2'
           'neuron~mpi': 'serial'
       filter:
         environment_blacklist: ['CPATH', 'LIBRARY_PATH']
@@ -35,10 +36,13 @@ modules:
       - 'neurodamus'
       - 'neurodamus-hippocampus'
       - 'neurodamus-neocortex'
-      - 'neuron'
+      - 'neurodamus-mousify'
+      - 'neuron%intel'
       - 'py-bluepyopt'
       - 'py-bluepy'
+      - 'brion+python'
       - 'libxslt'
+      - 'py-sonata-network-reduction'
     blacklist:
       - '%gcc'
       - '%intel'

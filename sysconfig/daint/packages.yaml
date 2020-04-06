@@ -45,7 +45,8 @@ packages:
         buildable: False
         version: [3.14.5]
     boost:
-        version: [1.68.0]
+        variants: +python
+        version: [1.70.0]
     ncurses:
         paths:
             ncurses@6.1: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/ncurses/6.1
@@ -67,27 +68,23 @@ packages:
     python:
         paths:
             python@2.7.15.7: /opt/python/2.7.15.7
-        version: [2.7.15.7]
+            python@3.6.5.7: /opt/python/3.6.5.7
+        version: [2.7.15.7, 3.6.5.7]
     py-h5py:
         paths:
-            py-h5py~mpi@2.8.0: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/h5py/2.8.0-CrayGNU-19.10-python2-serial
+            py-h5py~mpi@2.8.0: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/h5py/2.8.0-CrayGNU-19.10-python3-serial
         version: [2.8.0]
-    py-matplotlib:
-        paths:
-            py-matplotlib@2.2.2: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/PyExtensions/2.7.15.7-CrayGNU-19.10
-        version: [2.2.2]
+        buildable: False
     py-numpy:
         paths:
-            py-numpy@1.14.3: /opt/python/2.7.15.7
-        version: [1.14.3]
-    py-pandas:
-        paths:
-            py-pandas@0.23.2: /apps/dom/UES/jenkins/7.0.UP01/mc/easybuild/software/PyExtensions/2.7.15.7-CrayGNU-19.10
-        version: [0.23.2]
+            py-numpy@1.15.1: /opt/python/3.6.5.7
+        version: [1.15.1]
+        buildable: False
     py-scipy:
         paths:
-            py-scipy@1.1.0: /opt/python/2.7.15.7
+            py-scipy@1.1.0: /opt/python/3.6.5.7
         version: [1.1.0]
+        buildable: False
     neuron:
         variants: +mpi +cross-compile
     reportinglib:

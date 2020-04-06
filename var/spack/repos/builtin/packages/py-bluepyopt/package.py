@@ -10,11 +10,17 @@ class PyBluepyopt(PythonPackage):
     """Bluebrain Python Optimisation Library"""
 
     homepage = "https://github.com/BlueBrain/BluePyOpt"
-    url = "https://pypi.io/packages/source/b/bluepyopt/bluepyopt-1.6.56.tar.gz"
+    url = "https://pypi.io/packages/source/b/bluepyopt/bluepyopt-1.9.27.tar.gz"
 
+    # NOTE : while adding new release check pmi_rank.patch compatibility
+    version('1.9.27', sha256='4cce15b92b32311c808cae5e005b664deb6e8dc5df4ca13ea7b59252ae346522')
+    version('1.8.68', sha256='b9d432840aab89d4863c935d3dc604816441eba02d731422b92056cee751ca9c')
     version('1.6.56', sha256='1c57c91465ca4b947fe157692e7004a3e6df02e4151e3dc77a8831382a8f1ab9')
     version('1.8.68', sha256='b9d432840aab89d4863c935d3dc604816441eba02d731422b92056cee751ca9c')
     version('1.9.12', sha256='7b623ab9168f460a85d952719ca5249248fc95e6f7a02658b0673b2baa0a8fc6')
+
+    # patch required to avoid hpe-mpi linked mechanism library
+    patch("pmi_rank.patch", when="@1.9.27:")
 
     variant('neuron', default=True, description="Use BluePyOpt together with NEURON")
 

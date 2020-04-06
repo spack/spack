@@ -53,5 +53,13 @@ packages:
       - timemory+mpi+cuda+cupti+caliper~gperftools~python@3.0.0a
       - virtualgl
       - vrpn
-      - zeromq@4.2.5
       - zlib@1.2.11
+
+  intel-stable-serial:
+    target_matrix:
+      - intel-stable
+    requires:
+      - architecture
+      - compiler
+    specs:
+      - zeromq+libsodium@4.3.2
