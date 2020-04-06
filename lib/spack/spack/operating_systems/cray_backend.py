@@ -80,6 +80,11 @@ class CrayBackend(LinuxDistro):
         name = 'cnl'
         version = self._detect_crayos_version()
         if version:
+            # If we found a CrayOS version, we do not want the information
+            # from LinuxDistro. In order to skip the logic from
+            # external.distro.linux_distribution, while still calling __init__
+            # methods further up the MRO, we skip LinuxDistro in the MRO and
+            # call the OperatingSystem superclass __init__ method
             super(LinuxDistro, self).__init__(name, version)
         else:
             super(CrayBackend, self).__init__()
