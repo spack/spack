@@ -19,6 +19,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 import spack.util.executable
+import spack.util.module_cmd
 import spack.compilers
 from spack.util.environment import filter_system_paths
 
@@ -422,8 +423,8 @@ class Compiler(object):
         # See build_environment.py for comments on this code
         for module in self.modules:
             if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
-                load_module('cce')
-            load_module(module)
+                spack.util.module_cmd.load_module('cce')
+            spack.util.module_cmd.load_module(module)
 
         # apply other compiler environment changes
         env = spack.util.environment.EnvironmentModifications()
