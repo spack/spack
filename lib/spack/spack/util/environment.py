@@ -602,7 +602,8 @@ class EnvironmentModifications(object):
 
         # Compute the environments before and after sourcing
         before = sanitize(
-            dict(os.environ), blacklist=blacklist, whitelist=whitelist
+            environment_after_sourcing_files(os.devnull, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
         )
         file_and_args = (filename,) + arguments
         after = sanitize(
