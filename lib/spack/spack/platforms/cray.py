@@ -18,15 +18,14 @@ from spack.util.module_cmd import module
 
 
 _craype_name_to_target_name = {
-    'x86_cascadelake': 'cascadelake',
-    'x86_naples': 'zen',
-    'x86_rome': 'zen',  # Cheating because we have the wrong modules on rzcrayz
-    'x86_skylake': 'skylake-avx512'
+    'x86-cascadelake': 'cascadelake',
+    'x86-naples': 'zen',
+    'x86-rome': 'zen',  # Cheating because we have the wrong modules on rzcrayz
+    'x86-skylake': 'skylake-avx512'
 }
 
 
-def _target_name_from_craype_target_name(craype_name):
-    name = craype_name.replace('-', '_')
+def _target_name_from_craype_target_name(name):
     return _craype_name_to_target_name.get(name, name)
 
 
