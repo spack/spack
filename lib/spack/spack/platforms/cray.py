@@ -98,6 +98,10 @@ class Cray(Platform):
         env.append_path("PKG_CONFIG_PATH", "/usr/lib64/pkgconfig")
         env.append_path("PKG_CONFIG_PATH", "/usr/local/lib64/pkgconfig")
 
+        # CRAY_LD_LIBRARY_PATH is used at build time by the cray compiler
+        # wrappers to augment LD_LIBRARY_PATH. This is to avoid long load
+        # times at runtime. This behavior is not always respected on cray
+        # "cluster" systems, so we reproduce it here.
         if os.environ.get('CRAY_LD_LIBRARY_PATH'):
             env.prepend_path('LD_LIBRARY_PATH',
                              os.environ['CRAY_LD_LIBRARY_PATH'])
