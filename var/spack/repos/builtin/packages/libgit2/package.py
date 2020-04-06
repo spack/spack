@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Libgit2(CMakePackage):
@@ -17,7 +16,7 @@ class Libgit2(CMakePackage):
     homepage = "https://libgit2.github.com/"
     url      = "https://github.com/libgit2/libgit2/archive/v0.26.0.tar.gz"
 
-    maintainers = ["AndrewGaspar", "DiegoMagdaleno"]
+    maintainers = ["AndrewGaspar"]
 
     version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
     version('0.99.0',  sha256='174024310c1563097a6613a0d3f7539d11a9a86517cd67ce533849065de08a11')
@@ -97,22 +96,3 @@ class Libgit2(CMakePackage):
             '-DBUILD_CLAR={0}'.format('ON' if self.run_tests else 'OFF'))
 
         return args
-
-    # This fixes a linking error on Darwin based operating systems
-    # as far as i know this issue happened on Darwin 19, in macOS versions
-    # macOS catalina, this should link the symbol to its correct place.
-
-    # I dont know if the issue
-    # is present on other operating systems, so for now
-    # we only execute this if is platform is Darwin, also install_name_tool is
-    # a mach tool only.
-    @run_after('install')
-    def fix_linking(self):
-        if sys.platform == 'darwin':
-            install_name_tool = which('install_name_tool')
-            install_name_tool('-change', 'libssh2.1.dylib',
-                              '{0}'.format(
-                                  self.spec['libssh2'].prefix.lib
-                                  + '/libssh2.1.0.1.dylib'),
-                              '{0}'.format(
-                                  prefix.lib + '/libgit2.1.0.0.dylib'))
