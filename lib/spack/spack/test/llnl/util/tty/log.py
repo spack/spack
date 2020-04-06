@@ -124,6 +124,7 @@ def mock_logger(attrs):
 
 
 def mock_shell_fg(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -132,50 +133,16 @@ def mock_shell_fg(proc, ctl, attrs):
 
 
 def mock_shell_fg_no_termios(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
-    ctl.wait_disabled_fg()
-
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_fg_tstp_cont(proc, ctl, attrs):
-    ctl.fg()
-    ctl.status()
-    ctl.wait_enabled()
-
-    ctl.tstp()           # stop in fg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled_fg()
-
-    ctl.cont()           # stop in fg
-    ctl.status()
-    ctl.wait_running()
-    ctl.wait_enabled()
-
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_fg_tstp_cont_no_termios(proc, ctl, attrs):
-    ctl.fg()
-    ctl.status()
-    ctl.wait_disabled_fg()
-
-    ctl.tstp()           # stop in fg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled_fg()
-
-    ctl.cont()           # stop in fg
-    ctl.status()
-    ctl.wait_running()
     ctl.wait_disabled_fg()
 
     os.kill(proc.pid, signal.SIGUSR1)
 
 
 def mock_shell_bg(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -184,6 +151,7 @@ def mock_shell_bg(proc, ctl, attrs):
 
 
 def mock_shell_tstp_cont(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -194,6 +162,7 @@ def mock_shell_tstp_cont(proc, ctl, attrs):
 
 
 def mock_shell_tstp_tstp_cont(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -207,6 +176,7 @@ def mock_shell_tstp_tstp_cont(proc, ctl, attrs):
 
 
 def mock_shell_tstp_tstp_cont_cont(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -223,6 +193,7 @@ def mock_shell_tstp_tstp_cont_cont(proc, ctl, attrs):
 
 
 def mock_shell_bg_fg(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -235,6 +206,7 @@ def mock_shell_bg_fg(proc, ctl, attrs):
 
 
 def mock_shell_bg_fg_no_termios(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -247,6 +219,7 @@ def mock_shell_bg_fg_no_termios(proc, ctl, attrs):
 
 
 def mock_shell_fg_bg(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -259,6 +232,7 @@ def mock_shell_fg_bg(proc, ctl, attrs):
 
 
 def mock_shell_fg_bg_no_termios(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
     ctl.wait_disabled_fg()
@@ -271,6 +245,7 @@ def mock_shell_fg_bg_no_termios(proc, ctl, attrs):
 
 
 def mock_shell_v_v(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.wait_enabled()
 
@@ -284,6 +259,7 @@ def mock_shell_v_v(proc, ctl, attrs):
 
 
 def mock_shell_v_v_no_termios(proc, ctl, attrs):
+    """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.wait_disabled_fg()
 
@@ -296,154 +272,14 @@ def mock_shell_v_v_no_termios(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def _mock_shell_integration(proc, ctl, attrs):
-    ctl.fg()             # start in foreground
-    ctl.status()
-    ctl.wait_enabled()
-
-    ctl.bg()             # send to background
-    ctl.tstp()           # immediately stop
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled()
-
-    ctl.cont()           # continue in bg, wait a bit
-    ctl.status()
-    ctl.wait_running()
-
-    ctl.fg()             # bring to foreground
-    ctl.status()
-    ctl.wait_enabled()
-
-    time.sleep(.1)       # allow some time to NOT print
-    ctl.write(b'v')      # enable verbose output
-    ctl.status()
-    time.sleep(.1)       # allow some time to print
-
-    ctl.bg()             # send to background (keep running)
-    ctl.status()
-    ctl.wait_disabled()
-
-    ctl.tstp()           # stop in bg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled()
-
-    ctl.cont()           # continue in bg for a bit
-    ctl.status()
-    ctl.wait_running()
-    ctl.wait_disabled()
-
-    ctl.fg()             # bring to foreground
-    ctl.status()
-    ctl.wait_enabled()
-
-    ctl.tstp()           # stop in fg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled_fg()
-
-    ctl.cont()           # cont in fg
-    ctl.status()
-    ctl.wait_running()
-    ctl.wait_enabled()
-
-    ctl.write(b'v')      # disable verbose and wait a bit
-    ctl.status()
-
-    ctl.bg()             # back to background
-    ctl.status()
-    ctl.wait_disabled()
-
-
-def _mock_shell_integration_no_termios(proc, ctl, attrs):
-    ctl.fg()             # start in foreground
-    ctl.status()
-    ctl.wait_disabled_fg()
-
-    ctl.bg()             # send to background
-    ctl.tstp()           # immediately stop
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled()
-
-    ctl.cont()           # continue in bg, wait a bit
-    ctl.status()
-    ctl.wait_running()
-
-    ctl.fg()             # bring to foreground
-    ctl.status()
-    ctl.wait_disabled_fg()
-
-    time.sleep(.1)       # allow some time to NOT print
-    ctl.write(b'v\n')    # enable verbose output
-    ctl.status()
-    time.sleep(.1)       # allow time to print
-
-    ctl.bg()             # send to background (keep running)
-    ctl.status()
-    ctl.wait_disabled()
-
-    ctl.tstp()           # stop in bg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled()
-
-    ctl.cont()           # continue in bg for a bit
-    ctl.status()
-    ctl.wait_running()
-    ctl.wait_disabled()
-
-    ctl.fg()             # bring to foreground
-    ctl.status()
-    ctl.wait_disabled_fg()
-
-    ctl.tstp()           # stop in fg
-    ctl.status()
-    ctl.wait_stopped()
-    ctl.wait_disabled_fg()
-
-    ctl.cont()           # cont in fg
-    ctl.status()
-    ctl.wait_running()
-    ctl.wait_disabled_fg()
-
-    ctl.write(b'v\n')    # disable verbose and wait a bit
-    ctl.status()
-
-    ctl.bg()             # back to background
-    ctl.status()
-    ctl.wait_disabled()
-
-
-def mock_shell_integration_1(proc, ctl, attrs):
-    _mock_shell_integration(proc, ctl, attrs)
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_integration_loop(proc, ctl, attrs):
-    for i in range(10):
-        _mock_shell_integration(proc, ctl, attrs)
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_integration_1_no_termios(proc, ctl, attrs):
-    _mock_shell_integration_no_termios(proc, ctl, attrs)
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_integration_loop_no_termios(proc, ctl, attrs):
-    for i in range(10):
-        _mock_shell_integration_no_termios(proc, ctl, attrs)
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
 @contextlib.contextmanager
 def no_termios():
     saved = llnl.util.tty.log.termios
     llnl.util.tty.log.termios = None
-    yield
-    llnl.util.tty.log.termios = saved
+    try:
+        yield
+    finally:
+        llnl.util.tty.log.termios = saved
 
 
 @contextlib.contextmanager
@@ -459,7 +295,6 @@ def nullcontext():
     (mock_shell_bg, nullcontext),
     (mock_shell_bg_fg, nullcontext),
     (mock_shell_fg_bg, nullcontext),
-    (mock_shell_fg_tstp_cont, nullcontext),
     (mock_shell_tstp_cont, nullcontext),
     (mock_shell_tstp_tstp_cont, nullcontext),
     (mock_shell_tstp_tstp_cont_cont, nullcontext),
@@ -468,12 +303,18 @@ def nullcontext():
     (mock_shell_bg, no_termios),
     (mock_shell_bg_fg_no_termios, no_termios),
     (mock_shell_fg_bg_no_termios, no_termios),
-    (mock_shell_fg_tstp_cont_no_termios, no_termios),
     (mock_shell_tstp_cont, no_termios),
     (mock_shell_tstp_tstp_cont, no_termios),
     (mock_shell_tstp_tstp_cont_cont, no_termios),
 ])
-def test_foreground_background_simple(test_fn, termios_on_or_off):
+def test_foreground_background(test_fn, termios_on_or_off):
+    """Functional tests for foregrounding and backgrounding a logged process.
+
+    This ensures that things like SIGTTOU are not raised and that
+    terminal settings are corrected on foreground/background and on
+    process stop and start.
+
+    """
     shell = PseudoShell(test_fn, mock_logger)
     shell.attrs["debug"] = True
 
@@ -489,16 +330,11 @@ def test_foreground_background_simple(test_fn, termios_on_or_off):
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
 @pytest.mark.skipif(not termios, reason="requires termios support")
 @pytest.mark.parametrize('test_fn,termios_on_or_off', [
-    # tests with termios
     (mock_shell_v_v, nullcontext),
-    (mock_shell_integration_1, nullcontext),
-    (mock_shell_integration_loop, nullcontext),
-    # tests without termios
     (mock_shell_v_v_no_termios, no_termios),
-    (mock_shell_integration_1_no_termios, no_termios),
-    (mock_shell_integration_loop_no_termios, no_termios),
 ])
-def test_foreground_background_with_output(test_fn, capfd, termios_on_or_off):
+def test_foreground_background_output(test_fn, capfd, termios_on_or_off):
+    """Tests hitting 'v' toggles output, and that force_echo works."""
     shell = PseudoShell(test_fn, mock_logger)
     shell.attrs["debug"] = True
 
@@ -507,28 +343,21 @@ def test_foreground_background_with_output(test_fn, capfd, termios_on_or_off):
     exitcode = shell.join()
 
     out, err = capfd.readouterr()
-    print("stderr ===========================")
-    print(err)
-    print()
-    print("stdout ===========================")
-    print(out)
-    print()
 
     # processes completed successfully
     assert exitcode == 0
 
-    # numbers output by logger
     stripped = out.strip()
     split = re.split(r'\s+', stripped) if stripped else []
+    output_numbers = set([int(n) for n in split])
+    logged_numbers = set(range(shell.attrs["count"]))
 
-    numbers = set([int(n) for n in split])
-    all_numbers = set(range(shell.attrs["count"]))
+    # 0 is always output if logger.force_echo() works
+    assert 0 in output_numbers
 
-    # test that logger.force_echo() works
-    assert 0 in numbers
+    # no unexpected numbers
+    assert output_numbers <= logged_numbers
 
-    # all numbers are really output we expect
-    assert numbers <= all_numbers
-
-    # only some are present, since we enable and disable output with 'v'
-    assert len(numbers) < len(all_numbers)
+    # only numbers between v presses are output (this tests whether some
+    # of the numbers were hidden, i.e., when verbose was off.
+    assert len(output_numbers) < len(logged_numbers)
