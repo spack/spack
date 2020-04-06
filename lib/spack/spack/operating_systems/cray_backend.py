@@ -98,6 +98,14 @@ class CrayBackend(LinuxDistro):
             v = read_clerelease_file()
             return spack.version.Version(v)[0]
         else:
+            # Not all Cray systems run CNL on the backend.
+            # Systems running in what Cray calls "cluster" mode run other
+            # linux OSs under the Cray PE.
+            # So if we don't detect any Cray OS version on the system,
+            # we return None. We can't ever be sure we will get a Cray OS
+            # version.
+            # Returning None allows the calling code to test for the value
+            # being "True-ish" rather than requiring a try/except block.
             return None
 
     def arguments_to_detect_version_fn(self, paths):
