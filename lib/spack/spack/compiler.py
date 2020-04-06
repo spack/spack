@@ -317,6 +317,10 @@ class Compiler(object):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
             return []
+        if not cls.verbose_flag():
+            # In this case there is no mechanism to learn what link directories
+            # are used by the compiler
+            return []
 
         try:
             tmpdir = tempfile.mkdtemp(prefix='spack-implicit-link-info')
