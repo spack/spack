@@ -7,7 +7,8 @@ from spack import *
 
 
 class Numap(CMakePackage):
-    """Numap is a Linux library dedicated to memory profiling based on hardware performance monitoring unit (PMU)."""
+    """Numap is a Linux library dedicated to memory profiling based on
+    hardware performance monitoring unit (PMU)."""
 
     homepage = "https://github.com/numap-library/numap"
     git      = "https://github.com/numap-library/numap.git"

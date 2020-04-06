@@ -7,7 +7,8 @@ from spack import *
 
 
 class Libbacktrace(AutotoolsPackage):
-    """A C library that may be linked into a C/C++ program to produce symbolic backtraces."""
+    """A C library that may be linked into a C/C++ program to produce
+    symbolic backtraces."""
 
     homepage = "https://github.com/ianlancetaylor/libbacktrace"
     git      = "https://github.com/ianlancetaylor/libbacktrace.git"
