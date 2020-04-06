@@ -14,14 +14,13 @@ class PyTensorboardPluginWit(Package):
        that requires minimal code."""
 
     homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
-    url      = "https://github.com/pair-code/what-if-tool"
     git      = "https://github.com/pair-code/what-if-tool.git"
 
     version('master', branch='master')
     depends_on('bazel@0.26.1:', type='build')
     depends_on('py-setuptools@36.2.0:', type='build')
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
-    depends_on('py-wheel', type=('build', 'run'))
+    depends_on('py-wheel', type='build')
 
     extends('python')
 
