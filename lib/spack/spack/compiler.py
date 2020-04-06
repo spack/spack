@@ -407,21 +407,27 @@ class Compiler(object):
                                       "the C11 standard",
                                       "c11_flag")
 
-    #
-    # Recompute the compiler version for a compiler
-    # Take advantage of modules to be cross-platform
-    # Not a class method
-    def compute_real_version(self):
-        """Recompute the compiler version for a compiler.
+    # Run the compiler to get compiler version info
+    # Use the run environment of the compiler to do so
+    # Note: This is not a class method. The class methods are used to detect
+    # compilers on PATH based systems, and do not set up the run environment of
+    # the compiler. This method can be called on `module` based systems as well
+    def get_real_version(self):
+        """Query the compiler for its version.
 
-        This method takes advantage of compiler modules to be cross-platform.
+        This is the "real" compiler version, regardless of what is in the 
+        compilers.yaml file, which the user can change to name their compiler.
+
+        Use the runtime environment of the compiler (modules and environment
+        modifications) to enable the compiler to run properly on any platform.
         """
         # store environment to replace later
         backup_env = os.environ
 
         # load modules and set env variables
-        # See build_environment.py for comments on this code
         for module in self.modules:
+            # On cray, mic-knl module cannot be loaded without cce module
+            # See: https://github.com/spack/spack/issues/3153
             if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
                 spack.util.module_cmd.load_module('cce')
             spack.util.module_cmd.load_module(module)
@@ -437,7 +443,14 @@ class Compiler(object):
                     ignore_errors=type(self.ignore_version_errors))
 
         # restore environment
-        os.environ = backup_env
+        # replacing the os.environ dictionary in python does not effect the
+        # environment variables in process space, so we have to modify the
+        # environment in place
+        for key in set(os.environ.keys()) | set(backup_env.keys()):
+            if key in backup_env:
+                os.environ[key] = backup_env[key]
+            else:
+                del os.environ[key]
 
         return self.extract_version_from_output(output)
 
