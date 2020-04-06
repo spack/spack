@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,14 +14,14 @@ class PyTns(PythonPackage):
 
     version('develop', branch='master')
     version('space2', branch='space2')
-    version('1.0.8', tag='tns-v1.0.8', preferred=True)
+    version('2.0.4', tag='tns-v2.0.4')
+    version('1.0.8', tag='tns-v1.0.8')
 
     depends_on('py-setuptools', type='build')
 
-    depends_on('py-enum34@1.0:', type='run', when='^python@:3.3.99')
     depends_on('py-matplotlib@1.3:', type='run')
-    depends_on('py-morphio@2.0:', type='run')
-    depends_on('py-neurom@1.4:', type='run')
+    depends_on('py-morphio@2.3.4:', type='run')
+    depends_on('py-neurom@1.4.19:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-scipy@0.13:', type='run')
-    depends_on('py-tmd@2.0.3:', type='run')
+    depends_on('py-tmd@2.0.8:', type='run')

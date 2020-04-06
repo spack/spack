@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,11 +13,12 @@ class PlacementAlgorithm(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/building/placementAlgorithm"
 
     version('develop', branch='master')
-    version('2.0.8', tag='placement-algorithm-v2.0.8', preferred=True)
+    version('2.0.10', tag='placement-algorithm-v2.0.10')
+    version('2.0.8', tag='placement-algorithm-v2.0.8')
 
     build_directory = 'python'
 
-    depends_on('py-setuptools', type=('build','run'))
+    depends_on('py-setuptools', type=('build', 'run'))
 
     depends_on('py-lxml', type='run')
     depends_on('py-numpy', type='run')
@@ -30,4 +31,4 @@ class PlacementAlgorithm(PythonPackage):
     depends_on('py-tqdm@4.0:', type='run')
     depends_on('py-voxcell@2.5:', type='run')
 
-    depends_on('py-region-grower@0.1.1:', type='run')
+    depends_on('py-region-grower@0.1.5:', type='run')
