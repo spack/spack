@@ -16,4 +16,4 @@ class Numap(CMakePackage):
     version('master',  branch='master')
     version('2019-09-06', commit='ffcdb88c64b59b7a3220eb1077d2b237029ca96a')
 
-    depends_on('libpfm')
+    depends_on('libpfm4')
