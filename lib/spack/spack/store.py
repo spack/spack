@@ -149,6 +149,7 @@ def upstream_install_roots(root):
             install_roots.append(upstream_root)
             upstream_root_description = os.path.join(
                 upstream_root, 'upstream-spack')
+    return install_roots
 
 
 def upstream_dbs_from_pointers(root):
