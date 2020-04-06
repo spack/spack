@@ -17,9 +17,9 @@ class NcclTests(MakefilePackage, CudaPackage):
     variant('cuda', default=True, description='with CUDA support, must be true')
     conflicts('~cuda', msg='nccl-tests require cuda')
 
-    depends_on('nccl', type=('build', 'run'))
-    depends_on('cuda', type=('build', 'run'))
-    depends_on('mpi', type=('build', 'run'), when='+mpi')
+    depends_on('nccl')
+    depends_on('cuda')
+    depends_on('mpi', when='+mpi')
 
     @property
     def build_targets(self):
