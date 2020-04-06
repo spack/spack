@@ -60,9 +60,9 @@ class Cce(Compiler):
     def c99_flag(self):
         if self.version >= ver('9.0'):
             return '-std=c99'
-        if self.version >= ver('8.4'):
-            return '-h stc=c99,noconform,gnu'
-        if self.version >= ver('8.1'):
+        elif self.version >= ver('8.4'):
+            return '-h std=c99,noconform,gnu'
+        elif self.version >= ver('8.1'):
             return '-h c99,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C99 standard',
@@ -73,7 +73,7 @@ class Cce(Compiler):
     def c11_flag(self):
         if self.version >= ver('9.0'):
             return '-std=c11'
-        if self.version >= ver('8.5'):
+        elif self.version >= ver('8.5'):
             return '-h std=c11,noconform,gnu'
         raise UnsupportedCompilerFlag(self,
                                       'the C11 standard',
