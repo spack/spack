@@ -6,6 +6,11 @@
 """The pty module handles pseudo-terminals.
 
 Currently, the infrastructure here is only used to test llnl.util.tty.log.
+
+If this is used outside a testing environment, we will want to reconsider
+things like timeouts in ``ProcessController.wait()``, which are set to
+get tests done quickly, not to avoid high CPU usage.
+
 """
 from __future__ import print_function
 
@@ -30,23 +35,32 @@ class ProcessController(object):
     would, by sending signals and I/O.
 
     """
-    def __init__(self, pid, master_fd, timeout=1, debug=False):
+    def __init__(self, pid, master_fd,
+                 timeout=1, sleep_time=1e-1, debug=False):
         """Create a controller to manipulate the process with id ``pid``
 
         Args:
             pid (int): id of process to control
-            master_fd (int): master file descriptor created as with
-                ``os.openpty()``, attached to pid's stdin
+            master_fd (int): master file descriptor attached to pid's stdin
             timeout (int): time in seconds for wait operations to time out
                 (default 1 second)
-            debug (bool): whether ``hline()`` and ``status()`` should
+            sleep_time (int): time to sleep after signals, to control the
+                signal rate of the controller (default 1e-1)
+            debug (bool): whether ``horizontal_line()`` and ``status()`` should
                 produce output when called (default False)
+
+        ``sleep_time`` allows the caller to insert delays after calls
+        that signal or modify the controlled process. Python behaves very
+        poorly if signals arrive too fast, and drowning a Python process
+        with a Python handler with signals can kill the process and hang
+        our tests, so we throttle this a closer-to-interactive rate.
 
         """
         self.pid = pid
         self.pgid = os.getpgid(pid)
         self.master_fd = master_fd
         self.timeout = timeout
+        self.sleep_time = sleep_time
         self.debug = debug
 
         # we need the ps command to wait for process statuses
@@ -60,7 +74,7 @@ class ProcessController(object):
             bool(cfg[3] & termios.ECHO),
         )
 
-    def hline(self, name):
+    def horizontal_line(self, name):
         """Labled horizontal line for debugging."""
         if self.debug:
             sys.stderr.write(
@@ -68,7 +82,7 @@ class ProcessController(object):
             )
 
     def status(self):
-        """Print debug messgae with status info for the child."""
+        """Print debug message with status info for the child."""
         if self.debug:
             canon, echo = self.get_canon_echo_attrs()
             sys.stderr.write("canon: %s, echo: %s\n" % (
@@ -80,7 +94,7 @@ class ProcessController(object):
             sys.stderr.write("\n")
 
     def input_on(self):
-        """True if the temrchild process """
+        """True if keyboard input is enabled on the master_fd pty."""
         return self.get_canon_echo_attrs() == (False, False)
 
     def background(self):
@@ -89,24 +103,29 @@ class ProcessController(object):
 
     def tstp(self):
         """Send SIGTSTP to the controlled process."""
-        self.hline("tstp")
+        self.horizontal_line("tstp")
         os.killpg(self.pgid, signal.SIGTSTP)
+        time.sleep(self.sleep_time)
 
     def cont(self):
-        self.hline("cont")
+        self.horizontal_line("cont")
         os.killpg(self.pgid, signal.SIGCONT)
+        time.sleep(self.sleep_time)
 
     def fg(self):
-        self.hline("fg")
-        os.tcsetpgrp(self.master_fd, os.getpgid(self.pid))
+        self.horizontal_line("fg")
+        with log.ignore_signal(signal.SIGTTOU):
+            os.tcsetpgrp(self.master_fd, os.getpgid(self.pid))
+        time.sleep(self.sleep_time)
 
     def bg(self):
-        self.hline("bg")
+        self.horizontal_line("bg")
         with log.ignore_signal(signal.SIGTTOU):
             os.tcsetpgrp(self.master_fd, os.getpgrp())
+        time.sleep(self.sleep_time)
 
     def write(self, byte_string):
-        self.hline("write '%s'" % byte_string.decode("utf-8"))
+        self.horizontal_line("write '%s'" % byte_string.decode("utf-8"))
         os.write(self.master_fd, byte_string)
 
     def wait(self, condition):
@@ -133,96 +152,7 @@ class ProcessController(object):
         self.wait(lambda: "T" in self.proc_status())
 
     def wait_running(self):
-        status = self.proc_status()
-        self.wait(lambda: "T" not in status)
-
-
-def _child_process(
-        tty_name, stdout_fd, stderr_fd, ready, child_function, attrs):
-    """Child process wrapper for PseudoShell.
-
-    Handles the mechanics of setting up a PTY, then calls
-    ``child_function``.
-
-    """
-    # new process group, like a command or pipeline launched by a shell
-    os.setpgrp()
-
-    # take controlling terminal and set up pty IO
-    stdin_fd = os.open(tty_name, os.O_RDWR)
-    os.dup2(stdin_fd, sys.stdin.fileno())
-    os.dup2(stdout_fd, sys.stdout.fileno())
-    os.dup2(stderr_fd, sys.stderr.fileno())
-    os.close(stdin_fd)
-
-    if attrs.get("debug"):
-        sys.stderr.write("child: stdin.isatty(): %s\n" % sys.stdin.isatty())
-
-    # tell the parent that we're really running
-    if attrs.get("debug"):
-        sys.stderr.write("child: ready!\n")
-    ready.value = True
-
-    child_function(attrs)
-
-
-def _master_process(master_function, child_function, attrs):
-    """Master process wrapper for PseudoShell.
-
-    Handles the mechanics of setting up a PTY, then calls
-    ``master_function``.
-
-    """
-    os.setsid()   # new session; this process is the controller
-
-    master_fd, child_fd = os.openpty()
-    pty_name = os.ttyname(child_fd)
-
-    # take controlling terminal
-    pty_fd = os.open(pty_name, os.O_RDWR)
-    os.close(pty_fd)
-
-    ready = multiprocessing.Value('i', False)
-    proc = multiprocessing.Process(
-        target=_child_process,
-        args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
-              ready, child_function, attrs)
-    )
-    proc.start()
-
-    # wait for subprocess to be running and connected.
-    while not ready.value:
-        time.sleep(1e-5)
-        pass
-
-    if attrs.get("debug"):
-        sys.stderr.write("pid:        %d\n" % os.getpid())
-        sys.stderr.write("pgid:       %d\n" % os.getpgrp())
-        sys.stderr.write("sid:        %d\n" % os.getsid(0))
-        sys.stderr.write("tcgetpgrp:  %d\n" % os.tcgetpgrp(master_fd))
-        sys.stderr.write("\n")
-
-        proc_pgid = os.getpgid(proc.pid)
-        sys.stderr.write("child pid:  %d\n" % proc.pid)
-        sys.stderr.write("child pgid: %d\n" % proc_pgid)
-        sys.stderr.write("child sid:  %d\n" % os.getsid(proc.pid))
-        sys.stderr.write("\n")
-        sys.stderr.flush()
-    # set up master to ignore SIGTSTP, like a shell
-    signal.signal(signal.SIGTSTP, signal.SIG_IGN)
-
-    # call the master function once the child is ready
-    try:
-        controller = ProcessController(
-            proc.pid, master_fd, debug=attrs.get("debug"))
-        error = master_function(proc, controller, attrs)
-    except BaseException:
-        error = 1
-        traceback.print_exc()
-
-    proc.join()
-
-    return error or proc.exitcode
+        self.wait(lambda: "T" not in self.proc_status())
 
 
 class PseudoShell(object):
@@ -258,11 +188,39 @@ class PseudoShell(object):
     same ``sys.stdout`` and ``sys.stderr`` as the process instantiating
     ``PseudoShell``.
 
+    Here are the relationships between processes created::
+
+        ._________________________________________________________.
+        | Child Process                                           | pid     2
+        | - runs child_function                                   | pgroup  2
+        |_________________________________________________________| session 1
+            ^
+            | create process with master_fd connected to stdin
+            | stdout, stderr are the same as caller
+        ._________________________________________________________.
+        | Master Process                                          | pid     1
+        | - runs master_function                                  | pgroup  1
+        | - uses ProcessController and master_fd to control child | session 1
+        |_________________________________________________________|
+            ^
+            | create process
+            | stdin, stdout, stderr are the same as caller
+        ._________________________________________________________.
+        | Caller                                                  |  pid     0
+        | - Constructs, starts, joins PseudoShell                 |  pgroup  0
+        | - provides master_function, child_function              |  session 0
+        |_________________________________________________________|
+
+
     """
     def __init__(self, master_function, child_function):
         self.proc = None
         self.master_function = master_function
         self.child_function = child_function
+
+        # these can be optionally set to change defaults
+        self.controller_timeout = 1
+        self.sleep_time = 0
 
         # attrs can be used to pass parameters to master and child
         self.manager = multiprocessing.Manager()
@@ -276,8 +234,9 @@ class PseudoShell(object):
         ``child_function``.
         """
         self.proc = multiprocessing.Process(
-            target=_master_process,
-            args=(self.master_function, self.child_function, self.attrs)
+            target=PseudoShell._set_up_and_run_master_function,
+            args=(self.master_function, self.child_function,
+                  self.controller_timeout, self.sleep_time, self.attrs)
         )
         self.proc.start()
 
@@ -285,3 +244,100 @@ class PseudoShell(object):
         """Wait for the child process to finish, and return its exit code."""
         self.proc.join()
         return self.proc.exitcode
+
+    @staticmethod
+    def _set_up_and_run_child_function(
+            tty_name, stdout_fd, stderr_fd, ready, child_function, attrs):
+        """Child process wrapper for PseudoShell.
+
+        Handles the mechanics of setting up a PTY, then calls
+        ``child_function``.
+
+        """
+        # new process group, like a command or pipeline launched by a shell
+        os.setpgrp()
+
+        # take controlling terminal and set up pty IO
+        stdin_fd = os.open(tty_name, os.O_RDWR)
+        os.dup2(stdin_fd, sys.stdin.fileno())
+        os.dup2(stdout_fd, sys.stdout.fileno())
+        os.dup2(stderr_fd, sys.stderr.fileno())
+        os.close(stdin_fd)
+
+        if attrs.get("debug"):
+            sys.stderr.write(
+                "child: stdin.isatty(): %s\n" % sys.stdin.isatty())
+
+        # tell the parent that we're really running
+        if attrs.get("debug"):
+            sys.stderr.write("child: ready!\n")
+        ready.value = True
+
+        try:
+            child_function(attrs)
+        except BaseException:
+            traceback.print_exc()
+
+    @staticmethod
+    def _set_up_and_run_master_function(
+            master_function, child_function, controller_timeout, sleep_time,
+            attrs):
+        """Set up a pty, spawn a child process, and execute master_function.
+
+        Handles the mechanics of setting up a PTY, then calls
+        ``master_function``.
+
+        """
+        os.setsid()   # new session; this process is the controller
+
+        master_fd, child_fd = os.openpty()
+        pty_name = os.ttyname(child_fd)
+
+        # take controlling terminal
+        pty_fd = os.open(pty_name, os.O_RDWR)
+        os.close(pty_fd)
+
+        ready = multiprocessing.Value('i', False)
+        child_process = multiprocessing.Process(
+            target=PseudoShell._set_up_and_run_child_function,
+            args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
+                  ready, child_function, attrs)
+        )
+        child_process.start()
+
+        # wait for subprocess to be running and connected.
+        while not ready.value:
+            time.sleep(1e-5)
+            pass
+
+        if attrs.get("debug"):
+            sys.stderr.write("pid:        %d\n" % os.getpid())
+            sys.stderr.write("pgid:       %d\n" % os.getpgrp())
+            sys.stderr.write("sid:        %d\n" % os.getsid(0))
+            sys.stderr.write("tcgetpgrp:  %d\n" % os.tcgetpgrp(master_fd))
+            sys.stderr.write("\n")
+
+            child_pgid = os.getpgid(child_process.pid)
+            sys.stderr.write("child pid:  %d\n" % child_process.pid)
+            sys.stderr.write("child pgid: %d\n" % child_pgid)
+            sys.stderr.write("child sid:  %d\n" % os.getsid(child_process.pid))
+            sys.stderr.write("\n")
+            sys.stderr.flush()
+        # set up master to ignore SIGTSTP, like a shell
+        signal.signal(signal.SIGTSTP, signal.SIG_IGN)
+
+        # call the master function once the child is ready
+        try:
+            controller = ProcessController(
+                child_process.pid, master_fd, debug=attrs.get("debug"))
+            controller.timeout = controller_timeout
+            controller.sleep_time = sleep_time
+            error = master_function(child_process, controller, attrs)
+        except BaseException:
+            error = 1
+            traceback.print_exc()
+
+        child_process.join()
+
+        # return whether either the parent or child failed
+        return error or child_process.exitcode
