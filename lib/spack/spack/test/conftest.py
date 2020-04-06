@@ -301,8 +301,17 @@ def use_configuration(config):
     """Context manager to swap out the global Spack configuration."""
     saved = spack.config.config
     spack.config.config = config
+
+    # Avoid using real spack configuration that has been cached by other
+    # tests, and avoid polluting the cache with spack test configuration
+    # (including modified configuration)
+    saved_compiler_cache = spack.compilers._cache_config_file
+    spack.compilers._cache_config_file = []
+
     yield
+
     spack.config.config = saved
+    spack.compilers._cache_config_file = saved_compiler_cache
 
 
 @contextlib.contextmanager
@@ -427,10 +436,6 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
         *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
 
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
-
     with use_configuration(cfg):
         yield cfg
 
@@ -525,6 +530,8 @@ def database(mock_store, mock_packages, config):
     """This activates the mock store, packages, AND config."""
     with use_store(mock_store):
         yield mock_store.db
+    # Force reading the database again between tests
+    mock_store.db.last_seen_verifier = ''
 
 
 @pytest.fixture(scope='function')
@@ -1032,6 +1039,13 @@ class MockPackage(object):
         self.provided = {}
         self.conflicts = {}
         self.patches = {}
+
+    def provides(self, vname):
+        return vname in self.provided
+
+    @property
+    def virtuals_provided(self):
+        return [v.name for v, c in self.provided]
 
 
 class MockPackageMultiRepo(object):

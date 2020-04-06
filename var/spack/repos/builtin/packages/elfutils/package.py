@@ -22,17 +22,17 @@ class Elfutils(AutotoolsPackage):
     list_depth = 1
 
     # Sourceware is often slow to respond.
-    timeout = {'timeout': 60}
+    fetch_options = {'timeout': 60}
 
-    version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2', fetch_options=timeout)
-    version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e', fetch_options=timeout)
-    version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023', fetch_options=timeout)
-    version('0.175', sha256='f7ef925541ee32c6d15ae5cb27da5f119e01a5ccdbe9fe57bf836730d7b7a65b', fetch_options=timeout)
-    version('0.174', sha256='cdf27e70076e10a29539d89e367101d516bc4aa11b0d7777fe52139e3fcad08a', fetch_options=timeout)
-    version('0.173', sha256='b76d8c133f68dad46250f5c223482c8299d454a69430d9aa5c19123345a000ff', fetch_options=timeout)
-    version('0.170', sha256='1f844775576b79bdc9f9c717a50058d08620323c1e935458223a12f249c9e066', fetch_options=timeout)
-    version('0.168', sha256='b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276', fetch_options=timeout)
-    version('0.163', sha256='7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23', fetch_options=timeout)
+    version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
+    version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
+    version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')
+    version('0.175', sha256='f7ef925541ee32c6d15ae5cb27da5f119e01a5ccdbe9fe57bf836730d7b7a65b')
+    version('0.174', sha256='cdf27e70076e10a29539d89e367101d516bc4aa11b0d7777fe52139e3fcad08a')
+    version('0.173', sha256='b76d8c133f68dad46250f5c223482c8299d454a69430d9aa5c19123345a000ff')
+    version('0.170', sha256='1f844775576b79bdc9f9c717a50058d08620323c1e935458223a12f249c9e066')
+    version('0.168', sha256='b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276')
+    version('0.163', sha256='7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23')
 
     # Libraries for reading compressed DWARF sections.
     variant('bzip2', default=False,

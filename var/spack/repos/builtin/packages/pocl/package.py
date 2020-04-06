@@ -20,6 +20,9 @@ class Pocl(CMakePackage):
     git      = "https://github.com/pocl/pocl.git"
 
     version("master", branch="master")
+    version('1.4', sha256='ec237faa83bb1c803fbdf7c6e83d8a2ad68b6f0ed1879c3aa16c0e1dcc478742')
+    version('1.3', sha256='6527e3f47fab7c21e96bc757c4ae3303901f35e23f64642d6da5cc4c4fcc915a')
+    version('1.2', sha256='0c43e68f336892f3a64cba19beb99d9212f529bedb77f7879c0331450b982d46')
     version('1.1', sha256='1e8dd0693a88c84937754df947b202871a40545b1b0a97ebefa370b0281c3c53')
     version('1.0', sha256='94bd86a2f9847c03e6c3bf8dca12af3734f8b272ffeacbc3fa8fcca58844b1d4')
     version('0.14', sha256='2127bf925a91fbbe3daf2f1bac0da5c8aceb16e2a9434977a3057eade974106a')
@@ -48,6 +51,9 @@ class Pocl(CMakePackage):
     # (see #1616)
     # These are the supported LLVM versions
     depends_on("llvm +clang @6.0:7.0", when="@master")
+    depends_on("llvm +clang @6.0:9.0", when="@1.4")
+    depends_on("llvm +clang @5.0:8.0", when="@1.3")
+    depends_on("llvm +clang @5.0:7.0", when="@1.2")
     depends_on("llvm +clang @5.0:6.0", when="@1.1")
     depends_on("llvm +clang @4.0:5.0", when="@1.0")
     depends_on("llvm +clang @3.7:4.0", when="@0.14")

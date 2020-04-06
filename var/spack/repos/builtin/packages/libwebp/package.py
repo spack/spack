@@ -14,7 +14,7 @@ class Libwebp(AutotoolsPackage):
     homepage = "https://developers.google.com/speed/webp/"
     url      = "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.0.3.tar.gz"
 
-    version('1.0.3', sha256='082d114bcb18a0e2aafc3148d43367c39304f86bf18ba0b2e766447e111a4a91')
+    version('1.0.3', sha256='e20a07865c8697bba00aebccc6f54912d6bc333bb4d604e6b07491c1a226b34f')
 
     variant('libwebpmux',     default=False, description='Build libwebpmux')
     variant('libwebpdemux',   default=False, description='Build libwebpdemux')

@@ -23,6 +23,7 @@ class Swig(AutotoolsPackage):
     url      = "http://prdownloads.sourceforge.net/swig/swig-3.0.12.tar.gz"
 
     version('master', git='https://github.com/swig/swig.git')
+    version('4.0.1', sha256='7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9')
     version('4.0.0', sha256='e8a39cd6437e342cdcbd5af27a9bf11b62dc9efec9248065debcb8276fcbb925')
     version('3.0.12', sha256='7cf9f447ae7ed1c51722efc45e7f14418d15d7a1e143ac9f09a668999f4fc94d')
     version('3.0.11', sha256='d9031d531d7418829a54d0d51c4ed9007016b213657ec70be44031951810566e')

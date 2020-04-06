@@ -14,6 +14,8 @@ class G4saiddata(Package):
 
     maintainers = ['drbenmorgan']
 
+    # Only versions relevant to Geant4 releases built by spack are added
+    version('2.0', sha256='1d26a8e79baa71e44d5759b9f55a67e8b7ede31751316a9e9037d80090c72e91')
     version('1.1', sha256='a38cd9a83db62311922850fe609ecd250d36adf264a88e88c82ba82b7da0ed7f')
 
     def install(self, spec, prefix):
@@ -21,6 +23,11 @@ class G4saiddata(Package):
         install_path = join_path(prefix.share, 'data', 'G4SAIDDATA{0}'
                                  .format(self.version))
         install_tree(self.stage.source_path, install_path)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        install_path = join_path(self.prefix.share, 'data', 'G4SAIDDATA{0}'
+                                 .format(self.version))
+        env.set('G4SAIDXSDATA', install_path)
 
     def url_for_version(self, version):
         """Handle version string."""

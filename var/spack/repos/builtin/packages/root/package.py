@@ -26,6 +26,8 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.20.02', sha256='0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6')
+    version('6.20.00', sha256='68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0')
     version('6.18.04', sha256='315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4',
             preferred=True)
 
@@ -110,6 +112,9 @@ class Root(CMakePackage):
     # otherwise it crashes with the internal minuit library
     variant('minuit', default=True,
             description='Automatically search for support libraries')
+    variant('mlp', default=False,
+            description="Enable support for TMultilayerPerceptron "
+            "classes' federation")
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
@@ -143,7 +148,7 @@ class Root(CMakePackage):
             description='TBB multi-threading support')
     variant('threads', default=True,
             description='Enable using thread library')
-    variant('tmva', default=True,
+    variant('tmva', default=False,
             description='Build TMVA multi variate analysis library')
     variant('unuran', default=True,
             description='Use UNURAN for random number generation')
@@ -185,6 +190,7 @@ class Root(CMakePackage):
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
     depends_on('zlib')
+    depends_on('zstd', when='@6.20:')
 
     # X-Graphics
     depends_on('libx11',  when="+x")
@@ -203,8 +209,14 @@ class Root(CMakePackage):
     # Qt4
     depends_on('qt@:4.999', when='+qt4')
 
-    # TMVA
-    depends_on('py-numpy', when='+tmva')
+    # Python
+    depends_on('python@2.7:', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='+tmva')
+    # This numpy dependency was not intended and will hopefully
+    # be fixed in 6.20.04.
+    # See: https://sft.its.cern.ch/jira/browse/ROOT-10626
+    depends_on('py-numpy', type=('build', 'run'),
+               when='@6.20.00:6.20.03 +python')
 
     # Optional dependencies
     depends_on('davix @0.7.1:', when='+davix')
@@ -219,7 +231,6 @@ class Root(CMakePackage):
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
-    depends_on('python@2.7:', when='+python', type=('build', 'run'))
     depends_on('r',         when='+r', type=('build', 'run'))
     depends_on('r-rcpp',    when='+r', type=('build', 'run'))
     depends_on('r-rinside', when='+r', type=('build', 'run'))
@@ -255,6 +266,7 @@ class Root(CMakePackage):
     # Incompatible variants
     conflicts('+opengl', when='~x', msg='OpenGL requires X')
     conflicts('+tmva', when='~gsl', msg='TVMA requires GSL')
+    conflicts('+tmva', when='~mlp', msg='TVMA requires MLP')
     conflicts('cxxstd=11', when='+root7', msg='root7 requires at least C++14')
 
     # Feature removed in 6.18:
@@ -357,6 +369,7 @@ class Root(CMakePackage):
                 ['minimal'],
                 ['minuit'],
                 ['minuit2', 'minuit'],
+                ['mlp'],
                 ['monalisa', False],
                 ['mysql'],
                 ['odbc'],

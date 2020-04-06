@@ -5,16 +5,6 @@
 
 from spack import *
 
-import numbers
-
-
-def is_integral(x):
-    """Any integer value"""
-    try:
-        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
-    except ValueError:
-        return False
-
 
 class NetcdfC(AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
@@ -75,22 +65,6 @@ class NetcdfC(AutotoolsPackage):
     # this variant out.
     # variant('cdmremote', default=False,
     #         description='Enable CDM Remote support')
-
-    # These variants control the number of dimensions (i.e. coordinates and
-    # attributes) and variables (e.g. time, entity ID, number of coordinates)
-    # that can be used in any particular NetCDF file.
-    variant(
-        'maxdims',
-        default=1024,
-        description='Defines the maximum dimensions of NetCDF files.',
-        values=is_integral
-    )
-    variant(
-        'maxvars',
-        default=8192,
-        description='Defines the maximum variables of NetCDF files.',
-        values=is_integral
-    )
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
     depends_on('autoconf', type='build', when='@4.7.0')
@@ -156,20 +130,6 @@ class NetcdfC(AutotoolsPackage):
     def force_autoreconf(self):
         # The patch for 4.7.0 touches configure.ac.
         return self.spec.satisfies('@4.7.0')
-
-    def patch(self):
-        try:
-            max_dims = int(self.spec.variants['maxdims'].value)
-            max_vars = int(self.spec.variants['maxvars'].value)
-        except (ValueError, TypeError):
-            raise TypeError('NetCDF variant values max[dims|vars] must be '
-                            'integer values.')
-
-        ff = FileFilter(join_path('include', 'netcdf.h'))
-        ff.filter(r'^(#define\s+NC_MAX_DIMS\s+)\d+(.*)$',
-                  r'\1{0}\2'.format(max_dims))
-        ff.filter(r'^(#define\s+NC_MAX_VARS\s+)\d+(.*)$',
-                  r'\1{0}\2'.format(max_vars))
 
     def configure_args(self):
         cflags = []

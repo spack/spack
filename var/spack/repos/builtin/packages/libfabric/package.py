@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
 from spack import *
 
 
@@ -16,9 +15,9 @@ class Libfabric(AutotoolsPackage):
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('master', branch='master')
-    version('1.9.1rc1', sha256='fdf89a0797f0d923aaef2c41cc70be45716e4d07dc5d318365b9c17795eb49ab')
+    version('1.9.1', sha256='c305c6035c992523e08c7591a6a3707225ba3e72de40443eaed837a10df6771a')
     version('1.9.0', sha256='559bfb7376c38253c936d0b104591c3394880376d676894895706c4f5f88597c')
-    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88', preferred=True)
+    version('1.8.1', sha256='3c560b997f9eafd89f961dd8e8a29a81aad3e39aee888e3f3822da419047dc88')
     version('1.8.0', sha256='c4763383a96af4af52cd81b3b094227f5cf8e91662f861670965994539b7ee37')
     version('1.7.1', sha256='f4e9cc48319763cff4943de96bf527b737c9f1d6ac3088b8b5c75d07bd719569')
     version('1.7.0', sha256='b3dd9cc0fa36fe8c3b9997ba279ec831a905704816c25fe3c4c09fc7eeceaac4')
@@ -74,39 +73,6 @@ class Libfabric(AutotoolsPackage):
     depends_on('automake', when='@develop', type='build')
     depends_on('libtool', when='@develop', type='build')
 
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/libfabric/releases/download/v1.9.0/fabtests-1.9.0.tar.bz2',
-             sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e',
-             placement='fabtests', when='@1.9.0')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/libfabric/releases/download/v1.8.0/fabtests-1.8.0.tar.gz',
-             sha256='4b9af18c9c7c8b28eaeac4e6e9148bd2ea7dc6b6f00f8e31c90a6fc536c5bb6c',
-             placement='fabtests', when='@1.8.0')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/libfabric/releases/download/v1.7.0/fabtests-1.7.0.tar.gz',
-             sha256='ebb4129dc69dc0e1f48310ce1abb96673d8ddb18166bc595312ebcb96e803de9',
-             placement='fabtests', when='@1.7.0')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/fabtests/releases/download/v1.6.1/fabtests-1.6.1.tar.gz',
-             sha256='d357466b868fdaf1560d89ffac4c4e93a679486f1b4221315644d8d3e21174bf',
-             placement='fabtests', when='@1.6.1')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/fabtests/releases/download/v1.6.0/fabtests-1.6.0.tar.gz',
-             sha256='dc3eeccccb005205017f5af60681ede15782ce202a0103450a6d56a7ff515a67',
-             placement='fabtests', when='@1.6.0')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/fabtests/releases/download/v1.5.3/fabtests-1.5.3.tar.gz',
-             sha256='3835b3bf86cd00d23df0ddba8bf317e4a195e8d5c3c2baa918b373d548f77f29',
-             placement='fabtests', when='@1.5.3')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/fabtests/releases/download/v1.5.0/fabtests-1.5.0.tar.gz',
-             sha256='1dddd446c3f1df346899f9a8636f1b4265de5b863103ae24876e9f0c1e40a69d',
-             placement='fabtests', when='@1.5.0')
-    resource(name='fabtests',
-             url='https://github.com/ofiwg/fabtests/releases/download/v1.4.2/fabtests-1.4.2.tar.gz',
-             sha256='3b78d0ca1b223ff21b7f5b3627e67e358e3c18b700f86b017e2233fee7e88c2e',
-             placement='fabtests', when='@1.4.2')
-
     conflicts('@1.9.0', when='platform=darwin',
               msg='This distribution is missing critical files')
 
@@ -118,10 +84,6 @@ class Libfabric(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
-
-        if self.run_tests:
-            with working_dir('fabtests'):
-                bash('./autogen.sh')
 
     def configure_args(self):
         args = []
@@ -139,29 +101,6 @@ class Libfabric(AutotoolsPackage):
 
         return args
 
-    def install(self, spec, prefix):
-        # Call main install method
-        super(Libfabric, self).install(spec, prefix)
-
-        # Build and install fabtests, if available
-        if not os.path.isdir('fabtests'):
-            return
-        with working_dir('fabtests'):
-            configure = Executable('./configure')
-            configure('--prefix={0}'.format(self.prefix),
-                      '--with-libfabric={0}'.format(self.prefix))
-            make()
-            make('install')
-
     def installcheck(self):
         fi_info = Executable(self.prefix.bin.fi_info)
         fi_info()
-
-        # Run fabtests test suite if available
-        if not os.path.isdir('fabtests'):
-            return
-        if self.spec.satisfies('@1.8.0,1.9.0'):
-            # make test seems broken.
-            return
-        with working_dir('fabtests'):
-            make('test')

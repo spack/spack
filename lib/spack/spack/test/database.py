@@ -14,6 +14,12 @@ import os
 import pytest
 import json
 import shutil
+try:
+    import uuid
+    _use_uuid = True
+except ImportError:
+    _use_uuid = False
+    pass
 
 import llnl.util.lock as lk
 from llnl.util.tty.colify import colify
@@ -483,6 +489,21 @@ def test_015_write_and_read(mutable_database):
         assert new_rec.installed == rec.installed
 
 
+def test_017_write_and_read_without_uuid(mutable_database, monkeypatch):
+    monkeypatch.setattr(spack.database, '_use_uuid', False)
+    # write and read DB
+    with spack.store.db.write_transaction():
+        specs = spack.store.db.query()
+        recs = [spack.store.db.get_record(s) for s in specs]
+
+    for spec, rec in zip(specs, recs):
+        new_rec = spack.store.db.get_record(spec)
+        assert new_rec.ref_count == rec.ref_count
+        assert new_rec.spec == rec.spec
+        assert new_rec.path == rec.path
+        assert new_rec.installed == rec.installed
+
+
 def test_020_db_sanity(database):
     """Make sure query() returns what's actually in the db."""
     _check_db_sanity(database)
@@ -717,6 +738,9 @@ def test_old_external_entries_prefix(mutable_database):
 
     with open(spack.store.db._index_path, 'w') as f:
         f.write(json.dumps(db_obj))
+    if _use_uuid:
+        with open(spack.store.db._verifier_path, 'w') as f:
+            f.write(str(uuid.uuid4()))
 
     record = spack.store.db.get_record(s)
 

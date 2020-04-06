@@ -21,6 +21,14 @@ class CmakeClient(CMakePackage):
 
     version('1.0', '4cb3ff35b2472aae70f542116d616e63')
 
+    variant(
+        'multi', description='',
+        values=any_combination_of('up', 'right', 'back').with_default('up')
+    )
+    variant('single', description='', default='blue',
+            values=('blue', 'red', 'green'), multi=False)
+    variant('truthy', description='', default=True)
+
     callback_counter = 0
 
     flipped = False

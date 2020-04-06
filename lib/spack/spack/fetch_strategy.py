@@ -29,7 +29,6 @@ import os.path
 import re
 import shutil
 import sys
-import xml.etree.ElementTree
 
 import llnl.util.tty as tty
 import six
@@ -257,7 +256,7 @@ class URLFetchStrategy(FetchStrategy):
                 self.digest = kwargs[h]
 
         self.expand_archive = kwargs.get('expand', True)
-        self.extra_options = kwargs.get('fetch_options', [])
+        self.extra_options = kwargs.get('fetch_options', {})
         self._curl = None
 
         self.extension = kwargs.get('extension', None)
@@ -773,13 +772,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(['git', repo_path, repo_ref])
             return result
 
-    def get_source_id(self):
-        if not self.branch:
-            return
-        output = self.git('ls-remote', self.url, self.branch, output=str)
-        if output:
-            return output.split()[0]
-
     def _repo_info(self):
         args = ''
 
@@ -957,11 +949,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.revision
 
-    def get_source_id(self):
-        output = self.svn('info', '--xml', self.url, output=str)
-        info = xml.etree.ElementTree.fromstring(output)
-        return info.find('entry/commit').get('revision')
-
     def mirror_id(self):
         if self.revision:
             repo_path = url_util.parse(self.url).path
@@ -1076,11 +1063,6 @@ class HgFetchStrategy(VCSFetchStrategy):
             repo_path = url_util.parse(self.url).path
             result = os.path.sep.join(['hg', repo_path, self.revision])
             return result
-
-    def get_source_id(self):
-        output = self.hg('id', self.url, output=str)
-        if output:
-            return output.strip()
 
     @_needs_stage
     def fetch(self):
@@ -1265,7 +1247,8 @@ def _check_version_attributes(fetcher, pkg, version):
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
-        return URLFetchStrategy(pkg.url_for_version(version))
+        return URLFetchStrategy(pkg.url_for_version(version),
+                                fetch_options=pkg.fetch_options)
     except spack.package.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
@@ -1279,12 +1262,13 @@ def _from_merged_attrs(fetcher, pkg, version):
         # TODO: refactor this logic into its own method or function
         # TODO: to avoid duplication
         mirrors = [spack.url.substitute_version(u, version)
-                   for u in getattr(pkg, 'urls', [])]
+                   for u in getattr(pkg, 'urls', [])[1:]]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)
         attrs = {fetcher.url_attr: url}
 
+    attrs['fetch_options'] = pkg.fetch_options
     attrs.update(pkg.versions[version])
     return fetcher(**attrs)
 
@@ -1307,8 +1291,10 @@ def for_package_version(pkg, version):
     if version not in pkg.versions:
         return _extrapolate(pkg, version)
 
+    # Set package args first so version args can override them
+    args = {'fetch_options': pkg.fetch_options}
     # Grab a dict of args out of the package version dict
-    args = pkg.versions[version]
+    args.update(pkg.versions[version])
 
     # If the version specifies a `url_attr` directly, use that.
     for fetcher in all_strategies:
@@ -1388,7 +1374,8 @@ def from_list_url(pkg):
                         args.get('checksum'))
 
                 # construct a fetcher
-                return URLFetchStrategy(url_from_list, checksum)
+                return URLFetchStrategy(url_from_list, checksum,
+                                        fetch_options=pkg.fetch_options)
             except KeyError as e:
                 tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)

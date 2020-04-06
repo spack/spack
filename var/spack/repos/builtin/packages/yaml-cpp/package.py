@@ -23,6 +23,8 @@ class YamlCpp(CMakePackage):
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
+    variant('static', default=False,
+            description='Build with static libraries')
     variant('pic',   default=True,
             description='Build with position independent code')
     variant('tests', default=False,
@@ -65,6 +67,8 @@ class YamlCpp(CMakePackage):
         options.extend([
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DBUILD_STATIC_LIBS=%s' % (
+                'ON' if '+static' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
             '-DYAML_CPP_BUILD_TESTS:BOOL=%s' % (

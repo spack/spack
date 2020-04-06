@@ -36,6 +36,7 @@ import six
 import sys
 import time
 
+import llnl.util.filesystem as fs
 import llnl.util.lock as lk
 import llnl.util.tty as tty
 import spack.binary_distribution as binary_distribution
@@ -43,14 +44,12 @@ import spack.compilers
 import spack.error
 import spack.hooks
 import spack.package
+import spack.package_prefs as prefs
 import spack.repo
 import spack.store
 
-from llnl.util.filesystem import \
-    chgrp, install, install_tree, mkdirp, touch, working_dir
-from llnl.util.tty.color import colorize, cwrite
+from llnl.util.tty.color import colorize
 from llnl.util.tty.log import log_output
-from spack.package_prefs import get_package_dir_permissions, get_package_group
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
@@ -133,21 +132,21 @@ def _do_fake_install(pkg):
     chmod = which('chmod')
 
     # Install fake command
-    mkdirp(pkg.prefix.bin)
-    touch(os.path.join(pkg.prefix.bin, command))
+    fs.mkdirp(pkg.prefix.bin)
+    fs.touch(os.path.join(pkg.prefix.bin, command))
     chmod('+x', os.path.join(pkg.prefix.bin, command))
 
     # Install fake header file
-    mkdirp(pkg.prefix.include)
-    touch(os.path.join(pkg.prefix.include, header + '.h'))
+    fs.mkdirp(pkg.prefix.include)
+    fs.touch(os.path.join(pkg.prefix.include, header + '.h'))
 
     # Install fake shared and static libraries
-    mkdirp(pkg.prefix.lib)
+    fs.mkdirp(pkg.prefix.lib)
     for suffix in [dso_suffix, '.a']:
-        touch(os.path.join(pkg.prefix.lib, library + suffix))
+        fs.touch(os.path.join(pkg.prefix.lib, library + suffix))
 
     # Install fake man page
-    mkdirp(pkg.prefix.man.man1)
+    fs.mkdirp(pkg.prefix.man.man1)
 
     packages_dir = spack.store.layout.build_packages_path(pkg.spec)
     dump_packages(pkg.spec, packages_dir)
@@ -182,6 +181,9 @@ def _packages_needed_to_bootstrap_compiler(pkg):
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     dep.concretize()
+    # mark compiler as depended-on by the package that uses it
+    dep._dependents[pkg.name] = spack.spec.DependencySpec(
+        pkg.spec, dep, ('build',))
     packages = [(s.package, False) for
                 s in dep.traverse(order='post', root=False)]
     packages.append((dep.package, True))
@@ -251,8 +253,7 @@ def _print_installed_pkg(message):
     Args:
         message (str): message to be output
     """
-    cwrite('@*g{[+]} ')
-    print(message)
+    print(colorize('@*g{[+]} ') + message)
 
 
 def _process_external_package(pkg, explicit):
@@ -377,14 +378,14 @@ def dump_packages(spec, path):
     Dump all package information for a spec and its dependencies.
 
     This creates a package repository within path for every namespace in the
-    spec DAG, and fills the repos wtih package files and patch files for every
+    spec DAG, and fills the repos with package files and patch files for every
     node in the DAG.
 
     Args:
         spec (Spec): the Spack spec whose package information is to be dumped
         path (str): the path to the build packages directory
     """
-    mkdirp(path)
+    fs.mkdirp(path)
 
     # Copy in package.py files from any dependencies.
     # Note that we copy them in as they are in the *install* directory
@@ -407,7 +408,10 @@ def dump_packages(spec, path):
                 source_repo = spack.repo.Repo(source_repo_root)
                 source_pkg_dir = source_repo.dirname_for_package_name(
                     node.name)
-            except spack.repo.RepoError:
+            except spack.repo.RepoError as err:
+                tty.debug('Failed to create source repo for {0}: {1}'
+                          .format(node.name, str(err)))
+                source_pkg_dir = None
                 tty.warn("Warning: Couldn't copy in provenance for {0}"
                          .format(node.name))
 
@@ -419,10 +423,10 @@ def dump_packages(spec, path):
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
-        if node is not spec:
-            install_tree(source_pkg_dir, dest_pkg_dir)
-        else:
+        if node is spec:
             spack.repo.path.dump_provenance(node, dest_pkg_dir)
+        elif source_pkg_dir:
+            fs.install_tree(source_pkg_dir, dest_pkg_dir)
 
 
 def install_msg(name, pid):
@@ -458,17 +462,17 @@ def log(pkg):
         tty.debug(e)
 
     # Archive the whole stdout + stderr for the package
-    install(pkg.log_path, pkg.install_log_path)
+    fs.install(pkg.log_path, pkg.install_log_path)
 
     # Archive the environment used for the build
-    install(pkg.env_path, pkg.install_env_path)
+    fs.install(pkg.env_path, pkg.install_env_path)
 
     if os.path.exists(pkg.configure_args_path):
         # Archive the args used for the build
-        install(pkg.configure_args_path, pkg.install_configure_args_path)
+        fs.install(pkg.configure_args_path, pkg.install_configure_args_path)
 
     # Finally, archive files that are specific to each package
-    with working_dir(pkg.stage.path):
+    with fs.working_dir(pkg.stage.path):
         errors = six.StringIO()
         target_dir = os.path.join(
             spack.store.layout.metadata_path(pkg.spec), 'archived-files')
@@ -490,8 +494,8 @@ def log(pkg):
                     target = os.path.join(target_dir, f)
                     # We must ensure that the directory exists before
                     # copying a file in
-                    mkdirp(os.path.dirname(target))
-                    install(f, target)
+                    fs.mkdirp(os.path.dirname(target))
+                    fs.install(f, target)
                 except Exception as e:
                     tty.debug(e)
 
@@ -502,7 +506,7 @@ def log(pkg):
 
         if errors.getvalue():
             error_file = os.path.join(target_dir, 'errors.txt')
-            mkdirp(target_dir)
+            fs.mkdirp(target_dir)
             with open(error_file, 'w') as err:
                 err.write(errors.getvalue())
             tty.warn('Errors occurred when archiving files.\n\t'
@@ -1068,10 +1072,10 @@ class PackageInstaller(object):
                                                   pkg.name, 'src')
                         tty.msg('{0} Copying source to {1}'
                                 .format(pre, src_target))
-                        install_tree(pkg.stage.source_path, src_target)
+                        fs.install_tree(pkg.stage.source_path, src_target)
 
                     # Do the real install in the source directory.
-                    with working_dir(pkg.stage.source_path):
+                    with fs.working_dir(pkg.stage.source_path):
                         # Save the build environment in a file before building.
                         dump_environment(pkg.env_path)
 
@@ -1283,20 +1287,20 @@ class PackageInstaller(object):
             spack.store.layout.create_install_directory(pkg.spec)
         else:
             # Set the proper group for the prefix
-            group = get_package_group(pkg.spec)
+            group = prefs.get_package_group(pkg.spec)
             if group:
-                chgrp(pkg.spec.prefix, group)
+                fs.chgrp(pkg.spec.prefix, group)
 
             # Set the proper permissions.
             # This has to be done after group because changing groups blows
             # away the sticky group bit on the directory
             mode = os.stat(pkg.spec.prefix).st_mode
-            perms = get_package_dir_permissions(pkg.spec)
+            perms = prefs.get_package_dir_permissions(pkg.spec)
             if mode != perms:
                 os.chmod(pkg.spec.prefix, perms)
 
             # Ensure the metadata path exists as well
-            mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
+            fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
 
     def _update_failed(self, task, mark=False, exc=None):
         """
@@ -1607,6 +1611,21 @@ class BuildTask(object):
         self.dependencies = set(package_id(d.package) for d in
                                 self.spec.dependencies() if
                                 package_id(d.package) != self.pkg_id)
+
+        # Handle bootstrapped compiler
+        #
+        # The bootstrapped compiler is not a dependency in the spec, but it is
+        # a dependency of the build task. Here we add it to self.dependencies
+        compiler_spec = self.spec.compiler
+        arch_spec = self.spec.architecture
+        if not spack.compilers.compilers_for_spec(compiler_spec,
+                                                  arch_spec=arch_spec):
+            # The compiler is in the queue, identify it as dependency
+            dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
+            dep.architecture = arch_spec
+            dep.concretize()
+            dep_id = package_id(dep.package)
+            self.dependencies.add(dep_id)
 
         # List of uninstalled dependencies, which is used to establish
         # the priority of the build task.
