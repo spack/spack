@@ -14,6 +14,8 @@ class PyAwesomeSlugify(PythonPackage):
 
     version('1.6.5', sha256='bbdec3fa2187917473a2efad092b57f7125a55f841a7cf6a1773178d32ccfd71')
 
+    depends_on('py-setuptools', type='build')
+
     depends_on('py-regex', type=('build', 'run'))
     depends_on('py-unidecode@0.04.14:0.04.99', type=('build', 'run'))
-    depends_on('py-nose', type=('build', 'run'))
+    depends_on('py-nose', type='test')
