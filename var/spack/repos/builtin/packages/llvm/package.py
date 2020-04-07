@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class Llvm(CMakePackage):
+class Llvm(CMakePackage, CudaPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
        with traditional virtual machines, though it does provide helpful
@@ -57,19 +57,6 @@ class Llvm(CMakePackage):
         default=True,
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
-
-    variant(
-        "cuda",
-        default=False,
-        description="Build LLVM with CUDA, required for nvptx offload",
-    )
-    variant(
-        "nvptx_offload_ccs",
-        default="35,60,70,75",
-        multi=True,
-        description="NVIDIA compute cabailities to make inlining capable",
-    )
-
     variant(
         "omp_debug",
         default=False,
@@ -256,10 +243,10 @@ class Llvm(CMakePackage):
                 [
                     "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix,
                     "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
-                        ",".join(spec.variants["nvptx_offload_ccs"].value)
+                        ",".join(spec.variants["cuda_arch"].value)
                     ),
                     "-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}".format(
-                        spec.variants["nvptx_offload_ccs"].value[-1]
+                        spec.variants["cuda_arch"].value[-1]
                     ),
                 ]
             )
