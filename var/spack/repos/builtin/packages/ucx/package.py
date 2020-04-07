@@ -46,7 +46,6 @@ class Ucx(AutotoolsPackage):
     variant('pic', default=False,
             description='Builds with PIC support')
 
-
     depends_on('numactl')
     depends_on('rdma-core')
 
