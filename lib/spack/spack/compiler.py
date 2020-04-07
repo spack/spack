@@ -415,7 +415,7 @@ class Compiler(object):
     def get_real_version(self):
         """Query the compiler for its version.
 
-        This is the "real" compiler version, regardless of what is in the 
+        This is the "real" compiler version, regardless of what is in the
         compilers.yaml file, which the user can change to name their compiler.
 
         Use the runtime environment of the compiler (modules and environment

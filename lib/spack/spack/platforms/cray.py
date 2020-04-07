@@ -112,9 +112,9 @@ class Cray(Platform):
 
         We detect the cray platform based on the availability through `module`
         of the cray programming environment. If this environment is available,
-        we can use it to find compilers, target modules, etc. If the cray 
+        we can use it to find compilers, target modules, etc. If the cray
         programming environment is not available via modules, then we will
-        treat it as a standard linux system, as the cray compiler wrappers 
+        treat it as a standard linux system, as the cray compiler wrappers
         and other componenets of the cray programming environment are
         irrelevant without module support.
         """
