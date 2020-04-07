@@ -139,7 +139,7 @@ class Lua(Package):
 
         if dependent_spec.package.extends(self.spec):
             env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
-            if '+shared' in spec:
+            if '+shared' in self.spec:
                 env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
                                  separator=';')
 
