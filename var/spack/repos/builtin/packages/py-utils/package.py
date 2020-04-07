@@ -16,4 +16,4 @@ class PyUtils(PythonPackage):
     version('0.8.0', sha256='916672df4cf9647e44f0aa1b3b327eb361c3c0bac1b1e32a6cf723ca766a2d4b')
 
     depends_on('python@3.6:', type=('build', 'run'), when='@0.9.0:')
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
