@@ -23,7 +23,7 @@ class PpopenApplFem(MakefilePackage):
     depends_on('mpi')
     depends_on('metis')
 
-    # gcc dose not support OpenMP atomic to same structure refernce.
+    # gcc does not support OpenMP atomic to same structure reference.
     # For example a%b = a%b - a%c
     # To avoid this, the patch is replace as follows:
     #   tmp = a%c
@@ -33,7 +33,7 @@ class PpopenApplFem(MakefilePackage):
     parallel = False
 
     def edit(self, spec, prefix):
-        fflags = ['-O3', '-I.']
+        fflags = ['-O3', '-I.', self.compiler.openmp_flag]
         if spec.satisfies('%gcc'):
             fflags.extend(['-cpp', '-ffree-line-length-none'])
         makefile_in = FileFilter('Makefile.in')
@@ -51,7 +51,6 @@ class PpopenApplFem(MakefilePackage):
         )
         makefile_in.filter('mpicc', spec['mpi'].mpicc)
         makefile_in.filter('mpif90', spec['mpi'].mpifc)
-        makefile_in.filter('-openmp', self.compiler.openmp_flag)
 
     def install(self, spec, prefix):
         for d in ['ppohFEM', 'app_flow', 'app_heat', 'app_struct']:

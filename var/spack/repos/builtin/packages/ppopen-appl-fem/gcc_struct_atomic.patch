@@ -1,26 +1,5 @@
-diff --git a/Makefile.in b/Makefile.in
-index f06b7aa..41db8df 100644
---- a/Makefile.in
-+++ b/Makefile.in
-@@ -8,7 +8,7 @@ OPTFLAGS       = -O3
- F90            = mpif90
- F90FLAGS       =
- F90LDFLAGS     =
--F90OPTFLAGS    = -O3 -openmp
-+F90OPTFLAGS    = -cpp -O3 -fopenmp  -ffree-line-length-none
- 
- # Tools
- MAKE           = make
-@@ -18,6 +18,6 @@ RM             = rm -f
- MKDIR          = mkdir -p
- 
- # Metis
--METISDIR       = $(HOME)/tools/metis5
-+METISDIR       = /fefs/home/r0001/work/spack/opt/spack/linux-rhel8-thunderx2/gcc-8.3.1/metis-5.1.0-hhb7faqksrioyomn2fulsgrjafjh3d2m
- METISLIBDIR    = $(METISDIR)/lib
- METISINCDIR    = $(METISDIR)/include
 diff --git a/ppohFEM/src/solver/matrix/hecmw_mat_ass.f90 b/ppohFEM/src/solver/matrix/hecmw_mat_ass.f90
-index dda6a62..dd242da 100644
+index dda6a62..6010d6d 100644
 --- a/ppohFEM/src/solver/matrix/hecmw_mat_ass.f90
 +++ b/ppohFEM/src/solver/matrix/hecmw_mat_ass.f90
 @@ -322,7 +322,7 @@ module hecmw_matrix_ass
@@ -32,9 +11,15 @@ index dda6a62..dd242da 100644
        type (hecmwST_matrix),optional     :: conMAT
        integer(kind=kint) :: NDOF, in, i, ii, iii, ndof2, k, iS, iE, iiS, iiE, ik
  
-@@ -342,9 +342,9 @@ module hecmw_matrix_ass
-           hecMAT%B(NDOF*inode-i) = hecMAT%B(NDOF*inode-i)        &
-                                  - hecMAT%D(ndof2*inode-ii)*RHS
+@@ -338,13 +338,13 @@ module hecmw_matrix_ass
+ 
+       DO i = NDOF-1,0,-1
+         IF( i .NE. NDOF-idof ) THEN
++          tmp = hecMAT%D(ndof2*inode-ii)*RHS
+ !$omp atomic
+-          hecMAT%B(NDOF*inode-i) = hecMAT%B(NDOF*inode-i)        &
+-                                 - hecMAT%D(ndof2*inode-ii)*RHS
++          hecMAT%B(NDOF*inode-i) = hecMAT%B(NDOF*inode-i) - tmp
            if(present(conMAT)) then
 +            tmp = conMAT%D(ndof2*inode-ii)*RHS
  !$omp atomic
@@ -44,8 +29,15 @@ index dda6a62..dd242da 100644
            endif
          ENDIF
          ii = ii - NDOF
-@@ -398,9 +398,9 @@ module hecmw_matrix_ass
-                                   - hecMAT%AU(ndof2*ik-iii)*RHS
+@@ -393,14 +393,14 @@ module hecmw_matrix_ass
+           if (hecMAT%itemU(ik) .eq. inode) then
+             iii = ndof2 - idof
+             DO i = NDOF-1,0,-1
++              tmp = hecMAT%AU(ndof2*ik-iii)*RHS
+ !$omp atomic
+-              hecMAT%B(NDOF*in-i) = hecMAT%B(NDOF*in-i)      &
+-                                  - hecMAT%AU(ndof2*ik-iii)*RHS
++              hecMAT%B(NDOF*in-i) = hecMAT%B(NDOF*in-i) - tmp
                hecMAT%AU(ndof2*ik-iii)= 0.d0
                if(present(conMAT)) then
 +                tmp = conMAT%AU(ndof2*ik-iii)*RHS
@@ -56,8 +48,15 @@ index dda6a62..dd242da 100644
                  conMAT%AU(ndof2*ik-iii)= 0.d0
                endif
                iii = iii - NDOF
-@@ -437,9 +437,9 @@ module hecmw_matrix_ass
-                                   - hecMAT%AL(ndof2*ik-iii)*RHS
+@@ -432,14 +432,14 @@ module hecmw_matrix_ass
+             iii  = ndof2 - idof
+ 
+             DO i = NDOF-1, 0, -1
++              tmp = hecMAT%AL(ndof2*ik-iii)*RHS
+ !$omp atomic
+-              hecMAT%B(NDOF*in-i) = hecMAT%B(NDOF*in-i)      &
+-                                  - hecMAT%AL(ndof2*ik-iii)*RHS
++              hecMAT%B(NDOF*in-i) = hecMAT%B(NDOF*in-i) - tmp
                hecMAT%AL(ndof2*ik-iii) = 0.d0
                if(present(conMAT)) then
 +                tmp = conMAT%AL(ndof2*ik-iii)*RHS
