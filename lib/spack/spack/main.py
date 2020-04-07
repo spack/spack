@@ -655,7 +655,8 @@ def print_setup_info(*info):
         path = spack.util.path.canonicalize_path(path)
         module_to_roots[name].append(path)
 
-    upstream_roots = spack.store.upstream_install_roots(spack.store.root)
+    # Invoke str() to resolve LazyReference
+    upstream_roots = spack.store.upstream_install_roots(str(spack.store.root))
     for upstream_root in upstream_roots:
         # For each upstream install root, if there is a 'modules' directory,
         # then create a dictionary: each subdir of that directory should be
