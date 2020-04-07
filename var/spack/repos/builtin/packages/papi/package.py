@@ -57,21 +57,23 @@ class Papi(AutotoolsPackage):
             env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
 
     def configure_args(self):
-        return ['MPICC=:', 
-                '--with-components={0}'.format(' '.join(
-                    filter(lambda x: self.spec.variants[x].value, self.spec.variants)))
-            ]
+        options = ['MPICC=:']
+        variants = filter(lambda x: self.spec.variants[x].value,
+                          self.spec.variants)
+        if variants:
+            options.append('--with-components={0}'.format(' '.join(variants)))
+        return options
 
     @run_before('configure')
     def component_configure(self):
         configure_script = Executable('./configure')
         if '+lmsensors' in self.spec and self.version < Version('6'):
-                with working_dir("src/components/lmsensors"):
-                    configure_script(
-                        "--with-sensors_incdir=%s/sensors" %
-                        self.spec['lm-sensors'].headers.directories[0],
-                        "--with-sensors_libdir=%s" %
-                        self.spec['lm-sensors'].libs.directories[0])
+            with working_dir("src/components/lmsensors"):
+                configure_script(
+                    "--with-sensors_incdir=%s/sensors" %
+                    self.spec['lm-sensors'].headers.directories[0],
+                    "--with-sensors_libdir=%s" %
+                    self.spec['lm-sensors'].libs.directories[0])
 
     @run_before('build')
     def fix_build(self):
