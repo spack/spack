@@ -440,7 +440,7 @@ class Compiler(object):
         cc = spack.util.executable.Executable(self.cc)
         output = cc(self.version_argument,
                     output=str, error=str,
-                    ignore_errors=type(self.ignore_version_errors))
+                    ignore_errors=tuple(self.ignore_version_errors))
 
         # restore environment
         # replacing the os.environ dictionary in python does not effect the
