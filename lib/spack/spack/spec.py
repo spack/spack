@@ -2239,8 +2239,10 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
+                # get the path from the module
+                # the package can override the default
                 s.external_path = getattr(s.package, 'external_prefix',
-                                          md.get_path.from_module(
+                                          md.get_path_from_module(
                                               s.external_module))
 
         # Mark everything in the spec as concrete, as well.
