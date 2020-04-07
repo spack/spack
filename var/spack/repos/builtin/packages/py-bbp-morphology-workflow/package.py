@@ -13,6 +13,7 @@ class PyBbpMorphologyWorkflow(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/platform/bbp-morphology-workflow"
     git      = "ssh://bbpcode.epfl.ch/platform/bbp-morphology-workflow"
     version('develop', branch='master')
+    version('1.0.4', tag='morphology-repair-workflow-v1.0.4')
     version('1.0.3', tag='morphology-repair-workflow-v1.0.3')
 
     depends_on('py-setuptools', type=('build', 'run'))
