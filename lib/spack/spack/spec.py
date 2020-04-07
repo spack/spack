@@ -2246,11 +2246,9 @@ class Spec(object):
                 for mod in compiler.modules:
                     md.load_module(mod)
 
-                try:
-                    s.external_path = s.package.external_prefix
-                except AttributeError:
-                    s.external_path = md.get_path_from_module(
-                        s.external_module)
+                s.external_path = getattr(s.package, 'external_prefix',
+                                          md.get_path.from_module(
+                                              s.external_module))
 
         # Mark everything in the spec as concrete, as well.
         self._mark_concrete()
