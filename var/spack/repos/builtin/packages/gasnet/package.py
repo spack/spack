@@ -57,7 +57,7 @@ class Gasnet(AutotoolsPackage):
             '--enable-mpi-compat',
             '--enable-segment-fast',
             '--disable-parsync',
-            '--with-segment-mmap-max=%s ' 
+            '--with-segment-mmap-max=%s '
             % (self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
             'CC=%s %s' % (spack_cc, self.compiler.pic_flag),
