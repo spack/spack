@@ -12,8 +12,12 @@ class PyPythonUtils(PythonPackage):
     which make common patterns shorter and easier."""
 
     homepage = "https://github.com/WoLpH/python-utils"
-    url      = "https://files.pythonhosted.org/packages/source/p/python-utils/python-utils-2.3.0.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-utils/python-utils-2.4.0.tar.gz"
 
+    version('2.4.0', sha256='f21fc09ff58ea5ebd1fd2e8ef7f63e39d456336900f26bdc9334a03a3f7d8089')
     version('2.3.0', sha256='34aaf26b39b0b86628008f2ae0ac001b30e7986a8d303b61e1357dfcdad4f6d3')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-pytest', type='test')
+    depends_on('py-pytest-runner', type='test')

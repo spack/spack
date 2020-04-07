@@ -370,6 +370,54 @@ env:
     assert not e2.specs_by_hash
 
 
+@pytest.mark.usefixtures('config')
+def test_env_view_external_prefix(tmpdir_factory, mutable_database,
+                                  mock_packages):
+    fake_prefix = tmpdir_factory.mktemp('a-prefix')
+    fake_bin = fake_prefix.join('bin')
+    fake_bin.ensure(dir=True)
+
+    initial_yaml = StringIO("""\
+env:
+  specs:
+  - a
+  view: true
+""")
+
+    external_config = StringIO("""\
+packages:
+  a:
+    paths:
+      a: {a_prefix}
+    buildable: false
+""".format(a_prefix=str(fake_prefix)))
+    external_config_dict = spack.util.spack_yaml.load_config(external_config)
+
+    test_scope = spack.config.InternalConfigScope(
+        'env-external-test', data=external_config_dict)
+    with spack.config.override(test_scope):
+
+        e = ev.create('test', initial_yaml)
+        e.concretize()
+        # Note: normally installing specs in a test environment requires doing
+        # a fake install, but not for external specs since no actions are
+        # taken to install them. The installation commands also include
+        # post-installation functions like DB-registration, so are important
+        # to do (otherwise the package is not considered installed).
+        e.install_all()
+        e.write()
+
+        env_modifications = e.add_default_view_to_shell('sh')
+        individual_modifications = env_modifications.split('\n')
+
+        def path_includes_fake_prefix(cmd):
+            return 'export PATH' in cmd and str(fake_bin) in cmd
+
+        assert any(
+            path_includes_fake_prefix(cmd) for cmd in individual_modifications
+        )
+
+
 def test_init_with_file_and_remove(tmpdir):
     """Ensure a user can remove from any position in the spack.yaml file."""
     path = tmpdir.join('spack.yaml')
