@@ -13,6 +13,8 @@ class IntelMkl(IntelPackage):
 
     homepage = "https://software.intel.com/en-us/intel-mkl"
 
+    version('2020.1.217', sha256='082a4be30bf4f6998e4d6e3da815a77560a5e66a68e254d161ab96f07086066d',
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16533/l_mkl_2020.1.217.tgz')
     version('2020.0.166', sha256='f6d92deb3ff10b11ba3df26b2c62bb4f0f7ae43e21905a91d553e58f0f5a8ae0',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16232/l_mkl_2020.0.166.tgz')
     version('2019.5.281', sha256='9995ea4469b05360d509c9705e9309dc983c0a10edc2ae3a5384bc837326737e',
@@ -53,6 +55,8 @@ class IntelMkl(IntelPackage):
     # built from parallel_studio_xe_2016.2.062
     version('11.3.2.181', sha256='bac04a07a1fe2ae4996a67d1439ee90c54f31305e8663d1ccfce043bed84fc27',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/8711/l_mkl_11.3.2.181.tgz')
+
+    depends_on('cpio', type='build')
 
     variant('shared', default=True, description='Builds shared library')
     variant('ilp64', default=False, description='64 bit integers')

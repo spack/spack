@@ -46,7 +46,19 @@ config_merge_list = {
 
 config_override_list = {
     'config': {
-        'build_stage:': ['patha', 'pathb']}}
+        'build_stage:': ['pathd', 'pathe']}}
+
+config_merge_dict = {
+    'config': {
+        'info': {
+            'a': 3,
+            'b': 4}}}
+
+config_override_dict = {
+    'config': {
+        'info:': {
+            'a': 7,
+            'c': 9}}}
 
 
 @pytest.fixture()
@@ -382,7 +394,7 @@ def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_override_list, 'high')
     assert spack.config.get('config') == {
         'install_tree': 'install_tree_path',
-        'build_stage': ['patha', 'pathb']
+        'build_stage': config_override_list['config']['build_stage:']
     }
 
 
@@ -857,3 +869,74 @@ def test_dotkit_in_config_does_not_raise(
     # we throw a a deprecation warning without raising
     assert '_sp_sys_type' in captured[0]  # stdout
     assert 'Warning' in captured[1]  # stderr
+
+
+def test_internal_config_section_override(mock_low_high_config,
+                                          write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', {
+                                        'config:': {
+                                            'build_stage': wanted_list
+                                        }
+                                    }))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_internal_config_dict_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_dict))
+    assert mock_low_high_config.get('config:info') == wanted_dict
+
+
+def test_internal_config_list_override(mock_low_high_config,
+                                       write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    mock_low_high_config.push_scope(spack.config.InternalConfigScope
+                                    ('high', config_override_list))
+    assert mock_low_high_config.get('config:build_stage') == wanted_list
+
+
+def test_set_section_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config::build_stage', wanted_list):
+        assert mock_low_high_config.get('config:build_stage') == wanted_list
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_list_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_list, 'low')
+    wanted_list = config_override_list['config']['build_stage:']
+    with spack.config.override('config:build_stage:', wanted_list):
+        assert wanted_list == mock_low_high_config.get('config:build_stage')
+    assert config_merge_list['config']['build_stage'] == \
+        mock_low_high_config.get('config:build_stage')
+
+
+def test_set_dict_override(mock_low_high_config, write_config_file):
+    write_config_file('config', config_merge_dict, 'low')
+    wanted_dict = config_override_dict['config']['info:']
+    with spack.config.override('config:info:', wanted_dict):
+        assert wanted_dict == mock_low_high_config.get('config:info')
+    assert config_merge_dict['config']['info'] == \
+        mock_low_high_config.get('config:info')
+
+
+def test_set_bad_path(config):
+    with pytest.raises(syaml.SpackYAMLError, match='Illegal leading'):
+        with spack.config.override(':bad:path', ''):
+            pass
+
+
+def test_bad_path_double_override(config):
+    with pytest.raises(syaml.SpackYAMLError,
+                       match='Meaningless second override'):
+        with spack.config.override('bad::double:override::directive', ''):
+            pass

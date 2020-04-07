@@ -26,6 +26,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
 
     extendable = True
 
+    version('5.2.0', sha256='2fea62b3c78d6f38e9451da8a4d26023840725977dffee5250d3d180f56595e1')
     version('5.1.0', sha256='e36b1124cac27c7caa51cc57de408c31676d5f0096349b4d50b57bfe1bcd7495')
     version('4.4.1', sha256='09fbd0f212f4ef21e53f1d9c41cf30ce3d7f9450fb44911601e21ed64c67ae97')
     version('4.4.0', sha256='72f846379fcec7e813d46adcbacd069d72c4f4d8f6003bcd92c3513aafcd6e96')
@@ -267,6 +268,12 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             ])
         else:
             config_args.append("--without-z")
+
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            config_args.append('F77_INTEGER_8_FLAG=-fdefault-integer-8')
 
         return config_args
 

@@ -226,7 +226,7 @@ _config_sections() {
 _extensions() {
     if [[ -z "${SPACK_EXTENSIONS:-}" ]]
     then
-        SPACK_EXTENSIONS="aspell go-bootstrap go icedtea jdk kim-api lua matlab mofem-cephas octave openjdk perl python r ruby rust tcl yorick"
+        SPACK_EXTENSIONS="$(spack extensions)"
     fi
     SPACK_COMPREPLY="$SPACK_EXTENSIONS"
 }
@@ -382,7 +382,7 @@ _spack_buildcache() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory --no-rebuild-index -y --spec-yaml --no-deps"
+        SPACK_COMPREPLY="-h --help -r --rel -f --force -u --unsigned -a --allow-root -k --key -d --directory -m --mirror-name --mirror-url --no-rebuild-index -y --spec-yaml --only"
     else
         _all_packages
     fi
@@ -391,7 +391,7 @@ _spack_buildcache_create() {
 _spack_buildcache_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned"
+        SPACK_COMPREPLY="-h --help -f --force -m --multiple -a --allow-root -u --unsigned -o --otherarch"
     else
         _all_packages
     fi
@@ -655,11 +655,15 @@ _spack_debug() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create-db-tarball"
+        SPACK_COMPREPLY="create-db-tarball report"
     fi
 }
 
 _spack_debug_create_db_tarball() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_debug_report() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -980,7 +984,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --only"
+        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --first --only"
     else
         _installed_packages
     fi
@@ -1025,7 +1029,7 @@ _spack_mirror() {
 _spack_mirror_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file -D --dependencies -n --versions-per-spec"
+        SPACK_COMPREPLY="-h --help -d --directory -a --all -f --file --skip-unstable-versions -D --dependencies -n --versions-per-spec"
     else
         _all_packages
     fi
@@ -1272,7 +1276,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c"
+        SPACK_COMPREPLY="-h --help -V --version -c -m"
     else
         SPACK_COMPREPLY=""
     fi

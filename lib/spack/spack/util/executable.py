@@ -209,7 +209,7 @@ class Executable(object):
                 istream.close()
 
     def __eq__(self, other):
-        return self.exe == other.exe
+        return hasattr(other, 'exe') and self.exe == other.exe
 
     def __neq__(self, other):
         return not (self == other)

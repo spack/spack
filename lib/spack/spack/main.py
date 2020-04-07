@@ -22,6 +22,7 @@ import warnings
 from six import StringIO
 
 import llnl.util.cpu
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.log import log_output
@@ -125,8 +126,9 @@ def get_version():
     if os.path.exists(git_path):
         git = exe.which("git")
         if git:
-            desc = git("-C", spack.paths.prefix, "describe", "--tags",
-                       output=str, fail_on_error=False)
+            with fs.working_dir(spack.paths.prefix):
+                desc = git(
+                    "describe", "--tags", output=str, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
@@ -548,15 +550,24 @@ class SpackCommand(object):
             tty.debug(e)
             self.error = e
             if fail_on_error:
+                self._log_command_output(out)
                 raise
 
         if fail_on_error and self.returncode not in (None, 0):
+            self._log_command_output(out)
             raise SpackCommandError(
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
         return out.getvalue()
+
+    def _log_command_output(self, out):
+        if tty.is_verbose():
+            fmt = self.command_name + ': {0}'
+            for ln in out.getvalue().split('\n'):
+                if len(ln) > 0:
+                    tty.verbose(fmt.format(ln.replace('==> ', '')))
 
 
 def _profile_wrapper(command, parser, args, unknown_args):
