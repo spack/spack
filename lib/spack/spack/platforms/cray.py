@@ -160,12 +160,14 @@ class Cray(Platform):
         def target_names_from_modules(modules):
             # Craype- module prefixes that are not valid CPU targets.
             targets = []
-            non_targets = (
-                'hugepages', 'network', 'target', 'accel', 'xtpe', 'dl-plugin')
-            pattern = r'craype-(?!{0})(\S*)'.format('|'.join(non_targets))
             for mod in modules:
                 if 'craype-' in mod:
-                    targets.extend(re.findall(pattern, mod))
+                    name = mod[7:]
+                    _n = name.replace('-', '_')  # test for mic-knl/mic_knl
+                    is_target_name = name in cpu.targets or _n in cpu.targets
+                    is_cray_target_name = name in _craype_name_to_target_name
+                    if is_target_name or is_cray_target_name:
+                        targets.append(name)
 
             return targets
 
