@@ -29,7 +29,9 @@ class PyTensorboard(Package):
     depends_on('py-werkzeug@0.11.15:', type=('build', 'run'))
     depends_on('py-wheel', type=('build', 'run'))
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
-#   depends_on('py-google-auth-oauthlib@0.4.1:0.5', type=('build', 'run'))
+    depends_on('py-google-auth-oauthlib@0.4.1:0.5', type=('build', 'run'))
+    depends_on('py-tensorboard-plugin-wit', type=('build', 'run'), when='@2.2.0:')
+    depends_on('py-tensorflow-estimator', type='run')
 
     extends('python')
 
