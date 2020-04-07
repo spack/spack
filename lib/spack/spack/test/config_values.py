@@ -5,6 +5,7 @@
 
 import spack.spec
 
+
 def test_set_install_hash_length(mock_packages, mutable_config, monkeypatch):
     # spack.store.layout caches initial config values, so we monkeypatch
     mutable_config.set('config:install_hash_length', 5)
@@ -24,7 +25,6 @@ def test_set_install_hash_length(mock_packages, mutable_config, monkeypatch):
     hash = prefix.rsplit('-')[-1]
 
     assert len(hash) == 9
-
 
 
 def test_set_install_hash_length_upper_case(mock_packages, mutable_config,
