@@ -209,9 +209,10 @@ class Target(object):
         compiler_version = compiler.version
         version_number, suffix = cpu.version_components(compiler.version)
         if not version_number or suffix not in ('', 'apple'):
-            # Try to deduce the correct version. Depending on where this
-            # function is called we might get either a CompilerSpec or a
-            # fully fledged compiler object
+            # Try to deduce the underlying version of the compiler, regardless
+            # of its name in compilers.yaml. Depending on where this function
+            # is called we might get either a CompilerSpec or a fully fledged
+            # compiler object.
             import spack.spec
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
