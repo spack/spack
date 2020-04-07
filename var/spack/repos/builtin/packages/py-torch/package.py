@@ -154,7 +154,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # TODO: See if there is a way to use an external mkldnn installation.
     # Currently, only older versions of py-torch use an external mkldnn
     # library.
-    depends_on('dnnl', when='@0.4:0.4.1+mkldnn')
+    depends_on('onednn', when='@0.4:0.4.1+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
