@@ -20,8 +20,10 @@ class Intel(IntelPackage):
     version('19.0.3',              sha256='15373ac6df2a84e6dd9fa0eac8b5f07ab00cdbb67f494161fd0d4df7a71aff8e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15272/parallel_studio_xe_2019_update3_composer_edition.tgz')
     version('19.0.1',              sha256='db000cb2ebf411f6e91719db68a0c68b8d3f7d38ad7f2049ea5b2f1b5f006c25', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/14832/parallel_studio_xe_2019_update1_composer_edition.tgz')
     version('19.0.0',              sha256='e1a29463038b063e01f694e2817c0fcf1a8e824e24f15a26ce85f20afa3f963a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13581/parallel_studio_xe_2019_composer_edition.tgz')
-    #
-    version('18.0.4',              sha256='94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')
+
+    # Version 18.0.5 comes with parallel studio 2018 update 4. See:
+    # https://software.intel.com/en-us/articles/intel-compiler-and-composer-update-version-numbers-to-compiler-version-number-mapping
+    version('18.0.5',              sha256='94aca8f091dff9535b02f022a37aef150b36925c8ef069335621496f8e4db267', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13722/parallel_studio_xe_2018_update4_composer_edition.tgz')
     version('18.0.3',              sha256='f21f7759709a3d3e3390a8325fa89ac79b1fce8890c292e73b2ba3ec576ebd2b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/13002/parallel_studio_xe_2018_update3_composer_edition.tgz')
     version('18.0.2',              sha256='02d2a9fb10d9810f85dd77700215c4348d2e4475e814e4f086eb1442462667ff', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12722/parallel_studio_xe_2018_update2_composer_edition.tgz')
     version('18.0.1',              sha256='db9aa417da185a03a63330c9d76ee8e88496ae6b771584d19003a29eedc7cab5', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/12381/parallel_studio_xe_2018_update1_composer_edition.tgz')
