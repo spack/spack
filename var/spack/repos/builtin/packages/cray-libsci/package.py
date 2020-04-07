@@ -78,4 +78,4 @@ class CrayLibsci(Package):
         return self.blas_libs
 
     def install(self, spec, prefix):
-        NoBuildError()
+        raise NoBuildError(spec)
