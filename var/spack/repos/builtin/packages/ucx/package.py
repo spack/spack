@@ -33,6 +33,18 @@ class Ucx(AutotoolsPackage):
 
     variant('thread_multiple', default=False,
             description='Enable thread support in UCP and UCT')
+    variant('optimizations', default=False,
+            description='Enable optimizations')
+    variant('logging', default=False,
+            description='Enable logging')
+    variant('debug', default=False,
+            description='Enable debugging')
+    variant('assertions', default=False,
+            description='Enable assertions')
+    variant('parameter_checking', default=False,
+            description='Enable paramter checking')
+    variant('pic', default=False,
+            description='Builds with PIC support')
 
     depends_on('numactl')
     depends_on('rdma-core')
@@ -44,4 +56,30 @@ class Ucx(AutotoolsPackage):
             config_args.append('--enable-mt')
         else:
             config_args.append('--disable-mt')
+
+        if '+optimizations' in spec:
+            config_args.append('--enable-optimizations')
+        else:
+            config_args.append('--disable-optimizations')
+
+        if '+logging' in spec:
+            config_args.append('--enable-logging')
+        else:
+            config_args.append('--disable-logging')
+
+        if '+assertions' in spec:
+            config_args.append('--enable-assertions')
+        else:
+            config_args.append('--disable-assertions')
+
+        if '+paramter_checking' in spec:
+            config_args.append('--enable-params-check')
+        else:
+            config_args.append('--disable-params-check')
+
+        if '+pic' in spec:
+            config_args.append('--with-pic')
+        else:
+            config_args.append('--without-pic')
+
         return config_args
