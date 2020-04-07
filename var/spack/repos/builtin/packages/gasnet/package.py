@@ -57,7 +57,8 @@ class Gasnet(AutotoolsPackage):
             '--enable-mpi-compat',
             '--enable-segment-fast',
             '--disable-parsync',
-            '--with-segment-mmap-max=%s ' % (self.spec.variants['segment-mmap-max'].value),
+            '--with-segment-mmap-max=%s ' 
+            % (self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
             'CC=%s %s' % (spack_cc, self.compiler.pic_flag),
             'CXX=%s %s' % (spack_cxx, self.compiler.pic_flag),
@@ -92,9 +93,9 @@ class Gasnet(AutotoolsPackage):
                          '--disable-portals'])
 
         if '+udp' in self.spec:
-            args.extend(['--enable-udp', 
-                         '--disable-ibv', 
-                         '--disable-mpi', 
+            args.extend(['--enable-udp',
+                         '--disable-ibv',
+                         '--disable-mpi',
                          '--disable-seq'])
 
         return args
