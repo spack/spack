@@ -43,13 +43,12 @@ class Arm(spack.compiler.Compiler):
     def extract_version_from_output(cls, output):
         """Extracts the version from compiler's output."""
         match = re.search(cls.version_regex, output)
+        temp = 'unknown'
         if match:
             if match.group(1).count('.') == 1:
                 temp = match.group(1) + ".0." + match.group(2)
             else:
                 temp = match.group(1) + "." + match.group(2)
-        else:
-            temp = 'unknown'
         return temp
 
     @classmethod
