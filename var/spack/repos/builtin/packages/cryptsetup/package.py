@@ -34,6 +34,8 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    depends_on('automake@:1.16.1', when='@2.2.1', type='build')
+
     # Upstream includes support for discovering the location of the libintl
     # library but is missing the bit in the Makefile.ac that includes it in
     # the LDFLAGS. See https://gitlab.com/cryptsetup/cryptsetup/issues/479
