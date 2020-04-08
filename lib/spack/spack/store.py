@@ -85,15 +85,17 @@ def _store():
     shared_install_trees = spack.config.get('config:shared_install_trees')
 
     if install_tree:
-        # if this install tree didn't exist before, create it. if there are
-        # shared install trees available, point the new install tree at one of
-        # them.
-        root = install_trees[install_tree]
+        if install_tree in install_trees:
+            root = install_trees[install_tree]
+        elif install_tree in shared_install_trees:
+            root = shared_install_trees[install_tree]
+        else:
+            # TODO: provide the user an option to create a new install tree
+            raise ValueError("Specified install tree does not exist: {0}"
+                             .format(install_tree))
     elif shared_install_trees:
-        # if no install tree is specified and there are shared install trees,
-        # then we are in user mode: the install tree is in ~
-        # if the ~ install tree does not yet exist, create it and automatically
-        # have it set one of the shared install trees as an upstream
+        # If no install tree is specified and there are shared install trees,
+        # then we are in user mode, and the install tree is in ~
         root = user_install_root
     else:
         # If this is not a shared spack instance, then by default we will place

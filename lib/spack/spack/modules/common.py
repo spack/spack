@@ -286,6 +286,9 @@ def read_module_indices():
     module_indices = []
 
     if not uses_old_module_index:
+        # New spack upstream instances do not require specifying module root
+        # locations in the config, since modules are now stored in the install
+        # tree by default.
         upstream_roots = spack.store.upstream_install_roots(
             str(spack.store.root))
         for upstream_root in upstream_roots:
