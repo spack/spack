@@ -19,11 +19,3 @@ class Uchardet(CMakePackage):
     version('0.0.4', sha256='9dbe41fc73ba6a70676c04b1f0dd812914c0bbb65940283f2d54c5a2338a2acd')
     version('0.0.3', sha256='8caba57524b6e306e764b4dabf5bfec48b6f9d89b73543ed7c95263890e2006f')
     version('0.0.2', sha256='eb59b5b36269212a0d5f44d654cdbeb02e4e43ff59e3ce0205d6a64670991e83')
-
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
-
-#    def install(self, spec, prefix):
-#        # FIXME: Unknown build system
-#        make()
-#        make('install')
