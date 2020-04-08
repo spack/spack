@@ -29,7 +29,7 @@ class Sgpp(SConsPackage):
     patch('directory.patch', when='@:3.2.0')
     # Fix faulty setup.py in 3.2.0
     patch('fix-setup-py.patch', when='@3.2.0')
-    # Backport opencl fix from master
+    # Backport opencl fix
     patch('ocl.patch', when='@:3.2.0+opencl')
 
     variant('simd',
@@ -97,16 +97,16 @@ class Sgpp(SConsPackage):
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
     conflicts('+datadriven', when='simd=sse3',
-            msg='Datadriven module requires at leastAVX!')
+              msg='Datadriven module requires at leastAVX!')
     conflicts('+datadriven', when='simd=sse42',
-            msg='Datadriven module requires at least AVX!')
+              msg='Datadriven module requires at least AVX!')
     # Misc module requirements
     conflicts('+misc', when='-datadriven')
     conflicts('+misc', when='-solver')
     conflicts('+misc', when='-optimization')
     conflicts('+misc', when='-pde')
     conflicts('+misc', when='@:3.1.0',
-            msg='The misc module was introduced in version 3.2.0')
+              msg='The misc module was introduced in version 3.2.0')
     # Combigrid module requirements (for 3.2.0 or older)
     # newer combigrids have no dependencies
     conflicts('+combigrid', when='@:3.2.0~optimization')
