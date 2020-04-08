@@ -8,6 +8,7 @@ import glob
 import os
 import sys
 from llnl.util.filesystem import fix_darwin_install_name
+import llnl.util.tty as tty
 
 
 class Papi(AutotoolsPackage):
@@ -50,13 +51,15 @@ class Papi(AutotoolsPackage):
 
     configure_directory = 'src'
 
-    def setup_build_environment(self, env):
+    def setup_lmsensors(self, env):
         if '+lmsensors' in self.spec and self.version >= Version('6'):
             env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
 
+    def setup_build_environment(self, env):
+        self.setup_lmsensors(env)
+
     def setup_run_environment(self, env):
-        if '+lmsensors' in self.spec and self.version >= Version('6'):
-            env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
+        self.setup_lmsensors(env)
 
     def configure_args(self):
         options = ['MPICC=:']
@@ -83,11 +86,6 @@ class Papi(AutotoolsPackage):
         for level in [".", "*", "*/*"]:
             files = glob.iglob(join_path(level, "*.[ch]"))
             filter_file(r"\<malloc\.h\>", "<stdlib.h>", *files)
-
-    @run_after('build')
-    def test(self):
-        if self.run_tests:
-            make("test")
 
     @run_after('install')
     def fix_darwin_install(self):
