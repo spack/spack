@@ -41,7 +41,10 @@ class F18(CMakePackage):
         # Tests have linking errors with older compilers (before GCC 8.x).
         # Don't build tests for now.
         # https://bugs.llvm.org/show_bug.cgi?id=45463
-        args.append('-DFLANG_INCLUDE_TESTS:BOOL=OFF')
+        if self.run_tests:
+            args.append('-DFLANG_INCLUDE_TESTS:BOOL=ON')
+        else:
+            args.append('-DFLANG_INCLUDE_TESTS:BOOL=OFF')
 
         if '+fir' in spec:
             args.append('-DLINK_WITH_FIR:BOOL=ON')
