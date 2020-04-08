@@ -8,7 +8,6 @@ import glob
 import os
 import sys
 from llnl.util.filesystem import fix_darwin_install_name
-import llnl.util.tty as tty
 
 
 class Papi(AutotoolsPackage):
@@ -67,7 +66,7 @@ class Papi(AutotoolsPackage):
         # fail, so that PAPI does not get confused
         options = ['MPICC=:']
         # Build a list of activated variants (optional PAPI components)
-        variants = filter(lambda x: self.spec.variants[x].value == True,
+        variants = filter(lambda x: self.spec.variants[x].value is True,
                           self.spec.variants)
         if variants:
             options.append('--with-components={0}'.format(' '.join(variants)))
