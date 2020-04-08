@@ -12,6 +12,7 @@ class PyNotebook(PythonPackage):
     homepage = "https://github.com/jupyter/notebook"
     url      = "https://pypi.io/packages/source/n/notebook/notebook-4.2.3.tar.gz"
 
+    version('6.0.1', sha256='47a9092975c9e7965ada00b9a20f0cf637d001db60d241d479f53c0be117ad48')
     version('6.0.1', sha256='660976fe4fe45c7aa55e04bf4bccb9f9566749ff637e9020af3422f9921f9a5d')
     version('5.7.8', sha256='573e0ae650c5d76b18b6e564ba6d21bf321d00847de1d215b418acb64f056eb8')
     version('4.2.3', sha256='39a9603d3fe88b60de2903680c965cf643acf2c16fb2c6bac1d905e1042b5851')
