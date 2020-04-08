@@ -540,6 +540,24 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
+    @when('%fj')
+    @run_before('configure')
+    def make_fj_directory(self):
+        copy_tree('wmake/rules/linuxARM64Clang', 'wmake/rules/linuxARM64Fj')
+        config = [
+            'wmake/rules/linuxARM64Fj/c',
+            'wmake/rules/linuxARM64Fj/c++',
+            'wmake/rules/linuxARM64Fj/general'
+        ]
+        for cfg in config:
+            filter_file('Clang', 'Fj', cfg, string=True)
+
+        copy_tree('wmake/rules/General/Clang', 'wmake/rules/General/Fj')
+        filter_file('clang', spack_cc,
+                    'wmake/rules/General/Fj/c', string=True)
+        filter_file('clang++', spack_cxx,
+                    'wmake/rules/General/Fj/c++', string=True)
+
     def configure(self, spec, prefix):
         """Make adjustments to the OpenFOAM configuration files in their various
         locations: etc/bashrc, etc/config.sh/FEATURE and customizations that
