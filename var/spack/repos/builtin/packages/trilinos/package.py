@@ -133,8 +133,12 @@ class Trilinos(CMakePackage):
     # chaco is disabled by default. As of 12.14.1 libchaco.so
     # has the global symbol divide (and maybe others) that can
     # lead to symbol clash.
-    variant('chaco',       default=False,
+    variant('chaco',        default=False,
             description='Compile with Chaco from SEACAS')
+    variant('couplings',    default=False,
+            description='Compile with Trilinos couplings')
+    variant('didasko',      default=False,
+            description='Compile with Didasko')
     variant('epetra',       default=True,
             description='Compile with Epetra')
     variant('epetraext',    default=True,
@@ -431,6 +435,10 @@ class Trilinos(CMakePackage):
                 'ON' if '+aztec' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
                 'ON' if '+belos' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_TrilinosCouplings:BOOL=%s' % (
+                'ON' if '+couplings' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_Didasko:BOOL=%s' % (
+                'ON' if '+didasko' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
                 'ON' if '+epetra' in spec else 'OFF'),
             '-DTrilinos_ENABLE_EpetraExt:BOOL=%s' % (
