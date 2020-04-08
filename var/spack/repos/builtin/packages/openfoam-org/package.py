@@ -45,6 +45,7 @@ from spack.pkg.builtin.openfoam import write_environ
 from spack.pkg.builtin.openfoam import rewrite_environ_files
 from spack.pkg.builtin.openfoam import mplib_content
 from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -138,15 +139,10 @@ class OpenfoamOrg(Package):
         return settings
 
     def setup_run_environment(self, env):
-        # This should be similar to the openfoam package,
-        # but sourcing the etc/bashrc here seems to exit with an error.
-        # ... this needs to be examined in more detail.
-        #
-        # Minimal environment only.
-        env.set('FOAM_PROJECT_DIR', self.projectdir)
-        env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            env.prepend_path('PATH', join_path(self.projectdir, d))
+        bashrc = self.prefix.etc.bashrc
+        env.extend(EnvironmentModifications.from_sourcing_file(
+            bashrc, clean=True
+        ))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
@@ -386,5 +382,3 @@ class OpenfoamOrg(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
-
-# -----------------------------------------------------------------------------
