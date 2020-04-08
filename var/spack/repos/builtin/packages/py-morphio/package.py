@@ -13,6 +13,7 @@ class PyMorphio(PythonPackage):
     git      = "https://github.com/BlueBrain/MorphIO.git"
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
+    version('unifurcation', branch='unifurcation', submodules=True, get_full_repo=True)
     version('2.3.4', tag='v2.3.4', submodules=True, get_full_repo=True)
     version('2.2.1', tag='v2.2.1', submodules=True, get_full_repo=True)
     version('2.1.2', tag='v2.1.2', submodules=True, get_full_repo=True)
