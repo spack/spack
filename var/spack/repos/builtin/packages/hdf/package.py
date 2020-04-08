@@ -53,6 +53,7 @@ class Hdf(AutotoolsPackage):
 
         if '+libtirpc' in spec:
             config_args.append('LIBS=-ltirpc')
-            config_args.append('CPPFLAGS=-I{0}/include/tirpc'.format(spec['libtirpc'].prefix))
+            config_args.append('CPPFLAGS=-I{0}/include/tirpc'.format(
+                spec['libtirpc'].prefix))
 
         return config_args
