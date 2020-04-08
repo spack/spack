@@ -26,7 +26,7 @@ class F18(CMakePackage):
     # Dependencies
     depends_on('cmake@3.9.0:', type='build')
     depends_on('llvm+clang@9:', when='~fir')
-    depends_on('llvm+clang+mlir@10:', when='+fir')
+    depends_on('llvm+clang+mlir@10.0.1:', when='+fir')
 
     # Conflicts
     compiler_warning = 'F18 requires a compiler with support for C++17'
