@@ -711,8 +711,6 @@ def _config():
                 pass
             raise ValueError("The specified install tree does not exist")
 
-        install_root = install_trees[install_tree]
-
         scope_name = 'install_tree:' + install_tree
         install_root = install_trees[install_tree]
         install_config_path = os.path.join(install_root, 'config')
