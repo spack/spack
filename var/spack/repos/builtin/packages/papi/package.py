@@ -43,7 +43,7 @@ class Papi(AutotoolsPackage):
 
     depends_on('lm-sensors', when='+lmsensors')
 
-    conflicts('%gcc@8:', when='@:5.6.99', msg='Requires GCC version less than 8.0')
+    #conflicts('%gcc@8:', when='@:5.6.99', msg='Requires GCC version less than 8.0')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
@@ -62,8 +62,12 @@ class Papi(AutotoolsPackage):
         self.setup_lmsensors(env)
 
     def configure_args(self):
+        # PAPI uses MPI if MPI is present; since we don't require
+        # an MPI package, we ensure that all attempts to use MPI
+        # fail, so that PAPI does not get confused
         options = ['MPICC=:']
-        variants = filter(lambda x: self.spec.variants[x].value,
+        # Build a list of activated variants (optional PAPI components)
+        variants = filter(lambda x: self.spec.variants[x].value == True,
                           self.spec.variants)
         if variants:
             options.append('--with-components={0}'.format(' '.join(variants)))
