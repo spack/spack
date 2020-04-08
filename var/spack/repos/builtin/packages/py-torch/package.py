@@ -55,7 +55,6 @@ class PyTorch(PythonPackage, CudaPackage):
     # see https://github.com/pytorch/pytorch/issues/35149
     version('1.4.0', tag='v1.4.0', submodules=True,
             submodules_delete=['third_party/fbgemm'])
-    conflicts('+fbgemm', when='@1.4.0')
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
@@ -105,6 +104,8 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+redis', when='@:1.0')
     conflicts('+zstd', when='@:1.0')
     conflicts('+tbb', when='@:1.1')
+    # see https://github.com/pytorch/pytorch/issues/35149
+    conflicts('+fbgemm', when='@1.4.0')
 
     cuda_arch_conflict = ('This version of Torch/Caffe2 only supports compute '
                           'capabilities ')
