@@ -21,6 +21,7 @@ class PyGpaw(PythonPackage):
     variant('scalapack', default=True,
             description='Build with ScaLAPACK support')
     variant('fftw', default=True, description='Build with FFTW support')
+    variant('libvdwxc', default=True, description='Build with libvdwxc support')
 
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
     depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
