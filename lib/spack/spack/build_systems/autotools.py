@@ -282,6 +282,12 @@ class AutotoolsPackage(PackageBase):
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
 
+    def setup_build_environment(self, env):
+        # avoid permission denied on
+        # /sbin/ldconfig.real:
+        #   Can't create temporary cache file /etc/ld.so.cache~: Permission denied
+        env.set('ac_cv_path_LDCONFIG', 'true')
+
     def build(self, spec, prefix):
         """Makes the build targets specified by
         :py:attr:``~.AutotoolsPackage.build_targets``
