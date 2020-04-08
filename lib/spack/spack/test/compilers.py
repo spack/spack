@@ -369,7 +369,13 @@ def test_clang_version_detection(version_str, expected_version):
      'Thread model: posix\n'
      'InstalledDir:\n'
      '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
-     '19.0')
+     '19.0.0.73'),
+    ('Arm C/C++/Fortran Compiler version 19.3.1 (build number 75) (based on LLVM 7.0.2)\n' # NOQA
+     'Target: aarch64--linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir:\n'
+     '/opt/arm/arm-hpc-compiler-19.0_Generic-AArch64_RHEL-7_aarch64-linux/bin\n', # NOQA
+     '19.3.1.75')
 ])
 def test_arm_version_detection(version_str, expected_version):
     version = spack.compilers.arm.Arm.extract_version_from_output(version_str)

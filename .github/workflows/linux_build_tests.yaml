@@ -18,6 +18,8 @@ on:
       - '!var/spack/repos/builtin/packages/py-setuptools/**'
       - '!var/spack/repos/builtin/packages/openjpeg/**'
       - '!var/spack/repos/builtin/packages/r-rcpp/**'
+      # Don't run if we only modified documentation
+      - 'lib/spack/docs/**'
 
 jobs:
   build:

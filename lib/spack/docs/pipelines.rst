@@ -117,6 +117,27 @@ created has the same name as the current branch being tested, but has ``multi-ci
 prepended to the branch name.  Once Gitlab CI has full support for dynamically
 defined workloads, this command will be deprecated.
 
+Until this command is no longer needed and can be deprecated, there are
+a few gotchas to note.  While you can embed your username and password in the
+`DOWNSTREAM_CI_REPO` url, you may not be able to have Gitlab mask the value, as
+it will likely contain characters that Gitlab cannot currently mask.  Another
+option is to set up an SSH token, but for this to work, the associated SSH
+key must be passphrase-less so that it can be provided in an automated manner.
+
+If you attempt to set up an SSH token that does require a passphrase, you may
+see a log message similar to:
+
+```
+fatal: https://<instance-url>/<org>/<project>:<port>/info/refs not valid: is this a git repository?
+```
+
+In this case, you can try a passphrase-less SSH key, or else embed your gitlab
+username and password in the `DOWNSTREAM_CI_REPO` as in the following example:
+
+```
+https://<username>:<password>@<instance-url>/<org>/<project>.git
+```
+
 .. _cmd_spack_ci_rebuild:
 
 ^^^^^^^^^^^^^^^^^^^^
@@ -436,4 +457,5 @@ DOWNSTREAM_CI_REPO
 ^^^^^^^^^^^^^^^^^^
 
 Needed until Gitlab CI supports dynamic job generation.  Can contain connection
-credentials, and could be the same repository or a different one.
+credentials embedded in the url, and could be the same repository or a different
+one.
