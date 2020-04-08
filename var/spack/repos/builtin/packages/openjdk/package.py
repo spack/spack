@@ -42,7 +42,7 @@ class Openjdk(Package):
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
         if pkg:
-            version(ver, sha256=pkg[0], url=pkg[1], expand=False)
+            version(ver, sha256=pkg[0], url=pkg[1])
 
     provides('java@8', when='@1.8.0:1.8.999')
     provides('java@11', when='@11.0:11.99')
