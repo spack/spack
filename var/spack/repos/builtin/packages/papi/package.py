@@ -43,7 +43,7 @@ class Papi(AutotoolsPackage):
 
     depends_on('lm-sensors', when='+lmsensors')
 
-    #conflicts('%gcc@8:', when='@:5.6.99', msg='Requires GCC version less than 8.0')
+    conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
