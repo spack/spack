@@ -82,9 +82,6 @@ class Opencv(CMakePackage, CudaPackage):
     variant('videoio', default=True, description='videoio module')
 
     # Optional 3rd party components
-    variant('cuda', default=False,
-            description='Activates support for CUDA, \
-                         essentially turns on +contrib')
     variant('eigen', default=True, description='Activates support for eigen')
     variant('ipp', default=True, description='Activates support for IPP')
     variant('ipp_iw', default=True, description='Build IPP IW from source')
@@ -148,6 +145,7 @@ class Opencv(CMakePackage, CudaPackage):
     # exists, otherwise build will fail
     # See https://github.com/opencv/opencv_contrib/issues/1786
     conflicts('cuda@10:', when='+cudacodec')
+    conflicts('cuda', when='~contrib', msg='cuda support requires +contrib')
 
     extends('python', when='+python')
 
