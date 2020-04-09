@@ -1,0 +1,34 @@
+--- a/meson.build
++++ b/meson.build
+@@ -1916,10 +1916,14 @@ endif
+ # proxy-libintl subproject.
+ # FIXME: glib-gettext.m4 has much more checks to detect broken/uncompatible
+ # implementations. This could be extended if issues are found in some platforms.
+-if cc.has_function('ngettext')
++gettext_opt = get_option('gettext')
++found_gettext = false
++if ['auto', 'libc'].contains(gettext_opt) and cc.has_function('ngettext')
+   libintl = []
+   have_bind_textdomain_codeset = cc.has_function('bind_textdomain_codeset')
+-else
++  found_gettext = true
++endif
++if not found_gettext and ['auto', 'external'].contains(gettext_opt)
+   libintl = cc.find_library('intl', required : false)
+   if not libintl.found()
+     libintl = subproject('proxy-libintl').get_variable('intl_dep')
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -9,6 +9,12 @@ option('iconv',
+        value : 'auto',
+        description : 'iconv implementation to use (\'libc\' = \'Part of the C library\'; \'external\' = \'External libiconv\'; \'auto\' = \'Auto-detect which iconv is available\')')
+ 
++option('gettext',
++       type : 'combo',
++       choices : ['auto', 'libc', 'external'],
++       value : 'auto',
++       description : 'gettext implementation to use (\'libc\' = \'Part of the C library\'; \'external\' = \'External libintl\'; \'auto\' = \'Auto-detect which gettext is available\')')
++
+ option('charsetalias_dir',
+        type : 'string',
+        value : '',
