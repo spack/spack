@@ -136,7 +136,7 @@ class Opencv(CMakePackage, CudaPackage):
     depends_on('vtk', when='+vtk')
     depends_on('qt', when='+qt')
     depends_on('java', when='+java')
-    depends_on('ant', when='+java')
+    depends_on('ant', when='+java', type='build')
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('protobuf@3.5.0:', when='@3.4.1: +dnn')
     depends_on('protobuf@3.1.0', when='@3.3.0:3.4.0 +dnn')
