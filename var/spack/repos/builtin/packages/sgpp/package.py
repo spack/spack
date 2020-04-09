@@ -13,10 +13,12 @@ class Sgpp(SConsPackage):
 
     homepage = "https://sgpp.sparsegrids.org"
     url = "https://github.com/SGpp/SGpp/archive/v3.2.0.tar.gz"
+    git = "https://github.com/SGpp/SGpp.git"
+
     maintainers = ['G-071', 'leiterrl', 'pfluegdk']
 
     # Versions with Python 3 bindings:
-    version('master', git='https://github.com/SGpp/SGpp.git', branch='master')
+    version('master', branch='master')
     version('3.3.0', sha256='ca4d5b79f315b425ce69b04940c141451a76848bf1bd7b96067217304c68e2d4')
     version('3.2.0', sha256='dab83587fd447f92ed8546eacaac6b8cbe65b8db5e860218c0fa2e42f776962d')
     # Versions with Python 2 bindings:
@@ -25,7 +27,7 @@ class Sgpp(SConsPackage):
 
     # Patch that ensures libraries will actually
     # be copied into prefix/lib upon installation
-    # (otherwise it would be prefix/sgpp/lib)
+    # (otherwise it would be prefix/lib/sgpp)
     patch('directory.patch', when='@:3.2.0')
     # Fix faulty setup.py in 3.2.0
     patch('fix-setup-py.patch', when='@3.2.0')
@@ -64,9 +66,10 @@ class Sgpp(SConsPackage):
     # Mandatory dependencies
     depends_on('scons@2.5.1', when='@:3.1.0', type=('build'))
     depends_on('scons@3:', when='@3.2.0:', type=('build'))
-    depends_on('zlib', type=('build', 'run'))
+    depends_on('zlib', type=('link'))
     # Python dependencies
     extends('python', when='+python')
+    depends_on('py-setuptools', when='+python', type=('build'))
     # Python 3 support was added in version 3.2.0
     depends_on('python@2.7:2.8', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('python@3:', when='@3.2.0:+python', type=('build', 'run'))
@@ -120,7 +123,7 @@ class Sgpp(SConsPackage):
                      'RUN_BOOST_TESTS=0',
                      'RUN_PYTHON_TESTS=0']
         # No need to check the code style anymore -> saves installation time
-        if any(x in spec for x in ['@3.2.0', '@3.1.0', '@3.0.0']):
+        if spec.satisfies('@:3.2.0'):
             self.args.append('RUN_CPPLINT=0')
         else:  # argument was renamed after 3.2.0
             self.args.append('CHECK_STYLE=0')
@@ -145,7 +148,7 @@ class Sgpp(SConsPackage):
         self.args.append('SG_SOLVER={0}'.format(
             '1' if '+solver' in spec else '0'))
         # Misc flag did not exist in older versions
-        if all(x not in spec for x in ['@3.1.0', '@3.0.0']):
+        if spec.satisfies('@3.2.0:'):
             self.args.append('SG_MISC={0}'.format(
                 '1' if '+misc' in spec else '0'))
         # SIMD and OpenCL Flags:
