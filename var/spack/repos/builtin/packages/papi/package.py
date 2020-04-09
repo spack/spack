@@ -2,12 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 import glob
 import os
 import sys
-from llnl.util.filesystem import fix_darwin_install_name
+import llnl.util.filesystem as fs
 
 
 class Papi(AutotoolsPackage):
@@ -69,6 +67,12 @@ class Papi(AutotoolsPackage):
         return options
 
     @run_before('configure')
+    def fortran_check(self):
+        if not self.compiler.fc:
+            msg = 'PAPI requires a Fortran compiler to build'
+            raise RuntimeError(msg)
+
+    @run_before('configure')
     def component_configure(self):
         configure_script = Executable('./configure')
         if '+lmsensors' in self.spec and self.version < Version('6'):
@@ -92,4 +96,4 @@ class Papi(AutotoolsPackage):
         if sys.platform == 'darwin':
             os.rename(join_path(self.prefix.lib, 'libpapi.so'),
                       join_path(self.prefix.lib, 'libpapi.dylib'))
-            fix_darwin_install_name(self.prefix.lib)
+            fs.fix_darwin_install_name(self.prefix.lib)
