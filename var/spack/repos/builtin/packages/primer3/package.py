@@ -28,7 +28,8 @@ class Primer3(MakefilePackage):
     # https://github.com/primer3-org/primer3/issues/3
     def patch(self):
         if self.spec.version == Version('2.3.7'):
-            filter_file(r'^(CC_OPTS.*)', r'\1 -fpermissive', join_path('src', 'Makefile'))
+            filter_file(r'^(CC_OPTS.*)', r'\1 -fpermissive',
+                        join_path('src', 'Makefile'))
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
