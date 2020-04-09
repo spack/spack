@@ -179,7 +179,7 @@ class Llvm(CMakePackage, CudaPackage):
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.
     patch("constexpr_longdouble.patch", when="@6:8+libcxx")
-    patch("constexpr_longdouble_9.0.patch", when="@9+libcxx")
+    patch("constexpr_longdouble_9.0.patch", when="@9:+libcxx")
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
