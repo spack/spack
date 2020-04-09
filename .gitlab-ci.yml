@@ -1,0 +1,10 @@
+e4s_pipeline:
+  only:
+  - external_pull_requests
+  variables:
+    SPACK_REPO: https://github.com/spack/spack.git
+    SPACK_REF: ${CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME}
+  trigger:
+    project: scott/spack-env
+    branch: bzip2
+    strategy: depend
