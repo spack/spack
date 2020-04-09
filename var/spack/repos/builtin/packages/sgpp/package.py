@@ -86,6 +86,8 @@ class Sgpp(SConsPackage):
     depends_on('opencl@1.1:', when='+opencl', type=('build', 'run'))
     # MPI dependency
     depends_on('mpi', when='+mpi', type=('build', 'run'))
+    # Testing requires boost test
+    depends_on('boost+test', type=('test'))
 
     # Compiler with C++11 support is required
     conflicts('%gcc@:4.8.4', msg='Compiler with c++11 support is required!')
@@ -119,14 +121,23 @@ class Sgpp(SConsPackage):
 
     def build_args(self, spec, prefix):
         # No need for unit tests anymore -> saves installation time
-        self.args = ['COMPILE_BOOST_TESTS=0',
-                     'RUN_BOOST_TESTS=0',
-                     'RUN_PYTHON_TESTS=0']
-        # No need to check the code style anymore -> saves installation time
-        if spec.satisfies('@:3.2.0'):
-            self.args.append('RUN_CPPLINT=0')
-        else:  # argument was renamed after 3.2.0
-            self.args.append('CHECK_STYLE=0')
+        if self.run_tests:
+            self.args = ['COMPILE_BOOST_TESTS=1',
+                         'RUN_BOOST_TESTS=1']
+            if ('+python' in spec):
+                self.args.append('RUN_PYTHON_TESTS=1')
+            if spec.satisfies('@:3.2.0'):
+                self.args.append('RUN_CPPLINT=1')
+            else:  # argument was renamed after 3.2.0
+                self.args.append('CHECK_STYLE=1')
+        else:
+            self.args = ['COMPILE_BOOST_TESTS=0',
+                         'RUN_BOOST_TESTS=0',
+                         'RUN_PYTHON_TESTS=0']
+            if spec.satisfies('@:3.2.0'):
+                self.args.append('RUN_CPPLINT=0')
+            else:  # argument was renamed after 3.2.0
+                self.args.append('CHECK_STYLE=0')
         # Install direction
         self.args.append('PREFIX={0}'.format(prefix))
         # Generate swig bindings?
