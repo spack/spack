@@ -50,7 +50,6 @@ modules:
       - psp-validation
       - py-basalt
       - py-bbp-analysis-framework
-      - py-bbp-morphology-workflow
       - py-bglibpy
       - py-bluepy
       - py-bluepymm
@@ -59,6 +58,7 @@ modules:
       - py-entity-management
       - py-jupyter-notebook
       - py-morph-tool
+      - py-morphology-repair-workflow
       - 'py-mvdtool%gcc'
       - py-neurodamus
       - py-simwriter
