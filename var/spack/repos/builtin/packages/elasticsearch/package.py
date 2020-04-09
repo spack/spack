@@ -19,7 +19,7 @@ class Elasticsearch(Package):
     version('6.3.0', sha256='0464127140820d82b24bd2830232131ea85bcd49267a8bc7365e4fa391dee2a3')
     version('6.2.4', sha256='91e6f1ea1e1dd39011e7a703d2751ca46ee374665b08b0bfe17e0c0c27000e8e')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
         dirs = [
