@@ -50,15 +50,11 @@ class Papi(AutotoolsPackage):
 
     configure_directory = 'src'
 
-    def setup_lmsensors(self, env):
+    def setup_build_environment(self, env):
         if '+lmsensors' in self.spec and self.version >= Version('6'):
             env.set('PAPI_LMSENSORS_ROOT', self.spec['lm-sensors'].prefix)
 
-    def setup_build_environment(self, env):
-        self.setup_lmsensors(env)
-
-    def setup_run_environment(self, env):
-        self.setup_lmsensors(env)
+    setup_run_environment = setup_build_environment
 
     def configure_args(self):
         # PAPI uses MPI if MPI is present; since we don't require
