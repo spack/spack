@@ -85,6 +85,9 @@ class Libceed(Package):
                 opt = '-O -g'
             makeopts += ['OPT=%s' % opt]
 
+            if 'avx' in self.spec.target:
+                makeopts.append('AVX=1')
+
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
                 if spec.satisfies('@:0.4'):
