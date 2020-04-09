@@ -18,10 +18,13 @@ class ABI(object):
     """This class provides methods to test ABI compatibility between specs.
        The current implementation is rather rough and could be improved."""
 
-    def architecture_compatible(self, parent, child):
-        """Return true if parent and child have ABI compatible targets."""
-        return not parent.architecture or not child.architecture or \
-            parent.architecture == child.architecture
+    def architecture_compatible(self, target, constraint):
+        """Return true if architecture of target spec is ABI compatible
+           to the architecture of constraint spec. If either the target
+           or constraint specs have no architecture, target is also defined
+           as architecture ABI compatible to constraint."""
+        return not target.architecture or not constraint.architecture or \
+            target.architecture.satisfies(constraint.architecture)
 
     @memoized
     def _gcc_get_libstdcxx_version(self, version):
@@ -107,8 +110,8 @@ class ABI(object):
                     return True
         return False
 
-    def compatible(self, parent, child, **kwargs):
-        """Returns true iff a parent and child spec are ABI compatible"""
+    def compatible(self, target, constraint, **kwargs):
+        """Returns true if target spec is ABI compatible to constraint spec"""
         loosematch = kwargs.get('loose', False)
-        return self.architecture_compatible(parent, child) and \
-            self.compiler_compatible(parent, child, loose=loosematch)
+        return self.architecture_compatible(target, constraint) and \
+            self.compiler_compatible(target, constraint, loose=loosematch)
