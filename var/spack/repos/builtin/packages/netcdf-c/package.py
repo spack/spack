@@ -13,15 +13,17 @@ class NetcdfC(AutotoolsPackage):
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c.git"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.7.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-4.7.3.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version('4.6.2'):
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-{0}.tar.gz"
         else:
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-{0}.tar.gz"
 
         return url.format(version.dotted)
+
+    maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
