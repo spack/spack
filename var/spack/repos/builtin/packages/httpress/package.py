@@ -7,17 +7,15 @@ from spack import *
 
 
 class Httpress(MakefilePackage):
-    """High performance HTTP server stress & benchmark utility"""
+    """High performance HTTP server stress & benchmark utility."""
 
     homepage = "https://bitbucket.org/yarosla/httpress/wiki/Home"
-    url      = "https://bitbucket.org/yarosla/httpress/get/f27fa1949044.zip"
+    hg       = "https://bitbucket.org/yarosla/httpress"
 
-    def url_for_version(self, version):
-        url = "https://bitbucket.org/yarosla/httpress/get/f27fa1949044.zip"
-        return url
+    version('develop')
+    version('1.1.0', revision='1.1.0', preferred=True)
 
-    version('develop', sha256='fd5503864d201b921b20e7c5f1dce2c013e5215f4cbdf3f32344e9f743e6e964')
-
+    depends_on('mercurial', type='build')
     depends_on('libev')
     depends_on('gnutls')
 
