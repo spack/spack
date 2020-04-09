@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
-
+import os
 import spack.compilers.clang
 
 from spack.compiler import Compiler, UnsupportedCompilerFlag
@@ -185,3 +185,9 @@ class Gcc(Compiler):
     @property
     def stdcxx_libs(self):
         return ('-lstdc++', )
+
+    def remap_debugsrc(self, from_dir, to_dir):
+        option = "-ffile-prefix-map" if self.spec.satisfies('gcc@8:') \
+                 else "-fdebug-prefix-map"
+        real_from_dir = os.path.realpath(from_dir)
+        return "%s=%s=%s" % (option, real_from_dir, to_dir)

@@ -458,6 +458,12 @@ class Compiler(object):
             itertools.product(prefixes, compiler_names, suffixes)
         ]
 
+    def remap_debugsrc(self, from_dir, to_dir):
+        """If the compiler supports options to translate source paths
+        to a different prefix, it should override this method and return
+        a filled-in option"""
+        return ""
+
     def setup_custom_environment(self, pkg, env):
         """Set any environment variables necessary to use the compiler."""
         pass

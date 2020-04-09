@@ -3901,6 +3901,10 @@ class Spec(object):
         # to give to the attribute the appropriate comparison semantic
         return self.architecture.target.microarchitecture
 
+    @property
+    def source_target(self):
+        return os.path.join(self.prefix, 'share', self.name, 'src')
+
 
 class LazySpecCache(collections.defaultdict):
     """Cache for Specs that uses a spec_like as key, and computes lazily

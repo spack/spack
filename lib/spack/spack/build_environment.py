@@ -213,6 +213,9 @@ def set_compiler_environment_variables(pkg, env):
     isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set('SPACK_TARGET_ARGS', isa_arg)
 
+    env.set('SPACK_DEBUGSRC_REMAP',
+            compiler.remap_debugsrc(pkg.stage.source_path, spec.source_target))
+
     # Trap spack-tracked compiler flags as appropriate.
     # env_flags are easy to accidentally override.
     inject_flags = {}
