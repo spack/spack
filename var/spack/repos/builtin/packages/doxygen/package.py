@@ -28,7 +28,7 @@ class Doxygen(CMakePackage):
     # graphviz appears to be a run-time optional dependency
     variant('graphviz', default=False,
             description='Build with dot command support from Graphviz.')
-    
+
     variant('mscgen', default=False,
             description='Build with support for code graphs from mscgen.')
 
