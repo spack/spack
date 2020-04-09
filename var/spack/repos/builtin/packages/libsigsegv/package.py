@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+
 from spack import *
 
 
@@ -18,5 +20,37 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
 
     patch('patch.new_config_guess', when='@2.10')
 
+    test_requires_compiler = True
+
     def configure_args(self):
         return ['--enable-shared']
+
+    def _attempt_it(self, exe, options, expected, status, installed, purpose):
+        """Run the test and output PASSED or FAILED based on the results."""
+        try:
+            self.run_test(exe, options, expected, status, installed, purpose)
+            print('PASSED')
+        except Exception as exc:
+            tty.error(exc)
+            print('FAILED')
+
+    def test(self):
+        # Start by compiling and linking the simple program
+        prog = 'data/smoke_test'
+
+        options = [
+            '-I{0}'.format(self.prefix.include),
+            '{0}.c'.format(prog),
+            '-o',
+            prog,
+            '-L{0}'.format(self.prefix.lib),
+            '-lsigsegv',
+            '-Wl,-R{0}'.format(self.prefix.lib)]
+        reason = 'test ability to link to the library'
+        self._attempt_it('cc', options, [], None, False, purpose=reason)
+
+        # Now run the program and confirm the output matches expectations
+        with open('./data/smoke_test.out', 'r') as fd:
+            expected = fd.read()
+        reason = 'test ability to use the library'
+        self._attempt_it(prog, options, expected, None, False, purpose=reason)
