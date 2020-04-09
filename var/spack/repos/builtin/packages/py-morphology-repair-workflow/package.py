@@ -7,11 +7,11 @@
 from spack import *
 
 
-class PyBbpMorphologyWorkflow(PythonPackage):
+class PyMorphologyRepairWorkflow(PythonPackage):
     """Python library neuron morphology analysis"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/platform/bbp-morphology-workflow"
-    git      = "ssh://bbpcode.epfl.ch/platform/bbp-morphology-workflow"
+    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/morphology-repair-workflow"
+    git      = "ssh://bbpcode.epfl.ch/nse/morphology-repair-workflow"
     version('develop', branch='master')
     version('1.0.4', tag='morphology-repair-workflow-v1.0.4')
     version('1.0.3', tag='morphology-repair-workflow-v1.0.3')
