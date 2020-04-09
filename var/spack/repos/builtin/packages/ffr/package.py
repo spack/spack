@@ -18,7 +18,7 @@ class Ffr(MakefilePackage):
     version('3.1.004', sha256='2b396f66bb6437366721fac987f9c6e8b830638c3e4cb5df6a08ff41633f8481', url="file://{0}/FFR_V3.1.004.zip".format(os.getcwd()))
     version('3.0_000', sha256='edc69fb1fd9dbdb3f531a8f2b9533a9b3c1a28768bb4029b84a6b35c95db0b48', url="file://{0}/open_FrontFlowRed_3.0_000.tar.gz".format(os.getcwd()))
 
-    # FronntFroow/red is used Fortran format I/E without width (Foe Example 3I)
+    # FronntFroow/red used Fortran format I/E without width (For Example 3I)
     # But gfortran require width (For Example (3I6).
     patch('gfortran_format_31.patch', when='@3.1.004 %gcc')
     patch('gfortran_format_30.patch', when='@3.0_000 %gcc')
@@ -44,6 +44,11 @@ class Ffr(MakefilePackage):
         make = join_path(root_dir, 'src_pre', 'src', 'Makefile')
         os.chmod(make, 0o644)
         filter_file('#CSRCS =.*$', 'CSRCS = kmetis_main.c io.c', make)
+        filter_file(
+            'LIBPRE =.*$',
+            'LIBPRE = ' + spec['metis'].libs.ld_flags,
+            make
+        )
         if spec.satisfies('@3.0_000'):
             d = find('.', 'src_main', recursive=True)
             root_dir  = os.path.dirname(d[0])
@@ -55,10 +60,6 @@ class Ffr(MakefilePackage):
                 m.filter(
                     r'include Makefile\..*\.in',
                     'include Makefile.spack.in'
-                )
-                m.filter(
-                    'LIBPRE =.*$',
-                    'LIBPRE = -L{0} -lmetis'.format(spec['metis'].prefix.lib)
                 )
                 with open(join_path(workdir, 'Makefile.spack.in'), 'w') as m:
                     m.write('OS = {0}\n'.format(spec.os))
