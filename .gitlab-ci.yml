@@ -1,0 +1,7 @@
+e4s_pipeline:
+  only:
+  - external_pull_requests
+  trigger:
+    project: scott/spack-env
+    branch: e4s
+    strategy: depend
