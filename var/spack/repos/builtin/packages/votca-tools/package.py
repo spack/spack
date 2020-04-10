@@ -30,6 +30,9 @@ class VotcaTools(CMakePackage):
     # https://github.com/votca/tools/pull/197, fix cmake module
     patch("https://github.com/votca/tools/pull/197.patch", sha256="a06cce2a9cee63c8d01e4d1833f9cd2ba817b846c86fdb51ea5c9cd843135e68", when="@1.6_rc1")
 
+    variant('mkl', default=False, description='Build with MKL support')
+    conflicts('+mkl', when='@:1.5.9999')
+
     depends_on("cmake@2.8:", type='build')
     depends_on("expat")
     depends_on("fftw")
@@ -37,9 +40,14 @@ class VotcaTools(CMakePackage):
     depends_on("eigen@3.3:", when="@1.5:")
     depends_on("boost")
     depends_on("sqlite", when="@:1.5.9999")
+    depends_on('mkl', when='+mkl')
 
     def cmake_args(self):
         args = [
             '-DWITH_RC_FILES=OFF'
         ]
+
+        if '~mkl' in self.spec:
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_MKL=ON')
+
         return args
