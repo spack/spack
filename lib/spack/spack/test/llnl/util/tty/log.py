@@ -24,61 +24,46 @@ from llnl.util.tty.pty import PseudoShell
 from spack.util.executable import which
 
 
-def test_log_python_output_with_python_stream(capsys, tmpdir):
-    # pytest's DontReadFromInput object does not like what we do here, so
-    # disable capsys or things hang.
+def test_log_python_output_with_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
-        with capsys.disabled():
-            with log_output('foo.txt'):
-                print('logged')
+        with log_output('foo.txt', echo=True):
+            print('logged')
 
+        # foo.txt has output
         with open('foo.txt') as f:
             assert f.read() == 'logged\n'
 
-        assert capsys.readouterr() == ('', '')
+        # output is also echoed.
+        assert capfd.readouterr()[0] == 'logged\n'
 
 
-def test_log_python_output_with_fd_stream(capfd, tmpdir):
+def test_log_python_output_without_echo(capfd, tmpdir):
     with tmpdir.as_cwd():
         with log_output('foo.txt'):
             print('logged')
 
+        # foo.txt has output
         with open('foo.txt') as f:
             assert f.read() == 'logged\n'
 
-        # Coverage is cluttering stderr during tests
+        # nothing on stdout or stderr
         assert capfd.readouterr()[0] == ''
 
 
 def test_log_python_output_and_echo_output(capfd, tmpdir):
     with tmpdir.as_cwd():
+        # echo two lines
         with log_output('foo.txt') as logger:
             with logger.force_echo():
-                print('echo')
+                print('force echo')
             print('logged')
 
-        # Coverage is cluttering stderr during tests
-        assert capfd.readouterr()[0] == 'echo\n'
-
+        # log file contains everything
         with open('foo.txt') as f:
-            assert f.read() == 'echo\nlogged\n'
+            assert f.read() == 'force echo\nlogged\n'
 
-
-@pytest.mark.skipif(not which('echo'), reason="needs echo command")
-def test_log_subproc_output(capsys, tmpdir):
-    echo = which('echo')
-
-    # pytest seems to interfere here, so we need to use capsys.disabled()
-    # TODO: figure out why this is and whether it means we're doing
-    # sometihng wrong with OUR redirects.  Seems like it should work even
-    # with capsys enabled.
-    with tmpdir.as_cwd():
-        with capsys.disabled():
-            with log_output('foo.txt'):
-                echo('logged')
-
-        with open('foo.txt') as f:
-            assert f.read() == 'logged\n'
+        # only force-echo'd stuff is in output
+        assert capfd.readouterr()[0] == 'force echo\n'
 
 
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
@@ -86,22 +71,21 @@ def test_log_subproc_and_echo_output(capfd, tmpdir):
     echo = which('echo')
 
     with tmpdir.as_cwd():
+        # ensure that a subprocess echoing output is also logged
         with log_output('foo.txt') as logger:
             with logger.force_echo():
                 echo('echo')
             print('logged')
 
-        # Coverage is cluttering stderr during tests
-        assert capfd.readouterr()[0] == 'echo\n'
-
         with open('foo.txt') as f:
-            assert f.read() == 'logged\n'
+            assert f.read() == 'echo\nlogged\n'
+
+        assert capfd.readouterr()[0] == 'echo\n'
 
 
 #
 # Tests below use a pseudoterminal to test llnl.util.tty.log
 #
-
 def mock_logger(attrs):
     """Mock logger (child) process for testing log.keyboard_input."""
     def handler(signum, frame):
