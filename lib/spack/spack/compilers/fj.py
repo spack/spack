@@ -61,7 +61,3 @@ class Fj(spack.compiler.Compiler):
     @property
     def pic_flag(self):
         return "-KPIC"
-
-    def setup_custom_environment(self, pkg, env):
-        env.append_flags('fcc_ENV', '-Nclang')
-        env.append_flags('FCC_ENV', '-Nclang')
