@@ -240,6 +240,7 @@ class Openmpi(AutotoolsPackage):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
     variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
+    variant('runpath', default=True, description='Enable wrapper runpath')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -548,6 +549,14 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--enable-cxx-exceptions')
         else:
             config_args.append('--disable-cxx-exceptions')
+
+        if '+runpath' in spec:
+            config_args.append('--enable-wrapper-rpath')
+            config_args.append('--enable-wrapper-runpath')
+        else:
+            config_args.append('--disable-wrapper-rpath')
+            config_args.append('--disable-wrapper-runpath')
+
         return config_args
 
     @run_after('install')
