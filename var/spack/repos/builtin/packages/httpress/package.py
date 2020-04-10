@@ -13,14 +13,12 @@ class Httpress(MakefilePackage):
     hg       = "https://bitbucket.org/yarosla/httpress"
 
     version('develop')
-    version('1.1.0', revision='1.1.0', preferred=True)
+    version('1.1.0', revision='1.1.0')
 
     depends_on('mercurial', type='build')
     depends_on('libev')
     depends_on('gnutls')
 
     def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        mkdirp(prefix.obj)
         install_tree('./bin/Release', prefix.bin)
         install_tree('./obj/Release', prefix.obj)
