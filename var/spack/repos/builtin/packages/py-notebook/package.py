@@ -52,7 +52,9 @@ class PyNotebook(PythonPackage):
     depends_on('py-tornado@5.0:',      type=('build', 'run'), when='@6.0.0:')
 
     depends_on('py-jupyter-core',        type=('build', 'run'))
-    depends_on('py-jupyter-core@4.4.0:', type=('build', 'run'), when='@5.7.0:')
+    depends_on('py-jupyter-core@4.4.0:', type=('build', 'run'), when='@5.7.0:6.0.1')
+    depends_on('py-jupyter-core@4.6.0:', type=('build', 'run'), when='@6.0.2')
+    depends_on('py-jupyter-core@4.6.1:', type=('build', 'run'), when='@6.0.3:')
 
     depends_on('py-jupyter-client',        type=('build', 'run'))
     depends_on('py-jupyter-client@5.2.0:', type=('build', 'run'), when='@5.7.0:5.999')
