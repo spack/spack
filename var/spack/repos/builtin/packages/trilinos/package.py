@@ -34,19 +34,19 @@ class Trilinos(CMakePackage):
 
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
-    version('master', branch='master')
+    version('master',  branch='master')
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
     version('12.12.1', sha256='5474c5329c6309224a7e1726cf6f0d855025b2042959e4e2be2748bd6bb49e18')
     version('12.10.1', sha256='ab81d917196ffbc21c4927d42df079dd94c83c1a08bda43fef2dd34d0c1a5512')
-    version('12.8.1', sha256='d20fe60e31e3ba1ef36edecd88226240a518f50a4d6edcc195b88ee9dda5b4a1')
-    version('12.6.4', sha256='1c7104ba60ee8cc4ec0458a1c4f6a26130616bae7580a7b15f2771a955818b73')
-    version('12.6.3', sha256='4d28298bb4074eef522db6cd1626f1a934e3d80f292caf669b8846c0a458fe81')
-    version('12.6.2', sha256='8be7e3e1166cc05aea7f856cc8033182e8114aeb8f87184cb38873bfb2061779')
-    version('12.6.1', sha256='4b38ede471bed0036dcb81a116fba8194f7bf1a9330da4e29c3eb507d2db18db')
-    version('12.4.2', sha256='fd2c12e87a7cedc058bcb8357107ffa2474997aa7b17b8e37225a1f7c32e6f0e')
-    version('12.2.1', sha256='088f303e0dc00fb4072b895c6ecb4e2a3ad9a2687b9c62153de05832cf242098')
-    version('12.0.1', sha256='eee7c19ca108538fa1c77a6651b084e06f59d7c3307dae77144136639ab55980')
+    version('12.8.1',  sha256='d20fe60e31e3ba1ef36edecd88226240a518f50a4d6edcc195b88ee9dda5b4a1')
+    version('12.6.4',  sha256='1c7104ba60ee8cc4ec0458a1c4f6a26130616bae7580a7b15f2771a955818b73')
+    version('12.6.3',  sha256='4d28298bb4074eef522db6cd1626f1a934e3d80f292caf669b8846c0a458fe81')
+    version('12.6.2',  sha256='8be7e3e1166cc05aea7f856cc8033182e8114aeb8f87184cb38873bfb2061779')
+    version('12.6.1',  sha256='4b38ede471bed0036dcb81a116fba8194f7bf1a9330da4e29c3eb507d2db18db')
+    version('12.4.2',  sha256='fd2c12e87a7cedc058bcb8357107ffa2474997aa7b17b8e37225a1f7c32e6f0e')
+    version('12.2.1',  sha256='088f303e0dc00fb4072b895c6ecb4e2a3ad9a2687b9c62153de05832cf242098')
+    version('12.0.1',  sha256='eee7c19ca108538fa1c77a6651b084e06f59d7c3307dae77144136639ab55980')
     version('11.14.3', sha256='e37fa5f69103576c89300e14d43ba77ad75998a54731008b25890d39892e6e60')
     version('11.14.2', sha256='f22b2b0df7b88e28b992e19044ba72b845292b93cbbb3a948488199647381119')
     version('11.14.1', sha256='f10fc0a496bf49427eb6871c80816d6e26822a39177d850cc62cf1484e4eec07')
@@ -60,13 +60,15 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
 
     # Build options
-    variant('complex', default=False,
+    variant('c',            default=False,
+            description='Enable Trilinos C library')
+    variant('complex',      default=False,
             description='Enable complex numbers in Trilinos')
     variant('explicit_template_instantiation',  default=True,
             description='Enable explicit template instantiation (ETI)')
-    variant('float', default=False,
+    variant('float',        default=False,
             description='Enable single precision (float) numbers in Trilinos')
-    variant('gotype', default='long',
+    variant('gotype',       default='long',
             values=('int', 'long', 'long_long'),
             multi=False,
             description='global ordinal type for Tpetra')
@@ -82,12 +84,14 @@ class Trilinos(CMakePackage):
             description='Compile using the default xSDK configuration')
 
     # TPLs (alphabet order)
+    variant('adios2',       default=False,
+            description='Enable ADIOS2')
     variant('boost',        default=True,
             description='Compile with Boost')
     variant('cgns',         default=False,
             description='Enable CGNS')
-    variant('adios2',       default=False,
-            description='Enable ADIOS2')
+    variant('cppunit',      default=False,
+            description='Enable CppUnit')
     variant('glm',          default=True,
             description='Compile with GLM')
     variant('gtest',        default=True,
@@ -106,12 +110,16 @@ class Trilinos(CMakePackage):
             description='Compile with netcdf')
     variant('pnetcdf',      default=False,
             description='Compile with parallel-netcdf')
+    variant('pthreads',     default=False,
+            description='Compile with PThreads')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
     variant('superlu-dist', default=False,
             description='Compile with SuperluDist solvers')
     variant('superlu',      default=False,
             description='Compile with SuperLU solvers')
+    variant('qt',           default=False,
+            description='Compile with QT')
     variant('x11',          default=False,
             description='Compile with X11')
     variant('zlib',         default=False,
@@ -145,6 +153,12 @@ class Trilinos(CMakePackage):
             description='Compile with EpetraExt')
     variant('exodus',       default=True,
             description='Compile with Exodus from SEACAS')
+    variant('examples',     default=True,
+            description='Compile with provided examples')
+    variant('expat',        default=False,
+            description='Compile with expat enabled for Teuchos')
+    variant('gmp',          default=False,
+            description='Compile with gmp enabled for Teuchos')
     variant('ifpack',       default=True,
             description='Compile with Ifpack')
     variant('ifpack2',      default=True,
@@ -157,6 +171,8 @@ class Trilinos(CMakePackage):
             description='Compile with Isorropia')
     variant('kokkos',       default=True,
             description='Compile with Kokkos')
+    variant('libxml2',      default=False,
+            description='Compile with libxml2 enable for Teuchos')
     variant('ml',           default=True,
             description='Compile with ML')
     variant('minitensor',   default=False,
@@ -187,6 +203,8 @@ class Trilinos(CMakePackage):
             description='Compile with Tempus')
     variant('teuchos',      default=True,
             description='Compile with Teuchos')
+    variant('tests',        default=False,
+            description='Compile with tests')
     variant('tpetra',       default=True,
             description='Compile with Tpetra')
     variant('zoltan',       default=True,
@@ -248,6 +266,8 @@ class Trilinos(CMakePackage):
     conflicts('+belos', when='~teuchos')
     conflicts('+epetraext', when='~epetra')
     conflicts('+epetraext', when='~teuchos')
+    conflicts('+expat', when='~teuchos')
+    conflicts('+gmp', when='~teuchos')
     conflicts('+ifpack2', when='~belos')
     conflicts('+ifpack2', when='~teuchos')
     conflicts('+ifpack2', when='~tpetra')
@@ -263,6 +283,7 @@ class Trilinos(CMakePackage):
     conflicts('+isorropia', when='~epetraext')
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
+    conflicts('+libxml2', when='~teuchos')
     conflicts('+muelu', when='~teuchos')
     conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
@@ -335,7 +356,8 @@ class Trilinos(CMakePackage):
     depends_on('glm', when='+glm')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
-    depends_on('zlib', when="+zlib")
+    depends_on('qt', when='+qt')
+    depends_on('zlib', when='+zlib')
 
     # MPI related dependencies
     depends_on('mpi')
@@ -345,6 +367,7 @@ class Trilinos(CMakePackage):
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
+    depends_on('libxml2', when='+libxml2')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
@@ -394,8 +417,10 @@ class Trilinos(CMakePackage):
         mpi_bin = spec['mpi'].prefix.bin
         options.extend([
             '-DTrilinos_VERBOSE_CONFIGURE:BOOL=OFF',
-            '-DTrilinos_ENABLE_TESTS:BOOL=OFF',
-            '-DTrilinos_ENABLE_EXAMPLES:BOOL=OFF',
+            '-DTrilinos_ENABLE_TESTS:BOOL=%s' % (
+                'ON' if '+tests' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_EXAMPLES:BOOL=%s' % (
+                'ON' if '+examples' in spec else 'OFF'),
             '-DTrilinos_ENABLE_CXX11:BOOL=ON',
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
@@ -435,8 +460,6 @@ class Trilinos(CMakePackage):
                 'ON' if '+aztec' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Belos:BOOL=%s' % (
                 'ON' if '+belos' in spec else 'OFF'),
-            '-DTrilinos_ENABLE_TrilinosCouplings:BOOL=%s' % (
-                'ON' if '+couplings' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Didasko:BOOL=%s' % (
                 'ON' if '+didasko' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Epetra:BOOL=%s' % (
@@ -489,11 +512,31 @@ class Trilinos(CMakePackage):
                 'ON' if '+teuchos' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Tpetra:BOOL=%s' % (
                 'ON' if '+tpetra' in spec else 'OFF'),
+            '-DTrilinos_ENABLE_TrilinosCouplings:BOOL=%s' % (
+                'ON' if '+couplings' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Zoltan:BOOL=%s' % (
                 'ON' if '+zoltan' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
                 'ON' if '+zoltan2' in spec else 'OFF'),
         ])
+
+        if '+gmp' in spec:
+            options.extend([
+                '-DTEUCHOS_ENABLE_gmp:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTEUCHOS_ENABLE_gmp:BOOL=OFF'
+            ])
+
+        if '+libxml2' in spec:
+            options.extend([
+                '-DTEUCHOS_ENABLE_libxml2:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTEUCHOS_ENABLE_libxml2:BOOL=OFF'
+            ])
 
         if '+xsdkflags' in spec:
             options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
@@ -562,6 +605,15 @@ class Trilinos(CMakePackage):
                 'ON' if '+gtest' in spec else 'OFF'),
         ])
 
+        if '+cppunit' in spec:
+            options.extend([
+                '-DTPL_ENABLE_CppUnit:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_CppUnit:BOOL=OFF'
+            ])
+
         if '+netcdf' in spec:
             options.extend([
                 '-DTPL_ENABLE_Netcdf:BOOL=ON',
@@ -569,6 +621,15 @@ class Trilinos(CMakePackage):
             ])
         else:
             options.extend(['-DTPL_ENABLE_Netcdf:BOOL=OFF'])
+
+        if '+pthreads' in spec:
+            options.extend([
+                '-DTPL_ENABLE_Pthread:BOOL:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_Pthread:BOOL:BOOL=OFF'
+            ])
 
         if '+hypre' in spec:
             options.extend([
@@ -706,6 +767,15 @@ class Trilinos(CMakePackage):
                 '-DTPL_ENABLE_Pnetcdf:BOOL=OFF'
             ])
 
+        if '+qt' in spec:
+            options.extend([
+                '-DTPL_ENABLE_QT:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTPL_ENABLE_QT:BOOL=OFF'
+            ])
+
         if '+zlib' in spec:
             options.extend([
                 '-DTPL_ENABLE_Zlib:BOOL=ON',
@@ -729,6 +799,15 @@ class Trilinos(CMakePackage):
 
         options.append('-DTPL_ENABLE_ADIOS2:BOOL=' + str('+adios2' in spec))
         # ################# Miscellaneous Stuff ######################
+
+        if '+c' in spec:
+            options.extend([
+                '-DTrilinos_ENABLE_CTrilinos:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTrilinos_ENABLE_CTrilinos:BOOL=OFF'
+            ])
 
         # OpenMP
         if '+openmp' in spec:
