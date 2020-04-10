@@ -26,6 +26,7 @@ class PyHypothesis(PythonPackage):
     version('4.7.2',  sha256='87944c6379f77634474b88abbf1e5ed5fe966637cc926131eda5e2af5b54a608')
     version('3.7.0',  sha256='0fea49d08f2d5884f014151a5af6fb48d862f6ad567ffc4a2e84abf2f186c423')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-attrs@19.2.0:', when='@4.38.2:', type=('build', 'run'))
     depends_on('py-attrs@16.0.0:', when='@3.44.22:', type=('build', 'run'))
