@@ -215,6 +215,9 @@ class NetcdfC(AutotoolsPackage):
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
                 libs.append('-lsz')
+            if '+libtirpc' in hdf4:
+                # This should also come from hdf4.libs
+                libs.append('-ltirpc')
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.
