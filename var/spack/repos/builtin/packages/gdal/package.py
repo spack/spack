@@ -172,6 +172,7 @@ class Gdal(AutotoolsPackage):
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
         spec = self.spec
+        libs = []
 
         # Required dependencies
         args = [
@@ -294,6 +295,9 @@ class Gdal(AutotoolsPackage):
         # https://trac.osgeo.org/gdal/wiki/HDF
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
+            hdf4 = self.spec['hdf']
+            if '+libtirpc' in hdf4:
+                libs.append('-ltirpc')
         else:
             args.append('--with-hdf4=no')
 
@@ -479,6 +483,9 @@ class Gdal(AutotoolsPackage):
                 '--with-gnm=no',
                 '--with-pdfium=no',
             ])
+
+        if libs:
+            args.append('LIBS=' + ' '.join(libs))
 
         return args
 
