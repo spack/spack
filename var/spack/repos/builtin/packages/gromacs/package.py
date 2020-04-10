@@ -91,6 +91,9 @@ class Gromacs(CMakePackage):
 
         options = []
 
+        if self.spec.satisfies('@2020:'):
+            options.append('-DGMX_INSTALL_LEGACY_API=ON')
+
         if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
 
