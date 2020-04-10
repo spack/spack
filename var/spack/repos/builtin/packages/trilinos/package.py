@@ -352,6 +352,7 @@ class Trilinos(CMakePackage):
     depends_on('lapack')
     depends_on('boost', when='+boost')
     depends_on('boost', when='+dtk')
+    depends_on('expat', when='+expat')
     depends_on('matio', when='+matio')
     depends_on('glm', when='+glm')
     depends_on('metis@5:', when='+metis')
@@ -519,6 +520,15 @@ class Trilinos(CMakePackage):
             '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
                 'ON' if '+zoltan2' in spec else 'OFF'),
         ])
+
+        if '+expat' in spec:
+            options.extend([
+                '-DTEUCHOS_ENABLE_expat:BOOL=ON'
+            ])
+        else:
+            options.extend([
+                '-DTEUCHOS_ENABLE_expat:BOOL=OFF'
+            ])
 
         if '+gmp' in spec:
             options.extend([
