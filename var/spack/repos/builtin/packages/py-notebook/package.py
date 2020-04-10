@@ -55,7 +55,9 @@ class PyNotebook(PythonPackage):
     depends_on('py-jupyter-core@4.4.0:', type=('build', 'run'), when='@5.7.0:')
 
     depends_on('py-jupyter-client',        type=('build', 'run'))
-    depends_on('py-jupyter-client@5.2.0:', type=('build', 'run'), when='@5.7.0:')
+    depends_on('py-jupyter-client@5.2.0:', type=('build', 'run'), when='@5.7.0:5.999')
+    depends_on('py-jupyter-client@5.3.1:', type=('build', 'run'), when='@6.0.0:6.0.1')
+    depends_on('py-jupyter-client@5.3.4:', type=('build', 'run'), when='@6.0.2:')
 
     depends_on('py-traitlets',        type=('build', 'run'))
     depends_on('py-traitlets@4.2.1:', type=('build', 'run'), when='@5:')
