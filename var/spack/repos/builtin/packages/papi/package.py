@@ -37,10 +37,14 @@ class Papi(AutotoolsPackage):
     variant('rapl', default=False, description='Enable RAPL support')
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
+    variant('static', default=True, description='Enable building static libraries')
+    variant('shared', default=True, description='Enable building shared libraries')
+    variant('shlib_tools', default=False, description='Enable building dynamic tools')
 
     depends_on('lm-sensors', when='+lmsensors')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
+    conflicts('~static', when='~shared')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
