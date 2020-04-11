@@ -166,22 +166,21 @@ class PseudoShell(object):
 
     The two functions should have signatures like this::
 
-        def master_function(proc, ctl, attrs)
-        def child_function(attrs)
+        def master_function(proc, ctl, **kwargs)
+        def child_function(**kwargs)
 
     ``master_function`` is spawned in its own process and passed three
     arguments:
 
     proc
-      the ``multiprocessing.Process`` object representing the child
+        the ``multiprocessing.Process`` object representing the child
     ctl
-      a ``ProcessController`` object tied to the child
-    attrs
-      a ``dict`` object from ``multiprocessing.Manager``
-      that can be used to share state among the caller, master, and
-      child processes
+        a ``ProcessController`` object tied to the child
+    kwargs
+        keyword arguments passed from ``PseudoShell.start()``.
 
-    ``child_function`` is only passed the ``attrs`` dictionary.
+    ``child_function`` is only passed ``kwargs`` delegated from
+    ``PseudoShell.start()``.
 
     The ``ctl.master_fd`` will have its ``master_fd`` connected to
     ``sys.stdin`` in the child process. Both processes will share the
@@ -211,7 +210,6 @@ class PseudoShell(object):
         | - provides master_function, child_function              |  session 0
         |_________________________________________________________|
 
-
     """
     def __init__(self, master_function, child_function):
         self.proc = None
@@ -222,21 +220,23 @@ class PseudoShell(object):
         self.controller_timeout = 1
         self.sleep_time = 0
 
-        # attrs can be used to pass parameters to master and child
-        self.manager = multiprocessing.Manager()
-        self.attrs = self.manager.dict()
-
-    def start(self):
+    def start(self, **kwargs):
         """Start the master and child processes.
+
+        Arguments:
+            kwargs (dict): arbitrary keyword arguments that will be
+                passed to master and child functions
 
         The master process will create the child, then call
         ``master_function``.  The child process will call
         ``child_function``.
+
         """
         self.proc = multiprocessing.Process(
             target=PseudoShell._set_up_and_run_master_function,
             args=(self.master_function, self.child_function,
-                  self.controller_timeout, self.sleep_time, self.attrs)
+                  self.controller_timeout, self.sleep_time),
+            kwargs=kwargs,
         )
         self.proc.start()
 
@@ -247,7 +247,7 @@ class PseudoShell(object):
 
     @staticmethod
     def _set_up_and_run_child_function(
-            tty_name, stdout_fd, stderr_fd, ready, child_function, attrs):
+            tty_name, stdout_fd, stderr_fd, ready, child_function, **kwargs):
         """Child process wrapper for PseudoShell.
 
         Handles the mechanics of setting up a PTY, then calls
@@ -264,24 +264,24 @@ class PseudoShell(object):
         os.dup2(stderr_fd, sys.stderr.fileno())
         os.close(stdin_fd)
 
-        if attrs.get("debug"):
+        if kwargs.get("debug"):
             sys.stderr.write(
                 "child: stdin.isatty(): %s\n" % sys.stdin.isatty())
 
         # tell the parent that we're really running
-        if attrs.get("debug"):
+        if kwargs.get("debug"):
             sys.stderr.write("child: ready!\n")
         ready.value = True
 
         try:
-            child_function(attrs)
+            child_function(**kwargs)
         except BaseException:
             traceback.print_exc()
 
     @staticmethod
     def _set_up_and_run_master_function(
             master_function, child_function, controller_timeout, sleep_time,
-            attrs):
+            **kwargs):
         """Set up a pty, spawn a child process, and execute master_function.
 
         Handles the mechanics of setting up a PTY, then calls
@@ -301,7 +301,8 @@ class PseudoShell(object):
         child_process = multiprocessing.Process(
             target=PseudoShell._set_up_and_run_child_function,
             args=(pty_name, sys.stdout.fileno(), sys.stderr.fileno(),
-                  ready, child_function, attrs)
+                  ready, child_function),
+            kwargs=kwargs,
         )
         child_process.start()
 
@@ -310,7 +311,7 @@ class PseudoShell(object):
             time.sleep(1e-5)
             pass
 
-        if attrs.get("debug"):
+        if kwargs.get("debug"):
             sys.stderr.write("pid:        %d\n" % os.getpid())
             sys.stderr.write("pgid:       %d\n" % os.getpgrp())
             sys.stderr.write("sid:        %d\n" % os.getsid(0))
@@ -329,10 +330,10 @@ class PseudoShell(object):
         # call the master function once the child is ready
         try:
             controller = ProcessController(
-                child_process.pid, master_fd, debug=attrs.get("debug"))
+                child_process.pid, master_fd, debug=kwargs.get("debug"))
             controller.timeout = controller_timeout
             controller.sleep_time = sleep_time
-            error = master_function(child_process, controller, attrs)
+            error = master_function(child_process, controller, **kwargs)
         except BaseException:
             error = 1
             traceback.print_exc()

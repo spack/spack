@@ -5,9 +5,10 @@
 
 from __future__ import print_function
 import contextlib
+import multiprocessing
 import os
-import re
 import signal
+import sys
 import time
 
 try:
@@ -18,10 +19,16 @@ except ImportError:
 import pytest
 
 import llnl.util.tty.log
+from llnl.util.lang import uniq
 from llnl.util.tty.log import log_output
 from llnl.util.tty.pty import PseudoShell
 
 from spack.util.executable import which
+
+
+@contextlib.contextmanager
+def nullcontext():
+    yield
 
 
 def test_log_python_output_with_echo(capfd, tmpdir):
@@ -78,7 +85,7 @@ def test_log_subproc_and_echo_output(capfd, tmpdir):
             print('logged')
 
         with open('foo.txt') as f:
-            assert f.read() == 'echo\nlogged\n'
+            assert f.read() == 'logged\n'
 
         assert capfd.readouterr()[0] == 'echo\n'
 
@@ -86,28 +93,21 @@ def test_log_subproc_and_echo_output(capfd, tmpdir):
 #
 # Tests below use a pseudoterminal to test llnl.util.tty.log
 #
-def mock_logger(attrs):
+def simple_logger(**kwargs):
     """Mock logger (child) process for testing log.keyboard_input."""
     def handler(signum, frame):
         running[0] = False
     signal.signal(signal.SIGUSR1, handler)
 
+    log_path = kwargs["log_path"]
     running = [True]
-    i = 1
-    with log_output("log.txt") as logger:
-        with logger.force_echo():
-            print(0)
-
+    with log_output(log_path):
         while running[0]:
-            print(i)
-            i += 1
+            print("line")
             time.sleep(1e-3)
 
-    # report final count of printed numbers
-    attrs["count"] = i
 
-
-def mock_shell_fg(proc, ctl, attrs):
+def mock_shell_fg(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
@@ -116,7 +116,7 @@ def mock_shell_fg(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_fg_no_termios(proc, ctl, attrs):
+def mock_shell_fg_no_termios(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
@@ -125,7 +125,7 @@ def mock_shell_fg_no_termios(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_bg(proc, ctl, attrs):
+def mock_shell_bg(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
@@ -134,7 +134,7 @@ def mock_shell_bg(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_tstp_cont(proc, ctl, attrs):
+def mock_shell_tstp_cont(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
@@ -145,7 +145,7 @@ def mock_shell_tstp_cont(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_tstp_tstp_cont(proc, ctl, attrs):
+def mock_shell_tstp_tstp_cont(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
@@ -159,7 +159,7 @@ def mock_shell_tstp_tstp_cont(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_tstp_tstp_cont_cont(proc, ctl, attrs):
+def mock_shell_tstp_tstp_cont_cont(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.tstp()
     ctl.wait_stopped()
@@ -176,7 +176,7 @@ def mock_shell_tstp_tstp_cont_cont(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_bg_fg(proc, ctl, attrs):
+def mock_shell_bg_fg(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
@@ -189,7 +189,7 @@ def mock_shell_bg_fg(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_bg_fg_no_termios(proc, ctl, attrs):
+def mock_shell_bg_fg_no_termios(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.bg()
     ctl.status()
@@ -202,7 +202,7 @@ def mock_shell_bg_fg_no_termios(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_fg_bg(proc, ctl, attrs):
+def mock_shell_fg_bg(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
@@ -215,7 +215,7 @@ def mock_shell_fg_bg(proc, ctl, attrs):
     os.kill(proc.pid, signal.SIGUSR1)
 
 
-def mock_shell_fg_bg_no_termios(proc, ctl, attrs):
+def mock_shell_fg_bg_no_termios(proc, ctl, **kwargs):
     """Child function for test_foreground_background_* below."""
     ctl.fg()
     ctl.status()
@@ -224,34 +224,6 @@ def mock_shell_fg_bg_no_termios(proc, ctl, attrs):
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
-
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_v_v(proc, ctl, attrs):
-    """Child function for test_foreground_background_* below."""
-    ctl.fg()
-    ctl.wait_enabled()
-
-    time.sleep(.1)
-    ctl.write(b'v')
-    time.sleep(.1)
-    ctl.write(b'v')
-    time.sleep(.1)
-
-    os.kill(proc.pid, signal.SIGUSR1)
-
-
-def mock_shell_v_v_no_termios(proc, ctl, attrs):
-    """Child function for test_foreground_background_* below."""
-    ctl.fg()
-    ctl.wait_disabled_fg()
-
-    time.sleep(.1)  # allow some time to NOT print
-    ctl.write(b'v\n')
-    time.sleep(.1)  # allow some time to print
-    ctl.write(b'v\n')
-    time.sleep(.1)
 
     os.kill(proc.pid, signal.SIGUSR1)
 
@@ -264,11 +236,6 @@ def no_termios():
         yield
     finally:
         llnl.util.tty.log.termios = saved
-
-
-@contextlib.contextmanager
-def nullcontext():
-    yield
 
 
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
@@ -291,7 +258,7 @@ def nullcontext():
     (mock_shell_tstp_tstp_cont, no_termios),
     (mock_shell_tstp_tstp_cont_cont, no_termios),
 ])
-def test_foreground_background(test_fn, termios_on_or_off):
+def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     """Functional tests for foregrounding and backgrounding a logged process.
 
     This ensures that things like SIGTTOU are not raised and that
@@ -299,16 +266,104 @@ def test_foreground_background(test_fn, termios_on_or_off):
     process stop and start.
 
     """
-    shell = PseudoShell(test_fn, mock_logger)
-    shell.attrs["debug"] = True
+    shell = PseudoShell(test_fn, simple_logger)
+    log_path = str(tmpdir.join("log.txt"))
 
     # run the shell test
     with termios_on_or_off():
-        shell.start()
+        shell.start(log_path=log_path, debug=True)
     exitcode = shell.join()
 
     # processes completed successfully
     assert exitcode == 0
+
+    # assert log was created
+    assert os.path.exists(log_path)
+
+
+def synchronized_logger(**kwargs):
+    """Mock logger (child) process for testing log.keyboard_input.
+
+    This logger synchronizes with the parent process to test that 'v' can
+    toggle output.  It is used in ``test_foreground_background_output`` below.
+
+    """
+    def handler(signum, frame):
+        running[0] = False
+    signal.signal(signal.SIGUSR1, handler)
+
+    log_path = kwargs["log_path"]
+    write_lock = kwargs["write_lock"]
+    v = kwargs["v"]
+
+    running = [True]
+    sys.stderr.write(os.getcwd() + "\n")
+    with log_output(log_path) as logger:
+        with logger.force_echo():
+            print("forced output")
+
+        while running[0]:
+            with write_lock:
+                if v.acquire(False):  # non-blocking acquire
+                    print("off")
+                    v.release()
+                else:
+                    print("on")       # lock held; v is toggled on
+            time.sleep(1e-2)
+
+
+def mock_shell_v_v(proc, ctl, **kwargs):
+    """Child function for test_foreground_background_* below."""
+    write_lock = kwargs["write_lock"]
+    v = kwargs["v"]
+
+    ctl.fg()
+    ctl.wait_enabled()
+    time.sleep(.1)
+
+    write_lock.acquire()  # suspend writing
+    v.acquire()           # enable v lock
+    ctl.write(b'v')       # toggle v on stdin
+    time.sleep(.1)
+    write_lock.release()  # resume writing
+
+    time.sleep(.1)
+
+    write_lock.acquire()  # suspend writing
+    ctl.write(b'v')       # toggle v on stdin
+    time.sleep(.1)
+    v.release()           # disable v lock
+    write_lock.release()  # resume writing
+    time.sleep(.1)
+
+    os.kill(proc.pid, signal.SIGUSR1)
+
+
+def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
+    """Child function for test_foreground_background_* below."""
+    write_lock = kwargs["write_lock"]
+    v = kwargs["v"]
+
+    ctl.fg()
+    ctl.wait_disabled_fg()
+    time.sleep(.1)
+
+    write_lock.acquire()  # suspend writing
+    v.acquire()           # enable v lock
+    ctl.write(b'v\n')     # toggle v on stdin
+    time.sleep(.1)
+    write_lock.release()  # resume writing
+
+    time.sleep(.1)
+
+    write_lock.acquire()  # suspend writing
+    ctl.write(b'v\n')     # toggle v on stdin
+    time.sleep(.1)
+    v.release()           # disable v lock
+    write_lock.release()  # resume writing
+    time.sleep(.1)
+
+    os.kill(proc.pid, signal.SIGUSR1)
 
 
 @pytest.mark.skipif(not which("ps"), reason="requires ps utility")
@@ -317,31 +372,51 @@ def test_foreground_background(test_fn, termios_on_or_off):
     (mock_shell_v_v, nullcontext),
     (mock_shell_v_v_no_termios, no_termios),
 ])
-def test_foreground_background_output(test_fn, capfd, termios_on_or_off):
+def test_foreground_background_output(
+        test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
-    shell = PseudoShell(test_fn, mock_logger)
-    shell.attrs["debug"] = True
+    shell = PseudoShell(test_fn, synchronized_logger)
+    log_path = str(tmpdir.join("log.txt"))
+
+    # Locks for synchronizing with child
+    write_lock = multiprocessing.Lock()  # must be held by child to write
+    v = multiprocessing.Lock()  # held while master is in v mode
 
     with termios_on_or_off():
-        shell.start()
-    exitcode = shell.join()
+        shell.start(
+            write_lock=write_lock,
+            v=v,
+            debug=True,
+            log_path=log_path
+        )
 
+    exitcode = shell.join()
     out, err = capfd.readouterr()
+    print(err)  # will be shown if something goes wrong
+    print(out)
 
     # processes completed successfully
     assert exitcode == 0
 
-    stripped = out.strip()
-    split = re.split(r'\s+', stripped) if stripped else []
-    output_numbers = set([int(n) for n in split])
-    logged_numbers = set(range(shell.attrs["count"]))
+    # split output into lines
+    output = out.strip().split("\n")
 
-    # 0 is always output if logger.force_echo() works
-    assert 0 in output_numbers
+    # also get lines of log file
+    assert os.path.exists(log_path)
+    with open(log_path) as log:
+        log = log.read().strip().split("\n")
 
-    # no unexpected numbers
-    assert output_numbers <= logged_numbers
+    # output should contain only "on" lines, along with forced output,
+    # but there is still an unavoidable race in this test (between locks
+    # and master_fd).  We allow at most 2 "off"'s in the output to
+    # account for this race.
+    assert (
+        ['forced output', 'on'] == uniq(output) or
+        output.count("off") <= 2  # if master_fd is a bit slow
+    )
 
-    # only numbers between v presses are output (this tests whether some
-    # of the numbers were hidden, i.e., when verbose was off.
-    assert len(output_numbers) < len(logged_numbers)
+    # log should be off for a while, then on, then off
+    assert (
+        ['forced output', 'off', 'on', 'off'] == uniq(log) and
+        log.count("off") > 2  # ensure some "off" lines were omitted
+    )
