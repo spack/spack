@@ -19,11 +19,12 @@ class Openmm(CMakePackage, CudaPackage):
 
     install_targets = ['install', 'PythonInstall']
 
-    depends_on('python')
+    depends_on('python@2.7:', type=('build', 'run'))
+    depends_on('cmake@3.1:', type='build')
     depends_on('doxygen')
     depends_on('swig')
     depends_on('fftw')
-    depends_on('py-cython', type=('build', 'run'))
+    depends_on('py-cython', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     extends('python')
 
