@@ -43,6 +43,6 @@ class Openmm(CMakePackage, CudaPackage):
         spec = self.spec
         if '+cuda' in spec:
             env.set('OPENMM_CUDA_COMPILER',
-                    join_path(self.spec['cuda'].prefix.bin, 'nvcc'))
+                    self.spec['cuda'].prefix.bin.nvcc)
             env.prepend_path('PATH',
                              os.path.dirname(self.compiler.cc))
