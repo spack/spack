@@ -71,6 +71,7 @@ class Tau(Package):
     variant('sqlite', default=False, description='Activates SQLite3 output support')
     variant('slog2', default=False, description='Convert TAU trace files to SLOG2')
     variant('cputime', default=False, description='Enable user+system time from getrusage()')
+    variant('profile', default=True, description='Enable profiles')
     variant('profileparam', default=False, description='Generate profiles with parameter mapped event data')
     variant('profilecallpath', default=False, description='Enables profile callpaths')
 
@@ -227,6 +228,9 @@ class Tau(Package):
             options.append('-mpi')
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
+
+        if '+profile' in spec:
+            options.append('-PROFILE')
 
         if '+profileparam' in spec:
             options.append('-PROFILEPARAM')
