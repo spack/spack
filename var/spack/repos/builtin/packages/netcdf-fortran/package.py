@@ -27,6 +27,14 @@ class NetcdfFortran(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('pic', default=True,
+            description='Produce position-independent code (for shared libs)')
+    variant('dap', default=False, description='Enable DAP support')
+    variant('jna', default=False, description='Enable JNA support')
+    variant('doxygen', default=True, description='Enable doxygen docs')
+    variant('ncgen4', default=True, description='Enable generating netcdf-4 data')
+    variant('pnetcdf', default=True, description='Enable parallel-netcdf')
+    variant('netcdf4', default=False, description='Enable netcdf-4 data structure')
 
     # We need to build with MPI wrappers if parallel I/O features is enabled:
     # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
@@ -115,6 +123,41 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
+
+        if '+dap' in self.spec:
+            config_args.append('--enable-dap')
+        else:
+            config_args.append('--disable-dap')
+
+        if '+pic' in self.spec:
+            config_args.append('--with-pic')
+        else:
+            config_args.append('--without-pic')
+
+        if '+jna' in self.spec:
+            config_args.append('--enable-jna')
+        else:
+            config_args.append('--disable-jna')
+
+        if '+pnetcdf' in self.spec:
+            config_args.append('--enable-pnetcdf')
+        else:
+            config_args.append('--disable-pnetcdf')
+
+        if '+netcdf4' in self.spec:
+            config_args.append('--enable-netcdf-4')
+        else:
+            config_args.append('--disable-netcdf-4')
+
+        if '+ncgen4' in self.spec:
+            config_args.append('--enable-ncgen4')
+        else:
+            config_args.append('--disable-ncgen4')
+
+        if '+doxygen' in self.spec:
+            config_args.append('--enable-doxygen')
+        else:
+            config_args.append('--disable-doxygen')
 
         return config_args
 
