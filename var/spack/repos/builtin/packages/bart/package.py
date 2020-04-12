@@ -39,7 +39,7 @@ class Bart(MakefilePackage, CudaPackage):
         env['PREFIX'] = prefix
         env['FFTW_BASE'] = spec['fftw'].prefix
 
-        if spec['blas'].name in 'openblas':
+        if spec['blas'].name == 'openblas':
             env['OPENBLAS'] = '1'
 
         if spec['blas'].name in ['intel-mkl', 'intel-parallel-studio']:
