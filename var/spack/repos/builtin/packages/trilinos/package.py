@@ -357,6 +357,7 @@ class Trilinos(CMakePackage):
     depends_on('glm', when='+glm')
     depends_on('metis@5:', when='+metis')
     depends_on('suite-sparse', when='+suite-sparse')
+    depends_on('libxml2', when='+libxml2')
     depends_on('qt', when='+qt')
     depends_on('zlib', when='+zlib')
 
@@ -368,7 +369,6 @@ class Trilinos(CMakePackage):
     depends_on('parmetis', when='+metis')
     depends_on('cgns', when='+cgns')
     depends_on('adios2', when='+adios2')
-    depends_on('libxml2', when='+libxml2')
     # Trilinos' Tribits config system is limited which makes it very tricky to
     # link Amesos with static MUMPS, see
     # https://trilinos.org/docs/dev/packages/amesos2/doc/html/classAmesos2_1_1MUMPS.html
