@@ -18,6 +18,7 @@ class Rust(Package):
 
     homepage = "https://www.rust-lang.org"
     url = "https://static.rust-lang.org/dist/rustc-1.42.0-src.tar.gz"
+    git = "https://github.com/rust-lang/rust.git"
 
     maintainers = ["AndrewGaspar"]
 
@@ -55,11 +56,14 @@ class Rust(Package):
         description='Install Rust source files'
     )
 
-    depends_on('cmake', type='build')
-    depends_on('python@:2.8', type='build')
+    depends_on('python@2.7:', type='build')
+    depends_on('python@2.7:2.8', when='@:1.42.0', type='build')
+    depends_on('gmake@3.81:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
     depends_on('openssl')
     depends_on('libssh2')
     depends_on('libgit2')
+    depends_on('pkgconfig', type='build')
 
     # Version Notes:
     # Here's some information on why your favorite Rust version may be missing.
