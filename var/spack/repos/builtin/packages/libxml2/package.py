@@ -40,7 +40,7 @@ class Libxml2(AutotoolsPackage):
 
     @property
     def headers(self):
-        include_dir = self.spec.prefix.include
+        include_dir = self.spec.prefix.include.libxml2
         hl = find_all_headers(include_dir)
         hl.directories = include_dir
         return hl

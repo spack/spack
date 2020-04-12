@@ -48,8 +48,10 @@ class Ffmpeg(AutotoolsPackage):
     variant('libssh', default=False, description='SFTP protocol')
     variant('libvorbis', default=False, description='Vorbis en/decoding')
     variant('libwebp', default=False, description='WebP encoding via libwebp')
-    variant('libxml2', default=False,
-            description='XML parsing, needed for dash demuxing support')
+    # TODO: There is an issue with the spack headers property in the libxml2
+    # package recipe. Comment out the libxml2 variant until that is resolved.
+    # variant('libxml2', default=False,
+    #         description='XML parsing, needed for dash demuxing support')
     variant('libzmq', default=False, description='message passing via libzmq')
     variant('lzma', default=True, description='lzma support')
     variant('openssl', default=False, description='needed for https support')
@@ -70,7 +72,8 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('libssh', when='+libssh')
     depends_on('libvorbis', when='+libvorbis')
     depends_on('libwebp', when='+libwebp')
-    depends_on('libxml2', when='+libxml2')
+    # TODO: enable libxml2 when libxml2 header issue is resolved
+    # depends_on('libxml2', when='+libxml2')
     depends_on('libxv', when='+X')
     depends_on('libzmq', when='+libzmq')
     depends_on('openjpeg', when='+libopenjpeg')
@@ -125,7 +128,8 @@ class Ffmpeg(AutotoolsPackage):
             'libssh',
             'libvorbis',
             'libwebp',
-            'libxml2',
+            # TODO: enable when libxml2 header issue is resolved
+            # 'libxml2',
             'libzmq',
             'lzma',
             'openssl',
