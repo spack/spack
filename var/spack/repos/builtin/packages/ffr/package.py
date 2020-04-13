@@ -18,7 +18,7 @@ class Ffr(MakefilePackage):
     version('3.1.004', sha256='2b396f66bb6437366721fac987f9c6e8b830638c3e4cb5df6a08ff41633f8481', url="file://{0}/FFR_V3.1.004.zip".format(os.getcwd()))
     version('3.0_000', sha256='edc69fb1fd9dbdb3f531a8f2b9533a9b3c1a28768bb4029b84a6b35c95db0b48', url="file://{0}/open_FrontFlowRed_3.0_000.tar.gz".format(os.getcwd()))
 
-    # FronntFroow/red used Fortran format I/E without width (For Example 3I)
+    # FronntFlow/red used Fortran format I/E without width (For Example 3I)
     # But gfortran require width (For Example (3I6).
     patch('gfortran_format_31.patch', when='@3.1.004 %gcc')
     patch('gfortran_format_30.patch', when='@3.0_000 %gcc')
