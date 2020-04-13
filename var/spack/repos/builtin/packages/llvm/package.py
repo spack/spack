@@ -196,8 +196,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("thread-p9.patch", when="@develop+libcxx")
 
     @run_before('cmake')
-    if '+code_signing' in self.spec:
-        def codesign_check(self):
+    def codesign_check(self):
+        if '+code_signing' in self.spec:
             codesign = which('codesign')
             mkdir('tmp')
             llvm_check_file = join_path('tmp', 'llvm_check')
