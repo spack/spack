@@ -8,13 +8,14 @@ import os
 
 
 class Vmd(AutotoolsPackage):
-    """VMD provides user-editable materials which can be applied to molecular geometry.
-    These material properties control the details of how VMD shades the molecular geometry,
-    and how transparent or opaque the displayed molecular geometry is. With this feature,
-    one can easily create nice looking transparent surfaces which allow inner structural
-    details to be seen within a large molecular structure. The material controls can be
-    particularly helpful when rendering molecular scenes using external ray tracers, each of
-    which typically differ slightly.
+    """VMD provides user-editable materials which can be applied to molecular
+    geometry. These material properties control the details of how VMD shades
+    the molecular geometry, and how transparent or opaque the displayed
+    molecular geometry is. With this feature, one can easily create nice
+    looking transparent surfaces which allow inner structural details to be
+    seen within a large molecular structure. The material controls can be
+    particularly helpful when rendering molecular scenes using external ray
+    tracers, each of which typically differ slightly.
     """
 
     homepage = "https://www.ks.uiuc.edu/Research/vmd/"
