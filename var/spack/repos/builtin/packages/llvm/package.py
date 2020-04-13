@@ -208,7 +208,7 @@ class Llvm(CMakePackage, CudaPackage):
 
             except ProcessError:
                 # Newer LLVM versions have a simple script that sets up
-                # automatically
+                # automatically when run with sudo priviliges
                 setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
                 try:
                     setup()
