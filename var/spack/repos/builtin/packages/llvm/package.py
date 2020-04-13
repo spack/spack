@@ -122,7 +122,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant('code_signing', default=False,
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
-    
+ 
     extends("python", when="+python")
 
     # Build dependency
