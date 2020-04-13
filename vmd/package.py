@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Vmd(AutotoolsPackage):
+class Vmd(Package):
     """VMD provides user-editable materials which can be applied to molecular
     geometry. These material properties control the details of how VMD shades
     the molecular geometry, and how transparent or opaque the displayed
@@ -22,8 +22,7 @@ class Vmd(AutotoolsPackage):
     version('1.9.3', sha256='145b4d0cc10b56cadeb71e16c54ab8be713e268f11491714cd617422758ec643',
             url='file://{0}/vmd-1.9.3.bin.LINUXAMD64-CUDA8-OptiX4-OSPRay111p1.opengl.tar.gz'.format(os.getcwd()))
 
-    build_directory = 'src'
-    build_targets = ['install']
+    phases = ['configure', 'install']
 
     def configure(self, spec, prefix):
         os.environ['VMDINSTALLBINDIR'] = prefix.bin
@@ -31,6 +30,10 @@ class Vmd(AutotoolsPackage):
 
         configure = Executable('./configure')
         configure('LINUXAMD64')
+
+    def install(self, spec, prefix):
+        with working_dir(join_path(self.stage.source_path, 'src')):
+            make('install')
 
     def setup_run_environment(self, env):
         env.set('PLUGINDIR', self.spec.prefix.lib64.plugins)
