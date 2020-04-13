@@ -362,6 +362,12 @@ class Llvm(CMakePackage, CudaPackage):
             "-DLLVM_ENABLE_PROJECTS:STRING={0}".format(";".join(projects))
         )
 
+        if spec.satisfies('~code_signing'):
+            if not spec.satisfies('platform=darwin'):
+                return
+            if spec.satisfies('platform=darwin'):
+                cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
+
         return cmake_args
 
     @run_before("build")
