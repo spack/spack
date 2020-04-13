@@ -232,7 +232,7 @@ class Openmpi(AutotoolsPackage):
     # Additional support options
     variant('atomics', default=False, description='Enable built-in atomics')
     variant('java', default=False, description='Build Java support')
-    variant('staic', default=True, description='Build static libraries')
+    variant('static', default=True, description='Build static libraries')
     variant('sqlite3', default=False, description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
