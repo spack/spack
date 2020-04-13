@@ -357,16 +357,16 @@ class Llvm(CMakePackage, CudaPackage):
             ):
                 cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
-        # Semicolon seperated list of projects to enable
-        cmake_args.append(
-            "-DLLVM_ENABLE_PROJECTS:STRING={0}".format(";".join(projects))
-        )
-
         if spec.satisfies('~code_signing'):
             if not spec.satisfies('platform=darwin'):
                 return
             if spec.satisfies('platform=darwin'):
                 cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
+
+        # Semicolon seperated list of projects to enable
+        cmake_args.append(
+            "-DLLVM_ENABLE_PROJECTS:STRING={0}".format(";".join(projects))
+        )
 
         return cmake_args
 
