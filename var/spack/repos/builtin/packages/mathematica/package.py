@@ -35,7 +35,8 @@ class Mathematica(Package):
         # Backup .spack because Mathematica moves it but never restores it
         rand_suffix = random.randint(1, 65536)
         cp = which('cp')
-        cp('-a', '{0}/.spack'.format(prefix), '/tmp/.spack-{0}'.format(rand_suffix))
+        cp('-a', '{0}/.spack'.format(prefix),
+           '/tmp/.spack-{0}'.format(rand_suffix))
 
         sh = which('sh')
         sh(self.stage.archive_file, '--', '-auto', '-verbose',
