@@ -202,24 +202,24 @@ class Llvm(CMakePackage, CudaPackage):
             mkdir('tmp')
             llvm_check_file = join_path('tmp', 'llvm_check')
             copy('/usr/bin/false', llvm_check_file)
-        try:
-            codesign('-f', '-s', 'lldb_codesign', '--dryrun',
-                     llvm_check_file)
-            
-        except ProcessError:
-            # Newer LLVM versions have a simple script that sets up
-            # automatically
-            setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
             try:
-                setup()
-            except Exception:
-                raise RuntimeError(
-                                'spack was unable to either find or set up'
-                                'code-signing on your system. Please refer to'
-                                'https://lldb.llvm.org/resources/build.html#'
-                                'code-signing-on-macos for details on how to'
-                                'create this identity.'
-                                )
+                codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                         llvm_check_file)
+
+            except ProcessError:
+                # Newer LLVM versions have a simple script that sets up
+                # automatically
+                setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+                try:
+                    setup()
+                except Exception:
+                    raise RuntimeError(
+                        'spack was unable to either find or set up'
+                        'code-signing on your system. Please refer to'
+                        'https://lldb.llvm.org/resources/build.html#'
+                        'code-signing-on-macos for details on how to'
+                        'create this identity.'
+                    )
 
     def setup_build_environment(self, env):
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
