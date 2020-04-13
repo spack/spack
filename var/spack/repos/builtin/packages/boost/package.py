@@ -203,6 +203,12 @@ class Boost(Package):
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
+    # Fix for version comparison on newer Clang on darwin
+    # See: https://github.com/boostorg/build/issues/440
+    # See: https://github.com/macports/macports-ports/pull/6726
+    patch('darwin_clang_version.patch', level=0,
+          when='@1.56.0:1.72.0 platform=darwin')
+
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
