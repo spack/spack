@@ -358,8 +358,6 @@ class Llvm(CMakePackage, CudaPackage):
                 cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
         if spec.satisfies('~code_signing'):
-            if not spec.satisfies('platform=darwin'):
-                return
             if spec.satisfies('platform=darwin'):
                 cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
 
