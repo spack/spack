@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import random
 
 
 class Mathematica(Package):
@@ -33,10 +32,7 @@ class Mathematica(Package):
 
     def install(self, spec, prefix):
         # Backup .spack because Mathematica moves it but never restores it
-        rand_suffix = random.randint(1, 65536)
-        cp = which('cp')
-        cp('-a', '{0}/.spack'.format(prefix),
-           '/tmp/.spack-{0}'.format(rand_suffix))
+        copy('{0}/.spack'.format(prefix), self.stage)
 
         sh = which('sh')
         sh(self.stage.archive_file, '--', '-auto', '-verbose',
@@ -52,5 +48,4 @@ class Mathematica(Package):
             ln('-s', ws_path, ws_link_path)
 
         # Move back .spack where it belongs
-        mv = which('mv')
-        mv('/tmp/.spack-{0}'.format(rand_suffix), '{0}/.spack'.format(prefix))
+        copy('self.stage/.spack', '{0}/.spack'.format(prefix))
