@@ -8,9 +8,9 @@ class PySacremoses(PythonPackage):
     """LGPL MosesTokenizer in Python."""
 
     homepage = "https://github.com/alvations/sacremoses"
-    url      = "https://pypi.io/packages/source/s/sacremoses/sacremoses-0.0.38.tar.gz"
+    url      = "https://pypi.io/packages/source/s/sacremoses/sacremoses-0.0.39.tar.gz"
 
-    version('0.0.38', sha256='34dcfaacf9fa34a6353424431f0e4fcc60e8ebb27ffee320d57396690b712a3b')
+    version('0.0.39', sha256='53fad38b93dd5bf1657a68d52bcca5d681d4246477a764b7791a2abd5c7d1f4c')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-regex', type=('build', 'run'))
