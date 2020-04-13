@@ -122,7 +122,7 @@ class Llvm(CMakePackage, CudaPackage):
     variant('code_signing', default=False,
             description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
- 
+
     extends("python", when="+python")
 
     # Build dependency
@@ -196,7 +196,7 @@ class Llvm(CMakePackage, CudaPackage):
     patch("thread-p9.patch", when="@develop+libcxx")
 
     @run_before('cmake')
-    if '+code_signing' in spec:
+    if '+code_signing' in self.spec:
         def codesign_check(self):
             codesign = which('codesign')
             mkdir('tmp')
