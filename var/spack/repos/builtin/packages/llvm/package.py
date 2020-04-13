@@ -195,8 +195,8 @@ class Llvm(CMakePackage, CudaPackage):
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
 
+    @run_before('cmake')
     if '+code_signing' in spec:
-        @run_before('cmake')
         def codesign_check(self):
             codesign = which('codesign')
             mkdir('tmp')
@@ -214,12 +214,12 @@ class Llvm(CMakePackage, CudaPackage):
                 setup()
             except Exception:
                 raise RuntimeError(
-                            'spack was unable to either find or set up'
-                            'code-signing on your system. Please refer to'
-                            'https://lldb.llvm.org/resources/build.html#'
-                            'code-signing-on-macos for details on how to'
-                            'create this identity.'
-                            )
+                                'spack was unable to either find or set up'
+                                'code-signing on your system. Please refer to'
+                                'https://lldb.llvm.org/resources/build.html#'
+                                'code-signing-on-macos for details on how to'
+                                'create this identity.'
+                                )
 
     def setup_build_environment(self, env):
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
