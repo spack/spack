@@ -1672,22 +1672,23 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     def run_test(self, exe, options=[], expected=[], status=None,
                  installed=False, purpose=''):
-        """Run the test and confirm obtain the expected results
+        """Run the test and confirm the expected results are obtained
 
         Args:
             exe (str): the name of the executable
             options (list of str): list of options to pass to the runner
             expected (list of str): list of expected output strings
-            status (int or None): the expected process status if int or None
-                if the test is expected to succeed
+            status (int, list of int, or None): possible passing status values
+                with 0 and None meaning the test is expected to succeed
             installed (bool): the executable should be in the install prefix
             purpose (str): message to display before running test
         """
-        result = 'fail with status {0}'.format(status) if status else 'succeed'
-        tty.debug('test: {0}: expect to {1}'.format(exe, result))
-
+        status = [status] if not isinstance(status, list) else status
         if purpose:
             tty.msg(purpose)
+        else:
+            tty.debug('test: {0}: expect command status in {1}'
+                      .format(exe, status))
 
         runner = which(exe)
         assert runner is not None, "Failed to find executable '%s'" % exe
@@ -1699,19 +1700,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             output = runner(*options, output=str.split, error=str.split)
-            assert not status, 'Expected execution to fail'
 
-            for check in expected:
-                cmd = ' '.join([exe] + options)
-                msg = "Expected '%s' in output of `%s`" % (check, cmd)
-                msg += '\n\nOutput: %s' % output
-                assert check in output, msg
-
+            can_pass = None in status or 0 in status
+            assert can_pass, 'Expected execution to fail'
         except ProcessError as err:
             output = str(err)
-            status_msg = 'exited with status {0}'.format(status)
-            if status_msg not in output:
-                raise  # re-raise the same error/traceback
+            match = re.search(r'exited with status ([0-9]+)', output)
+            if not (match and int(match.group(1)) in status):
+                raise
+
+        for check in expected:
+            cmd = ' '.join([exe] + options)
+            msg = "Expected '%s' in output of `%s`" % (check, cmd)
+            msg += '\n\nOutput: %s' % output
+            assert check in output, msg
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
