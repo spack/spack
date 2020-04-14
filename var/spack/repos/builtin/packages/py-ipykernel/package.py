@@ -12,6 +12,7 @@ class PyIpykernel(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ipykernel"
     url      = "https://github.com/ipython/ipykernel/archive/4.5.0.tar.gz"
 
+    version('5.1.1', sha256='a735d3df42e76e8176849dcc8d7746eda80b7768e8f1b38cd9aa6cabfd28baf5')
     version('5.1.0', sha256='30f01a2a1470d3fabbad03f5c43606c1bc2142850fc4ccedcf44281664ae9122')
     version('4.5.0', sha256='c5ec5130f5f7eda71345b9ef638c9213c4c2f41610a9ad338a0f1d0819421adf')
     version('4.4.1', sha256='62fe16252e40fb3d443fcf31fc52e5596965cf17620571c10ea64502a6d51db7')
