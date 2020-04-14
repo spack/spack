@@ -27,8 +27,6 @@ class NetcdfFortran(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
-    variant('pic', default=True,
-            description='Produce position-independent code (for shared libs)')
     variant('dap', default=False, description='Enable DAP support')
     variant('jna', default=False, description='Enable JNA support')
     variant('doxygen', default=True, description='Enable doxygen docs')
