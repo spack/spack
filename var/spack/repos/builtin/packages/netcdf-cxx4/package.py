@@ -21,7 +21,15 @@ class NetcdfCxx4(AutotoolsPackage):
 
     # Usually the configure automatically inserts the pic flags, but we can
     # force its usage with this variant.
+    variant('static', default=True, description='Enable building static libraries')
+    variant('shared', default=True, description='Enable shared library')
     variant('pic', default=True, description='Produce position-independent code (for shared libs)')
+    variant('dap', default=False, description='Enable DAP support')
+    variant('jna', default=False, description='Enable JNA support')
+    variant('doxygen', default=True, description='Enable doxygen docs')
+    variant('ncgen4', default=True, description='Enable generating netcdf-4 data')
+    variant('pnetcdf', default=True, description='Enable parallel-netcdf')
+    variant('netcdf4', default=False, description='Enable netcdf-4 data structure')
 
     depends_on('netcdf-c')
 
@@ -29,6 +37,8 @@ class NetcdfCxx4(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
+
+    conflicts('~shared', when='~static')
 
     force_autoreconf = True
 
@@ -46,3 +56,52 @@ class NetcdfCxx4(AutotoolsPackage):
         return find_libraries(
             'libnetcdf_c++4', root=self.prefix, shared=shared, recursive=True
         )
+
+    def configure_args(self):
+
+        if '+static' in self.spec:
+            config_args.append('--enable-static')
+        else:
+            config_args.append('--disable-static')
+
+        if '+shared' in self.spec:
+            config_args.append('--enable-shared')
+        else:
+            config_args.append('--disable-shared')
+
+        if '+pic' in self.spec:
+            config_args.append('--with-pic')
+        else:
+            config_args.append('--without-pic')
+
+        if '+dap' in self.spec:
+            config_args.append('--enable-dap')
+        else:
+            config_args.append('--disable-dap')
+
+        if '+jna' in self.spec:
+            config_args.append('--enable-jna')
+        else:
+            config_args.append('--disable-jna')
+
+        if '+pnetcdf' in self.spec:
+            config_args.append('--enable-pnetcdf')
+        else:
+            config_args.append('--disable-pnetcdf')
+
+        if '+netcdf4' in self.spec:
+            config_args.append('--enable-netcdf-4')
+        else:
+            config_args.append('--disable-netcdf-4')
+
+        if '+ncgen4' in self.spec:
+            config_args.append('--enable-ncgen4')
+        else:
+            config_args.append('--disable-ncgen4')
+
+        if '+doxygen' in self.spec:
+            config_args.append('--enable-doxygen')
+        else:
+            config_args.append('--disable-doxygen')
+
+        return config_args
