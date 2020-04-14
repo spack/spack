@@ -60,8 +60,6 @@ class Trilinos(CMakePackage):
             description='Build python wrappers')
 
     # Build options
-    variant('c',            default=False,
-            description='Enable Trilinos C library')
     variant('complex',      default=False,
             description='Enable complex numbers in Trilinos')
     variant('explicit_template_instantiation',  default=True,
@@ -519,34 +517,13 @@ class Trilinos(CMakePackage):
                 'ON' if '+zoltan' in spec else 'OFF'),
             '-DTrilinos_ENABLE_Zoltan2:BOOL=%s' % (
                 'ON' if '+zoltan2' in spec else 'OFF'),
+            '-DTEUCHOS_ENABLE_expat:BOOL=%s' % (
+                'ON' if '+expat' in spec else 'OFF'),
+            '-DTEUCHOS_ENABLE_gmp:BOOL=%s' % (
+                'ON' if '+gmp' in spec else 'OFF'),
+            '-DTEUCHOS_ENABLE_libxml2:BOOL=%s' % (
+                'ON' if '+libxml2' in spec else 'OFF'),
         ])
-
-        if '+expat' in spec:
-            options.extend([
-                '-DTEUCHOS_ENABLE_expat:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTEUCHOS_ENABLE_expat:BOOL=OFF'
-            ])
-
-        if '+gmp' in spec:
-            options.extend([
-                '-DTEUCHOS_ENABLE_gmp:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTEUCHOS_ENABLE_gmp:BOOL=OFF'
-            ])
-
-        if '+libxml2' in spec:
-            options.extend([
-                '-DTEUCHOS_ENABLE_libxml2:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTEUCHOS_ENABLE_libxml2:BOOL=OFF'
-            ])
 
         if '+xsdkflags' in spec:
             options.extend(['-DUSE_XSDK_DEFAULTS=YES'])
@@ -809,16 +786,6 @@ class Trilinos(CMakePackage):
 
         options.append('-DTPL_ENABLE_ADIOS2:BOOL=' + str('+adios2' in spec))
         # ################# Miscellaneous Stuff ######################
-
-        if '+c' in spec:
-            options.extend([
-                '-DTrilinos_ENABLE_CTrilinos:BOOL=ON'
-            ])
-        else:
-            options.extend([
-                '-DTrilinos_ENABLE_CTrilinos:BOOL=OFF'
-            ])
-
         # OpenMP
         if '+openmp' in spec:
             options.extend([
