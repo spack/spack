@@ -71,7 +71,6 @@ class Tau(Package):
     variant('sqlite', default=False, description='Activates SQLite3 output support')
     variant('profileparam', default=False, description='Generate profiles with parameter mapped event data')
 
-
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
     # architectures supported:
