@@ -44,6 +44,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('sirius', default=False,
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
+    variant('cosma', default=False, description='Use COSMA for p?gemm')
 
     # override cuda_arch from CudaPackage since we only support one arch
     # at a time and only specific ones for which we have parameter files
@@ -105,6 +106,8 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
+    depends_on('cosma+scalapack', when='+cosma')
+    depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
     depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
     depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
     depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
@@ -129,11 +132,13 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    # PEXSI, ELPA and SIRIUS need MPI in CP2K
+    # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
     conflicts('~mpi', '+sirius')
+    conflicts('~mpi', '+cosma')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
+    conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
 
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
@@ -289,6 +294,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             cppflags += ['-D__MKL']
         elif self.spec.variants['blas'].value == 'accelerate':
             cppflags += ['-D__ACCELERATE']
+
+        if '+cosma' in spec:
+            # add before ScaLAPACK to override the p?gemm symbols
+            cosma = spec['cosma'].libs
+            ldflags.append(cosma.search_flags)
+            libs.extend(cosma)
 
         # MPI
         if '+mpi' in self.spec:
