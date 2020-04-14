@@ -1234,6 +1234,8 @@ add a version specifier to the spec:
 Notice that the package versions that provide insufficient MPI
 versions are now filtered out.
 
+.. _extensions:
+
 ---------------------------
 Extensions & Python support
 ---------------------------
