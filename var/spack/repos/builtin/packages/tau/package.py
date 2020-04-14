@@ -69,11 +69,7 @@ class Tau(Package):
     variant('io', default=True, description='Activates POSIX I/O support')
     variant('adios2', default=False, description='Activates ADIOS2 output support')
     variant('sqlite', default=False, description='Activates SQLite3 output support')
-    variant('slog2', default=False, description='Convert TAU trace files to SLOG2')
-    variant('cputime', default=False, description='Enable user+system time from getrusage()')
-    variant('profile', default=True, description='Enable profiles')
     variant('profileparam', default=False, description='Generate profiles with parameter mapped event data')
-    variant('profilecallpath', default=False, description='Enables profile callpaths')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -174,9 +170,6 @@ class Tau(Package):
         if ('platform=cray' in self.spec) and ('+x86_64' not in spec):
             options.append('-arch=craycnl')
 
-        if '+cputime' in spec:
-            options.append("-CPUTIME")
-
         if '+pdt' in spec:
             options.append("-pdt=%s" % spec['pdt'].prefix)
 
@@ -229,14 +222,8 @@ class Tau(Package):
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
 
-        if '+profile' in spec:
-            options.append('-PROFILE')
-
         if '+profileparam' in spec:
             options.append('-PROFILEPARAM')
-
-        if '+profilecallpath' in spec:
-            options.append('-PROFILECALLPATH')
 
         if '+shmem' in spec:
             options.append('-shmem')
@@ -252,9 +239,6 @@ class Tau(Package):
 
         if '+sqlite' in spec:
             options.append("-sqlite3=%s" % spec['sqlite'].prefix)
-
-        if '+slog2' in spec:
-            options.append("-slog2")
 
         if '+phase' in spec:
             options.append('-PROFILEPHASE')
