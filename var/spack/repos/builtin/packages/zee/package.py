@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Zee(CMakePackage):
@@ -35,6 +34,7 @@ class Zee(CMakePackage):
     variant('timemory', default=False,
             description='Add timemory API for time/memory measurement')
 
+    depends_on('benchmark')
     depends_on('boost')
     depends_on('cmake@3:', type='build')
     depends_on('pkg-config', type='build')
@@ -59,10 +59,13 @@ class Zee(CMakePackage):
                 yield '-D' + cmake_var + ':BOOL=ON'
             else:
                 yield '-D' + cmake_var + ':BOOL=FALSE'
-        yield '-DZee_OPSPLIT_CLIENTS_ONLY:BOOL=' + ('TRUE' if '+opsplit-only' in self.spec else 'FALSE')
-        yield '-DZee_USE_PETSc:BOOL=' + ('TRUE' if '+petsc' in self.spec else 'FALSE')
+        yield '-DZee_OPSPLIT_CLIENTS_ONLY:BOOL=' + \
+            ('TRUE' if '+opsplit-only' in self.spec else 'FALSE')
+        yield '-DZee_USE_PETSc:BOOL=' + \
+            ('TRUE' if '+petsc' in self.spec else 'FALSE')
         if '+codechecks' in self.spec:
-            yield '-DPYTHON_EXECUTABLE:FILEPATH=' + self.spec['python'].command.path
+            yield '-DPYTHON_EXECUTABLE:FILEPATH=' + \
+                self.spec['python'].command.path
             yield '-DZee_FORMATTING:BOOL=TRUE'
             yield '-DZee_TEST_FORMATTING:BOOL=TRUE'
         if '+timemory' in self.spec:
