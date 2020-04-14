@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+import llnl.util.tty as tty
 import spack.store
 from spack.main import SpackCommand, SpackCommandError
 
@@ -30,7 +31,7 @@ def test_multiple_matches(mutable_database):
 
 @pytest.mark.db
 def test_installed_dependents(mutable_database):
-    """Test can't uninstall when ther are installed dependents."""
+    """Test can't uninstall when there are installed dependents."""
     with pytest.raises(SpackCommandError):
         uninstall('-y', 'libelf')
 
@@ -155,3 +156,16 @@ def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     assert len(mpileaks_specs) == 3
     assert len(callpath_specs) == 3  # back to 3
     assert len(mpi_specs) == 3
+
+
+@pytest.mark.db
+@pytest.mark.regression('15773')
+def test_in_memory_consistency_when_uninstalling(
+        mutable_database, monkeypatch
+):
+    """Test that uninstalling doesn't raise warnings"""
+    def _warn(*args, **kwargs):
+        raise RuntimeError('a warning was triggered!')
+    monkeypatch.setattr(tty, 'warn', _warn)
+    # Now try to uninstall and check this doesn't trigger warnings
+    uninstall('-y', '-a')
