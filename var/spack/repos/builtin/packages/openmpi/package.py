@@ -613,7 +613,6 @@ class Openmpi(AutotoolsPackage):
             'shmemrun': ([spec_vers], None),
         }
 
-        failed = []
         for exe in checks:
             expected, status = checks[exe]
             purpose = 'test version of {0} is {1}'.format(exe, expected[0])
