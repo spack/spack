@@ -1243,8 +1243,7 @@ Extensions & Python support
 Spack's installation model assumes that each package will live in its
 own install prefix.  However, certain packages are typically installed
 *within* the directory hierarchy of other packages.  For example,
-modules in interpreted languages like `Python
-<https://www.python.org>`_ are typically installed in the
+`Python <https://www.python.org>`_ packages are typically installed in the
 ``$prefix/lib/python-2.7/site-packages`` directory.
 
 Spack has support for this type of installation as well.  In Spack,
