@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import sys
 
 
 class Charliecloud(AutotoolsPackage):
@@ -32,6 +33,10 @@ class Charliecloud(AutotoolsPackage):
     depends_on('rsync',               type='build', when='+docs')
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+
+    if sys.platform == 'darwin':
+       raise InstallError("This package does not build on Mac OS X\n"
+                          "see: https://github.com/hpc/charliecloud/issues/42")
 
     # bash automated testing harness (bats)
     depends_on('bats@0.4.0', type='test')
