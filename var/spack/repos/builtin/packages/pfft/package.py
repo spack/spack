@@ -27,50 +27,50 @@ class Pfft(AutotoolsPackage):
 
         configure = Executable('../configure')
 
-        fftw_precisions = spec['fftw'].variants.get('precision')
-        if 'double' in fftw_precisions:
+        fftw = spec['fftw']
+        if 'precision=double' in fftw:
             with working_dir('double', create=True):
                 configure(*options)
-        if 'float' in fftw_precisions:
+        if 'precision=float' in fftw:
             with working_dir('float', create=True):
                 configure('--enable-float', *options)
-        if 'long_double' in fftw_precisions:
+        if 'precision=long_double' in fftw:
             with working_dir('long-double', create=True):
                 configure('--enable-long-double', *options)
 
     def build(self, spec, prefix):
-        fftw_precisions = spec['fftw'].variants.get('precision')
-        if 'double' in fftw_precisions:
+        fftw = spec['fftw']
+        if 'precision=double' in fftw:
             with working_dir('double'):
                 make()
-        if 'float' in fftw_precisions:
+        if 'precision=float' in fftw:
             with working_dir('float'):
                 make()
-        if 'long_double' in fftw_precisions:
+        if 'precision=long_double' in fftw:
             with working_dir('long-double'):
                 make()
 
     def check(self):
         spec = self.spec
-        fftw_precisions = spec['fftw'].variants.get('precision')
-        if 'double' in fftw_precisions:
+        fftw = spec['fftw']
+        if 'precision=double' in fftw:
             with working_dir('double'):
                 make("check")
-        if 'float' in fftw_precisions:
+        if 'precision=float' in fftw:
             with working_dir('float'):
                 make("check")
-        if 'long_double' in fftw_precisions:
+        if 'precision=long_double' in fftw:
             with working_dir('long-double'):
                 make("check")
 
     def install(self, spec, prefix):
-        fftw_precisions = spec['fftw'].variants.get('precision')
-        if 'double' in fftw_precisions:
+        fftw = spec['fftw']
+        if 'precision=double' in fftw:
             with working_dir('double'):
                 make("install")
-        if 'float' in fftw_precisions:
+        if 'precision=float' in fftw:
             with working_dir('float'):
                 make("install")
-        if 'long_double' in fftw_precisions:
+        if 'precision=long_double' in fftw:
             with working_dir('long-double'):
                 make("install")
