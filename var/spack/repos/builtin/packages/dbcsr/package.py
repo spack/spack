@@ -41,6 +41,9 @@ class Dbcsr(CMakePackage, CudaPackage):
 
     conflicts('+cuda', when='cuda_arch=none')
 
+    generator = 'Ninja'
+    depends_on('ninja@1.10:', type='build')
+
     def cmake_args(self):
         if ('+openmp' in self.spec
             and '^openblas' in self.spec
@@ -81,3 +84,9 @@ class Dbcsr(CMakePackage, CudaPackage):
             args += ['-DWITH_GPU=%s' % gpuver]
 
         return args
+
+    def check(self):
+        """Override CMakePackage's check() to enforce seralized test runs
+           since they are already parallelized"""
+        with working_dir(self.build_directory):
+            self._if_ninja_target_execute('test', parallel=False)
