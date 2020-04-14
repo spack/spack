@@ -1536,7 +1536,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test(self):
         pass
 
-    def run_test(self, exe, options=[], expected=[], status=[None],
+    def run_test(self, exe, options=[], expected=[], status=None,
                  installed=False, purpose=''):
         """Run the test and confirm the expected results are obtained
 
@@ -1544,8 +1544,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             exe (str): the name of the executable
             options (list of str): list of options to pass to the runner
             expected (list of str): list of expected output strings
-            status (int or list of int): possible passing status values with
-                0 and None meaning the test is expected to succeed
+            status (int, list of int, or None): possible passing status values
+                with 0 and None meaning the test is expected to succeed
             installed (bool): the executable should be in the install prefix
             purpose (str): message to display before running test
         """
@@ -1571,8 +1571,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             assert can_pass, 'Expected execution to fail'
         except ProcessError as err:
             output = str(err)
-            code = int(re.findall(r'[0-9]+', output.split('\n')[0])[0])
-            if code not in status:
+            match = re.search(r'exited with status ([0-9]+)', output)
+            if not (match and int(match.group(1)) in status):
                 raise
 
         for check in expected:
