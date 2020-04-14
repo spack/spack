@@ -34,9 +34,7 @@ class Charliecloud(AutotoolsPackage):
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
-    if sys.platform == 'darwin':
-       raise InstallError("This package does not build on Mac OS X\n"
-                          "see: https://github.com/hpc/charliecloud/issues/42")
+    conflicts('platform=darwin', msg='This package does not build on macOS')
 
     # bash automated testing harness (bats)
     depends_on('bats@0.4.0', type='test')
