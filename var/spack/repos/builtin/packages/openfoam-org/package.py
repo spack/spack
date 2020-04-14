@@ -140,9 +140,13 @@ class OpenfoamOrg(Package):
 
     def setup_run_environment(self, env):
         bashrc = self.prefix.etc.bashrc
-        env.extend(EnvironmentModifications.from_sourcing_file(
-            bashrc, clean=True
-        ))
+        try:
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                bashrc, clean=True
+            ))
+        except Exception as e:
+            msg = 'unexpected error when sourcing OpenFOAM bashrc [{0}]'
+            tty.warn(msg.format(str(e)))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
