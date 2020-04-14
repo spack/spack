@@ -159,7 +159,7 @@ class Petsc(Package):
     depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
     depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
