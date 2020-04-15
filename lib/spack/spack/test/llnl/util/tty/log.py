@@ -108,7 +108,7 @@ def simple_logger(**kwargs):
 
 
 def mock_shell_fg(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -117,7 +117,7 @@ def mock_shell_fg(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_no_termios(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_disabled_fg()
@@ -126,7 +126,7 @@ def mock_shell_fg_no_termios(proc, ctl, **kwargs):
 
 
 def mock_shell_bg(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -135,7 +135,7 @@ def mock_shell_bg(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_cont(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -146,7 +146,7 @@ def mock_shell_tstp_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_tstp_cont(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -160,7 +160,7 @@ def mock_shell_tstp_tstp_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_tstp_tstp_cont_cont(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.tstp()
     ctl.wait_stopped()
 
@@ -177,7 +177,7 @@ def mock_shell_tstp_tstp_cont_cont(proc, ctl, **kwargs):
 
 
 def mock_shell_bg_fg(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -190,7 +190,7 @@ def mock_shell_bg_fg(proc, ctl, **kwargs):
 
 
 def mock_shell_bg_fg_no_termios(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.bg()
     ctl.status()
     ctl.wait_disabled()
@@ -203,7 +203,7 @@ def mock_shell_bg_fg_no_termios(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_bg(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_enabled()
@@ -216,7 +216,7 @@ def mock_shell_fg_bg(proc, ctl, **kwargs):
 
 
 def mock_shell_fg_bg_no_termios(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background."""
     ctl.fg()
     ctl.status()
     ctl.wait_disabled_fg()
@@ -313,7 +313,7 @@ def synchronized_logger(**kwargs):
 
 
 def mock_shell_v_v(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
     v = kwargs["v"]
 
@@ -340,7 +340,7 @@ def mock_shell_v_v(proc, ctl, **kwargs):
 
 
 def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
-    """Child function for test_foreground_background_* below."""
+    """PseudoShell master function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
     v = kwargs["v"]
 
