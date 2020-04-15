@@ -24,10 +24,10 @@ from spack import *
 
 
 class CodeServer(Package):
-    """FIXME: Put a proper description of your package here."""
+    """code-server is VS Code running on a remote server,
+    accessible through the browser."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/cdr/code-server"
     url      = "https://github.com/cdr/code-server/releases/download/3.1.0/code-server-3.1.0-linux-x86_64.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
