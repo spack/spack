@@ -11,7 +11,7 @@ class Cubist(Package):
     """Cubist is a powerful tool for generating rule-based models that
     balance the need for accurate prediction against the requirements of
     intelligibility.
-    
+
     Cubist models generally give better results than those
     produced by simple techniques such as multivariate linear regression,
     while also being easier to understand than neural networks."""
