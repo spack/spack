@@ -61,6 +61,7 @@ class NetcdfC(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
+    variant('jna', default=False, description='Enable JNA support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -180,6 +181,11 @@ class NetcdfC(AutotoolsPackage):
                 config_args.append('--enable-parallel4')
             else:
                 config_args.append('--disable-parallel4')
+
+        if '+jna' in self.spec:
+            config_args.append('--enable-jna')
+        else:
+            config_args.append('--disable-jna')
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
