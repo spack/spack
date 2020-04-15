@@ -406,10 +406,13 @@ def test_foreground_background_output(
     with open(log_path) as log:
         log = log.read().strip().split("\n")
 
-    # output should contain only "on" lines, along with forced output,
-    # but there is still an unavoidable race in this test (between locks
-    # and master_fd).  We allow at most 2 "off"'s in the output to
-    # account for this race.
+    # Master and child process coordinate with locks such that the child
+    # writes "off" when echo is off, and "on" when echo is on.  The
+    # output should contain mostly "on" lines, but may contain an "off"
+    # or two. This is because the master toggles echo by sending "v" on
+    # stdin to the child, but this is not synchronized with our locks.
+    # It's good enough for a test, though.  We allow at most 2 "off"'s in
+    # the output to account for the race.
     assert (
         ['forced output', 'on'] == uniq(output) or
         output.count("off") <= 2  # if master_fd is a bit slow
