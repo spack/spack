@@ -1172,10 +1172,15 @@ Explicit binding of virtual dependencies
 """"""""""""""""""""""""""""""""""""""""
 
 There are packages that provide more than just one virtual dependency.
-When interacting with them users might be willing to pick only
-a single virtual dependency from the package and use different providers for
-the others. For instance we might want to use ``intel-parallel-studio`` for
-``mpi`` and ``openblas`` for both ``lapack`` and ``blas``:
+When interacting with them users might want to pick only
+a single virtual dependency from one package and use different providers for
+the others. For example, consider these two packages:
+
+* ``intel-parallel-studio``, which provides ``mpi``, ``lapack``, and ``blas``
+* ``openblas``, which provides ``lapack`` and ``blas``
+
+We might want to use ``intel-parallel-studio`` for ``mpi`` and ``openblas``
+for ``lapack`` and ``blas``:
 
 .. code-block:: console
 
@@ -1200,9 +1205,8 @@ the others. For instance we might want to use ``intel-parallel-studio`` for
        ^intel-parallel-studio@cluster%gcc@9.0.1~advisor auto_dispatch=none ~clck+daal~gdb~ilp64~inspector+ipp~itac+mkl+mpi~newdtags+rpath+shared+tbb threads=none ~vtune arch=linux-ubuntu18.04-broadwell
        ^openblas@0.3.9%gcc@9.0.1~consistent_fpcsr~ilp64+pic+shared threads=none arch=linux-ubuntu18.04-broadwell
 
-The ``^<virtual>=<spec>`` syntax tells Spack to use that ``spec`` for the virtual
-that has been specified and gives the lowest possible concretization priority to
-all the other virtual dependencies that are provided by the same package.
+The ``^<virtual>=<spec>`` syntax tells Spack to use ``<spec>`` to satisfy the
+requested virtual, and to only use other virtuals provided by it as a last resort.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Specifying Specs by Hash
