@@ -30,6 +30,9 @@ class IqTree(CMakePackage):
 
     def cmake_args(self):
 
+        # Note that one has to specify "single" to get a single
+        # threaded build. Otherwise OpenMP is assumed
+
         spec = self.spec
         args = []
         iqflags = []
@@ -40,6 +43,9 @@ class IqTree(CMakePackage):
         if '+mpi' in spec:
             iqflags.append('mpi')
 
-        args.append('-DIQTREE_FLAGS=' + ",".join([str(f) for f in iqflags]))
+        if not iqflags:
+            iqflags.append('single')
+
+        args.append('-DIQTREE_FLAGS=' + ",".join(iqflags))
 
         return args
