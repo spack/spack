@@ -294,7 +294,7 @@ def synchronized_logger(**kwargs):
 
     log_path = kwargs["log_path"]
     write_lock = kwargs["write_lock"]
-    v = kwargs["v"]
+    v_lock = kwargs["v_lock"]
 
     running = [True]
     sys.stderr.write(os.getcwd() + "\n")
@@ -304,9 +304,9 @@ def synchronized_logger(**kwargs):
 
         while running[0]:
             with write_lock:
-                if v.acquire(False):  # non-blocking acquire
+                if v_lock.acquire(False):  # non-blocking acquire
                     print("off")
-                    v.release()
+                    v_lock.release()
                 else:
                     print("on")       # lock held; v is toggled on
             time.sleep(1e-2)
@@ -315,14 +315,14 @@ def synchronized_logger(**kwargs):
 def mock_shell_v_v(proc, ctl, **kwargs):
     """PseudoShell master function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
-    v = kwargs["v"]
+    v_lock = kwargs["v_lock"]
 
     ctl.fg()
     ctl.wait_enabled()
     time.sleep(.1)
 
     write_lock.acquire()  # suspend writing
-    v.acquire()           # enable v lock
+    v_lock.acquire()      # enable v lock
     ctl.write(b'v')       # toggle v on stdin
     time.sleep(.1)
     write_lock.release()  # resume writing
@@ -332,7 +332,7 @@ def mock_shell_v_v(proc, ctl, **kwargs):
     write_lock.acquire()  # suspend writing
     ctl.write(b'v')       # toggle v on stdin
     time.sleep(.1)
-    v.release()           # disable v lock
+    v_lock.release()      # disable v lock
     write_lock.release()  # resume writing
     time.sleep(.1)
 
@@ -342,14 +342,14 @@ def mock_shell_v_v(proc, ctl, **kwargs):
 def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
     """PseudoShell master function for test_foreground_background_output."""
     write_lock = kwargs["write_lock"]
-    v = kwargs["v"]
+    v_lock = kwargs["v_lock"]
 
     ctl.fg()
     ctl.wait_disabled_fg()
     time.sleep(.1)
 
     write_lock.acquire()  # suspend writing
-    v.acquire()           # enable v lock
+    v_lock.acquire()      # enable v lock
     ctl.write(b'v\n')     # toggle v on stdin
     time.sleep(.1)
     write_lock.release()  # resume writing
@@ -359,7 +359,7 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
     write_lock.acquire()  # suspend writing
     ctl.write(b'v\n')     # toggle v on stdin
     time.sleep(.1)
-    v.release()           # disable v lock
+    v_lock.release()      # disable v lock
     write_lock.release()  # resume writing
     time.sleep(.1)
 
@@ -380,12 +380,12 @@ def test_foreground_background_output(
 
     # Locks for synchronizing with child
     write_lock = multiprocessing.Lock()  # must be held by child to write
-    v = multiprocessing.Lock()  # held while master is in v mode
+    v_lock = multiprocessing.Lock()  # held while master is in v mode
 
     with termios_on_or_off():
         shell.start(
             write_lock=write_lock,
-            v=v,
+            v_lock=v_lock,
             debug=True,
             log_path=log_path
         )
