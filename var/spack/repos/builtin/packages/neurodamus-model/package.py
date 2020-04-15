@@ -52,7 +52,7 @@ class NeurodamusModel(SimModel):
         SimModel.install(self, spec, prefix, install_src=False)
 
     def merge_hoc_mod(self, spec, prefix):
-        """Add hocs and mods from neurodamus-core.
+        """Add hocs, mods and python scripts from neurodamus-core.
 
         This routine simply adds the additional mods to existing dirs
         so that incremental builds can actually happen.
@@ -76,8 +76,12 @@ class NeurodamusModel(SimModel):
                     if os.path.isfile(mod_fil):
                         shutil.copy(mod_fil, 'mod_core')
 
+        # Neurodamus model may not have python scripts
+        mkdirp('python')
+
         copy_all(core_prefix.lib.hoc, 'hoc', make_link)
         copy_all(core_prefix.lib.mod, 'mod', make_link)
+        copy_all(core_prefix.lib.python, 'python', make_link)
 
     def build(self, spec, prefix):
         """ Build mod files from with nrnivmodl / nrnivmodl-core.
