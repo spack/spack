@@ -15,8 +15,7 @@ class CodeServer(Package):
 
     version('3.1.0', sha256='5ef85c8f280ce781a176a8b77386b333efe892755a5c325a1782e4eac6016e59')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('git@2:')
 
     def install(self, spec, prefix):
         ln = which('ln')
