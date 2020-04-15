@@ -21,5 +21,5 @@ class PyBiopandas(PythonPackage):
 
     depends_on('python@3.5:',       type=('build', 'run'))
     depends_on('py-pandas@0.24.2:', type=('build', 'run'))
-    depends_on('py-numpy@1.11.2:',  type=('build', 'run'))
+    depends_on('py-numpy@1.16.2:',  type=('build', 'run'))
     depends_on('py-scipy@0.18.1:',  type=('build', 'run'))
