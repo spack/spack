@@ -420,7 +420,7 @@ class Compiler(object):
         modifications) to enable the compiler to run properly on any platform.
         """
         # store environment to replace later
-        backup_env = os.environ.copy
+        backup_env = os.environ.copy()
 
         # load modules and set env variables
         for module in self.modules:
