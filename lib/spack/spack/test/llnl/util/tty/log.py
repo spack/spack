@@ -74,20 +74,37 @@ def test_log_python_output_and_echo_output(capfd, tmpdir):
 
 
 @pytest.mark.skipif(not which('echo'), reason="needs echo command")
-def test_log_subproc_and_echo_output(capfd, tmpdir):
+def test_log_subproc_and_echo_output_no_capfd(capfd, tmpdir):
     echo = which('echo')
 
+    # this is split into two tests because capfd interferes with the
+    # output logged to file when using a subprocess.  We test the file
+    # here, and echoing in test_log_subproc_and_echo_output_capfd below.
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            with log_output('foo.txt') as logger:
+                with logger.force_echo():
+                    echo('echo')
+                print('logged')
+
+            with open('foo.txt') as f:
+                assert f.read() == 'echo\nlogged\n'
+
+
+@pytest.mark.skipif(not which('echo'), reason="needs echo command")
+def test_log_subproc_and_echo_output_capfd(capfd, tmpdir):
+    echo = which('echo')
+
+    # This tests *only* what is echoed when using a subprocess, as capfd
+    # interferes with the logged data. See
+    # test_log_subproc_and_echo_output_no_capfd for tests on the logfile.
     with tmpdir.as_cwd():
-        # ensure that a subprocess echoing output is also logged
         with log_output('foo.txt') as logger:
             with logger.force_echo():
                 echo('echo')
             print('logged')
 
-        with open('foo.txt') as f:
-            assert f.read() == 'logged\n'
-
-        assert capfd.readouterr()[0] == 'echo\n'
+        assert capfd.readouterr()[0] == "echo\n"
 
 
 #
