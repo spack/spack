@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxft(AutotoolsPackage):
+class Libxft(AutotoolsPackage, XorgPackage):
     """X FreeType library.
 
     Xft version 2.1 was the first stand alone release of Xft, a library that
@@ -14,7 +14,7 @@ class Libxft(AutotoolsPackage):
     uses fontconfig to locate fonts so it has no configuration files."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXft"
-    url      = "https://www.x.org/archive/individual/lib/libXft-2.3.2.tar.gz"
+    xorg_mirror_path = "lib/libXft-2.3.2.tar.gz"
 
     version('2.3.2', sha256='26cdddcc70b187833cbe9dc54df1864ba4c03a7175b2ca9276de9f05dce74507')
 
