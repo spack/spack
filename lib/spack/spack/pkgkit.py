@@ -32,6 +32,7 @@ from spack.build_systems.meson import MesonPackage
 from spack.build_systems.sip import SIPPackage
 from spack.build_systems.gnu import GNUMirrorPackage
 from spack.build_systems.sourceware import SourcewarePackage
+from spack.build_systems.xorg import XorgPackage
 
 from spack.mixins import filter_compiler_wrappers
 
