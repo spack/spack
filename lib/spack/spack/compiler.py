@@ -407,8 +407,6 @@ class Compiler(object):
                                       "the C11 standard",
                                       "c11_flag")
 
-    # Run the compiler to get compiler version info
-    # Use the run environment of the compiler to do so
     # Note: This is not a class method. The class methods are used to detect
     # compilers on PATH based systems, and do not set up the run environment of
     # the compiler. This method can be called on `module` based systems as well
@@ -422,7 +420,7 @@ class Compiler(object):
         modifications) to enable the compiler to run properly on any platform.
         """
         # store environment to replace later
-        backup_env = os.environ
+        backup_env = os.environ.copy
 
         # load modules and set env variables
         for module in self.modules:
@@ -442,15 +440,9 @@ class Compiler(object):
                     output=str, error=str,
                     ignore_errors=tuple(self.ignore_version_errors))
 
-        # restore environment
-        # replacing the os.environ dictionary in python does not effect the
-        # environment variables in process space, so we have to modify the
-        # environment in place
-        for key in set(os.environ.keys()) | set(backup_env.keys()):
-            if key in backup_env:
-                os.environ[key] = backup_env[key]
-            else:
-                del os.environ[key]
+        # Restore environment
+        os.environ.clear()
+        os.environ.update(backup_env)
 
         return self.extract_version_from_output(output)
 
