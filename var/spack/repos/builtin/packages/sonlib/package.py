@@ -20,7 +20,7 @@ class Sonlib(MakefilePackage):
     url      = "https://github.com/ComparativeGenomicsToolkit/sonLib"
     git      = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
 
-    version('devel', branch='master')
+    version('master', branch='master')
     version('20200401', commit='7ebe2ede05a6ee366d93a7a993db69a99943a68f')
 
     def setup_build_environment(self, env):
