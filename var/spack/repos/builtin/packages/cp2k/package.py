@@ -177,6 +177,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
     def edit(self, spec, prefix):
+        pkgconf = which('pkg-config')
 
         fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
 
@@ -257,8 +258,8 @@ class Cp2k(MakefilePackage, CudaPackage):
                 os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
             ])
         else:
-            fcflags += ['$(shell pkg-config --cflags libint2)']
-            libs += ['$(shell pkg-config --libs libint2)']
+            fcflags += pkgconf('--cflags', 'libint2', output=str).split()
+            libs += pkgconf('--libs', 'libint2', output=str).split()
 
         if '+plumed' in self.spec:
             dflags.extend(['-D__PLUMED2'])
@@ -331,8 +332,8 @@ class Cp2k(MakefilePackage, CudaPackage):
                 ldflags.append(libxc.libs.search_flags)
                 libs.append(str(libxc.libs))
             else:
-                fcflags += ['$(shell pkg-config --cflags libxcf03)']
-                libs += ['$(shell pkg-config --libs libxcf03)']
+                fcflags += pkgconf('--cflags', 'libxcf03', output=str).split()
+                libs += pkgconf('--libs', 'libxcf03', output=str).split()
 
         if '+pexsi' in self.spec:
             cppflags.append('-D__LIBPEXSI')
@@ -430,12 +431,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             libs.append('-lsmm')
 
         elif 'smm=libxsmm' in spec:
-            cppflags.extend([
-                '-D__LIBXSMM',
-                '$(shell pkg-config --cflags-only-other libxsmmf)',
-            ])
-            fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
-            libs.append('$(shell pkg-config --libs libxsmmf)')
+            cppflags += ['-D__LIBXSMM']
+            cppflags += pkgconf('--cflags-only-other', 'libxsmmf',
+                                output=str).split()
+            fcflags += pkgconf('--cflags-only-I', 'libxsmmf',
+                               output=str).split()
+            libs += pkgconf('--libs', 'libxsmmf', output=str).split()
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
@@ -445,11 +446,13 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         with open(self.makefile, 'w') as mkf:
             if '+plumed' in self.spec:
-                # Include Plumed.inc in the Makefile
+                mkf.write('# include Plumed.inc as recommended by'
+                          'PLUMED to include libraries and flags')
                 mkf.write('include {0}\n'.format(
                     self.spec['plumed'].package.plumed_inc
                 ))
 
+            mkf.write('\n# COMPILER, LINKER, TOOLS\n\n')
             mkf.write('CC = {0.compiler.cc}\n'.format(self))
             if '%intel' in self.spec:
                 intel_bin_dir = ancestor(self.compiler.cc)
@@ -459,11 +462,12 @@ class Cp2k(MakefilePackage, CudaPackage):
                 # ${CPP} <file>.F > <file>.f90
                 #
                 # and use `-fpp` instead
-                mkf.write('CPP = # {0.compiler.cc} -P\n\n'.format(self))
-                mkf.write('AR = {0}/xiar -r\n\n'.format(intel_bin_dir))
+                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
+                mkf.write('AR = {0}/xiar -r\n'.format(intel_bin_dir))
             else:
-                mkf.write('CPP = # {0.compiler.cc} -E\n\n'.format(self))
-                mkf.write('AR = ar -r\n\n')
+                mkf.write('CPP = # {0.compiler.cc} -E\n'.format(self))
+                mkf.write('AR = ar -r\n')
+
             mkf.write('FC = {0}\n'.format(fc))
             mkf.write('LD = {0}\n'.format(fc))
 
@@ -472,20 +476,27 @@ class Cp2k(MakefilePackage, CudaPackage):
                     os.path.join(self.spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
-            mkf.write('DFLAGS = {0}\n\n'.format(' '.join(dflags)))
-            mkf.write('CPPFLAGS = {0}\n\n'.format(' '.join(cppflags)))
-            mkf.write('CFLAGS = {0}\n\n'.format(' '.join(cflags)))
-            mkf.write('CXXFLAGS = {0}\n\n'.format(' '.join(cxxflags)))
-            mkf.write('NVFLAGS = {0}\n\n'.format(' '.join(nvflags)))
-            mkf.write('FCFLAGS = {0}\n\n'.format(' '.join(fcflags)))
-            mkf.write('LDFLAGS = {0}\n\n'.format(' '.join(ldflags)))
+            def fflags(var, lst):
+                return '{0} = {1}\n\n'.format(
+                    var,
+                    ' \\\n\t'.join(lst))
+
+            mkf.write('\n# FLAGS & LIBRARIES\n')
+            mkf.write(fflags('DFLAGS', dflags))
+            mkf.write(fflags('CPPFLAGS', cppflags))
+            mkf.write(fflags('CFLAGS', cflags))
+            mkf.write(fflags('CXXFLAGS', cxxflags))
+            mkf.write(fflags('NVFLAGS', nvflags))
+            mkf.write(fflags('FCFLAGS', fcflags))
+            mkf.write(fflags('LDFLAGS', ldflags))
+            mkf.write(fflags('LIBS', libs))
+
             if '%intel' in spec:
-                mkf.write('LDFLAGS_C = {0}\n\n'.format(
-                    ' '.join(ldflags) + ' -nofor_main')
-                )
-            mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
-            mkf.write('GPUVER = {0}\n\n'.format(gpuver))
-            mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
+                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor_main']))
+
+            mkf.write('# CP2K-specific flags\n\n')
+            mkf.write('GPUVER = {0}\n'.format(gpuver))
+            mkf.write('DATA_DIR = {0}\n'.format(self.prefix.share.data))
 
     @property
     def build_directory(self):
