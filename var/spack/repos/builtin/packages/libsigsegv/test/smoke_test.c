@@ -1,43 +1,50 @@
-/* Simple libsigsegv include test 
+/* Simple "Hello World" test set up to handle a single page fault
  *
- * Inspired by libsigsegv's test cases.
+ * Inspired by libsigsegv's test cases with argument names for handlers
+ * taken from the header files.
  */
 
 #include "sigsegv.h"
 #include <stdio.h>
 #include <stdlib.h>   /* for exit */
-# include <stddef.h>  /* for NULL on SunOS4 */
+# include <stddef.h>  /* for NULL on SunOS4 (per libsigsegv examples) */
 #include <setjmp.h>   /* for controlling handler-related flow */
 
 
-jmp_buf mainbuf;
+/* Calling environment */
+jmp_buf calling_env;
 
 char *message = "Hello, World!";
 
-volatile int handler_called = 0;
+/* Track the number of times the handler is called */
+volatile int times_called = 0;
 
+
+/* Continuation function, which relies on the latest libsigsegv API */
 static void
-handler_continuation(void *arg1, void *arg2, void *arg3)
+resume(void *cont_arg1, void *cont_arg2, void *cont_arg3)
 {
-     /* Go back to where we started */
-    longjmp(mainbuf, handler_called);
+     /* Go to calling environment and restore state. */
+    longjmp(calling_env, times_called);
 }
 
+/* sigsegv handler */
 int
-handler(void *fault_address, int serious)
+handle_sigsegv(void *fault_address, int serious)
 {
-    handler_called++;
-    if (handler_called > 2)
-        abort();
-    printf("Caught sigsegv #%d\n", handler_called);
+    times_called++;
 
-    return sigsegv_leave_handler(handler_continuation, NULL, NULL, NULL);
+    /* Generate handler output for the test. */
+    printf("Caught sigsegv #%d\n", times_called);
+
+    return sigsegv_leave_handler(resume, NULL, NULL, NULL);
 }
 
+/* "Buggy" function used to demonstrate non-local goto */
 void printit(char *m)
 {
-    if (handler_called <= 0)
-        /* Force SIGSEGV */
+    if (times_called < 1)
+        /* Force SIGSEGV only on the first call. */
         printf("%s\n", *m);
     else
         /* Print it correctly. */
@@ -47,18 +54,14 @@ void printit(char *m)
 int
 main(void)
 {
-    /* Install the sigsegv handler */
-    sigsegv_install_handler(&handler);
+    /* Install the global SIGSEGV handler */
+    sigsegv_install_handler(&handle_sigsegv);
 
-    char *msg = "Hello, World!";
-    int calls = setjmp(mainbuf);
+    char *msg = "Hello World!";
+    int calls = setjmp(calling_env);  /* Resume here after detecting sigsegv */
 
-    /* This will be called multiple times thanks to the handler. */
+    /* Call the function that will trigger the page fault. */
     printit(msg);
 
-    /* Stop the cycle after the first two calls. */
-    if (calls > 1)
-        exit(0);
-
-    exit(0);
+    return 0;
 }

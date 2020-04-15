@@ -44,4 +44,4 @@ class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
         with open('./data/smoke_test.out', 'r') as fd:
             expected = fd.read()
         reason = 'test ability to use the library'
-        self.run_test(prog, options, expected, None, False, purpose=reason)
+        self.run_test(prog, [], expected, None, False, purpose=reason)
