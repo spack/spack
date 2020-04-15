@@ -40,6 +40,10 @@ class CodeServer(Package):
     # depends_on('foo')
 
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+        ln = which('ln')
+        mkdir = which('mkdir')
+        cp = which('cp')
+
+        cp('-r', '{0}/.'.format(self.stage.source_path), prefix)
+        mkdir(prefix.bin)
+        ln('-s', '{0}/code-server'.format(prefix), prefix.bin) 
