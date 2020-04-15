@@ -7,14 +7,9 @@ from spack import *
 
 
 class PyCmakeFormat(PythonPackage):
-    """cmake-format project provides Quality Assurance (QA) tools for cmake.
-
-- cmake-annotate can generate pretty HTML from your listfiles
-- cmake-format   can format your listfiles nicely so that they don’t look
-                 like crap.
-- cmake-lint     can check your listfiles for problems
-- ctest-to       can parse a ctest output tree and translate it into a more
-                 structured format (either JSON or XML)."""
+    """cmake-format project provides Quality Assurance (QA) tools for
+    cmake. Tools include cmake-annotate, cmake-format, cmake-lint,
+    and ctest-to."""
 
     homepage = "https://pypi.python.org/pypi/cmake-format"
     url      = "https://pypi.io/packages/source/c/cmake_format/cmake_format-0.6.9.tar.gz"
