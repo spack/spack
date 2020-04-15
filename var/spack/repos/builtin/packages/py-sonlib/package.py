@@ -13,7 +13,7 @@ class PySonlib(PythonPackage):
 
     # Note that there are a few versions of sonLib floating around
     # the one from the ComparativeGenomicsToolkit seems to be the
-    # actively developed verison
+    # actively developed version
 
     # There are no releases so we have devel and a commit
     # to fix the code at one point in time (1st April)
