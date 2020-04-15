@@ -754,8 +754,7 @@ class Openmpi(AutotoolsPackage):
             'orte-server': ([bad_option], 1),
             'orte-top': ([bad_option], 1),
             'ortecc': ([comp_vers], None),
-            # 'orted': ([bad_option], 213),
-            'orted': ([bad_option], 1),
+            'orted': ([bad_option], [1, 213]),
             'orterun': ([spec_vers], None),
             'oshCC': ([comp_vers], None),
             'oshc++': ([comp_vers], None),
@@ -773,21 +772,11 @@ class Openmpi(AutotoolsPackage):
             'shmemrun': ([spec_vers], None),
         }
 
-        print('TLD: version=%s' % spec_vers)
-        failed = []
         for exe in checks:
             expected, status = checks[exe]
-            try:
-                self.run_test(exe, ['--version'], expected, status)
-            except Exception as exc:
-                print('ERROR: Version check failed for {0}: {1}'
-                      .format(exe, str(exc)))
-                failed.append(exe)
-
-        num_failed = len(failed)
-        assert num_failed == 0, \
-            '{0} of {1} version checks failed: {2}' \
-            .format(num_failed, len(checks), failed)
+            purpose = 'test version of {0} is {1}'.format(exe, expected[0])
+            self.run_test(exe, ['--version'], expected, status,
+                          installed=True, purpose=purpose)
 
     def test(self):
         """Perform smoke tests on the installed package."""
