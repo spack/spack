@@ -29,7 +29,6 @@ import os.path
 import re
 import shutil
 import sys
-import xml.etree.ElementTree
 
 import llnl.util.tty as tty
 import six
@@ -760,13 +759,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             result = os.path.sep.join(['git', repo_path, repo_ref])
             return result
 
-    def get_source_id(self):
-        if not self.branch:
-            return
-        output = self.git('ls-remote', self.url, self.branch, output=str)
-        if output:
-            return output.split()[0]
-
     def _repo_info(self):
         args = ''
 
@@ -944,11 +936,6 @@ class SvnFetchStrategy(VCSFetchStrategy):
     def source_id(self):
         return self.revision
 
-    def get_source_id(self):
-        output = self.svn('info', '--xml', self.url, output=str)
-        info = xml.etree.ElementTree.fromstring(output)
-        return info.find('entry/commit').get('revision')
-
     def mirror_id(self):
         if self.revision:
             repo_path = url_util.parse(self.url).path
@@ -1063,11 +1050,6 @@ class HgFetchStrategy(VCSFetchStrategy):
             repo_path = url_util.parse(self.url).path
             result = os.path.sep.join(['hg', repo_path, self.revision])
             return result
-
-    def get_source_id(self):
-        output = self.hg('id', self.url, output=str)
-        if output:
-            return output.strip()
 
     @_needs_stage
     def fetch(self):
@@ -1257,7 +1239,7 @@ def _from_merged_attrs(fetcher, pkg, version):
         # TODO: refactor this logic into its own method or function
         # TODO: to avoid duplication
         mirrors = [spack.url.substitute_version(u, version)
-                   for u in getattr(pkg, 'urls', [])]
+                   for u in getattr(pkg, 'urls', [])[1:]]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
     else:
         url = getattr(pkg, fetcher.url_attr)

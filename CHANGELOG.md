@@ -1,3 +1,30 @@
+# v0.14.2 (2019-04-15)
+
+This is a minor release on the `0.14` series. It includes performance
+improvements and bug fixes:
+
+* Improvements to how `spack install` handles foreground/background (#15723)
+* Major performance improvements for reading the package DB (#14693, #15777)
+* No longer check for the old `index.yaml` database file (#15298)
+* Properly activate environments with '-h' in the name (#15429)
+* External packages have correct `.prefix` in environments/views (#15475)
+* Improvements to computing env modifications from sourcing files (#15791)
+* Bugfix on Cray machines when getting `TERM` env variable (#15630)
+* Avoid adding spurious `LMOD` env vars to Intel modules (#15778)
+* Don't output [+] for mock installs run during tests (#15609)
+
+# v0.14.1 (2019-03-20)
+
+This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
+
+* several bugfixes for parallel installation (#15339, #15341, #15220, #15197)
+* `spack load` now works with packages that have been renamed (#14348)
+* bugfix for `suite-sparse` installation (#15326)
+* deduplicate identical suffixes added to module names (#14920)
+* fix issues with `configure_args` during module refresh (#11084)
+* increased test coverage and test fixes (#15237, #15354, #15346)
+* remove some unused code (#15431)
+
 # v0.14.0 (2020-02-23)
 
 `v0.14.0` is a major feature release, with 3 highlighted features:
