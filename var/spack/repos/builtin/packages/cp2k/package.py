@@ -28,8 +28,6 @@ class Cp2k(MakefilePackage, CudaPackage):
     version('develop', branch='master', submodules="True")
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
-            description='Enable the use of OpenBlas/MKL/Accelerate')
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
@@ -73,18 +71,9 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     depends_on('python', type='build')
 
-    depends_on('fftw@3:', when='~openmp')
-    depends_on('fftw@3:+openmp', when='+openmp')
-
-    # see #1712 for the reason to enumerate BLAS libraries here
-    depends_on('openblas threads=none', when='blas=openblas ~openmp')
-    depends_on('openblas threads=openmp', when='blas=openblas +openmp')
-    depends_on('lapack', when='blas=openblas ~openmp')
-
-    depends_on('intel-mkl', when="blas=mkl ~openmp")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp')
-
-    conflicts('blas=accelerate', '+openmp')  # there is no Accelerate with OpenMP support
+    depends_on('blas')
+    depends_on('lapack')
+    depends_on('fftw-api@3')
 
     # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
     depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
@@ -176,10 +165,42 @@ class Cp2k(MakefilePackage, CudaPackage):
     def archive_files(self):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
+    def consistency_check(self, spec):
+        """
+        Consistency checks.
+        Due to issue #1712 we can not put them into depends_on/conflicts.
+        """
+
+        if '+openmp' in spec:
+            if '^openblas' in spec and '^openblas threads=openmp' not in spec:
+                raise InstallError(
+                    '^openblas threads=openmp required for cp2k+openmp'
+                    ' with openblas')
+
+            if '^fftw' in spec and '^fftw +openmp' not in spec:
+                raise InstallError(
+                    '^fftw +openmp required for cp2k+openmp'
+                    ' with fftw')
+
+            # MKL doesn't need to be checked since they are
+            # OMP thread-safe when using mkl_sequential
+            # BUT: we should check the version of MKL IF it is used for FFTW
+            #      since there we need at least v14 of MKL to be safe!
+
     def edit(self, spec, prefix):
+        self.consistency_check(spec)
+
         pkgconf = which('pkg-config')
 
-        fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+        if '^fftw' in spec:
+            fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+            fftw_header_dir = fftw.headers.directories[0]
+        elif '^intel-mkl' in spec:
+            fftw = spec['intel-mkl']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+        elif '^intel-parallel-studio+mkl' in spec:
+            fftw = spec['intel-parallel-studio']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
 
         optimization_flags = {
             'gcc': [
@@ -195,7 +216,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         cppflags = [
             '-D__LIBINT',
             '-D__FFTW3',
-            fftw.headers.cpp_flags,
+            '-I{0}'.format(fftw_header_dir),
         ]
 
         if '@:6.9' in spec:
@@ -291,9 +312,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if self.spec.variants['blas'].value == 'mkl':
+        if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
             cppflags += ['-D__MKL']
-        elif self.spec.variants['blas'].value == 'accelerate':
+        elif '^accelerate' in spec:
             cppflags += ['-D__ACCELERATE']
 
         if '+cosma' in spec:
