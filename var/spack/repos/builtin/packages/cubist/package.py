@@ -22,7 +22,7 @@ class Cubist(Package):
     version('2.07', 'f2b20807cd3275e775c42263a4efd3f50df6e495a8b6dc8989ea2d41b973ac1a')
 
     def patch(self):
-        makefile=FileFilter('Makefile')
+        makefile = FileFilter('Makefile')
         makefile.filter("SHELL .*", "SHELL  = /bin/sh")
 
     def install(self, spec, prefix):
