@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxkbfile(AutotoolsPackage):
+class Libxkbfile(AutotoolsPackage, XorgPackage):
     """XKB file handling routines."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libxkbfile"
-    url      = "https://www.x.org/archive/individual/lib/libxkbfile-1.0.9.tar.gz"
+    xorg_mirror_path = "lib/libxkbfile-1.0.9.tar.gz"
 
     version('1.0.9', sha256='95df50570f38e720fb79976f603761ae6eff761613eb56f258c3cb6bab4fd5e3')
 

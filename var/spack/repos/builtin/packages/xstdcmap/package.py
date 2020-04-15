@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xstdcmap(AutotoolsPackage):
+class Xstdcmap(AutotoolsPackage, XorgPackage):
     """The xstdcmap utility can be used to selectively define standard colormap
     properties.  It is intended to be run from a user's X startup script to
     create standard colormap definitions in order to facilitate sharing of
     scarce colormap resources among clients using PseudoColor visuals."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xstdcmap"
-    url      = "https://www.x.org/archive/individual/app/xstdcmap-1.0.3.tar.gz"
+    xorg_mirror_path = "app/xstdcmap-1.0.3.tar.gz"
 
     version('1.0.3', sha256='b97aaa883a9eedf9c3056ea1a7e818e3d93b63aa1f54193ef481d392bdef5711')
 
