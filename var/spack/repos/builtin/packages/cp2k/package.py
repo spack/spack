@@ -139,9 +139,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts('%clang')
-    conflicts('%cray')
     conflicts('%nag')
-    conflicts('%xl')
 
     @property
     def makefile_architecture(self):
@@ -208,8 +206,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-funroll-loops',
                 '-ftree-vectorize',
             ],
-            'intel': ['-O2', '-pc64', '-unroll'],
+            'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
+            'cray': ['-O2'],
+            'xl': ['-O3'],
         }
 
         dflags = ['-DNDEBUG']
@@ -242,19 +242,24 @@ class Cp2k(MakefilePackage, CudaPackage):
             cflags.append('-fp-model precise')
             cxxflags.append('-fp-model precise')
             fcflags += [
-                '-fp-model source',
+                '-fp-model precise',
                 '-heap-arrays 64',
                 '-g',
                 '-traceback',
             ]
         elif '%gcc' in spec:
-            fcflags.extend([
+            fcflags += [
                 '-ffree-form',
                 '-ffree-line-length-none',
                 '-ggdb',  # make sure we get proper Fortran backtraces
-            ])
+            ]
         elif '%pgi' in spec:
-            fcflags.extend(['-Mfreeform', '-Mextend'])
+            fcflags += ['-Mfreeform', '-Mextend']
+        elif '%cray' in spec:
+            fcflags += ['-emf', '-ffree', '-hflex_mp=strict']
+        elif '%xl' in spec:
+            fcflags += ['-qpreprocess', '-qstrict', '-q64']
+            ldflags += ['-Wl,--allow-multiple-definition']
 
         if '+openmp' in spec:
             cflags.append(self.compiler.openmp_flag)
@@ -263,6 +268,11 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(self.compiler.openmp_flag)
             nvflags.append('-Xcompiler="{0}"'.format(
                 self.compiler.openmp_flag))
+        elif '%cray' in spec:  # Cray enables OpenMP by default
+            cflags   += ['-hnoomp']
+            cxxflags += ['-hnoomp']
+            fcflags  += ['-hnoomp']
+            ldflags  += ['-hnoomp']
 
         ldflags.append(fftw.libs.search_flags)
 
