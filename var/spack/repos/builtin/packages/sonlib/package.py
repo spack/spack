@@ -11,14 +11,14 @@ class Sonlib(MakefilePackage):
     """sonLib is a compact C/Python library for
     sequence analysis in bioinformatics."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://github.com/benedictpaten/sonLib"
-    url      = "https://github.com/ComparativeGenomicsToolkit/sonLib"
-    git      = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
-
-    # This is sonlib as needed by the hal package
+    # This is sonlib as needed by the hal package which expects
+    # a side by side compilation
     #
     # If you need to use sonlib then you want py-sonlib
+
+    homepage = "https://github.com/ComparativeGenomicsToolkit"
+    url      = "https://github.com/ComparativeGenomicsToolkit/sonLib"
+    git      = "https://github.com/ComparativeGenomicsToolkit/sonLib.git"
 
     version('devel', branch='master')
     version('20200401', commit='7ebe2ede05a6ee366d93a7a993db69a99943a68f')
