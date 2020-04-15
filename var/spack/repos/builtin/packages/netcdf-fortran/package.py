@@ -118,11 +118,6 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
 
-        if '+pic' in self.spec:
-            config_args.append('--with-pic')
-        else:
-            config_args.append('--without-pic')
-
         if '+doc' in self.spec:
             config_args.append('--enable-doxygen')
         else:
