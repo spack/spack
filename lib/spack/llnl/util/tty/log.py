@@ -233,7 +233,7 @@ class keyboard_input(object):
         return self
 
     def __exit__(self, exc_type, exception, traceback):
-        """If termios was avaialble, restore old settings."""
+        """If termios was available, restore old settings."""
         if self.old_cfg:
             self._restore_default_terminal_settings()
 
