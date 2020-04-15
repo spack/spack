@@ -33,6 +33,8 @@ class Charliecloud(AutotoolsPackage):
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
+    conflicts('platform=darwin', msg='This package does not build on macOS')
+
     # bash automated testing harness (bats)
     depends_on('bats@0.4.0', type='test')
 

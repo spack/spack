@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Printproto(AutotoolsPackage):
+class Printproto(AutotoolsPackage, XorgPackage):
     """Xprint extension to the X11 protocol - a portable, network-transparent
     printing system."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/printproto"
-    url      = "https://www.x.org/archive/individual/proto/printproto-1.0.5.tar.gz"
+    xorg_mirror_path = "proto/printproto-1.0.5.tar.gz"
 
     version('1.0.5', sha256='e8b6f405fd865f0ea7a3a2908dfbf06622f57f2f91359ec65d13b955e49843fc')
 

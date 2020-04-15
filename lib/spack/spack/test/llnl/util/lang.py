@@ -130,3 +130,10 @@ def test_load_modules_from_file(module_path):
     foo = llnl.util.lang.load_module_from_file('foo', module_path)
     assert foo.value == 1
     assert foo.path == os.path.join('/usr', 'bin')
+
+
+def test_uniq():
+    assert [1, 2, 3] == llnl.util.lang.uniq([1, 2, 3])
+    assert [1, 2, 3] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 3, 3])
+    assert [1, 2, 1] == llnl.util.lang.uniq([1, 1, 1, 1, 2, 2, 2, 1, 1])
+    assert [] == llnl.util.lang.uniq([])
