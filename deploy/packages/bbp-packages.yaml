@@ -37,6 +37,7 @@ packages:
       - py-morphology-repair-workflow@1.0.4
       - py-simwriter@1.0.1
       - py-morph-tool@0.1.14
+      - py-morphio@2.3.4
       - py-neurodamus
       - py-sonata-network-reduction@0.0.6 ^neuron%intel@19.0.4^py-ipython%gcc
 

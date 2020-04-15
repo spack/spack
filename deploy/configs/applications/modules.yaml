@@ -58,6 +58,7 @@ modules:
       - py-entity-management
       - py-jupyter-notebook
       - py-morph-tool
+      - py-morphio
       - py-morphology-repair-workflow
       - 'py-mvdtool%gcc'
       - py-neurodamus
