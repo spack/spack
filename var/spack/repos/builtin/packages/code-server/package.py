@@ -13,6 +13,7 @@ class CodeServer(Package):
     homepage = "https://github.com/cdr/code-server"
     url      = "https://github.com/cdr/code-server/releases/download/3.1.0/code-server-3.1.0-linux-x86_64.tar.gz"
 
+    version('3.1.1', sha256='5dd922d28b2e351c146081849d987fb1e439ee7d53b941434b2eecb2a194da71')
     version('3.1.0', sha256='5ef85c8f280ce781a176a8b77386b333efe892755a5c325a1782e4eac6016e59')
 
     depends_on('git@2:')
