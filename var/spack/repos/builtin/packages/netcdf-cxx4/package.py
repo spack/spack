@@ -58,6 +58,7 @@ class NetcdfCxx4(AutotoolsPackage):
         )
 
     def configure_args(self):
+        config_args = []
 
         if '+static' in self.spec:
             config_args.append('--enable-static')
