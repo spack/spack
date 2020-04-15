@@ -30,10 +30,12 @@ class ActsCore(CMakePackage):
     """
 
     homepage = "http://acts.web.cern.ch/ACTS/"
-    git      = "https://gitlab.cern.ch/acts/acts-core.git"
+    git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('0.21.0', commit='10b719e68ddaca15b28ac25b3daddce8c0d3368d')
+    version('0.20.0', commit='1d37a849a9c318e8ca4fa541ef8433c1f004637b')
     version('0.19.0', commit='408335636486c421c6222a64372250ef12544df6')
     version('0.18.0', commit='d58a68cf75b52a5e0f563bc237f09250aa9da80c')
     version('0.17.0', commit='0789f654ff484b013fd27e5023cf342785ea8d97')

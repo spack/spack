@@ -285,7 +285,7 @@ be called using the ``spack -E`` flag to specify the environment.
 
 .. code-block:: console
 
-   $ spack activate myenv
+   $ spack env activate myenv
    $ spack add mpileaks
 
 or

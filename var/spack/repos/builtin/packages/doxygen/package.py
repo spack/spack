@@ -17,6 +17,8 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
+    version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
     version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')
     version('1.8.14', commit='2f4139de014bf03898320a45fe52c92872c1e0f4')
     version('1.8.12', commit='4951df8d0d0acf843b4147136f945504b96536e7')
@@ -26,6 +28,9 @@ class Doxygen(CMakePackage):
     # graphviz appears to be a run-time optional dependency
     variant('graphviz', default=False,
             description='Build with dot command support from Graphviz.')
+
+    variant('mscgen', default=False,
+            description='Build with support for code graphs from mscgen.')
 
     depends_on("cmake@2.8.12:", type='build')
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
@@ -38,6 +43,7 @@ class Doxygen(CMakePackage):
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')
+    depends_on("mscgen", when="+mscgen", type='run')
 
     # Support C++14's std::shared_ptr. For details about this patch, see
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified

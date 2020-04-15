@@ -24,6 +24,7 @@ class Nccl(MakefilePackage):
     version('1.3.0-1', sha256='53f36151061907bdcafad1c26c1d9370a0a8400f561a83704a5138213ba51003')
 
     depends_on('cuda')
+    depends_on('rdma-core', when='@2.3.5-5:')
 
     # https://github.com/NVIDIA/nccl/issues/244
     patch('so_reuseport.patch', when='@2.3.7-1:2.4.8-1')

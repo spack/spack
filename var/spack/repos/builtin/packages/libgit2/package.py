@@ -16,7 +16,11 @@ class Libgit2(CMakePackage):
     homepage = "https://libgit2.github.com/"
     url      = "https://github.com/libgit2/libgit2/archive/v0.26.0.tar.gz"
 
+    maintainers = ["AndrewGaspar"]
+
+    version('1.0.0',   sha256='6a1fa16a7f6335ce8b2630fbdbb5e57c4027929ebc56fcd1ac55edb141b409b4')
     version('0.99.0',  sha256='174024310c1563097a6613a0d3f7539d11a9a86517cd67ce533849065de08a11')
+    version('0.28.5',  sha256='2b7b68aee6f123bc84cc502a9c12738435b8054e7d628962e091cd2a25be4f42')
     version('0.28.4',  sha256='30f3877469d09f2e4a21be933b4e2800560d16646028dd800744dc5f7fb0c749')
     version('0.28.3',  sha256='ee5344730fe11ce7c86646e19c2d257757be293f5a567548d398fb3af8b8e53b')
     version('0.28.2',  sha256='42b5f1e9b9159d66d86fff0394215c5733b6ef8f9b9d054cdd8c73ad47177fc3')
@@ -53,6 +57,7 @@ class Libgit2(CMakePackage):
     # Build Dependencies
     depends_on('cmake@2.8:', type='build', when="@:0.28")
     depends_on('cmake@3.5:', type='build', when="@0.99:")
+    depends_on('pkgconfig', type='build')
 
     # Runtime Dependencies
     depends_on('libssh2', when='+ssh')

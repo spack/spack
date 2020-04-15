@@ -7,7 +7,7 @@ from spack import *
 import sys
 
 
-class Llvm(CMakePackage):
+class Llvm(CMakePackage, CudaPackage):
     """The LLVM Project is a collection of modular and reusable compiler and
        toolchain technologies. Despite its name, LLVM has little to do
        with traditional virtual machines, though it does provide helpful
@@ -19,7 +19,7 @@ class Llvm(CMakePackage):
     url = "https://github.com/llvm/llvm-project/archive/llvmorg-7.1.0.tar.gz"
     list_url = "http://releases.llvm.org/download.html"
     git = "https://github.com/llvm/llvm-project"
-    maintainers = ['trws']
+    maintainers = ['trws', 'naromero77']
 
     family = "compiler"  # Used by lmod
 
@@ -57,19 +57,6 @@ class Llvm(CMakePackage):
         default=True,
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
-
-    variant(
-        "cuda",
-        default=False,
-        description="Build LLVM with CUDA, required for nvptx offload",
-    )
-    variant(
-        "nvptx_offload_ccs",
-        default="35,60,70,75",
-        multi=True,
-        description="NVIDIA compute cabailities to make inlining capable",
-    )
-
     variant(
         "omp_debug",
         default=False,
@@ -77,6 +64,7 @@ class Llvm(CMakePackage):
     )
     variant("lldb", default=True, description="Build the LLVM debugger")
     variant("lld", default=True, description="Build the LLVM linker")
+    variant("mlir", default=False, description="Build with MLIR support")
     variant(
         "internal_unwind",
         default=True,
@@ -132,23 +120,16 @@ class Llvm(CMakePackage):
         description="Build with OpenMP capable thread sanitizer",
     )
     variant("python", default=False, description="Install python bindings")
-    variant(
-        "flang",
-        default=False,
-        description="Build flang branch version instead",
-    )
 
     extends("python", when="+python")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
-    depends_on("python@2.7:2.8", when="@5: ~python +flang", type="build")
     depends_on("python", when="@5: ~python", type="build")
 
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
-    depends_on("python@2.7:2.8", when="@5:+python+flang")
     depends_on("python", when="@5:+python")
     depends_on("z3", when="@9:")
 
@@ -158,8 +139,8 @@ class Llvm(CMakePackage):
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"))
     depends_on("hwloc")
-    depends_on("libelf")  # libomptarget
-    depends_on("libffi")  # libomptarget
+    depends_on("libelf", when="+cuda")  # libomptarget
+    depends_on("libffi", when="+cuda")  # libomptarget
 
     # ncurses dependency
     depends_on("ncurses+termlib")
@@ -189,13 +170,16 @@ class Llvm(CMakePackage):
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5.99")
 
+    # MLIR exists in > 10.x
+    conflicts("+mlir", when="@:9")
+
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
     # Backport from llvm master + additional fix
     # see  https://bugs.llvm.org/show_bug.cgi?id=39696
     # for a bug report about this problem in llvm master.
     patch("constexpr_longdouble.patch", when="@6:8+libcxx")
-    patch("constexpr_longdouble_9.0.patch", when="@9+libcxx")
+    patch("constexpr_longdouble_9.0.patch", when="@9:+libcxx")
 
     # Backport from llvm master; see
     # https://bugs.llvm.org/show_bug.cgi?id=38233
@@ -259,10 +243,10 @@ class Llvm(CMakePackage):
                 [
                     "-DCUDA_TOOLKIT_ROOT_DIR:PATH=" + spec["cuda"].prefix,
                     "-DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES={0}".format(
-                        ",".join(spec.variants["nvptx_offload_ccs"].value)
+                        ",".join(spec.variants["cuda_arch"].value)
                     ),
                     "-DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_{0}".format(
-                        spec.variants["nvptx_offload_ccs"].value[-1]
+                        spec.variants["cuda_arch"].value[-1]
                     ),
                 ]
             )
@@ -306,6 +290,8 @@ class Llvm(CMakePackage):
             projects.append("libcxxabi")
             if spec.satisfies("@3.9.0:"):
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
+        if "+mlir" in spec:
+            projects.append("mlir")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
         if "+polly" in spec:
