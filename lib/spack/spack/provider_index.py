@@ -183,7 +183,8 @@ class ProviderIndex(abc.Mapping, _IndexBase):
         Args:
             spec: spec potentially providing additional virtual specs
             only (sequence of str or None): virtual specs to consider for
-                the update. If None all provided virtual specs are considered.
+                the update. If None all provided are considered, except
+                those explicitly excluded.
             exclude (sequence of str or None): virtual specs to exclude from
                 the update.
         """
@@ -198,20 +199,21 @@ class ProviderIndex(abc.Mapping, _IndexBase):
 
         pkg_provided = spec.package_class.provided
         if only is not None:
-            # Here we need to use k.name since the key is a Spec and
+            # Here we need to use vspec.name since the key is a Spec and
             # llnl.util.lang.total_ordering interferes with string
             # comparison
             pkg_provided = dict(
-                (k, v) for k, v in pkg_provided.items() if k.name in only
+                (vspec, condition) for vspec, condition in pkg_provided.items()
+                if vspec.name in only
             )
 
         if exclude is not None:
-            # Here we need to use k.name since the key is a Spec and
+            # Here we need to use vspec.name since the key is a Spec and
             # llnl.util.lang.total_ordering interferes with string
             # comparison
             pkg_provided = dict(
-                (k, v) for k, v in pkg_provided.items()
-                if k.name not in exclude
+                (vspec, condition) for vspec, condition in pkg_provided.items()
+                if vspec.name not in exclude
             )
 
         for provided_spec, provider_specs in six.iteritems(pkg_provided):
@@ -337,6 +339,16 @@ class ProviderIndex(abc.Mapping, _IndexBase):
 
 class IndexWithBindings(abc.Mapping, _IndexBase):
     def __init__(self, specs, bindings):
+        """Provider index that ensures some virtual dependencies to be
+        bound to certain providers.
+
+        Args:
+            specs: specs used to initialize this provider index.
+            bindings (dict): dictionary mapping a virtual dependency name to
+                its preferred provider. All the other virtual dependencies
+                provided by the same package will be given the lowest possible
+                priority.
+        """
         self.bindings = bindings
 
         # Be safe if the argument is a generator that can
