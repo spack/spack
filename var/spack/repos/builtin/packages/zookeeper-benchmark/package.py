@@ -15,8 +15,6 @@ class ZookeeperBenchmark(Package):
 
     version('master', branch='master')
 
-    variant('zooKeeperVersion', default='3.3.6', description='The client code corresponding to the ZooKeeper version will be found using maven.')
-
     depends_on('maven', type='build')
     depends_on('zookeeper', type=('build', 'run'))
 
