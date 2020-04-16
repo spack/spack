@@ -7,7 +7,7 @@ from spack import *
 
 
 class Neo4j(Package):
-    """Neo4j is the world’s leading Graph Database. It is a high performance
+    """Neo4j is the world's leading Graph Database. It is a high performance
     graph store with all the features expected of a mature and robust
     database, like a friendly query language and ACID transactions. The
     programmer works with a flexible network structure of nodes and
