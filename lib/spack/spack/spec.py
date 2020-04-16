@@ -591,41 +591,67 @@ class CompilerSpec(object):
 
 @lang.key_ordering
 class DependencySpec(object):
-    """DependencySpecs connect two nodes in the DAG, and contain deptypes.
+    """DependencySpecs connect two nodes in the DAG,
+    and contain edge properties like deptypes or
+    provided virtual dependencies.
 
     Dependencies can be one (or more) of several types:
 
     - build: needs to be in the PATH at build time.
     - link: is linked to and added to compiler flags.
     - run: needs to be in the PATH for the package to run.
+    - test: is used for testing the package
 
     Fields:
     - spec: Spec depended on by parent.
     - parent: Spec that depends on `spec`.
     - deptypes: list of strings, representing dependency relationships.
+    - virtuals: list of strings, representing virtual dependencies.
     """
 
-    def __init__(self, parent, spec, deptypes):
+    def __init__(self, parent, spec, deptypes, virtuals=None):
         self.parent = parent
         self.spec = spec
         self.deptypes = tuple(sorted(set(deptypes)))
 
-    def update_deptypes(self, deptypes):
-        deptypes = set(deptypes)
-        deptypes.update(self.deptypes)
-        deptypes = tuple(sorted(deptypes))
-        changed = self.deptypes != deptypes
+        # List of virtual dependencies satisfied by this edge
+        virtuals = virtuals or tuple()
+        self.virtuals = tuple(sorted(set(virtuals)))
 
-        self.deptypes = deptypes
+    def _update_edge_property(self, property_name, update):
+        """Update an edge property and return whether it changed or not.
+
+        Args:
+            property_name (str): name of the property to be updated
+            update (sequence): value used for the update
+        """
+        current = getattr(self, property_name)
+        update = set(current) | set(update)
+        update = tuple(sorted(update))
+        changed = current != update
+        setattr(self, property_name, update)
         return changed
 
+    def update_deptypes(self, deptypes):
+        """Update the dependency type and return whether it changed or not."""
+        return self._update_edge_property('deptypes', deptypes)
+
+    def update_virtuals(self, virtuals):
+        """Update the list of virtual dependencies and
+        return whether it changed or not.
+        """
+        return self._update_edge_property('virtuals', virtuals)
+
     def copy(self):
-        return DependencySpec(self.parent, self.spec, self.deptypes)
+        return DependencySpec(
+            self.parent, self.spec, self.deptypes, self.virtuals
+        )
 
     def _cmp_key(self):
         return (self.parent.name if self.parent else None,
                 self.spec.name if self.spec else None,
-                self.deptypes)
+                self.deptypes,
+                self.virtuals)
 
     def __str__(self):
         return "%s %s--> %s" % (self.parent.name if self.parent else None,
