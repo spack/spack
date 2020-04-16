@@ -105,5 +105,9 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
-        return find_libraries(
+        nc_libs = find_libraries(
             ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)
+        if '+termlib' in self.spec:
+            nc_libs.extend(find_libraries(
+                ['libtinfo', 'libtinfow'], root=self.prefix, recursive=True))
+        return nc_libs
