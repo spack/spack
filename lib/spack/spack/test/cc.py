@@ -338,6 +338,33 @@ def test_ccld_deps():
             test_args_without_paths)
 
 
+def test_ccld_deps_isystem():
+    """Ensure all flags are added in ccld mode,
+       when a build uses -isystem."""
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
+        mytest_args = test_args + ['-isystemfooinc']
+        check_args(
+            cc, mytest_args,
+            [real_cc] +
+            test_include_paths +
+            ['-isystemfooinc',
+             '-isystemxinc',
+             '-isystemyinc',
+             '-isystemzinc'] +
+            test_library_paths +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
+            ['-Wl,--disable-new-dtags'] +
+            test_wl_rpaths +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
+            test_args_without_paths)
+
+
 def test_cc_deps():
     """Ensure -L and RPATHs are not added in cc mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -350,6 +377,26 @@ def test_cc_deps():
             ['-Ixinc',
              '-Iyinc',
              '-Izinc'] +
+            test_library_paths +
+            ['-c'] +
+            test_args_without_paths)
+
+
+def test_cc_deps_isystem():
+    """Ensure -L and RPATHs are not added in cc mode,
+       when a build uses -isystem"""
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
+        mytest_args = test_args + ['-isystemfooinc']
+        check_args(
+            cc, ['-c'] + mytest_args,
+            [real_cc] +
+            test_include_paths +
+            ['-isystemfooinc',
+             '-isystemxinc',
+             '-isystemyinc',
+             '-isystemzinc'] +
             test_library_paths +
             ['-c'] +
             test_args_without_paths)
@@ -375,6 +422,42 @@ def test_ccld_with_system_dirs():
              '-Izinc'] +
             ['-I/usr/include',
              '-I/usr/local/include'] +
+            test_library_paths +
+            ['-Lxlib',
+             '-Lylib',
+             '-Lzlib'] +
+            ['-L/usr/local/lib',
+             '-L/lib64/'] +
+            ['-Wl,--disable-new-dtags'] +
+            test_wl_rpaths +
+            ['-Wl,-rpath,xlib',
+             '-Wl,-rpath,ylib',
+             '-Wl,-rpath,zlib'] +
+            ['-Wl,-rpath,/usr/lib64'] +
+            test_args_without_paths)
+
+
+def test_ccld_with_system_dirs_isystem():
+    """Ensure all flags are added in ccld mode,
+       when a build uses -isystem"""
+    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
+                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
+                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
+
+        sys_path_args = ['-isystem/usr/include',
+                         '-L/usr/local/lib',
+                         '-Wl,-rpath,/usr/lib64',
+                         '-isystem/usr/local/include',
+                         '-L/lib64/']
+        check_args(
+            cc, sys_path_args + test_args,
+            [real_cc] +
+            test_include_paths +
+            ['-isystemxinc',
+             '-isystemyinc',
+             '-isystemzinc'] +
+            ['-isystem/usr/include',
+             '-isystem/usr/local/include'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',
