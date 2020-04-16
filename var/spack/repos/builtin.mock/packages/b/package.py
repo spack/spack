@@ -15,4 +15,5 @@ class B(Package):
     version('1.0', '0123456789abcdef0123456789abcdef')
 
     def install(self, spec, prefix):
-        pass
+        with working_dir(prefix):
+            touch("fake_install")

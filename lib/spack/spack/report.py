@@ -132,6 +132,7 @@ class InfoCollector(object):
 
                 start_time = time.time()
                 value = None
+                error = None
                 try:
 
                     value = do_install(pkg, *args, **kwargs)
@@ -145,6 +146,7 @@ class InfoCollector(object):
                 except spack.build_environment.InstallError as e:
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
+                    error = e
                     package['result'] = 'failure'
                     package['stdout'] = fetch_package_log(pkg)
                     package['message'] = e.message or 'Installation failure'
@@ -153,6 +155,7 @@ class InfoCollector(object):
                 except (Exception, BaseException) as e:
                     # Everything else is an error (the installation
                     # failed outside of the child process)
+                    error = e
                     package['result'] = 'error'
                     package['stdout'] = fetch_package_log(pkg)
                     package['message'] = str(e) or 'Unknown error'
@@ -176,6 +179,11 @@ class InfoCollector(object):
                         item['packages'].append(package)
                     except StopIteration:
                         pass
+
+                if error and pkg.spec != pkg.spec.root:
+                    raise spack.build_environment.InstallError(
+                        "Install failed for dependency %s of %s" %
+                        (pkg.name, pkg.spec.root.name))
 
                 return value
 
