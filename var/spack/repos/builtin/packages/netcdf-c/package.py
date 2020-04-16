@@ -182,10 +182,7 @@ class NetcdfC(AutotoolsPackage):
             else:
                 config_args.append('--disable-parallel4')
 
-        if '+jna' in self.spec:
-            config_args.append('--enable-jna')
-        else:
-            config_args.append('--disable-jna')
+            config_args += self.enable_or_disable('jna')
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
