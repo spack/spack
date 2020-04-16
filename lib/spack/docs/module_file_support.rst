@@ -165,8 +165,6 @@ used ``gcc``.  You could therefore just type:
 
 To identify just the one built with the Intel compiler.
 
-.. _extensions:
-
 .. _cmd-spack-module-loads:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Rgb(AutotoolsPackage):
+class Rgb(AutotoolsPackage, XorgPackage):
     """X color name database.
 
     This package includes both the list mapping X color names to RGB values
@@ -16,7 +16,7 @@ class Rgb(AutotoolsPackage):
     The "others" subdirectory contains some alternate color databases."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/rgb"
-    url      = "https://www.x.org/archive/individual/app/rgb-1.0.6.tar.gz"
+    xorg_mirror_path = "app/rgb-1.0.6.tar.gz"
 
     version('1.0.6', sha256='cb998035e08b9f58ad3150cab60461c3225bdd075238cffc665e24da40718933')
 

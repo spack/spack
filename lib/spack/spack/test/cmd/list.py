@@ -37,6 +37,14 @@ def test_list_tags():
     assert 'cloverleaf3d' in output
     assert 'hdf5' not in output
 
+    output = list('--tags', 'hpc')
+    assert 'nek5000' in output
+    assert 'mfem' in output
+
+    output = list('--tags', 'HPC')
+    assert 'nek5000' in output
+    assert 'mfem' in output
+
 
 def test_list_format_name_only():
     output = list('--format', 'name_only')

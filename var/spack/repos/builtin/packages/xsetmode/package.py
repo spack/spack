@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Xsetmode(AutotoolsPackage):
+class Xsetmode(AutotoolsPackage, XorgPackage):
     """Set the mode for an X Input device."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xsetmode"
-    url      = "https://www.x.org/archive/individual/app/xsetmode-1.0.0.tar.gz"
+    xorg_mirror_path = "app/xsetmode-1.0.0.tar.gz"
 
     version('1.0.0', sha256='9ee0d6cf72dfaacb997f9570779dcbc42f5395ae102180cb19382860b4b02ef3')
 

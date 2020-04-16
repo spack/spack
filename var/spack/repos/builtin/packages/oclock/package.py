@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Oclock(AutotoolsPackage):
+class Oclock(AutotoolsPackage, XorgPackage):
     """oclock is a simple analog clock using the SHAPE extension to make
     a round (possibly transparent) window."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/oclock"
-    url      = "https://www.x.org/archive/individual/app/oclock-1.0.3.tar.gz"
+    xorg_mirror_path = "app/oclock-1.0.3.tar.gz"
 
     version('1.0.3', sha256='6628d1abe1612b87db9d0170cbe7f1cf4205cd764274f648c3c1bdb745bff877')
 
