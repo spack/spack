@@ -21,7 +21,7 @@ class ZookeeperBenchmark(Package):
     depends_on('zookeeper', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        zooKeeperVersion = self.spec['zookeeper'].version.string
+        zookeeper_version = self.spec['zookeeper'].version.string
         mvn = which('mvn')
-        mvn('-DZooKeeperVersion=' + zooKeeperVersion, 'package')
+        mvn('-DZooKeeperVersion=' + zookeeper_version, 'package')
         install_tree('.', prefix)
