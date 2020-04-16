@@ -47,6 +47,13 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
 
+    @when('platform=darwin')
+    def setup_build_environment(self, env):
+        # on macOS, emacs' config does search hard enough for ncurses'
+        # termlib `-ltinfo` lib, which results in linker errors
+        if '+termlib' in spec['ncurses']:
+            env.append_flags('LDFLAGS', '-ltinfo')
+
     def configure_args(self):
         spec = self.spec
 
