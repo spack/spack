@@ -20,6 +20,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     git = 'https://github.com/cp2k/cp2k.git'
     list_url = 'https://github.com/cp2k/cp2k/releases'
 
+    maintainers = ['dev-zero']
+
     version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
     version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
