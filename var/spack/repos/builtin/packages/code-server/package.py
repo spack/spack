@@ -25,4 +25,4 @@ class CodeServer(Package):
 
         cp('-r', '{0}/.'.format(self.stage.source_path), prefix)
         mkdir(prefix.bin)
-        ln('-s', '{0}/code-server'.format(prefix), prefix.bin) 
+        ln('-s', '{0}/code-server'.format(prefix), prefix.bin)
