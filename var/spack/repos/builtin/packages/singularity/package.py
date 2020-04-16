@@ -35,6 +35,8 @@ class Singularity(MakefilePackage):
     version('3.2.1', sha256='d4388fb5f7e0083f0c344354c9ad3b5b823e2f3f27980e56efa7785140c9b616')
     version('3.1.1', sha256='7f0df46458d8894ba0c2071b0848895304ae6b1137d3d4630f1600ed8eddf1a4')
 
+    variant('suid', default=True, description='install SUID binary')
+    variant('network', default=True, description='install network plugins')
     depends_on('go')
     depends_on('libuuid')
     depends_on('libgpg-error')
@@ -82,7 +84,12 @@ class Singularity(MakefilePackage):
     # Hijack the edit stage to run mconfig.
     def edit(self, spec, prefix):
         with working_dir(self.build_directory):
-            configure = Executable('./mconfig --prefix=%s' % prefix)
+            confstring = './mconfig --prefix=%s' % prefix
+            if '~suid' in spec:
+                confstring += ' --without-suid'
+            if '~network' in spec:
+                confstring += ' --without-network'
+            configure = Executable(confstring)
             configure()
 
     # Set these for use by MakefilePackage's default build/install methods.
