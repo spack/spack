@@ -1,0 +1,11 @@
+--- a/lib/FXRex.cpp	2019-08-22 21:46:13.000000000 -0500
++++ b/lib/FXRex.cpp	2020-04-13 16:46:31.718701955 -0500
+@@ -503,7 +503,7 @@
+ */
+ 
+ // Debugging regex code
+-#define REXDEBUG 1
++// #define REXDEBUG 1
+ 
+ // As close to infinity as we're going to get; this seems big enough.  We can not make
+ // it too large as this may wrap around when added to something else!

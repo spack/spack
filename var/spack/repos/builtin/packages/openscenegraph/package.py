@@ -14,6 +14,7 @@ class Openscenegraph(CMakePackage):
     homepage = "http://www.openscenegraph.org"
     url      = "https://github.com/openscenegraph/OpenSceneGraph/archive/OpenSceneGraph-3.6.4.tar.gz"
 
+    version('3.6.5', sha256='aea196550f02974d6d09291c5d83b51ca6a03b3767e234a8c0e21322927d1e12')
     version('3.6.4', sha256='81394d1b484c631028b85d21c5535280c21bbd911cb058e8746c87e93e7b9d33')
     version('3.2.3', sha256='a1ecc6524197024834e1277916922b32f30246cb583e27ed19bf3bf889534362')
     version('3.1.5', sha256='dddecf2b33302076712100af59b880e7647bc595a9a7cc99186e98d6e0eaeb5c')
@@ -21,8 +22,11 @@ class Openscenegraph(CMakePackage):
     variant('shared', default=True, description='Builds a shared version of the library')
 
     depends_on('cmake@2.8.7:', type='build')
-    depends_on('qt@4:')
+    depends_on('qt@4:', when='@3.2:')
+    depends_on('qt@:4', when='@:3.1')
     depends_on('zlib')
+    depends_on('libxinerama')
+    depends_on('libxrandr')
 
     def cmake_args(self):
         spec = self.spec
@@ -32,13 +36,17 @@ class Openscenegraph(CMakePackage):
         args = [
             '-DDYNAMIC_OPENSCENEGRAPH={0}'.format(shared_status),
             '-DDYNAMIC_OPENTHREADS={0}'.format(shared_status),
-            '-DZLIB_INCLUDE_DIR={0}'.format(spec['zlib'].prefix.include),
-            '-DZLIB_LIBRARY={0}/libz.{1}'.format(spec['zlib'].prefix.lib,
-                                                 dso_suffix),
             '-DBUILD_OSG_APPLICATIONS=OFF',
             '-DOSG_NOTIFY_DISABLED=ON',
             '-DLIB_POSTFIX=',
+            '-DCMAKE_RELWITHDEBINFO_POSTFIX=',
         ]
+        if spec.satisfies('@:3.2'):
+            args.extend([
+                '-DZLIB_INCLUDE_DIR={0}'.format(spec['zlib'].prefix.include),
+                '-DZLIB_LIBRARY={0}/libz.{1}'.format(spec['zlib'].prefix.lib,
+                                                     dso_suffix),
+            ])
 
         # NOTE: This is necessary in order to allow OpenSceneGraph to compile
         # despite containing a number of implicit bool to int conversions.
