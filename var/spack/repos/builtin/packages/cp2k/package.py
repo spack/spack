@@ -302,7 +302,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                              'libplumed.{0}'.format(dso_suffix))
             ])
 
-        fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+        cc = spack_cc if '~mpi' in spec else spec['mpi'].mpicc
+        cxx = spack_cxx if '~mpi' in spec else spec['mpi'].mpicxx
+        fc = spack_fc if '~mpi' in spec else spec['mpi'].mpifc
 
         # Intel
         if '%intel' in self.spec:
@@ -486,8 +488,13 @@ class Cp2k(MakefilePackage, CudaPackage):
                 ))
 
             mkf.write('\n# COMPILER, LINKER, TOOLS\n\n')
-            mkf.write('CC = {0.compiler.cc}\n'.format(self))
-            if '%intel' in self.spec:
+            mkf.write('FC  = {0}\n'
+                      'CC  = {1}\n'
+                      'CXX = {2}\n'
+                      'LD  = {3}\n'
+                      .format(fc, cc, cxx, fc))
+
+            if '%intel' in spec:
                 intel_bin_dir = ancestor(self.compiler.cc)
                 # CPP is a commented command in Intel arch of CP2K
                 # This is the hack through which cp2k developers avoid doing :
@@ -495,14 +502,11 @@ class Cp2k(MakefilePackage, CudaPackage):
                 # ${CPP} <file>.F > <file>.f90
                 #
                 # and use `-fpp` instead
-                mkf.write('CPP = # {0.compiler.cc} -P\n'.format(self))
-                mkf.write('AR = {0}/xiar -r\n'.format(intel_bin_dir))
+                mkf.write('CPP = # {0} -P\n'.format(spack_cc))
+                mkf.write('AR  = {0}/xiar -r\n'.format(intel_bin_dir))
             else:
-                mkf.write('CPP = # {0.compiler.cc} -E\n'.format(self))
-                mkf.write('AR = ar -r\n')
-
-            mkf.write('FC = {0}\n'.format(fc))
-            mkf.write('LD = {0}\n'.format(fc))
+                mkf.write('CPP = # {0} -E\n'.format(spack_cc))
+                mkf.write('AR  = ar -r\n')
 
             if self.spec.satisfies('+cuda'):
                 mkf.write('NVCC = {0}\n'.format(
