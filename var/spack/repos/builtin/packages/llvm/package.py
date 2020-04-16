@@ -237,6 +237,7 @@ class Llvm(CMakePackage, CudaPackage):
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
             "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
             "-DLIBOMP_USE_HWLOC:BOOL=ON",
+            "-DLIBOMP_HWLOC_INSTALL_DIR={0}".format(spec["hwloc"].prefix),
         ]
 
         projects = []
@@ -397,9 +398,8 @@ class Llvm(CMakePackage, CudaPackage):
 
                 # work around bad libelf detection in libomptarget
                 cmake_args.append(
-                    "-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}".format(
-                        spec["libelf"].prefix.include,
-                        spec["hwloc"].prefix.include,
+                    "-DLIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR:String={0}".format(
+                        spec["libelf"].prefix.include
                     )
                 )
 
