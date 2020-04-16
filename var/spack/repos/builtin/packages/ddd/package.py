@@ -23,6 +23,10 @@ class Ddd(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gdb@4.16:')
     depends_on('lesstif@0.89:')
 
+    # Patch to fix hangs due to injection of bogus GDB init settings:
+    #     https://stackoverflow.com/questions/2914003/ddd-hangs-on-start
+    patch('extended-prompt.patch')
+
     # Needed for OSX 10.9 DP6 build failure:
     #     https://savannah.gnu.org/patch/?8178
     patch('https://savannah.gnu.org/patch/download.php?file_id=29114',
