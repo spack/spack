@@ -312,7 +312,6 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-D__INTEL',
                 '-D__HAS_ISO_C_BINDING',
                 '-D__USE_CP2K_TRACE',
-                '-D__MKL'
             ])
             fcflags.extend([
                 '-diag-disable 8290,8291,10010,10212,11060',
