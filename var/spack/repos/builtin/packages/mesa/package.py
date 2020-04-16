@@ -37,6 +37,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('zlib')
     depends_on('expat')
+    depends_on('ncurses+termlib')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -83,6 +84,7 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
+            'LDFLAGS={0}'.format(self.spec['ncurses'].libs.search_flags),
             '--enable-shared',
             '--disable-static',
             '--disable-libglvnd',
