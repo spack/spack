@@ -9,8 +9,9 @@ from spack import *
 
 class Hal(MakefilePackage):
     """HAL is a structure to efficiently store and index multiple
-    genome alignments and ancestral reconstructions. HAL is a
-    graph-based representation which provides several advantages
+    genome alignments and ancestral reconstructions. 
+    
+    HAL is a graph-based representation which provides several advantages
     over matrix/block-based formats such as MAF, such as
     improved scalability and the ability to perform queries with
     respect to an arbitrary reference or subtree."""
