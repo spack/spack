@@ -40,7 +40,7 @@ def prefix_inspections(platform):
 
     if platform == 'darwin':
         for subdir in ('lib', 'lib64'):
-            inspections[subdir].append('DYLD_LIBRARY_PATH')
+            inspections[subdir].append('DYLD_FALLBACK_LIBRARY_PATH')
 
     return inspections
 
