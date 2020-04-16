@@ -12,6 +12,8 @@ class Dbcsr(CMakePackage, CudaPackage):
     homepage = "https://github.com/cp2k/dbcsr"
     git      = "https://github.com/cp2k/dbcsr.git"
 
+    maintainers = ['dev-zero']
+
     version('develop', branch='develop')
 
     variant('mpi',    default=True,  description='Compile with MPI')
