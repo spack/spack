@@ -307,7 +307,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         fc = spack_fc if '~mpi' in spec else spec['mpi'].mpifc
 
         # Intel
-        if '%intel' in self.spec:
+        if '%intel' in spec:
             cppflags.extend([
                 '-D__INTEL',
                 '-D__HAS_ISO_C_BINDING',
@@ -337,7 +337,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             libs.extend(cosma)
 
         # MPI
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             cppflags.extend([
                 '-D__parallel',
                 '-D__SCALAPACK'
@@ -347,7 +347,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(scalapack.search_flags)
 
             libs.extend(scalapack)
-            libs.extend(self.spec['mpi:cxx'].libs)
+            libs.extend(spec['mpi:cxx'].libs)
             libs.extend(self.compiler.stdcxx_libs)
 
             if 'wannier90' in spec:
@@ -369,7 +369,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 fcflags += pkgconf('--cflags', 'libxcf03', output=str).split()
                 libs += pkgconf('--libs', 'libxcf03', output=str).split()
 
-        if '+pexsi' in self.spec:
+        if '+pexsi' in spec:
             cppflags.append('-D__LIBPEXSI')
             fcflags.append('-I' + os.path.join(
                 spec['pexsi'].prefix, 'fortran'))
@@ -388,7 +388,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 ),
             ])
 
-        if '+elpa' in self.spec:
+        if '+elpa' in spec:
             elpa = spec['elpa']
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
             elpa_incdir = elpa.headers.directories[0]
@@ -412,27 +412,27 @@ class Cp2k(MakefilePackage, CudaPackage):
                                         int(elpa.version[1])))
                 fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'elpa'))]
 
-        if self.spec.satisfies('+sirius'):
+        if spec.satisfies('+sirius'):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
             libs += list(sirius.libs)
 
-        if self.spec.satisfies('+cuda'):
+        if spec.satisfies('+cuda'):
             cppflags += ['-D__ACC']
             libs += ['-lcudart', '-lnvrtc', '-lcuda']
 
-            if self.spec.satisfies('+cuda_blas'):
+            if spec.satisfies('+cuda_blas'):
                 cppflags += ['-D__DBCSR_ACC=2']
                 libs += ['-lcublas']
             else:
                 cppflags += ['-D__DBCSR_ACC']
 
-            if self.spec.satisfies('+cuda_fft'):
+            if spec.satisfies('+cuda_fft'):
                 cppflags += ['-D__PW_CUDA']
                 libs += ['-lcufft', '-lcublas']
 
-            cuda_arch = self.spec.variants['cuda_arch'].value
+            cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch:
                 gpuver = {
                     '35': 'K40',
@@ -442,7 +442,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 }[cuda_arch]
 
                 if (cuda_arch == '35'
-                        and self.spec.satisfies('+cuda_arch_35_k20x')):
+                        and spec.satisfies('+cuda_arch_35_k20x')):
                     gpuver = 'K20X'
 
         if 'smm=libsmm' in spec:
@@ -479,11 +479,11 @@ class Cp2k(MakefilePackage, CudaPackage):
         nvflags.extend(cppflags)
 
         with open(self.makefile, 'w') as mkf:
-            if '+plumed' in self.spec:
+            if '+plumed' in spec:
                 mkf.write('# include Plumed.inc as recommended by'
                           'PLUMED to include libraries and flags')
                 mkf.write('include {0}\n'.format(
-                    self.spec['plumed'].package.plumed_inc
+                    spec['plumed'].package.plumed_inc
                 ))
 
             mkf.write('\n# COMPILER, LINKER, TOOLS\n\n')
@@ -507,9 +507,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 mkf.write('CPP = # {0} -E\n'.format(spack_cc))
                 mkf.write('AR  = ar -r\n')
 
-            if self.spec.satisfies('+cuda'):
+            if spec.satisfies('+cuda'):
                 mkf.write('NVCC = {0}\n'.format(
-                    os.path.join(self.spec['cuda'].prefix, 'bin', 'nvcc')))
+                    os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
             def fflags(var, lst):
