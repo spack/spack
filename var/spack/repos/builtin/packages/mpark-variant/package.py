@@ -27,6 +27,6 @@ class MparkVariant(CMakePackage):
     conflicts('%gcc@7.3.1',
               msg='GCC 7.3.1 has a bug that prevents using MPark.Variant. '
                   'See https://github.com/mpark/variant/issues/43 and '
-                  '    https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84785 '
+                  'https://gcc.gnu.org/bugzilla/show_bug.cgi?id=84785 '
                   'Please use a different compiler version or another '
                   'compiler.')
