@@ -8,6 +8,8 @@ from spack import *
 class Grpc(CMakePackage):
     """A high performance, open-source universal RPC framework."""
 
+    maintainers = ['nazavode']
+
     homepage = "https://grpc.io"
     url      = "https://github.com/grpc/grpc/archive/v1.27.0.tar.gz"
 
@@ -25,6 +27,7 @@ class Grpc(CMakePackage):
     depends_on('openssl')
     depends_on('zlib')
     depends_on('c-ares')
+    depends_on('abseil-cpp', when='@1.27.0:')
 
     def cmake_args(self):
         args = [
@@ -44,4 +47,6 @@ class Grpc(CMakePackage):
             '-DgRPC_GFLAGS_PROVIDER:String=none',
             '-DgRPC_BENCHMARK_PROVIDER:String=none',
         ]
+        if self.spec.satisfies('@1.27.0:'):
+            args.append('-DgRPC_ABSL_PROVIDER:String=package')
         return args

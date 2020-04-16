@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Glproto(AutotoolsPackage):
+class Glproto(AutotoolsPackage, XorgPackage):
     """OpenGL Extension to the X Window System.
 
     This extension defines a protocol for the client to send 3D rendering
     commands to the X server."""
 
     homepage = "https://www.x.org/wiki/"
-    url      = "https://www.x.org/archive/individual/proto/glproto-1.4.17.tar.gz"
+    xorg_mirror_path = "proto/glproto-1.4.17.tar.gz"
 
     version('1.4.17', sha256='9d8130fec2b98bd032db7730fa092dd9dec39f3de34f4bb03ceb43b9903dbc96')
 
