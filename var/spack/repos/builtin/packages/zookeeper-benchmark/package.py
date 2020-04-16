@@ -18,9 +18,10 @@ class ZookeeperBenchmark(Package):
     variant('zooKeeperVersion', default='3.3.6', description='The client code corresponding to the ZooKeeper version will be found using maven.')
 
     depends_on('maven', type='build')
+    depends_on('zookeeper', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        zooKeeperVersion = self.spec.variants['zooKeeperVersion'].value
+        zooKeeperVersion = self.spec['zookeeper'].version.string
         mvn = which('mvn')
         mvn('-DZooKeeperVersion=' + zooKeeperVersion, 'package')
         install_tree('.', prefix)
