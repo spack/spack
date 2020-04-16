@@ -1600,6 +1600,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return 'test-%s-out.txt' % self.spec.format('{name}-{hash:7}')
 
     test_requires_compiler = False
+    test_failures = None
+    test_log_file = None
+    test_stage = None
 
     def do_test(self, name, remove_directory=False, dirty=False):
         if self.test_requires_compiler:
@@ -1612,16 +1615,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        test_stage = Prefix(os.path.join(
+        # Clear test failures
+        self.test_failures = []
+
+        self.test_stage = Prefix(os.path.join(
             sup.canonicalize_path(
                 spack.config.get('config:test_stage', os.getcwd())),
             name))
-        if not os.path.exists(test_stage):
-            mkdirp(test_stage)
-        test_log_file = os.path.join(test_stage, self.test_log_name)
+        if not os.path.exists(self.test_stage):
+            mkdirp(self.test_stage)
+        self.test_log_file = os.path.join(self.test_stage, self.test_log_name)
 
         def test_process():
-            with tty.log.log_output(test_log_file) as logger:
+            with tty.log.log_output(self.test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
                             self.spec.format('{name}-{hash:7}'))
@@ -1631,7 +1637,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.set_debug(True)
 
                 # setup test directory
-                testdir = test_stage.join(self.spec.format('{name}-{hash}'))
+                testdir = self.test_stage.join(
+                    self.spec.format('{name}-{hash}'))
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
                 mkdirp(testdir)
@@ -1644,20 +1651,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 try:
                     os.chdir(testdir)
                     self.test()
-                except Exception as e:
-                    # Catch the error and print a summary to the log file
-                    # so that cdash and junit reporters know about it
-                    exc_info = sys.exc_info()
-                    print('Error: %s' % e)
-                    import traceback
-                    traceback.print_tb(exc_info[2])
-                    raise  # re-raise the same error/traceback
-                else:
+                    if self.test_failures:
+                        raise TestFailure(self.test_failures)
+
                     # cleanup test directory on success
                     if remove_directory:
                         shutil.rmtree(testdir)
-                        if not os.listdir(test_stage):
-                            shutil.rmtree(test_stage)
+                        if not os.listdir(self.test_stage):
+                            shutil.rmtree(self.test_stage)
                 finally:
                     # reset debug level
                     tty.set_debug(old_debug)
@@ -1673,15 +1674,66 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                  installed=False, purpose=''):
         """Run the test and confirm the expected results are obtained
 
+        Log any failures and continue, they will be re-raised later
+
         Args:
             exe (str): the name of the executable
             options (list of str): list of options to pass to the runner
             expected (list of str): list of expected output strings
             status (int, list of int, or None): possible passing status values
                 with 0 and None meaning the test is expected to succeed
-            installed (bool): the executable should be in the install prefix
+            installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
         """
+        try:
+            self._run_test_helper(
+                exe, options, expected, status, installed, purpose)
+            tty.msg("PASSED")
+        except BaseException as e:
+            # print a summary of the error to the log file
+            # so that cdash and junit reporters know about it
+            exc_type, _, tb = sys.exc_info()
+            print('Error: %s' % e)
+            import traceback
+            # remove the current call frame to get back to
+            stack = traceback.extract_stack()[:-1]
+
+            # Package files have a line added at import time, so we re-read
+            # the file to make line numbers match. We have to subtract two from
+            # the line number because the original line number is inflated once
+            # by the import statement and the lines are displaced one by the
+            # import statement.
+            for i, entry in enumerate(stack):
+                filename, lineno, function, text = entry
+                if spack.paths.is_package_file(filename):
+                    with open(filename, 'r') as f:
+                        lines = f.readlines()
+                    text = lines[lineno - 2]
+                    stack[i] = (filename, lineno, function, text)
+
+            # Format the stack to print and print it
+            out = traceback.format_list(stack)
+            for line in out:
+                print(line.rstrip('\n'))
+
+            if exc_type is spack.util.executable.ProcessError:
+                out = StringIO()
+                spack.build_environment.write_log_summary(
+                    out, 'test', self.test_log_file, last=1)
+                m = out.getvalue()
+            else:
+                # We're below the package context, so get context from stack
+                # instead of from traceback.
+                # The traceback is truncated here, so we can't use it to
+                # traverse the stack.
+                m = '\n'.join(spack.build_environment.get_package_context(
+                        traceback.extract_stack()))
+
+            exc = e  # e is deleted after this block
+            self.test_failures.append((exc, m))
+
+    def _run_test_helper(self, exe, options, expected, status, installed,
+                         purpose):
         status = [status] if not isinstance(status, list) else status
         if purpose:
             tty.msg(purpose)
@@ -2528,3 +2580,15 @@ class DependencyConflictError(spack.error.SpackError):
         super(DependencyConflictError, self).__init__(
             "%s conflicts with another file in the flattened directory." % (
                 conflict))
+
+
+class TestFailure(spack.error.SpackError):
+    """Raised when package tests have failed for an installation."""
+    def __init__(self, failures):
+        # Failures are all exceptions
+        msg = "%d tests failed.\n" % len(failures)
+        for failure, message in failures:
+            msg += '\n\n%s\n' % str(failure)
+            msg += '\n%s\n' % message
+
+        super(TestFailure, self).__init__(msg)
