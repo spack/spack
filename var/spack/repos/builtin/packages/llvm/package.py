@@ -236,7 +236,7 @@ class Llvm(CMakePackage, CudaPackage):
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
             "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
-            "-DLIBOMP_USE_HWLOC=On",
+            "-DLIBOMP_USE_HWLOC:BOOL=ON",
         ]
 
         projects = []
@@ -391,7 +391,9 @@ class Llvm(CMakePackage, CudaPackage):
                     "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
                 ]
                 cmake_args.extend(self.cmake_args())
-                cmake_args.append('-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB=true')
+                cmake_args.append(
+                    "-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB:BOOL=TRUE"
+                )
 
                 # work around bad libelf detection in libomptarget
                 cmake_args.append(
