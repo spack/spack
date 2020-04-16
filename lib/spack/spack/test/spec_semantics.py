@@ -1011,6 +1011,9 @@ class TestSpecSematics(object):
         ('netlib-scalapack ^intel-parallel-studio ^lapack=openblas',
          [('mpi', 'intel-parallel-studio'), ('lapack', 'openblas'),
           ('blas', 'openblas')]),
+        # Test that we can bind more than one virtual to the same provider
+        ('netlib-scalapack ^lapack,blas=openblas',
+         [('lapack', 'openblas'), ('blas', 'openblas')]),
     ])
     def test_virtual_deps_bindings(self, spec_str, specs_in_dag):
         s = Spec(spec_str)
