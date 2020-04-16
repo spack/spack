@@ -33,7 +33,6 @@ Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
 import re
-import inspect
 import multiprocessing
 import os
 import shutil
@@ -52,6 +51,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
+import spack.package
 import spack.schema.environment
 import spack.store
 import spack.architecture as arch
@@ -879,7 +879,10 @@ def fork(pkg, function, dirty, fake, context='build', **kwargs):
 
             # build up some context from the offending package so we can
             # show that, too.
-            package_context = get_package_context(tb)
+            if exc_type is not spack.package.TestFailure:
+                package_context = get_package_context(traceback.extract_tb(tb))
+            else:
+                package_context = []
 
             build_log = None
             if context == 'build' and hasattr(pkg, 'log_path'):
@@ -953,8 +956,8 @@ def get_package_context(traceback, context=3):
     """Return some context for an error message when the build fails.
 
     Args:
-        traceback (traceback): A traceback from some exception raised during
-            install
+        traceback (list of tuples): output from traceback.extract_tb() or
+            traceback.extract_stack()
         context (int): Lines of context to show before and after the line
             where the error happened
 
@@ -963,65 +966,44 @@ def get_package_context(traceback, context=3):
     from there.
 
     """
-    def make_stack(tb, stack=None):
-        """Tracebacks come out of the system in caller -> callee order.  Return
-        an array in callee -> caller order so we can traverse it."""
-        if stack is None:
-            stack = []
-        if tb is not None:
-            make_stack(tb.tb_next, stack)
-            stack.append(tb)
-        return stack
-
-    stack = make_stack(traceback)
-
-    for tb in stack:
-        frame = tb.tb_frame
-        if 'self' in frame.f_locals:
-            # Find the first proper subclass of PackageBase.
-            obj = frame.f_locals['self']
-            if isinstance(obj, spack.package.PackageBase):
+    for filename, lineno, function, text in reversed(traceback):
+        if 'package.py' in filename or 'spack/build_systems' in filename:
+            if function not in ('run_test', '_run_test_helper'):
+                # We are in a package and not one of the listed methods
+                # We exclude these methods because we expect errors in them to
+                # be the result of user tests failing, and we show the tests
+                # instead.
                 break
 
-    # Determine whether we are in a package file
-    # Package files are named `package.py` and are not in the lib/spack/spack
     # Package files have a line added at import time, so we adjust the lineno
     # when we are getting context from a package file instead of a base class
-    # We have to remove the file extension because it can be .py and can be
-    # .pyc depending on context, and can differ between the files
-    filename = inspect.getfile(frame.f_code)
-    filename_noext = os.path.splitext(filename)[0]
-    packagebase_filename_noext = os.path.splitext(
-        inspect.getfile(spack.package.PackageBase))[0]
-    in_package = (filename_noext != packagebase_filename_noext and
-                  os.path.basename(filename_noext) == 'package')
-    adjust = 1 if in_package else 0
+    adjust = 1 if spack.paths.is_package_file(filename) else 0
+    lineno = lineno - adjust
 
     # We found obj, the Package implementation we care about.
     # Point out the location in the install method where we failed.
     lines = [
         '{0}:{1:d}, in {2}:'.format(
             filename,
-            tb.tb_lineno - adjust,  # adjust for import mangling
-            frame.f_code.co_name
+            lineno,
+            function
         )
     ]
 
     # Build a message showing context in the install method.
-    sourcelines, start = inspect.getsourcelines(frame)
-
-    # Calculate lineno of the error relative to the start of the function.
     # Adjust for import mangling of package files.
-    fun_lineno = tb.tb_lineno - start - adjust
-    start_ctx = max(0, fun_lineno - context)
-    sourcelines = sourcelines[start_ctx:fun_lineno + context + 1]
+    with open(filename, 'r') as f:
+        sourcelines = f.readlines()
+    start = max(0, lineno - context - 1)
+    sourcelines = sourcelines[start:lineno + context + 1]
 
     for i, line in enumerate(sourcelines):
-        is_error = start_ctx + i == fun_lineno
+        i = i + adjust  # adjusting for import munging again
+        is_error = start + i == lineno
         mark = '>> ' if is_error else '   '
         # Add start to get lineno relative to start of file, not function.
         marked = '  {0}{1:-6d}{2}'.format(
-            mark, start + start_ctx + i, line.rstrip())
+            mark, start + i, line.rstrip())
         if is_error:
             marked = colorize('@R{%s}' % cescape(marked))
         lines.append(marked)
@@ -1093,28 +1075,11 @@ class ChildError(InstallError):
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
             # the log with errors or warnings highlighted.
-            def write_log_summary(log_type, log):
-                errors, warnings = parse_log_events(log)
-                nerr = len(errors)
-                nwar = len(warnings)
-                if nerr > 0:
-                    # If errors are found, only display errors
-                    out.write(
-                        "\n%s found in %s log:\n" %
-                        (plural(nerr, 'error'), log_type))
-                    out.write(make_log_context(errors))
-                elif nwar > 0:
-                    # If no errors are found but warnings are, display warnings
-                    out.write(
-                        "\n%s found in %s log:\n" %
-                        (plural(nwar, 'warning'), log_type))
-                    out.write(make_log_context(warnings))
-
             if self.build_log and os.path.exists(self.build_log):
-                write_log_summary('build', self.build_log)
+                write_log_summary(out, 'build', self.build_log)
 
             if self.test_log and os.path.exists(self.test_log):
-                write_log_summary('test', self.test_log)
+                write_log_summary(out, 'test', self.test_log)
 
         else:
             # The error happened in in the Python code, so try to show
@@ -1171,3 +1136,30 @@ class StopPhase(spack.error.SpackError):
 
 def _make_stop_phase(msg, long_msg):
     return StopPhase(msg, long_msg)
+
+
+def write_log_summary(out, log_type, log, last=None):
+    errors, warnings = parse_log_events(log)
+    nerr = len(errors)
+    nwar = len(warnings)
+
+    if nerr > 0:
+        if last and nerr > last:
+            errors = errors[-last:]
+            nerr = last
+
+        # If errors are found, only display errors
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nerr, 'error'), log_type))
+        out.write(make_log_context(errors))
+    elif nwar > 0:
+        if last and nwar > last:
+            warnings = warnings[-last:]
+            nwar = last
+
+        # If no errors are found but warnings are, display warnings
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nwar, 'warning'), log_type))
+        out.write(make_log_context(warnings))

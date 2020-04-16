@@ -1114,6 +1114,12 @@ class Python(AutotoolsPackage):
         # do not use self.command because we are also testing the run env
         exe = self.command.name
 
+        self.run_test('/bin/false')
+
+        self.run_test('/usr/bin/false')
+
+        self.run_test('/usr/bin/true', status=1)
+
         # test hello world
         self.run_test(exe, options=['-c', 'print("hello world!")'],
                       expected=['hello world!'])

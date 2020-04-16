@@ -10,8 +10,8 @@ throughout Spack and should bring in a minimal number of external
 dependencies.
 """
 import os
+import inspect
 from llnl.util.filesystem import ancestor
-
 
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = ancestor(__file__, 4)
@@ -58,3 +58,16 @@ gpg_keys_path      = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 gpg_path           = os.path.join(opt_path, "spack", "gpg")
+
+
+def is_package_file(filename):
+    """Determine whether we are in a package file from a repo."""
+    # Package files are named `package.py` and are not in lib/spack/spack
+    # We have to remove the file extension because it can be .py and can be
+    # .pyc depending on context, and can differ between the files
+    import spack.package  # break cycle
+    filename_noext = os.path.splitext(filename)[0]
+    packagebase_filename_noext = os.path.splitext(
+        inspect.getfile(spack.package.PackageBase))[0]
+    return (filename_noext != packagebase_filename_noext and
+            os.path.basename(filename_noext) == 'package')
