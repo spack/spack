@@ -4182,20 +4182,30 @@ class SpecParser(spack.parse.Parser):
             if not dep:
                 # We're adding a dependency to the last spec. This dependency
                 # can be either of the form ^spec i.e. a usual dependency or
-                # of the form ^vdep=spec if we have to bind a vdep to a
-                # particular provider.
+                # of the form ^vdep[,vdep,...]=spec if we have to bind a vdep
+                # to a particular provider.
                 self.expect(ID)
-                dep_or_virtual = self.token.value
-                if self.accept(EQ):
-                    # ^vdep=spec
-                    virtual_dependency = dep_or_virtual
-                    self.expect(VAL)
-                    # Implicit recursion on the parser below
-                    dep = Spec(self.token.value)
-                    specs[-1]._add_explicit_provider(virtual_dependency, dep)
-                else:
-                    # ^spec
+
+                virtuals, dep = [], None
+                # case 1: ^spec
+                if not self.next or not (
+                    # This condition identifies virtual dependency binding
+                    self.next.is_a(EQ) or self.next.is_a(COMMA)
+                ):
                     dep = self.spec(self.token.value)
+
+                # case 2: ^vdep[,vdep,...]=spec
+                else:
+                    virtuals.append(self.token.value)
+                    while self.accept(COMMA):
+                        self.expect(ID)
+                        virtuals.append(self.token.value)
+                    # Ensure there's an '=' sigil
+                    self.expect(EQ)
+                    # Implicit recursion on the parser below
+                    self.expect(VAL)
+                    dep = Spec(self.token.value)
+                    specs[-1]._add_explicit_provider(virtuals[-1], dep)
 
             # Raise an error if the previous spec is already
             # concrete (assigned by hash)
