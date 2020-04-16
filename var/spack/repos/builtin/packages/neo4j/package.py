@@ -23,7 +23,7 @@ class Neo4j(Package):
     version('4.0.0',  sha256='7173b97baf53be82b46f95fa52f99af591606a318e03915917ddd7141936fec5')
     version('3.5.16', sha256='1304fcd56b0f08f35b05d8b546fd844637ba1ffa5e00bb1e9a81a06b6242cb88')
 
-    depends_on('maven', type=('build','run'))
+    depends_on('maven', type=('build', 'run'))
 
     def install(self, spec, prefix):
         maven = which('mvn')
