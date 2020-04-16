@@ -1,0 +1,16 @@
+--- a/ddd/settings.C	2009-02-11 10:25:06.000000000 -0700
++++ b/ddd/settings.C	2020-04-16 10:59:05.917497540 -0600
+@@ -1619,6 +1619,13 @@
+ 		if (base == "extension-language")
+ 		    return;
+ 
++		// Resolve the DDD hang reported at
++		// https://stackoverflow.com/questions/2914003/ddd-hangs-on-start.
++		// GDB's default value is the string "not set" which hangs
++		// DDD when sourcing the gdbSettings on initialization.
++		if (base == "extended-prompt")
++		    return;
++
+ 		if (doc.contains("deprecated"))
+ 		    return;	// Won't support this
+ 
