@@ -19,7 +19,7 @@ class MparkVariant(CMakePackage):
     # Ref.: https://github.com/mpark/variant/pull/73
     patch('nvcc.patch', when='@:1.4.0')
 
-    cxx11_msg = 'MPark.Variant needs at a C++11-capable compiler. ' \
+    cxx11_msg = 'MPark.Variant needs a C++11-capable compiler. ' \
                 'See https://github.com/mpark/variant#requirements'
     conflicts('%gcc@:4.7', msg=cxx11_msg)
     conflicts('%clang@:3.5', msg=cxx11_msg)
