@@ -121,9 +121,9 @@ pipeline {
     }
 
     // Configured via the UI to allow concurrent PR builds
-    triggers {
-        cron('H H(0-7) * * *')
-    }
+    // triggers {
+    //     cron('H H(0-7) * * *')
+    // }
 
     stages {
         stage('Setup') {
