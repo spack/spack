@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Cubist(Package):
+class Cubist(MakefilePackage):
     """Cubist is a powerful tool for generating rule-based models that
     balance the need for accurate prediction against the requirements of
     intelligibility.
@@ -21,12 +21,11 @@ class Cubist(Package):
 
     version('2.07', 'f2b20807cd3275e775c42263a4efd3f50df6e495a8b6dc8989ea2d41b973ac1a')
 
-    def patch(self):
+    def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')
         makefile.filter("SHELL .*", "SHELL  = /bin/bash")
 
     def install(self, spec, prefix):
-        make()
         mkdirp(self.prefix.bin)
         install('cubist', prefix.bin)
         install('summary', prefix.bin)
