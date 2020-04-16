@@ -170,6 +170,9 @@ class Llvm(CMakePackage, CudaPackage):
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5.99")
 
+    # cuda_arch value must be specified
+    conflicts("cuda_arch=none", msg="A value for cuda_arch must be specified.")
+
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
