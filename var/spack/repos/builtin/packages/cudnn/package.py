@@ -190,6 +190,10 @@ class Cudnn(Package):
 
         return url.format(directory, cuda, ver)
 
+    def setup_run_environment(self, env):
+        if 'target=ppc64le: platform=linux' in self.spec:
+            env.set('CUDNN_DIR', os.path.join(self.prefix, 'targets', 'ppc64le-linux'))
+
     def install(self, spec, prefix):
         install_tree('.', prefix)
 
