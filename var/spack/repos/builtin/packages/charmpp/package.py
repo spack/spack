@@ -244,8 +244,9 @@ class Charmpp(Package):
             options.append("slurmpmi")
         if "pmi=slurmPMI2" in spec:
             options.append("slurmpmi2")
-        if "pmi=PMIX" in spec:
+        if "pmi=PMIx" in spec:
             options.append("ompipmix")
+            options.extend(["--basedir=%s" % spec["openmpi"].prefix])
 
         if "+shared" in spec:
             options.append("--build-shared")
