@@ -9,10 +9,11 @@ from spack import *
 class Exa(Package):
     """exa is a replacement for ls written in Rust."""
 
-    homepage = "hhttps://the.exa.website"
+    homepage = "https://the.exa.website"
     url      = "https://github.com/ogham/exa/archive/v0.9.0.tar.gz"
 
-    version('0.9.0', sha256='c69061b386ee387b3437bb341091cd6b79e8e9909c0d0e5fdfe7a2edfceb3dcb')
+    version(
+        '0.9.0', sha256='c69061b386ee387b3437bb341091cd6b79e8e9909c0d0e5fdfe7a2edfceb3dcb')
 
     depends_on('rust')
 
