@@ -51,7 +51,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     def setup_build_environment(self, env):
         # on macOS, emacs' config does search hard enough for ncurses'
         # termlib `-ltinfo` lib, which results in linker errors
-        if '+termlib' in spec['ncurses']:
+        if '+termlib' in self.spec['ncurses']:
             env.append_flags('LDFLAGS', '-ltinfo')
 
     def configure_args(self):
