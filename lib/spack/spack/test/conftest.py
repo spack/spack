@@ -422,6 +422,9 @@ def mock_configuration(configuration_dir):
 @pytest.fixture(scope='function')
 def config(mock_configuration):
     """This fixture activates/deactivates the mock configuration."""
+    # TODO: note that any test which ends up calling config.clear_caches will
+    # remove the builtin scope. So future uses of the 'config' fixture would
+    # be missing this scope.
     with use_configuration(mock_configuration):
         yield mock_configuration
 

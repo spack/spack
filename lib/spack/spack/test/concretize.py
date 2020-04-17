@@ -103,14 +103,20 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
+        # TODO: I suspect any test using config.override (which is only used
+        # for tests) should use the 'mutable_config' fixture
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
     # clear any test values fetched
     spack.architecture.get_platform.cache.clear()
+    # TODO: if the caches are cleared, and we use 'config' instead of
+    # 'mutable_config' for the below tests, then fewer of the succeeding
+    # flag handler tests fail (some of them still fail though).
+    spack.config.config.clear_caches()
 
 
-@pytest.mark.usefixtures('mutable_config', 'mock_packages')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
