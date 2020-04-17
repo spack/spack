@@ -21,5 +21,5 @@ class SourceHighlight(AutotoolsPackage, GNUMirrorPackage):
     depends_on('boost')
 
     def configure_args(self):
-        args = ["--with-boost=" + format(self.spec['boost'].prefix)]
+        args = ["--with-boost={0}".format(self.spec['boost'].prefix)]
         return args
