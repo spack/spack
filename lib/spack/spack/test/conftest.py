@@ -433,7 +433,7 @@ def mutable_config(tmpdir_factory, configuration_dir):
     configuration_dir.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir))
+        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
           for name in ['site', 'system', 'user']])
 
     with use_configuration(cfg):
