@@ -6,10 +6,10 @@
 from spack import *
 
 
-class Nccmp(Package):
+class Nccmp(Package, SourceforgePackage):
     """Compare NetCDF Files"""
     homepage = "http://nccmp.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/nccmp/nccmp-1.8.2.0.tar.gz"
+    sourceforge_mirror_path = "nccmp/nccmp-1.8.2.0.tar.gz"
 
     version('1.8.2.0', sha256='7f5dad4e8670568a71f79d2bcebb08d95b875506d3d5faefafe1a8b3afa14f18')
 

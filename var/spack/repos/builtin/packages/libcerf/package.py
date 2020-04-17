@@ -7,14 +7,14 @@
 from spack import *
 
 
-class Libcerf(AutotoolsPackage):
+class Libcerf(AutotoolsPackage, SourceforgePackage):
     """A self-contained C library providing complex error functions, based
        on Faddeeva's plasma dispersion function w(z). Also provides Dawson's
        integral and Voigt's convolution of a Gaussian and a Lorentzian
 
     """
     homepage = "http://sourceforge.net/projects/libcerf"
-    url      = "http://downloads.sourceforge.net/project/libcerf/libcerf-1.3.tgz"
+    sourceforge_mirror_path = "libcerf/libcerf-1.3.tgz"
 
     version('1.3', sha256='d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859')
 
