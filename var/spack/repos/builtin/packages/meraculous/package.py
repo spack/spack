@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Meraculous(CMakePackage):
+class Meraculous(CMakePackage, SourceforgePackage):
     """Meraculous is a while genome assembler for Next Generation Sequencing
        data geared for large genomes."""
 
     homepage = "http://jgi.doe.gov/data-and-tools/meraculous/"
-    url      = "https://downloads.sourceforge.net/project/meraculous20/Meraculous-v2.2.4.tar.gz"
+    sourceforge_mirror_path = "meraculous20/Meraculous-v2.2.4.tar.gz"
     git      = "https://bitbucket.org/berkeleylab/genomics-meraculous2.git"
 
     version('2.2.5.1', branch='release-2.2.5.1')
