@@ -404,6 +404,11 @@ def set_build_environment_variables(pkg, env, dirty):
             if os.path.isdir(pcdir):
                 env.prepend_path('PKG_CONFIG_PATH', pcdir)
 
+    # We force "unsafe build" for packages that require it
+    # when spack is running as root
+    if os.getgid() == 0:
+        env.set("FORCE_UNSAFE_CONFIGURE", "1")
+
     return env
 
 
