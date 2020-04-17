@@ -442,7 +442,11 @@ def mutable_config(tmpdir_factory, configuration_dir):
     with use_configuration(cfg):
         yield cfg
 
-    spack.config.config.clear_caches()
+    # TODO: this should be done, but it would actually undo the one-time setup
+    # that occurs for the configuration_dir fixture and interferes with tests
+    # using the 'config' fixture. To allow this, the 'config' fixture needs
+    # to be refactored to reassemble the scopes into a config every time.
+    # spack.config.config.clear_caches()
 
 
 @pytest.fixture()
