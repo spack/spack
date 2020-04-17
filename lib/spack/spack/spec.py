@@ -609,7 +609,7 @@ class DependencySpec(object):
     - virtuals: list of strings, representing virtual dependencies.
     """
 
-    def __init__(self, parent, spec, deptypes, virtuals=None):
+    def __init__(self, parent, spec, deptypes, virtuals):
         self.parent = parent
         self.spec = spec
         self.deptypes = tuple(sorted(set(deptypes)))
@@ -1160,7 +1160,7 @@ class Spec(object):
                 "Cannot depend on '%s' twice" % spec)
 
         # create an edge and add to parent and child
-        dspec = DependencySpec(self, spec, deptypes)
+        dspec = DependencySpec(self, spec, deptypes, virtuals=None)
         self._dependencies[spec.name] = dspec
         spec._dependents[self.name] = dspec
 
@@ -1337,9 +1337,9 @@ class Spec(object):
             if not dspec:
                 # make a fake dspec for the root.
                 if direction == 'parents':
-                    dspec = DependencySpec(self, None, ())
+                    dspec = DependencySpec(self, None, (), virtuals=None)
                 else:
-                    dspec = DependencySpec(None, self, ())
+                    dspec = DependencySpec(None, self, (), virtuals=None)
             return (d, dspec) if depth else dspec
 
         yield_me = yield_root or d > 0
@@ -2064,7 +2064,7 @@ class Spec(object):
 
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
-        assert(self.virtual)
+        assert self.virtual
         for name, dep_spec in self._dependents.items():
             dependent = dep_spec.parent
             deptypes = dep_spec.deptypes
@@ -4205,7 +4205,8 @@ class SpecParser(spack.parse.Parser):
                     # Implicit recursion on the parser below
                     self.expect(VAL)
                     dep = Spec(self.token.value)
-                    specs[-1]._add_explicit_provider(virtuals[-1], dep)
+                    for v in virtuals:
+                        specs[-1]._add_explicit_provider(v, dep)
 
             # Raise an error if the previous spec is already
             # concrete (assigned by hash)
