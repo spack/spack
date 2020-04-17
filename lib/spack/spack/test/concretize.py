@@ -110,13 +110,17 @@ def current_host(request, monkeypatch):
 
     # clear any test values fetched
     spack.architecture.get_platform.cache.clear()
-    # TODO: if the caches are cleared, and we use 'config' instead of
-    # 'mutable_config' for the below tests, then fewer of the succeeding
-    # flag handler tests fail (some of them still fail though).
-    spack.config.config.clear_caches()
+    # TODO: when using 'config' instead of  'mutable_config' for the below
+    # then some flag handler tests fail. If we call clear_caches() here, then
+    # fewer of those tests fail (some of them still fail though). Using
+    # mutable_config is the only way to get all the tests to pass.
+    # spack.config.config.clear_caches()
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+# Note: I recommend using mutable_config here since the current_host fixture
+# changes the config. Undoing that creates problems for other tests (see the
+# other comments).
+@pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
