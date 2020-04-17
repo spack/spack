@@ -103,8 +103,6 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
-        # There's a cache that needs to be cleared for unit tests
-        PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
