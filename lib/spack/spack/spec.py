@@ -1153,14 +1153,14 @@ class Spec(object):
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
-    def _add_dependency(self, spec, deptypes):
+    def _add_dependency(self, spec, deptypes, virtuals=None):
         """Called by the parser to add another spec as a dependency."""
         if spec.name in self._dependencies:
             raise DuplicateDependencyError(
                 "Cannot depend on '%s' twice" % spec)
 
         # create an edge and add to parent and child
-        dspec = DependencySpec(self, spec, deptypes, virtuals=None)
+        dspec = DependencySpec(self, spec, deptypes, virtuals=virtuals)
         self._dependencies[spec.name] = dspec
         spec._dependents[self.name] = dspec
 
@@ -1592,7 +1592,9 @@ class Spec(object):
                 (name,
                  syaml.syaml_dict([
                      ('hash', dspec.spec._cached_hash(hash)),
-                     ('type', sorted(str(s) for s in dspec.deptypes))])
+                     ('type', sorted(str(s) for s in dspec.deptypes)),
+                     ('virtuals', sorted(str(s) for s in dspec.virtuals))
+                 ])
                  ) for name, dspec in sorted(deps.items())
             ])
 
@@ -3202,22 +3204,32 @@ class Spec(object):
         return changed
 
     def _dup_deps(self, other, deptypes, caches):
+        """Duplicates in self the dependencies from another spec.
+
+        Args:
+            other (Spec): spec from which we want to duplicate the dependencies
+            deptypes (tuple): dependency types that needs to be copied
+            caches: caches used to copy specs
+        """
         new_specs = {self.name: self}
-        for dspec in other.traverse_edges(cover='edges',
-                                          root=False):
-            if (dspec.deptypes and
-                not any(d in deptypes for d in dspec.deptypes)):
+        for dspec in other.traverse_edges(cover='edges', root=False):
+            # Skip dependencies if they are not of the correct type
+            if dspec.deptypes and not (set(deptypes) & set(dspec.deptypes)):
                 continue
 
-            if dspec.parent.name not in new_specs:
-                new_specs[dspec.parent.name] = dspec.parent.copy(
-                    deps=False, caches=caches)
-            if dspec.spec.name not in new_specs:
-                new_specs[dspec.spec.name] = dspec.spec.copy(
-                    deps=False, caches=caches)
+            # Copy the edge but first create every node that is not
+            # already in the DAG
+            parent, child = dspec.parent.name, dspec.spec.name
+            copy_kwargs = {'deps': False, 'caches': caches}
+            if parent not in new_specs:
+                new_specs[parent] = dspec.parent.copy(**copy_kwargs)
 
-            new_specs[dspec.parent.name]._add_dependency(
-                new_specs[dspec.spec.name], dspec.deptypes)
+            if child not in new_specs:
+                new_specs[child] = dspec.spec.copy(**copy_kwargs)
+
+            new_specs[parent]._add_dependency(
+                new_specs[child], dspec.deptypes, virtuals=dspec.virtuals
+            )
 
     def copy(self, deps=True, **kwargs):
         """Make a copy of this spec.
