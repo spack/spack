@@ -13,7 +13,11 @@ class Exa(Package):
     url      = "https://github.com/ogham/exa/archive/v0.9.0.tar.gz"
 
     version(
-        '0.9.0', sha256='c69061b386ee387b3437bb341091cd6b79e8e9909c0d0e5fdfe7a2edfceb3dcb')
+        '0.9.0', sha256='96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783')
+
+    def url_for_version(self, version):
+        url = "https://github.com/ogham/exa/archive/v{0}.tar.gz"
+        return url.format(version)
 
     depends_on('rust')
 
