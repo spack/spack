@@ -601,6 +601,9 @@ class TestConcretize(object):
         with pytest.raises(NoValidVersionError, match="no valid versions"):
             Spec(spec).concretized()
 
+    # TODO: these tests aren't supposed to change the config, but without the
+    # mutable_config fixture, the execution of these tests cause later
+    # flag_handler tests to fail.
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
