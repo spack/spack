@@ -110,7 +110,7 @@ def current_host(request, monkeypatch):
     # spack.architecture.get_platform.cache.clear()
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+@pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)

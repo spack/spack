@@ -439,6 +439,8 @@ def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     with use_configuration(cfg):
         yield cfg
 
+    spack.config.config.clear_caches()
+
 
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
