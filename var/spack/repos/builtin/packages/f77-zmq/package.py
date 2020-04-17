@@ -31,7 +31,7 @@ class F77Zmq(MakefilePackage):
         makefile = FileFilter('Makefile')
         makefile.filter('CC=.*',
                         'CC={0} {1}'.format(spack_cc,
-                                            self.compiler.pic_flag))
+                                            self.compiler.cc_pic_flag))
         makefile.filter('CFLAGS=.*', 'CFLAGS={0}'.format(cflags))
         makefile.filter('PREFIX=.*', 'PREFIX={0}'.format(self.prefix))
         p = self.spec['libzmq'].prefix

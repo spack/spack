@@ -63,7 +63,8 @@ class SuiteSparse(Package):
         # logic in it. Any kind of customization will need to go through
         # filtering of that file
 
-        pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
+        cc_pic_flag  = self.compiler.cc_pic_flag  if '+pic' in spec else ''
+        f77_pic_flag = self.compiler.f77_pic_flag if '+pic' in spec else ''
 
         make_args = [
             # By default, the Makefile uses the Intel compilers if
@@ -78,11 +79,11 @@ class SuiteSparse(Package):
             'CUDA_PATH=%s' % (spec['cuda'].prefix if '+cuda' in spec else ''),
             'CFOPENMP=%s' % (self.compiler.openmp_flag
                              if '+openmp' in spec else ''),
-            'CFLAGS=-O3 %s' % pic_flag,
+            'CFLAGS=-O3 %s' % cc_pic_flag,
             # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
             # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
-            'FFLAGS=%s' % pic_flag,
-            'F77FLAGS=%s' % pic_flag,
+            'FFLAGS=%s' % f77_pic_flag,
+            'F77FLAGS=%s' % f77_pic_flag,
             # use Spack's metis in CHOLMOD/Partition module,
             # otherwise internal Metis will be compiled
             'MY_METIS_LIB=%s' % spec['metis'].libs.ld_flags,

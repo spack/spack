@@ -371,7 +371,7 @@ class Boost(Package):
                 cxxflags.append(flag)
 
         if '+pic' in self.spec:
-            cxxflags.append(self.compiler.pic_flag)
+            cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build

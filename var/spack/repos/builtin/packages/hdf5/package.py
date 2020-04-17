@@ -259,8 +259,11 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--enable-static-exec')
 
         if '+pic' in self.spec:
-            extra_args += ['%s=%s' % (f, self.compiler.pic_flag)
-                           for f in ['CFLAGS', 'CXXFLAGS', 'FCFLAGS']]
+            extra_args.extend([
+                'CFLAGS='   + self.compiler.cc_pic_flag,
+                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
+                'FCFLAGS='  + self.compiler.fc_pic_flag,
+            ])
 
         if '+mpi' in self.spec:
             # The HDF5 configure script warns if cxx and mpi are enabled

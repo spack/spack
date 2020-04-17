@@ -40,8 +40,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         env.unset('TERMINFO')
 
     def flag_handler(self, name, flags):
-        if name == 'cflags' or name == 'cxxflags':
-            flags.append(self.compiler.pic_flag)
+        if name == 'cflags':
+            flags.append(self.compiler.cc_pic_flag)
+        elif name == 'cxxflags':
+            flags.append(self.compiler.cxx_pic_flag)
 
         return (flags, None, None)
 

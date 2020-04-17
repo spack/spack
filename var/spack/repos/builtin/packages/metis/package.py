@@ -79,7 +79,7 @@ class Metis(Package):
         # Process library spec and options
         options = []
         if '+shared' in spec:
-            options.append('COPTIONS={0}'.format(self.compiler.pic_flag))
+            options.append('COPTIONS={0}'.format(self.compiler.cc_pic_flag))
         if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
@@ -107,7 +107,7 @@ class Metis(Package):
             install(sharefile, prefix.share)
 
         if '+shared' in spec:
-            shared_flags = [self.compiler.pic_flag, '-shared']
+            shared_flags = [self.compiler.cc_pic_flag, '-shared']
             if sys.platform == 'darwin':
                 shared_suffix = 'dylib'
                 shared_flags.extend(['-Wl,-all_load', 'libmetis.a'])

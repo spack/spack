@@ -78,8 +78,8 @@ class NetlibScalapack(CMakePackage):
 
         if '+pic' in spec:
             options.extend([
-                "-DCMAKE_C_FLAGS=%s" % self.compiler.pic_flag,
-                "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.pic_flag
+                "-DCMAKE_C_FLAGS=%s" % self.compiler.cc_pic_flag,
+                "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.fc_pic_flag
             ])
 
         return options
