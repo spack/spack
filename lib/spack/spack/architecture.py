@@ -441,7 +441,7 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
-@memoized
+# @memoized
 def get_platform(platform_name):
     """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()
@@ -477,7 +477,7 @@ def arch_for_spec(arch_spec):
     return Arch(arch_plat, arch_spec.os, arch_spec.target)
 
 
-@memoized
+# @memoized
 def all_platforms():
     classes = []
     mod_path = spack.paths.platform_path
@@ -498,7 +498,7 @@ def all_platforms():
     return classes
 
 
-@memoized
+# @memoized
 def platform():
     """Detects the platform for this machine.
 
@@ -516,7 +516,7 @@ def platform():
             return platform_cls()
 
 
-@memoized
+# @memoized
 def sys_type():
     """Print out the "default" platform-os-target tuple for this machine.
 
@@ -533,7 +533,7 @@ def sys_type():
     return str(arch)
 
 
-@memoized
+# @memoized
 def compatible_sys_types():
     """Returns a list of all the systypes compatible with the current host."""
     compatible_archs = []
