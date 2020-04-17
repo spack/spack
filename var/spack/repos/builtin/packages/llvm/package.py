@@ -170,6 +170,9 @@ class Llvm(CMakePackage, CudaPackage):
     # OMP TSAN exists in > 5.x
     conflicts("+omp_tsan", when="@:5.99")
 
+    # cuda_arch value must be specified
+    conflicts("cuda_arch=none", when="+cuda", msg="A value for cuda_arch must be specified.")
+
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
@@ -233,7 +236,8 @@ class Llvm(CMakePackage, CudaPackage):
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
             "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
-            "-DLIBOMP_USE_HWLOC=On",
+            "-DLIBOMP_USE_HWLOC:BOOL=ON",
+            "-DLIBOMP_HWLOC_INSTALL_DIR={0}".format(spec["hwloc"].prefix),
         ]
 
         projects = []
@@ -388,13 +392,14 @@ class Llvm(CMakePackage, CudaPackage):
                     "-DCMAKE_INSTALL_PREFIX:PATH={0}".format(spec.prefix),
                 ]
                 cmake_args.extend(self.cmake_args())
-                cmake_args.append('-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB=true')
+                cmake_args.append(
+                    "-DLIBOMPTARGET_NVPTX_ENABLE_BCLIB:BOOL=TRUE"
+                )
 
                 # work around bad libelf detection in libomptarget
                 cmake_args.append(
-                    "-DCMAKE_CXX_FLAGS:String=-I{0} -I{1}".format(
-                        spec["libelf"].prefix.include,
-                        spec["hwloc"].prefix.include,
+                    "-DLIBOMPTARGET_DEP_LIBELF_INCLUDE_DIR:String={0}".format(
+                        spec["libelf"].prefix.include
                     )
                 )
 
