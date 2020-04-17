@@ -169,7 +169,7 @@ class AutotoolsPackage(PackageBase):
                         line = 'wl="-Wl,"\n'
                     if line == 'pic_flag=""\n':
                         line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.pic_flag)
+                               .format(self.compiler.cc_pic_flag)
                     sys.stdout.write(line)
 
     @property

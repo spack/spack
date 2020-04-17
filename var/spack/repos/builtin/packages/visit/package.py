@@ -72,8 +72,8 @@ class Visit(CMakePackage):
             '-DVISIT_VTK_DIR:PATH=' + spec['vtk'].prefix,
             '-DVISIT_ZLIB_DIR:PATH=' + spec['zlib'].prefix,
             '-DVISIT_USE_GLEW=OFF',
-            '-DCMAKE_CXX_FLAGS=' + self.compiler.pic_flag,
-            '-DCMAKE_C_FLAGS=' + self.compiler.pic_flag,
+            '-DCMAKE_CXX_FLAGS=' + self.compiler.cxx_pic_flag,
+            '-DCMAKE_C_FLAGS=' + self.compiler.cc_pic_flag,
         ]
 
         if '+python' in spec:

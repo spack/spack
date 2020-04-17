@@ -131,7 +131,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/spack/spack/pull/3081 and
         # https://github.com/spack/spack/pull/4416
         if spec.satisfies('%intel'):
-            config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+            config_args.append('-Accflags={0}'.format(
+                self.compiler.cc_pic_flag))
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')

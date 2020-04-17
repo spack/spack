@@ -280,7 +280,7 @@ class Python(AutotoolsPackage):
             config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
-            config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
 
         if spec.satisfies('@3.7:'):
             if '+ssl' in spec:
