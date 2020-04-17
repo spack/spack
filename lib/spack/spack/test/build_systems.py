@@ -245,6 +245,29 @@ class TestGNUMirrorPackage(object):
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')
+class TestSourceforgePackage(object):
+
+    def test_define(self):
+        s = Spec('mirror-sourceforge')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        s = Spec('mirror-sourceforge-broken')
+        s.concretize()
+        pkg_broken = spack.repo.get(s)
+
+        cls_name = type(pkg_broken).__name__
+        with pytest.raises(AttributeError,
+                           match=r'{0} must define a `sourceforge_mirror_path`'
+                                 r' attribute \[none defined\]'
+                                 .format(cls_name)):
+            pkg_broken.urls
+
+        assert pkg.urls[0] == 'https://prdownloads.sourceforge.net/' \
+                              'tcl/tcl8.6.5-src.tar.gz'
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestSourcewarePackage(object):
 
     def test_define(self):
