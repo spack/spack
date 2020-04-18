@@ -20,13 +20,15 @@ class VotcaCsgTutorials(CMakePackage):
     git      = "https://github.com/votca/csg-tutorials.git"
 
     version('master', branch='master')
+    version('1.6', sha256='54946c647724f1beb95942d47ec7f4cf7a95a59ec7268522693d5ec723585daf')
     version('1.6_rc2', sha256='3c82e6fe03c7d5226f37b787eee23eb629901734d19b93ef9eb519660ff5223c')
     version('1.6_rc1', sha256='87c4d945d2bdcb247e985cd407b0767c441f7810f1237ae65a63617f136e2ac9')
-    version('1.5.1',   sha256='e35cea92df0e7d05ca7b449c1b5d84d887a3a23c7796abe3b84e4d6feec7faca', preferred=True)
+    version('1.5.1',   sha256='e35cea92df0e7d05ca7b449c1b5d84d887a3a23c7796abe3b84e4d6feec7faca')
     version('1.5',     sha256='03b841fb94129cf59781a7a5e3b71936c414aa9dfa17a50d7bc856d46274580c')
     version('1.4.1',   sha256='623724192c3a7d76b603a74a3326f181045f10f38b9f56dce754a90f1a74556e')
     version('1.4',     sha256='27d50acd68a9d8557fef18ec2b0c62841ae91c22275ab9afbd65c35e4dd5f719')
 
-    for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6_rc1", "1.6_rc2", "master"]:
+    for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6_rc1", "1.6_rc2", "1.6",
+              "master"]:
         depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")
