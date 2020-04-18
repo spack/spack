@@ -166,7 +166,7 @@ def compiler_list(args):
     # string type). Tuples produced by this are guaranteed to be comparable in
     # Python 3
     convert_str = (
-        lambda tuple_container :
+        lambda tuple_container:
         tuple(str(x) if x else '' for x in tuple_container))
 
     index_str_keys = list(
