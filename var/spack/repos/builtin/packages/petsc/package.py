@@ -66,6 +66,7 @@ class Petsc(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
+    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
@@ -133,6 +134,7 @@ class Petsc(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
@@ -147,8 +149,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='@:3.12.99+hdf5+mpi')
-    depends_on('hdf5+mpi+hl+fortran', when='@3.13:+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
+    depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
@@ -294,7 +296,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
+        for library in ('cuda', 'metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(

@@ -20,7 +20,9 @@ class Nekcem(Package):
     variant('mpi', default=True, description='Build with MPI')
 
     # We only have a development version
-    version('develop')
+    version('develop', branch='development')
+    # The following hash-versions are used by the 'ceed' package
+    version('c8db04b', commit='c8db04b96f9b9cb0434ee75da711502fe95891b5')
     version('0b8bedd', commit='0b8beddfdcca646bfcc866dfda1c5f893338399b')
     version('7332619', commit='7332619b73d03868a256614b61794dce2d95b360')
 
@@ -28,7 +30,6 @@ class Nekcem(Package):
     depends_on('mpi', when='+mpi')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('python@2.7:', type='build')
 
     @run_before('install')
     def fortran_check(self):
@@ -112,7 +113,7 @@ class Nekcem(Package):
                         'makenek')
 
         # Install NekCEM in prefix/bin
-        install_tree('../NekCEM', prefix.bin.NekCEM)
+        install_tree(self.stage.source_path, prefix.bin.NekCEM)
         # Create symlinks to makenek, nek and configurenek scripts
         with working_dir(prefix.bin):
             os.symlink(os.path.join('NekCEM', bin_dir, makenek), makenek)
