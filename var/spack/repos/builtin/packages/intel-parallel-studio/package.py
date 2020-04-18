@@ -20,6 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
+    version('cluster.2020.1',      sha256='fd11d8de72b2bd60474f8bce7b463e4cbb2255969b9eaf24f689575aa2a2abab', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16526/parallel_studio_xe_2020_update1_cluster_edition.tgz')
     version('cluster.2020.0',      sha256='573b1d20707d68ce85b70934cfad15b5ad9cc14124a261c17ddd7717ba842c64', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16225/parallel_studio_xe_2020_cluster_edition.tgz')
     #
     version('cluster.2019.5',      sha256='c03421de616bd4e640ed25ce4103ec9c5c85768a940a5cb5bd1e97b45be33904', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15809/parallel_studio_xe_2019_update5_cluster_edition.tgz')
@@ -58,6 +59,7 @@ class IntelParallelStudio(IntelPackage):
     # NB: Pre-2018 download packages for Professional are the same as for
     # Cluster; differences manifest only in the tokens present in the license
     # file delivered as part of the purchase.
+    version('professional.2020.1', sha256='5b547be92ecf50cb338b3038a565f5609135b27aa98a8b7964879eb2331eb29a', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16527/parallel_studio_xe_2020_update1_professional_edition.tgz')
     version('professional.2020.0', sha256='e88cad18d28da50ed9cb87b12adccf13efd91bf94731dc33290481306c6f15ac', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16226/parallel_studio_xe_2020_professional_edition.tgz')
     #
     version('professional.2019.5', sha256='0ec638330214539361f8632e20759f385a5a78013dcc980ee93743d86d354452', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15810/parallel_studio_xe_2019_update5_professional_edition.tgz')
@@ -92,6 +94,7 @@ class IntelParallelStudio(IntelPackage):
     version('professional.2015.1', sha256='84fdf48d1de20e1d580ba5d419a5bc1c55d217a4f5dc1807190ecffe0229a62b', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/4992/parallel_studio_xe_2015_update1.tgz')
 
     # Composer Edition (basic tier; excluded: MPI/..., Advisor/Inspector/Vtune)
+    version('composer.2020.1',     sha256='26c7e7da87b8a83adfd408b2a354d872be97736abed837364c1bf10f4469b01e', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16530/parallel_studio_xe_2020_update1_composer_edition.tgz')
     version('composer.2020.0',     sha256='9168045466139b8e280f50f0606b9930ffc720bbc60bc76f5576829ac15757ae', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16229/parallel_studio_xe_2020_composer_edition.tgz')
     #
     version('composer.2019.5',     sha256='e8c8e4b9b46826a02c49325c370c79f896858611bf33ddb7fb204614838ad56c', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/15813/parallel_studio_xe_2019_update5_composer_edition.tgz')

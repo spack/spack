@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Scalpel(MakefilePackage):
+class Scalpel(MakefilePackage, SourceforgePackage):
     """Scalpel is a software package for detecting INDELs (INsertions and
        DELetions) mutations in a reference genome which has been sequenced
        with next-generation sequencing technology.
     """
 
     homepage = "http://scalpel.sourceforge.net/index.html"
-    url      = "https://downloads.sourceforge.net/project/scalpel/scalpel-0.5.4.tar.gz"
+    sourceforge_mirror_path = "scalpel/scalpel-0.5.4.tar.gz"
 
     version('0.5.4', sha256='506f731b3886def158c15fd8b74fa98390f304a507d2040972e6b09ddefac8f0')
     version('0.5.3', sha256='d45b569fe3aa5934883bc7216c243d53168351c23e020d96a46fa77a1563b65e')

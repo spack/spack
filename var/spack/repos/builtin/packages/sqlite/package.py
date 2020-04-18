@@ -122,6 +122,6 @@ class Sqlite(AutotoolsPackage):
         if '+functions' in self.spec:
             libraryname = 'libsqlitefunctions.' + dso_suffix
             cc = Executable(spack_cc)
-            cc(self.compiler.pic_flag, '-lm', '-shared',
+            cc(self.compiler.cc_pic_flag, '-lm', '-shared',
                 'extension-functions.c', '-o', libraryname)
             install(libraryname, self.prefix.lib)

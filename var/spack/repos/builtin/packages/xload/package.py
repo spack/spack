@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xload(AutotoolsPackage):
+class Xload(AutotoolsPackage, XorgPackage):
     """xload displays a periodically updating histogram of the
     system load average."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xload"
-    url      = "https://www.x.org/archive/individual/app/xload-1.1.2.tar.gz"
+    xorg_mirror_path = "app/xload-1.1.2.tar.gz"
 
     version('1.1.2', sha256='4863ad339d22c41a0ca030dc5886404f5ae8b8c47cd5e09f0e36407edbdbe769')
 

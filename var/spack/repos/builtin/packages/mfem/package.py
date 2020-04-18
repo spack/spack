@@ -382,7 +382,9 @@ class Mfem(Package):
         if '~static' in spec:
             options += ['STATIC=NO']
         if '+shared' in spec:
-            options += ['SHARED=YES', 'PICFLAG=%s' % self.compiler.pic_flag]
+            options += [
+                'SHARED=YES', 'PICFLAG=%s' % self.compiler.cxx_pic_flag
+            ]
 
         if '+mpi' in spec:
             options += ['MPICXX=%s' % spec['mpi'].mpicxx]

@@ -31,6 +31,9 @@ class Mathematica(Package):
     license_url      = 'https://reference.wolfram.com/language/tutorial/RegistrationAndPasswords.html#857035062'
 
     def install(self, spec, prefix):
+        # Backup .spack because Mathematica moves it but never restores it
+        copy_tree(join_path(prefix, '.spack'), self.stage)
+
         sh = which('sh')
         sh(self.stage.archive_file, '--', '-auto', '-verbose',
            '-targetdir={0}'.format(prefix),
@@ -43,3 +46,6 @@ class Mathematica(Package):
             ln = which('ln')
             ws_path = os.path.join(prefix, 'Executables', 'wolframscript')
             ln('-s', ws_path, ws_link_path)
+
+        # Move back .spack where it belongs
+        copy_tree(join_path(self.stage, '.spack'), prefix)

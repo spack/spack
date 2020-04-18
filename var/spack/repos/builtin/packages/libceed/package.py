@@ -92,7 +92,7 @@ class Libceed(Package):
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
                 if spec.satisfies('@:0.4'):
                     nvccflags = ['-ccbin %s -Xcompiler "%s" -Xcompiler %s' %
-                                 (compiler.cxx, opt, compiler.pic_flag)]
+                                 (compiler.cxx, opt, compiler.cc_pic_flag)]
                     nvccflags = ' '.join(nvccflags)
                     makeopts += ['NVCCFLAGS=%s' % nvccflags]
             else:

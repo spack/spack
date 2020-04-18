@@ -15,7 +15,7 @@ class Magma(CMakePackage, CudaPackage):
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
-    maintainers = ['luszczek']
+    maintainers = ['stomov', 'luszczek']
 
     version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
     version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
