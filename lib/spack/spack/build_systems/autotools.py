@@ -153,6 +153,21 @@ class AutotoolsPackage(PackageBase):
 
         raise RuntimeError('Failed to find suitable config.guess')
 
+    @run_before('configure')
+    def _set_autotools_environment_varoables(self):
+        """Many autotools builds use a version of mknod.m4 that fails when
+        running as root unless FORCE_UNSAFE_CONFIGURE is set to 1.
+
+        We set this to 1 and expect the user to take responsibiltiy if
+        they are running as root. They have to anyway, as this variable
+        doesn't actually prevent configure from doing bad things as root.
+        Without it, configure just fails halfway through, but it can
+        still run things *before* this check. Forcing this just removes a
+        nuisance -- this is not circumventing any real protection.
+
+        """
+        os.environ["FORCE_UNSAFE_CONFIGURE"] = "1"
+
     @run_after('configure')
     def _do_patch_libtool(self):
         """If configure generates a "libtool" script that does not correctly
