@@ -71,13 +71,13 @@ class Papi(AutotoolsPackage):
 
         # The logic above enables specific components
         # The logic below explicitly disable variants when specified
-        if '~static' in spec:
+        if '~static' in self.spec:
             options.append('--with-static-lib=no')
 
-        if '~shared' in spec:
+        if '~shared' in self.spec:
             options.append('--with-shared-lib=no')
 
-        if '~shlib_tools' in spec:
+        if '~shlib_tools' in self.spec:
             options.append('--without-shlib')
 
         return options
