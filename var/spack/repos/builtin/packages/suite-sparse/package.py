@@ -97,6 +97,14 @@ class SuiteSparse(Package):
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
 
+        # Recent versions require c11 but some demos do not get the c11 from
+        # GraphBLAS/CMakeLists.txt, for example the file
+        # GraphBLAS/Demo/Program/wildtype_demo.c. For many compilers this is
+        # not an issue because c11 or newer is their default. However, for some
+        # compilers (e.g. xlc) the c11 flag is necessary.
+        if spec.satisfies('@5.4:'):
+            make_args += ['CFLAGS+=%s' % self.compiler.c11_flag]
+
         # 64bit blas in UMFPACK:
         if (spec.satisfies('^openblas+ilp64') or
             spec.satisfies('^intel-mkl+ilp64') or
