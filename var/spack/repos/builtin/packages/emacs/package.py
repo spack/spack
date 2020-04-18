@@ -36,6 +36,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('ncurses')
     depends_on('pcre')
     depends_on('zlib')
+    depends_on('libxml2')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
@@ -45,6 +46,13 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
+
+    @when('platform=darwin')
+    def setup_build_environment(self, env):
+        # on macOS, emacs' config does search hard enough for ncurses'
+        # termlib `-ltinfo` lib, which results in linker errors
+        if '+termlib' in self.spec['ncurses']:
+            env.append_flags('LDFLAGS', '-ltinfo')
 
     def configure_args(self):
         spec = self.spec

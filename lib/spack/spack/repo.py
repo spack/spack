@@ -240,6 +240,7 @@ class TagIndex(Mapping):
 
         # Add it again under the appropriate tags
         for tag in getattr(package, 'tags', []):
+            tag = tag.lower()
             self._tag_dict[tag].append(package.name)
 
 
@@ -1002,6 +1003,7 @@ class Repo(object):
         index = self.tag_index
 
         for t in tags:
+            t = t.lower()
             v &= set(index[t])
 
         return sorted(v)

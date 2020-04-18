@@ -129,7 +129,17 @@ class Bazel(Package):
     def setup_build_environment(self, env):
         env.set('EXTRA_BAZEL_ARGS',
                 # Spack's logs don't handle colored output well
-                '--color=no --host_javabase=@local_jdk//:jdk')
+                '--color=no --host_javabase=@local_jdk//:jdk'
+                # Enable verbose output for failures
+                ' --verbose_failures'
+                # Ask bazel to explain what it's up to
+                # Needs a filename as argument
+                ' --explain=explainlogfile.txt'
+                # Increase verbosity of explanation,
+                ' --verbose_explanations'
+                # Show (formatted) subcommands being executed
+                ' --subcommands=pretty_print'
+                ' --jobs={0}'.format(make_jobs))
 
     def bootstrap(self, spec, prefix):
         bash = which('bash')

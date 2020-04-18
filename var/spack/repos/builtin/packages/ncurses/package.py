@@ -28,7 +28,8 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
     variant('termlib', default=True,
-            description='Enables termlib needs for gnutls in emacs.')
+            description='Enables termlib features. This is an extra '
+                        'lib and optional internal dependency.')
 
     depends_on('pkgconfig', type='build')
 
@@ -39,8 +40,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         env.unset('TERMINFO')
 
     def flag_handler(self, name, flags):
-        if name == 'cflags' or name == 'cxxflags':
-            flags.append(self.compiler.pic_flag)
+        if name == 'cflags':
+            flags.append(self.compiler.cc_pic_flag)
+        elif name == 'cxxflags':
+            flags.append(self.compiler.cxx_pic_flag)
 
         return (flags, None, None)
 
@@ -105,5 +108,9 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
-        return find_libraries(
+        nc_libs = find_libraries(
             ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)
+        if '+termlib' in self.spec:
+            nc_libs.extend(find_libraries(
+                ['libtinfo', 'libtinfow'], root=self.prefix, recursive=True))
+        return nc_libs

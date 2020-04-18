@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xbacklight(AutotoolsPackage):
+class Xbacklight(AutotoolsPackage, XorgPackage):
     """Xbacklight is used to adjust the backlight brightness where supported.
     It uses the RandR extension to find all outputs on the X server
     supporting backlight brightness control and changes them all in the
     same way."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xbacklight"
-    url      = "https://www.x.org/archive/individual/app/xbacklight-1.2.1.tar.gz"
+    xorg_mirror_path = "app/xbacklight-1.2.1.tar.gz"
 
     version('1.2.1', sha256='82c80cd851e3eb6d7a216d92465fcf6d5e456c2d5ac12c63cd2757b39fb65b10')
 

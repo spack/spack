@@ -37,8 +37,11 @@ class Snappy(CMakePackage):
 
     def flag_handler(self, name, flags):
         flags = list(flags)
-        if '+pic' in self.spec and name in ('cflags', 'cxxflags'):
-            flags.append(self.compiler.pic_flag)
+        if '+pic' in self.spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
         return (None, None, flags)
 
     @run_after('install')

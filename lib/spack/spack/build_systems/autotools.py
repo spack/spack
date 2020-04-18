@@ -169,7 +169,7 @@ class AutotoolsPackage(PackageBase):
                         line = 'wl="-Wl,"\n'
                     if line == 'pic_flag=""\n':
                         line = 'pic_flag="{0}"\n'\
-                               .format(self.compiler.pic_flag)
+                               .format(self.compiler.cc_pic_flag)
                     sys.stdout.write(line)
 
     @property
@@ -219,11 +219,11 @@ class AutotoolsPackage(PackageBase):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ['-ivf']
-            if 'pkgconfig' in spec:
-                autoreconf_args += [
-                    '-I',
-                    os.path.join(spec['pkgconfig'].prefix, 'share', 'aclocal'),
-                ]
+            for dep in spec.dependencies(deptype='build'):
+                if os.path.exists(dep.prefix.share.aclocal):
+                    autoreconf_args.extend([
+                        '-I', dep.prefix.share.aclocal
+                    ])
             autoreconf_args += self.autoreconf_extra_args
             m.autoreconf(*autoreconf_args)
 

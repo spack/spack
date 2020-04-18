@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libxfont2(AutotoolsPackage):
+class Libxfont2(AutotoolsPackage, XorgPackage):
     """libXfont provides the core of the legacy X11 font system, handling the
     index files (fonts.dir, fonts.alias, fonts.scale), the various font file
     formats, and rasterizing them.   It is used by the X servers, the
@@ -15,7 +15,7 @@ class Libxfont2(AutotoolsPackage):
     via either the new API's in libXft, or the legacy API's in libX11."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXfont"
-    url      = "https://www.x.org/archive/individual/lib/libXfont2-2.0.1.tar.gz"
+    xorg_mirror_path = "lib/libXfont2-2.0.1.tar.gz"
 
     version('2.0.1', sha256='381b6b385a69343df48a082523c856aed9042fbbc8ee0a6342fb502e4321230a')
 

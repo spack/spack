@@ -1,0 +1,30 @@
+--- a/Makefile	2020-04-08 17:21:01.982819829 -0500
++++ b/Makefile	2020-04-08 17:21:42.982804931 -0500
+@@ -289,7 +289,7 @@
+ ifeq ($(BUILDTYPE), MacOSX)
+ CUDA_L := -L$(CUDA_BASE)/lib -lcufft -lcudart -lcublas -m64 -lstdc++
+ else
+-CUDA_L := -L$(CUDA_BASE)/lib64 -lcufft -lcudart -lcublas -lstdc++ -Wl,-rpath $(CUDA_BASE)/lib64
++CUDA_L := -L$(CUDA_BASE)/lib64 -lcufft -lcudart -lcublas -lstdc++
+ endif 
+ else
+ CUDA_H :=
+@@ -327,14 +327,13 @@
+ CPPFLAGS += -DUSE_ACML
+ else
+ BLAS_H := -I$(BLAS_BASE)/include
+-ifeq ($(BUILDTYPE), MacOSX)
+-BLAS_L := -L$(BLAS_BASE)/lib -lopenblas
++ifeq ($(OPENBLAS),1)
++BLAS_L := -lopenblas
+ else
+ ifeq ($(NOLAPACKE),1)
+-BLAS_L := -L$(BLAS_BASE)/lib -llapack -lblas
+-CPPFLAGS += -Isrc/lapacke
++BLAS_L := -llapack -lcblas
+ else
+-BLAS_L := -L$(BLAS_BASE)/lib -llapacke -lblas
++BLAS_L := -llapacke -lcblas
+ endif
+ endif
+ endif

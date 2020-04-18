@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Rstart(AutotoolsPackage):
+class Rstart(AutotoolsPackage, XorgPackage):
     """This package includes both the client and server sides implementing
     the protocol described in the "A Flexible Remote Execution Protocol
     Based on rsh" paper found in the specs/ subdirectory.
@@ -15,7 +15,7 @@ class Rstart(AutotoolsPackage):
     provided in common ssh implementations."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/rstart"
-    url      = "https://www.x.org/archive/individual/app/rstart-1.0.5.tar.gz"
+    xorg_mirror_path = "app/rstart-1.0.5.tar.gz"
 
     version('1.0.5', sha256='5271c0c2675b4ad09aace7edddfdd137af10fc754afa6260d8eb5d0bba7098c7')
 
