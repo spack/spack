@@ -552,7 +552,7 @@ class Openmpi(AutotoolsPackage):
         else:
             config_args.append('--disable-wrapper-rpath')
             config_args.append('--disable-wrapper-runpath')
-        
+
         if spec.satisfies('@:4'):
             if '+cxx' in spec:
                 config_args.append('--enable-mpi-cxx')
