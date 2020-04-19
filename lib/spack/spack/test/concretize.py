@@ -230,7 +230,7 @@ class TestConcretize(object):
         spec.concretize()
         assert spec['cmake'].architecture == spec.architecture
 
-    def test_architecture_deep_inheritance(self):
+    def test_architecture_deep_inheritance(self, mock_targets):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
@@ -243,7 +243,7 @@ class TestConcretize(object):
         mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
         with spack.repo.swap(mock_repo):
-            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+            spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
 

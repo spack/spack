@@ -8,6 +8,7 @@ import contextlib
 import errno
 import inspect
 import itertools
+import json
 import os
 import os.path
 import shutil
@@ -17,6 +18,8 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import llnl.util.cpu.microarchitecture
+import llnl.util.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
@@ -446,6 +449,40 @@ def default_config():
     defaults_config = spack.config.Configuration(defaults_scope)
     with use_configuration(defaults_config):
         yield defaults_config
+
+
+@pytest.fixture(scope='session')
+def mock_uarch_json(tmpdir_factory):
+    """Mock microarchitectures.json with test architecture descriptions."""
+    tmpdir = tmpdir_factory.mktemp('microarchitectures')
+
+    uarch_json = py.path.local(spack.paths.test_path).join(
+        "data", "microarchitectures", "microarchitectures.json")
+    uarch_json.copy(tmpdir)
+    yield str(tmpdir.join("microarchitectures.json"))
+
+
+@pytest.fixture(scope='session')
+def mock_uarch_configuration(mock_uarch_json):
+    """Create mock dictionaries for the llnl.util.cpu."""
+    def load_json():
+        with open(mock_uarch_json) as f:
+            return json.load(f)
+
+    targets_json = llnl.util.cpu.schema.LazyDictionary(load_json)
+    targets = llnl.util.cpu.microarchitecture.LazyDictionary(
+        llnl.util.cpu.microarchitecture._known_microarchitectures)
+
+    yield targets_json, targets
+
+
+@pytest.fixture(scope='function')
+def mock_targets(mock_uarch_configuration, monkeypatch):
+    """Use this fixture to enable mock uarch targets for testing."""
+    targets_json, targets = mock_uarch_configuration
+
+    monkeypatch.setattr(llnl.util.cpu.schema, "targets_json", targets_json)
+    monkeypatch.setattr(llnl.util.cpu.microarchitecture, "targets", targets)
 
 
 @pytest.fixture(scope='session')
