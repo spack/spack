@@ -169,22 +169,24 @@ node_platform_set(Package) :- node_platform_set(Package, _).
 % OS semantics
 %-----------------------------------------------------------------------------
 % one os per node
-1 { node_os(Package, OS) : node_os(Package, OS) } 1 :- node(Package).
+1 { node_os(Package, OS) : os(OS) } 1 :- node(Package).
 
-% node_os_set implies that the node has that os
+% node_os_set implies that the node must have that os
 node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
 node_os_set(Package) :- node_os_set(Package, _).
 
-% fall back to default if not set
-node_os(Package, OS)
-  :- node(Package), not node_os_set(Package), node_os_default(OS).
+% inherit OS along dependencies
+node_os_inherit(Package, OS) :- node_os_set(Package, OS).
+node_os_inherit(Dependency, OS)
+  :- node_os_inherit(Package, OS), depends_on(Package, Dependency),
+     not node_os_set(Dependency).
+node_os_inherit(Package) :- node_os_inherit(Package, _).
 
-% same OS throughout DAG (can currently only set one OS)
-% TODO make this smarter; build env may have a different os from run env
-node_os_set(Package, OS)
-  :- depends_on(Package, Dependency), node_os_set(Dependency, OS).
-node_os_set(Dependency, OS)
-  :- depends_on(Package, Dependency), node_os_set(Package, OS).
+% fall back to default if not set or inherited
+node_os(Package, OS)
+  :- node(Package),
+     not node_os_set(Package), not node_os_inherit(Package),
+     node_os_default(OS).
 
 #defined node_os_set/2.
 

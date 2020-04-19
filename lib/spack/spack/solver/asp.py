@@ -19,6 +19,7 @@ import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
 import spack
+import spack.architecture
 import spack.cmd
 import spack.config
 import spack.dependency
@@ -617,9 +618,22 @@ class AspGenerator(object):
         self.fact(fn.node_platform_default(default.platform))
 
     def os_defaults(self, specs):
-        self.h2('Default operating system')
-        default = default_arch()
-        self.fact(fn.node_os_default(default.os))
+        self.h2('Possible operating systems')
+        platform = spack.architecture.platform()
+
+        # create set of OS's to consider
+        possible = set([
+            platform.front_os, platform.back_os, platform.default_os])
+        for spec in specs:
+            if spec.architecture and spec.architecture.os:
+                possible.add(spec.architecture.os)
+
+        # make directives for possible OS's
+        for os in sorted(possible):
+            self.fact(fn.os(os))
+
+        # mark this one as default
+        self.fact(fn.node_os_default(platform.default_os))
 
     def target_defaults(self, specs):
         """Add facts about targets and target compatibility."""
