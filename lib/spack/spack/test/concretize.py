@@ -15,7 +15,7 @@ from spack.error import SpecError
 from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.compilers
 import spack.platforms.test
 
@@ -235,10 +235,10 @@ class TestConcretize(object):
         """
         default_dep = ('link', 'build')
 
-        bazpkg = MockPackage('bazpkg', [], [])
-        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
-        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
-        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+        mock_repo = MockPackageMultiRepo()
+        bazpkg = mock_repo.add_package('bazpkg', [], [])
+        barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
+        mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
         with spack.repo.swap(mock_repo):
             spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
