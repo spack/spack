@@ -51,7 +51,7 @@ class Jsoncpp(CMakePackage):
         filter_file(
             'return d >= min && d <= max;',
             'return d >= static_cast<double>(min) && '
-                'd <= static_cast<double>(max);',
+            'd <= static_cast<double>(max);',
             'src/lib_json/json_value.cpp')
 
     def cmake_args(self):
