@@ -144,33 +144,48 @@ variant_not_default(Package, Variant, Value, 0)
 #defined variant_possible_value/3.
 
 %-----------------------------------------------------------------------------
-% Platform/OS semantics
+% Platform semantics
 %-----------------------------------------------------------------------------
-% one platform, os per node
-% TODO: convert these to use optimization, like targets.
+% one platform per node
 1 { node_platform(Package, Platform) : node_platform(Packagee, Platform) } 1
   :- node(Package).
-1 { node_os(Package, OS) : node_os(Package, OS) } 1 :- node(Package).
 
-% arch fields for pkg P are set if set to anything
-node_platform_set(Package) :- node_platform_set(Package, _).
-node_os_set(Package) :- node_os_set(Package, _).
-
-% if no platform/os is set, fall back to the defaults
+% if no platform is set, fall back to the default
 node_platform(Package, Platform)
  :- node(Package),
     not node_platform_set(Package),
     node_platform_default(Platform).
+
+% setting platform on a node is a hard constraint
+node_platform(Package, Platform)
+ :- node(Package), node_platform_set(Package, Platform).
+
+% platform is set if set to anything
+node_platform_set(Package) :- node_platform_set(Package, _).
+
+#defined node_platform_set/2.  % avoid warnings
+
+%-----------------------------------------------------------------------------
+% OS semantics
+%-----------------------------------------------------------------------------
+% one os per node
+1 { node_os(Package, OS) : node_os(Package, OS) } 1 :- node(Package).
+
+% node_os_set implies that the node has that os
+node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
+node_os_set(Package) :- node_os_set(Package, _).
+
+% fall back to default if not set
 node_os(Package, OS)
   :- node(Package), not node_os_set(Package), node_os_default(OS).
 
-% setting os/platform on a node is a hard constraint
-node_platform(Package, Platform)
- :- node(Package), node_platform_set(Package, Platform).
-node_os(Package, OS) :- node(Package), node_os_set(Package, OS).
+% same OS throughout DAG (can currently only set one OS)
+% TODO make this smarter; build env may have a different os from run env
+node_os_set(Package, OS)
+  :- depends_on(Package, Dependency), node_os_set(Dependency, OS).
+node_os_set(Dependency, OS)
+  :- depends_on(Package, Dependency), node_os_set(Package, OS).
 
-% avoid info warnings (see variants)
-#defined node_platform_set/2.
 #defined node_os_set/2.
 
 %-----------------------------------------------------------------------------
