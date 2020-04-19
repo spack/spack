@@ -11,7 +11,7 @@ Chaining Spack Installations
 
 You can point your Spack installation to another installation to use any
 packages that are installed there. To register the other Spack instance,
-you can add it as an entry to ``upstreams.yaml``:
+you can add it as an entry to ``etc/spack/upstreams.yaml``:
 
 .. code-block:: yaml
 
