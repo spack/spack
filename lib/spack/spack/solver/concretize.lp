@@ -193,6 +193,14 @@ node_target(Package, Target)
 node_target_weight(Package, Weight)
  :- node(Package), node_target(Package, Target), target_weight(Target, Weight).
 
+% compatibility rules for targets among nodes
+node_target_match_pref(Package, Target) :- node_target_set(Package, Target).
+node_target_match_pref(Dependency, Target)
+  :- depends_on(Package, Dependency), node_target_match_pref(Package, Target),
+     not node_target_set(Dependency, _).
+node_target_match(Package, 1)
+  :- node_target(Package, Target), node_target_match_pref(Package, Target).
+
 #defined node_target_set/2.
 
 %-----------------------------------------------------------------------------
@@ -346,4 +354,5 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % TODO: if these are slightly different by compiler (e.g., skylake is
 % best, gcc supports skylake and broadweell, clang's best is haswell)
 % things seem to get really slow.
-#minimize{ Weight@5,Package : node_target_weight(Package, Weight) }.
+#maximize{ Weight@5,Package : node_target_match(Package, Weight) }.
+#minimize{ Weight@4,Package : node_target_weight(Package, Weight) }.
