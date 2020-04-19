@@ -14,6 +14,7 @@ import time
 import types
 from six import string_types
 
+import llnl.util.cpu
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 
@@ -46,9 +47,10 @@ def listify(args):
 
 
 def packagize(pkg):
-    if isinstance(pkg, spack.package.PackageMeta):
+    if isinstance(pkg, string_types):
+        return spack.repo.path.get_pkg_class(pkg)
+    else:
         return pkg
-    return spack.repo.path.get_pkg_class(pkg)
 
 
 def specify(spec):
@@ -138,9 +140,12 @@ class AspFunctionBuilder(object):
 fn = AspFunctionBuilder()
 
 
+def default_arch():
+    return spack.spec.ArchSpec(spack.architecture.sys_type())
+
+
 def compilers_for_default_arch():
-    default_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-    return spack.compilers.compilers_for_arch(default_arch)
+    return spack.compilers.compilers_for_arch(default_arch())
 
 
 def extend_flag_list(flag_list, new_flags):
@@ -606,13 +611,21 @@ class AspGenerator(object):
 
         return sorted(supported, reverse=True)
 
-    def arch_defaults(self):
-        """Add facts about the default architecture for a package."""
-        self.h2('Default architecture')
-        default = spack.spec.ArchSpec(spack.architecture.sys_type())
+    def platform_defaults(self):
+        self.h2('Default platform')
+        default = default_arch()
         self.fact(fn.node_platform_default(default.platform))
+
+    def os_defaults(self, specs):
+        self.h2('Default operating system')
+        default = default_arch()
         self.fact(fn.node_os_default(default.os))
-        self.fact(fn.node_target_default(default.target))
+
+    def target_defaults(self, specs):
+        """Add facts about targets and target compatibility."""
+        self.h2('Default target')
+        default = default_arch()
+        self.fact(fn.node_target_default(default_arch().target))
 
         uarch = default.target.microarchitecture
 
@@ -641,6 +654,17 @@ class AspGenerator(object):
                     compiler.name, compiler.version, target.name))
                 self.fact(fn.compiler_supports_target(
                     compiler.name, compiler.version, uarch.family.name))
+
+        # add any targets explicitly mentioned in specs
+        for spec in specs:
+            if not spec.architecture or not spec.architecture.target:
+                continue
+
+            target = llnl.util.cpu.targets.get(spec.target.name)
+            if not target:
+                raise ValueError("Invalid target: ", spec.target.name)
+            if target not in compatible_targets:
+                compatible_targets.append(target)
 
         i = 0
         for target in compatible_targets:
@@ -726,7 +750,12 @@ class AspGenerator(object):
         self.h1('General Constraints')
         self.available_compilers()
         self.compiler_defaults()
-        self.arch_defaults()
+
+        # architecture defaults
+        self.platform_defaults()
+        self.os_defaults(specs)
+        self.target_defaults(specs)
+
         self.virtual_providers()
         self.provider_defaults()
         self.flag_defaults()
@@ -824,7 +853,7 @@ class ResultParser(object):
             dependency.add_type(type)
 
     def reorder_flags(self):
-        """Order compiler flags on specsaccord in predefined order.
+        """Order compiler flags on specs in predefined order.
 
         We order flags so that any node's flags will take priority over
         those of its dependents.  That is, the deepest node in the DAG's
