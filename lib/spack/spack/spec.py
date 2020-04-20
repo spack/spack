@@ -1594,7 +1594,7 @@ class Spec(object):
                  syaml.syaml_dict([
                      ('hash', dspec.spec._cached_hash(hash)),
                      ('type', sorted(str(s) for s in dspec.deptypes)),
-                     ('virtuals', sorted(str(s) for s in dspec.virtuals))
+                     ('provides', sorted(str(s) for s in dspec.virtuals))
                  ])
                  ) for name, dspec in sorted(deps.items())
             ])
@@ -1807,7 +1807,7 @@ class Spec(object):
                 dag_hash, deptypes = elt['hash'], elt['type']
                 # FIXME: Document why we are using "get"
                 # FIXME: instead of subscripts (ci.py)
-                virtuals = elt.get('virtuals', [])
+                virtuals = elt.get('provides', [])
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
