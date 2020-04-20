@@ -365,7 +365,8 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
             assert len(s) == 1, specs
             s = s[0]
             binds.append(str(s))
-            virtual_deps = s.package.used_together.get(v, (v,))
+            virtual_deps = used_together(s, v)
+
             highest.update_with(s, only=virtual_deps)
             lowest.update_with(s, exclude=virtual_deps)
 
@@ -380,7 +381,7 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
             if not spec.satisfies(constraint, strict=True):
                 continue
 
-            binds = spec.package.used_together[vspec]
+            binds = used_together(spec, vspec)
             is_highest = True
             self.providers.maps[0].update_with(spec, only=binds)
             self.providers.maps[2].update_with(spec, exclude=binds)
@@ -396,6 +397,27 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
 
     def __len__(self):
         return len(self.providers)
+
+
+def used_together(provider_spec, virtual_spec):
+    """Return the set of virtual specs that needs to be used together
+    for a given provider.
+
+    Args:
+        provider_spec: provider spec
+        virtual_spec: virtual spec of interest
+
+    Returns:
+        Set of virtual specs that needs to be used together
+    """
+    result, pkg = set(), provider_spec.package
+    for when_spec, vspec_sets in pkg.used_together.items():
+        if not provider_spec.satisfies(when_spec):
+            continue
+        ss = [s for s in vspec_sets if virtual_spec in s]
+        for xx in ss:
+            result |= xx
+    return result
 
 
 def _transform(providers, transform_fun, out_mapping_type=dict):
