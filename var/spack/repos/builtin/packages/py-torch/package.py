@@ -6,7 +6,6 @@
 from spack import *
 
 
-# TODO: try switching to CMakePackage for more control over build
 class PyTorch(PythonPackage, CudaPackage):
     """Tensors and Dynamic neural networks in Python
     with strong GPU acceleration."""
@@ -107,26 +106,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # see https://github.com/pytorch/pytorch/issues/35149
     conflicts('+fbgemm', when='@1.4.0')
 
-    cuda_arch_conflict = ('This version of Torch/Caffe2 only supports compute '
-                          'capabilities ')
-
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
-    conflicts('cuda_arch=52', when='@1.3.0:+cuda',
-              msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=50', when='@1.3.0:+cuda',
-              msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=35', when='@1.3.0:+cuda',
-              msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=32', when='@1.3.0:+cuda',
-              msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=30', when='@1.3.0:+cuda',
-              msg=cuda_arch_conflict + '>=5.3')
-    conflicts('cuda_arch=30', when='@1.2.0:+cuda',
-              msg=cuda_arch_conflict + '>=3.2')
-    conflicts('cuda_arch=20', when='@1.0.0:+cuda',
-              msg=cuda_arch_conflict + '>=3.0')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
