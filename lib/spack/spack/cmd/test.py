@@ -10,9 +10,10 @@ import textwrap
 import datetime
 import fnmatch
 import re
+import shutil
 
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+import llnl.util.filesystem as fs
 
 import spack.environment as ev
 import spack.cmd
@@ -82,9 +83,15 @@ def setup_parser(subparser):
     status_parser = sp.add_parser('status', help=test_status.__doc__)
     status_parser.add_argument('name', help="Test for which to provide status")
 
-    # Status
+    # Results
     results_parser = sp.add_parser('results', help=test_results.__doc__)
     results_parser.add_argument('name', help="Test for which to print results")
+
+    # Remove
+    remove_parser = sp.add_parser('remove', help=test_remove.__doc__)
+    remove_parser.add_argument(
+        'name', nargs='?',
+        help="Test to remove from test stage")
 
 def test_run(args):
     """Run tests for the specified installed packages
@@ -142,7 +149,7 @@ environment variables:
 
     # test_stage_dir
     stage = _get_stage(test_name)
-    mkdirp(stage)
+    fs.mkdirp(stage)
 
     with reporter('test', stage):
         if args.smoke_test:
@@ -162,9 +169,7 @@ environment variables:
 
 
 def test_list(args):
-    """
-    List tests that are running or have available results.
-    """
+    """List tests that are running or have available results."""
     stage_dir = _get_stage()
     tests = os.listdir(stage_dir)
 
@@ -184,18 +189,16 @@ def test_list(args):
         # TODO: Make these specify results vs active
         msg = "Spack test results available for the following tests:\n"
         msg += "        %s\n" % ' '.join(tests)
-        msg += "    Run `spack clean -t` to remove all tests"
+        msg += "    Run `spack test remove` to remove all tests"
         tty.msg(msg)
     else:
         msg = "No test results match the query\n"
-        msg += "        Tests may have been removed using `spack clean -t`"
+        msg += "        Tests may have been removed using `spack test remove`"
         tty.msg(msg)
 
 
 def test_status(args):
-    """
-    Get the current status for a particular Spack test ensemble.
-    """
+    """Get the current status for a particular Spack test."""
     name = args.name
     stage = _get_stage(name)
 
@@ -207,9 +210,7 @@ def test_status(args):
 
 
 def test_results(args):
-    """
-    Get the results for a particular Spack test ensemble.
-    """
+    """Get the results for a particular Spack test."""
     name = args.name
     stage = _get_stage(name)
 
@@ -233,6 +234,20 @@ def test_results(args):
         tty.msg("No test %s found in test stage" % name)
 
 
+def test_remove(args):
+    """Remove results for a test from the test stage.
+
+    If no test is listed, remove all tests from the test stage.
+
+    Removed tests can no longer be accessed for results or status, and will not
+    appear in `spack test list` results."""
+    stage_dir = _get_stage(args.name)
+    if args.name:
+        shutil.rmtree(stage_dir)
+    else:
+        fs.remove_directory_contents(stage_dir)
+
+
 def test(parser, args):
     globals()['test_%s' % args.test_command](args)
 
@@ -242,7 +257,7 @@ def _get_stage(name=None):
     Return the test stage for the named test or the overall test stage.
     """
     stage_dir = spack.util.path.canonicalize_path(
-        spack.config.get('config:test_stage', os.getcwd()))
+        spack.config.get('config:test_stage', '~/.spack/test'))
     return os.path.join(stage_dir, name) if name else stage_dir
 
 
