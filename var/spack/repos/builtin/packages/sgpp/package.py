@@ -96,10 +96,6 @@ class Sgpp(SConsPackage):
     conflicts('+datadriven', when='-solver')
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
-    conflicts('+datadriven', when='sse3',
-              msg='Datadriven module requires at leastAVX!')
-    conflicts('+datadriven', when='sse42',
-              msg='Datadriven module requires at least AVX!')
     # Misc module requirements
     conflicts('+misc', when='-datadriven')
     conflicts('+misc', when='-solver')
@@ -140,6 +136,7 @@ class Sgpp(SConsPackage):
         # Java variant deactivated due to spack issue #987
         # self.args.append('SG_JAVA={0}'.format(
         #     '1' if '+java' in spec else '0'))
+        self.args.append('SG_JAVA=0')
         # Which modules to build?
         self.args.append('SG_OPTIMIZATION={0}'.format(
             '1' if '+optimization' in spec else '0'))
@@ -159,7 +156,7 @@ class Sgpp(SConsPackage):
                 '1' if '+misc' in spec else '0'))
         # SIMD scons parameter (pick according to simd spec)
         if 'avx512' in self.spec.target:
-            self.args.append('ARCH=avx2')
+            self.args.append('ARCH=avx512')
         elif 'avx2' in self.spec.target:
             self.args.append('ARCH=avx2')
         elif 'avx' in self.spec.target:
