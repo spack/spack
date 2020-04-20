@@ -449,7 +449,8 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
-                            custom_spack_repo=None, custom_spack_ref=None):
+                            custom_spack_repo=None, custom_spack_ref=None,
+                            optimizer=None):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
     with spack.concretize.disable_compiler_existence_check():
@@ -787,6 +788,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     sorted_output = {}
     for output_key, output_value in sorted(output_object.items()):
         sorted_output[output_key] = output_value
+
+    if optimizer:
+        sorted_output = optimizer(sorted_output)
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
