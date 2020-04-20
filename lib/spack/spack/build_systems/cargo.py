@@ -44,7 +44,11 @@ class CargoPackage(PackageBase):
     @property
     def cargo_build(self):
         cargo_build = deepcopy(inspect.getmodule(self).cargo_build)
-        cargo_build.add_default_env('RUSTFLAGS', '--codegen rpath')
+        cargo_build.add_default_env(
+            'RUSTFLAGS',
+            '--codegen rpath \
+             --cap-lints warn'
+        )
         cargo_build.add_default_arg('-vv') # Very verbose output
         cargo_build.add_default_arg('--manifest-path')
         cargo_build.add_default_arg(self.manifest_path)

@@ -12,12 +12,14 @@ import errno
 import hashlib
 import tempfile
 import getpass
+from copy import deepcopy
 from six import string_types
 from six import iteritems
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition_path, remove_linked_tree, join_path
+from llnl.util.filesystem import \
+    partition_path, remove_linked_tree, join_path, ancestor
 
 import spack.paths
 import spack.caches
@@ -758,12 +760,46 @@ class CargoStage(object):
     def fetch(self, *args, **kwargs):
         # Fetching the cargo stage requires the package is expanded
         self.package_stage.expand_archive()
-        self.cargo(
-            '--locked', 'vendor', '--versioned-dirs',
+
+        cargo_lock = \
+            join_path(
+                ancestor(
+                    join_path(
+                        self.package_stage.source_path,
+                        self.manifest
+                    )
+                ),
+                'Cargo.lock'
+            )
+
+        cargo = deepcopy(self.cargo)
+        checksum = spack.config.get('config:checksum')
+        if checksum and not os.path.exists(cargo_lock):
+            tty.warn("There is no Cargo.lock file to vendor crate depenencies safely.")
+
+            # Ask the user whether to skip the checksum if we're
+            # interactive, but just fail if non-interactive.
+            ck_msg = "Add a checksum or use --no-checksum to skip this check."
+            ignore_checksum = False
+            if sys.stdout.isatty():
+                ignore_checksum = tty.get_yes_or_no("  Fetch anyway?",
+                                                    default=False)
+                if ignore_checksum:
+                    tty.msg("Vendoring with no checksum.", ck_msg)
+                    cargo.add_default_arg('--locked')
+
+            if not ignore_checksum:
+                raise fs.FetchError("Will not vendor cargo dependencies")
+
+        
+
+        config = self.cargo(
+            'vendor', '--versioned-dirs',
             '--manifest-path',
             join_path(self.package_stage.source_path, self.manifest),
             join_path(
-                self.package_stage.path, 'spack-cargo-vendor'))
+                self.package_stage.path, 'spack-cargo-vendor'),
+            output=str)
 
     # The Cargo depenedencies are checked during the 'fetch' stage
     def check(self):
