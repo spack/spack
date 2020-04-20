@@ -7,17 +7,15 @@ from spack import *
 
 
 class Exa(Package):
+
     """exa is a replacement for ls written in Rust."""
 
-    homepage = "https://the.exa.website"
-    url      = "https://github.com/ogham/exa/archive/v0.9.0.tar.gz"
+    homepage = 'https://the.exa.website'
+    url = 'https://github.com/ogham/exa/archive/v0.9.0.tar.gz'
 
-    version(
-        '0.9.0', sha256='96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783')
-
-    def url_for_version(self, version):
-        url = "https://github.com/ogham/exa/archive/v{0}.tar.gz"
-        return url.format(version)
+    version('0.9.0',
+            sha256='96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783'
+            )
 
     depends_on('rust')
 
