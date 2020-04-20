@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Bbmap(Package):
+class Bbmap(Package, SourceforgePackage):
     """Short read aligner for DNA and RNA-seq data."""
 
     homepage = "http://sourceforge.net/projects/bbmap/"
-    url      = "https://downloads.sourceforge.net/project/bbmap/BBMap_38.63.tar.gz"
+    sourceforge_mirror_path = "bbmap/BBMap_38.63.tar.gz"
 
     version('38.63', sha256='089064104526c8d696164aefa067f935b888bc71ef95527c72a98c17ee90a01f')
     version('37.36', sha256='befe76d7d6f3d0f0cd79b8a01004a2283bdc0b5ab21b0743e9dbde7c7d79e8a9')

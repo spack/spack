@@ -45,6 +45,7 @@ from spack.pkg.builtin.openfoam import write_environ
 from spack.pkg.builtin.openfoam import rewrite_environ_files
 from spack.pkg.builtin.openfoam import mplib_content
 from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -84,7 +85,7 @@ class OpenfoamOrg(Package):
 
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('flex',  type='build')
+    depends_on('flex')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -138,15 +139,14 @@ class OpenfoamOrg(Package):
         return settings
 
     def setup_run_environment(self, env):
-        # This should be similar to the openfoam package,
-        # but sourcing the etc/bashrc here seems to exit with an error.
-        # ... this needs to be examined in more detail.
-        #
-        # Minimal environment only.
-        env.set('FOAM_PROJECT_DIR', self.projectdir)
-        env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            env.prepend_path('PATH', join_path(self.projectdir, d))
+        bashrc = self.prefix.etc.bashrc
+        try:
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                bashrc, clean=True
+            ))
+        except Exception as e:
+            msg = 'unexpected error when sourcing OpenFOAM bashrc [{0}]'
+            tty.warn(msg.format(str(e)))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
@@ -386,5 +386,3 @@ class OpenfoamOrg(Package):
                 if os.path.isfile(f)
             ]:
                 os.symlink(f, os.path.basename(f))
-
-# -----------------------------------------------------------------------------

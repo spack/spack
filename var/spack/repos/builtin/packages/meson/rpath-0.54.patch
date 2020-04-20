@@ -1,0 +1,20 @@
+--- a/mesonbuild/scripts/depfixer.py
++++ b/mesonbuild/scripts/depfixer.py
+@@ -15,6 +15,7 @@
+ 
+ import sys, struct
+ import shutil, subprocess
++import os
+ 
+ from ..mesonlib import OrderedSet
+ 
+@@ -432,6 +433,9 @@ def fix_jar(fname):
+ 
+ def fix_rpath(fname, new_rpath, final_path, install_name_mappings, verbose=True):
+     global INSTALL_NAME_TOOL
++    # Do not strip rpath when run from within Spack
++    if 'SPACK_RPATH_DIRS' in os.environ:
++        return
+     # Static libraries, import libraries, debug information, headers, etc
+     # never have rpaths
+     # DLLs and EXE currently do not need runtime path fixing

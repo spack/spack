@@ -11,10 +11,11 @@ class Charliecloud(AutotoolsPackage):
 
     maintainers = ['j-ogas']
     homepage = "https://hpc.github.io/charliecloud"
-    url      = "https://github.com/hpc/charliecloud/releases/download/v0.14/charliecloud-0.9.10.tar.gz"
+    url      = "https://github.com/hpc/charliecloud/releases/download/v0.14/charliecloud-0.14.tar.gz"
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
+    version('0.15',   sha256='2163420d43c934151c4f44a188313bdb7f79e576d5a86ba64b9ea45f784b9921')
     version('0.14',   sha256='4ae23c2d6442949e16902f9d5604dbd1d6059aeb5dd461b11fc5c74d49dcb194')
 
     depends_on('m4',       type='build')
@@ -31,6 +32,8 @@ class Charliecloud(AutotoolsPackage):
     depends_on('rsync',               type='build', when='+docs')
     depends_on('py-sphinx',           type='build', when='+docs')
     depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+
+    conflicts('platform=darwin', msg='This package does not build on macOS')
 
     # bash automated testing harness (bats)
     depends_on('bats@0.4.0', type='test')

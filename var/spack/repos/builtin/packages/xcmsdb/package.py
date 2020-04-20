@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xcmsdb(AutotoolsPackage):
+class Xcmsdb(AutotoolsPackage, XorgPackage):
     """xcmsdb is used to load, query, or remove Device Color Characterization
     data stored in properties on the root window of the screen as
     specified in section 7, Device Color Characterization, of the
     X11 Inter-Client Communication Conventions Manual (ICCCM)."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xcmsdb"
-    url      = "https://www.x.org/archive/individual/app/xcmsdb-1.0.5.tar.gz"
+    xorg_mirror_path = "app/xcmsdb-1.0.5.tar.gz"
 
     version('1.0.5', sha256='8442352ee5eb3ea0d3a489c26d734e784ef6964150c2a173401d0dc6638ca236')
 

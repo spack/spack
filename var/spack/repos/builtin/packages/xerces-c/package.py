@@ -45,7 +45,7 @@ class XercesC(AutotoolsPackage):
             multi=False,
             description='Use the specified transcoder')
 
-    depends_on('libiconv', type='link', when='transcoder=gnuiconv')
+    depends_on('iconv', type='link', when='transcoder=gnuiconv')
     depends_on('icu4c',    type='link', when='transcoder=icu')
 
     # Pass flags to configure.  This is necessary for CXXFLAGS or else
@@ -61,7 +61,7 @@ class XercesC(AutotoolsPackage):
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
-            flags.append(spec['libiconv'].libs.ld_flags)
+            flags.append(spec['iconv'].libs.ld_flags)
 
         return (None, None, flags)
 

@@ -37,6 +37,7 @@ class Mesa(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('zlib')
     depends_on('expat')
+    depends_on('ncurses+termlib')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -83,6 +84,7 @@ class Mesa(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         args = [
+            'LDFLAGS={0}'.format(self.spec['ncurses'].libs.search_flags),
             '--enable-shared',
             '--disable-static',
             '--disable-libglvnd',
@@ -174,3 +176,11 @@ class Mesa(AutotoolsPackage):
         args.append('--with-dri-drivers=' + ','.join(args_dri_drivers))
 
         return args
+
+    @property
+    def libs(self):
+        for dir in ['lib64', 'lib']:
+            libs = find_libraries('libGL', join_path(self.prefix, dir),
+                                  shared=True, recursive=False)
+            if libs:
+                return libs

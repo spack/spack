@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxevie(AutotoolsPackage):
+class Libxevie(AutotoolsPackage, XorgPackage):
     """Xevie - X Event Interception Extension (XEvIE)."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXevie"
-    url      = "https://www.x.org/archive/individual/lib/libXevie-1.0.3.tar.gz"
+    xorg_mirror_path = "lib/libXevie-1.0.3.tar.gz"
 
     version('1.0.3', sha256='3759bb1f7fdade13ed99bfc05c0717bc42ce3f187e7da4eef80beddf5e461258')
 

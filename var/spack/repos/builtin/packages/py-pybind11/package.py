@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class PyPybind11(CMakePackage):
@@ -23,6 +24,7 @@ class PyPybind11(CMakePackage):
     maintainers = ['ax3l']
 
     version('master', branch='master')
+    version('2.5.0', sha256='97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504')
     version('2.4.3', sha256='1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d')
     version('2.3.0', sha256='0f34838f2c8024a6765168227ba587b3687729ebf03dc912f88ff75c7aa9cfe8')
     version('2.2.4', sha256='b69e83658513215b8d1443544d0549b7d231b9f201f6fc787a2b2218b408181e')
@@ -56,6 +58,8 @@ class PyPybind11(CMakePackage):
     def setup_build_environment(self, env):
         env.set('PYBIND11_USE_CMAKE', 1)
 
+    # https://github.com/pybind/pybind11/pull/1995
+    @when('@:2.4.99')
     def patch(self):
         """ see https://github.com/spack/spack/issues/13559 """
         filter_file('import sys',
@@ -74,9 +78,11 @@ class PyPybind11(CMakePackage):
         with working_dir('spack-test', create=True):
             # test include helper points to right location
             python = self.spec['python'].command
-            inc = python(
+            py_inc = python(
                 '-c',
                 'import pybind11 as py; ' +
                 self.spec['python'].package.print_string('py.get_include()'),
-                output=str)
-            assert inc.strip() == str(self.prefix.include)
+                output=str).strip()
+            for inc in [py_inc, self.prefix.include]:
+                inc_file = join_path(inc, 'pybind11', 'pybind11.h')
+                assert os.path.isfile(inc_file)

@@ -752,7 +752,8 @@ def purge():
 
 
 def get_checksums_for_versions(
-        url_dict, name, first_stage_function=None, keep_stage=False):
+        url_dict, name, first_stage_function=None, keep_stage=False,
+        fetch_options=None):
     """Fetches and checksums archives from URLs.
 
     This function is called by both ``spack checksum`` and ``spack
@@ -766,6 +767,8 @@ def get_checksums_for_versions(
         first_stage_function (callable): function that takes a Stage and a URL;
             this is run on the stage of the first URL downloaded
         keep_stage (bool): whether to keep staging area when command completes
+        fetch_options (dict): Options used for the fetcher (such as timeout
+            or cookies)
 
     Returns:
         (str): A multi-line string containing versions and corresponding hashes
@@ -799,7 +802,12 @@ def get_checksums_for_versions(
     i = 0
     for url, version in zip(urls, versions):
         try:
-            with Stage(url, keep=keep_stage) as stage:
+            if fetch_options:
+                url_or_fs = fs.URLFetchStrategy(
+                    url, fetch_options=fetch_options)
+            else:
+                url_or_fs = url
+            with Stage(url_or_fs, keep=keep_stage) as stage:
                 # Fetch the archive
                 stage.fetch()
                 if i == 0 and first_stage_function:

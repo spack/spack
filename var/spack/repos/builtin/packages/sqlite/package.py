@@ -38,7 +38,7 @@ class Sqlite(AutotoolsPackage):
             '(unsafe for <3.26.0.0 due to Magellan).')
 
     variant('rtree', default=False, description='Build with Rtree module')
-    variant('column_metadata', default=False, description="Build with COLUMN_METADATA")
+    variant('column_metadata', default=True, description="Build with COLUMN_METADATA")
 
     # See https://blade.tencent.com/magellan/index_en.html
     conflicts('+fts', when='@:3.25.99.99')
@@ -122,6 +122,6 @@ class Sqlite(AutotoolsPackage):
         if '+functions' in self.spec:
             libraryname = 'libsqlitefunctions.' + dso_suffix
             cc = Executable(spack_cc)
-            cc(self.compiler.pic_flag, '-lm', '-shared',
+            cc(self.compiler.cc_pic_flag, '-lm', '-shared',
                 'extension-functions.c', '-o', libraryname)
             install(libraryname, self.prefix.lib)

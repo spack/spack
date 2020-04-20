@@ -851,7 +851,7 @@ from websites and from git.
 
 .. warning::
 
-   This workaround should be used ONLY as a last resort!  Wihout SSL
+   This workaround should be used ONLY as a last resort!  Without SSL
    certificate verification, spack and git will download from sites you
    wouldn't normally trust.  The code you download and run may then be
    compromised!  While this is not a major issue for archives that will

@@ -59,9 +59,17 @@ class Fj(spack.compiler.Compiler):
         return "-std=c11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
         return "-KPIC"
 
-    def setup_custom_environment(self, pkg, env):
-        env.append_flags('fcc_ENV', '-Nclang')
-        env.append_flags('FCC_ENV', '-Nclang')
+    @property
+    def cxx_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def fc_pic_flag(self):
+        return "-KPIC"

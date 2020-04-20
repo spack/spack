@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Fslsfonts(AutotoolsPackage):
+class Fslsfonts(AutotoolsPackage, XorgPackage):
     """fslsfonts produces a list of fonts served by an X font server."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/fslsfonts"
-    url      = "https://www.x.org/archive/individual/app/fslsfonts-1.0.5.tar.gz"
+    xorg_mirror_path = "app/fslsfonts-1.0.5.tar.gz"
 
     version('1.0.5', sha256='27e58d2313835ce0f08cf47c59a43798b122f605a55f54b170db27b57a492007')
 

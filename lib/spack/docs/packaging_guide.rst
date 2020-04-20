@@ -2197,7 +2197,7 @@ property to ``True``, e.g.:
        extendable = True
        ...
 
-To make a package into an extension, simply add simply add an
+To make a package into an extension, simply add an
 ``extends`` call in the package definition, and pass it the name of an
 extendable package:
 
@@ -2211,6 +2211,10 @@ extendable package:
 Now, the ``py-numpy`` package can be used as an argument to ``spack
 activate``.  When it is activated, all the files in its prefix will be
 symbolically linked into the prefix of the python package.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Adding additional constraints
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some packages produce a Python extension, but are only compatible with
 Python 3, or with Python 2.  In those cases, a ``depends_on()``
@@ -2231,8 +2235,7 @@ variant(s) are selected.  This may be accomplished with conditional
 .. code-block:: python
 
    class FooLib(Package):
-       variant('python', default=True, description= \
-           'Build the Python extension Module')
+       variant('python', default=True, description='Build the Python extension Module')
        extends('python', when='+python')
        ...
 
@@ -3607,7 +3610,7 @@ the command line.
     For most compilers, ``$rpath_flag`` is ``-Wl,-rpath,``. However, NAG
     passes its flags to GCC instead of passing them directly to the linker.
     Therefore, its ``$rpath_flag`` is doubly wrapped: ``-Wl,-Wl,,-rpath,``.
-    ``$rpath_flag`` can be overriden on a compiler specific basis in
+    ``$rpath_flag`` can be overridden on a compiler specific basis in
     ``lib/spack/spack/compilers/$compiler.py``.
 
 The compiler wrappers also pass the compiler flags specified by the user from

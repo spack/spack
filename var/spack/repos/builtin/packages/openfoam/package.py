@@ -265,9 +265,12 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('1912_200403', sha256='1de8f4ddd39722b75f6b01ace9f1ba727b53dd999d1cd2b344a8c677ac2db4c0')
     version('1912', sha256='437feadf075419290aa8bf461673b723a60dc39525b23322850fb58cb48548f2')
+    version('1906_200312', sha256='f75645151ed5d8c5da592d307480979fe580a25627cc0c9718ef370211577594')
     version('1906_191103', sha256='631a7fcd926ccbcdef0ab737a9dc55e58d6bedae2f3acaa041ea679db6c9303b')
     version('1906', sha256='bee03c4b1da0d2c9f98eb469eeffbce3a8614728ef8e87f664042a7490976537')
+    version('1812_200312', sha256='925d2877c12740fab177a30fdcaa8899c262c15b90225f9c29d18a2d97532de0')
     version('1812_191001', sha256='857a3d476696679313ea9a3f022b33446ddef2bcd417049a9486d504c12038dd')
     version('1812_190531', sha256='51f0ef49a199edf3cd94e2ccfc7330e54e93c8e4ddb29ee66fe3e6b443583b34')
     version('1812', sha256='d4d23d913419c6a364b1fe91509c1fadb5661bdf2eedb8fe9a8a005924eb2032')

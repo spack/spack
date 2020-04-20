@@ -21,6 +21,7 @@ class PyGpaw(PythonPackage):
     variant('scalapack', default=True,
             description='Build with ScaLAPACK support')
     variant('fftw', default=True, description='Build with FFTW support')
+    variant('libvdwxc', default=True, description='Build with libvdwxc support')
 
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
     depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
@@ -35,6 +36,7 @@ class PyGpaw(PythonPackage):
     depends_on('fftw+mpi', when='+fftw +mpi')
     depends_on('fftw~mpi', when='+fftw ~mpi')
     depends_on('scalapack', when='+scalapack')
+    depends_on('libvdwxc', when='+libvdwxc')
 
     patch('libxc.patch', when='@1.3.0')
 
@@ -75,6 +77,9 @@ class PyGpaw(PythonPackage):
         if '+fftw' in spec:
             libs += spec['fftw'].libs
             include_dirs.append(spec['fftw'].prefix.include)
+        if '+libvdwxc' in spec:
+            libs += spec['libvdwxc'].libs
+            include_dirs.append(spec['libvdwxc'].prefix.include)
 
         lib_dirs = list(libs.directories)
         libs = list(libs.names)
@@ -101,3 +106,5 @@ class PyGpaw(PythonPackage):
                 f.write("define_macros += {0}\n".format(scalapack_macros))
             if '+fftw' in spec:
                 f.write("fftw = True\n")
+            if '+libvdwxc' in spec:
+                f.write("libvdwxc = True\n")

@@ -30,7 +30,7 @@ class Voropp(MakefilePackage):
         # CFLAGS=-Wall -ansi -pedantic -O3
         cflags = ''
         if '+pic' in spec:
-            cflags += self.compiler.pic_flag
+            cflags += self.compiler.cc_pic_flag
         filter_file(r'CFLAGS=.*',
                     'CFLAGS={0}'.format(cflags),
                     'config.mk')

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
-import os
 import sys
 
 
@@ -241,6 +239,11 @@ class PyTensorflow(Package, CudaPackage):
     patch('io_bazel_rules_docker2.patch', when='@1.15:2.0')
     # Avoide build error: "name 'new_http_archive' is not defined"
     patch('http_archive.patch', when='@1.12.3')
+    # Backport of 837c8b6b upstream
+    # "Remove contrib cloud bigtable and storage ops/kernels."
+    # Allows 2.0.* releases to build with '--config=nogcp'
+    patch('0001-Remove-contrib-cloud-bigtable-and-storage-ops-kernel.patch',
+          when='@2.0.0:2.0.1')
 
     phases = ['configure', 'build', 'install']
 
@@ -581,6 +584,12 @@ class PyTensorflow(Package, CudaPackage):
                 spec['nccl'].prefix.include + '"',
                 '.tf_configure.bazelrc')
 
+        # see tensorflow issue #31187 on github
+        if spec.satisfies('@2.0.0:2.0.1'):
+            filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
+                        '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
+                        'tensorflow/lite/experimental/ruy/platform.h')
+
         if spec.satisfies('+cuda'):
             libs = spec['cuda'].libs.directories
             libs.extend(spec['cudnn'].libs.directories)
@@ -679,26 +688,12 @@ class PyTensorflow(Package, CudaPackage):
 
         build_pip_package = Executable(
             'bazel-bin/tensorflow/tools/pip_package/build_pip_package')
-        build_pip_package(tmp_path)
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            for fn in glob.iglob(join_path(
-                    '../bazel-bin/tensorflow/tools/pip_package',
-                    'build_pip_package.runfiles/org_tensorflow/*')):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-            for fn in glob.iglob('../tensorflow/tools/pip_package/*'):
-                dst = os.path.basename(fn)
-                if not os.path.exists(dst):
-                    os.symlink(fn, dst)
-
-            # macOS is case-insensitive, and BUILD file in directory
-            # containing setup.py causes the following error message:
-            #     error: could not create 'build': File exists
-            # Delete BUILD file to prevent this.
-            os.remove('BUILD')
+        buildpath = join_path(self.stage.source_path, 'spack-build')
+        with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')

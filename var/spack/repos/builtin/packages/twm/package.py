@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Twm(AutotoolsPackage):
+class Twm(AutotoolsPackage, XorgPackage):
     """twm is a window manager for the X Window System.  It provides
     titlebars, shaped windows, several forms of icon management,
     user-defined macro functions, click-to-type and pointer-driven
     keyboard focus, and user-specified key and pointer button bindings."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/twm"
-    url      = "https://www.x.org/archive/individual/app/twm-1.0.9.tar.gz"
+    xorg_mirror_path = "app/twm-1.0.9.tar.gz"
 
     version('1.0.9', sha256='1c325e8456a200693c816baa27ceca9c5e5e0f36af63d98f70a335853a0039e8')
 

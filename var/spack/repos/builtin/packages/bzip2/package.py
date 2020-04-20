@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Bzip2(Package):
+class Bzip2(Package, SourcewarePackage):
     """bzip2 is a freely available, patent free high-quality data
     compressor. It typically compresses files to within 10% to 15%
     of the best available techniques (the PPM family of statistical
@@ -14,10 +14,7 @@ class Bzip2(Package):
     and six times faster at decompression."""
 
     homepage = "https://sourceware.org/bzip2/"
-    url      = "https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz"
-
-    # The server is sometimes a bit slow to respond
-    fetch_options = {'timeout': 60}
+    sourceware_mirror_path = "bzip2/bzip2-1.0.8.tar.gz"
 
     version('1.0.8', sha256='ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
     version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')

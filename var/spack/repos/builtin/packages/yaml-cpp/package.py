@@ -20,15 +20,18 @@ class YamlCpp(CMakePackage):
     version('0.6.3', sha256='77ea1b90b3718aa0c324207cb29418f5bced2354c2e483a9523d98c3460af1ed')
     version('0.6.2', sha256='e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05')
     version('0.5.3', sha256='decc5beabb86e8ed9ebeb04358d5363a5c4f72d458b2c788cb2f3ac9c19467b2')
+    version('0.3.0', sha256='ab8d0e07aa14f10224ed6682065569761f363ec44bc36fcdb2946f6d38fe5a89')
 
     variant('shared', default=True,
             description='Enable build of shared libraries')
+    variant('static', default=False,
+            description='Build with static libraries')
     variant('pic',   default=True,
             description='Build with position independent code')
     variant('tests', default=False,
             description='Build yaml-cpp tests using internal gtest')
 
-    depends_on('boost@:1.66.99', when='@:0.5.3')
+    depends_on('boost@:1.66.99', when='@0.5.0:0.5.3')
 
     conflicts('%gcc@:4.7', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
     conflicts('%clang@:3.3.0', when='@0.6.0:', msg="versions 0.6.0: require c++11 support")
@@ -65,6 +68,8 @@ class YamlCpp(CMakePackage):
         options.extend([
             '-DBUILD_SHARED_LIBS:BOOL=%s' % (
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DBUILD_STATIC_LIBS=%s' % (
+                'ON' if '+static' in spec else 'OFF'),
             '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
                 'ON' if '+pic' in spec else 'OFF'),
             '-DYAML_CPP_BUILD_TESTS:BOOL=%s' % (
@@ -72,3 +77,10 @@ class YamlCpp(CMakePackage):
         ])
 
         return options
+
+    def url_for_version(self, version):
+        url = "https://github.com/jbeder/yaml-cpp/archive/{0}-{1}.tar.gz"
+        if version < Version('0.5.3'):
+            return url.format('release', version)
+        else:
+            return url.format('yaml-cpp', version)
