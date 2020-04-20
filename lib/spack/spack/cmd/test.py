@@ -31,11 +31,16 @@ def setup_parser(subparser):
     # Run
     run_parser = sp.add_parser('run', help=test_run.__doc__)
 
+    name_help_msg = "Name the test for subsequent access."
+    name_help_msg += " Default is the timestamp of the run formatted"
+    name_help_msg += " 'YYYY-MM-DD_HH:MM:SS'"
+    run_parser.add_argument('-n', '--name', help=name_help_msg)
+
     run_parser.add_argument(
-        '-n', '--name', help="The name of the test. Default is current time"
+        '--keep-stage',
+        action='store_true',
+        help='Keep testing directory for debugging'
     )
-    run_parser.add_argument('--keep-stage', action='store_true',
-                            help='Keep testing directory for debugging')
     run_parser.add_argument(
         '--log-format',
         default=None,
