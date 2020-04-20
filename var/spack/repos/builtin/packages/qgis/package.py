@@ -72,6 +72,7 @@ class Qgis(CMakePackage):
     depends_on('libspatialindex')
     depends_on('libspatialite@4.2.0:')
     depends_on('libzip')
+    depends_on('libtasn1')
     depends_on('proj@4.4.0:')
     depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-pyqt4', when='@2')
@@ -97,10 +98,11 @@ class Qgis(CMakePackage):
     # optionals
     depends_on('postgresql@8:', when='+postgresql')  # for PostGIS support
     depends_on('gsl', when='+georeferencer')  # for georeferencer
-    depends_on('grass@7.0.0', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
+    # grass@7.8.1 is the first version that supports proj@6
+    depends_on('grass@7.8.1:7.999.999', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
 
     # the below dependencies are shown in cmake config
-    depends_on('hdf5')
+#    depends_on('hdf5')
     depends_on('netcdf-c')
 
     # build
@@ -111,6 +113,7 @@ class Qgis(CMakePackage):
 
     # Take care of conflicts using depends_on
     depends_on('proj@5:', when='@3.8.2:')
+    depends_on('proj@6.3.1:', when='@3.12.1:')    # Not sure of the when= version.
     depends_on('qt@5.9.0:5.12.99', when='@3.8')
     depends_on('qt@5.9.0:', when='@3.10.0:')
     depends_on('qtkeychain@:1.5.99', when='^qt@4')
