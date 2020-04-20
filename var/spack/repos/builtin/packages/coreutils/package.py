@@ -34,6 +34,5 @@ class Coreutils(AutotoolsPackage, GNUMirrorPackage):
                 configure_args.append('--program-prefix=g')
             configure_args.append('--without-gmp')
             configure_args.append('gl_cv_func_ftello_works=yes')
-            configure_args.append('FORCE_UNSAFE_CONFIGURE=1')
 
             return configure_args
