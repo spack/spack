@@ -171,7 +171,7 @@ class Metis(Package):
     @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'build')
+        build_directory = join_path(self.stage.path, 'build')
 
         options = CMakePackage._std_args(self)
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
