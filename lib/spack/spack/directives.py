@@ -408,11 +408,19 @@ def extends(spec, **kwargs):
     return _execute_extends
 
 
-@directive(dicts=('provided', 'provided_together'))
+@directive(dicts=('provided', 'used_together'))
 def provides(*specs, **kwargs):
-    """Allows packages to provide a virtual dependency.  If a package provides
-       'mpi', other packages can declare that they depend on "mpi", and spack
-       can use the providing package to satisfy the dependency.
+    """Allows packages to provide a virtual dependency.
+
+    If a package provides 'mpi', other packages can declare that they
+    depend on "mpi", and spack can use the providing package to satisfy
+    the dependency.
+
+    Args:
+        *specs: virtual specs provided by this package
+        **kwargs:
+
+            when: condition when this provides clause needs to be considered
     """
     def _execute_provides(pkg):
         when = kwargs.get('when')
@@ -427,7 +435,7 @@ def provides(*specs, **kwargs):
         spec_objs = [spack.spec.Spec(x) for x in specs]
         spec_names = [x.name for x in spec_objs]
         for provided_spec in spec_objs:
-            pkg.provided_together[provided_spec.name] = spec_names
+            pkg.used_together[provided_spec.name] = spec_names
 
             if pkg.name == provided_spec.name:
                 raise CircularReferenceError(

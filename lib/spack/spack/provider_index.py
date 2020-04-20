@@ -365,7 +365,7 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
             assert len(s) == 1, specs
             s = s[0]
             binds.append(str(s))
-            virtual_deps = s.package.provided_together.get(v, (v,))
+            virtual_deps = s.package.used_together.get(v, (v,))
             highest.update_with(s, only=virtual_deps)
             lowest.update_with(s, exclude=virtual_deps)
 
@@ -380,7 +380,7 @@ class IndexWithBindings(abc.Mapping, _IndexBase):
             if not spec.satisfies(constraint, strict=True):
                 continue
 
-            binds = spec.package.provided_together[vspec]
+            binds = spec.package.used_together[vspec]
             is_highest = True
             self.providers.maps[0].update_with(spec, only=binds)
             self.providers.maps[2].update_with(spec, exclude=binds)
