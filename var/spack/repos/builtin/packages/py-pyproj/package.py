@@ -24,8 +24,10 @@ class PyPyproj(PythonPackage):
 
     depends_on('python@:2', when='@:1.9.5.1')
     depends_on('python@3:', when='@2.3:')
+    depends_on('python@3.5:', when='@2.6.0:')
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
+    depends_on('py-cython@0.28:', when='@2.6.0:')
     depends_on('py-aenum', type=('build', 'run'), when='@2.2:^python@:3.5')
     depends_on('proj')
     depends_on('proj@:5',   when='@:1')
