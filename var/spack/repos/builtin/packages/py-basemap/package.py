@@ -13,6 +13,8 @@ class PyBasemap(PythonPackage):
 
     homepage = "http://matplotlib.org/basemap/"
 
+
+    version('1.2.1', sha256='3fb30424f18cd4ffd505e30fd9c810ae81b999bb92f950c76553e1abc081faa7')
     version('1.2.0', sha256='bd5bf305918a2eb675939873b735238f9e3dfe6b5c290e37c41e5b082ff3639a')
     version('1.0.7', sha256='e07ec2e0d63b24c9aed25a09fe8aff2598f82a85da8db74190bac81cbf104531')
 
@@ -22,7 +24,11 @@ class PyBasemap(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
-    depends_on('py-pyproj@:1.99', type=('build', 'run'))
+    depends_on('py-pyproj@:1.99', type=('build', 'run'), when='@:1.2.0')
+    # 1.2.1 is PROJ6 compatible
+    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=939022
+    depends_on('py-pyproj@2:', type=('build', 'run'), when='@1.2.1:')
+
     depends_on('py-pyshp', type=('build', 'run'))
     depends_on('pil', type=('build', 'run'))
     depends_on('geos')
