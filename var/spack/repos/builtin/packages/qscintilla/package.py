@@ -43,6 +43,8 @@ class Qscintilla(QMakePackage):
     # giving 'Nothing Installed Error'
     def setup_build_environment(self, env):
         env.set('INSTALL_ROOT', self.prefix)
+        # https://riverbankcomputing.com/pipermail/qscintilla/2015-January/001012.html
+        env.set('QMAKEFEATURES', join_path(self.stage.source_path, 'Qt4Qt5', 'features'))
 
     def setup_run_environment(self, env):
         env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
