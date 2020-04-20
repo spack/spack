@@ -4,11 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import sys
 
 
 class Bat(Package):
-
     """A cat(1) clone with wings."""
 
     homepage = 'https://github.com/sharkdp/bat'
