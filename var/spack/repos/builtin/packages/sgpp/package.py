@@ -36,10 +36,6 @@ class Sgpp(SConsPackage):
 
     variant('python', default=True,
             description='Provide Python bindings for SGpp')
-    variant('java', default=False,
-            description='Provide Java bindings for SGpp')
-    # export CLASSPATH=$(spack location --install-dir sgpp)/lib/jsgpp.jar
-    # After that one can compile and run simple java examples with sgpp
     variant('optimization', default=True,
             description='Builds the optimization module of SGpp')
     variant('pde', default=True,
@@ -59,6 +55,12 @@ class Sgpp(SConsPackage):
     variant('mpi', default=False,
             description='Enables support for MPI-distributed operations')
 
+    # Java variant deactivated due to spack issue #987
+    # variant('java', default=False,
+    #         description='Provide Java bindings for SGpp')
+    # depends_on('swig@3:', when='+java', type=('build'))
+    # extends('openjdk', when='+java')
+
     # Mandatory dependencies
     depends_on('scons@2.5.1', when='@:3.1.0', type=('build'))
     depends_on('scons@3:', when='@3.2.0:', type=('build'))
@@ -70,9 +72,6 @@ class Sgpp(SConsPackage):
     depends_on('python@2.7:2.8', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('python@3:', when='@3.2.0:+python', type=('build', 'run'))
     depends_on('swig@3:', when='+python', type=('build'))
-    # Java dependencies
-    depends_on('swig@3:', when='+java', type=('build'))
-    extends('openjdk', when='+java')
     # Python libraries (version depends on whether we use Python 2 or 3)
     depends_on('py-numpy@:1.16', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('py-numpy@1.17:', when='@3.2.0:+python', type=('build', 'run'))
@@ -136,10 +135,11 @@ class Sgpp(SConsPackage):
         # Install direction
         self.args.append('PREFIX={0}'.format(prefix))
         # Generate swig bindings?
-        self.args.append('SG_JAVA={0}'.format(
-            '1' if '+java' in spec else '0'))
         self.args.append('SG_PYTHON={0}'.format(
             '1' if '+python' in spec else '0'))
+        # Java variant deactivated due to spack issue #987
+        # self.args.append('SG_JAVA={0}'.format(
+        #     '1' if '+java' in spec else '0'))
         # Which modules to build?
         self.args.append('SG_OPTIMIZATION={0}'.format(
             '1' if '+optimization' in spec else '0'))
