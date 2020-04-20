@@ -284,9 +284,9 @@ have some drawbacks:
    The ``spack load`` and ``spack module tcl loads`` commands, on the
    other hand, are not very smart: if the user-supplied spec matches
    more than one installed package, then ``spack module tcl loads`` will
-   fail. This default behavior may change in the future.  For now, 
-   the workaround is to either be more specific on any failing ``spack load`` 
-   commands or to use ``spack load --first`` to allow spack to load the 
+   fail. This default behavior may change in the future.  For now,
+   the workaround is to either be more specific on any failing ``spack load``
+   commands or to use ``spack load --first`` to allow spack to load the
    first matching spec.
 
 
@@ -1432,10 +1432,6 @@ The following functionality is prepared:
 
 #. Base image: the example starts from a minimal ubuntu.
 
-#. Installing as root: docker images are usually set up as root.
-   Since some autotools scripts might complain about this being unsafe, we set
-   ``FORCE_UNSAFE_CONFIGURE=1`` to avoid configure errors.
-
 #. Pre-install the spack dependencies, including modules from the packages.
    This avoids needing to build those from scratch via ``spack bootstrap``.
    Package installs are followed by a clean-up of the system package index,
@@ -1466,8 +1462,7 @@ In order to build and run the image, execute:
 
    # general environment for docker
    ENV        DEBIAN_FRONTEND=noninteractive \
-              SPACK_ROOT=/usr/local \
-              FORCE_UNSAFE_CONFIGURE=1
+              SPACK_ROOT=/usr/local
 
    # install minimal spack dependencies
    RUN        apt-get update \
