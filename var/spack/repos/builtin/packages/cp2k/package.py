@@ -277,6 +277,10 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags  += ['-hnoomp']
             ldflags  += ['-hnoomp']
 
+        if '@7:' in spec:  # recent versions of CP2K use C++14 CUDA code
+            cxxflags.append(self.compiler.cxx14_flag)
+            nvflags.append(self.compiler.cxx14_flag)
+
         ldflags.append(fftw.libs.search_flags)
 
         if 'superlu-dist@4.3' in spec:
