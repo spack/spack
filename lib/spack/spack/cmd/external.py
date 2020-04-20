@@ -26,13 +26,13 @@ def setup_parser(subparser):
 def _get_system_executables():
     path = os.getenv('PATH')
     search_paths = path.split(os.pathsep)
-    exe_to_path = {}
+    path_to_exe = {}
     # Reverse order of search directories so that an exe in the first PATH
     # entry overrides later entries
     for search_path in reversed(search_paths):
         for exe in os.listdir(search_path):
-            exe_to_path[exe] = os.path.join(search_path, exe)
-    return exe_to_path
+            path_to_exe[os.path.join(search_path, exe)] = exe
+    return path_to_exe
 
 
 ExternalPackageEntry = namedtuple(
@@ -59,9 +59,9 @@ def external_find(args):
     _get_external_packages(TestRepo())
 
 
-def _get_external_packages(repo, system_exe_to_path=None):
-    if not system_exe_to_path:
-        system_exe_to_path = _get_system_executables()
+def _get_external_packages(repo, system_path_to_exe=None):
+    if not system_path_to_exe:
+        system_path_to_exe = _get_system_executables()
 
     exe_pattern_to_pkgs = defaultdict(list)
     for pkg in repo.all_packages():
@@ -71,12 +71,12 @@ def _get_external_packages(repo, system_exe_to_path=None):
 
     pkg_to_found_exes = defaultdict(set)
     found_exe_to_pkgs = defaultdict(set)
-    for exe in system_exe_to_path:
+    for path, exe in system_path_to_exe.items():
         for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
             if re.search(exe_pattern, exe):
                 for pkg in pkgs:
-                    pkg_to_found_exes[pkg].add(exe)
-                found_exe_to_pkgs[exe].update(pkgs)
+                    pkg_to_found_exes[pkg].add(path)
+                found_exe_to_pkgs[path].update(pkgs)
     # Sort to get repeatable results
     found_exe_to_pkgs = dict(
         (x, list(sorted(y, key=lambda p: p.name)))
@@ -114,8 +114,7 @@ def _get_external_packages(repo, system_exe_to_path=None):
             else:
                 resolved_specs[spec] = exe
 
-            path = system_exe_to_path[exe]
-            bin_dir = os.path.dirname(path)
+            bin_dir = os.path.dirname(exe)
             base_dir = os.path.dirname(bin_dir)
 
             exe_to_usable_packages[exe].append(pkg)
