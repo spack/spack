@@ -6,16 +6,15 @@
 from spack import *
 
 
-class FdFind(Package):
+class FdFind(CargoPackage):
     """A simple, fast and user-friendly alternative to 'find'."""
 
     homepage = "https://github.com/sharkdp/fd"
-    url      = "https://github.com/sharkdp/fd/archive/v7.3.0.tar.gz"
 
-    version('7.4.0', sha256='33570ba65e7f8b438746cb92bb9bc4a6030b482a0d50db37c830c4e315877537')
+    crates_io = "fd-find"
+    git = "https://github.com/sharkdp/fd.git"
 
-    depends_on('rust')
-
-    def install(self, spec, prefix):
-        cargo = which('cargo')
-        cargo('install', '--root', prefix, '--path', '.')
+    version('master', branch='master')
+    version('8.0.0', sha256='c2c514a6aab9cfbfc920668f39bb745e4ac24545408ab817aa8a4554f639e635')
+    version('7.5.0', sha256='111941422349755e27f9c7c443e0043e9fe31384cd503b133fb27a2b04c78fbc')
+    version('7.4.0', sha256='b21777867eb06d903a152fcc45e774e319b0d49ab3ab9d30cf1a38f7c541f590')
