@@ -17,6 +17,8 @@ class Cdo(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
+    version('1.9.9.rc2', sha256='2328299c43ecd10f8283056b6a65e6f205fb64e988ce360fc2b30672e7491e66',
+            url='https://code.mpimet.mpg.de/attachments/download/21529/cdo-1.9.9rc2.tar.gz')
     version('1.9.8', sha256='f2660ac6f8bf3fa071cf2a3a196b3ec75ad007deb3a782455e80f28680c5252a', url='https://code.mpimet.mpg.de/attachments/download/20286/cdo-1.9.8.tar.gz')
     version('1.9.7.1', sha256='3771952e065bcf935d43e492707370ed2a0ecb59a06bea24f9ab69d77943962c',
             url='https://code.mpimet.mpg.de/attachments/download/20124/cdo-1.9.7.1.tar.gz')
@@ -42,6 +44,8 @@ class Cdo(AutotoolsPackage):
 
     variant('udunits2', default=True, description='Enable UDUNITS2 support')
     variant('libxml2', default=True, description='Enable libxml2 support')
+    # PROJ.6 supported starting 1.9.8.1
+    # https://launchpad.net/ubuntu/+source/cdo/+changelog
     variant('proj', default=True,
             description='Enable PROJ library for cartographic projections')
     variant('curl', default=False, description='Enable curl support')
@@ -66,7 +70,8 @@ class Cdo(AutotoolsPackage):
 
     depends_on('udunits', when='+udunits2')
     depends_on('libxml2', when='+libxml2')
-    depends_on('proj@:5', when='+proj')
+    depends_on('proj@:5', when='@:1.9.8+proj')
+    depends_on('proj@6:', when='@1.9.9:+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')
