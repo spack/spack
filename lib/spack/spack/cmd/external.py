@@ -119,8 +119,7 @@ def _get_external_packages(repo, system_exe_to_path=None):
             bin_dir = os.path.dirname(path)
             base_dir = os.path.dirname(bin_dir)
 
-            for exe in found_pkg_exes:
-                exe_to_usable_packages[exe].append(pkg)
+            exe_to_usable_packages[exe].append(pkg)
 
             pkg_to_entries[pkg.name].append(
                 ExternalPackageEntry(spec=spec, base_dir=base_dir))
