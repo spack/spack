@@ -138,21 +138,20 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     @staticmethod
-    def determine_spec_details(exes):
-        if 'cmake' not in exes:
+    def determine_spec_details(exe, all_files):
+        if 'cmake' not in exe:
             return None
 
         spec = spack.spec.Spec('cmake')
 
-        cmake = spack.util.executable.Executable('cmake')
+        cmake = spack.util.executable.Executable(exe)
         output = cmake('--version', output=str)
         if output:
             match = re.search(r'version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
             spec.versions = Version(version_str)
-
-        return str(spec)
+            return str(spec)
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 import os
 import re
 
@@ -36,12 +36,24 @@ def _get_system_executables():
     return exe_to_path
 
 
-def _pkg_yaml_template(name, spec, path):
+ExternalPackageEntry = namedtuple(
+    'ExternalPackageEntry',
+    ['spec', 'base_dir'])
+
+
+def _pkg_yaml_template(pkg_name, external_pkg_entries):
     template = """\
 {name}:
   paths:
-    {spec}: {path}"""
-    return template.format(name=name, spec=spec, path=path)
+    {path_entries_block}"""
+
+    entry_template = "{spec}: {path}"
+    path_entries_block = "\n    ".join(
+        entry_template.format(spec=str(e.spec), path=e.base_dir)
+        for e in external_pkg_entries)
+
+    return template.format(
+        name=pkg_name, path_entries_block=path_entries_block)
 
 
 def external_find(args):
@@ -75,21 +87,15 @@ def _get_external_packages(repo, system_exe_to_path=None):
         for x, y in pkg_to_found_exes.items())
 
     exe_to_usable_packages = defaultdict(list)
-    pkg_to_template = {}
-    resolved_pkgs = set()
+    pkg_to_entries = defaultdict(list)
+    resolved_specs = {}  # spec -> exe found for the spec
     for exe in sorted(found_exe_to_pkgs):
         associated_packages = found_exe_to_pkgs[exe]
         for pkg in associated_packages:
-            if pkg.name in resolved_pkgs:
-                # The package was already considered as part of examining a
-                # different exe. It does not need to be reexamined.
-                continue
-            resolved_pkgs.add(pkg.name)
-
             found_pkg_exes = pkg_to_found_exes[pkg]
 
             if hasattr(pkg, 'determine_spec_details'):
-                spec_str = pkg.determine_spec_details(found_pkg_exes)
+                spec_str = pkg.determine_spec_details(exe, found_pkg_exes)
             else:
                 spec_str = pkg.name
 
@@ -99,19 +105,30 @@ def _get_external_packages(repo, system_exe_to_path=None):
                         .format(pkg.name, ", ".join(found_pkg_exes)))
                 continue
 
-            paths = list(system_exe_to_path[x] for x in found_pkg_exes)
-            bin_dirs = set(os.path.dirname(x) for x in paths)
-            if len(bin_dirs) > 1:
-                tty.warn("{0} has executables in separate locations: {1}"
-                         .format(pkg.name, ", ".join(bin_dirs)))
-            bin_dir = list(bin_dirs)[0]
+            spec = spack.spec.Spec(spec_str)
+            if spec in resolved_specs:
+                prior_associated_exe = resolved_specs[spec]
+                tty.debug("Executables {0} and {1} are both associated with"
+                          " the same spec {2}"
+                          .format(exe, prior_associated_exe, str(spec)))
+                continue
+            else:
+                resolved_specs[spec] = exe
+
+            path = system_exe_to_path[exe]
+            bin_dir = os.path.dirname(path)
             base_dir = os.path.dirname(bin_dir)
 
             for exe in found_pkg_exes:
                 exe_to_usable_packages[exe].append(pkg)
 
-            pkg_to_template[pkg.name] = _pkg_yaml_template(
-                pkg.name, spec_str, base_dir)
+            pkg_to_entries[pkg.name].append(
+                ExternalPackageEntry(spec=spec, base_dir=base_dir))
+
+    pkg_to_template = {}
+    for pkg_name, ext_pkg_entries in pkg_to_entries.items():
+        pkg_to_template[pkg_name] = _pkg_yaml_template(
+            pkg.name, ext_pkg_entries)
 
     used_packages = set()
     for exe, pkgs in exe_to_usable_packages.items():
