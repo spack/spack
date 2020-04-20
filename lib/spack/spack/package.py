@@ -2035,7 +2035,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         versions = {}
         for v in crate["versions"]:
-            versions[v["num"]] = "https://crates.io" + v["dl_path"]
+            if not v["yanked"]:
+                versions[v["num"]] = "https://crates.io" + v["dl_path"]
         return versions
 
     def fetch_remote_versions(self):
