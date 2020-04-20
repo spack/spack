@@ -130,7 +130,7 @@ To activate an environment, use the following command:
 By default, the ``spack env activate`` will load the view associated
 with the Environment into the user environment. The ``-v,
 --with-view`` argument ensures this behavior, and the ``-V,
---without-vew`` argument activates the environment without changing
+--without-view`` argument activates the environment without changing
 the user environment variables.
 
 The ``-p`` option to the ``spack env activate`` command modifies the
