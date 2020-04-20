@@ -34,10 +34,6 @@ class Sgpp(SConsPackage):
     # Backport opencl fix
     patch('ocl.patch', when='@:3.2.0+opencl')
 
-    variant('simd',
-            default='sse3',
-            values=('sse3', 'sse42', 'avx', 'fma4', 'avx2', 'avx512'),
-            description='Specifies the SIMD extension to be used')
     variant('python', default=True,
             description='Provide Python bindings for SGpp')
     variant('java', default=False,
@@ -76,7 +72,7 @@ class Sgpp(SConsPackage):
     depends_on('swig@3:', when='+python', type=('build'))
     # Java dependencies
     depends_on('swig@3:', when='+java', type=('build'))
-    depends_on('openjdk', when='+java', type=('build', 'run'))
+    extends('openjdk', when='+java')
     # Python libraries (version depends on whether we use Python 2 or 3)
     depends_on('py-numpy@:1.16', when='@:3.1.0+python', type=('build', 'run'))
     depends_on('py-numpy@1.17:', when='@3.2.0:+python', type=('build', 'run'))
@@ -101,9 +97,9 @@ class Sgpp(SConsPackage):
     conflicts('+datadriven', when='-solver')
     conflicts('+datadriven', when='-optimization')
     conflicts('+datadriven', when='-pde')
-    conflicts('+datadriven', when='simd=sse3',
+    conflicts('+datadriven', when='sse3',
               msg='Datadriven module requires at leastAVX!')
-    conflicts('+datadriven', when='simd=sse42',
+    conflicts('+datadriven', when='sse42',
               msg='Datadriven module requires at least AVX!')
     # Misc module requirements
     conflicts('+misc', when='-datadriven')
@@ -120,7 +116,6 @@ class Sgpp(SConsPackage):
     conflicts('+combigrid', when='@:3.2.0~quadrature')
 
     def build_args(self, spec, prefix):
-        # No need for unit tests anymore -> saves installation time
         if self.run_tests:
             self.args = ['COMPILE_BOOST_TESTS=1',
                          'RUN_BOOST_TESTS=1']
@@ -162,9 +157,20 @@ class Sgpp(SConsPackage):
         if spec.satisfies('@3.2.0:'):
             self.args.append('SG_MISC={0}'.format(
                 '1' if '+misc' in spec else '0'))
-        # SIMD and OpenCL Flags:
-        self.args.append('ARCH={0}'.format(
-            spec.variants['simd'].value))
+        # SIMD scons parameter (pick according to simd spec)
+        if 'avx512' in self.spec.target:
+            self.args.append('ARCH=avx2')
+        elif 'avx2' in self.spec.target:
+            self.args.append('ARCH=avx2')
+        elif 'avx' in self.spec.target:
+            self.args.append('ARCH=avx')
+        elif 'fma4' in self.spec.target:
+            self.args.append('ARCH=fma4')
+        elif 'sse42' in self.spec.target:
+            self.args.append('ARCH=sse42')
+        elif 'sse3' in self.spec.target:
+            self.args.append('ARCH=sse3')
+        # OpenCL Flags
         self.args.append('USE_OCL={0}'.format(
             '1' if '+opencl' in spec else '0'))
         # Get the mpicxx compiler from the Spack spec
