@@ -101,6 +101,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
     depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
     depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
+    depends_on('elpa@2018.05:+openmp', when='+openmp+elpa@7.0:')
     depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
     depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:')
     depends_on('elpa@2018.05:~openmp', when='~openmp+elpa@7.0:')
