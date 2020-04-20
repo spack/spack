@@ -791,8 +791,10 @@ class CargoStage(object):
             if not ignore_checksum:
                 raise fs.FetchError("Will not vendor cargo dependencies")
 
-        
-
+        # TODO: Tweak the config file that 'cargo vendor' writes out to make the
+        # path to the vendor directory relative and write it out.
+        #
+        # This also needs to be cached
         config = self.cargo(
             'vendor', '--versioned-dirs',
             '--manifest-path',
