@@ -20,7 +20,6 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
-    # Find
     sp.add_parser('find', help=external_find.__doc__)
 
 
