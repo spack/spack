@@ -48,8 +48,9 @@ def external_find(args):
     _get_external_packages(TestRepo())
 
 
-def _get_external_packages(repo):
-    system_exe_to_path = _get_system_executables()
+def _get_external_packages(repo, system_exe_to_path=None):
+    if not system_exe_to_path:
+        system_exe_to_path = _get_system_executables()
 
     exe_pattern_to_pkgs = defaultdict(list)
     for pkg in repo.all_packages():
