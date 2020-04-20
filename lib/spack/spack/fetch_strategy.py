@@ -566,6 +566,23 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         tty.msg('Using cached archive: %s' % path)
 
 
+# This class is intentionally defined prior to version control fetch strategies
+# because it should be preferred before a version control strategy
+@fetcher
+class CratesIOURLFetchStrategy(URLFetchStrategy):
+    """FetchStrategy that pulls from crates.io"""
+    url_attr = 'crates_io'
+
+    def __init__(self, crate, version, *args, **kwargs):
+        url = "https://crates.io/api/v1/crates/{crate}/{version}/download".format(
+            crate=crate,
+            version=version
+        )
+        super(CratesIOURLFetchStrategy, self).__init__(
+            url=url, extension='tar.gz', *args, **kwargs
+        )
+
+
 class VCSFetchStrategy(FetchStrategy):
     """Superclass for version control system fetch strategies.
 
@@ -1212,8 +1229,10 @@ def check_pkg_attributes(pkg):
     conflicts = set([s.url_attr for s in all_strategies
                      if hasattr(pkg, s.url_attr)])
 
-    # URL isn't a VCS fetch method. We can use it with a VCS method.
+    # URL and crates_io aren't VCS fetch methods. We can use them with VCS
+    # methods.
     conflicts -= set(['url'])
+    conflicts -= set(['crates_io'])
 
     if len(conflicts) > 1:
         raise FetcherConflict(
@@ -1247,8 +1266,14 @@ def _check_version_attributes(fetcher, pkg, version):
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
-        return URLFetchStrategy(pkg.url_for_version(version),
-                                fetch_options=pkg.fetch_options)
+        if hasattr(pkg, 'crates_io'):
+            return CratesIOURLFetchStrategy(
+                crate=pkg.crates_io,
+                version=version
+            )
+        else:
+            return URLFetchStrategy(pkg.url_for_version(version),
+                                    fetch_options=pkg.fetch_options)
     except spack.package.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
@@ -1264,6 +1289,8 @@ def _from_merged_attrs(fetcher, pkg, version):
         mirrors = [spack.url.substitute_version(u, version)
                    for u in getattr(pkg, 'urls', [])[1:]]
         attrs = {fetcher.url_attr: url, 'mirrors': mirrors}
+    elif fetcher.url_attr == 'crates_io':
+        attrs = {'crate': pkg.crates_io, 'version': version}
     else:
         url = getattr(pkg, fetcher.url_attr)
         attrs = {fetcher.url_attr: url}
@@ -1305,7 +1332,11 @@ def for_package_version(pkg, version):
     # if a version's optional attributes imply a particular fetch
     # strategy, and we have the `url_attr`, then use that strategy.
     for fetcher in all_strategies:
-        if hasattr(pkg, fetcher.url_attr) or fetcher.url_attr == 'url':
+        # crates.io packages have the same optional_attrs as 'url', and so
+        # do not treat those attributes as a hint at the 'url' fetcher for
+        # crates_io packages
+        if hasattr(pkg, fetcher.url_attr) or \
+            (fetcher.url_attr == 'url' and not hasattr(pkg, 'crates_io')):
             optionals = fetcher.optional_attrs
             if optionals and any(a in args for a in optionals):
                 _check_version_attributes(fetcher, pkg, version)

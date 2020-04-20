@@ -2030,6 +2030,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Returns:
             dict: a dictionary mapping versions to URLs
         """
+        if hasattr(self, 'crates_io') and self.crates_io:
+            # For packages pulled from crates.io, all releases can be easily
+            # discovered
+            raise RuntimeError('TODO: fetch_remote_versions for crates.io')
+
         if not self.all_urls:
             return {}
 
