@@ -166,6 +166,12 @@ class AutoreconfPackageTemplate(PackageTemplate):
         return args"""
 
 
+class CargoPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for CMake-based packages"""
+
+    base_class_name = 'CargoPackage'
+
+
 class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
@@ -399,6 +405,7 @@ class SIPPackageTemplate(PackageTemplate):
 templates = {
     'autotools':  AutotoolsPackageTemplate,
     'autoreconf': AutoreconfPackageTemplate,
+    'cargo':      CargoPackageTemplate,
     'cmake':      CMakePackageTemplate,
     'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
@@ -475,6 +482,7 @@ class BuildSystemGuesser:
         # build systems, we choose the first match in this list.
         clues = [
             (r'/CMakeLists\.txt$',    'cmake'),
+            (r'/Cargo\.toml$',        'cargo'),
             (r'/NAMESPACE$',          'r'),
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
