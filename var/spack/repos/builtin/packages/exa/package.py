@@ -7,7 +7,6 @@ from spack import *
 
 
 class Exa(Package):
-
     """exa is a replacement for ls written in Rust."""
 
     homepage = 'https://the.exa.website'
@@ -20,4 +19,3 @@ class Exa(Package):
     def install(self, spec, prefix):
         cargo = which('cargo')
         cargo('install', '--root', prefix, '--path', '.')
-
