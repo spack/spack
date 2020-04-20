@@ -7,10 +7,13 @@ import os
 
 
 class Shengbte(Package):
-    """ShengBTE is a software package for solving the Boltzmann Transport Equation for phonons."""
+    """ShengBTE is a software package for solving the Boltzmann Transport
+    Equation for phonons."""
 
     homepage = "www.shengbte.org"
     url      = "www.shengbte.org/downloads/ShengBTE-v1.1.1-8a63749.tar.bz2"
+
+    build_directory = 'Src'
 
     version('1.1.1-8a63749', sha256='43920740d19ae854c8ecae0b648acfdf1d7726ca4c2b44f1a1684457f2f88522')
 
@@ -18,8 +21,10 @@ class Shengbte(Package):
     depends_on('spglib')
     depends_on('intel-mkl')
 
+    phases = ['edit', 'build', 'install']
+
     def edit(self, spec, prefix):
-        arch_make = join_path(self.stage.source_path, 'Src', 'arch.make')
+        arch_make = join_path(self.build_directory, 'arch.make')
         copy('arch.make.example', arch_make)
         filter_file('export FFLAGS=.*', 'export FFLAGS=-debug -O2', arch_make)
         filter_file('export LDFLAGS=.*',
@@ -28,15 +33,16 @@ class Shengbte(Package):
         filter_file('export MPIFC=.*',
                     'export MPIFC=%s' % spec['mpi'].mpifc,
                     arch_make)
-        filter_file('LAPACK=.*',
-                    'LAPACK=$(MKLROOT)/lib/intel64_lin/libmkl_lapack95_lp64.a -Wl,--start-group \\\n \
-                    $(MKLROOT)/lib/intel64_lin/libmkl_intel_lp64.a \\\n \
-                    $(MKLROOT)/lib/intel64_lin/libmkl_sequential.a \\\n \
-                    $(MKLROOT)/lib/intel64_lin/libmkl_core.a -Wl,--end-group -lpthread -lm -ldl',
+        filter_file('LAPACK=.*', 'LAPACK=%s/intel64/libmkl_lapack95_lp64.a \
+                    -Wl,--start-group %s/intel64/libmkl_intel_lp64.a \
+                    %s/intel64/libmkl_sequential.a %s/intel64/libmkl_core.a \
+                    -Wl,--end-group -lpthread -lm -ldl'
+                    % (spec['mkl'].prefix.mkl.lib, spec['mkl'].prefix.mkl.lib,
+                       spec['mkl'].prefix.mkl.lib, spec['mkl'].prefix.mkl.lib),
                     arch_make)
 
     def build(self, spec, prefix):
-        with working_dir(join_path(self.stage.source_path, 'Src')):
+        with working_dir(self.build_directory):
             os.system('make')
 
     def install(self, spec, prefix):
