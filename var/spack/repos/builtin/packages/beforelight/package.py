@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Beforelight(AutotoolsPackage):
+class Beforelight(AutotoolsPackage, XorgPackage):
     """The beforelight program is a sample implementation of a screen saver
     for X servers supporting the MIT-SCREEN-SAVER extension.   It is only
     recommended for use as a code sample, as it does not include features
     such as screen locking or configurability."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/beforelight"
-    url      = "https://www.x.org/archive/individual/app/beforelight-1.0.5.tar.gz"
+    xorg_mirror_path = "app/beforelight-1.0.5.tar.gz"
 
     version('1.0.5', sha256='93bb3c457d6d5e8def3180fdee07bc84d1b7f0e5378a95812e2193cd51455cdc')
 

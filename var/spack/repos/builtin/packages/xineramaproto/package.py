@@ -6,14 +6,14 @@
 from spack import *
 
 
-class Xineramaproto(AutotoolsPackage):
+class Xineramaproto(AutotoolsPackage, XorgPackage):
     """X Xinerama Extension.
 
     This is an X extension that allows multiple physical screens controlled
     by a single X server to appear as a single screen."""
 
     homepage = "http://cgit.freedesktop.org/xorg/proto/xineramaproto"
-    url      = "https://www.x.org/archive/individual/proto/xineramaproto-1.2.1.tar.gz"
+    xorg_mirror_path = "proto/xineramaproto-1.2.1.tar.gz"
 
     version('1.2.1', sha256='d99e121edf7b310008d7371ac5dbe3aa2810996d476b754dc78477cc26e5e7c1')
 

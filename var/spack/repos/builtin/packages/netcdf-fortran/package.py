@@ -13,9 +13,9 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-fortran-4.5.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.2.tar.gz"
 
-    maintainers = ['skosukhin']
+    maintainers = ['skosukhin', 'WardF']
 
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
@@ -64,12 +64,16 @@ class NetcdfFortran(AutotoolsPackage):
     def flag_handler(self, name, flags):
         config_flags = None
 
-        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+        if '+pic' in self.spec:
             # Unlike NetCDF-C, we add PIC flag only when +pic. Adding the
             # flags also when ~shared would make it impossible to build a
             # static-only version of the library with NAG.
-            config_flags = [self.compiler.pic_flag]
-        elif name == 'cppflags':
+            if name == 'cflags':
+                config_flags = [self.compiler.cc_pic_flag]
+            elif name == 'fflags':
+                config_flags = [self.compiler.f77_pic_flag]
+
+        if name == 'cppflags':
             config_flags = [self.spec['netcdf-c'].headers.cpp_flags]
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs

@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
 
     maintainers = ['dalcinl', 'joseeroman', 'balay']
 
+    version('3.13.0', sha256='780eff0eea1a5217642d23cd563786ef22df27e1d772a1b0bb4ccc5701df5ea5')
     version('3.12.0', sha256='d8c06953b7d00f529a9a7fd016dfa8efdf1d05995baeea7688d1d59611f424f7')
     version('3.11.0', sha256='1e591056beee209f585cd781e5fe88174cd2a61215716a71d9eaaf9411b6a775')
     version('3.10.0', sha256='6494959f44280d3b80e73978d7a6bf656c9bb04bb3aa395c668c7a58948db1c6')
@@ -26,6 +27,7 @@ class PySlepc4py(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-petsc4py', type=('build', 'run'))
+    depends_on('py-petsc4py@3.13:3.13.99', when='@3.13:3.13.99', type=('build', 'run'))
     depends_on('py-petsc4py@3.12:3.12.99', when='@3.12:3.12.99', type=('build', 'run'))
     depends_on('py-petsc4py@3.11:3.11.99', when='@3.11:3.11.99', type=('build', 'run'))
     depends_on('py-petsc4py@3.10:3.10.99', when='@3.10:3.10.99', type=('build', 'run'))

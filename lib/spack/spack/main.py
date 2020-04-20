@@ -693,7 +693,10 @@ def main(argv=None):
     # Spack clears these variables before building and installing packages,
     # but needs to know the prior state for commands like `spack load` and
     # `spack env activate that modify the user environment.
-    for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
+    recovered_vars = (
+        'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH'
+    )
+    for var in recovered_vars:
         stored_var_name = 'SPACK_%s' % var
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]

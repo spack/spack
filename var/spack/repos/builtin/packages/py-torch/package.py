@@ -51,7 +51,10 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
-    version('1.4.0', tag='v1.4.0', submodules=True)
+    version('1.4.1', tag='v1.4.1', submodules=True)
+    # see https://github.com/pytorch/pytorch/issues/35149
+    version('1.4.0', tag='v1.4.0', submodules=True,
+            submodules_delete=['third_party/fbgemm'])
     version('1.3.1', tag='v1.3.1', submodules=True)
     version('1.3.0', tag='v1.3.0', submodules=True)
     version('1.2.0', tag='v1.2.0', submodules=True)
@@ -101,6 +104,8 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+redis', when='@:1.0')
     conflicts('+zstd', when='@:1.0')
     conflicts('+tbb', when='@:1.1')
+    # see https://github.com/pytorch/pytorch/issues/35149
+    conflicts('+fbgemm', when='@1.4.0')
 
     cuda_arch_conflict = ('This version of Torch/Caffe2 only supports compute '
                           'capabilities ')
@@ -154,7 +159,7 @@ class PyTorch(PythonPackage, CudaPackage):
     # TODO: See if there is a way to use an external mkldnn installation.
     # Currently, only older versions of py-torch use an external mkldnn
     # library.
-    depends_on('dnnl', when='@0.4:0.4.1+mkldnn')
+    depends_on('onednn', when='@0.4:0.4.1+mkldnn')
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
