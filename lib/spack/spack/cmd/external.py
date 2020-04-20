@@ -25,7 +25,7 @@ def setup_parser(subparser):
 
 def _get_system_executables():
     path = os.getenv('PATH')
-    search_paths = path.split(os.pathsep)
+    search_paths = list(p for p in path.split(os.pathsep) if os.path.isdir(p))
     path_to_exe = {}
     # Reverse order of search directories so that an exe in the first PATH
     # entry overrides later entries
