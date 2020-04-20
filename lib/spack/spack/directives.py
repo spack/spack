@@ -434,9 +434,8 @@ def provides(*specs, **kwargs):
 
         spec_objs = [spack.spec.Spec(x) for x in specs]
         spec_names = [x.name for x in spec_objs]
+        pkg.used_together.setdefault(when_spec, []).append(set(spec_names))
         for provided_spec in spec_objs:
-            pkg.used_together[provided_spec.name] = spec_names
-
             if pkg.name == provided_spec.name:
                 raise CircularReferenceError(
                     "Package '%s' cannot provide itself.")

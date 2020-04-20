@@ -2352,7 +2352,9 @@ class Spec(object):
         # providing multiple virtual dependencies together
         for virtual_dep in list(self.providers):
             provider_spec = self.providers.providers_for(virtual_dep)[0]
-            vdeps = provider_spec.package.used_together[virtual_dep]
+            vdeps = spack.provider_index.used_together(
+                provider_spec, virtual_dep
+            )
             # A single entry means this virtual dependency is not tied
             # to other virtual dependencies
             if len(vdeps) == 1:
