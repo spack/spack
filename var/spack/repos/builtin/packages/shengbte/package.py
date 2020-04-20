@@ -33,12 +33,11 @@ class Shengbte(Package):
         filter_file('export MPIFC=.*',
                     'export MPIFC=%s' % spec['mpi'].mpifc,
                     arch_make)
-        filter_file('LAPACK=.*', 'LAPACK=%s/intel64/libmkl_lapack95_lp64.a \
-                    -Wl,--start-group %s/intel64/libmkl_intel_lp64.a \
-                    %s/intel64/libmkl_sequential.a %s/intel64/libmkl_core.a \
+        filter_file('LAPACK=.*', 'LAPACK={0}/libmkl_lapack95_lp64.a \
+                    -Wl,--start-group {0}/libmkl_intel_lp64.a \
+                    {0}/libmkl_sequential.a {0}/libmkl_core.a \
                     -Wl,--end-group -lpthread -lm -ldl'
-                    % (spec['mkl'].prefix.mkl.lib, spec['mkl'].prefix.mkl.lib,
-                       spec['mkl'].prefix.mkl.lib, spec['mkl'].prefix.mkl.lib),
+                    .format(spec['mkl'].prefix.mkl.lib.intel64),
                     arch_make)
 
     def build(self, spec, prefix):
