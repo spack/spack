@@ -39,6 +39,7 @@ import shutil
 import sys
 import traceback
 import types
+import copy
 from six import StringIO
 
 import llnl.util.tty as tty
@@ -444,6 +445,15 @@ def _set_variables_for_single_module(pkg, module):
     m.meson = Executable('meson')
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
+
+    m.cargo = Executable('cargo')
+    m.cargo.add_default_arg('--locked')
+
+    m.cargo_build = copy.deepcopy(m.cargo)
+    m.cargo_build.add_default_arg('build')
+    m.cargo_build.add_default_arg('--offline')
+    m.cargo_build.add_default_arg('--jobs')
+    m.cargo_build.add_default_arg(str(jobs))
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)

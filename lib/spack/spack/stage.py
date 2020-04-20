@@ -17,7 +17,7 @@ from six import iteritems
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
-from llnl.util.filesystem import partition_path, remove_linked_tree
+from llnl.util.filesystem import partition_path, remove_linked_tree, join_path
 
 import spack.paths
 import spack.caches
@@ -32,6 +32,7 @@ import spack.util.path as sup
 import spack.util.url as url_util
 
 from spack.util.crypto import prefix_bits, bit_length
+from spack.util.executable import which
 
 
 # The well-known stage source subdirectory name.
@@ -733,6 +734,79 @@ class DIYStage(object):
 
     def cache_local(self):
         tty.msg("Sources for DIY stages are not cached")
+
+
+class CargoStage(object):
+    """
+    This class is used to stage and cache packages from the Cargo package
+    manager. This class is used solely for packages written in Rust, or
+    partially in Rust, in-order to provide a bridge from Spack's package
+    management features to Cargo's.
+    """
+
+    def __init__(self, manifest, package_stage):
+        self.manifest = manifest
+        self.package_stage = package_stage
+        self.cargo = which('cargo', required=True)
+
+    def __enter__(self):
+        pass
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+    def fetch(self, *args, **kwargs):
+        # Fetching the cargo stage requires the package is expanded
+        self.package_stage.expand_archive()
+        self.cargo(
+            '--locked', 'vendor', '--versioned-dirs',
+            '--manifest-path',
+            join_path(self.package_stage.source_path, self.manifest),
+            join_path(
+                self.package_stage.path, 'spack-cargo-vendor'))
+
+    # The Cargo depenedencies are checked during the 'fetch' stage
+    def check(self):
+        pass
+
+    # Cargo dependencies are expanded during 'fetch'
+    def expand_archive(self):
+        pass
+
+    @property
+    def expanded(self):
+        """Returns True since `cargo` vendor always expands"""
+        return True
+
+    def restage(self):
+        raise RestageError("Cannot restage a cargo stage.")
+
+    def create(self):
+        mkdirp(join_path(
+            self.package_stage.path, 'spack-cargo-vendor'))
+        # Set-up config
+        config_dir_path = join_path(self.package_stage.path, '.cargo')
+        mkdirp(config_dir_path)
+
+        with open(join_path(config_dir_path, 'config'), 'w') as f:
+            f.write(
+"""\
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "spack-cargo-vendor"
+""")
+
+        self.created = True
+
+    def destroy(self):
+        # No need to destroy the vendor stage.
+        pass
+
+    def cache_local(self):
+        tty.msg('TODO: Cache cargo vendored dependencies')
+        pass
 
 
 def ensure_access(file):

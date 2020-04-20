@@ -54,7 +54,8 @@ from llnl.util.link_tree import LinkTree
 from spack.filesystem_view import YamlFilesystemView
 from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
-from spack.stage import stage_prefix, Stage, ResourceStage, StageComposite
+from spack.stage import \
+    stage_prefix, Stage, ResourceStage, StageComposite, CargoStage
 from spack.util.package_hash import package_hash
 from spack.version import Version
 
@@ -823,7 +824,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         for ii, fetcher in enumerate(composite_fetcher):
             if ii == 0:
                 # Construct root stage first
-                stage = self._make_root_stage(fetcher)
+                stage = root_stage = self._make_root_stage(fetcher)
             else:
                 # Construct resource stage
                 resource = resources[ii - 1]  # ii == 0 is root!
@@ -831,6 +832,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                                                   resource)
             # Append the item to the composite
             composite_stage.append(stage)
+
+        if self.cargo_manifest:
+            composite_stage.append(
+                CargoStage(self.cargo_manifest, root_stage)
+            )
 
         return composite_stage
 
