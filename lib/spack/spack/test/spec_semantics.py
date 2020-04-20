@@ -1031,3 +1031,21 @@ class TestSpecSematics(object):
         s = Spec(spec_str)
         with pytest.raises(Exception):
             s.concretize()
+
+    @pytest.mark.parametrize('spec_str,expected_providers', [
+        ('netlib-scalapack ^mpi=mpich ^lapack=openblas',
+         {'mpich': ['mpi'], 'openblas': ['blas', 'lapack']}),
+        ('netlib-scalapack ^mpi=mpich ^lapack,blas=openblas',
+         {'mpich': ['mpi'], 'openblas': ['blas', 'lapack']}),
+        ('netlib-scalapack ^mpi=intel-parallel-studio ^openblas',
+         {'intel-parallel-studio': ['mpi'], 'openblas': ['blas', 'lapack']}),
+    ])
+    def test_virtual_deps_as_edge_attributes(
+            self, spec_str, expected_providers
+    ):
+        s = Spec(spec_str)
+        s.concretize()
+        for name, expected_virtuals in expected_providers.items():
+            assert name in s._dependencies
+            expected_virtuals = tuple(sorted(expected_virtuals))
+            assert expected_virtuals == s._dependencies[name].virtuals

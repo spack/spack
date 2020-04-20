@@ -654,9 +654,10 @@ class DependencySpec(object):
                 self.virtuals)
 
     def __str__(self):
-        return "%s %s--> %s" % (self.parent.name if self.parent else None,
-                                self.deptypes,
-                                self.spec.name if self.spec else None)
+        return "%s %s[%s]--> %s" % (self.parent.name if self.parent else None,
+                                    self.deptypes,
+                                    ', '.join(self.virtuals),
+                                    self.spec.name if self.spec else None)
 
 
 _valid_compiler_flags = [
@@ -1153,7 +1154,7 @@ class Spec(object):
                 "Spec for '%s' cannot have two compilers." % self.name)
         self.compiler = compiler
 
-    def _add_dependency(self, spec, deptypes, virtuals=None):
+    def _add_dependency(self, spec, deptypes, virtuals):
         """Called by the parser to add another spec as a dependency."""
         if spec.name in self._dependencies:
             raise DuplicateDependencyError(
@@ -1796,18 +1797,22 @@ class Spec(object):
         for dep_name, elt in dependency_dict.items():
             if isinstance(elt, six.string_types):
                 # original format, elt is just the dependency hash.
-                dag_hash, deptypes = elt, ['build', 'link']
+                dag_hash, deptypes, virtuals = elt, ['build', 'link'], []
             elif isinstance(elt, tuple):
                 # original deptypes format: (used tuples, not future-proof)
                 dag_hash, deptypes = elt
+                virtuals = []
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
                 dag_hash, deptypes = elt['hash'], elt['type']
+                # FIXME: Document why we are using "get"
+                # FIXME: instead of subscripts (ci.py)
+                virtuals = elt.get('virtuals', [])
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
 
-            yield dep_name, dag_hash, list(deptypes)
+            yield dep_name, dag_hash, list(deptypes), virtuals[:]
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -1955,7 +1960,10 @@ class Spec(object):
                     dag_node, dependency_types = spec_and_dependency_types(s)
 
                 dependency_spec = spec_builder({dag_node: s_dependencies})
-                spec._add_dependency(dependency_spec, dependency_types)
+                # FIXME: check "virtuals" argument
+                spec._add_dependency(
+                    dependency_spec, dependency_types, virtuals=[]
+                )
 
             return spec
 
@@ -1986,8 +1994,11 @@ class Spec(object):
                 continue
 
             yaml_deps = node[name]['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                deps[name]._add_dependency(deps[dname], dtypes)
+            for item in Spec.read_yaml_dep_specs(yaml_deps):
+                dname, dhash, dtypes, virtuals = item
+                deps[name]._add_dependency(
+                    deps[dname], dtypes, virtuals=virtuals
+                )
 
         return spec
 
@@ -2067,6 +2078,7 @@ class Spec(object):
     def _replace_with(self, concrete):
         """Replace this virtual spec with a concrete spec."""
         assert self.virtual
+        virtuals = [self.name]
         for name, dep_spec in self._dependents.items():
             dependent = dep_spec.parent
             deptypes = dep_spec.deptypes
@@ -2077,7 +2089,9 @@ class Spec(object):
 
             # add the replacement, unless it is already a dep of dependent.
             if concrete.name not in dependent._dependencies:
-                dependent._add_dependency(concrete, deptypes)
+                dependent._add_dependency(
+                    concrete, deptypes, virtuals=virtuals
+                )
 
     def _expand_virtual_packages(self, concretizer):
         """Find virtual packages in this spec, replace them with providers,
@@ -2504,11 +2518,21 @@ class Spec(object):
         return dep
 
     def _find_provider(self, vdep, provider_index):
-        """Find provider for a virtual spec in the provider index.
-           Raise an exception if there is a conflicting virtual
-           dependency already in this spec.
+        """Find a provider for a virtual spec in the provider
+        index and return it.
+
+        Raise an exception if there is a conflicting virtual
+        dependency already in this spec.
+
+        Args:
+            vdep: virtual spec
+            provider_index: provider index to be used
+
+        Raises:
+           MultipleProviderError: if multiple providers are found
+           UnsatisfiableProviderSpecError: if no provider can be found
         """
-        assert(vdep.virtual)
+        assert vdep.virtual
 
         # note that this defensively copies.
         providers = provider_index.providers_for(vdep)
@@ -2574,10 +2598,12 @@ class Spec(object):
 
         # If it's a virtual dependency, try to find an existing
         # provider in the spec, and merge that.
+        virtuals = []
         if dep.virtual:
             visited.add(dep.name)
             provider = self._find_provider(dep, provider_index)
             if provider:
+                virtuals.append(dep.name)
                 dep = provider
         else:
             index = spack.provider_index.IndexWithBindings(
@@ -2589,6 +2615,7 @@ class Spec(object):
                     continue
 
                 if index.providers_for(vspec):
+                    virtuals.append(vspec.name)
                     vspec._replace_with(dep)
                     del spec_deps[vspec.name]
                     changed = True
@@ -2632,7 +2659,11 @@ class Spec(object):
         # Add merged spec to my deps and recurse
         spec_dependency = spec_deps[dep.name]
         if dep.name not in self._dependencies:
-            self._add_dependency(spec_dependency, dependency.type)
+            self._add_dependency(
+                spec_dependency, dependency.type, virtuals=virtuals
+            )
+        elif virtuals:
+            self._dependencies[spec_dependency.name].update_virtuals(virtuals)
 
         changed |= spec_dependency._normalize_helper(
             visited, spec_deps, provider_index, tests)
@@ -2889,7 +2920,8 @@ class Spec(object):
             dep_spec_copy = other.get_dependency(name)
             dep_copy = dep_spec_copy.spec
             deptypes = dep_spec_copy.deptypes
-            self._add_dependency(dep_copy.copy(), deptypes)
+            virtuals = dep_spec_copy.virtuals
+            self._add_dependency(dep_copy.copy(), deptypes, virtuals=virtuals)
             changed = True
 
         return changed
@@ -4180,7 +4212,7 @@ class SpecParser(spack.parse.Parser):
             self.push_tokens([self.token])
             specs.append(self.spec(None))
         else:
-            dep = None
+            dep, virtuals = None, []
             if self.accept(FILE):
                 # this may return None, in which case we backtrack
                 dep = self.spec_from_file()
@@ -4198,7 +4230,6 @@ class SpecParser(spack.parse.Parser):
                 # to a particular provider.
                 self.expect(ID)
 
-                virtuals, dep = [], None
                 # case 1: ^spec
                 if not self.next or not (
                     # This condition identifies virtual dependency binding
@@ -4226,7 +4257,7 @@ class SpecParser(spack.parse.Parser):
                 raise RedundantSpecError(specs[-1], 'dependency')
             # command line deps get empty deptypes now.
             # Real deptypes are assigned later per packages.
-            specs[-1]._add_dependency(dep, ())
+            specs[-1]._add_dependency(dep, (), virtuals=virtuals)
 
     def spec_from_file(self):
         """Read a spec from a filename parsed on the input stream.
