@@ -25,3 +25,8 @@ class Qwtpolar(QMakePackage):
                     self.prefix, 'qwtpolarconfig.pri')
         # Don't build examples as they're causing qmake to throw errors
         filter_file(r'QwtPolarExamples', '', 'qwtpolarconfig.pri')
+
+    def setup_build_environment(self, env):
+        # https://whynhow.info/51901/Building-qwt-and-qwtpolar-under-Windows
+        # https://www.qtcentre.org/threads/52120-Need-Help-to-build-QwtPolar-Library
+        env.set('QMAKEFEATURES', self.spec['qwt'].prefix.features)
