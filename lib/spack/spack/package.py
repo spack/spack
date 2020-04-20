@@ -22,6 +22,7 @@ import shutil
 import sys
 import textwrap
 import time
+import json
 from six import StringIO
 from six import string_types
 from six import with_metaclass
@@ -56,6 +57,7 @@ from spack.installer import \
     install_args_docstring, PackageInstaller, InstallError
 from spack.stage import \
     stage_prefix, Stage, ResourceStage, StageComposite, CargoStage
+from spack.util.executable import which
 from spack.util.package_hash import package_hash
 from spack.version import Version
 
@@ -2022,6 +2024,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 urls.append(args['url'])
         return urls
 
+    def _fetch_cargo_versions(self):
+        """Find versions of this package, assuming it comes from crates.io"""
+        curl = which('curl', required=True)
+        payload = curl(
+            '-L',
+            'https://crates.io/api/v1/crates/{crate}'.format(crate=self.crates_io),
+            output=str)
+        crate = json.loads(payload)
+
+        versions = {}
+        for v in crate["versions"]:
+            versions[v["num"]] = "https://crates.io" + v["dl_path"]
+        return versions
+
     def fetch_remote_versions(self):
         """Find remote versions of this package.
 
@@ -2033,7 +2049,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if hasattr(self, 'crates_io') and self.crates_io:
             # For packages pulled from crates.io, all releases can be easily
             # discovered
-            raise RuntimeError('TODO: fetch_remote_versions for crates.io')
+            return self._fetch_cargo_versions()
 
         if not self.all_urls:
             return {}

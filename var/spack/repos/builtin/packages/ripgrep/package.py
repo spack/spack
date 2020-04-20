@@ -21,7 +21,5 @@ class Ripgrep(CargoPackage):
 
     version('master', branch='master')
     version('12.0.1', sha256='7dc6e92652933ac66d236d78ef61658b73c09639981bd1be0630461ce64d3cab')
+    version('12.0.0', sha256='117f3608a82950b647d8f158cbd3388bffc0a594f29b2c39198392134126b6c0')
     version('11.0.2', sha256='d903146d825e92f77f95d1e1e8e5272f42253978c07d58c2294467a14dca126f')
-    version('11.0.1', sha256='bafda49e418a8cd7df1fddddab809beb131117c698dc120ca614019b3e05c42e')
-    version('0.10.0', sha256='7f3ab77309993175ac2fe01a7f990bf972c0ddae0d63d747693d598bfaf2de44')
-    version('0.3.1',  sha256='0f37b342258640323b43d50ffb72a972dfe8cb4bd28d3b8f40d1da0ffdb21987')
