@@ -44,6 +44,7 @@ class CargoPackage(PackageBase):
     @property
     def cargo_build(self):
         cargo_build = deepcopy(inspect.getmodule(self).cargo_build)
+        cargo_build.add_default_arg('-vv') # Very verbose output
         cargo_build.add_default_arg('--manifest-path')
         cargo_build.add_default_arg(self.manifest_path)
         if 'build_type=release' in self.spec:
