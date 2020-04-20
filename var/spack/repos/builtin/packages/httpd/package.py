@@ -30,6 +30,6 @@ class Httpd(AutotoolsPackage):
         spec = self.spec
         config_args = [
             '--with-apr={0}'.format(spec['apr'].prefix),
-            '--with-apr-util={0}'.format(spec['apr-util'].prefix.bin)
+            '--with-apr-util={0}'.format(spec['apr-util'].prefix)
         ]
         return config_args
