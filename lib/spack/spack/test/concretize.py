@@ -102,23 +102,16 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
-        # TODO: I suspect any test using config.override (which is only used
-        # for tests) should use the 'mutable_config' fixture
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
     # clear any test values fetched
     spack.architecture.get_platform.cache.clear()
-    # TODO: when using 'config' instead of  'mutable_config' for the below
-    # then some flag handler tests fail. If we call clear_caches() here, then
-    # fewer of those tests fail (some of them still fail though). Using
-    # mutable_config is the only way to get all the tests to pass.
-    # spack.config.config.clear_caches()
 
 
-# Note: I recommend using mutable_config here since the current_host fixture
-# changes the config. Undoing that creates problems for other tests (see the
-# other comments).
+# This must use the mutable_config fixture because the test
+# adjusting_default_target_based_on_compiler uses the current_host fixture,
+# which changes the config.
 @pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
@@ -610,9 +603,6 @@ class TestConcretize(object):
         with pytest.raises(NoValidVersionError, match="no valid versions"):
             Spec(spec).concretized()
 
-    # TODO: these tests aren't supposed to change the config, but without the
-    # mutable_config fixture, the execution of these tests cause later
-    # flag_handler tests to fail.
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
