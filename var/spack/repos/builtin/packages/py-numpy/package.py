@@ -77,9 +77,9 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
-    depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
+    depends_on('python@2.7:2.8,3.4:+ssl', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:+ssl', type=('build', 'run'), when='@1.16:')
+    depends_on('python@3.5:+ssl', type=('build', 'run'), when='@1.17:')
     depends_on('py-setuptools', type='build')
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
