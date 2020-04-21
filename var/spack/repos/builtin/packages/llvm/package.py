@@ -179,8 +179,19 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("+mlir", when="@:9")
 
     # Code-signing variant is specific to macOS!
-    conflicts('+code_signing',    when='~macos')
-    conflicts('+code_signing',    when='~lldb')
+    conflicts(
+        '+code_signing',
+        when='~macos',
+        msg="code signing is only needed on macOS",
+    )
+    conflicts(
+        '+code_signing',
+        when='~lldb',
+        msg="code signing is only necessary for building the"
+            "in-tree debug server on macOS. Turning this variant"
+            "off enables a build of llvm with lldb that uses the"
+            "system debug server",
+    )
 
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
