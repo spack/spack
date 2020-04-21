@@ -2169,13 +2169,17 @@ Adding the following to a package:
 
 .. code-block:: python
 
-    conflicts('%intel', when='@1.2')
+    conflicts('%intel', when='@:1.2',
+              msg='<myNicePackage> <= v1.2 cannot be built with Intel ICC, '
+                  'please use a newer release.')
 
 we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install version "1.2". The ``when`` argument can
-be omitted, in which case the conflict will always be active.
+compiler when we are trying to install a version "<=1.2". The ``when`` argument
+can be omitted, in which case the conflict will always be active.
 Conflicts are always evaluated after the concretization step has been performed,
 and if any match is found a detailed error message is shown to the user.
+You can add an additional message via the ``msg=`` parameter to a conflict that
+provideds more specific instructions for users.
 
 .. _packaging_extensions:
 
