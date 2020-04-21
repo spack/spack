@@ -466,20 +466,12 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="start generate pushyaml rebuild"
+        SPACK_COMPREPLY="generate rebuild"
     fi
-}
-
-_spack_ci_start() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref --downstream-repo --branch-name --commit-sha"
 }
 
 _spack_ci_generate() {
     SPACK_COMPREPLY="-h --help --output-file --copy-to --spack-repo --spack-ref"
-}
-
-_spack_ci_pushyaml() {
-    SPACK_COMPREPLY="-h --help --downstream-repo --branch-name --commit-sha"
 }
 
 _spack_ci_rebuild() {
