@@ -148,7 +148,7 @@ environment variables:
     reporter.specs = specs_to_test
 
     # test_stage_dir
-    stage = _get_stage(test_name)
+    stage = get_stage(test_name)
     fs.mkdirp(stage)
 
     with reporter('test', stage):
@@ -170,7 +170,7 @@ environment variables:
 
 def test_list(args):
     """List tests that are running or have available results."""
-    stage_dir = _get_stage()
+    stage_dir = get_stage()
     tests = os.listdir(stage_dir)
 
     # Filter tests by filter argument
@@ -200,7 +200,7 @@ def test_list(args):
 def test_status(args):
     """Get the current status for a particular Spack test."""
     name = args.name
-    stage = _get_stage(name)
+    stage = get_stage(name)
 
     if os.path.exists(stage):
         # TODO: Make this handle capability tests too
@@ -212,7 +212,7 @@ def test_status(args):
 def test_results(args):
     """Get the results for a particular Spack test."""
     name = args.name
-    stage = _get_stage(name)
+    stage = get_stage(name)
 
     # TODO: Make this handle capability tests too
     # The results file may turn out to be a placeholder for future work
@@ -241,7 +241,7 @@ def test_remove(args):
 
     Removed tests can no longer be accessed for results or status, and will not
     appear in `spack test list` results."""
-    stage_dir = _get_stage(args.name)
+    stage_dir = get_stage(args.name)
     if args.name:
         shutil.rmtree(stage_dir)
     else:
@@ -252,7 +252,7 @@ def test(parser, args):
     globals()['test_%s' % args.test_command](args)
 
 
-def _get_stage(name=None):
+def get_stage(name=None):
     """
     Return the test stage for the named test or the overall test stage.
     """
@@ -265,5 +265,5 @@ def _get_results_file(name):
     """
     Return the results file for the named test.
     """
-    stage = _get_stage(name)
+    stage = get_stage(name)
     return os.path.join(stage, 'results.txt')
