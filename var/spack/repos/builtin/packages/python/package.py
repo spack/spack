@@ -254,6 +254,10 @@ class Python(AutotoolsPackage):
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
+            # fails to build _scproxy
+            # https://bugs.python.org/issue26317#msg342055
+            # https://github.com/spack/spack/issues/2230
+            config_args.append('--disable-framework')
 
         if spec.satisfies('%intel', strict=True) and \
                 spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
