@@ -1467,7 +1467,7 @@ class PackageInstaller(object):
                     self._update_installed(task)
                     _print_installed_pkg(pkg.prefix)
 
-                    # If the compiler was already installed, just add it to the config
+                    # It's an already installed compiler, add it to the config
                     if task.compiler:
                         spack.compilers.add_compilers_to_config(
                             spack.compilers.find_compilers([pkg.spec.prefix]))
