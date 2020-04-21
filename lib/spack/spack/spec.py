@@ -1021,7 +1021,7 @@ class Spec(object):
         self._dependents = DependencyMap()
         self._dependencies = DependencyMap()
         self.namespace = None
-        self._explicit_providers = {}
+        self._user_requested_providers = {}
 
         self._hash = None
         self._build_hash = None
@@ -1177,13 +1177,13 @@ class Spec(object):
         if arch and not arch.platform and (arch.os or arch.target):
             self._set_architecture(platform=spack.architecture.platform().name)
 
-    def _add_explicit_provider(self, virtual, spec):
+    def _add_user_requested_provider(self, virtual, spec):
         # We cannot provide the same virtual multiple times
-        if virtual in self._explicit_providers:
+        if virtual in self._user_requested_providers:
             msg = 'virtual dependency "{0}" cannot be specified multiple times'
             raise ValueError(msg.format(virtual))
 
-        self._explicit_providers[virtual] = spec
+        self._user_requested_providers[virtual] = spec
 
     #
     # Public interface
@@ -1413,7 +1413,7 @@ class Spec(object):
     def providers(self):
         try:
             return spack.provider_index.IndexWithBindings(
-                self.traverse(), self._explicit_providers
+                self.traverse(), self._user_requested_providers
             )
         except spack.error.SpackError:
             # This case should take care of cases where a spec
@@ -2110,7 +2110,7 @@ class Spec(object):
         """
         # Make an index of stuff this spec already provides
         self_index = spack.provider_index.IndexWithBindings(
-            self.traverse(), self._explicit_providers
+            self.traverse(), self._user_requested_providers
         )
         changed = False
         done = False
@@ -2392,7 +2392,7 @@ class Spec(object):
     def _verify_bindings(self):
         """Check if the explicit bindings are correct."""
         missing = []
-        for v, s in self._explicit_providers.items():
+        for v, s in self._user_requested_providers.items():
             index = spack.provider_index.ProviderIndex([s], restrict=True)
             providers = index.providers_for(v)
             if not providers:
@@ -2607,7 +2607,7 @@ class Spec(object):
                 dep = provider
         else:
             index = spack.provider_index.IndexWithBindings(
-                [dep], self._explicit_providers
+                [dep], self._user_requested_providers
             )
             items = list(spec_deps.items())
             for name, vspec in items:
@@ -2760,7 +2760,7 @@ class Spec(object):
                     all_spec_deps[name].constrain(spec)
 
         # FIXME: Revisit this part
-        bindings = getattr(self, '_explicit_providers', {})
+        bindings = getattr(self, '_user_requested_providers', {})
         provider_index = spack.provider_index.IndexWithBindings(
             [s for s in all_spec_deps.values()], bindings
         )
@@ -3077,10 +3077,10 @@ class Spec(object):
 
         # For virtual dependencies, we need to dig a little deeper.
         self_index = spack.provider_index.IndexWithBindings(
-            self.traverse(), self._explicit_providers
+            self.traverse(), self._user_requested_providers
         )
         other_index = spack.provider_index.IndexWithBindings(
-            other.traverse(), other._explicit_providers
+            other.traverse(), other._user_requested_providers
         )
 
         # This handles cases where there are already providers for both vpkgs
@@ -3218,7 +3218,7 @@ class Spec(object):
             self._dup_deps(other, deptypes, caches)
 
         self._concrete = other._concrete
-        self._explicit_providers = other._explicit_providers
+        self._user_requested_providers = other._user_requested_providers
 
         if caches:
             self._hash = other._hash
@@ -4249,7 +4249,7 @@ class SpecParser(spack.parse.Parser):
                     self.expect(VAL)
                     dep = Spec(self.token.value)
                     for v in virtuals:
-                        specs[-1]._add_explicit_provider(v, dep)
+                        specs[-1]._add_user_requested_provider(v, dep)
 
             # Raise an error if the previous spec is already
             # concrete (assigned by hash)
