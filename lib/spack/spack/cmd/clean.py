@@ -6,12 +6,13 @@
 import argparse
 import os
 import shutil
+import collections
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
 
 import spack.caches
-import spack.cmd
+import spack.cmd.test
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
@@ -89,7 +90,8 @@ def clean(parser, args):
 
     if args.test_stage:
         tty.msg("Removing files in test stage")
-        spack.cmd.test.test_remove(NamedTuple({'name': None}))
+        test_remove_args = collections.namedtuple('args', ['name'])(None)
+        spack.cmd.test.test_remove(test_remove_args)
 
     if args.python_cache:
         tty.msg('Removing python cache files')

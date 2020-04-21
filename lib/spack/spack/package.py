@@ -1618,10 +1618,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # Clear test failures
         self.test_failures = []
 
-        self.test_stage = Prefix(os.path.join(
-            sup.canonicalize_path(
-                spack.config.get('config:test_stage', os.getcwd())),
-            name))
+        self.test_stage = Prefix(spack.cmd.test.get_stage(name))
         if not os.path.exists(self.test_stage):
             mkdirp(self.test_stage)
         self.test_log_file = os.path.join(self.test_stage, self.test_log_name)
