@@ -1805,9 +1805,7 @@ class Spec(object):
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
                 dag_hash, deptypes = elt['hash'], elt['type']
-                # FIXME: Document why we are using "get"
-                # FIXME: instead of subscripts (ci.py)
-                virtuals = elt.get('provides', [])
+                virtuals = elt['provides']
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
