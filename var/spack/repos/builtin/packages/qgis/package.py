@@ -107,7 +107,7 @@ class Qgis(CMakePackage):
     depends_on('cmake@3.0.0:', type='build')
     depends_on('flex@2.5.6:', type='build')
     depends_on('bison@2.4:', type='build')
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # Take care of conflicts using depends_on
     depends_on('proj@5:', when='@3.8.2:')
