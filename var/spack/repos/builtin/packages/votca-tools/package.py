@@ -21,15 +21,13 @@ class VotcaTools(CMakePackage):
 
     version('master', branch='master')
     version('1.6', sha256='cfd0fedc80fecd009f743b5df47777508d76bf3ef294a508a9f11fbb42efe9a5')
-    version('1.6_rc2', sha256='1998148dc5bbdb63d05c24d19b4a803d9b2c800891a813fd846e53616d49abcd')
-    version('1.6_rc1', sha256='59b4bb64a93786a693e0cbc743a27c0bc451b9db2b0f63e4d2866f7aba10c268')
     version('1.5.1', sha256='4be4fe25a2910e24e1720cd9022d214001d38196033ade8f9d6e618b4f47d5c4')
     version('1.5', sha256='a82a6596c24ff06e79eab17ca02f4405745ceeeb66369693a59023ad0b62cf22')
     version('1.4.1', sha256='b6b87f6bec8db641a1d8660422ca44919252a69494b32ba6c8c9ac986bae9a65')
     version('1.4', sha256='41638122e7e59852af61d391b4ab8c308fd2e16652f768077e13a99d206ec5d3')
 
-    # https://github.com/votca/tools/pull/197, fix cmake module
-    patch("https://github.com/votca/tools/pull/197.patch", sha256="a06cce2a9cee63c8d01e4d1833f9cd2ba817b846c86fdb51ea5c9cd843135e68", when="@1.6_rc1")
+    # https://github.com/votca/tools/pull/229, fix mkl in exported target
+    patch("https://github.com/votca/tools/pull/229.patch", sha256="250d0b679e5d3104e3c8d6adf99751b71386c7ed4cbdae1c75408717ef3f401f", when="@1.6+mkl")
 
     variant('mkl', default=False, description='Build with MKL support')
     conflicts('+mkl', when='@:1.5.9999')
