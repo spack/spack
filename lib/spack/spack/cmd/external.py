@@ -10,6 +10,7 @@ import re
 
 import spack
 import llnl.util.tty as tty
+import spack.util.spack_yaml as syaml
 
 description = "add external packages to Spack configuration"
 section = "config"
@@ -61,18 +62,16 @@ def _pkg_yaml_template(pkg_name, external_pkg_entries):
 
     This does not generate the entire packages.yaml.
     """
-    template = """\
-{name}:
-  paths:
-    {path_entries_block}"""
+    paths_dict = syaml.syaml_dict()
+    for e in external_pkg_entries:
+        paths_dict[str(e.spec)] = e.base_dir
+    pkg_dict = syaml.syaml_dict()
+    pkg_dict['paths'] = paths_dict
 
-    entry_template = "{spec}: {path}"
-    path_entries_block = "\n    ".join(
-        entry_template.format(spec=str(e.spec), path=e.base_dir)
-        for e in external_pkg_entries)
+    pkgs_dict = syaml.syaml_dict()
+    pkgs_dict[pkg_name] = pkg_dict
 
-    return template.format(
-        name=pkg_name, path_entries_block=path_entries_block)
+    return pkgs_dict
 
 
 def external_find(args):
@@ -161,7 +160,7 @@ def _get_external_packages(repo, system_path_to_exe=None):
         used_packages.add(pkgs[0].name)
 
     for pkg_name in used_packages:
-        print(pkg_to_template[pkg_name])
+        print(syaml.dump_config(pkg_to_template[pkg_name]))
 
 
 class TestRepo(object):
