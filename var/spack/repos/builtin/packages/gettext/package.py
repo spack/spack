@@ -51,7 +51,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
         config_args = [
             '--disable-java',
-            '--disable-icsharp',
+            '--disable-csharp',
             '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix),
             '--with-included-glib',
             '--with-included-gettext',
