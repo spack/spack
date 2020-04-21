@@ -160,10 +160,10 @@ environment variables:
                         remove_directory=not args.keep_stage,
                         dirty=args.dirty)
                     with open(_get_results_file(test_name), 'a') as f:
-                        f.write("%s PASSED\n" % spec.format("{name}-{hash:7}"))
+                        f.write("%s PASSED\n" % spec.format("{name}-{version}-{hash:7}"))
                 except BaseException:
                     with open(_get_results_file(test_name), 'a') as f:
-                        f.write("%s FAILED\n" % spec.format("{name}-{hash:7}"))
+                        f.write("%s FAILED\n" % spec.format("{name}-{version}-{hash:7}"))
         else:
             raise NotImplementedError
 
