@@ -25,14 +25,25 @@ class Sgpp(SConsPackage):
     version('3.1.0', sha256='6b46bc5b3966e92567d6754130666bdffb7be1d1d2c1b427d7ce964b8eaab526')
     version('3.0.0', sha256='4dd9049e664abd7db78c355fea5e192167812f443115d4bf686a51bb1e9bda9c')
 
+    # Patches with bugfixes that are necessary to build old SGpp versions
+    # with spack. Patches are submitted upstream, but need to applied
+    # for versions too old to include them as they will not be
+    # backported for old releases:
+
     # Patch that ensures libraries will actually
     # be copied into prefix/lib upon installation
     # (otherwise it would be prefix/lib/sgpp)
+    # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/222
     patch('directory.patch', when='@:3.2.0')
-    # Fix faulty setup.py in 3.2.0
+    # Fix faulty setup.py introduced in 3.2.0
+    # Fixed in SGpp in version 3.3.0
     patch('fix-setup-py.patch', when='@3.2.0')
-    # Backport opencl fix
-    patch('ocl.patch', when='@:3.2.0+opencl')
+    # Fix compilation issue with opencl introduced in 3.2.0
+    # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/219
+    patch('ocl.patch', when='@3.2.0+opencl')
+    # Fixes compilation with AVX512 and datadriven
+    # Fixed in SGpp in PR https://github.com/SGpp/SGpp/pull/229
+    patch('avx512_datadriven_compilation.patch', when='@:3.3.0+datadriven')
 
     variant('python', default=True,
             description='Provide Python bindings for SGpp')
@@ -111,6 +122,7 @@ class Sgpp(SConsPackage):
     conflicts('+combigrid', when='@:3.2.0~quadrature')
 
     def build_args(self, spec, prefix):
+        # Testing parameters
         if self.run_tests:
             self.args = ['COMPILE_BOOST_TESTS=1',
                          'RUN_BOOST_TESTS=1']
@@ -128,15 +140,19 @@ class Sgpp(SConsPackage):
                 self.args.append('RUN_CPPLINT=0')
             else:  # argument was renamed after 3.2.0
                 self.args.append('CHECK_STYLE=0')
+
         # Install direction
         self.args.append('PREFIX={0}'.format(prefix))
+
         # Generate swig bindings?
         self.args.append('SG_PYTHON={0}'.format(
             '1' if '+python' in spec else '0'))
+
         # Java variant deactivated due to spack issue #987
         # self.args.append('SG_JAVA={0}'.format(
         #     '1' if '+java' in spec else '0'))
         self.args.append('SG_JAVA=0')
+
         # Which modules to build?
         self.args.append('SG_OPTIMIZATION={0}'.format(
             '1' if '+optimization' in spec else '0'))
@@ -150,10 +166,12 @@ class Sgpp(SConsPackage):
             '1' if '+combigrid' in spec else '0'))
         self.args.append('SG_SOLVER={0}'.format(
             '1' if '+solver' in spec else '0'))
+
         # Misc flag did not exist in older versions
         if spec.satisfies('@3.2.0:'):
             self.args.append('SG_MISC={0}'.format(
                 '1' if '+misc' in spec else '0'))
+
         # SIMD scons parameter (pick according to simd spec)
         if 'avx512' in self.spec.target:
             self.args.append('ARCH=avx512')
@@ -167,14 +185,17 @@ class Sgpp(SConsPackage):
             self.args.append('ARCH=sse42')
         elif 'sse3' in self.spec.target:
             self.args.append('ARCH=sse3')
+
         # OpenCL Flags
         self.args.append('USE_OCL={0}'.format(
             '1' if '+opencl' in spec else '0'))
+
         # Get the mpicxx compiler from the Spack spec
         # (makes certain we use the one from spack):
         if ('+mpi' in spec):
             self.args.append('CXX={0}'.format(
                 self.spec['mpi'].mpicxx))
+
         return self.args
 
     def install_args(self, spec, prefix):
