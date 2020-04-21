@@ -44,6 +44,9 @@ class Phist(CMakePackage):
                     'eigen',
                     'ghost'])
 
+    variant(name='int64', default=True, 
+            description='Use 64-bit global indices.')
+
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
                         '3: +verbose 4: +extreme 5; +debug')
@@ -86,6 +89,9 @@ class Phist(CMakePackage):
     # in older versions, it is not possible to turn off the use of host-
     # specific compiler flags in Release mode.
     conflicts('~host', when='@:1.7.3')
+    # builtin always uses 64-bit indices
+    conflicts('~int64', when='kernel_lib=builtin')
+    conflicts('+int64', when='kernel_lib=eigen')
 
     # ###################### Dependencies ##########################
 
@@ -98,15 +104,18 @@ class Phist(CMakePackage):
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
+    depends_on('trilinos@12:+tpetra gotype=long_long', when='kernel_lib=tpetra +int64')
+    depends_on('trilinos@12:+tpetra gotype=long', when='kernel_lib=tpetra ~int64')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
-    depends_on('petsc', when='kernel_lib=petsc')
+    depends_on('petsc +int64', when='kernel_lib=petsc +int64')
+    depends_on('petsc ~int64', when='kernel_lib=petsc ~int64')
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
     depends_on('trilinos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis')
+    depends_on('parmetis ^metis+int64', when='+parmetis +int64')
+    depends_on('parmetis ^metis~int64', when='+parmetis ~int64')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
@@ -146,6 +155,8 @@ class Phist(CMakePackage):
                 % ('ON' if '+trilinos' in spec else 'OFF'),
                 '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
+                '-DXSDK_INDEX_SIZE=%s'
+                % ('64' if '+int64' in spec else '32'),
                 '-DPHIST_HOST_OPTIMIZE:BOOL=%s'
                 % ('ON' if '+host' in spec else 'OFF'),
                 ]
