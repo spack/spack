@@ -1601,7 +1601,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     test_requires_compiler = False
 
-    def do_test(self, time, remove_directory=False, dirty=False):
+    def do_test(self, name, remove_directory=False, dirty=False):
         if self.test_requires_compiler:
             compilers = spack.compilers.compilers_for_spec(
                 self.spec.compiler, arch_spec=self.spec.architecture)
@@ -1612,11 +1612,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                           self.spec.compiler)
                 return
 
-        test_name = time.strftime('%Y-%m-%d_%H:%M:%S')
         test_stage = Prefix(os.path.join(
             sup.canonicalize_path(
                 spack.config.get('config:test_stage', os.getcwd())),
-            test_name))
+            name))
         if not os.path.exists(test_stage):
             mkdirp(test_stage)
         test_log_file = os.path.join(test_stage, self.test_log_name)
@@ -1665,7 +1664,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         spack.build_environment.fork(
             self, test_process, dirty=dirty, fake=False, context='test',
-            test_name=test_name)
+            test_name=name)
 
     def test(self):
         pass
