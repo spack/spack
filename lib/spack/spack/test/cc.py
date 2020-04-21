@@ -339,8 +339,11 @@ def test_ccld_deps():
 
 
 def test_ccld_deps_isystem():
-    """Ensure all flags are added in ccld mode,
-       when a build uses -isystem."""
+    """Ensure all flags are added in ccld mode.
+       When a build uses -isystem, Spack should inject it's
+       include paths using -isystem. Spack will insert these
+       after any provided -isystem includes, but before any
+       system directories included using -isystem"""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
@@ -382,26 +385,6 @@ def test_cc_deps():
             test_args_without_paths)
 
 
-def test_cc_deps_isystem():
-    """Ensure -L and RPATHs are not added in cc mode,
-       when a build uses -isystem"""
-    with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
-                 SPACK_RPATH_DIRS='xlib:ylib:zlib',
-                 SPACK_LINK_DIRS='xlib:ylib:zlib'):
-        mytest_args = test_args + ['-isystemfooinc']
-        check_args(
-            cc, ['-c'] + mytest_args,
-            [real_cc] +
-            test_include_paths +
-            ['-isystemfooinc',
-             '-isystemxinc',
-             '-isystemyinc',
-             '-isystemzinc'] +
-            test_library_paths +
-            ['-c'] +
-            test_args_without_paths)
-
-
 def test_ccld_with_system_dirs():
     """Ensure all flags are added in ccld mode."""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
@@ -438,8 +421,10 @@ def test_ccld_with_system_dirs():
 
 
 def test_ccld_with_system_dirs_isystem():
-    """Ensure all flags are added in ccld mode,
-       when a build uses -isystem"""
+    """Ensure all flags are added in ccld mode.
+       Ensure that includes are in the proper
+       place when a build uses -isystem, and uses
+       system directories in the include paths"""
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
