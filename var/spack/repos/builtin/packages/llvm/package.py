@@ -180,11 +180,6 @@ class Llvm(CMakePackage, CudaPackage):
 
     conflicts(
         '+code_signing',
-        when='~macos',
-        msg="code signing is only needed on macOS",
-    )
-    conflicts(
-        '+code_signing',
         when='~lldb',
         msg="code signing is only necessary for building the"
             "in-tree debug server on macOS. Turning this variant"
@@ -210,7 +205,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     @run_before('cmake')
     def codesign_check(self):
-        if '+code_signing' in self.spec:
+        if self.spec.satisfies("+code_signing platform=darwin"):
             codesign = which('codesign')
             mkdir('tmp')
             llvm_check_file = join_path('tmp', 'llvm_check')
@@ -371,9 +366,8 @@ class Llvm(CMakePackage, CudaPackage):
             ):
                 cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
 
-        if spec.satisfies('~code_signing'):
-            if spec.satisfies('platform=darwin'):
-                cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
+        if self.spec.satisfies("~code_signing platform=darwin"):
+            cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(
