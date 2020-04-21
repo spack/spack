@@ -49,7 +49,7 @@ class Phist(CMakePackage):
 
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
-                        '3: +verbose 4: +extreme 5; +debug')
+                        '3: +verbose 4: +extreme 5: +debug')
 
     variant('host', default=True,
             description='allow PHIST to use compiler flags that lead to host-'
@@ -93,6 +93,10 @@ class Phist(CMakePackage):
     conflicts('~int64', when='kernel_lib=builtin')
     conflicts('+int64', when='kernel_lib=eigen')
 
+    # ###################### Patches ##########################
+
+    patch('update_tpetra_gotypes.patch', when='@:1.9.0')
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
@@ -104,7 +108,7 @@ class Phist(CMakePackage):
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
     depends_on('trilinos@12:+tpetra gotype=long_long', when='kernel_lib=tpetra +int64')
-    depends_on('trilinos@12:+tpetra gotype=long', when='kernel_lib=tpetra ~int64')
+    depends_on('trilinos@12:+tpetra gotype=int', when='kernel_lib=tpetra ~int64')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
     depends_on('petsc +int64', when='kernel_lib=petsc +int64')
