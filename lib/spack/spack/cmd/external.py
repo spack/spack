@@ -28,6 +28,15 @@ def is_executable(path):
 
 
 def _get_system_executables():
+    """Get the paths of all executables available from the current PATH.
+
+    For convenience, this is constructed as a dictionary where the keys are
+    the executable paths and the values are the names of the executables
+    (i.e. the basename of the executable path).
+
+    There may be multiple paths with the same basename. In this case it is
+    assumed there are two different instances of the executable.
+    """
     path = os.getenv('PATH')
     search_paths = list(p for p in path.split(os.pathsep) if os.path.isdir(p))
     path_to_exe = {}
@@ -47,6 +56,11 @@ ExternalPackageEntry = namedtuple(
 
 
 def _pkg_yaml_template(pkg_name, external_pkg_entries):
+    """Generate config according to the packages.yaml schema for a single
+    package.
+
+    This does not generate the entire packages.yaml.
+    """
     template = """\
 {name}:
   paths:
