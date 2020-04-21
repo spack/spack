@@ -21,6 +21,6 @@ class LinuxPam(AutotoolsPackage):
 
     def configure_args(self):
         config_args = [
-            '--includedir=' + self.prefix.include.security)
+            '--includedir=' + self.prefix.include.security
         ]
         return config_args
