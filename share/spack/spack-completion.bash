@@ -1469,7 +1469,7 @@ _spack_test() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="run list status results"
+        SPACK_COMPREPLY="run list status results remove"
     fi
 }
 
@@ -1501,6 +1501,15 @@ _spack_test_status() {
 }
 
 _spack_test_results() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_test_remove() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help"
