@@ -178,7 +178,6 @@ class Llvm(CMakePackage, CudaPackage):
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
-
     # code signing is only necessary on macOS",
     conflicts('+code_signing', when='platform=linux')
     conflicts('+code_signing', when='platform=bgq')
