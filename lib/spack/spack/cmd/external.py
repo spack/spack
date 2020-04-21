@@ -23,6 +23,10 @@ def setup_parser(subparser):
     sp.add_parser('find', help=external_find.__doc__)
 
 
+def is_executable(path):
+    return os.path.isfile(path) and os.access(path, os.X_OK)
+
+
 def _get_system_executables():
     path = os.getenv('PATH')
     search_paths = list(p for p in path.split(os.pathsep) if os.path.isdir(p))
@@ -31,7 +35,9 @@ def _get_system_executables():
     # entry overrides later entries
     for search_path in reversed(search_paths):
         for exe in os.listdir(search_path):
-            path_to_exe[os.path.join(search_path, exe)] = exe
+            exe_path = os.path.join(search_path, exe)
+            if is_executable(exe_path):
+                path_to_exe[exe_path] = exe
     return path_to_exe
 
 
