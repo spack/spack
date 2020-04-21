@@ -17,7 +17,7 @@ class Avizo(Package):
     interface."""
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
-    version('9.7.0', 
+    version('9.7.0',
             sha256='9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
             url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
             expand=False)
@@ -30,18 +30,18 @@ class Avizo(Package):
             url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
             expand=False)
 
-    gcc_ver={
-        "9.7.0": "44"
-        "2019.3": "48"
+    gcc_ver = {
+        "9.7.0": "44",
+        "2019.3": "48",
         "2019.4": "48"
     }
 
-    install_dir={
+    install_dir = {
         "9.7.0": 'Avizo-9.7.0',
         "2019.3": join_path('..', 'Avizo'),
         "2019.4": join_path('..', 'Avizo')
     }
-    
+
     # Licensing
     license_required = True
     license_comment = '#'
@@ -61,8 +61,8 @@ class Avizo(Package):
 
         with working_dir('Avizo'):
             avizo_tar = tarfile.open(name='Avizo-{0}-Linux64-gcc{1}.tar.bz2'
-                                     .format(self.version,
-                                             self.gcc_ver[self.version.string]))
+                                     .format(self.version, self.gcc_ver
+                                             [self.version.string]))
             avizo_tar.extractall()
 
             with working_dir(self.install_dir[self.version.string]):
