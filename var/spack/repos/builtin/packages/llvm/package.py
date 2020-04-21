@@ -178,7 +178,6 @@ class Llvm(CMakePackage, CudaPackage):
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
-    # Code-signing variant is specific to macOS!
     conflicts(
         '+code_signing',
         when='~macos',
