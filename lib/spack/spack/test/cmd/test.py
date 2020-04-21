@@ -62,7 +62,8 @@ def test_test_output(install_mockery, mock_archive, mock_fetch,
     contents = os.listdir(testdir)
     assert len(contents) == 2
 
-    outfile = os.path.join(testdir, contents[1])
+    contents = list(filter(lambda x: x != 'results.txt', contents))
+    outfile = os.path.join(testdir, contents[0])
     with open(outfile, 'r') as f:
         output = f.read()
     assert "BEFORE TEST" in output
