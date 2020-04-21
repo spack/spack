@@ -32,15 +32,15 @@ def test_test_package_not_installed(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
         install_mockery):
 
-    output = spack_test('libdwarf')
+    output = spack_test('run', 'libdwarf')
 
     assert "No installed packages match spec libdwarf" in output
 
 
 @pytest.mark.parametrize('arguments,expected', [
-    ([], spack.config.get('config:dirty')),  # default from config file
-    (['--clean'], False),
-    (['--dirty'], True),
+    (['run'], spack.config.get('config:dirty')),  # default from config file
+    (['run', '--clean'], False),
+    (['run', '--dirty'], True),
 ])
 def test_test_dirty_flag(arguments, expected):
     parser = argparse.ArgumentParser()
@@ -53,16 +53,16 @@ def test_test_output(install_mockery, mock_archive, mock_fetch,
                      mock_test_stage):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
-    spack_test('printing-package')
+    spack_test('run', 'printing-package')
 
     contents = os.listdir(mock_test_stage)
     assert len(contents) == 1
 
     testdir = os.path.join(mock_test_stage, contents[0])
     contents = os.listdir(testdir)
-    assert len(contents) == 1
+    assert len(contents) == 2
 
-    outfile = os.path.join(testdir, contents[0])
+    outfile = os.path.join(testdir, contents[1])
     with open(outfile, 'r') as f:
         output = f.read()
     assert "BEFORE TEST" in output
@@ -76,7 +76,7 @@ def test_test_output_on_error(mock_packages, mock_archive, mock_fetch,
     install('test-error')
     # capfd interferes with Spack's capturing
     with capfd.disabled():
-        out = spack_test('test-error', fail_on_error=False)
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert "ProcessError: Command exited with status 1" in out
 
@@ -85,7 +85,7 @@ def test_test_output_on_failure(mock_packages, mock_archive, mock_fetch,
                                 install_mockery, capfd, mock_test_stage):
     install('test-fail')
     with capfd.disabled():
-        out = spack_test('test-fail', fail_on_error=False)
+        out = spack_test('run', 'test-fail', fail_on_error=False)
 
     assert "Expected 'not in the output' in output of `true`" in out
     assert "AssertionError:" in out
@@ -96,7 +96,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
     """Make sure spack prints location of test log on failure."""
     install('test-error')
     with capfd.disabled():
-        out = spack_test('test-error', fail_on_error=False)
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert 'See test log' in out
     assert mock_test_stage in out
@@ -112,7 +112,7 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
 def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
     with tmpdir.as_cwd():
-        spack_test(
+        spack_test('run',
             '--log-format=junit', '--log-file=test.xml',
             pkg_name)
 
@@ -138,7 +138,7 @@ def test_cdash_output_test_error(
         mock_test_stage, capfd):
     install('test-error')
     with tmpdir.as_cwd():
-        spack_test(
+        spack_test('run',
             '--log-format=cdash',
             '--log-file=cdash_reports',
             'test-error')
@@ -156,7 +156,7 @@ def test_cdash_upload_clean_test(
         mock_test_stage):
     install('printing-package')
     with tmpdir.as_cwd():
-        spack_test(
+        spack_test('run',
             '--log-file=cdash_reports',
             '--log-format=cdash',
             'printing-package')
@@ -172,12 +172,12 @@ def test_cdash_upload_clean_test(
 def test_test_help_does_not_show_cdash_options(capsys):
     """Make sure `spack test --help` does not describe CDash arguments"""
     with pytest.raises(SystemExit):
-        spack_test('--help')
+        spack_test('run', '--help')
         captured = capsys.readouterr()
         assert 'CDash URL' not in captured.out
 
 
 def test_test_help_cdash():
     """Make sure `spack test --help-cdash` describes CDash arguments"""
-    out = spack_test('--help-cdash')
+    out = spack_test('run', '--help-cdash')
     assert 'CDash URL' in out

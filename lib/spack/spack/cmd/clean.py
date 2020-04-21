@@ -89,9 +89,7 @@ def clean(parser, args):
 
     if args.test_stage:
         tty.msg("Removing files in test stage")
-        test_stage_root = sup.canonicalize_path(
-            spack.config.get('config:test_stage', ''))
-        fs.remove_directory_contents(test_stage_root)
+        spack.cmd.test.test_remove(NamedTuple({'name': None}))
 
     if args.python_cache:
         tty.msg('Removing python cache files')
