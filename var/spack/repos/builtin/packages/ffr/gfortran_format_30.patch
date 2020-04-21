@@ -1,0 +1,30 @@
+diff -ru ffr.old/FFR2VIZ/src/tovtk.f ffr.new/FFR_V3.1.004/FFR2VIZ/src/tovtk.f
+--- ffr.old/FFR2VIZ/src/tovtk.f	2009-05-27 10:57:50.000000000 +0900
++++ ffr.new/FFR2VIZ/src/tovtk.f	2020-04-07 18:55:05.000000000 +0900
+@@ -190,7 +190,7 @@
+ 
+         character(len=*), parameter :: FNAME = "write_vtk_points: "
+ c       character(len=*), parameter ::fmt_data = "(3E)"
+-        character(len=*), parameter ::fmt_data = "(9E)"
++        character(len=*), parameter ::fmt_data = "(9E15.7)"
+         integer :: ii
+ 
+         write(*, *)'dbg> ', FNAME, ' writing...'
+@@ -491,7 +491,7 @@
+ 
+         character(len=*), parameter :: FNAME = "write_vtk_scalar: "
+ c       character(len=*), parameter ::fmt_data = "(E)"
+-        character(len=*), parameter ::fmt_data = "(9E)"
++        character(len=*), parameter ::fmt_data = "(9E15.7)"
+         integer :: ii
+ 
+         write(*, *)'dbg> ', FNAME, ' writing...', trim(byname)
+@@ -541,7 +541,7 @@
+ 
+         character(len=*), parameter :: FNAME = "write_vtk_vector: "
+ c       character(len=*), parameter ::fmt_data = "(3E)"
+-        character(len=*), parameter ::fmt_data = "(9E)"
++        character(len=*), parameter ::fmt_data = "(9E15.7)"
+         integer :: ii
+ 
+         write(*, *)'dbg> ', FNAME, ' writing...', trim(byname)

@@ -5,7 +5,6 @@ ENV DOCKERFILE_BASE=centos            \
     DOCKERFILE_DISTRO=centos          \
     DOCKERFILE_DISTRO_VERSION=6       \
     SPACK_ROOT=/opt/spack             \
-    FORCE_UNSAFE_CONFIGURE=1          \
     DEBIAN_FRONTEND=noninteractive    \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker

@@ -106,8 +106,8 @@ class Scorep(AutotoolsPackage):
             config_args.append('--with-mpi=openmpi')
 
         config_args.extend([
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag)
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+            'CXXFLAGS={0}'.format(self.compiler.cxx_pic_flag)
         ])
 
         if "+mpi" in spec:

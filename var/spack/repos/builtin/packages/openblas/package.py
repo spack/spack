@@ -231,8 +231,8 @@ class Openblas(MakefilePackage):
         if '~shared' in self.spec:
             if '+pic' in self.spec:
                 make_defs.extend([
-                    'CFLAGS={0}'.format(self.compiler.pic_flag),
-                    'FFLAGS={0}'.format(self.compiler.pic_flag)
+                    'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
+                    'FFLAGS={0}'.format(self.compiler.f77_pic_flag)
                 ])
             make_defs += ['NO_SHARED=1']
         # fix missing _dggsvd_ and _sggsvd_

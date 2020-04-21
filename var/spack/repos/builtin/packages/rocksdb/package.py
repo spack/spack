@@ -13,7 +13,8 @@ class Rocksdb(MakefilePackage):
     url      = 'https://github.com/facebook/rocksdb/archive/v6.5.3.tar.gz'
     git      = 'https://github.com/facebook/rocksdb.git'
 
-    version('develop', git=git, branch='master', submodules=True)
+    version('master',  git=git, branch='master', submodules=True)
+    version('6.7.3',   sha256='c4d1397b58e4801b5fd7c3dd9175e6ae84541119cbebb739fe17d998f1829e81')
     version('6.5.3',   sha256='6dc023a11d61d00c8391bd44f26ba7db06c44be228c10b552edc84e02d7fbde2')
     version('5.18.3',  sha256='7fb6738263d3f2b360d7468cf2ebe333f3109f3ba1ff80115abd145d75287254')
     version('5.17.2',  sha256='101f05858650a810c90e4872338222a1a3bf3b24de7b7d74466814e6a95c2d28')
@@ -22,6 +23,7 @@ class Rocksdb(MakefilePackage):
 
     variant('bz2', default=False, description='Enable bz2 compression support')
     variant('lz4', default=True, description='Enable lz4 compression support')
+    variant('shared', default=True, description='Build shared library')
     variant('snappy', default=False, description='Enable snappy compression support')
     variant('static', default=True, description='Build static library')
     variant('zlib', default=True, description='Enable zlib compression support')
@@ -35,6 +37,8 @@ class Rocksdb(MakefilePackage):
     depends_on('zlib', when='+zlib')
     depends_on('zstd', when='+zstd')
     depends_on('tbb', when='+tbb')
+
+    conflicts('~shared~static', msg='have to build one type of library')
 
     phases = ['install']
 
@@ -85,5 +89,27 @@ class Rocksdb(MakefilePackage):
         env['PLATFORM_FLAGS'] = ' '.join(ldflags)
         env['INSTALL_PATH'] = self.spec.prefix
 
-        buildtype = 'install-static' if '+static' in spec else 'install-shared'
-        make(buildtype)
+        if '+static' in spec:
+            make('install-static')
+
+        if '+shared' in spec:
+            make('install-shared')
+
+    @run_after('install')
+    def install_pkgconfig(self):
+        libdir = self.spec['rocksdb'].libs.directories[0]
+        pkg_path = join_path(libdir, 'pkgconfig')
+        mkdirp(pkg_path)
+
+        with open(join_path(pkg_path, 'rocksdb.pc'), 'w') as f:
+            f.write('prefix={0}\n'.format(self.prefix))
+            f.write('exec_prefix=${prefix}\n')
+            f.write('libdir={0}\n'.format(libdir))
+            f.write('includedir={0}\n'.format(self.prefix.include))
+            f.write('\n')
+            f.write('Name: rocksdb\n')
+            f.write('Description: RocksDB: A Persistent Key-Value Store for'
+                    ' Flash and RAM Storage\n')
+            f.write('Version: {0}\n'.format(self.spec.version))
+            f.write('Cflags: -I${includedir}\n')
+            f.write('Libs: -L${libdir} -lrocksdb -ldl\n')

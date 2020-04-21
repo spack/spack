@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import glob
 import os
 import sys
@@ -38,9 +39,19 @@ class Papi(AutotoolsPackage):
     variant('lmsensors', default=False, description='Enable lm_sensors support')
     variant('sde', default=False, description='Enable software defined events')
 
+    variant('shared', default=True, description='Build shared libraries')
+    # PAPI requires building static libraries, so there is no "static" variant
+    variant('static_tools', default=False, description='Statically link the PAPI tools')
+    # The PAPI configure option "--with-shlib-tools" is deprecated
+    # and therefore not implemented here
+
     depends_on('lm-sensors', when='+lmsensors')
 
     conflicts('%gcc@8:', when='@5.3.0', msg='Requires GCC version less than 8.0')
+
+    # This is the only way to match exactly version 6.0.0 without also
+    # including version 6.0.0.1 due to spack version matching logic
+    conflicts('@5.9.99999:6.0.0.a', when='+static_tools', msg='Static tools cannot build on version 6.0.0')
 
     # Does not build with newer versions of gcc, see
     # https://bitbucket.org/icl/papi/issues/46/cannot-compile-on-arch-linux
@@ -55,15 +66,24 @@ class Papi(AutotoolsPackage):
     setup_run_environment = setup_build_environment
 
     def configure_args(self):
+        spec = self.spec
         # PAPI uses MPI if MPI is present; since we don't require
         # an MPI package, we ensure that all attempts to use MPI
         # fail, so that PAPI does not get confused
         options = ['MPICC=:']
-        # Build a list of activated variants (optional PAPI components)
-        variants = filter(lambda x: self.spec.variants[x].value is True,
-                          self.spec.variants)
-        if variants:
-            options.append('--with-components={0}'.format(' '.join(variants)))
+        # Build a list of PAPI components
+        components = filter(
+            lambda x: spec.variants[x].value,
+            ['example', 'infiniband', 'powercap', 'rapl', 'lmsensors', 'sde'])
+        if components:
+            options.append('--with-components=' + ' '.join(components))
+
+        build_shared = 'yes' if '+shared' in spec else 'no'
+        options.append('--with-shared-lib=' + build_shared)
+
+        if '+static_tools' in spec:
+            options.append('--with-static-tools')
+
         return options
 
     @run_before('configure')

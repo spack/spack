@@ -609,7 +609,7 @@ def get_concrete_spec(args):
 
     if spec_str:
         try:
-            spec = Spec(spec_str)
+            spec = find_matching_specs(spec_str)[0]
             spec.concretize()
         except SpecError as spec_error:
             tty.error('Unable to concrectize spec {0}'.format(args.spec))

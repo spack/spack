@@ -42,13 +42,10 @@
 spack() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
-    # (DY?)LD_LIBRARY_PATH variables on process start.
-    if [ -n "${LD_LIBRARY_PATH-}" ]; then
-        export SPACK_LD_LIBRARY_PATH=$LD_LIBRARY_PATH
-    fi
-    if [ -n "${DYLD_LIBRARY_PATH-}" ]; then
-        export SPACK_DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
-    fi
+    # variables that affect dyld on process start.
+    for var in LD_LIBRARY_PATH DYLD_LIBRARY_PATH DYLD_FALLBACK_LIBRARY_PATH; do
+        eval "if [ -n \"\${${var}-}\" ]; then export SPACK_$var=\${${var}}; fi"
+    done
 
     # Zsh does not do word splitting by default, this enables it for this
     # function only

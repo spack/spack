@@ -26,16 +26,24 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gmp@4.1:')  # 4.2.3 or higher is recommended
     depends_on('gmp@5.0:', when='@4.0.0:')  # https://www.mpfr.org/mpfr-4.0.0/
 
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
+    depends_on('autoconf-archive', when='@4.0.2:', type='build')
+
+    force_autoreconf = True
+
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
     patches = {
-        '4.0.2': 'f2d2a530acb5e70e1a9d5b80881dbb4a504d56535c4bc103d83e0bb630172029',
+        '4.0.2': '8f15fd27ab65341a60d724d594897d32f4597ddf642d0dc121995e2150181b0c',
         '4.0.1': '5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739',
-        '3.1.6': '66a5d58364113a21405fc53f4a48f4e8',
-        '3.1.5': '1dc5fe65feb5607b89fe0f410d53b627',
-        '3.1.4': 'd124381573404fe83654c7d5a79aeabf',
-        '3.1.3': 'ebd1d835e0ae2fd8a9339210ccd1d0a8',
-        '3.1.2': '9f96a5c7cac1d6cd983ed9cf7d997074',
+        '3.1.6': '7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008',
+        '3.1.5': '1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04',
+        '3.1.4': '113705d5333ef0d0ad3eb136a85404ba6bd1cc524dece5ce902c536aa2e29903',
+        '3.1.3': '4152a780b3cc6e9643283e59093b43460196d0fea9302d8c93b2496f6679f4e4',
+        '3.1.2': '1b9fdb515efb09a506a01e1eb307b1464455f5ca63d6c193db3a3da371ab3220',
     }
 
     for ver, checksum in patches.items():

@@ -410,6 +410,30 @@ class Compiler(object):
                                       "the C11 standard",
                                       "c11_flag")
 
+    @property
+    def cc_pic_flag(self):
+        """Returns the flag used by the C compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def cxx_pic_flag(self):
+        """Returns the flag used by the C++ compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def f77_pic_flag(self):
+        """Returns the flag used by the F77 compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def fc_pic_flag(self):
+        """Returns the flag used by the FC compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
     #
     # Compiler classes have methods for querying the version of
     # specific compiler executables.  This is used when discovering compilers.

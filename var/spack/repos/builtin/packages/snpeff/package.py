@@ -7,13 +7,13 @@ from spack import *
 import os.path
 
 
-class Snpeff(Package):
+class Snpeff(Package, SourceforgePackage):
     """SnpEff is a variant annotation and effect prediction tool. It
     annotates and predicts the effects of genetic variants (such as
     amino acid changes)."""
 
     homepage = "http://snpeff.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/snpeff/snpEff_latest_core.zip"
+    sourceforge_mirror_path = "snpeff/snpEff_latest_core.zip"
 
     version('2017-11-24', sha256='d55a7389a78312947c1e7dadf5e6897b42d3c6e942e7c1b8ec68bb35d2ae2244')
 
