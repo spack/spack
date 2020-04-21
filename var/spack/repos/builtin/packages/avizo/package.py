@@ -54,7 +54,6 @@ class Avizo(Package):
 
     def install(self, spec, prefix):
         ver = self.version.joined
-        gcc_ver= 
         sh = which('sh')
         sh('Avizo-{0}-Linux64-gcc{1}.bin'
            .format(ver, self.gcc_ver[self.version.string]),
