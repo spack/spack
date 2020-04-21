@@ -178,9 +178,15 @@ class Llvm(CMakePackage, CudaPackage):
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
+
+    # code signing is only necessary on macOS",
+    conflicts('+code_signing', when='platform=linux')
+    conflicts('+code_signing', when='platform=bgq')
+    conflicts('+code_signing', when='platform=cray')
+
     conflicts(
         '+code_signing',
-        when='~lldb',
+        when='~lldb platform=darwin',
         msg="code signing is only necessary for building the"
             "in-tree debug server on macOS. Turning this variant"
             "off enables a build of llvm with lldb that uses the"
@@ -205,7 +211,7 @@ class Llvm(CMakePackage, CudaPackage):
 
     @run_before('cmake')
     def codesign_check(self):
-        if self.spec.satisfies("+code_signing platform=darwin"):
+        if self.spec.satisfies("+code_signing"):
             codesign = which('codesign')
             mkdir('tmp')
             llvm_check_file = join_path('tmp', 'llvm_check')
