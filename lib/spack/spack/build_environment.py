@@ -446,15 +446,6 @@ def _set_variables_for_single_module(pkg, module):
     m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
-    m.cargo = Executable('cargo')
-    m.cargo.add_default_arg('--locked')
-    m.cargo.add_default_arg('--offline')
-
-    m.cargo_build = copy.deepcopy(m.cargo)
-    m.cargo_build.add_default_arg('build')
-    m.cargo_build.add_default_arg('--jobs')
-    m.cargo_build.add_default_arg(str(jobs))
-
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
     m.std_meson_args = spack.build_systems.meson.MesonPackage._std_args(pkg)

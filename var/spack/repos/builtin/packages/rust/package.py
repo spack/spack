@@ -6,6 +6,8 @@
 from spack import *
 from six import iteritems
 
+import llnl.util.tty as tty
+
 
 class Rust(Package):
     """The Rust programming language toolchain
@@ -544,3 +546,10 @@ sysconfdir = "etc"
 
     def install(self, spec, prefix):
         python('./x.py', 'install')
+
+    def setup_dependent_package(self, module, dependent_spec):
+        """Called before cargo modules' build() methods."""
+
+        module.cargo = Executable(join_path(self.prefix.bin, 'cargo'))
+        module.cargo.add_default_arg('--locked')
+        module.cargo.add_default_arg('--offline')

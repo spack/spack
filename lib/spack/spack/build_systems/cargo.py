@@ -7,11 +7,13 @@
 from copy import deepcopy
 import inspect
 import json
+import spack
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir, join_path, copy
 from spack.directives import cargo_manifest, depends_on, variant
 from spack.package import PackageBase
+from spack.util.executable import Executable
 
 
 class CargoPackage(PackageBase):
@@ -42,18 +44,31 @@ class CargoPackage(PackageBase):
     cargo_manifest()
 
     @property
+    def cargo(self):
+        cargo = Executable(join_path(self.spec['rust'].prefix.bin, 'cargo'))
+        cargo.add_default_arg('--locked')
+        cargo.add_default_arg('--offline')
+        return cargo
+
+    @property
     def cargo_build(self):
-        cargo_build = deepcopy(inspect.getmodule(self).cargo_build)
-        cargo_build.add_default_env(
-            'RUSTFLAGS',
-            '--codegen rpath \
-             --cap-lints warn'
-        )
+        jobs = spack.config.get('config:build_jobs') if self.parallel else 1
+
+        cargo_build = self.cargo
+        cargo_build.add_default_arg('build')
+        cargo_build.add_default_arg('--jobs')
+        cargo_build.add_default_arg(str(jobs))
         cargo_build.add_default_arg('-vv') # Very verbose output
         cargo_build.add_default_arg('--manifest-path')
         cargo_build.add_default_arg(self.manifest_path)
         if 'build_type=release' in self.spec:
             cargo_build.add_default_arg('--release')
+
+        cargo_build.add_default_env(
+            'RUSTFLAGS',
+            '--codegen rpath \
+             --cap-lints warn'
+        )
         return cargo_build
 
     @property
