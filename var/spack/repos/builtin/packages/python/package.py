@@ -132,6 +132,7 @@ class Python(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('ncurses', when='+readline')
     depends_on('openssl', when='+ssl')
+    depends_on('openssl@:1.0.2', when='@:2.8+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
     depends_on('sqlite@3.0.8:', when='+sqlite3')
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
@@ -191,7 +192,8 @@ class Python(AutotoolsPackage):
         return url.format(re.split('[a-z]', str(version))[0], version)
 
     @when('@2.7:2.8,3.4:')
-    def patch(self):
+    @run_before('build')
+    def patch_setup_py(self):
         # NOTE: Python's default installation procedure makes it possible for a
         # user's local configurations to change the Spack installation.  In
         # order to prevent this behavior for a full installation, we must
@@ -200,6 +202,20 @@ class Python(AutotoolsPackage):
         ff.filter(
             r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
             r'\1setup.py\2 --no-user-cfg \3\6'
+        )
+
+    @when('@:3.6.999+ssl')
+    @run_before('build')
+    def patch_openssl(self):
+        # NOTE: Older versions of Python do not support the '--with-openssl'
+        # configuration option, so the installation's module setup file needs
+        # to be modified directly in order to point to the correct SSL path.
+        ff = FileFilter(join_path('Modules', 'Setup.dist'))
+        ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
+        ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
+        ff.filter(
+            r'^SSL=(.*)$',
+            r'SSL={0}'.format(self.spec['openssl'].prefix)
         )
 
     def setup_build_environment(self, env):
@@ -285,8 +301,8 @@ class Python(AutotoolsPackage):
         if '+pic' in spec:
             config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
 
-        if spec.satisfies('@3.7:'):
-            if '+ssl' in spec:
+        if '+ssl' in spec:
+            if spec.satisfies('@3.7:'):
                 config_args.append('--with-openssl={0}'.format(
                     spec['openssl'].prefix))
 
