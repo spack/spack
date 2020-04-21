@@ -27,6 +27,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # Optional variants
     variant('libunistring', default=False, description='Use libunistring')
 
+    depends_on('iconv')
     # Recommended dependencies
     depends_on('ncurses',  when='+curses')
     depends_on('libxml2',  when='+libxml2')
@@ -50,7 +51,8 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
         config_args = [
             '--disable-java',
-            '--disable-csharp',
+            '--disable-icsharp',
+            '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix),
             '--with-included-glib',
             '--with-included-gettext',
             '--with-included-libcroco',
