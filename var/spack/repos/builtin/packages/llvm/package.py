@@ -186,9 +186,9 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts(
         '+code_signing',
         when='~lldb platform=darwin',
-        msg="code signing is only necessary for building the"
-            "in-tree debug server on macOS. Turning this variant"
-            "off enables a build of llvm with lldb that uses the"
+        msg="code signing is only necessary for building the "
+            "in-tree debug server on macOS. Turning this variant "
+            "off enables a build of llvm with lldb that uses the "
             "system debug server",
     )
 
