@@ -16,6 +16,7 @@ class PyTraceback2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pbr', type='build')
+    depends_on('py-linecache2', type='run')
 
     # test-requirements.txt
     depends_on('py-contextlib2', type='test')
