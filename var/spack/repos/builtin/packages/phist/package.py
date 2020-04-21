@@ -103,7 +103,6 @@ class Phist(CMakePackage):
     # the feature (e.g. use the '~fortran' variant)
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('trilinos@12:+tpetra gotype=long_long', when='kernel_lib=tpetra +int64')
     depends_on('trilinos@12:+tpetra gotype=long', when='kernel_lib=tpetra ~int64')
     # Epetra backend also works with older Trilinos versions
@@ -113,7 +112,7 @@ class Phist(CMakePackage):
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
-    depends_on('trilinos', when='+trilinos')
+    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
     depends_on('parmetis ^metis+int64', when='+parmetis +int64')
     depends_on('parmetis ^metis~int64', when='+parmetis ~int64')
 
@@ -148,11 +147,11 @@ class Phist(CMakePackage):
                 '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
                 % ('ON' if '+scamac' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos+belos+anasazi' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
                 '-DXSDK_INDEX_SIZE=%s'
