@@ -1597,7 +1597,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def test_log_name(self):
-        return 'test-%s-out.txt' % self.spec.format('{name}-{hash:7}')
+        return 'test-%s-out.txt' % self.spec.format('{name}-{version}-{hash:7}')
 
     test_requires_compiler = False
     test_failures = None
@@ -1610,7 +1610,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 self.spec.compiler, arch_spec=self.spec.architecture)
             if not compilers:
                 tty.error('Skipping tests for package %s\n' %
-                          self.spec.format('{name}-{hash:7}') +
+                          self.spec.format('{name}-{version}-{hash:7}') +
                           'Package test requires missing compiler %s' %
                           self.spec.compiler)
                 return
@@ -1627,7 +1627,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             with tty.log.log_output(self.test_log_file) as logger:
                 with logger.force_echo():
                     tty.msg('Testing package %s' %
-                            self.spec.format('{name}-{hash:7}'))
+                            self.spec.format('{name}-{version}-{hash:7}'))
 
                 # use debug print levels for log file to record commands
                 old_debug = tty.is_debug()
@@ -1635,7 +1635,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
                 # setup test directory
                 testdir = self.test_stage.join(
-                    self.spec.format('{name}-{hash}'))
+                    self.spec.format('{name}-{version}-{hash}'))
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
                 mkdirp(testdir)
