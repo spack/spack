@@ -17,6 +17,8 @@ class Ffmpeg(AutotoolsPackage):
     version('4.1.1', sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
     version('4.1',   sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
     version('3.2.4', sha256='c0fa3593a2e9e96ace3c1757900094437ad96d1d6ca19f057c378b5f394496a4')
+    version('2.8.15', sha256='35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21')
+    version('1.0.10', sha256='1dbde434c3b5c573d3b2ffc1babe3814f781c10c4bc66193a4132a44c9715176')
 
     # Licensing
     variant('gpl', default=True,
@@ -54,6 +56,7 @@ class Ffmpeg(AutotoolsPackage):
     #         description='XML parsing, needed for dash demuxing support')
     variant('libzmq', default=False, description='message passing via libzmq')
     variant('lzma', default=True, description='lzma support')
+    variant('avresample', default=False, description='AV reasmpling component')
     variant('openssl', default=False, description='needed for https support')
     variant('sdl2', default=True, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
@@ -83,6 +86,8 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('snappy', when='+libsnappy')
     depends_on('speex', when='+libspeex')
     depends_on('xz', when='+lzma')
+
+    conflicts('+libaom', when='@:3.999') # https://www.ffmpeg.org/index.html#news (search AV1)
 
     def configure_args(self):
         spec = self.spec
@@ -132,6 +137,7 @@ class Ffmpeg(AutotoolsPackage):
             # 'libxml2',
             'libzmq',
             'lzma',
+            'avresample',
             'openssl',
             'sdl2',
             'shared',
