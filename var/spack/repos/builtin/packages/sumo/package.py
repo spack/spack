@@ -38,7 +38,7 @@ class Sumo(CMakePackage):
     depends_on('googletest')
     depends_on('xerces-c')
     depends_on('proj')
-    depends_on('fox+opengl')
+    depends_on('fox@1.6.57+opengl')
     depends_on('swig')
     depends_on('java')
     depends_on('gdal', when='+gdal')
