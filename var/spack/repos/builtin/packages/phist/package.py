@@ -45,7 +45,7 @@ class Phist(CMakePackage):
                     'eigen',
                     'ghost'])
 
-    variant(name='int64', default=True, 
+    variant(name='int64', default=True,
             description='Use 64-bit global indices.')
 
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
