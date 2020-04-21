@@ -239,6 +239,7 @@ def ci_rebuild(args):
     compiler_action = get_env_var('SPACK_COMPILER_ACTION')
     cdash_build_name = get_env_var('SPACK_CDASH_BUILD_NAME')
     related_builds = get_env_var('SPACK_RELATED_BUILDS_CDASH')
+    pr_env_var = get_env_var('SPACK_IS_PR_PIPELINE')
 
     gitlab_ci = None
     if 'gitlab-ci' in yaml_root:
@@ -291,11 +292,18 @@ def ci_rebuild(args):
     local_mirror_dir = os.path.join(ci_artifact_dir, 'local_mirror')
     build_cache_dir = os.path.join(local_mirror_dir, 'build_cache')
 
+    spack_is_pr_pipeline = True if pr_env_var == 'True' else False
+
     enable_artifacts_mirror = False
     artifact_mirror_url = None
     if 'enable-artifacts-buildcache' in gitlab_ci:
         enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
-        if enable_artifacts_mirror:
+        if enable_artifacts_mirror or spack_is_pr_pipeline:
+            # If this is a PR pipeline, we will override the setting to
+            # make sure that artifacts buildcache is enabled.  Otherwise
+            # jobs will not have binary deps available since we do not
+            # allow pushing binaries to remote mirror during PR pipelines
+            enable_artifacts_mirror = True
             artifact_mirror_url = 'file://' + local_mirror_dir
             mirror_msg = 'artifact buildcache enabled, mirror url: {0}'.format(
                 artifact_mirror_url)
@@ -441,9 +449,12 @@ def ci_rebuild(args):
 
             spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
-            # 4) create buildcache on remote mirror
-            spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
-                                          remote_mirror_url, cdash_build_id)
+            # 4) create buildcache on remote mirror, but not if this is
+            # running to test a spack PR
+            if not spack_is_pr_pipeline:
+                spack_ci.push_mirror_contents(
+                    env, job_spec, job_spec_yaml_path, remote_mirror_url,
+                    cdash_build_id)
 
             # 5) create another copy of that buildcache on "local artifact
             # mirror" (only done if cash reporting is enabled)

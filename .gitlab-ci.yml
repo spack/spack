@@ -1,10 +1,22 @@
-e4s_pipeline:
+pr_pipeline:
   only:
   - external_pull_requests
   variables:
     SPACK_REPO: https://github.com/spack/spack.git
     SPACK_REF: ${CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME}
+    SPACK_IS_PR_PIPELINE: "True"
   trigger:
     project: scott/spack-env
-    branch: bzip2
+    branch: e4s
+    strategy: depend
+
+merge_pipeline:
+  only:
+  - develop
+  variables:
+    SPACK_REPO: https://github.com/spack/spack.git
+    SPACK_REF: develop
+  trigger:
+    project: scott/spack-env
+    branch: e4s
     strategy: depend

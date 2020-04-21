@@ -475,6 +475,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             tty.verbose("Using CDash auth token from environment")
             cdash_auth_token = os.environ.get('SPACK_CDASH_AUTH_TOKEN')
 
+    is_pr_pipeline = "False"
+    if 'SPACK_IS_PR_PIPELINE' in os.environ:
+        is_pr_pipeline = os.environ.get('SPACK_IS_PR_PIPELINE')
+
     # Make sure we use a custom spack if necessary
     before_script = None
     after_script = None
@@ -613,6 +617,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                         root_spec, main_phase, strip_compilers),
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
+                    'SPACK_IS_PR_PIPELINE': is_pr_pipeline,
                 }
 
                 job_dependencies = []
