@@ -7,7 +7,7 @@ from spack import *
 
 
 class Cmaq(Package):
-    """Code base for the U.S. EPA’s Community Multiscale Air Quality Model
+    """Code base for the U.S. EPA's Community Multiscale Air Quality Model
     (CMAQ)."""
     homepage = "http://www.epa.gov/CMAQ"
     url      = "https://github.com/USEPA/CMAQ/archive/CMAQv5.3.1_19Dec2019.tar.gz"
