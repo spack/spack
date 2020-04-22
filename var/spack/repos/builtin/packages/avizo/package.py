@@ -17,17 +17,18 @@ class Avizo(Package):
     interface."""
 
     homepage = "https://www.thermofisher.com/sa/en/home/industrial/electron-microscopy/electron-microscopy-instruments-workflow-solutions/3d-visualization-analysis-software.html"
-    version('9.7.0',
-            sha256='9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
-            url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
+
+    version('2019.4',
+            sha256='a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248',
+            url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
             expand=False)
     version('2019.3',
             sha256='be109df81e2f7238f234862367841dae05e76cc62218c1f36b1d9bc9514ce5f7',
             url="file://{0}/Avizo-20193-Linux64-gcc48.bin".format(os.getcwd()),
             expand=False)
-    version('2019.4',
-            sha256='a637720535bcbe254ab56368004a9544c64ec36186373fa24f26cee279685248',
-            url="file://{0}/Avizo-20194-Linux64-gcc48.bin".format(os.getcwd()),
+    version('9.7.0',
+            sha256='9c9b9e81957387f4218df0c5adbb80717e9ae80ab3ca6ff8da523f7f499dcc5b',
+            url="file://{0}/Avizo-970-Linux64-gcc44.bin".format(os.getcwd()),
             expand=False)
 
     gcc_ver = {
