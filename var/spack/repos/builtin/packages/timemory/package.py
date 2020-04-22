@@ -23,7 +23,7 @@ class Timemory(CMakePackage):
     version('3.0.1', commit='a5bb58b5e4d44b71f699f536ad1b56722f213ce6',
             submodules=True)
 
-    linux = False if platform is 'darwin' else True
+    linux = False if platform == 'darwin' else True
 
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=False, description='Build static libraries')
@@ -144,7 +144,7 @@ class Timemory(CMakePackage):
             args.append('-D{0}CUDA_ARCH={1}'.format(key, targ))
 
         cpu_target = spec.variants['cpu_target'].value
-        if cpu_target is not 'auto':
+        if cpu_target == 'auto':
             args.append('-DCpuArch_TARGET={0}'.format(cpu_target))
 
         # spack options which translate to TIMEMORY_<OPTION>
