@@ -24,6 +24,4 @@ class PyPid(PythonPackage):
     version('2.2.1', sha256='2c5b398d348b8b1901ccb29b5c914c583187692acfbc3c28fc4ee483b9909357')
     version('2.2.0', sha256='f2c3beb5742159794379b73088eb3f592a4b7b93bfef95f8bbc27ab98e5394ed')
 
-    extends('python')
-
-    depends_on('py-psutil', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
