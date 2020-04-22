@@ -27,7 +27,7 @@ class PpopenApplAmrFdm(MakefilePackage):
     depends_on('mpi')
 
     parallel = False
-    build_targets = ['default', 'install', 'advAMR3D', 'bin_install']
+    build_targets = ['default', 'advAMR3D']
 
     def edit(self, spec, prefix):
         fflags = [
@@ -37,6 +37,14 @@ class PpopenApplAmrFdm(MakefilePackage):
         ]
         makefile_in = FileFilter('Makefile.in')
         makefile_in.filter('^PREFIX +=.*', 'PREFIX = {0}'.format(prefix))
+        makefile_in.filter(
+            '^INCDIR +=.*',
+            'INCDIR = {0}/include'.format(self.build_directory)
+        )
+        makefile_in.filter(
+            '^LIBDIR +=.*',
+            'LIBDIR = {0}/lib'.format(self.build_directory)
+        )
         makefile_in.filter('^F90 +=.*', 'F90 = {0}'.format(spack_fc))
         makefile_in.filter(
             '^MPIF90 +=.*',
@@ -53,4 +61,7 @@ class PpopenApplAmrFdm(MakefilePackage):
         )
 
     def install(self, spec, prefix):
+        install_tree('include', prefix.include)
+        install_tree('lib', prefix.lib)
+        install_tree('bin', prefix.bin)
         install_tree('doc', prefix.doc)
