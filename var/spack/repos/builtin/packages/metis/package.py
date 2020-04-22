@@ -171,11 +171,10 @@ class Metis(Package):
     @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'build')
+        build_directory = join_path(self.stage.path, 'build')
 
-        options = std_cmake_args[:]
+        options = CMakePackage._std_args(self)
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Normally this is available via the 'CMakePackage' object, but metis
         # IS-A 'Package' (not a 'CMakePackage') to support non-cmake metis@:5.
