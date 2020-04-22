@@ -18,9 +18,9 @@ class Timemory(CMakePackage):
 
     version('master', branch='master', submodules=True)
     version('develop', branch='develop', submodules=True)
-    version('3.0.0', commit='b36b1673b2c6b7ff3126d8261bef0f8f176c7beb',
-            submodules=True)
     version('3.0.1', commit='a5bb58b5e4d44b71f699f536ad1b56722f213ce6',
+            submodules=True)
+    version('3.0.0', commit='b36b1673b2c6b7ff3126d8261bef0f8f176c7beb',
             submodules=True)
 
     linux = False if platform == 'darwin' else True
