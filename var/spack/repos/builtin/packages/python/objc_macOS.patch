@@ -1,0 +1,32 @@
+From e3c0df6cdeac8e7fdc55115aa8b8a39219b9751c Mon Sep 17 00:00:00 2001
+From: Axel Huebl <axel.huebl@plasma.ninja>
+Date: Wed, 22 Apr 2020 10:04:26 -0700
+Subject: [PATCH] scproxy: ObjC File
+
+This file includes an objective C header from macOS.
+
+See https://github.com/python/cpython/pull/13306
+---
+ Modules/{_scproxy.c => _scproxy.m} | 0
+ setup.py                           | 2 +-
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+ rename Modules/{_scproxy.c => _scproxy.m} (100%)
+
+diff --git a/Modules/_scproxy.c b/Modules/_scproxy.m
+similarity index 100%
+rename from Modules/_scproxy.c
+rename to Modules/_scproxy.m
+diff --git a/setup.py b/setup.py
+index 88cff6164d712..8220e1ccbdf23 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1654,7 +1654,7 @@ class db_found(Exception): pass
+ 
+         if host_platform == 'darwin':
+             exts.append(
+-                       Extension('_scproxy', ['_scproxy.c'],
++                       Extension('_scproxy', ['_scproxy.m'],
+                        extra_link_args=[
+                            '-framework', 'SystemConfiguration',
+                            '-framework', 'CoreFoundation',
+
