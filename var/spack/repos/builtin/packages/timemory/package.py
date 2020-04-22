@@ -52,7 +52,8 @@ class Timemory(CMakePackage):
             description=('Build pre-configured (i.e. dedicated) kokkos-tools '
                          'libraries, e.g. kp_timemory_cpu_flops'))
     variant('build_caliper', default=True,
-            description='Build Caliper submodule instead of spack installation')
+            description=('Build Caliper submodule instead of spack '
+                         'installation'))
     variant('build_gotcha', default=False,
             description='Build GOTCHA submodule instead of spack installation')
     variant('build_ompt', default=True,
