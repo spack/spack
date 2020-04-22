@@ -23,7 +23,7 @@ class Timemory(CMakePackage):
     version('3.0.1', commit='a5bb58b5e4d44b71f699f536ad1b56722f213ce6',
             submodules=True)
 
-    linux = False if platform == 'darwin' else True
+    linux = False if platform is 'darwin' else True
 
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=False, description='Build static libraries')
