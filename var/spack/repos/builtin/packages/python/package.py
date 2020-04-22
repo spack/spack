@@ -166,6 +166,12 @@ class Python(AutotoolsPackage):
     # https://github.com/python/cpython/pull/16717
     patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
+    # CPython tries to build an Objective-C file with GCC's C frontend
+    # https://github.com/spack/spack/pull/16222
+    # https://github.com/python/cpython/pull/13306
+    conflicts('%gcc platform=darwin',
+              msg='CPython does not compile with GCC on macOS yet, use clang. '
+                  'See: https://github.com/python/cpython/pull/13306')
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
     conflicts(
