@@ -242,6 +242,11 @@ class Python(AutotoolsPackage):
             ldflags = ' '.join(spec[dep.name].libs.search_flags
                                for dep in link_deps)
 
+            # https://github.com/python/cpython/blob/v3.7.7/setup.py#L1655-L1661
+            if spec.satisfies('%gcc platform=darwin'):
+                ldflags += ' -framework SystemConfiguration' \
+                           ' -framework CoreFoundation'
+
             config_args.extend(['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags])
 
         # https://docs.python.org/3/whatsnew/3.7.html#build-changes
@@ -254,15 +259,6 @@ class Python(AutotoolsPackage):
 
         if spec.satisfies('%gcc platform=darwin'):
             config_args.append('--disable-toolbox-glue')
-            # fails to build _scproxy
-            # https://bugs.python.org/issue26317#msg342055
-            # https://github.com/spack/spack/issues/2230
-            frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
-            if os.path.exists(frameworkprefix):
-                config_args.append('--with-framework={0}'
-                                   .format(frameworkprefix))
-            else:
-                config_args.append('--disable-framework')
 
         if spec.satisfies('%intel', strict=True) and \
                 spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
