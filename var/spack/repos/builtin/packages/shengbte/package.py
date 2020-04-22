@@ -3,17 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
-import os
 
 
-class Shengbte(Package):
+class Shengbte(MakefilePackage):
     """ShengBTE is a software package for solving the Boltzmann Transport
     Equation for phonons."""
 
     homepage = "www.shengbte.org"
     url      = "www.shengbte.org/downloads/ShengBTE-v1.1.1-8a63749.tar.bz2"
-
-    build_directory = 'Src'
 
     version('1.1.1-8a63749', sha256='43920740d19ae854c8ecae0b648acfdf1d7726ca4c2b44f1a1684457f2f88522')
 
@@ -21,7 +18,9 @@ class Shengbte(Package):
     depends_on('spglib')
     depends_on('intel-mkl')
 
-    phases = ['edit', 'build', 'install']
+    parallel = False
+
+    build_directory = 'Src'
 
     def edit(self, spec, prefix):
         arch_make = join_path(self.build_directory, 'arch.make')
@@ -40,11 +39,6 @@ class Shengbte(Package):
                     .format(spec['mkl'].prefix.mkl.lib.intel64),
                     arch_make)
 
-    def build(self, spec, prefix):
-        with working_dir(self.build_directory):
-            os.system('make')
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(self.stage.source_path):
-            install('ShengBTE', prefix.bin)
+        install('ShengBTE', prefix.bin)
