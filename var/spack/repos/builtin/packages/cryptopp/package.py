@@ -26,7 +26,6 @@ class Cryptopp(MakefilePackage):
     version('5.6.1', sha256='98e74d8cb17a38033354519ac8ba9c5d98a6dc00bf5d1ec3c533c2e8ec86f268')
 
     variant('shared', default=True,  description="Build shared object versions of libraries.")
-    variant('sse',    default=True,  description="Build with instruction vectorization enabled.")
 
     depends_on('gmake', type='build')
 
@@ -37,16 +36,18 @@ class Cryptopp(MakefilePackage):
     def build(self, spec, prefix):
         cxx_flags = []
 
-        if '+shared' in self.spec:
+        if '+shared' in spec:
             cxx_flags.append(self.compiler.cxx_pic_flag)
-        if '~sse' in self.spec:
-            cxx_flags.extend([
-                '-DCRYPTOPP_DISABLE_SSE2',
-                '-DCRYPTOPP_DISABLE_SSSE3',
-                '-DCRYPTOPP_DISABLE_SSE4',
-            ])
 
-        make_target = 'dynamic' if '+shared' in self.spec else 'static'
+        target = self.spec.target
+        if 'sse4.1' not in target:
+            cxx_flags.append('-DCRYPTOPP_DISABLE_SSE4')
+        if 'ssse3' not in target:
+            cxx_flags.append('-DCRYPTOPP_DISABLE_SSSE3')
+        if 'sse2' not in target:
+            cxx_flags.append('-DCRYPTOPP_DISABLE_SSE2')
+
+        make_target = 'dynamic' if '+shared' in spec else 'static'
         make(make_target, 'CXXFLAGS={0}'.format(' '.join(cxx_flags)))
 
     def install(self, spec, prefix):
