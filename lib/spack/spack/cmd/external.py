@@ -7,6 +7,7 @@ from __future__ import print_function
 from collections import defaultdict, namedtuple
 import os
 import re
+import six
 
 import spack
 import llnl.util.tty as tty
@@ -78,6 +79,36 @@ def external_find(args):
     _get_external_packages(TestRepo())
 
 
+def _group_by_prefix(paths):
+    groups = defaultdict(set)
+    for p in paths:
+        groups[os.path.dirname(p)].add(p)
+    return groups.items()
+
+
+def _convert_to_iterable(single_val_or_multiple):
+    x = single_val_or_multiple
+    if x is None:
+        return []
+    elif isinstance(x, six.string_types):
+        return [x]
+    elif isinstance(x, spack.spec.Spec):
+        # Specs are iterable, but a single spec should be converted to a list
+        return [x]
+
+    try:
+        iter(x)
+        return x
+    except TypeError:
+        return [x]
+
+
+def _determine_base_dir(prefix):
+    assert os.path.isdir(prefix)
+    if os.path.basename(prefix) == 'bin':
+        return os.path.dirname(prefix)
+
+
 def _get_external_packages(repo, system_path_to_exe=None):
     if not system_path_to_exe:
         system_path_to_exe = _get_system_executables()
@@ -89,77 +120,57 @@ def _get_external_packages(repo, system_path_to_exe=None):
                 exe_pattern_to_pkgs[exe].append(pkg)
 
     pkg_to_found_exes = defaultdict(set)
-    found_exe_to_pkgs = defaultdict(set)
     for path, exe in system_path_to_exe.items():
         for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
             if re.search(exe_pattern, exe):
                 for pkg in pkgs:
                     pkg_to_found_exes[pkg].add(path)
-                found_exe_to_pkgs[path].update(pkgs)
-    # Sort to get repeatable results
-    found_exe_to_pkgs = dict(
-        (x, list(sorted(y, key=lambda p: p.name)))
-        for x, y in found_exe_to_pkgs.items())
-    pkg_to_found_exes = dict(
-        (x, list(sorted(y)))
-        for x, y in pkg_to_found_exes.items())
 
-    exe_to_usable_packages = defaultdict(list)
     pkg_to_entries = defaultdict(list)
     resolved_specs = {}  # spec -> exe found for the spec
-    for exe in sorted(found_exe_to_pkgs):
-        associated_packages = found_exe_to_pkgs[exe]
-        for pkg in associated_packages:
-            found_pkg_exes = pkg_to_found_exes[pkg]
 
+    # TODO: iterate through this in a predetermined order (e.g. by package
+    # name) to get repeatable results when there are conflicts.
+    for pkg, exes in pkg_to_found_exes.items():
+        for prefix, exes_in_prefix in _group_by_prefix(exes):
             if hasattr(pkg, 'determine_spec_details'):
-                spec_str = pkg.determine_spec_details(exe, found_pkg_exes)
+                specs = _convert_to_iterable(
+                    pkg.determine_spec_details(prefix, exes_in_prefix))
             else:
-                spec_str = pkg.name
+                # Note: packages which do not implement
+                # 'determine_spec_details' should use exact-match regular
+                # expressions
+                specs = [spack.spec.Spec(pkg.name)]
 
-            if not spec_str:
-                tty.msg("{0} detected that the following executables are"
-                        " associated with a different package: {1}"
-                        .format(pkg.name, ", ".join(found_pkg_exes)))
-                continue
+            for spec in specs:
+                pkg_prefix = _determine_base_dir(prefix)
 
-            spec = spack.spec.Spec(spec_str)
-            if spec in resolved_specs:
-                prior_associated_exe = resolved_specs[spec]
-                tty.debug("Executables {0} and {1} are both associated with"
-                          " the same spec {2}"
-                          .format(exe, prior_associated_exe, str(spec)))
-                continue
+                if spec in resolved_specs:
+                    prior_prefix = ', '.join(resolved_specs[spec])
+
+                    tty.debug(
+                        "Executables in {0} and {1} are both associated"
+                        " with the same spec {2}"
+                        .format(prefix, prior_prefix, str(spec)))
+                    continue
+                else:
+                    resolved_specs[spec] = prefix
+
+                pkg_to_entries[pkg.name].append(
+                    ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
             else:
-                resolved_specs[spec] = exe
-
-            bin_dir = os.path.dirname(exe)
-            base_dir = os.path.dirname(bin_dir)
-
-            exe_to_usable_packages[exe].append(pkg)
-
-            pkg_to_entries[pkg.name].append(
-                ExternalPackageEntry(spec=spec, base_dir=base_dir))
+                tty.debug(
+                    'The following executables in {0} were decidedly not'
+                    'part of the package {1}: {2}'
+                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
+                )
 
     pkg_to_template = {}
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         pkg_to_template[pkg_name] = _pkg_yaml_template(
             pkg.name, ext_pkg_entries)
 
-    used_packages = set()
-    for exe, pkgs in exe_to_usable_packages.items():
-        if len(pkgs) > 1:
-            tty.warn("The following packages all use {0}: {1}"
-                     .format(exe, ", ".join(p.name for p in pkgs)))
-
-        # If some package that uses this exe was already selected, then omit
-        # this executable from consideration
-        if used_packages & set(p.name for p in pkgs):
-            continue
-
-        used_packages.add(pkgs[0].name)
-
-    for pkg_name in used_packages:
+    for config in pkg_to_template.values():
         print(syaml.dump_config(pkg_to_template[pkg_name]))
 
 

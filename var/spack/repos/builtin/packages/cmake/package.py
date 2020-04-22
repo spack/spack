@@ -6,6 +6,7 @@
 from spack import *
 
 import re
+import os
 
 
 class Cmake(Package):
@@ -138,20 +139,23 @@ class Cmake(Package):
     phases = ['bootstrap', 'build', 'install']
 
     @staticmethod
-    def determine_spec_details(exe, all_files):
-        if 'cmake' not in exe:
+    def determine_spec_details(prefix, exes_in_prefix):
+        exe_to_path = dict(
+            (os.path.basename(p), p) for p in exes_in_prefix
+        )
+        if 'cmake' not in exe_to_path:
             return None
 
         spec = spack.spec.Spec('cmake')
 
-        cmake = spack.util.executable.Executable(exe)
+        cmake = spack.util.executable.Executable(exe_to_path['cmake'])
         output = cmake('--version', output=str)
         if output:
             match = re.search(r'version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
             spec.versions = Version(version_str)
-            return str(spec)
+            return spec
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
