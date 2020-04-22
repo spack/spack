@@ -194,6 +194,8 @@ class Cudnn(Package):
         if 'target=ppc64le: platform=linux' in self.spec:
             env.set('cuDNN_ROOT', os.path.join(
                 self.prefix, 'targets', 'ppc64le-linux'))
+            env.set('CUDNN_ROOT', os.path.join(
+                self.prefix, 'targets', 'ppc64le-linux'))
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
