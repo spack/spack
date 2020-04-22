@@ -13,6 +13,9 @@ class Bat(CargoPackage):
     crates_io = "bat"
     git = "https://github.com/sharkdp/bat.git"
 
+    # onig-sys needs llvm for libclang in order to generate Rust code for onig
+    # headers.
+    depends_on('llvm', type='build')
     depends_on('oniguruma')
     depends_on('libgit2')
 
@@ -23,5 +26,11 @@ class Bat(CargoPackage):
 
     # Tell onig-sys to prefer spack-installed oniguruma
     def setup_build_environment(self, env):
+        # onig-sys environment
         env.append_flags('RUSTONIG_DYNAMIC_LIBONIG', '1')
+        env.append_flags(
+            'LLVM_CONFIG_PATH',
+            join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
+
+        # git-sys environment
         env.append_flags('LIBGIT2_SYS_USE_PKG_CONFIG', '1')
