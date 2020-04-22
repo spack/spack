@@ -19,7 +19,7 @@ class PyCoilmq(PythonPackage):
     version('0.4.4', sha256='2a0d494c73412e76075d2a72698948fb1d84c9c5719b134c364c07bcc6a3eacf')
     version('0.4.3', sha256='7a051f4fd2b76c8accf0b3f435267566910085c18483726e9eb56416e40703b7')
 
-    extends('python')
+    depends_on('py-setuptools', type='build')
     depends_on('py-python-daemon', type=('build', 'run'))
     depends_on('py-pid', type=('build', 'run'))
     depends_on('py-wheel', type=('build', 'run'))
