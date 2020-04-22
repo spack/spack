@@ -149,7 +149,7 @@ class Timemory(CMakePackage):
 
         # spack options which translate to TIMEMORY_<OPTION>
         for dep in ('require_packages', 'build_caliper', 'build_gotcha', 'build_ompt',
-                    'kokkos_build_config'):
+                    'kokkos_build_config', 'use_arch'):
             args.append('-DTIMEMORY_{}={}'.format(
                 dep.upper(), 'ON' if '+{}'.format(dep) in spec else 'OFF'))
 
