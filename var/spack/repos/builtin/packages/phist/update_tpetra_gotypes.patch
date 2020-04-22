@@ -1,0 +1,35 @@
+commit 8df8ad0e56e3bbd3d0c133fcdb7d2af6ab4dd229
+Author: Jonas Thies <Jonas.Thies@DLR.de>
+Date:   Tue Apr 21 18:24:53 2020 +0200
+
+    tpetra: use 'int' and 'long long' as gidx type for 32 and 64-bit compilations, respectively
+    because Trilinos allows to instantiate those variants (before I had 'int'/'ptrdiff_t')
+
+diff --git a/src/kernels/tpetra/phist_typedefs.h b/src/kernels/tpetra/phist_typedefs.h
+index 1f6b6c6c..3a351c27 100644
+--- a/src/kernels/tpetra/phist_typedefs.h
++++ b/src/kernels/tpetra/phist_typedefs.h
+@@ -34,19 +34,18 @@
+ using phist_s_complex = std::complex<float>;
+ //! double precision complex type
+ using phist_d_complex = std::complex<double>;
+-//! type of global indices
+-using phist_gidx = std::ptrdiff_t;
+ #else
+ typedef float complex phist_s_complex;
+ typedef double complex phist_d_complex;
++#endif
++
+ //! type of global indices
+ #ifdef PHIST_FORCE_32BIT_GIDX
+ typedef int phist_gidx;
+ #define PRgidx "d"
+ #else
+-typedef ptrdiff_t phist_gidx;
+-#define PRgidx "ld"
+-#endif
++typedef long long phist_gidx;
++#define PRgidx "lld"
+ #endif
+ 
+ // we want ptrdiff_t (aka long long int on 64 bit systems) as local index,
