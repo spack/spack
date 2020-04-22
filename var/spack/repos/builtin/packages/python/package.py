@@ -257,7 +257,12 @@ class Python(AutotoolsPackage):
             # fails to build _scproxy
             # https://bugs.python.org/issue26317#msg342055
             # https://github.com/spack/spack/issues/2230
-            config_args.append('--disable-framework')
+            frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+            if os.path.exists(frameworkprefix):
+                config_args.append('--with-framework={0}'
+                                   .format(frameworkprefix))
+            else:
+                config_args.append('--disable-framework')
 
         if spec.satisfies('%intel', strict=True) and \
                 spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
