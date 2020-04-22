@@ -52,7 +52,6 @@ class PyTorch(PythonPackage, CudaPackage):
     version('master', branch='master', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
-    # see https://github.com/pytorch/pytorch/issues/35149
     version('1.4.0', tag='v1.4.0', submodules=True,
             submodules_delete=['third_party/fbgemm'])
     version('1.3.1', tag='v1.3.1', submodules=True)
@@ -104,8 +103,11 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+redis', when='@:1.0')
     conflicts('+zstd', when='@:1.0')
     conflicts('+tbb', when='@:1.1')
-    # see https://github.com/pytorch/pytorch/issues/35149
+    # https://github.com/pytorch/pytorch/issues/35149
     conflicts('+fbgemm', when='@1.4.0')
+    # https://github.com/pytorch/pytorch/issues/35478
+    conflicts('%clang@11.0.3-apple',
+              msg='Apple Clang 11.0.3 segfaults at build-time')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
