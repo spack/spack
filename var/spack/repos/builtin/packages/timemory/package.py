@@ -124,51 +124,51 @@ class Timemory(CMakePackage):
         ]
 
         cxxstd = spec.variants['cxxstd'].value
-        args.append('-DCMAKE_CXX_STANDARD={}'.format(cxxstd))
+        args.append('-DCMAKE_CXX_STANDARD={0}'.format(cxxstd))
 
         tls = spec.variants['tls_model'].value
-        args.append('-DTIMEMORY_TLS_MODEL={}'.format(tls))
+        args.append('-DTIMEMORY_TLS_MODEL={0}'.format(tls))
 
         if '+python' in spec:
-            args.append('-DPYTHON_EXECUTABLE={}'.format(spec['python'].command.path))
+            args.append('-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path))
 
         if '+mpi' in spec:
             args.append('-DTIMEMORY_USE_MPI_LINK_FLAGS=OFF')
-            args.append('-DMPI_C_COMPILER={}'.format(spec['mpi'].mpicc))
-            args.append('-DMPI_CXX_COMPILER={}'.format(spec['mpi'].mpicxx))
+            args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
+            args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
 
         if '+cuda' in spec:
             targ = spec.variants['cuda_arch'].value
             key = '' if spec.satisfies('@:3.0.1') else 'TIMEMORY_'
             # newer versions use 'TIMEMORY_CUDA_ARCH'
-            args.append('-D{}CUDA_ARCH={}'.format(key, targ))
+            args.append('-D{0}CUDA_ARCH={1}'.format(key, targ))
 
         cpu_target = spec.variants['cpu_target'].value
         if cpu_target is not 'auto':
-            args.append('-DCpuArch_TARGET={}'.format(cpu_target))
+            args.append('-DCpuArch_TARGET={0}'.format(cpu_target))
 
         # spack options which translate to TIMEMORY_<OPTION>
         for dep in ('require_packages', 'build_caliper', 'build_gotcha', 'build_ompt',
                     'kokkos_build_config', 'use_arch'):
-            args.append('-DTIMEMORY_{}={}'.format(
-                dep.upper(), 'ON' if '+{}'.format(dep) in spec else 'OFF'))
+            args.append('-DTIMEMORY_{0}={1}'.format(
+                dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
         # spack options which translate to BUILD_<OPTION>_LIBS
         for dep in ('shared', 'static'):
-            args.append('-DBUILD_{}_LIBS={}'.format(
-                dep.upper(), 'ON' if '+{}'.format(dep) in spec else 'OFF'))
+            args.append('-DBUILD_{0}_LIBS={1}'.format(
+                dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
         # spack options which translate to TIMEMORY_BUILD_<OPTION>
         for dep in ('tools', 'examples', 'kokkos_tools', 'lto', 'extra_optimizations',
                     'mpip_library', 'ompt_library'):
-            args.append('-DTIMEMORY_BUILD_{}={}'.format(
-                dep.upper(), 'ON' if '+{}'.format(dep) in spec else 'OFF'))
+            args.append('-DTIMEMORY_BUILD_{0}={1}'.format(
+                dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
         # spack options which translate to TIMEMORY_USE_<OPTION>
         for dep in ('python', 'mpi', 'tau', 'papi', 'ompt', 'cuda', 'cupti', 'vtune',
                     'upcxx', 'gotcha', 'likwid', 'caliper', 'dyninst', 'gperftools',
                     'statistics'):
-            args.append('-DTIMEMORY_USE_{}={}'.format(
-                dep.upper(), 'ON' if '+{}'.format(dep) in spec else 'OFF'))
+            args.append('-DTIMEMORY_USE_{0}={1}'.format(
+                dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
         return args
