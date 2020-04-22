@@ -57,6 +57,14 @@ class Hwloc(AutotoolsPackage):
         default=False,
         description='Enable the Cairo back-end of hwloc\'s lstopo command'
     )
+    variant(
+        'netloc',
+        default=False,
+        description="Enable netloc [requires MPI]"
+    )
+
+    # netloc isn't available until version 2.0.0
+    conflicts('+netloc', when="@:1.99.99")
 
     depends_on('pkgconfig', type='build')
     depends_on('m4', type='build', when='@master')
@@ -71,6 +79,10 @@ class Hwloc(AutotoolsPackage):
     depends_on('cairo', when='+cairo')
     depends_on('numactl', when='@:1.11.11 platform=linux')
 
+    # When mpi=openmpi, this introduces an unresolvable dependency.
+    # See https://github.com/spack/spack/issues/15836 for details
+    depends_on('mpi', when='+netloc')
+
     def url_for_version(self, version):
         return "http://www.open-mpi.org/software/hwloc/v%s/downloads/hwloc-%s.tar.gz" % (version.up_to(2), version)
 
@@ -81,7 +93,7 @@ class Hwloc(AutotoolsPackage):
             # (Alternatively, we could require OpenCL as dependency.)
             "--disable-opencl",
         ]
-        if '@2.0.0:' in self.spec:
+        if '+netloc' in self.spec:
             args.append('--enable-netloc')
 
         args.extend(self.enable_or_disable('cairo'))
