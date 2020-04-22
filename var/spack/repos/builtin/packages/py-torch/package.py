@@ -109,7 +109,6 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('%clang@11.0.3-apple',
               msg='Apple Clang 11.0.3 segfaults at build-time')
 
-
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
