@@ -28,6 +28,7 @@ class Qt(Package):
     version('5.14.1', sha256='6f17f488f512b39c2feb57d83a5e0a13dcef32999bea2e2a8f832f54a29badb8')
     version('5.14.0', sha256='be9a77cd4e1f9d70b58621d0753be19ea498e6b0da0398753e5038426f76a8ba')
     version('5.13.1', sha256='adf00266dc38352a166a9739f1a24a1e36f1be9c04bf72e16e142a256436974e')
+    version('5.12.7', sha256='873783a0302129d98a8f63de9afe4520fb5f8d5316be8ad7b760c59875cd8a8d')
     version('5.12.5', sha256='a2299e21db7767caf98242767bffb18a2a88a42fee2d6a393bedd234f8c91298')
     version('5.12.2', sha256='59b8cb4e728450b21224dcaaa40eb25bafc5196b6988f2225c394c6b7f881ff5')
     version('5.11.3', sha256='859417642713cee2493ee3646a7fee782c9f1db39e41d7bb1322bba0c5f0ff4d')
@@ -48,6 +49,8 @@ class Qt(Package):
     version('4.8.5',  sha256='eb728f8268831dc4373be6403b7dd5d5dde03c169ad6882f9a8cb560df6aa138')
     version('3.3.8b', sha256='1b7a1ff62ec5a9cb7a388e2ba28fda6f960b27f27999482ebeceeadb72ac9f6e')
 
+    variant('debug',      default=False,
+            description="Build debug version.")
     variant('gtk',        default=False,
             description="Build with gtkplus.")
     variant('webkit',     default=False,
@@ -111,6 +114,8 @@ class Qt(Package):
     # https://github.com/spack/spack/issues/14400
     patch('qt5-11-intel-overflow.patch', when='@5.11 %intel')
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
+    # https://bugreports.qt.io/browse/QTBUG-78937
+    patch('qt5-12-configure.patch', when='@5.12')
 
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
@@ -140,7 +145,7 @@ class Qt(Package):
     depends_on("glib", when='@4:')
     depends_on("libpng", when='@4:')
     depends_on("dbus", when='@4:+dbus')
-    depends_on("gl@3.2:", when='@4:+opengl')
+    depends_on("gl", when='@4:+opengl')
 
     depends_on("harfbuzz", when='@5:')
     depends_on("double-conversion", when='@5.7:')
@@ -358,7 +363,7 @@ class Qt(Package):
             '-v',
             '-opensource',
             '-{0}opengl'.format('' if '+opengl' in self.spec else 'no-'),
-            '-release',
+            '-{0}'.format('debug' if '+debug' in self.spec else 'release'),
             '-confirm-license',
             '-optimized-qmake',
             '-no-pch',
