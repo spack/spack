@@ -20,3 +20,4 @@ class Libsm(AutotoolsPackage, XorgPackage):
     depends_on('xtrans', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('libuuid')
