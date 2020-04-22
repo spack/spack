@@ -133,6 +133,11 @@ def _get_external_packages(repo, system_path_to_exe=None):
     # name) to get repeatable results when there are conflicts.
     for pkg, exes in pkg_to_found_exes.items():
         for prefix, exes_in_prefix in _group_by_prefix(exes):
+            # TODO: multiple instances of a package can live in the same
+            # prefix, and a package implementation can return multiple specs
+            # for one prefix, but without additional details (e.g. about the
+            # naming scheme which differentiates them), the spec won't be
+            # usable.
             if hasattr(pkg, 'determine_spec_details'):
                 specs = _convert_to_iterable(
                     pkg.determine_spec_details(prefix, exes_in_prefix))
