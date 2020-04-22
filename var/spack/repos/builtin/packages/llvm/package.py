@@ -119,6 +119,8 @@ class Llvm(CMakePackage, CudaPackage):
         default=False,
         description="Build with OpenMP capable thread sanitizer",
     )
+    variant('code_signing', default=False,
+            description="Enable code-signing on macOS")
     variant("python", default=False, description="Install python bindings")
 
     extends("python", when="+python")
@@ -176,6 +178,20 @@ class Llvm(CMakePackage, CudaPackage):
     # MLIR exists in > 10.x
     conflicts("+mlir", when="@:9")
 
+    # code signing is only necessary on macOS",
+    conflicts('+code_signing', when='platform=linux')
+    conflicts('+code_signing', when='platform=bgq')
+    conflicts('+code_signing', when='platform=cray')
+
+    conflicts(
+        '+code_signing',
+        when='~lldb platform=darwin',
+        msg="code signing is only necessary for building the "
+            "in-tree debug server on macOS. Turning this variant "
+            "off enables a build of llvm with lldb that uses the "
+            "system debug server",
+    )
+
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
     # Backport from llvm master + additional fix
@@ -192,31 +208,31 @@ class Llvm(CMakePackage, CudaPackage):
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
 
-    @run_before("cmake")
-    def check_darwin_lldb_codesign_requirement(self):
-        if not self.spec.satisfies("+lldb platform=darwin"):
-            return
-        codesign = which("codesign")
-        mkdir("tmp")
-        llvm_check_file = join_path("tmp", "llvm_check")
-        copy("/usr/bin/false", llvm_check_file)
-
-        try:
-            codesign("-f", "-s", "lldb_codesign", "--dryrun", llvm_check_file)
-
-        except ProcessError:
-            # Newer LLVM versions have a simple script that sets up
-            # automatically
-            setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+    @run_before('cmake')
+    def codesign_check(self):
+        if self.spec.satisfies("+code_signing"):
+            codesign = which('codesign')
+            mkdir('tmp')
+            llvm_check_file = join_path('tmp', 'llvm_check')
+            copy('/usr/bin/false', llvm_check_file)
             try:
-                setup()
-            except Exception:
-                raise RuntimeError(
-                    'The "lldb_codesign" identity must be available to build '
-                    "LLVM with LLDB. See https://lldb.llvm.org/resources/"
-                    "build.html#code-signing-on-macos for details on how to "
-                    "create this identity."
-                )
+                codesign('-f', '-s', 'lldb_codesign', '--dryrun',
+                         llvm_check_file)
+
+            except ProcessError:
+                # Newer LLVM versions have a simple script that sets up
+                # automatically when run with sudo priviliges
+                setup = Executable("./lldb/scripts/macos-setup-codesign.sh")
+                try:
+                    setup()
+                except Exception:
+                    raise RuntimeError(
+                        'spack was unable to either find or set up'
+                        'code-signing on your system. Please refer to'
+                        'https://lldb.llvm.org/resources/build.html#'
+                        'code-signing-on-macos for details on how to'
+                        'create this identity.'
+                    )
 
     def setup_build_environment(self, env):
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
@@ -354,6 +370,9 @@ class Llvm(CMakePackage, CudaPackage):
                 "platform=linux"
             ):
                 cmake_args.append("-DCMAKE_BUILD_WITH_INSTALL_RPATH=1")
+
+        if self.spec.satisfies("~code_signing platform=darwin"):
+            cmake_args.append('-DLLDB_USE_SYSTEM_DEBUGSERVER=ON')
 
         # Semicolon seperated list of projects to enable
         cmake_args.append(
