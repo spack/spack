@@ -23,6 +23,3 @@ class Libcgroup(AutotoolsPackage):
     depends_on('bison',    type='build')
     depends_on('flex',     type='build')
     depends_on('linux-pam')
-
-    def setup_build_environment(self, env):
-        env.prepend_path('CPATH', self.spec['linux-pam'].prefix.include)
