@@ -1685,12 +1685,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         try:
             self._run_test_helper(
                 exe, options, expected, status, installed, purpose)
-            tty.msg("PASSED")
+            print("PASSED")
         except BaseException as e:
             # print a summary of the error to the log file
             # so that cdash and junit reporters know about it
             exc_type, _, tb = sys.exc_info()
-            print('Error: %s' % e)
+            print('FAILED: %s' % e)
             import traceback
             # remove the current call frame to get back to
             stack = traceback.extract_stack()[:-1]
