@@ -30,3 +30,7 @@ class Snakemake(PythonPackage):
     depends_on('py-ratelimiter', type='run')
     depends_on('py-requests', type='run')
     depends_on('py-wrapt', type='run')
+
+    depends_on('py-nbformat', type='run', when='@5.10.0:')
+    depends_on('py-psutil', type='run', when='@5.10.0:')
+    depends_on('py-toposort', type='run', when='@5.10.0:')
