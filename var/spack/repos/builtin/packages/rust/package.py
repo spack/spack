@@ -85,6 +85,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1')
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
     version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573')
     version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b')
@@ -124,6 +125,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.43.0': {
+            'x86_64-unknown-linux-gnu':      '069f34fa5cef92551724c83c36360df1ac66fe3942bc1d0e4d341ce79611a029',
+            'powerpc64le-unknown-linux-gnu': 'c75c7ae4c94715fd6cc43d1d6fdd0952bc151f7cbe3054f66d99a529d5bb996f',
+            'aarch64-unknown-linux-gnu':     'e5fa55f333c10cdae43d147438a80ffb435d6c7b9681cd2e2f0857c024556856',
+            'x86_64-apple-darwin':           '504e8efb2cbb36f5a3db7bb36f339a1e5216082c910ad19039c370505cfbde99'
+        },
         '1.42.0': {
             'x86_64-unknown-linux-gnu':      '7d1e07ad9c8a33d8d039def7c0a131c5917aa3ea0af3d0cc399c6faf7b789052',
             'powerpc64le-unknown-linux-gnu': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
