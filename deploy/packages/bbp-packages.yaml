@@ -50,7 +50,7 @@ packages:
     specs:
       - emsim
       - meshball
-      - regiodesics
+      - regiodesics@0.1.1
 
   gnu-stable-parallel:
     target_matrix:
