@@ -69,7 +69,7 @@ def test_test_output(install_mockery, mock_archive, mock_fetch,
     assert "BEFORE TEST" in output
     assert "true: expect command status in [" in output
     assert "AFTER TEST" in output
-    assert "rror" not in output  # no error
+    assert "FAILED" not in output
 
 
 def test_test_output_on_error(mock_packages, mock_archive, mock_fetch,
@@ -80,7 +80,7 @@ def test_test_output_on_error(mock_packages, mock_archive, mock_fetch,
         out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert "TestFailure" in out
-    assert "Error: Command exited with status 1" in out
+    assert "FAILED: Command exited with status 1" in out
 
 
 def test_test_output_on_failure(mock_packages, mock_archive, mock_fetch,
@@ -90,7 +90,6 @@ def test_test_output_on_failure(mock_packages, mock_archive, mock_fetch,
         out = spack_test('run', 'test-fail', fail_on_error=False)
 
     assert "Expected 'not in the output' in output of `true`" in out
-    assert "Error:" in out
     assert "TestFailure" in out
 
 
@@ -109,8 +108,8 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
     'mock_packages', 'mock_archive', 'mock_fetch', 'install_mockery'
 )
 @pytest.mark.parametrize('pkg_name,msgs', [
-    ('test-error', ['Error: Command exited', 'TestFailure']),
-    ('test-fail', ['Error: Expected', 'TestFailure'])
+    ('test-error', ['FAILED: Command exited', 'TestFailure']),
+    ('test-fail', ['FAILED: Expected', 'TestFailure'])
 ])
 def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
     install(pkg_name)
@@ -151,7 +150,7 @@ def test_cdash_output_test_error(
         report_file = report_dir.join('test-error_Test.xml')
         assert report_file in report_dir.listdir()
         content = report_file.open().read()
-        assert 'Error: Command exited with status 1' in content
+        assert 'FAILED: Command exited with status 1' in content
 
 
 def test_cdash_upload_clean_test(
