@@ -119,7 +119,6 @@ _error_matches = [
         "([^ :]+) ?: (error|fatal error|catastrophic error)",
         "([^:]+)\\(([^\\)]+)\\) ?: (error|fatal error|catastrophic error)"),
     "^FAILED",
-    "^==> \[\d\d\d\d-\d\d-\d\d-\d\d:\d\d:\d\d\.\d+, \d+\]\s*FAILED",
     "^[Bb]us [Ee]rror",
     "^[Ss]egmentation [Vv]iolation",
     "^[Ss]egmentation [Ff]ault",
