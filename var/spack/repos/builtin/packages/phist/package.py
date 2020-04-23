@@ -96,7 +96,7 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
-    patch('update_tpetra_gotypes.patch', when='@:1.9.0')
+    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
 
     # ###################### Dependencies ##########################
 
