@@ -18,4 +18,4 @@ class PySqlparse(PythonPackage):
     version('0.2.3', sha256='12470ab41df1a7003a2957a79c6da9cd4ded180c8a193aa112fe0899b935ef30')
 
     depends_on('py-setuptools',   type='build')
-    depends_on('python@2.7,3.4:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
