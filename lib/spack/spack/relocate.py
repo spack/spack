@@ -100,7 +100,7 @@ def _patchelf():
 def _elf_rpaths_for(path):
     """Return the RPATHs for an executable or a library.
 
-    The RPATHs are obtrained by ``patchelf --print-rpath PATH``.
+    The RPATHs are obtained by ``patchelf --print-rpath PATH``.
 
     Args:
         path (str): full path to the executable or library
@@ -123,23 +123,28 @@ def _elf_rpaths_for(path):
     return output.split(':') if output else []
 
 
-def _make_relative(start_path, path_root, paths):
+def _make_relative(reference_file, path_root, paths):
     """Return a list where any path in ``paths`` that starts with
-    ``path_root`` is made relative to ``dirname(start_path)``.
+    ``path_root`` is made relative to the directory in which the
+    reference file is stored.
 
     After a path is made relative it is prefixed with the ``$ORIGIN``
     string.
 
     Args:
-        start_path (str): path from which the starting directory
-            is extracted
+        reference_file (str): file from which the reference directory
+            is computed
         path_root (str): root of the relative paths
         paths: paths to be examined
 
     Returns:
         List of relative paths
     """
-    start_directory = os.path.dirname(start_path)
+    # Check prerequisites of the function
+    msg = "{0} is not a file".format(reference_file)
+    assert os.path.isfile(reference_file), msg
+
+    start_directory = os.path.dirname(reference_file)
     pattern = re.compile(path_root)
     relative_paths = []
 
@@ -155,10 +160,14 @@ def _make_relative(start_path, path_root, paths):
 
 def _normalize_relative_paths(start_path, relative_paths):
     """Normalize the relative paths with respect to the original path name
-    of the file.
+    of the file (``start_path``).
 
-    If a path starts with ``$ORIGIN`` replace ``$ORIGIN`` with the
-    directory name of ``start_path`` and then normalize the path.
+    The paths that are passed to this function existed or were relevant
+    on another filesystem, so os.path.abspath cannot be used.
+
+    A relative path may contain the signifier $ORIGIN. Assuming that
+    ``start_path`` is absolute, this implies that the relative path
+    (relative to start_path) should be replaced with an absolute path.
 
     Args:
         start_path (str): path from which the starting directory

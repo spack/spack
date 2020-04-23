@@ -181,9 +181,13 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
 
 
 @pytest.mark.parametrize('start_path,relative_paths,expected', [
+    # $ORIGIN will be replaced with os.path.dirname('usr/bin/test')
+    # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     ['/usr/lib', '/usr/lib64', '/opt/local/lib'])
+     ['/usr/lib', '/usr/lib64', '/opt/local/lib']),
+    # Relative path without $ORIGIN
+    ('/usr/bin/test', ['../local/lib'], ['../local/lib']),
 ])
 def test_normalize_relative_paths(start_path, relative_paths, expected):
     normalized = spack.relocate._normalize_relative_paths(
