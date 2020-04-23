@@ -92,5 +92,4 @@ class Ucx(AutotoolsPackage):
         else:
             config_args.append('--without-java')
 
-
         return config_args
