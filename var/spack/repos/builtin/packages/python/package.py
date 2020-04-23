@@ -67,9 +67,9 @@ class Python(AutotoolsPackage):
 
     extendable = True
 
-    # --enable-shared is known to cause problems for some users on macOS
+    # FYI --enable-shared was known to cause problems for some users on macOS
     # See http://bugs.python.org/issue29846
-    variant('shared', default=sys.platform != 'darwin',
+    variant('shared', default=True,
             description='Enable shared libraries')
     # From https://docs.python.org/2/c-api/unicode.html: Python's default
     # builds use a 16-bit type for Py_UNICODE and store Unicode values
@@ -645,7 +645,6 @@ class Python(AutotoolsPackage):
         # installed package, it may be in either lib or lib64, so we need
         # to ask Python where its LIBDIR is.
         libdir = self.get_config_var('LIBDIR')
-
         # The system Python installation on macOS and Homebrew installations
         # install libraries into a Frameworks directory
         frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
