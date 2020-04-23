@@ -9,11 +9,11 @@ from spack import *
 class PyBasalt(PythonPackage):
     """C++11 Graph Storage library with Python interface"""
 
-    homepage = "https://github.com/tristan0x/basalt"
-    url      = "git@github.com:tristan0x/basalt.git"
-    
+    homepage = "https://github.com/BlueBrain/basalt"
+    url      = "git@github.com:BlueBrain/basalt.git"
+
     version('develop', git=url, branch='master', submodules=True, get_full_repo=True)
-    version('0.2.8', git=url, tag='v0.2.8', submodules=True, get_full_repo=True)
+    version('0.2.9', git=url, tag='v0.2.9', submodules=True, get_full_repo=True)
     version('0.2.4', git=url, tag='v0.2.4', submodules=True, get_full_repo=True)
     version('0.1.1', git=url, tag='v0.1.1', submodules=True, get_full_repo=True)
 
@@ -32,7 +32,7 @@ class PyBasalt(PythonPackage):
     depends_on('py-sphinx', type='build')
     depends_on('py-sphinx-rtd-theme', type='build')
     depends_on('python@3:')
-    depends_on('rocksdb~static')
+    depends_on('rocksdb~static+snappy')
 
     def build_args(self, spec, prefix):
-        return ['test']
+        return ['test', '--no-doc-test']
