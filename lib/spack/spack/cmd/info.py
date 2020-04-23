@@ -114,10 +114,8 @@ class VariantFormatter(object):
                     '{0} [{1}]'.format(k, self.default(v)),
                     width=self.column_widths[0]
                 )
-                allowed = textwrap.wrap(
-                    v.allowed_values,
-                    width=self.column_widths[1]
-                )
+                allowed = v.allowed_values.replace('True, False', 'on, off')
+                allowed = textwrap.wrap(allowed, width=self.column_widths[1])
                 description = textwrap.wrap(
                     v.description,
                     width=self.column_widths[2]
