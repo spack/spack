@@ -20,11 +20,13 @@ class Steps(CMakePackage):
 
     variant("native", default=True, description="Generate non-portable arch-specific code")
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
+    variant("distmesh", default=False, description="Add solvers based on distributed mesh")
     variant("petsc", default=False, description="Use PETSc library for parallel E-Field solver")
     variant("mpi", default=True, description="Use MPI for parallel solvers")
     variant("coverage", default=False, description="Enable code coverage")
-    variant("bundle", default=True, description="Use bundled libraries")
+    variant("bundle", default=False, description="Use bundled libraries")
 
+    depends_on("boost")
     depends_on("blas")
     depends_on("lapack", when="+lapack")
     depends_on("lcov", when="+coverage", type="build")
@@ -38,23 +40,28 @@ class Steps(CMakePackage):
     depends_on("py-unittest2", type=("build", "test"))
     depends_on("python")
 
+    depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
+
+    conflicts("+distmesh~mpi",
+              msg="steps+distmesh requires +mpi")
 
     def cmake_args(self):
         args = []
         spec = self.spec
 
-        if "~bundle" in spec:
-            bundles = [
-                "EASYLOGGINGPP",
-                "RANDOM123",
-                "SUNDIALS",
-                "SUPERLU_DIST"
-            ]
-            for bundle in bundles:
-                args.append("-DUSE_BUNDLE_{0}:BOOL=OFF".format(bundle))
+        use_bundle = "ON" if "+bundle" in spec else "OFF"
+        bundles = [
+            "EASYLOGGINGPP",
+            "OMEGA_H",
+            "RANDOM123",
+            "SUNDIALS",
+            "SUPERLU_DIST"
+        ]
+        args.extend("-DUSE_BUNDLE_{0}:BOOL={1}".format(bundle, use_bundle)
+                    for bundle in bundles)
 
         if "+native" in spec:
             args.append("-DTARGET_NATIVE_ARCH:BOOL=True")
@@ -78,6 +85,11 @@ class Steps(CMakePackage):
 
         if "+coverage" in spec:
             args.append("-DENABLE_CODECOVERAGE:BOOL=True")
+
+        if "+distmesh" in spec:
+            args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=True")
+        else:
+            args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=False")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         args.append('-DPYTHON_EXECUTABLE='
