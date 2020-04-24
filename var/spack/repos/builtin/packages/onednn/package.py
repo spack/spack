@@ -30,6 +30,7 @@ class Onednn(CMakePackage):
     version('1.0.2',  sha256='9281715436adb7b9eef63fad419a581f397218824bc1271e557c134725c03916')
     version('1.0.1',  sha256='8fee2324267811204c1f877a1dea70b23ab3d5f4c3ea0198d81f0921aa70d76e')
     version('1.0',    sha256='7bfe11cac1d1f5dc1b60c1258e79d8cc84944d459e3758d50c1f7feba05bc6d7')
+    version('0.21.5', sha256='ebb146cadda1c14767251ded54219c8215daee84aa1ac773cf43b5c2ae53160b')
     version('0.21.4', sha256='00ace1ce08cab3408bc83e6b9d55ccba661761e044c03175d58caccedddf93b3')
     version('0.21.3', sha256='a0211aeb5e7dad50b97fa5dffc1a2fe2fe732572d4164e1ee8750a2ede43fbec')
     version('0.21.2', sha256='5897bfd0e321a761de0c57ba1dfe0ebc753cc0d8a18bda2056af48022706a297')
