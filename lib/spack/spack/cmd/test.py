@@ -38,6 +38,14 @@ def setup_parser(subparser):
     run_parser.add_argument('-n', '--name', help=name_help_msg)
 
     run_parser.add_argument(
+        '--fail-fast', action='store_true',
+        help="Stop tests for each package after the first failure."
+    )
+    run_parser.add_argument(
+        '--fail-first', action='store_true',
+        help="Stop after the first failed package."
+    )
+    run_parser.add_argument(
         '--keep-stage',
         action='store_true',
         help='Keep testing directory for debugging'
@@ -112,6 +120,10 @@ environment variables:
         parser.print_help()
         return
 
+    # set config option for fail-fast
+    if args.fail_fast:
+        spack.config.set('config:fail_fast', True, scope='command_line')
+
     # record test time; this will be default test name
     now = datetime.datetime.now()
     test_name = args.name or now.strftime('%Y-%m-%d_%H:%M:%S')
@@ -164,6 +176,8 @@ environment variables:
                 except BaseException:
                     with open(_get_results_file(test_name), 'a') as f:
                         f.write("%s FAILED\n" % spec.format("{name}-{version}-{hash:7}"))
+                    if args.fail_first:
+                        break
         else:
             raise NotImplementedError
 
