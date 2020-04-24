@@ -11,6 +11,7 @@ import os.path
 import shutil
 import stat
 import sys
+import re
 from subprocess import PIPE
 from subprocess import check_call
 
@@ -185,6 +186,8 @@ class AutotoolsPackage(PackageBase):
                     if line == 'pic_flag=""\n':
                         line = 'pic_flag="{0}"\n'\
                                .format(self.compiler.cc_pic_flag)
+                    if self.spec.satisfies('%fj') and 'fjhpctag.o' in line:
+                        line = re.sub(r'/\S*/fjhpctag.o', '', line)
                     sys.stdout.write(line)
 
     @property
