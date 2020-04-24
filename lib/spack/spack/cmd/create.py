@@ -54,10 +54,9 @@ from spack import *
 
 
 class {class_name}({base_class_name}):
-    """FIXME: Put a proper description of your package here."""
+    """{description}"""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+{homepage}
 {url_def}
 
     # FIXME: Add a list of GitHub accounts to
@@ -78,6 +77,13 @@ class BundlePackageTemplate(object):
     """
 
     base_class_name = 'BundlePackage'
+
+    description = "FIXME: Put a proper description of your package here."
+
+    homepage = """\
+    # FIXME: Add a proper url for your package's homepage here.
+    homepage = "https://www.example.com"\
+"""
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -100,6 +106,8 @@ class BundlePackageTemplate(object):
                 name=self.name,
                 class_name=self.class_name,
                 base_class_name=self.base_class_name,
+                description=self.description,
+                homepage=self.homepage,
                 url_def=self.url_def,
                 versions=self.versions,
                 dependencies=self.dependencies,
@@ -170,6 +178,69 @@ class CargoPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
     base_class_name = 'CargoPackage'
+
+
+class CratesIOPackageTemplate(PackageTemplate):
+    """Provides a template for a package from crates.io
+    
+    Different from CargoPackageTemplate because it pulls directly from 
+    crates.io rather than a generic source control or web release."""
+
+    base_class_name = 'CargoPackage'
+
+    url_line = """\
+    crates_io = "{name}"
+    git       = "{repo}"
+"""
+
+    body_def = ""
+
+    def __init__(self, name, url, versions):
+        crate_metadata = spack.util.web.get_crate_metadata(name)
+        crate = crate_metadata["crate"]
+
+        description = crate["description"]
+        repository = crate["repository"]
+        homepage = crate["homepage"]
+
+        if repository:
+            versions = """\
+    version('master', branch='master')
+{versions}
+""".format(versions=versions)
+
+        super(PackageTemplate, self).__init__(name, versions)
+
+        if description:
+            self.description = description
+
+        home = \
+            homepage if homepage else \
+                "https://crates.io/crates/{0}".format(crate["id"])
+
+        self.homepage = """\
+    homepage  = "{home}"\
+""".format(home=home)
+
+        # URLs may have a trailing slash
+        if repository:
+            repository = repository.strip('/')
+
+            # Add '.git' if it's missing
+            if not repository.endswith('.git'):
+                repository = repository + '.git'
+
+            git_line = """
+    git       = "{0}"
+    """.format(repository)
+        else:
+            git_line = ''
+
+        self.url_def = """\
+    crates_io = "{name}"{git_line}""".format(
+            name=name,
+            git_line=git_line
+        )
 
 
 class CMakePackageTemplate(PackageTemplate):
@@ -407,6 +478,7 @@ templates = {
     'autoreconf': AutoreconfPackageTemplate,
     'cargo':      CargoPackageTemplate,
     'cmake':      CMakePackageTemplate,
+    'crates_io':  CratesIOPackageTemplate,
     'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
     'scons':      SconsPackageTemplate,
@@ -473,6 +545,11 @@ class BuildSystemGuesser:
         # They all have the same base URL.
         if url is not None and 'downloads.sourceforge.net/octave/' in url:
             self.build_system = 'octave'
+            return
+
+        # crates.io and lib.rs serve up cargo packages
+        if url is not None and 'crates.io' in url or 'lib.rs' in url:
+            self.build_system = 'crates_io'
             return
 
         # A list of clues that give us an idea of the build system a package
@@ -623,12 +700,29 @@ def get_versions(args, name):
 
     if args.url is not None and args.template != 'bundle':
         # Find available versions
-        try:
-            url_dict = spack.util.web.find_versions_of_archive(args.url)
-        except UndetectableVersionError:
-            # Use fake versions
-            tty.warn("Couldn't detect version in: {0}".format(args.url))
-            return hashed_versions, guesser
+
+        # Check if the URL is a crates.io crate. Provide both crates.io and
+        # lib.rs support for flexibility
+        crates_io_prefix = 'https://crates.io/crates/'
+        lib_rs_prefix = 'https://lib.rs/crates/'
+
+        crate = None
+        if args.url.startswith(crates_io_prefix):
+            crate = args.url[len(crates_io_prefix):]
+        elif args.url.startswith(lib_rs_prefix):
+            crate = args.url[len(lib_rs_prefix):]
+
+        if crate is not None:
+            # For packages pulled from crates.io, all releases can be easily
+            # discovered
+            url_dict = spack.util.web.find_crate_versions(crate)
+        else:
+            try:
+                url_dict = spack.util.web.find_versions_of_archive(args.url)
+            except UndetectableVersionError:
+                # Use fake versions
+                tty.warn("Couldn't detect version in: {0}".format(args.url))
+                return hashed_versions, guesser
 
         if not url_dict:
             # If no versions were found, revert to what the user provided

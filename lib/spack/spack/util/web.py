@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import codecs
 import errno
+import json
 import re
 import os
 import os.path
@@ -18,6 +19,8 @@ import traceback
 from six.moves.urllib.request import urlopen, Request
 from six.moves.urllib.error import URLError
 import multiprocessing.pool
+
+from spack.util.executable import which
 
 try:
     # Python 2 had these in the HTMLParser package.
@@ -473,6 +476,35 @@ def spider(root, depth=0):
     root = url_util.parse(root)
     pages, links = _spider(root, set(), root, 0, depth, False)
     return pages, links
+
+
+def get_crate_metadata(crate_name):
+    """Retrieves the metadata of a crate from crates.io
+
+    Returns:
+        crate: a dictionary of crate metadata
+    """
+    curl = which('curl', required=True)
+    payload = curl(
+        '-L',
+        'https://crates.io/api/v1/crates/{crate}'.format(crate=crate_name),
+        output=str)
+    return json.loads(payload)
+
+
+def find_crate_versions(crate_name):
+    """Retrieves the versions of a crate from crates.io
+
+    Returns:
+        dict: a dictionary mapping versions to URLs
+    """
+    crate = get_crate_metadata(crate_name)
+
+    versions = {}
+    for v in crate["versions"]:
+        if not v["yanked"]:
+            versions[v["num"]] = "https://crates.io" + v["dl_path"]
+    return versions
 
 
 def find_versions_of_archive(archive_urls, list_url=None, list_depth=0):

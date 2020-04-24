@@ -2024,21 +2024,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 urls.append(args['url'])
         return urls
 
-    def _fetch_cargo_versions(self):
-        """Find versions of this package, assuming it comes from crates.io"""
-        curl = which('curl', required=True)
-        payload = curl(
-            '-L',
-            'https://crates.io/api/v1/crates/{crate}'.format(crate=self.crates_io),
-            output=str)
-        crate = json.loads(payload)
-
-        versions = {}
-        for v in crate["versions"]:
-            if not v["yanked"]:
-                versions[v["num"]] = "https://crates.io" + v["dl_path"]
-        return versions
-
     def fetch_remote_versions(self):
         """Find remote versions of this package.
 
@@ -2050,7 +2035,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         if hasattr(self, 'crates_io') and self.crates_io:
             # For packages pulled from crates.io, all releases can be easily
             # discovered
-            return self._fetch_cargo_versions()
+            return self.find_crate_versions(self.crates_io)
 
         if not self.all_urls:
             return {}
