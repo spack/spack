@@ -132,7 +132,9 @@ class Python(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('ncurses', when='+readline')
     depends_on('openssl', when='+ssl')
-    depends_on('openssl@:1.0.2z', when='@:2.8+ssl')
+    # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
+    # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
+    depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
     depends_on('sqlite@3.0.8:', when='+sqlite3')
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
@@ -166,11 +168,6 @@ class Python(AutotoolsPackage):
     # Fixes build with the Intel compilers
     # https://github.com/python/cpython/pull/16717
     patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
-
-    # Because Python uses compiler system paths during install, it's possible
-    # to pick up a system OpenSSL when trying to build '~ssl'. To avoid this
-    # scenario, we hard disable the 'ssl' module by applying a patch.
-    patch('nossl.patch', when='@:3.6.999~ssl')
 
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
@@ -222,6 +219,19 @@ class Python(AutotoolsPackage):
             ff.filter(
                 r'^SSL=(.*)$',
                 r'SSL={0}'.format(self.spec['openssl'].prefix)
+            )
+        # Because Python uses compiler system paths during install, it's possible
+        # to pick up a system OpenSSL when trying to build '~ssl'. To avoid this
+        # scenario, we hard disable the 'ssl' module by applying a patch.
+        elif self.spec.satisfies('@:3.6.999~ssl'):
+            ff = FileFilter('setup.py')
+            ff.filter(
+                r'^(\s+(ssl_((incs)|(libs)))\s+=\s+)(.*)$',
+                r'\1 None and \6'
+            )
+            ff.filter(
+                r'^(\s+(opensslv_h)\s+=\s+)(.*)$',
+                r'\1 None and \3'
             )
 
     def setup_build_environment(self, env):
