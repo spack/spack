@@ -16,9 +16,16 @@ class PyRtree(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('libspatialindex')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         lib = self.spec['libspatialindex'].prefix.lib
-        spack_env.set('SPATIALINDEX_LIBRARY',
-                      join_path(lib, 'libspatialindex.%s'   % dso_suffix))
-        spack_env.set('SPATIALINDEX_C_LIBRARY',
-                      join_path(lib, 'libspatialindex_c.%s' % dso_suffix))
+        env.set('SPATIALINDEX_LIBRARY',
+                join_path(lib, 'libspatialindex.%s'   % dso_suffix))
+        env.set('SPATIALINDEX_C_LIBRARY',
+                join_path(lib, 'libspatialindex_c.%s' % dso_suffix))
+
+    def setup_run_environment(self, env):
+        lib = self.spec['libspatialindex'].prefix.lib
+        env.set('SPATIALINDEX_LIBRARY',
+                join_path(lib, 'libspatialindex.%s'   % dso_suffix))
+        env.set('SPATIALINDEX_C_LIBRARY',
+                join_path(lib, 'libspatialindex_c.%s' % dso_suffix))
