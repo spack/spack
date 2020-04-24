@@ -1676,7 +1676,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         Args:
             exe (str): the name of the executable
             options (list of str): list of options to pass to the runner
-            expected (list of str): list of expected output strings
+            expected (list of str): list of expected output strings. Each
+                string is a regex expected to match part of the output.
             status (int, list of int, or None): possible passing status values
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
@@ -1759,9 +1760,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         for check in expected:
             cmd = ' '.join([exe] + options)
-            msg = "Expected '%s' in output of `%s`" % (check, cmd)
+            msg = "Expected '%s' to match output of `%s`" % (check, cmd)
             msg += '\n\nOutput: %s' % output
-            assert check in output, msg
+            assert re.search(check, output), msg
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.
