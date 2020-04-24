@@ -24,9 +24,15 @@ class Charliecloud(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
 
-    depends_on('python@3.5:',    type='run')
-    depends_on('py-lark-parser', type='run')
-    depends_on('py-requests',    type='run')
+    # Use legacy build system up to version 0.13
+    depends_on('skopeo',         type='run', when='@:0.13')
+    depends_on('umoci',          type='run', when='@:0.13')
+    depends_on('python+libxml2', type='run', when='@:0.13')
+
+    # Charliecloud@0.14 and up use python for building
+    depends_on('python@3.5:',    type='run', when='@0.14:')
+    depends_on('py-lark-parser', type='run', when='@0.14:')
+    depends_on('py-requests',    type='run', when='@0.14:')
 
     # man pages and html docs variant
     variant('docs', default=False, description='Build man pages and html docs')
