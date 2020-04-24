@@ -26,7 +26,6 @@ class PyChainer(PythonPackage):
     version('6.7.0', sha256='87cb3378a35e7c5c695028ec91d58dc062356bc91412384ea939d71374610389')
 
     depends_on('python@3.5.1:', when='@7:', type=('build', 'run'))
-    depends_on('python@:3.6', when='@6:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy@1.9:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', type=('build', 'run'))
