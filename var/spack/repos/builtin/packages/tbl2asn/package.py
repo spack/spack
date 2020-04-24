@@ -11,7 +11,6 @@ class Tbl2asn(Package):
        sequence records for submission to GenBank."""
 
     homepage = "https://www.ncbi.nlm.nih.gov/genbank/tbl2asn2/"
-    url      = "https://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz"
 
     version('20200301', sha256='7cc1119d3cfcbbffdbd4ecf33cef8bbdd44fc5625c72976bee08b1157625377e',
             expand=False)
