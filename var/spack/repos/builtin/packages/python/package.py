@@ -132,7 +132,7 @@ class Python(AutotoolsPackage):
     depends_on('readline', when='+readline')
     depends_on('ncurses', when='+readline')
     depends_on('openssl', when='+ssl')
-    depends_on('openssl@:1.0.2', when='@:2.8+ssl')
+    depends_on('openssl@:1.0.2z', when='@:2.8+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
     depends_on('sqlite@3.0.8:', when='+sqlite3')
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
@@ -167,6 +167,11 @@ class Python(AutotoolsPackage):
     # https://github.com/python/cpython/pull/16717
     patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
+    # Because Python uses compiler system paths during install, it's possible
+    # to pick up a system OpenSSL when trying to build '~ssl'. To avoid this
+    # scenario, we hard disable the 'ssl' module by applying a patch.
+    patch('nossl.patch', when='@:3.6.999~ssl')
+
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
     conflicts(
@@ -191,32 +196,33 @@ class Python(AutotoolsPackage):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
         return url.format(re.split('[a-z]', str(version))[0], version)
 
-    @when('@2.7:2.8,3.4:')
-    @run_before('build')
-    def patch_setup_py(self):
+    # TODO: Ideally, these patches would be applied as separate '@run_before'
+    # functions enabled via '@when', but these two decorators don't work
+    # when used together. See: https://github.com/spack/spack/issues/12736
+    def patch(self):
         # NOTE: Python's default installation procedure makes it possible for a
         # user's local configurations to change the Spack installation.  In
         # order to prevent this behavior for a full installation, we must
         # modify the installation script so that it ignores user files.
-        ff = FileFilter('Makefile.pre.in')
-        ff.filter(
-            r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
-            r'\1setup.py\2 --no-user-cfg \3\6'
-        )
+        if self.spec.satisfies('@2.7:2.8,3.4:'):
+            ff = FileFilter('Makefile.pre.in')
+            ff.filter(
+                r'^(.*)setup\.py(.*)((build)|(install))(.*)$',
+                r'\1setup.py\2 --no-user-cfg \3\6'
+            )
 
-    @when('@:3.6.999+ssl')
-    @run_before('build')
-    def patch_openssl(self):
         # NOTE: Older versions of Python do not support the '--with-openssl'
         # configuration option, so the installation's module setup file needs
         # to be modified directly in order to point to the correct SSL path.
-        ff = FileFilter(join_path('Modules', 'Setup.dist'))
-        ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
-        ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
-        ff.filter(
-            r'^SSL=(.*)$',
-            r'SSL={0}'.format(self.spec['openssl'].prefix)
-        )
+        # See: https://stackoverflow.com/a/5939170
+        if self.spec.satisfies('@:3.6.999+ssl'):
+            ff = FileFilter(join_path('Modules', 'Setup.dist'))
+            ff.filter(r'^#(((SSL=)|(_ssl))(.*))$', r'\1')
+            ff.filter(r'^#((.*)(\$\(SSL\))(.*))$', r'\1')
+            ff.filter(
+                r'^SSL=(.*)$',
+                r'SSL={0}'.format(self.spec['openssl'].prefix)
+            )
 
     def setup_build_environment(self, env):
         spec = self.spec

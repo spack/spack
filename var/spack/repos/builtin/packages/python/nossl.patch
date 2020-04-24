@@ -1,0 +1,33 @@
+diff --git a/setup.py b/setup.py
+index f764223..bf7d241 100644
+--- a/setup.py
++++ b/setup.py
+@@ -871,8 +871,7 @@ class PyBuildExt(build_ext):
+                                       '/usr/contrib/ssl/lib/'
+                                      ] )
+ 
+-        if (ssl_incs is not None and
+-            ssl_libs is not None):
++        if False:
+             exts.append( Extension('_ssl', ['_ssl.c'],
+                                    include_dirs = ssl_incs,
+                                    library_dirs = ssl_libs,
+@@ -905,8 +904,7 @@ class PyBuildExt(build_ext):
+ 
+         min_openssl_ver = 0x00907000
+         have_any_openssl = ssl_incs is not None and ssl_libs is not None
+-        have_usable_openssl = (have_any_openssl and
+-                               openssl_ver >= min_openssl_ver)
++        have_usable_openssl = False
+ 
+         if have_any_openssl:
+             if have_usable_openssl:
+@@ -931,7 +929,7 @@ class PyBuildExt(build_ext):
+                             depends = ['md5.h']) )
+ 
+         min_sha2_openssl_ver = 0x00908000
+-        if COMPILED_WITH_PYDEBUG or openssl_ver < min_sha2_openssl_ver:
++        if COMPILED_WITH_PYDEBUG or openssl_ver < min_sha2_openssl_ver or not have_usable_openssl:
+             # OpenSSL doesn't do these until 0.9.8 so we'll bring our own hash
+             exts.append( Extension('_sha256', ['sha256module.c']) )
+             exts.append( Extension('_sha512', ['sha512module.c']) )
