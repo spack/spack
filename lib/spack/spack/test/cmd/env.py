@@ -20,7 +20,7 @@ from spack.main import SpackCommand
 from spack.stage import stage_prefix
 
 from spack.spec_list import SpecListError
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.spack_json as sjson
 
 
@@ -733,10 +733,10 @@ def create_v1_lockfile_dict(roots, all_specs):
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
 
-    y = MockPackage('y', [], [])
-    x = MockPackage('x', [y], [build_only])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
+    mock_repo.add_package('x', [y], [build_only])
 
-    mock_repo = MockPackageMultiRepo([x, y])
     with spack.repo.swap(mock_repo):
         x = Spec('x')
         x.concretize()
@@ -765,9 +765,9 @@ def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    y = MockPackage('y', [], [])
+    mock_repo = MockPackageMultiRepo()
+    y = mock_repo.add_package('y', [], [])
 
-    mock_repo = MockPackageMultiRepo([y])
     with spack.repo.swap(mock_repo):
         y = Spec('y')
         y.concretize()
@@ -796,11 +796,10 @@ def test_indirect_build_dep():
     default = ('build', 'link')
     build_only = ('build',)
 
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [build_only])
-    x = MockPackage('x', [y], [default])
-
-    mock_repo = MockPackageMultiRepo([x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y], [default])
 
     def noop(*args):
         pass
@@ -838,11 +837,10 @@ def test_store_different_build_deps():
     default = ('build', 'link')
     build_only = ('build',)
 
-    z = MockPackage('z', [], [])
-    y = MockPackage('y', [z], [build_only])
-    x = MockPackage('x', [y, z], [default, build_only])
-
-    mock_repo = MockPackageMultiRepo([x, y, z])
+    mock_repo = MockPackageMultiRepo()
+    z = mock_repo.add_package('z', [], [])
+    y = mock_repo.add_package('y', [z], [build_only])
+    mock_repo.add_package('x', [y, z], [default, build_only])
 
     def noop(*args):
         pass
