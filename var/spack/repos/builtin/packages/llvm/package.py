@@ -289,6 +289,9 @@ class Llvm(CMakePackage, CudaPackage):
 
         if "~python" in spec and "+lldb" in spec:
             cmake_args.append("-DLLDB_DISABLE_PYTHON:Bool=TRUE")
+        if "+lldb" in spec and spec.satisfies("@10.0.0:"):
+            cmake_args.append("-DLLDB_ENABLE_PYTHON:Bool={0}".format(
+                'ON' if '+python' in spec else 'OFF'))
 
         if "+gold" in spec:
             cmake_args.append(
