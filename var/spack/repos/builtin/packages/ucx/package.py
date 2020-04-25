@@ -16,6 +16,7 @@ class Ucx(AutotoolsPackage):
     maintainers = ['hppritcha']
 
     # Current
+    version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
     version('1.7.0', sha256='6ab81ee187bfd554fe7e549da93a11bfac420df87d99ee61ffab7bb19bdd3371')
     version('1.6.1', sha256='1425648aa03f5fa40e4bc5c4a5a83fe0292e2fe44f6054352fbebbf6d8f342a1')
     version('1.6.0', sha256='360e885dd7f706a19b673035a3477397d100a02eb618371697c7f3ee4e143e2c')
@@ -43,11 +44,15 @@ class Ucx(AutotoolsPackage):
             description='Enable assertions')
     variant('parameter_checking', default=False,
             description='Enable paramter checking')
-    variant('pic', default=False,
+    variant('pic', default=True,
             description='Builds with PIC support')
+    variant('java', default=False,
+            description='Builds with Java bindings')
 
     depends_on('numactl')
     depends_on('rdma-core')
+    depends_on('java@8', when='+java')
+    depends_on('maven', when='+java')
 
     def configure_args(self):
         spec = self.spec
@@ -81,5 +86,10 @@ class Ucx(AutotoolsPackage):
             config_args.append('--with-pic')
         else:
             config_args.append('--without-pic')
+
+        if '+java' in spec:
+            config_args.append('--with-java=%s' % spec['java'].prefix)
+        else:
+            config_args.append('--without-java')
 
         return config_args
