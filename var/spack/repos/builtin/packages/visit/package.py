@@ -33,7 +33,8 @@ class Visit(CMakePackage):
     patch('parallel-hdf5.patch', when='+hdf5+mpi')
 
     depends_on('cmake@3.0:', type='build')
-    depends_on('vtk@8.1.0:+opengl2', when='@3.0:3.0.1')
+    # https://github.com/visit-dav/visit/issues/3498
+    depends_on('vtk@8.1.0:8.1.999+opengl2', when='@3.0:3.0.1')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
     depends_on('vtk+python', when='+python @3.0:')
     depends_on('vtk~mpi', when='~mpi')
@@ -42,7 +43,11 @@ class Visit(CMakePackage):
     depends_on('qt@5.10:', when='+gui @3.0:')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
-    depends_on('silo+shared', when='+silo')
+    # VisIt uses Silo's 'ghost zone' data structures, which are only available
+    # in v4.10+ releases: https://wci.llnl.gov/simulation/computer-codes/silo/releases/release-notes-4.10
+    depends_on('silo@4.10:+shared', when='+silo')
+    depends_on('silo~mpi', when='+silo~mpi')
+    depends_on('silo+mpi', when='+silo+mpi')
     depends_on('hdf5~mpi', when='+hdf5~mpi')
     depends_on('hdf5+mpi', when='+hdf5+mpi')
     depends_on('mpi', when='+mpi')
@@ -66,14 +71,23 @@ class Visit(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
+        cxx_flags = [self.compiler.cxx_pic_flag]
+        cc_flags = [self.compiler.cc_pic_flag]
+
+        # NOTE: This is necessary in order to allow VisIt to compile a couple
+        # of lines of code with 'const char*' to/from 'char*' conversions.
+        if spec.satisfies('@3:%gcc'):
+            cxx_flags.append('-fpermissive')
+            cc_flags.append('-fpermissive')
+
         args = [
             '-DVTK_MAJOR_VERSION=' + str(spec['vtk'].version[0]),
             '-DVTK_MINOR_VERSION=' + str(spec['vtk'].version[1]),
             '-DVISIT_VTK_DIR:PATH=' + spec['vtk'].prefix,
             '-DVISIT_ZLIB_DIR:PATH=' + spec['zlib'].prefix,
             '-DVISIT_USE_GLEW=OFF',
-            '-DCMAKE_CXX_FLAGS=' + self.compiler.cxx_pic_flag,
-            '-DCMAKE_C_FLAGS=' + self.compiler.cc_pic_flag,
+            '-DCMAKE_CXX_FLAGS=' + ' '.join(cxx_flags),
+            '-DCMAKE_C_FLAGS=' + ' '.join(cc_flags),
         ]
 
         if '+python' in spec:
