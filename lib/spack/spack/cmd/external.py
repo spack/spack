@@ -154,6 +154,12 @@ def _get_external_packages(repo, system_path_to_exe=None):
             for spec in specs:
                 pkg_prefix = _determine_base_dir(prefix)
 
+                if not pkg_prefix:
+                    tty.debug("{0} does not end with a 'bin/' directory: it"
+                              " cannot be added as a Spack package"
+                              .format(prefix))
+                    continue
+
                 if spec in resolved_specs:
                     prior_prefix = ', '.join(resolved_specs[spec])
 
