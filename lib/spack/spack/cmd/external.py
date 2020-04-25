@@ -12,6 +12,8 @@ import six
 import spack
 import llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
+import spack.util.environment
+import llnl.util.filesystem
 
 description = "add external packages to Spack configuration"
 section = "config"
@@ -39,8 +41,10 @@ def _get_system_executables():
     There may be multiple paths with the same basename. In this case it is
     assumed there are two different instances of the executable.
     """
-    path = os.getenv('PATH')
-    search_paths = list(p for p in path.split(os.pathsep) if os.path.isdir(p))
+    path_hints = spack.util.environment.get_path('PATH')
+    search_paths = llnl.util.filesystem.search_paths_for_executables(
+        *path_hints)
+
     path_to_exe = {}
     # Reverse order of search directories so that an exe in the first PATH
     # entry overrides later entries
