@@ -89,8 +89,6 @@ SPACK_DEBUG_LOG_DIR = 'SPACK_DEBUG_LOG_DIR'
 SPACK_CCACHE_BINARY = 'SPACK_CCACHE_BINARY'
 SPACK_SYSTEM_DIRS = 'SPACK_SYSTEM_DIRS'
 
-
-# Platform-specific library suffix.
 dso_suffix = 'dylib' if sys.platform == 'darwin' else 'so'
 
 
@@ -758,6 +756,54 @@ def modifications_from_dependencies(spec, context):
     return env
 
 
+def _setup_pkg_and_run(pkg, function, child_pipe, input_stream, dirty, fake):
+    # We are in the child process. Python sets sys.stdin to
+    # open(os.devnull) to prevent our process and its parent from
+    # simultaneously reading from the original stdin. But, we assume
+    # that the parent process is not going to read from it till we
+    # are done with the child, so we undo Python's precaution.
+    if input_stream is not None:
+        sys.stdin = input_stream
+
+    try:
+        if not fake:
+            setup_package(pkg, dirty=dirty)
+        return_value = function()
+        child_pipe.send(return_value)
+    except StopIteration as e:
+        # StopIteration is used to stop installations
+        # before the final stage, mainly for debug purposes
+        tty.msg(e)
+        child_pipe.send(None)
+
+    except BaseException:
+        # catch ANYTHING that goes wrong in the child process
+        exc_type, exc, tb = sys.exc_info()
+
+        # Need to unwind the traceback in the child because traceback
+        # objects can't be sent to the parent.
+        tb_string = traceback.format_exc()
+
+        # build up some context from the offending package so we can
+        # show that, too.
+        package_context = get_package_context(tb)
+
+        build_log = None
+        if hasattr(pkg, 'log_path'):
+            build_log = pkg.log_path
+
+        # make a pickleable exception to send to parent.
+        msg = "%s: %s" % (exc_type.__name__, str(exc))
+
+        ce = ChildError(msg,
+                        exc_type.__module__,
+                        exc_type.__name__,
+                        tb_string, build_log, package_context)
+        child_pipe.send(ce)
+
+    finally:
+        child_pipe.close()
+
 def fork(pkg, function, dirty, fake):
     """Fork a child process to do part of a spack build.
 
@@ -787,63 +833,16 @@ def fork(pkg, function, dirty, fake):
     expected to handle (or re-raise) the ChildError.
     """
 
-    def child_process(child_pipe, input_stream):
-        # We are in the child process. Python sets sys.stdin to
-        # open(os.devnull) to prevent our process and its parent from
-        # simultaneously reading from the original stdin. But, we assume
-        # that the parent process is not going to read from it till we
-        # are done with the child, so we undo Python's precaution.
-        if input_stream is not None:
-            sys.stdin = input_stream
-
-        try:
-            if not fake:
-                setup_package(pkg, dirty=dirty)
-            return_value = function()
-            child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
-
-        except BaseException:
-            # catch ANYTHING that goes wrong in the child process
-            exc_type, exc, tb = sys.exc_info()
-
-            # Need to unwind the traceback in the child because traceback
-            # objects can't be sent to the parent.
-            tb_string = traceback.format_exc()
-
-            # build up some context from the offending package so we can
-            # show that, too.
-            package_context = get_package_context(tb)
-
-            build_log = None
-            if hasattr(pkg, 'log_path'):
-                build_log = pkg.log_path
-
-            # make a pickleable exception to send to parent.
-            msg = "%s: %s" % (exc_type.__name__, str(exc))
-
-            ce = ChildError(msg,
-                            exc_type.__module__,
-                            exc_type.__name__,
-                            tb_string, build_log, package_context)
-            child_pipe.send(ce)
-
-        finally:
-            child_pipe.close()
-
     parent_pipe, child_pipe = multiprocessing.Pipe()
-    input_stream = None
+    input_fd = None
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
-            input_stream = os.fdopen(os.dup(sys.stdin.fileno()))
+            input_fd = os.dup(sys.stdin.fileno())
 
         p = multiprocessing.Process(
-            target=child_process, args=(child_pipe, input_stream))
+            target=_setup_pkg_and_run,
+            args=(pkg, function, kwargs, child_pipe, input_fd))
         p.start()
 
     except InstallError as e:
