@@ -16,7 +16,7 @@ class Shengbte(MakefilePackage):
 
     depends_on('mpi')
     depends_on('spglib')
-    depends_on('intel-mkl')
+    depends_on('mkl')
 
     parallel = False
 
