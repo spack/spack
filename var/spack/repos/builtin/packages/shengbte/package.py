@@ -32,11 +32,8 @@ class Shengbte(MakefilePackage):
         filter_file('export MPIFC=.*',
                     'export MPIFC=%s' % spec['mpi'].mpifc,
                     arch_make)
-        filter_file('LAPACK=.*', 'LAPACK={0}/libmkl_lapack95_lp64.a \
-                    -Wl,--start-group {0}/libmkl_intel_lp64.a \
-                    {0}/libmkl_sequential.a {0}/libmkl_core.a \
-                    -Wl,--end-group -lpthread -lm -ldl'
-                    .format(spec['mkl'].prefix.mkl.lib.intel64),
+        filter_file('LAPACK=.*', 
+                    'LAPACK=' + spec['mkl'].libs.ld_flags,
                     arch_make)
 
     def install(self, spec, prefix):
