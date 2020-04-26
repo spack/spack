@@ -74,6 +74,7 @@ class PyTorch(PythonPackage, CudaPackage):
     variant('mkldnn', default=True, description='Enables use of MKLDNN')
     variant('nnpack', default=False, description='Enables NNPACK build')
     variant('qnnpack', default=False, description='Enables QNNPACK build (quantized 8-bit operators)')
+    variant('xnnpack', default=False, description='Enables XNNPACK build')
     variant('distributed', default=False, description='Enables distributed (c10d, gloo, mpi, etc.) build')
     variant('nccl', default=True, description='Use Spack-installed NCCL')
     variant('caffe2', default=False, description='Enables Caffe2 operators build')
@@ -94,6 +95,7 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+miopen', when='@:0.4')
     conflicts('+mkldnn', when='@:0.3')
     conflicts('+qnnpack', when='@:0.4')
+    conflicts('+xnnpack', when='@:1.4')
     conflicts('+nccl', when='~cuda')
     conflicts('+opencv', when='@:0.4')
     conflicts('+ffmpeg', when='@:0.4')
@@ -149,6 +151,8 @@ class PyTorch(PythonPackage, CudaPackage):
     # TODO: add dependency: https://github.com/Maratyszcza/NNPACK
     # depends_on('nnpack', when='+nnpack')
     depends_on('qnnpack', when='+qnnpack')
+    # TODO: add dependency: https://github.com/google/XNNPACK
+    # depends_on('xnnpack', when='+xnnpack')
     depends_on('mpi', when='+distributed')
     depends_on('nccl', when='+nccl')
     depends_on('gloo', when='+gloo')
@@ -239,6 +243,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('nnpack')
         enable_or_disable('qnnpack')
+        enable_or_disable('xnnpack')
         enable_or_disable('distributed')
 
         enable_or_disable('nccl')
