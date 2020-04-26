@@ -30,5 +30,5 @@ class VotcaCsg(CMakePackage):
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "master"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")
-    depends_on("gromacs~mpi@5.1:")
+    depends_on("gromacs~mpi@5.1:2019.9999")
     depends_on("hdf5~mpi")
