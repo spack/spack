@@ -19,16 +19,22 @@ class Dd4hep(CMakePackage):
     git      = "https://github.com/AIDASoft/DD4hep.git"
 
     version('master', branch='master')
+
+    version('1.12.1', commit='77c60d3ff3573ddfe2da803bdd47f8616f9f5dd9')
+    version('1.12.0', commit='7840b0705af272493d5a6276cb254f7c0951d29b')
+    version('1.11.2', commit='b95823997380f0d6f023e05e5705acd27993e945')
+    version('1.11.1', commit='89b6d15bd7fb9afd8f2b6f601ec89bfe944fe8a5')
     version('1.11.0', commit='280c7d748d56a704699408ac8e57815d029b169a')
     version('1.10.0', commit='9835d1813c07d9d5850d1e68276c0171d1726801')
 
     # Workarounds for various TBB issues in DD4hep v1.11
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
-    patch('tbb-workarounds.patch', when='@1.11.0')
+    patch('tbb-workarounds.patch', when='@1.11')
 
-    variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
+    variant('assimp', default=False, description="Enable CAD interface based on Assimp")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
     variant('testing', default=False, description="Enable and build tests")
+    variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
 
     depends_on('cmake @3.12:', type='build')
     depends_on('boost @1.49:')
@@ -42,6 +48,7 @@ class Dd4hep(CMakePackage):
         cxxstd = spec['root'].variants['cxxstd'].value
         args = [
             "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
+            "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
             "-DBUILD_TESTING={0}".format(spec.satisfies('+testing')),
