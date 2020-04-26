@@ -64,12 +64,16 @@ class NetcdfFortran(AutotoolsPackage):
     def flag_handler(self, name, flags):
         config_flags = None
 
-        if name in ['cflags', 'fflags'] and '+pic' in self.spec:
+        if '+pic' in self.spec:
             # Unlike NetCDF-C, we add PIC flag only when +pic. Adding the
             # flags also when ~shared would make it impossible to build a
             # static-only version of the library with NAG.
-            config_flags = [self.compiler.pic_flag]
-        elif name == 'cppflags':
+            if name == 'cflags':
+                config_flags = [self.compiler.cc_pic_flag]
+            elif name == 'fflags':
+                config_flags = [self.compiler.f77_pic_flag]
+
+        if name == 'cppflags':
             config_flags = [self.spec['netcdf-c'].headers.cpp_flags]
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs

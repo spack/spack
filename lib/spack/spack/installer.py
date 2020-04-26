@@ -1466,6 +1466,12 @@ class PackageInstaller(object):
                 if lock is not None:
                     self._update_installed(task)
                     _print_installed_pkg(pkg.prefix)
+
+                    # It's an already installed compiler, add it to the config
+                    if task.compiler:
+                        spack.compilers.add_compilers_to_config(
+                            spack.compilers.find_compilers([pkg.spec.prefix]))
+
                 else:
                     # At this point we've failed to get a write or a read
                     # lock, which means another process has taken a write

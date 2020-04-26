@@ -26,7 +26,7 @@ class Python(AutotoolsPackage):
 
     homepage = "https://www.python.org/"
     url      = "https://www.python.org/ftp/python/3.8.0/Python-3.8.0.tgz"
-    list_url = "https://www.python.org/downloads/"
+    list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
     maintainers = ['adamjstewart']
@@ -34,7 +34,8 @@ class Python(AutotoolsPackage):
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-    version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114', preferred=True)
+    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a', preferred=True)
+    version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
     version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
     version('3.7.3',  sha256='d62e3015f2f89c970ac52343976b406694931742fbde2fed8d1ce8ebb4e1f8ff')
@@ -59,6 +60,8 @@ class Python(AutotoolsPackage):
     version('3.3.6',  sha256='0a58ad1f1def4ecc90b18b0c410a3a0e1a48cf7692c75d1f83d0af080e5d2034')
     version('3.2.6',  sha256='fc1e41296e29d476f696303acae293ae7a2310f0f9d0d637905e722a3f16163e')
     version('3.1.5',  sha256='d12dae6d06f52ef6bf1271db4d5b4d14b5dd39813e324314e72b648ef1bc0103')
+    version('2.7.18', sha256='da3080e3b488f648a3d7a4560ddee895284c3380b11d6de75edb986526b9a814')
+    version('2.7.17', sha256='f22059d09cdf9625e0a7284d24a13062044f5bf59d93a7f3382190dfa94cecde')
     version('2.7.16', sha256='01da813a3600876f03f46db11cc5c408175e99f03af2ba942ef324389a83bad5')
     version('2.7.15', sha256='18617d1f15a380a919d517630a9cd85ce17ea602f9bbdc58ddc672df4b0239db')
     version('2.7.14', sha256='304c9b202ea6fbd0a4a8e0ad3733715fbd4749f2204a9173a58ec53c32ea73e8')
@@ -163,6 +166,12 @@ class Python(AutotoolsPackage):
     # https://github.com/python/cpython/pull/16717
     patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
+    # CPython tries to build an Objective-C file with GCC's C frontend
+    # https://github.com/spack/spack/pull/16222
+    # https://github.com/python/cpython/pull/13306
+    conflicts('%gcc platform=darwin',
+              msg='CPython does not compile with GCC on macOS yet, use clang. '
+                  'See: https://github.com/python/cpython/pull/13306')
     # For more information refer to this bug report:
     # https://bugs.python.org/issue29712
     conflicts(
@@ -280,7 +289,7 @@ class Python(AutotoolsPackage):
             config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
-            config_args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
 
         if spec.satisfies('@3.7:'):
             if '+ssl' in spec:

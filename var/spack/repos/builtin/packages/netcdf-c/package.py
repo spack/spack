@@ -158,7 +158,7 @@ class NetcdfC(AutotoolsPackage):
         if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            cflags.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')

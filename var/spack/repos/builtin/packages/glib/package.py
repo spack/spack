@@ -159,6 +159,11 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('platform=darwin'):
+            # https://github.com/pybind/pybind11/issues/595
+            env.set('STRIP', 'strip -x')
+
     @when('@:2.57.99')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())

@@ -130,7 +130,7 @@ To activate an environment, use the following command:
 By default, the ``spack env activate`` will load the view associated
 with the Environment into the user environment. The ``-v,
 --with-view`` argument ensures this behavior, and the ``-V,
---without-vew`` argument activates the environment without changing
+--without-view`` argument activates the environment without changing
 the user environment variables.
 
 The ``-p`` option to the ``spack env activate`` command modifies the
@@ -281,7 +281,7 @@ in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
-be called using the ``spack -E`` flag to specify the environment.
+be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: console
 
@@ -292,7 +292,7 @@ or
 
 .. code-block:: console
 
-   $ spack -E myenv add python
+   $ spack -e myenv add python
 
 .. _environments_concretization:
 

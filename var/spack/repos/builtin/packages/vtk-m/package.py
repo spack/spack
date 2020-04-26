@@ -18,10 +18,13 @@ class VtkM(CMakePackage, CudaPackage):
     architectures."""
 
     homepage = "https://m.vtk.org/"
-    url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.0/vtk-m-v1.5.0.tar.gz"
+    maintainers = ['robertmaynard', 'kmorel', 'vicentebolea']
+
+    url      = "https://gitlab.kitware.com/vtk/vtk-m/-/archive/v1.5.1/vtk-m-v1.5.1.tar.gz"
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
+    version('1.5.1', sha256="64c19e66c0d579cfb21bb0df10d649b523b470b0c9a6c2ea5fd979dfeda2c25e")
     version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
     version('1.4.0', sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a")
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
@@ -44,7 +47,7 @@ class VtkM(CMakePackage, CudaPackage):
     variant("64bitids", default=False,
             description="enable 64 bits ids")
 
-    depends_on("cmake")
+    depends_on("cmake@3.12:", type="build")         # CMake >= 3.12
     depends_on("tbb", when="+tbb")
     depends_on("cuda", when="+cuda")
     depends_on("mpi", when="+mpi")
@@ -145,4 +148,8 @@ class VtkM(CMakePackage, CudaPackage):
                 print("64 bit ids enabled")
             else:
                 options.append("-DVTKm_USE_64BIT_IDS:BOOL=OFF")
+
+            if spec.variants["build_type"].value != 'Release':
+                options.append("-DVTKm_NO_ASSERT:BOOL=ON")
+
             return options

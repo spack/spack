@@ -92,7 +92,19 @@ class Intel(Compiler):
             return "-std=c1x"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
         return "-fPIC"
 
     @property
