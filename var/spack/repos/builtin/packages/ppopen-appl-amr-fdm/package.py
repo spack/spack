@@ -11,12 +11,7 @@ class PpopenApplAmrFdm(MakefilePackage):
     """
     ppOpen-APPL/AMR-FDM is an adaptive mesh refinement (AMR) framework
     for development of 3D parallel finite-difference method (FDM)
-    applications by the following capabilities:
-
-    - Cell-based adaptive mesh structure
-    - Dynamic domain decomposition (DDD) to avoid load imbalance problem
-    - Explicit time integration
-    - Flat MPI & OpenMP/MPI hybrid parallel programming models
+    applications.
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
