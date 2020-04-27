@@ -27,7 +27,7 @@ class Zstd(MakefilePackage):
 
     def setup_build_environment(self, env):
         if '+pic' in self.spec:
-            env.append_flags('CFLAGS', self.compiler.pic_flag)
+            env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
 
     def build(self, spec, prefix):
         make('PREFIX={0}'.format(prefix))

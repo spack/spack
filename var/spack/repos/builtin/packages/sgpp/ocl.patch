@@ -1,0 +1,13 @@
+diff --git a/datadriven/examplesOCL/multiEvalPerformance.cpp b/datadriven/examplesOCL/multiEvalPerformance.cpp
+index 60c281353..373e8509d 100644
+--- a/datadriven/examplesOCL/multiEvalPerformance.cpp
++++ b/datadriven/examplesOCL/multiEvalPerformance.cpp
+@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
+   std::string fileName = "debugging.arff";
+ 
+   sgpp::datadriven::ARFFTools arffTools;
+-  sgpp::datadriven::Dataset dataset = arffTools.readARFFFromeFile(fileName);
++  sgpp::datadriven::Dataset dataset = arffTools.readARFFFromFile(fileName);
+ 
+   // sgpp::base::DataVector *classes = dataset.getClasses();
+   sgpp::base::DataMatrix& trainingData = dataset.getData();

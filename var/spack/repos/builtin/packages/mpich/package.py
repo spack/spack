@@ -63,6 +63,9 @@ spack package at this time.''',
     )
     variant('pci', default=(sys.platform != 'darwin'),
             description="Support analyzing devices on PCI bus")
+    variant('libxml2', default=True,
+            description='Use libxml2 for XML support instead of the custom '
+                        'minimalistic implementation')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -86,6 +89,23 @@ spack package at this time.''',
           sha256='c7d4ecf865dccff5b764d9c66b6a470d11b0b1a5b4f7ad1ffa61079ad6b5dede',
           when='@3.3:3.3.0')
 
+    # This patch for Libtool 2.4.2 enables shared libraries for NAG and is
+    # applied by MPICH starting version 3.1.
+    patch('nag_libtool_2.4.2_0.patch', when='@:3.0%nag')
+
+    # This patch for Libtool 2.4.2 fixes the problem with '-pthread' flag and
+    # enables convenience libraries for NAG. Starting version 3.1, the order of
+    # checks for FC and F77 is changed, therefore we need to apply the patch in
+    # two steps (the patch files can be merged once the support for versions
+    # 3.1 and older is dropped).
+    patch('nag_libtool_2.4.2_1.patch', when='@:3.1.3%nag')
+    patch('nag_libtool_2.4.2_2.patch', when='@:3.1.3%nag')
+
+    # This patch for Libtool 2.4.6 does the same as the previous two. The
+    # problem is not fixed upstream yet and the upper version constraint is
+    # given just to avoid application of the patch to the develop version.
+    patch('nag_libtool_2.4.6.patch', when='@3.1.4:3.3%nag')
+
     depends_on('findutils', type='build')
     depends_on('pkgconfig', type='build')
 
@@ -96,8 +116,14 @@ spack package at this time.''',
 
     depends_on('ucx', when='netmod=ucx')
 
-    depends_on('libpciaccess', when="+pci")
-    depends_on('libxml2')
+    # The dependencies on libpciaccess and libxml2 come from the embedded
+    # hwloc, which, before version 3.3, was used only for Hydra.
+    depends_on('libpciaccess', when="@:3.2+hydra+pci")
+    depends_on('libxml2', when='@:3.2+hydra+libxml2')
+
+    # Starting with version 3.3, MPICH uses hwloc directly.
+    depends_on('libpciaccess', when="@3.3:+pci")
+    depends_on('libxml2', when='@3.3:+libxml2')
 
     # Starting with version 3.3, Hydra can use libslurm for nodelist parsing
     depends_on('slurm', when='+slurm')
@@ -118,6 +144,12 @@ spack package at this time.''',
     conflicts('netmod=tcp', when='device=ch4')
     conflicts('pmi=pmi2', when='device=ch3 netmod=ofi')
     conflicts('pmi=pmix', when='device=ch3')
+
+    # MPICH does not require libxml2 and libpciaccess for versions before 3.3
+    # when ~hydra is set: prevent users from setting +libxml2 and +pci in this
+    # case to avoid generating an identical MPICH installation.
+    conflicts('+pci', when='@:3.2~hydra')
+    conflicts('+libxml2', when='@:3.2~hydra')
 
     def setup_build_environment(self, env):
         env.unset('F90')
@@ -181,6 +213,7 @@ spack package at this time.''',
     def configure_args(self):
         spec = self.spec
         config_args = [
+            '--disable-silent-rules',
             '--enable-shared',
             '--with-pm={0}'.format('hydra' if '+hydra' in spec else 'no'),
             '--{0}-romio'.format('enable' if '+romio' in spec else 'disable'),
@@ -233,5 +266,12 @@ spack package at this time.''',
         if 'netmod=ucx' in spec:
             config_args.append('--with-ucx={0}'.format(
                 spec['ucx'].prefix))
+
+        # In other cases the argument is redundant.
+        if '@:3.2+hydra' in spec or '@3.3:' in spec:
+            # The root configure script passes the argument to the configure
+            # scripts of all instances of hwloc (there are three copies of it:
+            # for hydra, for hydra2, and for MPICH itself).
+            config_args += self.enable_or_disable('libxml2')
 
         return config_args

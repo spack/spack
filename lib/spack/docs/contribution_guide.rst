@@ -385,8 +385,8 @@ coverage. This helps us tell what percentage of lines of code in Spack are
 covered by unit tests. Although code covered by unit tests can still contain
 bugs, it is much less error prone than code that is not covered by unit tests.
 
-Codecov provides `browser extensions <https://github.com/codecov/browser-extension>`_
-for Google Chrome, Firefox, and Opera. These extensions integrate with GitHub
+Codecov provides `browser extensions <https://github.com/codecov/sourcegraph-codecov>`_
+for Google Chrome and Firefox. These extensions integrate with GitHub
 and allow you to see coverage line-by-line when viewing the Spack repository.
 If you are new to Spack, a great way to get started is to write unit tests to
 increase coverage!

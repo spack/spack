@@ -624,9 +624,9 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     assert os.path.isdir(directory_name), \
-        '"directory_name" must be a valid directory'
+        'Invalid directory: ' + directory_name
     assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path'
+        '"directory_name" must contain an absolute path: ' + directory_name
 
     directory_basename = os.path.basename(directory_name)
 

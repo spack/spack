@@ -22,6 +22,7 @@
 .coverage
 \#*
 .#*
+.cache
 lib/spack/spack/test/.cache
 /bin/spackc
 *.in.log
@@ -32,3 +33,7 @@ lib/spack/spack/test/.cache
 .project
 .cproject
 .pydevproject
+
+# VSCode files
+.vscode
+.devcontainer

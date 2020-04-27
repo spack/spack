@@ -21,6 +21,8 @@ class PySetuptools(PythonPackage):
         'easy_install'
     ]
 
+    version('46.1.3', sha256='795e0475ba6cd7fa082b1ee6e90d552209995627a2a227a47c6ea93282f4bfb1')
+    version('44.1.0', sha256='794a96b0c1dc6f182c36b72ab70d7e90f1d59f7a132e6919bb37b4fd4d424aca')
     version('41.4.0', sha256='7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d')
     version('41.0.1', sha256='a222d126f5471598053c9a77f4b5d4f26eaa1f150ad6e01dcf1a42e185d05613')
     version('41.0.0', sha256='79d30254b6fe7a8e672e43cd85f13a9f3f2a50080bc81d851143e2219ef0dcb1')
@@ -40,7 +42,9 @@ class PySetuptools(PythonPackage):
     version('16.0',   sha256='aa86255dee2c4a0056509750008007667c29306b7a6c13801468515b2c672845')
     version('11.3.1', sha256='bd25f17de4ecf00116a9f7368b614a54ca1612d7945d2eafe5d97bc08c138bc5')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'), when='@45.0.0:')
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44.0.0:44.99.99')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43.99.99')
 
     # Previously, setuptools vendored all of its dependencies to allow
     # easy bootstrapping. As of version 34.0.0, this is no longer done

@@ -18,6 +18,7 @@ class Ecflow(CMakePackage):
     homepage = 'https://confluence.ecmwf.int/display/ECFLOW/'
     url      = 'https://confluence.ecmwf.int/download/attachments/8650755/ecFlow-4.11.1-Source.tar.gz'
 
+    version('4.12.0', sha256='566b797e8d78e3eb93946b923ef540ac61f50d4a17c9203d263c4fd5c39ab1d1')
     version('4.11.1', sha256='b3bcc1255939f87b9ba18d802940e08c0cf6379ca6aeec1fef7bd169b0085d6c')
 
     variant('static_boost', default=False,

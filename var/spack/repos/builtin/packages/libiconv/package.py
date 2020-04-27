@@ -20,6 +20,7 @@ class Libiconv(AutotoolsPackage, GNUMirrorPackage):
     # We cannot set up a warning for gets(), since gets() is not part
     # of C11 any more and thus might not exist.
     patch('gets.patch', when='@1.14')
+    provides('iconv')
 
     conflicts('@1.14', when='%gcc@5:')
 

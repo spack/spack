@@ -477,6 +477,9 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: This is currently only used by package sanity tests.
     manual_download = False
 
+    #: Set of additional options used when fetching package versions.
+    fetch_options = {}
+
     #
     # Set default licensing information
     #
@@ -602,11 +605,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         """
         deptype = spack.dependency.canonical_deptype(deptype)
 
-        if visited is None:
-            visited = {cls.name: set()}
+        visited = {} if visited is None else visited
+        missing = {} if missing is None else missing
 
-        if missing is None:
-            missing = {cls.name: set()}
+        visited.setdefault(cls.name, set())
 
         for name, conditions in cls.dependencies.items():
             # check whether this dependency could be of the type asked for
@@ -621,6 +623,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                     providers = spack.repo.path.providers_for(name)
                     dep_names = [spec.name for spec in providers]
                 else:
+                    visited.setdefault(cls.name, set()).add(name)
                     visited.setdefault(name, set())
                     continue
             else:
@@ -763,7 +766,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # If no specific URL, use the default, class-level URL
         url = getattr(self, 'url', None)
         urls = getattr(self, 'urls', [None])
-        default_url = url or urls.pop(0)
+        default_url = url or urls[0]
 
         # if no exact match AND no class-level default, use the nearest URL
         if not default_url:
@@ -1031,6 +1034,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             any(self.spec.satisfies(c) for c in constraints)
             for s, constraints in self.provided.items() if s.name == vpkg_name
         )
+
+    @property
+    def virtuals_provided(self):
+        """
+        virtual packages provided by this package with its spec
+        """
+        return [vspec for vspec, constraints in self.provided.items()
+                if any(self.spec.satisfies(c) for c in constraints)]
 
     @property
     def installed(self):
@@ -2151,26 +2162,27 @@ def possible_dependencies(*pkg_or_spec, **kwargs):
 
     See ``PackageBase.possible_dependencies`` for details.
     """
-    transitive = kwargs.get('transitive', True)
-    expand_virtuals = kwargs.get('expand_virtuals', True)
-    deptype = kwargs.get('deptype', 'all')
-    missing = kwargs.get('missing')
-
     packages = []
     for pos in pkg_or_spec:
         if isinstance(pos, PackageMeta):
-            pkg = pos
-        elif isinstance(pos, spack.spec.Spec):
-            pkg = pos.package
-        else:
-            pkg = spack.spec.Spec(pos).package
+            packages.append(pos)
+            continue
 
-        packages.append(pkg)
+        if not isinstance(pos, spack.spec.Spec):
+            pos = spack.spec.Spec(pos)
+
+        if spack.repo.path.is_virtual(pos.name):
+            packages.extend(
+                p.package_class
+                for p in spack.repo.path.providers_for(pos.name)
+            )
+            continue
+        else:
+            packages.append(pos.package_class)
 
     visited = {}
     for pkg in packages:
-        pkg.possible_dependencies(
-            transitive, expand_virtuals, deptype, visited, missing)
+        pkg.possible_dependencies(visited=visited, **kwargs)
 
     return visited
 

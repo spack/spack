@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Xtrap(AutotoolsPackage):
+class Xtrap(AutotoolsPackage, XorgPackage):
     """XTrap sample clients."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xtrap"
-    url      = "https://www.x.org/archive/individual/app/xtrap-1.0.2.tar.gz"
+    xorg_mirror_path = "app/xtrap-1.0.2.tar.gz"
 
     version('1.0.2', sha256='e8916e05bfb0d72a088aaaac0feaf4ad7671d0f509d1037fb3c0c9ea131b93d2')
 

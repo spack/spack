@@ -16,3 +16,8 @@ class Cpio(AutotoolsPackage, GNUMirrorPackage):
     version('2.13', sha256='e87470d9c984317f658567c03bfefb6b0c829ff17dbf6b0de48d71a4c8f3db88')
 
     build_directory = 'spack-build'
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%intel') and name == 'cflags':
+            flags.append('-no-gcc')
+        return (flags, None, None)
