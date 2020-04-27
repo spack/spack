@@ -61,12 +61,11 @@ class Podio(CMakePackage):
         # podio releases are dashes and padded with a leading zero
         # the patch version is omitted when 0
         # so for example v01-12-01, v01-12 ...
-        major=(str(version[0]).zfill(2))
-        minor=(str(version[1]).zfill(2))
-        patch=(str(version[2]).zfill(2))
-        if(version[2] == 0): 
+        major = (str(version[0]).zfill(2))
+        minor = (str(version[1]).zfill(2))
+        patch = (str(version[2]).zfill(2))
+        if version[2] == 0:
             url = "https://github.com/AIDASoft/podio/archive/v%s-%s.tar.gz" % (major, minor)
         else:
             url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
-        return url 
-
+        return url
