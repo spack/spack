@@ -26,14 +26,12 @@ class Shengbte(MakefilePackage):
         arch_make = join_path(self.build_directory, 'arch.make')
         copy('arch.make.example', arch_make)
         filter_file('export FFLAGS=.*', 'export FFLAGS=-debug -O2', arch_make)
-        filter_file('export LDFLAGS=.*',
-                    'export LDFLAGS=-L%s -lsymspg' % spec['spglib'].prefix.lib,
+        filter_file('export LDFLAGS=.*', 'export LDFLAGS=' + spec['spglib'].
+                    libs.ld_flags, arch_make)
+
+        filter_file('export MPIFC=.*', 'export MPIFC=%s' % spec['mpi'].mpifc,
                     arch_make)
-        filter_file('export MPIFC=.*',
-                    'export MPIFC=%s' % spec['mpi'].mpifc,
-                    arch_make)
-        filter_file('LAPACK=.*', 
-                    'LAPACK=' + spec['mkl'].libs.ld_flags,
+        filter_file('LAPACK=.*', 'LAPACK=' + spec['mkl'].libs.ld_flags,
                     arch_make)
 
     def install(self, spec, prefix):
