@@ -17,7 +17,10 @@ class Singularity(MakefilePackage):
        which has a different install base (Autotools).
 
        Needs post-install chmod/chown steps to enable full functionality.
-       See package definition or `spack-build-out.txt` build log for details.
+       See package definition or `spack-build-out.txt` build log for details,
+       e.g.
+
+       tail -15 $(spack location -i singularity)/.spack/spack-build-out.txt
     '''
 
     homepage = "https://www.sylabs.io/singularity/"
