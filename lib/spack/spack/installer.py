@@ -799,12 +799,15 @@ class PackageInstaller(object):
                     .format(self.pkg.stop_before_phase, self.pkg.name))
 
         self.pkg.last_phase = kwargs.pop('stop_at', None)
-        if self.pkg.last_phase == self.pkg.phases[-1]:
-            self.pkg.last_phase = None
         if self.pkg.last_phase is not None and \
                 self.pkg.last_phase not in self.pkg.phases:
             tty.die('\'{0}\' is not an allowed phase for package {1}'
                     .format(self.pkg.last_phase, self.pkg.name))
+        # If we got a last_phase, make sure it's not already last
+        if self.pkg.last_phase and \
+                self.pkg.last_phase == self.pkg.phases[-1]:
+            self.pkg.last_phase = None
+
 
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
