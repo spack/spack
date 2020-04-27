@@ -57,4 +57,4 @@ class Xabclib(MakefilePackage):
 
     @property
     def libs(self):
-        return find_libraries('libOpenAT.a', self.prefix.lib, shared=False)
+        return find_libraries('libOpenAT', self.prefix.lib, shared=False)
