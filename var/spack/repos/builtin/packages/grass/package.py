@@ -58,7 +58,7 @@ class Grass(AutotoolsPackage):
     # http://htmlpreview.github.io/?https://github.com/OSGeo/grass/blob/master/REQUIREMENTS.html
     # General requirements
     depends_on('gmake@3.81:', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('zlib')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
@@ -254,5 +254,8 @@ class Grass(AutotoolsPackage):
     # hence invoke the following function afterwards
     @run_after('configure')
     def fix_iconv_linking(self):
+        if self.spec['iconv'].name != 'libiconv':
+            return
+
         makefile = FileFilter('include/Make/Platform.make')
         makefile.filter(r'^ICONVLIB\s*=.*', 'ICONVLIB = -liconv')

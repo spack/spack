@@ -92,6 +92,7 @@ class Bazel(Package):
     # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
     depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
+    depends_on('zip', type=('build', 'run'))
 
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
@@ -128,7 +129,17 @@ class Bazel(Package):
     def setup_build_environment(self, env):
         env.set('EXTRA_BAZEL_ARGS',
                 # Spack's logs don't handle colored output well
-                '--color=no --host_javabase=@local_jdk//:jdk')
+                '--color=no --host_javabase=@local_jdk//:jdk'
+                # Enable verbose output for failures
+                ' --verbose_failures'
+                # Ask bazel to explain what it's up to
+                # Needs a filename as argument
+                ' --explain=explainlogfile.txt'
+                # Increase verbosity of explanation,
+                ' --verbose_explanations'
+                # Show (formatted) subcommands being executed
+                ' --subcommands=pretty_print'
+                ' --jobs={0}'.format(make_jobs))
 
     def bootstrap(self, spec, prefix):
         bash = which('bash')

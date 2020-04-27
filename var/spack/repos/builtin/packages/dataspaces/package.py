@@ -56,7 +56,7 @@ class Dataspaces(AutotoolsPackage):
         args = []
         cookie = self.spec.variants['gni-cookie'].value
         ptag = self.spec.variants['ptag'].value
-        args.append('CFLAGS={0}'.format(self.compiler.pic_flag))
+        args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
         if self.spec.satisfies('+dimes'):
             args.append('--enable-dimes')
         if self.spec.satisfies('+cray-drc'):

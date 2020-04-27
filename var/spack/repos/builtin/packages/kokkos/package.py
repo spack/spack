@@ -142,6 +142,9 @@ class Kokkos(Package):
     depends_on('qthreads', when='+qthreads')
     depends_on('cuda', when='+cuda')
 
+    # generate_makefile.bash calls cmake
+    depends_on('cmake@3.10:', type='build')
+
     def install(self, spec, prefix):
         generate = which(join_path(self.stage.source_path,
                                    'generate_makefile.bash'))

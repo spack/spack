@@ -8,10 +8,11 @@ This test checks the binary packaging infrastructure
 """
 import os
 import stat
-import sys
 import shutil
 import pytest
 import argparse
+import re
+import platform
 
 from llnl.util.filesystem import mkdirp
 
@@ -19,16 +20,17 @@ import spack.repo
 import spack.store
 import spack.binary_distribution as bindist
 import spack.cmd.buildcache as buildcache
-import spack.util.gpg
 from spack.spec import Spec
 from spack.paths import mock_gpg_keys_path
 from spack.fetch_strategy import URLFetchStrategy, FetchStrategyComposite
 from spack.relocate import needs_binary_relocation, needs_text_relocation
-from spack.relocate import strings_contains_installroot
-from spack.relocate import get_patchelf, relocate_text, relocate_links
-from spack.relocate import substitute_rpath, get_relative_rpaths
-from spack.relocate import macho_replace_paths, macho_make_paths_relative
-from spack.relocate import modify_macho_object, macho_get_paths
+from spack.relocate import relocate_text, relocate_links
+from spack.relocate import get_relative_elf_rpaths
+from spack.relocate import get_normalized_elf_rpaths
+from spack.relocate import macho_make_paths_relative
+from spack.relocate import macho_make_paths_normal
+from spack.relocate import set_placeholder, macho_find_paths
+from spack.relocate import file_is_relocatable
 
 
 def has_gpg():
@@ -50,9 +52,9 @@ def fake_fetchify(url, pkg):
 @pytest.mark.usefixtures('install_mockery', 'mock_gnupghome')
 def test_buildcache(mock_archive, tmpdir):
     # tweak patchelf to only do a download
-    spec = Spec("patchelf")
-    spec.concretize()
-    pkg = spack.repo.get(spec)
+    pspec = Spec("patchelf")
+    pspec.concretize()
+    pkg = spack.repo.get(pspec)
     fake_fetchify(pkg.fetcher, pkg)
     mkdirp(os.path.join(pkg.prefix, "bin"))
     patchelfscr = os.path.join(pkg.prefix, "bin", "patchelf")
@@ -71,7 +73,7 @@ echo $PATH"""
     pkg = spec.package
     fake_fetchify(mock_archive.url, pkg)
     pkg.do_install()
-    pkghash = '/' + spec.dag_hash(7)
+    pkghash = '/' + str(spec.dag_hash(7))
 
     # Put some non-relocatable file in there
     filename = os.path.join(spec.prefix, "dummy.txt")
@@ -99,87 +101,68 @@ echo $PATH"""
     parser = argparse.ArgumentParser()
     buildcache.setup_parser(parser)
 
+    create_args = ['create', '-a', '-f', '-d', mirror_path, pkghash]
     # Create a private key to sign package with if gpg2 available
     if spack.util.gpg.Gpg.gpg():
         spack.util.gpg.Gpg.create(name='test key 1', expires='0',
                                   email='spack@googlegroups.com',
                                   comment='Spack test key')
-        # Create build cache with signing
-        args = parser.parse_args(['create', '-d', mirror_path, str(spec)])
-        buildcache.buildcache(parser, args)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-        files = os.listdir(spec.prefix)
-
-        # create build cache with relative path and signing
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', str(spec)])
-        buildcache.buildcache(parser, args)
-
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # install build cache with verification
-        args = parser.parse_args(['install', str(spec)])
-        buildcache.install_tarball(spec, args)
-
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
     else:
-        # create build cache without signing
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-u', str(spec)])
-        buildcache.buildcache(parser, args)
+        create_args.insert(create_args.index('-a'), '-u')
 
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
+    args = parser.parse_args(create_args)
+    buildcache.buildcache(parser, args)
+    # trigger overwrite warning
+    buildcache.buildcache(parser, args)
 
-        # install build cache without verification
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
+    # Uninstall the package
+    pkg.do_uninstall(force=True)
 
-        files = os.listdir(spec.prefix)
-        assert 'link_to_dummy.txt' in files
-        assert 'dummy.txt' in files
-        # test overwrite install without verification
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+    install_args = ['install', '-a', '-f', pkghash]
+    if not spack.util.gpg.Gpg.gpg():
+        install_args.insert(install_args.index('-a'), '-u')
+    args = parser.parse_args(install_args)
+    # Test install
+    buildcache.buildcache(parser, args)
 
-        # create build cache with relative path
-        args = parser.parse_args(
-            ['create', '-d', mirror_path, '-f', '-r', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
+    files = os.listdir(spec.prefix)
 
-        # Uninstall the package
-        pkg.do_uninstall(force=True)
-
-        # install build cache
-        args = parser.parse_args(['install', '-u', str(spec)])
-        buildcache.install_tarball(spec, args)
-
-        # test overwrite install
-        args = parser.parse_args(['install', '-f', '-u', str(pkghash)])
-        buildcache.buildcache(parser, args)
-
-        files = os.listdir(spec.prefix)
-        assert 'link_to_dummy.txt' in files
-        assert 'dummy.txt' in files
-        assert os.path.realpath(
-            os.path.join(spec.prefix, 'link_to_dummy.txt')
-        ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+    assert 'link_to_dummy.txt' in files
+    assert 'dummy.txt' in files
 
     # Validate the relocation information
     buildinfo = bindist.read_buildinfo_file(spec.prefix)
     assert(buildinfo['relocate_textfiles'] == ['dummy.txt'])
     assert(buildinfo['relocate_links'] == ['link_to_dummy.txt'])
+
+    # create build cache with relative path
+    create_args.insert(create_args.index('-a'), '-f')
+    create_args.insert(create_args.index('-a'), '-r')
+    args = parser.parse_args(create_args)
+    buildcache.buildcache(parser, args)
+
+    # Uninstall the package
+    pkg.do_uninstall(force=True)
+
+    if not spack.util.gpg.Gpg.gpg():
+        install_args.insert(install_args.index('-a'), '-u')
+    args = parser.parse_args(install_args)
+    buildcache.buildcache(parser, args)
+
+    # test overwrite install
+    install_args.insert(install_args.index('-a'), '-f')
+    args = parser.parse_args(install_args)
+    buildcache.buildcache(parser, args)
+
+    files = os.listdir(spec.prefix)
+    assert 'link_to_dummy.txt' in files
+    assert 'dummy.txt' in files
+#    assert os.path.realpath(
+#        os.path.join(spec.prefix, 'link_to_dummy.txt')
+#    ) == os.path.realpath(os.path.join(spec.prefix, 'dummy.txt'))
+
+    args = parser.parse_args(['keys'])
+    buildcache.buildcache(parser, args)
 
     args = parser.parse_args(['list'])
     buildcache.buildcache(parser, args)
@@ -200,6 +183,9 @@ echo $PATH"""
     args = parser.parse_args(['keys', '-f'])
     buildcache.buildcache(parser, args)
 
+    args = parser.parse_args(['keys', '-i', '-t'])
+    buildcache.buildcache(parser, args)
+
     # unregister mirror with spack config
     mirrors = {}
     spack.config.set('mirrors', mirrors)
@@ -210,7 +196,10 @@ echo $PATH"""
     bindist._cached_specs = set()
 
 
+@pytest.mark.usefixtures('install_mockery')
 def test_relocate_text(tmpdir):
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
     with tmpdir.as_cwd():
         # Validate the text path replacement
         old_dir = '/home/spack/opt/spack'
@@ -220,24 +209,46 @@ def test_relocate_text(tmpdir):
             script.close()
         filenames = [filename]
         new_dir = '/opt/rh/devtoolset/'
-        relocate_text(filenames, oldpath=old_dir, newpath=new_dir,
-                      oldprefix=old_dir, newprefix=new_dir)
+        relocate_text(filenames, old_dir, new_dir,
+                      old_dir, new_dir,
+                      old_dir, new_dir,
+                      {old_dir: new_dir})
         with open(filename, "r")as script:
             for line in script:
                 assert(new_dir in line)
-        assert(strings_contains_installroot(filename, old_dir) is False)
+        assert(file_is_relocatable(os.path.realpath(filename)))
+    # Remove cached binary specs since we deleted the mirror
+    bindist._cached_specs = set()
 
 
 def test_relocate_links(tmpdir):
     with tmpdir.as_cwd():
-        old_dir = '/home/spack/opt/spack'
-        filename = 'link.ln'
-        old_src = os.path.join(old_dir, filename)
-        os.symlink(old_src, filename)
-        filenames = [filename]
-        new_dir = '/opt/rh/devtoolset'
-        relocate_links(filenames, old_dir, new_dir)
-        assert os.path.realpath(filename) == os.path.join(new_dir, filename)
+        old_layout_root = os.path.join(
+            '%s' % tmpdir, 'home', 'spack', 'opt', 'spack')
+        old_install_prefix = os.path.join(
+            '%s' % old_layout_root, 'debian6', 'test')
+        old_binname = os.path.join(old_install_prefix, 'binfile')
+        placeholder = set_placeholder(old_layout_root)
+        re.sub(old_layout_root, placeholder, old_binname)
+        filenames = ['link.ln', 'outsideprefix.ln']
+        new_layout_root = os.path.join(
+            '%s' % tmpdir, 'opt', 'rh', 'devtoolset')
+        new_install_prefix = os.path.join(
+            '%s' % new_layout_root, 'test', 'debian6')
+        new_linkname = os.path.join(new_install_prefix, 'link.ln')
+        new_linkname2 = os.path.join(new_install_prefix, 'outsideprefix.ln')
+        new_binname = os.path.join(new_install_prefix, 'binfile')
+        mkdirp(new_install_prefix)
+        with open(new_binname, 'w') as f:
+            f.write('\n')
+        os.utime(new_binname, None)
+        os.symlink(old_binname, new_linkname)
+        os.symlink('/usr/lib/libc.so', new_linkname2)
+        relocate_links(filenames, old_layout_root, new_layout_root,
+                       old_install_prefix, new_install_prefix,
+                       {old_install_prefix: new_install_prefix})
+        assert os.readlink(new_linkname) == new_binname
+        assert os.readlink(new_linkname2) == '/usr/lib/libc.so'
 
 
 def test_needs_relocation():
@@ -246,16 +257,223 @@ def test_needs_relocation():
     assert needs_binary_relocation('application', 'x-executable')
     assert not needs_binary_relocation('application', 'x-octet-stream')
     assert not needs_binary_relocation('text', 'x-')
-
     assert needs_text_relocation('text', 'x-')
     assert not needs_text_relocation('symbolic link to', 'x-')
 
     assert needs_binary_relocation('application', 'x-mach-binary')
 
 
-def test_macho_paths():
+def test_replace_paths(tmpdir):
+    with tmpdir.as_cwd():
+        suffix = 'dylib' if platform.system().lower() == 'darwin' else 'so'
+        hash_a = '53moz6jwnw3xpiztxwhc4us26klribws'
+        hash_b = 'tk62dzu62kd4oh3h3heelyw23hw2sfee'
+        hash_c = 'hdkhduizmaddpog6ewdradpobnbjwsjl'
+        hash_d = 'hukkosc7ahff7o65h6cdhvcoxm57d4bw'
+        hash_loco = 'zy4oigsc4eovn5yhr2lk4aukwzoespob'
 
-    out = macho_make_paths_relative('/Users/Shares/spack/pkgC/lib/libC.dylib',
+        prefix2hash = dict()
+
+        old_spack_dir = os.path.join('%s' % tmpdir,
+                                     'Users', 'developer', 'spack')
+        mkdirp(old_spack_dir)
+
+        oldprefix_a = os.path.join('%s' % old_spack_dir, 'pkgA-%s' % hash_a)
+        oldlibdir_a = os.path.join('%s' % oldprefix_a, 'lib')
+        mkdirp(oldlibdir_a)
+        prefix2hash[str(oldprefix_a)] = hash_a
+
+        oldprefix_b = os.path.join('%s' % old_spack_dir, 'pkgB-%s' % hash_b)
+        oldlibdir_b = os.path.join('%s' % oldprefix_b, 'lib')
+        mkdirp(oldlibdir_b)
+        prefix2hash[str(oldprefix_b)] = hash_b
+
+        oldprefix_c = os.path.join('%s' % old_spack_dir, 'pkgC-%s' % hash_c)
+        oldlibdir_c = os.path.join('%s' % oldprefix_c, 'lib')
+        oldlibdir_cc = os.path.join('%s' % oldlibdir_c, 'C')
+        mkdirp(oldlibdir_c)
+        prefix2hash[str(oldprefix_c)] = hash_c
+
+        oldprefix_d = os.path.join('%s' % old_spack_dir, 'pkgD-%s' % hash_d)
+        oldlibdir_d = os.path.join('%s' % oldprefix_d, 'lib')
+        mkdirp(oldlibdir_d)
+        prefix2hash[str(oldprefix_d)] = hash_d
+
+        oldprefix_local = os.path.join('%s' % tmpdir, 'usr', 'local')
+        oldlibdir_local = os.path.join('%s' % oldprefix_local, 'lib')
+        mkdirp(oldlibdir_local)
+        prefix2hash[str(oldprefix_local)] = hash_loco
+        libfile_a = 'libA.%s' % suffix
+        libfile_b = 'libB.%s' % suffix
+        libfile_c = 'libC.%s' % suffix
+        libfile_d = 'libD.%s' % suffix
+        libfile_loco = 'libloco.%s' % suffix
+        old_libnames  = [os.path.join(oldlibdir_a, libfile_a),
+                         os.path.join(oldlibdir_b, libfile_b),
+                         os.path.join(oldlibdir_c, libfile_c),
+                         os.path.join(oldlibdir_d, libfile_d),
+                         os.path.join(oldlibdir_local, libfile_loco)]
+
+        for old_libname in old_libnames:
+            with open(old_libname, 'a'):
+                os.utime(old_libname, None)
+
+        hash2prefix = dict()
+
+        new_spack_dir = os.path.join('%s' % tmpdir, 'Users', 'Shared',
+                                     'spack')
+        mkdirp(new_spack_dir)
+
+        prefix_a = os.path.join(new_spack_dir, 'pkgA-%s' % hash_a)
+        libdir_a = os.path.join(prefix_a, 'lib')
+        mkdirp(libdir_a)
+        hash2prefix[hash_a] = str(prefix_a)
+
+        prefix_b = os.path.join(new_spack_dir, 'pkgB-%s' % hash_b)
+        libdir_b = os.path.join(prefix_b, 'lib')
+        mkdirp(libdir_b)
+        hash2prefix[hash_b] = str(prefix_b)
+
+        prefix_c = os.path.join(new_spack_dir, 'pkgC-%s' % hash_c)
+        libdir_c = os.path.join(prefix_c, 'lib')
+        libdir_cc = os.path.join(libdir_c, 'C')
+        mkdirp(libdir_cc)
+        hash2prefix[hash_c] = str(prefix_c)
+
+        prefix_d = os.path.join(new_spack_dir, 'pkgD-%s' % hash_d)
+        libdir_d = os.path.join(prefix_d, 'lib')
+        mkdirp(libdir_d)
+        hash2prefix[hash_d] = str(prefix_d)
+
+        prefix_local = os.path.join('%s' % tmpdir, 'usr', 'local')
+        libdir_local = os.path.join(prefix_local, 'lib')
+        mkdirp(libdir_local)
+        hash2prefix[hash_loco] = str(prefix_local)
+
+        new_libnames  = [os.path.join(libdir_a, libfile_a),
+                         os.path.join(libdir_b, libfile_b),
+                         os.path.join(libdir_cc, libfile_c),
+                         os.path.join(libdir_d, libfile_d),
+                         os.path.join(libdir_local, libfile_loco)]
+
+        for new_libname in new_libnames:
+            with open(new_libname, 'a'):
+                os.utime(new_libname, None)
+
+        prefix2prefix = dict()
+        for prefix, hash in prefix2hash.items():
+            prefix2prefix[prefix] = hash2prefix[hash]
+
+        out_dict = macho_find_paths([oldlibdir_a, oldlibdir_b,
+                                     oldlibdir_c,
+                                     oldlibdir_cc, oldlibdir_local],
+                                    [os.path.join(oldlibdir_a,
+                                                  libfile_a),
+                                     os.path.join(oldlibdir_b,
+                                                  libfile_b),
+                                     os.path.join(oldlibdir_local,
+                                                  libfile_loco)],
+                                    os.path.join(oldlibdir_cc,
+                                                 libfile_c),
+                                    old_spack_dir,
+                                    prefix2prefix
+                                    )
+        assert out_dict == {oldlibdir_a: libdir_a,
+                            oldlibdir_b: libdir_b,
+                            oldlibdir_c: libdir_c,
+                            oldlibdir_cc: libdir_cc,
+                            libdir_local: libdir_local,
+                            os.path.join(oldlibdir_a, libfile_a):
+                            os.path.join(libdir_a, libfile_a),
+                            os.path.join(oldlibdir_b, libfile_b):
+                            os.path.join(libdir_b, libfile_b),
+                            os.path.join(oldlibdir_local, libfile_loco):
+                            os.path.join(libdir_local, libfile_loco),
+                            os.path.join(oldlibdir_cc, libfile_c):
+                            os.path.join(libdir_cc, libfile_c)}
+
+        out_dict = macho_find_paths([oldlibdir_a, oldlibdir_b,
+                                     oldlibdir_c,
+                                     oldlibdir_cc,
+                                     oldlibdir_local],
+                                    [os.path.join(oldlibdir_a,
+                                                  libfile_a),
+                                     os.path.join(oldlibdir_b,
+                                                  libfile_b),
+                                     os.path.join(oldlibdir_cc,
+                                                  libfile_c),
+                                     os.path.join(oldlibdir_local,
+                                                  libfile_loco)],
+                                    None,
+                                    old_spack_dir,
+                                    prefix2prefix
+                                    )
+        assert out_dict == {oldlibdir_a: libdir_a,
+                            oldlibdir_b: libdir_b,
+                            oldlibdir_c: libdir_c,
+                            oldlibdir_cc: libdir_cc,
+                            libdir_local: libdir_local,
+                            os.path.join(oldlibdir_a, libfile_a):
+                            os.path.join(libdir_a, libfile_a),
+                            os.path.join(oldlibdir_b, libfile_b):
+                            os.path.join(libdir_b, libfile_b),
+                            os.path.join(oldlibdir_local, libfile_loco):
+                            os.path.join(libdir_local, libfile_loco),
+                            os.path.join(oldlibdir_cc, libfile_c):
+                            os.path.join(libdir_cc, libfile_c)}
+
+        out_dict = macho_find_paths([oldlibdir_a, oldlibdir_b,
+                                     oldlibdir_c, oldlibdir_cc,
+                                     oldlibdir_local],
+                                    ['@rpath/%s' % libfile_a,
+                                     '@rpath/%s' % libfile_b,
+                                     '@rpath/%s' % libfile_c,
+                                     '@rpath/%s' % libfile_loco],
+                                    None,
+                                    old_spack_dir,
+                                    prefix2prefix
+                                    )
+
+        assert out_dict == {'@rpath/%s' % libfile_a:
+                            '@rpath/%s' % libfile_a,
+                            '@rpath/%s' % libfile_b:
+                            '@rpath/%s' % libfile_b,
+                            '@rpath/%s' % libfile_c:
+                            '@rpath/%s' % libfile_c,
+                            '@rpath/%s' % libfile_loco:
+                            '@rpath/%s' % libfile_loco,
+                            oldlibdir_a: libdir_a,
+                            oldlibdir_b: libdir_b,
+                            oldlibdir_c: libdir_c,
+                            oldlibdir_cc: libdir_cc,
+                            libdir_local: libdir_local,
+                            }
+
+        out_dict = macho_find_paths([oldlibdir_a,
+                                     oldlibdir_b,
+                                     oldlibdir_d,
+                                     oldlibdir_local],
+                                    ['@rpath/%s' % libfile_a,
+                                     '@rpath/%s' % libfile_b,
+                                     '@rpath/%s' % libfile_loco],
+                                    None,
+                                    old_spack_dir,
+                                    prefix2prefix)
+        assert out_dict == {'@rpath/%s' % libfile_a:
+                            '@rpath/%s' % libfile_a,
+                            '@rpath/%s' % libfile_b:
+                            '@rpath/%s' % libfile_b,
+                            '@rpath/%s' % libfile_loco:
+                            '@rpath/%s' % libfile_loco,
+                            oldlibdir_a: libdir_a,
+                            oldlibdir_b: libdir_b,
+                            oldlibdir_d: libdir_d,
+                            libdir_local: libdir_local,
+                            }
+
+
+def test_macho_make_paths():
+    out = macho_make_paths_relative('/Users/Shared/spack/pkgC/lib/libC.dylib',
                                     '/Users/Shared/spack',
                                     ('/Users/Shared/spack/pkgA/lib',
                                      '/Users/Shared/spack/pkgB/lib',
@@ -264,13 +482,43 @@ def test_macho_paths():
                                      '/Users/Shared/spack/pkgB/libB.dylib',
                                      '/usr/local/lib/libloco.dylib'),
                                     '/Users/Shared/spack/pkgC/lib/libC.dylib')
-    assert out == (['@loader_path/../../../../Shared/spack/pkgA/lib',
-                    '@loader_path/../../../../Shared/spack/pkgB/lib',
-                    '/usr/local/lib'],
-                   ['@loader_path/../../../../Shared/spack/pkgA/libA.dylib',
-                    '@loader_path/../../../../Shared/spack/pkgB/libB.dylib',
-                    '/usr/local/lib/libloco.dylib'],
-                   '@rpath/libC.dylib')
+    assert out == {'/Users/Shared/spack/pkgA/lib':
+                   '@loader_path/../../pkgA/lib',
+                   '/Users/Shared/spack/pkgB/lib':
+                   '@loader_path/../../pkgB/lib',
+                   '/usr/local/lib': '/usr/local/lib',
+                   '/Users/Shared/spack/pkgA/libA.dylib':
+                   '@loader_path/../../pkgA/libA.dylib',
+                   '/Users/Shared/spack/pkgB/libB.dylib':
+                   '@loader_path/../../pkgB/libB.dylib',
+                   '/usr/local/lib/libloco.dylib':
+                   '/usr/local/lib/libloco.dylib',
+                   '/Users/Shared/spack/pkgC/lib/libC.dylib':
+                   '@rpath/libC.dylib'}
+
+    out = macho_make_paths_normal('/Users/Shared/spack/pkgC/lib/libC.dylib',
+                                  ('@loader_path/../../pkgA/lib',
+                                   '@loader_path/../../pkgB/lib',
+                                   '/usr/local/lib'),
+                                  ('@loader_path/../../pkgA/libA.dylib',
+                                   '@loader_path/../../pkgB/libB.dylib',
+                                   '/usr/local/lib/libloco.dylib'),
+                                  '@rpath/libC.dylib')
+
+    assert out == {'@rpath/libC.dylib':
+                   '/Users/Shared/spack/pkgC/lib/libC.dylib',
+                   '@loader_path/../../pkgA/lib':
+                   '/Users/Shared/spack/pkgA/lib',
+                   '@loader_path/../../pkgB/lib':
+                   '/Users/Shared/spack/pkgB/lib',
+                   '/usr/local/lib': '/usr/local/lib',
+                   '@loader_path/../../pkgA/libA.dylib':
+                   '/Users/Shared/spack/pkgA/libA.dylib',
+                   '@loader_path/../../pkgB/libB.dylib':
+                   '/Users/Shared/spack/pkgB/libB.dylib',
+                   '/usr/local/lib/libloco.dylib':
+                   '/usr/local/lib/libloco.dylib'
+                   }
 
     out = macho_make_paths_relative('/Users/Shared/spack/pkgC/bin/exeC',
                                     '/Users/Shared/spack',
@@ -281,98 +529,47 @@ def test_macho_paths():
                                      '/Users/Shared/spack/pkgB/libB.dylib',
                                      '/usr/local/lib/libloco.dylib'), None)
 
-    assert out == (['@loader_path/../../pkgA/lib',
-                    '@loader_path/../../pkgB/lib',
-                    '/usr/local/lib'],
-                   ['@loader_path/../../pkgA/libA.dylib',
-                    '@loader_path/../../pkgB/libB.dylib',
-                    '/usr/local/lib/libloco.dylib'], None)
+    assert out == {'/Users/Shared/spack/pkgA/lib':
+                   '@loader_path/../../pkgA/lib',
+                   '/Users/Shared/spack/pkgB/lib':
+                   '@loader_path/../../pkgB/lib',
+                   '/usr/local/lib': '/usr/local/lib',
+                   '/Users/Shared/spack/pkgA/libA.dylib':
+                   '@loader_path/../../pkgA/libA.dylib',
+                   '/Users/Shared/spack/pkgB/libB.dylib':
+                   '@loader_path/../../pkgB/libB.dylib',
+                   '/usr/local/lib/libloco.dylib':
+                   '/usr/local/lib/libloco.dylib'}
 
-    out = macho_replace_paths('/Users/Shared/spack',
-                              '/Applications/spack',
-                              ('/Users/Shared/spack/pkgA/lib',
-                               '/Users/Shared/spack/pkgB/lib',
-                               '/usr/local/lib'),
-                              ('/Users/Shared/spack/pkgA/libA.dylib',
-                               '/Users/Shared/spack/pkgB/libB.dylib',
-                               '/usr/local/lib/libloco.dylib'),
-                              '/Users/Shared/spack/pkgC/lib/libC.dylib')
-    assert out == (['/Applications/spack/pkgA/lib',
-                    '/Applications/spack/pkgB/lib',
-                    '/usr/local/lib'],
-                   ['/Applications/spack/pkgA/libA.dylib',
-                    '/Applications/spack/pkgB/libB.dylib',
-                    '/usr/local/lib/libloco.dylib'],
-                   '/Applications/spack/pkgC/lib/libC.dylib')
+    out = macho_make_paths_normal('/Users/Shared/spack/pkgC/bin/exeC',
+                                  ('@loader_path/../../pkgA/lib',
+                                   '@loader_path/../../pkgB/lib',
+                                   '/usr/local/lib'),
+                                  ('@loader_path/../../pkgA/libA.dylib',
+                                      '@loader_path/../../pkgB/libB.dylib',
+                                      '/usr/local/lib/libloco.dylib'),
+                                  None)
 
-    out = macho_replace_paths('/Users/Shared/spack',
-                              '/Applications/spack',
-                              ('/Users/Shared/spack/pkgA/lib',
-                               '/Users/Shared/spack/pkgB/lib',
-                               '/usr/local/lib'),
-                              ('/Users/Shared/spack/pkgA/libA.dylib',
-                               '/Users/Shared/spack/pkgB/libB.dylib',
-                               '/usr/local/lib/libloco.dylib'),
-                              None)
-    assert out == (['/Applications/spack/pkgA/lib',
-                    '/Applications/spack/pkgB/lib',
-                    '/usr/local/lib'],
-                   ['/Applications/spack/pkgA/libA.dylib',
-                    '/Applications/spack/pkgB/libB.dylib',
-                    '/usr/local/lib/libloco.dylib'],
-                   None)
+    assert out == {'@loader_path/../../pkgA/lib':
+                   '/Users/Shared/spack/pkgA/lib',
+                   '@loader_path/../../pkgB/lib':
+                   '/Users/Shared/spack/pkgB/lib',
+                   '/usr/local/lib': '/usr/local/lib',
+                   '@loader_path/../../pkgA/libA.dylib':
+                   '/Users/Shared/spack/pkgA/libA.dylib',
+                   '@loader_path/../../pkgB/libB.dylib':
+                   '/Users/Shared/spack/pkgB/libB.dylib',
+                   '/usr/local/lib/libloco.dylib':
+                   '/usr/local/lib/libloco.dylib'}
 
 
 def test_elf_paths():
-    out = get_relative_rpaths(
+    out = get_relative_elf_rpaths(
         '/usr/bin/test', '/usr',
         ('/usr/lib', '/usr/lib64', '/opt/local/lib'))
     assert out == ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib']
 
-    out = substitute_rpath(
-        ('/usr/lib', '/usr/lib64', '/opt/local/lib'), '/usr', '/opt')
-    assert out == ['/opt/lib', '/opt/lib64', '/opt/local/lib']
-
-
-@pytest.mark.skipif(sys.platform != 'darwin',
-                    reason="only works with Mach-o objects")
-def test_relocate_macho(tmpdir):
-    with tmpdir.as_cwd():
-
-        get_patchelf()  # this does nothing on Darwin
-
-        rpaths, deps, idpath = macho_get_paths('/bin/bash')
-        nrpaths, ndeps, nid = macho_make_paths_relative('/bin/bash', '/usr',
-                                                        rpaths, deps, idpath)
-        shutil.copyfile('/bin/bash', 'bash')
-        modify_macho_object('bash',
-                            rpaths, deps, idpath,
-                            nrpaths, ndeps, nid)
-
-        rpaths, deps, idpath = macho_get_paths('/bin/bash')
-        nrpaths, ndeps, nid = macho_replace_paths('/usr', '/opt',
-                                                  rpaths, deps, idpath)
-        shutil.copyfile('/bin/bash', 'bash')
-        modify_macho_object('bash',
-                            rpaths, deps, idpath,
-                            nrpaths, ndeps, nid)
-
-        path = '/usr/lib/libncurses.5.4.dylib'
-        rpaths, deps, idpath = macho_get_paths(path)
-        nrpaths, ndeps, nid = macho_make_paths_relative(path, '/usr',
-                                                        rpaths, deps, idpath)
-        shutil.copyfile(
-            '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
-        modify_macho_object('libncurses.5.4.dylib',
-                            rpaths, deps, idpath,
-                            nrpaths, ndeps, nid)
-
-        rpaths, deps, idpath = macho_get_paths(path)
-        nrpaths, ndeps, nid = macho_replace_paths('/usr', '/opt',
-                                                  rpaths, deps, idpath)
-        shutil.copyfile(
-            '/usr/lib/libncurses.5.4.dylib', 'libncurses.5.4.dylib')
-        modify_macho_object(
-            'libncurses.5.4.dylib',
-            rpaths, deps, idpath,
-            nrpaths, ndeps, nid)
+    out = get_normalized_elf_rpaths(
+        '/usr/bin/test',
+        ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
+    assert out == ['/usr/lib', '/usr/lib64', '/opt/local/lib']

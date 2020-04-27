@@ -13,6 +13,8 @@ class Mxnet(MakefilePackage):
     homepage = "http://mxnet.io"
     url      = "https://github.com/apache/incubator-mxnet/releases/download/1.3.0/apache-mxnet-src-1.3.0-incubating.tar.gz"
 
+    maintainers = ['adamjstewart']
+
     version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2')
 
     variant('cuda', default=False, description='Enable CUDA support')

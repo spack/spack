@@ -76,11 +76,12 @@ class QuantumEspresso(Package):
     patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
 
     # Conflicts
+    # Omitted for now due to concretizer bug
     # MKL with 64-bit integers not supported.
-    conflicts(
-        '^mkl+ilp64',
-        msg='Quantum ESPRESSO does not support MKL 64-bit integer variant'
-    )
+    # conflicts(
+    #     '^mkl+ilp64',
+    #     msg='Quantum ESPRESSO does not support MKL 64-bit integer variant'
+    # )
 
     # We can't ask for scalapack or elpa if we don't want MPI
     conflicts(

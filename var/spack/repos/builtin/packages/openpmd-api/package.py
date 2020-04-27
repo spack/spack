@@ -15,6 +15,7 @@ class OpenpmdApi(CMakePackage):
     maintainers = ['ax3l']
 
     version('dev', branch='dev')
+    version('0.11.1',  tag='0.11.1-alpha')
     version('0.11.0',  tag='0.11.0-alpha')
     version('0.10.3',  tag='0.10.3-alpha')
     version('0.10.2',  tag='0.10.2-alpha')
@@ -54,6 +55,10 @@ class OpenpmdApi(CMakePackage):
     depends_on('python@3.5:', when='+python', type=['link', 'test', 'run'])
 
     extends('python', when='+python')
+
+    # Fix breaking HDF5 1.12.0 API
+    # https://github.com/openPMD/openPMD-api/pull/696
+    patch('hdf5-1.12.0.patch', when='@:0.11.0 +hdf5')
 
     def cmake_args(self):
         spec = self.spec

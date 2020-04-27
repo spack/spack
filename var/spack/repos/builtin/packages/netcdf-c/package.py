@@ -5,16 +5,6 @@
 
 from spack import *
 
-import numbers
-
-
-def is_integral(x):
-    """Any integer value"""
-    try:
-        return isinstance(int(x), numbers.Integral) and not isinstance(x, bool)
-    except ValueError:
-        return False
-
 
 class NetcdfC(AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and
@@ -23,15 +13,17 @@ class NetcdfC(AutotoolsPackage):
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c.git"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.7.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-4.7.3.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version('4.6.2'):
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-{0}.tar.gz"
         else:
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-{0}.tar.gz"
 
         return url.format(version.dotted)
+
+    maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
@@ -75,22 +67,6 @@ class NetcdfC(AutotoolsPackage):
     # this variant out.
     # variant('cdmremote', default=False,
     #         description='Enable CDM Remote support')
-
-    # These variants control the number of dimensions (i.e. coordinates and
-    # attributes) and variables (e.g. time, entity ID, number of coordinates)
-    # that can be used in any particular NetCDF file.
-    variant(
-        'maxdims',
-        default=1024,
-        description='Defines the maximum dimensions of NetCDF files.',
-        values=is_integral
-    )
-    variant(
-        'maxvars',
-        default=8192,
-        description='Defines the maximum variables of NetCDF files.',
-        values=is_integral
-    )
 
     # The patch for 4.7.0 touches configure.ac. See force_autoreconf below.
     depends_on('autoconf', type='build', when='@4.7.0')
@@ -157,20 +133,6 @@ class NetcdfC(AutotoolsPackage):
         # The patch for 4.7.0 touches configure.ac.
         return self.spec.satisfies('@4.7.0')
 
-    def patch(self):
-        try:
-            max_dims = int(self.spec.variants['maxdims'].value)
-            max_vars = int(self.spec.variants['maxvars'].value)
-        except (ValueError, TypeError):
-            raise TypeError('NetCDF variant values max[dims|vars] must be '
-                            'integer values.')
-
-        ff = FileFilter(join_path('include', 'netcdf.h'))
-        ff.filter(r'^(#define\s+NC_MAX_DIMS\s+)\d+(.*)$',
-                  r'\1{0}\2'.format(max_dims))
-        ff.filter(r'^(#define\s+NC_MAX_VARS\s+)\d+(.*)$',
-                  r'\1{0}\2'.format(max_vars))
-
     def configure_args(self):
         cflags = []
         cppflags = []
@@ -196,7 +158,7 @@ class NetcdfC(AutotoolsPackage):
         if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            cflags.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')

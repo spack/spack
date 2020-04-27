@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Tk(AutotoolsPackage):
+class Tk(AutotoolsPackage, SourceforgePackage):
     """Tk is a graphical user interface toolkit that takes developing
        desktop applications to a higher level than conventional
        approaches. Tk is the standard GUI not only for Tcl, but for
@@ -15,7 +15,7 @@ class Tk(AutotoolsPackage):
        applications that run unchanged across Windows, Mac OS X, Linux
        and more."""
     homepage = "http://www.tcl.tk"
-    url      = "http://prdownloads.sourceforge.net/tcl/tk8.6.5-src.tar.gz"
+    sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
     version('8.6.8', sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
     version('8.6.6', sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')

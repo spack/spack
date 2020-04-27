@@ -77,12 +77,13 @@ class Openmpi(AutotoolsPackage):
 
     maintainers = ['hppritcha']
 
-    version('develop', branch='master')
+    version('master', branch='master')
 
     # Current
-    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
+    version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
 
     # Still supported
+    version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
     version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
     version('3.1.5', preferred=True, sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
@@ -193,7 +194,7 @@ class Openmpi(AutotoolsPackage):
     patch('llnl-platforms.patch', when="@1.6.5")
     patch('configure.patch', when="@1.10.1")
     patch('fix_multidef_pmi_class.patch', when="@2.0.0:2.0.1")
-    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.3')
+    patch('fix-ucx-1.7.0-api-instability.patch', when='@4.0.0:4.0.2')
 
     # Vader Bug: https://github.com/open-mpi/ompi/issues/5375
     # Haven't release fix for 2.1.x
@@ -236,7 +237,8 @@ class Openmpi(AutotoolsPackage):
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
-    variant('cxx_exceptions', default=True, description='Enable C++ Exception support')
+    variant('cxx', default=False, description='Enable C++ MPI bindings')
+    variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -298,6 +300,10 @@ class Openmpi(AutotoolsPackage):
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
               'openmpi(>=3.0.0).')
+    conflicts('+cxx', when='@5:',
+              msg='C++ MPI bindings are removed in 5.0.X release')
+    conflicts('+cxx_exceptions', when='@5:',
+              msg='C++ exceptions are removed in 5.0.X release')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
     conflicts('fabrics=libfabric', when='@:1.8')  # libfabric support was added in 1.10.0
@@ -430,10 +436,6 @@ class Openmpi(AutotoolsPackage):
             config_args.append('--enable-static')
             config_args.extend(self.with_or_without('pmi'))
 
-        if spec.satisfies('@2.0:'):
-            # for Open-MPI 2.0:, C++ bindings are disabled by default.
-            config_args.extend(['--enable-mpi-cxx'])
-
         if spec.satisfies('@3.0.0:', strict=True):
             config_args.append('--with-zlib={0}'.format(spec['zlib'].prefix))
 
@@ -531,10 +533,17 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if '+cxx_exceptions' in spec:
-            config_args.append('--enable-cxx-exceptions')
-        else:
-            config_args.append('--disable-cxx-exceptions')
+        if spec.satisfies('@:4'):
+            if '+cxx' in spec:
+                config_args.append('--enable-mpi-cxx')
+            else:
+                config_args.append('--disable-mpi-cxx')
+
+            if '+cxx_exceptions' in spec:
+                config_args.append('--enable-cxx-exceptions')
+            else:
+                config_args.append('--disable-cxx-exceptions')
+
         return config_args
 
     @run_after('install')

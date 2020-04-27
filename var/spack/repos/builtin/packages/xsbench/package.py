@@ -28,7 +28,12 @@ class Xsbench(MakefilePackage):
 
     depends_on('mpi', when='+mpi')
 
-    build_directory = 'src'
+    @property
+    def build_directory(self):
+        if self.spec.satisfies('@:18'):
+            return 'src'
+        else:
+            return 'openmp-threading'
 
     @property
     def build_targets(self):
@@ -50,4 +55,5 @@ class Xsbench(MakefilePackage):
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
-        install('src/XSBench', prefix.bin)
+        with working_dir(self.build_directory):
+            install('XSBench', prefix.bin)

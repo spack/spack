@@ -22,21 +22,34 @@ class Warpx(MakefilePackage):
 
     version('master', tag='master')
 
-    depends_on('mpi')
-
     variant('dims',
             default='3',
-            values=('1', '2', '3'),
+            values=('2', '3', 'rz'),
             multi=False,
             description='Number of spatial dimensions')
-
+    variant('backend',
+            default='openmp',
+            values=('openmp', 'cuda', 'hip'),
+            multi=True,
+            description='Programming model for compute kernels')
+    variant('mpi', default=True, description='Enable MPI support')
     variant('psatd', default=False, description='Enable PSATD solver')
-    variant('do_electrostatic', default=False, description='Include electrostatic solver')
     variant('debug', default=False, description='Enable debugging features')
-    variant('tprof', default=False, description='Enable tiny profiling features')
-    variant('openmp', default=True, description='Enable OpenMP features')
+    variant('tprof', default=True, description='Enable tiny profiling features')
+    variant('openpmd', default=True, description='Enable openPMD I/O')
+    variant('ascent', default=False, description='Enable Ascent in situ vis')
 
+    depends_on('cuda', when='backend=cuda')
+    depends_on('mpi', when='+mpi')
     depends_on('fftw@3:', when='+psatd')
+    depends_on('fftw +mpi', when='+psatd +mpi')
+    depends_on('pkgconfig', type='build', when='+openpmd')
+    depends_on('python', type='build')  # AMReX' build system info
+    depends_on('openpmd-api@0.11.0:,dev', when='+openpmd')
+    depends_on('openpmd-api +mpi', when='+openpmd +mpi')
+    depends_on('ascent', when='+ascent')
+    depends_on('ascent +cuda', when='+ascent backend=cuda')
+    depends_on('ascent +mpi ^conduit~hdf5', when='+ascent +mpi')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
@@ -47,43 +60,50 @@ class Warpx(MakefilePackage):
              git='https://bitbucket.org/berkeleylab/picsar.git',
              tag='master')
 
-    @property
-    def build_targets(self):
-        if self.spec.satisfies('%clang'):
-            return ['CXXFLAGS={0}'.format(self.compiler.cxx11_flag)]
-        else:
-            return []
+    conflicts('backend=cuda', when='backend=hip',
+              msg='WarpX can be compiled with either CUDA or HIP backend')
+    conflicts('backend=hip', msg='WarpX\' HIP backend is not yet implemented')
 
     def edit(self, spec, prefix):
-
         comp = 'gcc'
-        vendors = {'%gcc': 'gcc', '%intel': 'intel'}
+        vendors = {'%gcc': 'gcc', '%intel': 'intel', '%clang': 'llvm'}
         for key, value in vendors.items():
             if self.spec.satisfies(key):
                 comp = value
 
-        def torf(s):
-            "Returns the string TRUE or FALSE"
-            return repr(s in spec).upper()
+        # Returns the string TRUE or FALSE
+        torf = lambda s: repr(s in spec).upper()
 
-        makefile = FileFilter('GNUmakefile')
-        makefile.filter('AMREX_HOME .*', 'AMREX_HOME = amrex')
-        makefile.filter('PICSAR_HOME .*', 'PICSAR_HOME = picsar')
-        makefile.filter('COMP .*', 'COMP = {0}'.format(comp))
-        makefile.filter('DIM .*',
-                        'DIM = {0}'.format(int(spec.variants['dims'].value)))
-        makefile.filter('USE_PSATD .*',
-                        'USE_PSATD = {0}'.format(torf('+psatd')))
-        makefile.filter('DO_ELECTROSTATIC .*',
-                        'DO_ELECTROSTATIC = %s' % torf('+do_electrostatic'))
         try:
             self.compiler.openmp_flag
         except UnsupportedCompilerFlag:
             use_omp = 'FALSE'
         else:
-            use_omp = torf('+openmp')
+            use_omp = torf('backend=openmp')
+
+        makefile = FileFilter('GNUmakefile')
+        makefile.filter('AMREX_HOME .*', 'AMREX_HOME = amrex')
+        makefile.filter('PICSAR_HOME .*', 'PICSAR_HOME = picsar')
+        makefile.filter('COMP .*', 'COMP = {0}'.format(comp))
+        makefile.filter('USE_MPI .*',
+                        'USE_MPI = {0}'.format(torf('+mpi')))
+        if 'dims=rz' in spec:
+            makefile.filter('USE_RZ .*', 'USE_RZ = TRUE')
+        else:
+            makefile.filter('DIM .*', 'DIM = {0}'.format(
+                int(spec.variants['dims'].value)))
+        makefile.filter('USE_PSATD .*',
+                        'USE_PSATD = {0}'.format(torf('+psatd')))
         makefile.filter('USE_OMP .*',
                         'USE_OMP = {0}'.format(use_omp))
+        makefile.filter('USE_GPU .*',
+                        'USE_GPU = {0}'.format(torf('backend=cuda')))
+        makefile.filter('USE_HIP .*',
+                        'USE_HIP = {0}'.format(torf('backend=hip')))
+        makefile.filter('USE_OPENPMD .*',
+                        'USE_OPENPMD = {0}'.format(torf('+openpmd')))
+        makefile.filter('USE_ASCENT_INSITU .*',
+                        'USE_ASCENT_INSITU = {0}'.format(torf('+ascent')))
         makefile.filter('DEBUG .*',
                         'DEBUG = {0}'.format(torf('+debug')))
         makefile.filter('TINY_PROFILE .*',

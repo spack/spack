@@ -14,10 +14,11 @@ class Libxsmm(MakefilePackage):
     and deep learning primitives."""
 
     homepage = 'https://github.com/hfp/libxsmm'
-    url      = 'https://github.com/hfp/libxsmm/archive/1.14.tar.gz'
+    url      = 'https://github.com/hfp/libxsmm/archive/1.15.tar.gz'
     git      = 'https://github.com/hfp/libxsmm.git'
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('1.15',   sha256='499e5adfbf90cd3673309243c2b56b237d54f86db2437e1ac06c8746b55ab91c')
     version('1.14',   sha256='9c0af4509ea341d1ee2c6c19fc6f19289318c3bd4b17844efeb9e7f9691abf76')
     version('1.13',   sha256='47c034e169820a9633770eece0e0fdd8d4a744e09b81da2af8c2608a4625811e')
     version('1.12.1', sha256='3687fb98da00ba92cd50b5f0d18b39912c7886dad3856843573aee0cb34e9791')

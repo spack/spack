@@ -178,6 +178,9 @@ class Boost(Package):
     conflicts('+taggedlayout', when='+versionedlayout')
     conflicts('+numpy', when='~python')
 
+    # boost-python in 1.72.0 broken with cxxstd=98
+    conflicts('cxxstd=98', when='+mpi+python @1.72.0:')
+
     # Container's Extended Allocators were not added until 1.56.0
     conflicts('+container', when='@:1.55.99')
 
@@ -199,6 +202,12 @@ class Boost(Package):
     patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68.9999%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
+    # Fix for version comparison on newer Clang on darwin
+    # See: https://github.com/boostorg/build/issues/440
+    # See: https://github.com/macports/macports-ports/pull/6726
+    patch('darwin_clang_version.patch', level=0,
+          when='@1.56.0:1.72.0 platform=darwin')
 
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
@@ -362,7 +371,7 @@ class Boost(Package):
                 cxxflags.append(flag)
 
         if '+pic' in self.spec:
-            cxxflags.append(self.compiler.pic_flag)
+            cxxflags.append(self.compiler.cxx_pic_flag)
 
         # clang is not officially supported for pre-compiled headers
         # and at least in clang 3.9 still fails to build

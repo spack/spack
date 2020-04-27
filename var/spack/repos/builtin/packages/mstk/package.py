@@ -28,6 +28,9 @@ class Mstk(CMakePackage):
     maintainers = ['raovgarimella', 'julienloiseau']
 
     version('master', branch='master')
+    version('3.3.5', sha256='64c976e12d1393aafd086ef941b176add6cfb963f463c33259596e7ef641cdd8')
+    version('3.3.4', sha256='bd34d31fc1fc468147a51e8d837d6bf9902ca8d38c7c0615e7f20968d4659da2')
+    version('3.3.3', sha256='54ea7929c9046915472f38367c83f75af634a6989ce0b89aad17fb9f4a25023e')
     version('3.3.2', sha256='fb4ffa97af4d0a0d4771c8585d0b27538b013d8b1cfaff992e5e054fef62af0b')
     version('3.3.1', sha256='9fdb0c33c1b68714d708b355d963547cf41332812658d4560d4db43904fc78de')
     version('3.3.0', sha256='205c48fb5619937b5dd83788da739b7c2060155b7c41793e29ce05422b8f7dfb')
