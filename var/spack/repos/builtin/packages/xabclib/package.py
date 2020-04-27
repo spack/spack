@@ -52,9 +52,9 @@ class Xabclib(MakefilePackage):
     def install(self, spec, prefix):
         mkdir(prefix.lib)
         mkdir(prefix.doc)
-        copy('libOpenAT.a', prefix.lib)
-        copy('Readme.pdf', prefix.doc)
+        install('libOpenAT.a', prefix.lib)
+        install('Readme.pdf', prefix.doc)
 
     @property
     def libs(self):
-        return find_libraries('libOpenAT.a', self.prefix.lib)
+        return find_libraries('libOpenAT.a', self.prefix.lib, shared=False)
