@@ -220,9 +220,9 @@ class Python(AutotoolsPackage):
                 r'^SSL=(.*)$',
                 r'SSL={0}'.format(self.spec['openssl'].prefix)
             )
-        # Because Python uses compiler system paths during install, it's possible
-        # to pick up a system OpenSSL when trying to build '~ssl'. To avoid this
-        # scenario, we hard disable the 'ssl' module by applying a patch.
+        # Because Python uses compiler system paths during install, it's
+        # possible to pick up a system OpenSSL when building 'python~ssl'.
+        # To avoid this scenario, we disable the 'ssl' module with patching.
         elif self.spec.satisfies('@:3.6.999~ssl'):
             ff = FileFilter('setup.py')
             ff.filter(
