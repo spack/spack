@@ -1165,12 +1165,15 @@ class PackageInstaller(object):
                 spack.compilers.add_compilers_to_config(
                     spack.compilers.find_compilers([pkg.spec.prefix]))
 
-        except StopIteration as e:
+        except spack.build_environment.ChildError as e:
             # A StopIteration exception means that do_install was asked to
-            # stop early from clients.
-            tty.msg('{0} {1}'.format(self.pid, str(e)))
-            tty.msg('Package stage directory : {0}'
-                    .format(pkg.stage.source_path))
+            # stop early from clients, and is not an error at this point
+            if e.name == "StopIteration":
+                tty.msg('{0} {1}'.format(self.pid, str(e)))
+                tty.msg('Package stage directory : {0}'
+                        .format(pkg.stage.source_path))
+            else:
+                raise
 
     _install_task.__doc__ += install_args_docstring
 

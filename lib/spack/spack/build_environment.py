@@ -812,11 +812,6 @@ def fork(pkg, function, dirty, fake):
                 setup_package(pkg, dirty=dirty)
             return_value = function()
             child_pipe.send(return_value)
-        except StopIteration as e:
-            # StopIteration is used to stop installations
-            # before the final stage, mainly for debug purposes
-            tty.msg(e)
-            child_pipe.send(None)
 
         except BaseException:
             # catch ANYTHING that goes wrong in the child process
