@@ -17,9 +17,10 @@ from six import string_types
 from six import iteritems
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as filesystem
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
 from llnl.util.filesystem import \
-    partition_path, remove_linked_tree, join_path, ancestor
+    partition_path, remove_linked_tree, join_path, ancestor, working_dir
 
 import spack.paths
 import spack.caches
@@ -32,6 +33,7 @@ import spack.fetch_strategy as fs
 import spack.util.pattern as pattern
 import spack.util.path as sup
 import spack.util.url as url_util
+import spack.util.web as web_util
 
 from spack.util.crypto import prefix_bits, bit_length
 from spack.util.executable import which
@@ -752,30 +754,99 @@ class CargoStage(object):
         self.package_stage = package_stage
         self.cargo = which('cargo', required=True)
 
+        # Tracks if the package had to be manually locked. `None` if unsure,
+        # `true` if the package shipped its own Cargo.lock, `false` if
+        # `CargoStage` had to lock it.
+        self.locked = None
+
     def __enter__(self):
         pass
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
 
+    @property
+    def vendor_cache(self):
+        return join_path(
+            spack.caches.fetch_cache_path(),
+            self.cache_rel_path
+        )
+
+    @property
+    def dependencies_cached(self):
+        cache = self.vendor_cache
+        return os.path.exists(cache) and not os.path.isdir(cache)
+
+    @property
+    def manifest_path(self):
+        return join_path(self.package_stage.source_path, self.manifest)
+
+    @property
+    def manifest_dir(self):
+        return os.path.dirname(self.manifest_path)
+
+    @property
+    def manifest_lock_path(self):
+        return join_path(self.manifest_dir, 'Cargo.lock')
+
+    @property
+    def expanded(self):
+        """Checks if the dependencies are already vendored"""
+        return os.path.exists(self.vendor_stage)
+
+    @property
+    def vendor_stage(self):
+        return join_path(
+            self.package_stage.path, 'spack-cargo-vendor')
+
+    @property
+    def cache_rel_path(self):
+        return join_path(
+            '_cargo-cache',
+            self.package_stage.fetcher.mirror_id()
+        ) + '.tar.gz'
+
     def fetch(self, *args, **kwargs):
+        if self.expanded:
+            tty.msg("Cargo dependencies already staged")
+            return
+
+        # If the dependencies have already been cached, copy the cache and
+        # return early. The cache will be expanded later.
+        #
+        # NOTE: This is primarily done because this cargo stage will
+        # sometimes place a Cargo.lock file into the `spack-src` directory in
+        # the cases where the cargo package had not locked its dependencies.
+        # This results in the spack-src directory being created, which `Stage`
+        # uses to detect if the stage has already been expanded.
+        if self.dependencies_cached:
+            cache = self.vendor_cache
+            tty.msg("Using cached cargo dependencies: " + cache)
+            filesystem.copy(
+                cache,
+                join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')
+            )
+            return
+
+        # if self.package_stage.mirror_paths:
+
+        #     if os.path.exists()
+
+        #     # Join URLs of mirror roots with mirror paths. Because
+        #     # urljoin() will strip everything past the final '/' in
+        #     # the root, so we add a '/' if it is not present.
+        #     urls = []
+        #     for mirror in spack.mirror.MirrorCollection().values():
+        #         for rel_path in self.mirror_paths:
+        #             urls.append(url_util.join(mirror.fetch_url, rel_path))
+            
+
         # Fetching the cargo stage requires the package is expanded
         self.package_stage.expand_archive()
 
-        cargo_lock = \
-            join_path(
-                ancestor(
-                    join_path(
-                        self.package_stage.source_path,
-                        self.manifest
-                    )
-                ),
-                'Cargo.lock'
-            )
-
         cargo = deepcopy(self.cargo)
         checksum = spack.config.get('config:checksum')
-        if checksum and not os.path.exists(cargo_lock):
+        if checksum and not os.path.exists(self.manifest_lock_path):
             tty.warn("There is no Cargo.lock file to vendor crate depenencies safely.")
 
             # Ask the user whether to skip the checksum if we're
@@ -792,17 +863,40 @@ class CargoStage(object):
             if not ignore_checksum:
                 raise fs.FetchError("Will not vendor cargo dependencies")
 
+            self.locked = False
+        else:
+            self.locked = True
+
+        # Create the vendored dependencies directory
+        mkdirp(self.vendor_stage)
+
         # TODO: Tweak the config file that 'cargo vendor' writes out to make the
         # path to the vendor directory relative and write it out.
         #
         # This also needs to be cached
-        config = self.cargo(
-            'vendor', '--versioned-dirs',
-            '--manifest-path',
-            join_path(self.package_stage.source_path, self.manifest),
-            join_path(
-                self.package_stage.path, 'spack-cargo-vendor'),
-            output=str)
+        try:
+            # Run from a relative directory so the generated configuration is
+            # relative to the staging directory
+            with working_dir(self.package_stage.path):
+                config = self.cargo(
+                    'vendor', '--versioned-dirs',
+                    '--manifest-path',
+                    self.manifest_path,
+                    'spack-cargo-vendor',
+                    output=str
+                )
+
+            # Set-up config
+            config_dir_path = join_path(self.package_stage.path, '.cargo')
+            mkdirp(config_dir_path)
+
+            with open(join_path(config_dir_path, 'config'), 'w') as f:
+                f.write(config)
+        except:
+            # Remove the spack-cargo-vendor dir because it's used to determine
+            # that dependencies have already been staged
+            os.rmdir(self.vendor_stage)
+            raise
 
     # The Cargo depenedencies are checked during the 'fetch' stage
     def check(self):
@@ -810,41 +904,72 @@ class CargoStage(object):
 
     # Cargo dependencies are expanded during 'fetch'
     def expand_archive(self):
-        pass
+        # This usually happens when the cargo dependencies are not already
+        # cached, because we vendor the dependencies directly into the correct
+        # location.
+        if self.expanded:
+            return
 
-    @property
-    def expanded(self):
-        """Returns True since `cargo` vendor always expands"""
-        return True
+        # If Cargo.lock already exists, then the package is "locked"
+        self.locked = os.path.exists(self.manifest_lock_path)
+
+        if os.path.exists(join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')):
+            tar = which('tar', required=True)
+            with working_dir(self.package_stage.path):
+                tar('-xf', 'spack-cargo-vendor.tar.gz')
+            self.locked = not os.path.exists(join_path(_source_path_subdir, 'Cargo.lock'))
+        else:
+            tty.die(
+                "CargoStage failed to vendor the cargo dependencies"
+            )
 
     def restage(self):
         raise RestageError("Cannot restage a cargo stage.")
 
     def create(self):
-        mkdirp(join_path(
-            self.package_stage.path, 'spack-cargo-vendor'))
-        # Set-up config
-        config_dir_path = join_path(self.package_stage.path, '.cargo')
-        mkdirp(config_dir_path)
-
-        with open(join_path(config_dir_path, 'config'), 'w') as f:
-            f.write(
-"""\
-[source.crates-io]
-replace-with = "vendored-sources"
-
-[source.vendored-sources]
-directory = "spack-cargo-vendor"
-""")
-
         self.created = True
 
     def destroy(self):
-        # No need to destroy the vendor stage.
+        # No need to destroy the vendor stage - will be done by PackageStage
         pass
 
     def cache_local(self):
-        tty.msg('TODO: Cache cargo vendored dependencies')
+        tar_file = join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')
+        # If the tar_file already exists, that means we're expanded from cache
+        # or a mirror, and so can just copy the file back to cache
+        if not os.path.exists(tar_file):
+            # Archive the dependencies and configuration files
+            tar = which('tar', required=True)
+
+            tar_file = join_path(self.package_stage.path, 'spack-cargo-vendor.tar.gz')
+            with working_dir(self.package_stage.path):
+                if not self.locked:
+                    tar(
+                        '-czf',
+                        tar_file,
+                        'spack-cargo-vendor', # Cache the vendored dependencies
+                        '.cargo', # And the cargo configuration
+                        self.manifest_lock_path # And the Cargo.lock for unlocked crates
+                    )
+                else:
+                    tar(
+                        '-czf',
+                        tar_file,
+                        'spack-cargo-vendor', # Cache the vendored dependencies
+                        '.cargo' # And the cargo configuration
+                    )
+
+        # Place the archive in <cache-location>/_cargo-cache/<parent-mirror-id>
+        dst = join_path(
+            spack.caches.fetch_cache_path(),
+            self.cache_rel_path
+        )
+
+        # Create the parent directory for the mirror
+        mkdirp(os.path.dirname(dst))
+
+        # Push the mirror
+        web_util.push_to_url(tar_file, dst)
         pass
 
 
