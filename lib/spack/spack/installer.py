@@ -1176,7 +1176,7 @@ class PackageInstaller(object):
             if e.name == "StopIteration":
                 tty.debug('{0} {1}'.format(self.pid, str(e)))
                 tty.debug('Package stage directory : {0}'
-                        .format(pkg.stage.source_path))
+                          .format(pkg.stage.source_path))
             else:
                 raise
 
