@@ -31,6 +31,10 @@ class Dd4hep(CMakePackage):
     # See https://github.com/AIDASoft/DD4hep/pull/613 .
     patch('tbb-workarounds.patch', when='@1.11')
 
+    # More TBB workarounds, this time for DD4hep v1.12
+    # See https://github.com/AIDASoft/DD4hep/pull/663 .
+    patch('fix-digikernel-tbb.patch', when='@1.12')
+
     variant('assimp', default=False, description="Enable CAD interface based on Assimp")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
     variant('testing', default=False, description="Enable and build tests")
