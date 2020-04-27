@@ -101,7 +101,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('glib', when='+pangocairo')
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
-    depends_on('poppler', when='+poppler')
+    depends_on('poppler+glib', when='+poppler')
     depends_on('zlib')
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
