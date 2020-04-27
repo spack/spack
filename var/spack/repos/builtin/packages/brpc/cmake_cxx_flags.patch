@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 3deb734..d77a70d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -137,7 +137,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-gcse")
+     endif()
+     if(NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0))
+-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-aligned-new")
++        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-aligned-new -Wno-narrowing")
+     endif()
+ endif()
+ 
