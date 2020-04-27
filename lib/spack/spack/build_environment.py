@@ -873,7 +873,9 @@ def fork(pkg, function, dirty, fake):
     # allows exception handling output to be logged from within Spack.
     # see spack.main.SpackCommand.
     if isinstance(child_result, ChildError):
-        child_result.print_context()
+        # Stop Iteration is used to control partial builds, and will be caught
+        if child_result.name != "StopIteration":
+            child_result.print_context()
         raise child_result
 
     return child_result
