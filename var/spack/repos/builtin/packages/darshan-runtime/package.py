@@ -49,6 +49,13 @@ class DarshanRuntime(Package):
         values=('NONE', 'cobalt', 'pbs', 'sge', 'slurm'),
         multi=False
     )
+    variant(
+        'log-path-by-env',
+        default='none',
+        description="The default log directory to use. "
+        "May also signify an environmental variable to resolve, "
+        "e.g. `log-path-by-env='$CUSTOM_VARIABLE'`"
+    )
 
     conflicts('+hdf5', when='@:3.1.8',
               msg='+hdf5 variant only available starting from version 3.2.0')
@@ -71,6 +78,12 @@ class DarshanRuntime(Package):
         if '+sge' in spec:
             job_id = 'JOB_ID'
 
+        darshan_log_env = self.spec.variants['log-path-by-env'].value
+        if darshan_log_env.startswith('$'):
+            darshan_log_env = darshan_log_env[1:]
+        else:
+            darshan_log_env = 'DARSHAN_LOG_DIR_PATH'
+
         # TODO: BG-Q and other platform configure options
         options = []
         if '+mpi' in spec:
@@ -90,7 +103,7 @@ class DarshanRuntime(Package):
             options.extend(['--enable-apxc-mod'])
 
         options.extend(['--with-mem-align=8',
-                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
+                        '--with-log-path-by-env=%s' % darshan_log_env,
                         '--with-jobid-env=%s' % job_id,
                         '--with-zlib=%s' % spec['zlib'].prefix])
 
@@ -102,5 +115,8 @@ class DarshanRuntime(Package):
 
     def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting
-        darshan_log_dir = os.environ['HOME']
-        env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
+        darshan_log_dir = self.spec.variants['log-path-by-env'].value
+        if darshan_log_dir == 'none':
+            darshan_log_dir = os.environ['HOME']
+        if not darshan_log_dir.startswith('$'):
+            env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
