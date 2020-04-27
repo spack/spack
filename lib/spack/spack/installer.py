@@ -808,7 +808,6 @@ class PackageInstaller(object):
                 self.pkg.last_phase == self.pkg.phases[-1]:
             self.pkg.last_phase = None
 
-
     def _cleanup_all_tasks(self):
         """Cleanup all build tasks to include releasing their locks."""
         for pkg_id in self.locks:
