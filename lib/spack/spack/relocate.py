@@ -97,70 +97,102 @@ def _patchelf():
     return exe_path if os.path.exists(exe_path) else None
 
 
-def get_existing_elf_rpaths(path_name):
+def _elf_rpaths_for(path):
+    """Return the RPATHs for an executable or a library.
+
+    The RPATHs are obtained by ``patchelf --print-rpath PATH``.
+
+    Args:
+        path (str): full path to the executable or library
+
+    Return:
+        RPATHs as a list of strings.
     """
-    Return the RPATHS returned by patchelf --print-rpath path_name
-    as a list of strings.
-    """
+    # If we're relocating patchelf itself, use it
+    patchelf_path = path if path.endswith("/bin/patchelf") else _patchelf()
+    patchelf = executable.Executable(patchelf_path)
 
-    # if we're relocating patchelf itself, use it
-
-    if path_name.endswith("/bin/patchelf"):
-        patchelf = executable.Executable(path_name)
-    else:
-        patchelf = executable.Executable(_patchelf())
-
-    rpaths = list()
+    output = ''
     try:
-        output = patchelf('--print-rpath', '%s' %
-                          path_name, output=str, error=str)
-        rpaths = output.rstrip('\n').split(':')
+        output = patchelf('--print-rpath', path, output=str, error=str)
+        output = output.strip('\n')
     except executable.ProcessError as e:
-        msg = 'patchelf --print-rpath %s produced an error %s' % (path_name, e)
-        tty.warn(msg)
-    return rpaths
+        msg = 'patchelf --print-rpath {0} produced an error [{1}]'
+        tty.warn(msg.format(path, str(e)))
+
+    return output.split(':') if output else []
 
 
-def get_relative_elf_rpaths(path_name, orig_layout_root, orig_rpaths):
+def _make_relative(reference_file, path_root, paths):
+    """Return a list where any path in ``paths`` that starts with
+    ``path_root`` is made relative to the directory in which the
+    reference file is stored.
+
+    After a path is made relative it is prefixed with the ``$ORIGIN``
+    string.
+
+    Args:
+        reference_file (str): file from which the reference directory
+            is computed
+        path_root (str): root of the relative paths
+        paths: paths to be examined
+
+    Returns:
+        List of relative paths
     """
-    Replaces orig rpath with relative path from dirname(path_name) if an rpath
-    in orig_rpaths contains orig_layout_root. Prefixes $ORIGIN
-    to relative paths and returns replacement rpaths.
-    """
-    rel_rpaths = []
-    for rpath in orig_rpaths:
-        if re.match(orig_layout_root, rpath):
-            rel = os.path.relpath(rpath, start=os.path.dirname(path_name))
-            rel_rpaths.append(os.path.join('$ORIGIN', '%s' % rel))
-        else:
-            rel_rpaths.append(rpath)
-    return rel_rpaths
+    # Check prerequisites of the function
+    msg = "{0} is not a file".format(reference_file)
+    assert os.path.isfile(reference_file), msg
+
+    start_directory = os.path.dirname(reference_file)
+    pattern = re.compile(path_root)
+    relative_paths = []
+
+    for path in paths:
+        if pattern.match(path):
+            rel = os.path.relpath(path, start=start_directory)
+            path = os.path.join('$ORIGIN', rel)
+
+        relative_paths.append(path)
+
+    return relative_paths
 
 
-def get_normalized_elf_rpaths(orig_path_name, rel_rpaths):
+def _normalize_relative_paths(start_path, relative_paths):
+    """Normalize the relative paths with respect to the original path name
+    of the file (``start_path``).
+
+    The paths that are passed to this function existed or were relevant
+    on another filesystem, so os.path.abspath cannot be used.
+
+    A relative path may contain the signifier $ORIGIN. Assuming that
+    ``start_path`` is absolute, this implies that the relative path
+    (relative to start_path) should be replaced with an absolute path.
+
+    Args:
+        start_path (str): path from which the starting directory
+            is extracted
+        relative_paths (str): list of relative paths as obtained by a
+            call to :ref:`_make_relative`
+
+    Returns:
+        List of normalized paths
     """
-    Normalize the relative rpaths with respect to the original path name
-    of the file. If the rpath starts with $ORIGIN replace $ORIGIN with the
-    dirname of the original path name and then normalize the rpath.
-    A dictionary mapping relativized rpaths to normalized rpaths is returned.
-    """
-    norm_rpaths = list()
-    for rpath in rel_rpaths:
-        if rpath.startswith('$ORIGIN'):
-            sub = re.sub(re.escape('$ORIGIN'),
-                         os.path.dirname(orig_path_name),
-                         rpath)
-            norm = os.path.normpath(sub)
-            norm_rpaths.append(norm)
-        else:
-            norm_rpaths.append(rpath)
-    return norm_rpaths
+    normalized_paths = []
+    pattern = re.compile(re.escape('$ORIGIN'))
+    start_directory = os.path.dirname(start_path)
+
+    for path in relative_paths:
+        if path.startswith('$ORIGIN'):
+            sub = pattern.sub(start_directory, path)
+            path = os.path.normpath(sub)
+        normalized_paths.append(path)
+
+    return normalized_paths
 
 
-def set_placeholder(dirname):
-    """
-    return string of @'s with same length
-    """
+def _placeholder(dirname):
+    """String of  of @'s with same length of the argument"""
     return '@' * len(dirname)
 
 
@@ -592,7 +624,7 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
     rpath was in the old layout root, i.e. system paths are not replaced.
     """
     for path_name in path_names:
-        orig_rpaths = get_existing_elf_rpaths(path_name)
+        orig_rpaths = _elf_rpaths_for(path_name)
         new_rpaths = list()
         if rel:
             # get the file path in the old_prefix
@@ -600,14 +632,14 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
                                     path_name)
             # get the normalized rpaths in the old prefix using the file path
             # in the orig prefix
-            orig_norm_rpaths = get_normalized_elf_rpaths(orig_path_name,
+            orig_norm_rpaths = _normalize_relative_paths(orig_path_name,
                                                          orig_rpaths)
             # get the normalize rpaths in the new prefix
             norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,
                                          prefix_to_prefix)
             # get the relativized rpaths in the new prefix
-            new_rpaths = get_relative_elf_rpaths(path_name, new_layout_root,
-                                                 norm_rpaths)
+            new_rpaths = _make_relative(path_name, new_layout_root,
+                                        norm_rpaths)
             modify_elf_object(path_name, new_rpaths)
         else:
             new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
@@ -652,10 +684,10 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names,
     Replace old RPATHs with paths relative to old_dir in binary files
     """
     for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        orig_rpaths = get_existing_elf_rpaths(cur_path)
+        orig_rpaths = _elf_rpaths_for(cur_path)
         if orig_rpaths:
-            new_rpaths = get_relative_elf_rpaths(orig_path, old_layout_root,
-                                                 orig_rpaths)
+            new_rpaths = _make_relative(orig_path, old_layout_root,
+                                        orig_rpaths)
             modify_elf_object(cur_path, new_rpaths)
 
 
@@ -679,7 +711,7 @@ def relocate_links(linknames, old_layout_root, new_layout_root,
     link target is create by replacing the old install prefix with the new
     install prefix.
     """
-    placeholder = set_placeholder(old_layout_root)
+    placeholder = _placeholder(old_layout_root)
     link_names = [os.path.join(new_install_prefix, linkname)
                   for linkname in linknames]
     for link_name in link_names:
@@ -810,7 +842,7 @@ def file_is_relocatable(file, paths_to_relocate=None):
 
     if platform.system().lower() == 'linux':
         if m_subtype == 'x-executable' or m_subtype == 'x-sharedlib':
-            rpaths = ':'.join(get_existing_elf_rpaths(file))
+            rpaths = ':'.join(_elf_rpaths_for(file))
             set_of_strings.discard(rpaths)
     if platform.system().lower() == 'darwin':
         if m_subtype == 'x-mach-binary':
