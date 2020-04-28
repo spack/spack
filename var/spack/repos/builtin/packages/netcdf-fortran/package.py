@@ -27,6 +27,7 @@ class NetcdfFortran(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('doc', default=False, description='Enable building docs')
 
     # We need to build with MPI wrappers if parallel I/O features is enabled:
     # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
@@ -34,6 +35,7 @@ class NetcdfFortran(AutotoolsPackage):
 
     depends_on('netcdf-c~mpi', when='~mpi')
     depends_on('netcdf-c+mpi', when='+mpi')
+    depends_on('doxygen', when='+doc', type='build')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
     # https://github.com/Unidata/netcdf-fortran/issues/94
@@ -119,6 +121,11 @@ class NetcdfFortran(AutotoolsPackage):
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
+
+        if '+doc' in self.spec:
+            config_args.append('--enable-doxygen')
+        else:
+            config_args.append('--disable-doxygen')
 
         return config_args
 
