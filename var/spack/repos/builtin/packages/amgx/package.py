@@ -28,10 +28,14 @@ class Amgx(CMakePackage, CudaPackage):
     variant('cuda', default=True, description='Build with CUDA')
     variant('mpi', default=True,
         description='Enable MPI support')
-    #TODO add mkl variant
-    #TODO add magma variant
+    variant('mkl', default=False,
+        description='Enable MKL support')
+    variant('magma', default=False,
+        description='Enable Magma support')
 
     depends_on('mpi', when='+mpi')
+    depends_on('intel-mkl', when='+mkl')
+    depends_on('magma', when='+magma')
 
     def cmake_args(self):
         args = []
@@ -45,5 +49,13 @@ class Amgx(CMakePackage, CudaPackage):
                 args.append('-DCUDA_ARCH={0}'.format(cuda_arch[0]))
         else:
             args.append('-DWITH_CUDA=OFF')
+
+        if '+mkl' in self.spec:
+            args.append('-DMKL_ROOT_DIR={0}'.format(
+                self.spec['intel-mkl'].prefix))
+
+        if '+magma' in self.spec:
+            args.append('-DMAGMA_ROOT_DIR={0}'.format(
+                self.spec['intel-mkl'].prefix))
 
         return args
