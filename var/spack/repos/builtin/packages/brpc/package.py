@@ -23,5 +23,5 @@ class Brpc(CMakePackage):
     depends_on('protobuf')
     depends_on('leveldb')
 
-    patch('cmake_cxx_flags.patch',
-        sha256='e92e20ed789d739431f93c73e1345e734b30a13967ed1fd7cc7f4244cbdf7401')
+    patch('narrow.patch',
+        sha256='d7393029443853ddda6c09e3d2185ac2f60920a36a8b685eb83b6b80c1535539')
