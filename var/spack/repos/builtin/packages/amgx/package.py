@@ -53,6 +53,6 @@ class Amgx(CMakePackage, CudaPackage):
 
         if '+magma' in self.spec:
             args.append('-DMAGMA_ROOT_DIR={0}'.format(
-                self.spec['intel-mkl'].prefix))
+                self.spec['magma'].prefix))
 
         return args
