@@ -30,7 +30,10 @@ class Openscenegraph(CMakePackage):
     depends_on('qt@:4', when='@:3.1')
     depends_on('libxinerama')
     depends_on('libxrandr')
+    depends_on('libpng')
     depends_on('jasper')
+    depends_on('libtiff')
+    depends_on('glib')
     depends_on('zlib')
 
     depends_on('ffmpeg+avresample', when='+ffmpeg')
