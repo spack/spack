@@ -182,6 +182,7 @@ class NetcdfC(AutotoolsPackage):
             else:
                 config_args.append('--disable-parallel4')
 
+        if self.spec.satisfies('@4.3.2:'):
             config_args += self.enable_or_disable('jna')
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
