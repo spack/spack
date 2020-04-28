@@ -82,6 +82,10 @@ packages:
         paths:
             ncurses@6.1: /usr
         version: [6.1]
+    ninja:
+        paths:
+            ninja@1.5.1: /usr
+        version: [1.5.1]
     numactl:
         paths:
             numactl@2.0.11: /usr
