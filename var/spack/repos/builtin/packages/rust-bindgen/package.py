@@ -12,11 +12,12 @@ class RustBindgen(CargoPackage):
     libraries."""
 
     homepage = "https://rust-lang.github.io/rust-bindgen/"
-
     crates_io = "bindgen"
     git = "https://github.com/rust-lang/rust-bindgen.git"
 
-    depends_on('llvm', type=('build', 'run'))
+    maintainers = ['AndrewGaspar']
+
+    depends_on('llvm@6.0:', type=('build', 'run'))
 
     version('master', branch='master')
     version('0.53.2', sha256='6bb26d6a69a335b8cb0e7c7e9775cd5666611dc50a37177c3f2cedcfc040e8c8')
@@ -110,4 +111,5 @@ class RustBindgen(CargoPackage):
     # rust-bindgen has a dependency on libclang - add path
     def setup_build_environment(self, env):
         env.append_flags(
-            'LIBCLANG_PATH', join_path(self.spec['llvm'].prefix, 'lib'))
+            'LLVM_CONFIG_PATH',
+            join_path(self.spec['llvm'].prefix.bin, 'llvm-config'))
