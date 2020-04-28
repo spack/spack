@@ -608,10 +608,10 @@ class Openmpi(AutotoolsPackage):
                 'shmemfort': ([comp_vers], None),
                 'shmemrun': ([spec_vers], None),
             },
-            '3.1.0:3.1.5': {   # Only tested 3.1.5 so far
+            '3.1.0:3.1.5': {
                 'prun': ([spec_vers], None),
             },
-            '3.0.0:3.1.5': {   # Only tested 3.1.5 so far
+            '3.0.0:3.1.5': {
                 'oshCC': ([comp_vers], None),
                 'oshc++': ([comp_vers], None),
                 'oshcxx': ([comp_vers], None),
