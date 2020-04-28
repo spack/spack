@@ -164,13 +164,18 @@ def test_multi_extension_search(hello_world_extension, extension_creator):
         assert ('Hello world') in spack.main.SpackCommand('hello-world')()
 
 
-def test_duplicate_module_load(hello_world_cmd):
+def test_duplicate_module_load(hello_world_cmd, capsys):
     """Ensure duplicate module load attempts are successful.
 
     The command module will already have been loaded once by the
     hello_world_cmd fixture.
     """
-    assert ('Hello world') in spack.main.SpackCommand('hello-world')()
+    parser = spack.main.make_argument_parser()
+    args = []
+    hw_cmd = spack.cmd.get_command(hello_world_cmd.command_name)
+    hw_cmd(parser, args)
+    captured = capsys.readouterr()
+    assert captured == ('Hello world!\n', '')
 
 
 @pytest.mark.parametrize('extension_name',
