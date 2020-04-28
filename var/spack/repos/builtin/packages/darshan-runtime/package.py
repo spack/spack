@@ -1,10 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class DarshanRuntime(Package):
@@ -18,7 +17,10 @@ class DarshanRuntime(Package):
     url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
     git      = "https://xgitlab.cels.anl.gov/darshan/darshan.git"
 
+    maintainers = ['shanedsnyder', 'carns']
+
     version('develop', branch='master')
+    version('3.1.8', sha256='3ed51c8d5d93b4a8cbb7d53d13052140a9dffe0bc1a3e1ebfc44a36a184b5c82')
     version('3.1.7', sha256='9ba535df292727ac1e8025bdf2dc42942715205cad8319d925723fd88709e8d6')
     version('3.1.6', sha256='21cb24e2a971c45e04476e00441b7fbea63d2afa727a5cf8b7a4a9d9004dd856')
     version('3.1.0', sha256='b847047c76759054577823fbe21075cfabb478cdafad341d480274fb1cef861c')
@@ -54,7 +56,6 @@ class DarshanRuntime(Package):
             make()
             make('install')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting
-        darshan_log_dir = '%s' % os.environ['HOME']
-        run_env.set('DARSHAN_LOG_DIR_PATH', darshan_log_dir)
+        env.set('DARSHAN_LOG_DIR_PATH', '.')

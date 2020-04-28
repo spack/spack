@@ -23,6 +23,8 @@ packages:
       - bison@3.0.5
       - blender
       - cmake@3.15.3
+      - darshan-runtime
+      - darshan-util
       - doxygen@1.8.15
       - emacs@26.1
       - environment-modules@3.2.10

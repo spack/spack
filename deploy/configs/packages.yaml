@@ -19,6 +19,8 @@ packages:
         paths:
             curl@7.29.0: /usr
         version: [7.29.0]
+    darshan-runtime:
+        variants: +slurm
     eigen:
         variants: ~fftw~gmp~metis~mpfr~scotch
     flex:
