@@ -133,9 +133,12 @@ def _get_external_packages(repo, system_path_to_exe=None):
     pkg_to_entries = defaultdict(list)
     resolved_specs = {}  # spec -> exe found for the spec
 
-    # TODO: iterate through this in a predetermined order (e.g. by package
-    # name) to get repeatable results when there are conflicts.
     for pkg, exes in pkg_to_found_exes.items():
+        # TODO: iterate through this in a predetermined order (e.g. by package
+        # name) to get repeatable results when there are conflicts. Note that
+        # if we take the prefixes returned by _group_by_prefix, then consider
+        # them in the order that they appear in PATH, this should be sufficient
+        # to get repeatable results.
         for prefix, exes_in_prefix in _group_by_prefix(exes):
             # TODO: multiple instances of a package can live in the same
             # prefix, and a package implementation can return multiple specs
