@@ -188,15 +188,10 @@ class CratesIOPackageTemplate(PackageTemplate):
 
     base_class_name = 'CargoPackage'
 
-    url_line = """\
-    crates_io = "{name}"
-    git       = "{repo}"
-"""
-
     body_def = ""
 
     def __init__(self, name, url, versions):
-        crate_metadata = spack.util.web.get_crate_metadata(name)
+        crate_metadata = spack.util.web.get_crate_metadata(get_crate(url))
         crate = crate_metadata["crate"]
 
         description = crate["description"]
@@ -216,7 +211,7 @@ class CratesIOPackageTemplate(PackageTemplate):
 
         home = \
             homepage if homepage else \
-                "https://crates.io/crates/{0}".format(crate["id"])
+                "https://crates.io/crates/{id}".format(id=crate["id"])
 
         self.homepage = """\
     homepage  = "{home}"\
@@ -237,8 +232,8 @@ class CratesIOPackageTemplate(PackageTemplate):
             git_line = ''
 
         self.url_def = """\
-    crates_io = "{name}"{git_line}""".format(
-            name=name,
+    crates_io = "{id}"{git_line}""".format(
+            id=crate["id"],
             git_line=git_line
         )
 
@@ -647,6 +642,23 @@ def get_name(args):
     return name
 
 
+def get_crate(url):
+    """Gets the name of the crate from the URL"""
+
+    # Check if the URL is a crates.io crate. Provide both crates.io and
+    # lib.rs support for flexibility
+    crates_io_prefix = 'https://crates.io/crates/'
+    lib_rs_prefix = 'https://lib.rs/crates/'
+
+    crate = None
+    if url.startswith(crates_io_prefix):
+        crate = url[len(crates_io_prefix):]
+    elif url.startswith(lib_rs_prefix):
+        crate = url[len(lib_rs_prefix):]
+
+    return crate
+
+
 def get_url(args):
     """Get the URL to use.
 
@@ -701,16 +713,8 @@ def get_versions(args, name):
     if args.url is not None and args.template != 'bundle':
         # Find available versions
 
-        # Check if the URL is a crates.io crate. Provide both crates.io and
-        # lib.rs support for flexibility
-        crates_io_prefix = 'https://crates.io/crates/'
-        lib_rs_prefix = 'https://lib.rs/crates/'
-
-        crate = None
-        if args.url.startswith(crates_io_prefix):
-            crate = args.url[len(crates_io_prefix):]
-        elif args.url.startswith(lib_rs_prefix):
-            crate = args.url[len(lib_rs_prefix):]
+        # Check if the URL is a crates.io crate.
+        crate = get_crate(args.url)
 
         if crate is not None:
             # For packages pulled from crates.io, all releases can be easily
