@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyPytouchreader(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
 
     version('develop', get_full_repo=True)
+    version('1.4.5', tag='v1.4.5', get_full_repo=True)
     version('1.4.4', tag='v1.4.4', get_full_repo=True)
     version('1.4.3', tag='v1.4.3', get_full_repo=True)
     version('1.4.2', tag='v1.4.2', get_full_repo=True)
