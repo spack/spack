@@ -230,13 +230,16 @@ class Openmpi(AutotoolsPackage):
     )
 
     # Additional support options
+    variant('atomics', default=False, description='Enable built-in atomics')
     variant('java', default=False, description='Build Java support')
+    variant('static', default=True, description='Build static libraries')
     variant('sqlite3', default=False, description='Build SQLite3 support')
     variant('vt', default=True, description='Build VampirTrace support')
     variant('thread_multiple', default=False,
             description='Enable MPI_THREAD_MULTIPLE support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('pmi', default=False, description='Enable PMI support')
+    variant('runpath', default=True, description='Enable wrapper runpath')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
     # Adding support to build a debug version of OpenMPI that activates
@@ -421,6 +424,11 @@ class Openmpi(AutotoolsPackage):
             '--with-wrapper-ldflags={0}'.format(' '.join(rpaths))
         ])
 
+        if '+atomics' in spec:
+            config_args.append('--enable-builtin-atomics')
+        else:
+            config_args.append('--disable-builtin-atomics')
+
         # According to this comment on github:
         #
         # https://github.com/open-mpi/ompi/issues/4338#issuecomment-383982008
@@ -431,9 +439,14 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
-                config_args.append('--enable-static')
+                if '+static' in spec:
+                    config_args.append('--enable-static')
         else:
-            config_args.append('--enable-static')
+            if '+static' in spec:
+                config_args.append('--enable-static')
+            else:
+                config_args.append('--disable-static')
+
             config_args.extend(self.with_or_without('pmi'))
 
         if spec.satisfies('@3.0.0:', strict=True):
@@ -532,6 +545,13 @@ class Openmpi(AutotoolsPackage):
                         config_args.append('CFLAGS=-D__LP64__')
             else:
                 config_args.append('--without-cuda')
+
+        if '+runpath' in spec:
+            config_args.append('--enable-wrapper-rpath')
+            config_args.append('--enable-wrapper-runpath')
+        else:
+            config_args.append('--disable-wrapper-rpath')
+            config_args.append('--disable-wrapper-runpath')
 
         if spec.satisfies('@:4'):
             if '+cxx' in spec:

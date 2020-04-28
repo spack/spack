@@ -14,7 +14,6 @@ import shutil
 import tempfile
 import xml.etree.ElementTree
 
-import ordereddict_backport
 import py
 import pytest
 import ruamel.yaml as yaml
@@ -38,11 +37,8 @@ import spack.util.executable
 import spack.util.gpg
 
 from spack.util.pattern import Bunch
-from spack.dependency import Dependency
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
-from spack.spec import Spec
-from spack.version import Version
 
 
 @pytest.fixture
@@ -1003,75 +999,6 @@ def installation_dir_with_headers(tmpdir_factory):
 
     return root
 
-
-##########
-# Mock packages
-##########
-
-
-class MockPackage(object):
-    def __init__(self, name, dependencies, dependency_types, conditions=None,
-                 versions=None):
-        self.name = name
-        self.spec = None
-        self.dependencies = ordereddict_backport.OrderedDict()
-        self._installed_upstream = False
-
-        assert len(dependencies) == len(dependency_types)
-        for dep, dtype in zip(dependencies, dependency_types):
-            d = Dependency(self, Spec(dep.name), type=dtype)
-            if not conditions or dep.name not in conditions:
-                self.dependencies[dep.name] = {Spec(name): d}
-            else:
-                dep_conditions = conditions[dep.name]
-                dep_conditions = dict(
-                    (Spec(x), Dependency(self, Spec(y), type=dtype))
-                    for x, y in dep_conditions.items())
-                self.dependencies[dep.name] = dep_conditions
-
-        if versions:
-            self.versions = versions
-        else:
-            versions = list(Version(x) for x in [1, 2, 3])
-            self.versions = dict((x, {'preferred': False}) for x in versions)
-
-        self.variants = {}
-        self.provided = {}
-        self.conflicts = {}
-        self.patches = {}
-
-    def provides(self, vname):
-        return vname in self.provided
-
-    @property
-    def virtuals_provided(self):
-        return [v.name for v, c in self.provided]
-
-
-class MockPackageMultiRepo(object):
-    def __init__(self, packages):
-        self.spec_to_pkg = dict((x.name, x) for x in packages)
-        self.spec_to_pkg.update(
-            dict(('mockrepo.' + x.name, x) for x in packages))
-
-    def get(self, spec):
-        if not isinstance(spec, spack.spec.Spec):
-            spec = Spec(spec)
-        return self.spec_to_pkg[spec.name]
-
-    def get_pkg_class(self, name):
-        return self.spec_to_pkg[name]
-
-    def exists(self, name):
-        return name in self.spec_to_pkg
-
-    def is_virtual(self, name):
-        return False
-
-    def repo_for_pkg(self, name):
-        import collections
-        Repo = collections.namedtuple('Repo', ['namespace'])
-        return Repo('mockrepo')
 
 ##########
 # Specs of various kind

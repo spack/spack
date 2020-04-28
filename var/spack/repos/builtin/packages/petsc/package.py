@@ -300,13 +300,15 @@ class Petsc(Package):
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library, value=('1' if library in spec else '0'))
+                    library=library,
+                    value=('1' if '+' + library in spec else '0'))
             )
-            if library in spec:
+            if '+' + library in spec:
                 options.append(
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
                 )
+
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:

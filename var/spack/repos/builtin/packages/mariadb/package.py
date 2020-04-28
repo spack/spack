@@ -33,6 +33,7 @@ class Mariadb(CMakePackage):
             'operations in the mariadb client library.')
 
     provides('mariadb-client')
+    provides('mysql-client')
 
     depends_on('boost')
     depends_on('cmake@2.6:', type='build')

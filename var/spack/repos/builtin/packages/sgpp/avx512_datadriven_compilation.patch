@@ -1,0 +1,21 @@
+diff --git a/datadriven/src/sgpp/datadriven/operation/hash/OperationMultiEvalStreaming/OperationMultiEvalStreaming_multImpl.cpp b/datadriven/src/sgpp/datadriven/operation/hash/OperationMultiEvalStreaming/OperationMultiEvalStreaming_multImpl.cpp
+index 7fafd43d4..ea15ba137 100644
+--- a/datadriven/src/sgpp/datadriven/operation/hash/OperationMultiEvalStreaming/OperationMultiEvalStreaming_multImpl.cpp
++++ b/datadriven/src/sgpp/datadriven/operation/hash/OperationMultiEvalStreaming/OperationMultiEvalStreaming_multImpl.cpp
+@@ -295,6 +295,7 @@ void OperationMultiEvalStreaming::multImpl(
+   _mm512_extload_pd(A, _MM_UPCONV_PD_NONE, _MM_BROADCAST_1X8, _MM_HINT_NONE)
+ #define _mm512_max_pd(A, B) _mm512_gmax_pd(A, B)
+ #define _mm512_set1_epi64(A) _mm512_set_1to8_epi64(A)
++#define _mm512_set1_pd(A) _mm512_set_1to8_pd(A)
+ #endif
+ #if defined(__AVX512F__)
+ #define _mm512_broadcast_sd(A) _mm512_broadcastsd_pd(_mm_load_sd(A))
+@@ -409,7 +410,7 @@ void OperationMultiEvalStreaming::multImpl(
+         eval_11 = _mm512_castsi512_pd(_mm512_and_epi64(abs2Mask, _mm512_castpd_si512(eval_11)));
+ #endif
+ 
+-        __m512d one = _mm512_set_1to8_pd(1.0);
++        __m512d one = _mm512_set1_pd(1.0);
+ 
+         eval_0 = _mm512_sub_pd(one, eval_0);
+         eval_1 = _mm512_sub_pd(one, eval_1);

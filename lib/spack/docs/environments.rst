@@ -281,7 +281,7 @@ in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
-be called using the ``spack -E`` flag to specify the environment.
+be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: console
 
@@ -292,7 +292,7 @@ or
 
 .. code-block:: console
 
-   $ spack -E myenv add python
+   $ spack -e myenv add python
 
 .. _environments_concretization:
 

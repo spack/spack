@@ -8,6 +8,7 @@ from __future__ import print_function
 import textwrap
 from six.moves import zip_longest
 
+import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
@@ -53,11 +54,9 @@ def variant(s):
 
 
 class VariantFormatter(object):
-    def __init__(self, variants, max_widths=(30, 20, 30)):
+    def __init__(self, variants):
         self.variants = variants
         self.headers = ('Name [Default]', 'Allowed values', 'Description')
-        # Set max headers lengths
-        self.max_column_widths = max_widths
 
         # Formats
         fmt_name = '{0} [{1}]'
@@ -67,7 +66,7 @@ class VariantFormatter(object):
         # than that
         self.column_widths = [len(x) for x in self.headers]
 
-        # Update according to line lengths
+        # Expand columns based on max line lengths
         for k, v in variants.items():
             candidate_max_widths = (
                 len(fmt_name.format(k, self.default(v))),  # Name [Default]
@@ -81,12 +80,18 @@ class VariantFormatter(object):
                 max(self.column_widths[2], candidate_max_widths[2])
             )
 
-        # Reduce to at most the maximum allowed
-        self.column_widths = (
-            min(self.column_widths[0], self.max_column_widths[0]),
-            min(self.column_widths[1], self.max_column_widths[1]),
-            min(self.column_widths[2], self.max_column_widths[2])
+        # Don't let name or possible values be less than max widths
+        _, cols = tty.terminal_size()
+        max_name = min(self.column_widths[0], 30)
+        max_vals = min(self.column_widths[1], 20)
+
+        # allow the description column to extend as wide as the terminal.
+        max_description = min(
+            self.column_widths[2],
+            # min width 70 cols, 14 cols of margins and column spacing
+            max(cols, 70) - max_name - max_vals - 14,
         )
+        self.column_widths = (max_name, max_vals, max_description)
 
         # Compute the format
         self.fmt = "%%-%ss%%-%ss%%s" % (
@@ -114,10 +119,8 @@ class VariantFormatter(object):
                     '{0} [{1}]'.format(k, self.default(v)),
                     width=self.column_widths[0]
                 )
-                allowed = textwrap.wrap(
-                    v.allowed_values,
-                    width=self.column_widths[1]
-                )
+                allowed = v.allowed_values.replace('True, False', 'on, off')
+                allowed = textwrap.wrap(allowed, width=self.column_widths[1])
                 description = textwrap.wrap(
                     v.description,
                     width=self.column_widths[2]

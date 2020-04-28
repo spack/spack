@@ -37,10 +37,15 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
-    subparser.add_argument(
+    arguments.add_common_arguments(subparser, ['spec'])
+
+    stop_group = subparser.add_mutually_exclusive_group()
+    stop_group.add_argument(
+        '-b', '--before', type=str, dest='before', default=None,
+        help="phase to stop before when installing (default None)")
+    stop_group.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    arguments.add_common_arguments(subparser, ['spec'])
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -91,4 +96,5 @@ def dev_build(self, args):
         verbose=not args.quiet,
         keep_stage=True,   # don't remove source dir for dev build.
         dirty=args.dirty,
+        stop_before=args.before,
         stop_at=args.until)

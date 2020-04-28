@@ -17,10 +17,10 @@ class Podio(CMakePackage):
     maintainers = ['vvolkl', 'drbenmorgan']
 
     version('master', branch='master')
-    version('00-10', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
-    version('00-09-02', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
-    version('00-09', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
-    version('00-08', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
+    version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
+    version('0.9.2', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
+    version('0.9.0', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
+    version('0.8.0', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
 
     variant('build_type', default='Release',
             description='The build type to build',
@@ -56,3 +56,16 @@ class Podio(CMakePackage):
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.set('PODIO', self.prefix)
+
+    def url_for_version(self, version):
+        # podio releases are dashes and padded with a leading zero
+        # the patch version is omitted when 0
+        # so for example v01-12-01, v01-12 ...
+        major = (str(version[0]).zfill(2))
+        minor = (str(version[1]).zfill(2))
+        patch = (str(version[2]).zfill(2))
+        if version[2] == 0:
+            url = "https://github.com/AIDASoft/podio/archive/v%s-%s.tar.gz" % (major, minor)
+        else:
+            url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
+        return url
