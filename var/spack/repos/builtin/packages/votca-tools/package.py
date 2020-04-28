@@ -18,8 +18,10 @@ class VotcaTools(CMakePackage):
     homepage = "http://www.votca.org"
     url      = "https://github.com/votca/tools/tarball/v1.4"
     git      = "https://github.com/votca/tools.git"
+    maintainers = ['junghans']
 
     version('master', branch='master')
+    version('stable', branch='stable')
     version('1.6', sha256='cfd0fedc80fecd009f743b5df47777508d76bf3ef294a508a9f11fbb42efe9a5')
     version('1.5.1', sha256='4be4fe25a2910e24e1720cd9022d214001d38196033ade8f9d6e618b4f47d5c4')
     version('1.5', sha256='a82a6596c24ff06e79eab17ca02f4405745ceeeb66369693a59023ad0b62cf22')
