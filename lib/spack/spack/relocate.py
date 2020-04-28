@@ -140,10 +140,6 @@ def _make_relative(reference_file, path_root, paths):
     Returns:
         List of relative paths
     """
-    # Check prerequisites of the function
-    msg = "{0} is not a file".format(reference_file)
-    assert os.path.isfile(reference_file), msg
-
     start_directory = os.path.dirname(reference_file)
     pattern = re.compile(path_root)
     relative_paths = []
