@@ -39,7 +39,7 @@ class Amgx(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         args = []
-        args.append("CMAKE_NO_MPI={0}".format(
+        args.append("-DCMAKE_NO_MPI={0}".format(
             '1' if '+mpi' not in self.spec else '0'))
 
         if '+cuda' in self.spec:
