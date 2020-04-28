@@ -163,6 +163,8 @@ after_success:
 #=============================================================================
 notifications:
   email:
-    recipients: tgamblin@llnl.gov
+    recipients:
+    - tgamblin@llnl.gov
+    - massimiliano.culpo@gmail.com
     on_success: change
     on_failure: always
