@@ -589,11 +589,11 @@ class Openmpi(AutotoolsPackage):
                 'orted': ([bad_option], 213),
                 'orterun': ([spec_vers], None),
             },
-            '2.1.0:2.1.6': {
+            '2.0.0:2.1.6': {
                 'ompi-submit': ([spec_vers], None),
                 'orte-submit': ([spec_vers], None),
             },
-            '2.1.0:3.1.5': {
+            '2.0.0:3.1.5': {
                 'ompi-dvm': ([spec_vers], None),
                 'ompi-ps': ([bad_option], 213),
                 'ompi-top': ([bad_option], 1),
@@ -632,7 +632,7 @@ class Openmpi(AutotoolsPackage):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        if self.spec.version not in spack.version.ver('2.1.0:4.0.3'):
+        if self.spec.version not in spack.version.ver('2.0.0:4.0.3'):
             tty.warn('Expected results have not been confirmed for {0} {1}'
                      .format(self.spec, self.spec.version))
 
