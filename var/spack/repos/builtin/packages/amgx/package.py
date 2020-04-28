@@ -31,7 +31,7 @@ class Amgx(CMakePackage, CudaPackage):
     variant('magma', default=False, description='Enable Magma support')
 
     depends_on('mpi', when='+mpi')
-    depends_on('intel-mkl', when='+mkl')
+    depends_on('mkl', when='+mkl')
     depends_on('magma', when='+magma')
 
     def cmake_args(self):
@@ -49,7 +49,7 @@ class Amgx(CMakePackage, CudaPackage):
 
         if '+mkl' in self.spec:
             args.append('-DMKL_ROOT_DIR={0}'.format(
-                self.spec['intel-mkl'].prefix))
+                self.spec['mkl'].prefix))
 
         if '+magma' in self.spec:
             args.append('-DMAGMA_ROOT_DIR={0}'.format(
