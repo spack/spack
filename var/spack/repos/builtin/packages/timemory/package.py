@@ -31,7 +31,6 @@ class Timemory(CMakePackage):
     variant('mpi', default=True, description='Enable MPI support')
     variant('tau', default=False, description='Enable TAU support')
     variant('papi', default=linux, description='Enable PAPI support')
-    variant('ompt', default=True, description='Enable OpenMP tools support')
     variant('cuda', default=linux, description='Enable CUDA support')
     variant('cupti', default=linux, description='Enable CUPTI support')
     variant('tools', default=True, description='Build/install extra tools')
@@ -39,7 +38,7 @@ class Timemory(CMakePackage):
     variant('upcxx', default=False, description='Enable UPC++ support')
     variant('gotcha', default=linux, description='Enable GOTCHA support')
     variant('likwid', default=linux, description='Enable LIKWID support')
-    variant('caliper', default=True, description='Enable Caliper support')
+    variant('caliper', default=False, description='Enable Caliper support')
     variant('dyninst', default=linux,
             description='Build dynamic instrumentation tools')
     variant('examples', default=False, description='Build/install examples')
@@ -51,14 +50,6 @@ class Timemory(CMakePackage):
     variant('kokkos_build_config', default=False,
             description=('Build pre-configured (i.e. dedicated) kokkos-tools '
                          'libraries, e.g. kp_timemory_cpu_flops'))
-    variant('build_caliper', default=True,
-            description=('Build Caliper submodule instead of spack '
-                         'installation'))
-    variant('build_gotcha', default=False,
-            description='Build GOTCHA submodule instead of spack installation')
-    variant('build_ompt', default=True,
-            description=('Build OpenMP/OMPT submodule instead of spack '
-                         'installation'))
     variant('cuda_arch', default='auto', description='CUDA architecture name',
             values=('auto', 'kepler', 'tesla', 'maxwell', 'pascal',
                     'volta', 'turing'), multi=False)
@@ -72,7 +63,8 @@ class Timemory(CMakePackage):
             description='Thread-local static model', multi=False,
             values=('global-dynamic', 'local-dynamic', 'initial-exec',
                     'local-exec'))
-    variant('lto', default=False, description='Build w/ link-time optimization')
+    variant('lto', default=False,
+            description='Build w/ link-time optimization')
     variant('statistics', default=True,
             description=('Build components w/ support for statistics '
                          '(min/max/stddev)'))
@@ -82,8 +74,16 @@ class Timemory(CMakePackage):
             values=('14', '17', '20'), multi=False)
     variant('mpip_library', default=linux,
             description='Build stand-alone timemory-mpip GOTCHA library')
+    variant('ompt', default=True, description=('Enable OpenMP tools support'))
+    variant('ompt_standalone', default=True, description=('Enable OpenMP '
+            'tools support via drop-in replacement of '
+            'libomp/libgomp/libiomp5'))
+    variant('ompt_llvm', default=False, description=('Enable OpenMP tools '
+            'support as part of llvm build'))
     variant('ompt_library', default=True,
             description='Build stand-alone timemory-ompt library')
+    variant('allinea_map', default=False,
+            description='Enable Allinea ARM-MAP support')
     variant('require_packages', default=False,
             description=('find_package(...) resulting in NOTFOUND '
                          'generates error'))
@@ -102,11 +102,14 @@ class Timemory(CMakePackage):
     depends_on('cuda', when='+cupti')
     depends_on('upcxx', when='+upcxx')
     depends_on('likwid', when='+likwid')
-    depends_on('gotcha', when='~build_gotcha+gotcha')
-    depends_on('caliper', when='~build_caliper+caliper')
+    depends_on('gotcha', when='+gotcha')
+    depends_on('caliper', when='+caliper')
     depends_on('dyninst', when='+dyninst')
     depends_on('gperftools', when='+gperftools')
     depends_on('intel-parallel-studio', when='+vtune')
+    depends_on('llvm-openmp-ompt+standalone', when='+ompt_standalone')
+    depends_on('llvm-openmp-ompt~standalone', when='+ompt_llvm')
+    depends_on('arm-forge', when='+allinea_map')
 
     conflicts('+python', when='~shared',
               msg='+python requires building shared libraries')
@@ -128,9 +131,18 @@ class Timemory(CMakePackage):
               msg='+mpip_library requires +gotcha')
     conflicts('+mpip_library', when='~shared',
               msg='+mpip_library requires building shared libraries')
-    conflicts('+ompt_library', when='~ompt', msg='+ompt_library requires +ompt')
+    conflicts('+ompt_standalone', when='~ompt',
+              msg='+ompt_standalone requires +ompt')
+    conflicts('+ompt_llvm', when='~ompt',
+              msg='+ompt_llvm requires +ompt')
+    conflicts('+ompt_library', when='~ompt',
+              msg='+ompt_library requires +ompt')
     conflicts('+ompt_library', when='~shared~static',
               msg='+ompt_library requires building shared or static libraries')
+    conflicts('+ompt_standalone+ompt_llvm', msg=('+ompt_standalone and '
+              '+ompt_llvm are not compatible. Use +ompt_llvm~ompt_standalone '
+              'if building LLVM, use ~ompt_llvm+ompt_standalone if ompt.h '
+              'is not provided by the compiler'))
 
     def cmake_args(self):
         spec = self.spec
@@ -166,9 +178,12 @@ class Timemory(CMakePackage):
         if cpu_target == 'auto':
             args.append('-DCpuArch_TARGET={0}'.format(cpu_target))
 
+        # forced disabling of submodule builds
+        for dep in ('caliper', 'gotcha', 'ompt'):
+            args.append('-DTIMEMORY_BUILD_{0}=OFF'.format(dep.upper()))
+
         # spack options which translate to TIMEMORY_<OPTION>
-        for dep in ('require_packages', 'build_caliper', 'build_gotcha',
-                    'build_ompt', 'kokkos_build_config', 'use_arch'):
+        for dep in ('require_packages', 'kokkos_build_config', 'use_arch'):
             args.append('-DTIMEMORY_{0}={1}'.format(
                 dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
@@ -184,9 +199,10 @@ class Timemory(CMakePackage):
                 dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
         # spack options which translate to TIMEMORY_USE_<OPTION>
-        for dep in ('python', 'mpi', 'tau', 'papi', 'ompt', 'cuda', 'cupti',
-                    'vtune', 'upcxx', 'gotcha', 'likwid', 'caliper', 'dyninst',
-                    'gperftools', 'statistics'):
+        for dep in ('allinea_map', 'python', 'mpi', 'tau', 'papi', 'ompt',
+                    'cuda', 'cupti', 'cupti', 'vtune', 'upcxx', 'gotcha',
+                    'likwid', 'caliper', 'dyninst', 'gperftools',
+                    'statistics'):
             args.append('-DTIMEMORY_USE_{0}={1}'.format(
                 dep.upper(), 'ON' if '+{0}'.format(dep) in spec else 'OFF'))
 
