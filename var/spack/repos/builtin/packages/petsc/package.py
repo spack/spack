@@ -296,26 +296,17 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
+        for library in ('cuda', 'metis', 'hdf5', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library, value=('1' if library in spec else '0'))
+                    library=library, value=('1' if '+'+library in spec else '0'))
             )
-            if library in spec:
+            if '+'+library in spec:
                 options.append(
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
                 )
-
-        # Add cuda if explicitly requested
-        if '+cuda' in spec:
-            options.append('--with-cuda=1')
-            options.append(
-                '--with-cuda-dir={path}'.format(
-                    path=spec['cuda'].prefix))
-        else:
-            options.append('--with-cuda=0')
 
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
