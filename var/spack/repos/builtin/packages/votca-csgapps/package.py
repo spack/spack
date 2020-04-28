@@ -18,6 +18,7 @@ class VotcaCsgapps(CMakePackage):
     homepage = "http://www.votca.org"
     url      = "https://github.com/votca/csgapps/tarball/v1.4"
     git      = "https://github.com/votca/csgapps.git"
+    maintainers = ['junghans']
 
     version('master', branch='master')
     version('stable', branch='stable')
