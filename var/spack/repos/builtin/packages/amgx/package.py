@@ -26,12 +26,9 @@ class Amgx(CMakePackage, CudaPackage):
     version('2.0.0', sha256='8ec7ea8412be3de216fcf7243c4e2a8bcf76878e6865468e4238630a082a431b')
 
     variant('cuda', default=True, description='Build with CUDA')
-    variant('mpi', default=True,
-        description='Enable MPI support')
-    variant('mkl', default=False,
-        description='Enable MKL support')
-    variant('magma', default=False,
-        description='Enable Magma support')
+    variant('mpi', default=True, description='Enable MPI support')
+    variant('mkl', default=False, description='Enable MKL support')
+    variant('magma', default=False, description='Enable Magma support')
 
     depends_on('mpi', when='+mpi')
     depends_on('intel-mkl', when='+mkl')
