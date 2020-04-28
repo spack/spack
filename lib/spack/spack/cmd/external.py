@@ -133,10 +133,10 @@ def _update_pkg_config(pkg_to_entries):
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         new_entries = list(
             e for e in ext_pkg_entries
-            if (not e.spec in predefined_external_specs))
+            if (e.spec not in predefined_external_specs))
 
         pkg_to_cfg[pkg_name] = _pkg_yaml_template(
-            pkg_name, ext_pkg_entries)
+            pkg_name, new_entries)
 
     cfg_scope = spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
