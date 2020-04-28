@@ -73,10 +73,7 @@ def _pkg_yaml_template(pkg_name, external_pkg_entries):
     pkg_dict = syaml.syaml_dict()
     pkg_dict['paths'] = paths_dict
 
-    pkgs_dict = syaml.syaml_dict()
-    pkgs_dict[pkg_name] = pkg_dict
-
-    return pkgs_dict
+    return pkg_dict
 
 
 def external_find(args):
@@ -114,6 +111,38 @@ def _determine_base_dir(prefix):
     assert os.path.isdir(prefix)
     if os.path.basename(prefix) == 'bin':
         return os.path.dirname(prefix)
+
+
+def _get_predefined_externals():
+    # Pull from all scopes when looking for preexisting external package
+    # entries
+    pkg_config = spack.config.get('packages')
+    already_defined_specs = set()
+    for pkg_name, per_pkg_cfg in pkg_config.items():
+        paths = per_pkg_cfg.get('packages', {})
+        already_defined_specs.update(spack.spec.Spec(k) for k in paths)
+        modules = per_pkg_cfg.get('modules', {})
+        already_defined_specs.update(spack.spec.Spec(k) for k in modules)
+    return already_defined_specs
+
+
+def _update_pkg_config(pkg_to_entries):
+    predefined_external_specs = _get_predefined_externals()
+
+    pkg_to_cfg = {}
+    for pkg_name, ext_pkg_entries in pkg_to_entries.items():
+        new_entries = list(
+            e for e in ext_pkg_entries
+            if (not e.spec in predefined_external_specs))
+
+        pkg_to_cfg[pkg_name] = _pkg_yaml_template(
+            pkg_name, ext_pkg_entries)
+
+    cfg_scope = spack.config.default_modify_scope()
+    pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
+
+    spack.config._merge_yaml(pkgs_cfg, pkg_to_cfg)
+    spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
 
 
 def _get_external_packages(repo, system_path_to_exe=None):
@@ -186,13 +215,7 @@ def _get_external_packages(repo, system_path_to_exe=None):
                     .format(prefix, pkg.name, ', '.join(exes_in_prefix))
                 )
 
-    pkg_to_template = {}
-    for pkg_name, ext_pkg_entries in pkg_to_entries.items():
-        pkg_to_template[pkg_name] = _pkg_yaml_template(
-            pkg.name, ext_pkg_entries)
-
-    for config in pkg_to_template.values():
-        print(syaml.dump_config(pkg_to_template[pkg_name]))
+    _update_pkg_config(pkg_to_entries)
 
 
 class TestRepo(object):
