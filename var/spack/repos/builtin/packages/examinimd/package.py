@@ -34,7 +34,7 @@ class Examinimd(MakefilePackage):
 
     conflicts('+openmp', when='+pthreads')
 
-    depends_on('kokkos')
+    depends_on('kokkos-legacy')
     depends_on('mpi', when='+mpi')
 
     @property

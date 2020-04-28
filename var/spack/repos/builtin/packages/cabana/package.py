@@ -22,9 +22,9 @@ class Cabana(CMakePackage):
     variant('cuda', default=False, description="enable Cuda backend")
 
     depends_on("cmake@3.9:", type='build')
-    depends_on("kokkos+serial", when="+serial")
-    depends_on("kokkos+openmp", when="+openmp")
-    depends_on("kokkos+cuda", when="+cuda")
+    depends_on("kokkos-legacy+serial", when="+serial")
+    depends_on("kokkos-legacy+openmp", when="+openmp")
+    depends_on("kokkos-legacy+cuda", when="+cuda")
 
     def cmake_args(self):
         options = [

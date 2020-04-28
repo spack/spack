@@ -6,7 +6,7 @@
 from spack import *
 
 
-class KokkosKernels(MakefilePackage):
+class KokkosKernelsLegacy(MakefilePackage):
     """Kokkos C++ Performance Portability Programming EcoSystem: Math Kernels -
     Provides BLAS, Sparse BLAS and Graph Kernels."""
 
@@ -16,14 +16,11 @@ class KokkosKernels(MakefilePackage):
     version('2.7.00', sha256='adf4af44eadbdfbeb9ec69dd5fae4e2852bd1fbe4a69213efd199e49f4098254')
     version('2.6.00', sha256='14ebf806f66b9ca73949a478b8d959be7fa1165a640935760a724d7cc0a66335')
     version('2.5.00', sha256='2c2289da3a41dafd97726e90507debafbb9f5e49ca5b0f5c8d1e044a5796f000')
-    version('develop', git='https://github.com/kokkos/kokkos-kernels',
-            branch='develop')
 
     # make sure kokkos kernels version matches kokkos
-    depends_on('kokkos@2.5.00', when='@2.5.00')
-    depends_on('kokkos@2.6.00', when='@2.6.00')
-    depends_on('kokkos@2.7.00', when='@2.7.00')
-    depends_on('kokkos@develop', when='@develop')
+    depends_on('kokkos-legacy@2.5.00', when='@2.5.00')
+    depends_on('kokkos-legacy@2.6.00', when='@2.6.00')
+    depends_on('kokkos-legacy@2.7.00', when='@2.7.00')
 
     patch('makefile.patch')
 
