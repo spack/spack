@@ -134,6 +134,12 @@ def _get_external_packages(repo, system_path_to_exe=None):
     resolved_specs = {}  # spec -> exe found for the spec
 
     for pkg, exes in pkg_to_found_exes.items():
+        if not hasattr(pkg, 'determine_spec_details'):
+            tty.warn("{0} must define 'determine_spec_details' in order"
+                     " for Spack to detect externally-provided instances"
+                     " of the package.".format(pkg.name))
+            continue
+
         # TODO: iterate through this in a predetermined order (e.g. by package
         # name) to get repeatable results when there are conflicts. Note that
         # if we take the prefixes returned by _group_by_prefix, then consider
@@ -145,14 +151,8 @@ def _get_external_packages(repo, system_path_to_exe=None):
             # for one prefix, but without additional details (e.g. about the
             # naming scheme which differentiates them), the spec won't be
             # usable.
-            if hasattr(pkg, 'determine_spec_details'):
-                specs = _convert_to_iterable(
-                    pkg.determine_spec_details(prefix, exes_in_prefix))
-            else:
-                # Note: packages which do not implement
-                # 'determine_spec_details' should use exact-match regular
-                # expressions
-                specs = [spack.spec.Spec(pkg.name)]
+            specs = _convert_to_iterable(
+                pkg.determine_spec_details(prefix, exes_in_prefix))
 
             for spec in specs:
                 pkg_prefix = _determine_base_dir(prefix)
