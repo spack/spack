@@ -75,11 +75,11 @@ class Timemory(CMakePackage):
     variant('mpip_library', default=linux,
             description='Build stand-alone timemory-mpip GOTCHA library')
     variant('ompt', default=True, description=('Enable OpenMP tools support'))
-    variant('ompt_standalone', default=True, description=('Enable OpenMP '
-            'tools support via drop-in replacement of '
-            'libomp/libgomp/libiomp5'))
-    variant('ompt_llvm', default=False, description=('Enable OpenMP tools '
-            'support as part of llvm build'))
+    variant('ompt_standalone', default=True,
+            description=('Enable OpenMP tools support via drop-in '
+                         'replacement of libomp/libgomp/libiomp5'))
+    variant('ompt_llvm', default=False,
+            description='Enable OpenMP tools support as part of llvm build')
     variant('ompt_library', default=True,
             description='Build stand-alone timemory-ompt library')
     variant('allinea_map', default=False,
@@ -139,10 +139,11 @@ class Timemory(CMakePackage):
               msg='+ompt_library requires +ompt')
     conflicts('+ompt_library', when='~shared~static',
               msg='+ompt_library requires building shared or static libraries')
-    conflicts('+ompt_standalone+ompt_llvm', msg=('+ompt_standalone and '
-              '+ompt_llvm are not compatible. Use +ompt_llvm~ompt_standalone '
-              'if building LLVM, use ~ompt_llvm+ompt_standalone if ompt.h '
-              'is not provided by the compiler'))
+    conflicts('+ompt_standalone+ompt_llvm',
+              msg=('+ompt_standalone and +ompt_llvm are not compatible. Use '
+                   '+ompt_llvm~ompt_standalone if building LLVM, use '
+                   '~ompt_llvm+ompt_standalone if ompt.h is not provided by the'
+                   ' compiler'))
 
     def cmake_args(self):
         spec = self.spec
