@@ -94,7 +94,7 @@ def test_get_executables(working_env, create_exe):
 external = SpackCommand('external')
 
 
-def test_find_external_command(mutable_config, working_env, create_exe):
+def test_find_external_cmd(mutable_config, working_env, create_exe):
     """Test invoking 'spack external find' with additional package arguments,
     which restricts the set of packages that Spack looks for.
     """
@@ -123,7 +123,7 @@ def test_find_external_cmd_not_buildable(
     assert not pkgs_cfg['cmake']['buildable']
 
 
-def test_find_external_command_full_repo(
+def test_find_external_cmd_full_repo(
         mutable_config, working_env, create_exe, mutable_mock_repo):
     """Test invoking 'spack external find' with no additional arguments, which
     iterates through each package in the repository.
@@ -143,7 +143,7 @@ def test_find_external_command_full_repo(
 
 
 def test_find_external_merge(mutable_config, mutable_mock_repo):
-    """Check that 'spack find external' doesnt overwrite an existing spec
+    """Check that 'spack find external' doesn't overwrite an existing spec
     entry in packages.yaml.
     """
     pkgs_cfg_init = {
