@@ -73,7 +73,7 @@ def test_find_external_update_config(mutable_config):
         ]
     }
 
-    spack.cmd.external._update_pkg_config(pkg_to_entries)
+    spack.cmd.external._update_pkg_config(pkg_to_entries, False)
 
     pkgs_cfg = spack.config.get('packages')
     cmake_cfg = pkgs_cfg['cmake']
@@ -150,7 +150,7 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
             ExternalPackageEntry(Spec('find-externals1@1.2'), '/x/y2/'),
         ]
     }
-    spack.cmd.external._update_pkg_config(pkg_to_entries)
+    spack.cmd.external._update_pkg_config(pkg_to_entries, False)
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']

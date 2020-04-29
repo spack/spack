@@ -27,6 +27,9 @@ def setup_parser(subparser):
         metavar='SUBCOMMAND', dest='external_command')
 
     find_parser = sp.add_parser('find', help=external_find.__doc__)
+    find_parser.add_argument(
+        '--not-buildable', action='store_true', default=False,
+        help="packages with detected externals won't be built with Spack")
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
 
@@ -64,7 +67,7 @@ ExternalPackageEntry = namedtuple(
     ['spec', 'base_dir'])
 
 
-def _pkg_yaml_template(external_pkg_entries):
+def _generate_pkg_config(external_pkg_entries):
     """Generate config according to the packages.yaml schema for a single
     package.
 
@@ -117,7 +120,7 @@ def external_find(args):
         packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
-    _update_pkg_config(pkg_to_entries)
+    _update_pkg_config(pkg_to_entries, args.not_buildable)
 
 
 def _group_by_prefix(paths):
@@ -166,7 +169,7 @@ def _get_predefined_externals():
     return already_defined_specs
 
 
-def _update_pkg_config(pkg_to_entries):
+def _update_pkg_config(pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
 
     pkg_to_cfg = {}
@@ -175,7 +178,10 @@ def _update_pkg_config(pkg_to_entries):
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
-        pkg_to_cfg[pkg_name] = _pkg_yaml_template(new_entries)
+        pkg_config = _generate_pkg_config(new_entries)
+        if not_buildable:
+            pkg_config['buildable'] = False
+        pkg_to_cfg[pkg_name] = pkg_config
 
     cfg_scope = spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
