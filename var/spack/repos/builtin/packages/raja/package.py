@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Raja(CMakePackage,CudaPackage):
+class Raja(CMakePackage, CudaPackage):
     """RAJA Parallel Framework."""
 
     homepage = "http://software.llnl.gov/RAJA/"
