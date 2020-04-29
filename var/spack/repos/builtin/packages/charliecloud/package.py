@@ -24,10 +24,10 @@ class Charliecloud(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
 
-    # Use legacy build system up to version 0.13
-    depends_on('skopeo',         type='run', when='@:0.13')
-    depends_on('umoci',          type='run', when='@:0.13')
-    depends_on('python+libxml2', type='run', when='@:0.13')
+    # Use skopeo and umoci for older ch-grow version dependencies
+    depends_on('skopeo',         type='run', when='@0.10:0.13')
+    depends_on('umoci',          type='run', when='@0.10:0.13')
+    depends_on('python+libxml2', type='run', when='@0.10:0.13')
 
     # Charliecloud@0.14 and up use python for building
     depends_on('python@3.5:',    type='run', when='@0.14:')
@@ -44,6 +44,7 @@ class Charliecloud(AutotoolsPackage):
 
     # bash automated testing harness (bats)
     depends_on('bats@0.4.0', type='test')
+    depends_on('python@3.5:', type='test')
 
     def configure_args(self):
 
