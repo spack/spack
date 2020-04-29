@@ -63,11 +63,18 @@ ExternalPackageEntry = namedtuple(
     ['spec', 'base_dir'])
 
 
-def _pkg_yaml_template(pkg_name, external_pkg_entries):
+def _pkg_yaml_template(external_pkg_entries):
     """Generate config according to the packages.yaml schema for a single
     package.
 
-    This does not generate the entire packages.yaml.
+    This does not generate the entire packages.yaml. For example, given some
+    external entries for the CMake package, this could return::
+
+       { 'paths': {
+             'cmake@3.17.1': '/opt/cmake-3.17.1/',
+             'cmake@3.16.5': '/opt/cmake-3.16.5/'
+         }
+       }
     """
     paths_dict = syaml.syaml_dict()
     for e in external_pkg_entries:
@@ -143,8 +150,7 @@ def _update_pkg_config(pkg_to_entries):
             e for e in ext_pkg_entries
             if (e.spec not in predefined_external_specs))
 
-        pkg_to_cfg[pkg_name] = _pkg_yaml_template(
-            pkg_name, new_entries)
+        pkg_to_cfg[pkg_name] = _pkg_yaml_template(new_entries)
 
     cfg_scope = spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get('packages', scope=cfg_scope)
