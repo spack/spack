@@ -13,10 +13,12 @@ class Ffmpeg(AutotoolsPackage):
     homepage = "https://ffmpeg.org"
     url      = "http://ffmpeg.org/releases/ffmpeg-4.1.1.tar.bz2"
 
-    version('4.2.2', sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
-    version('4.1.1', sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
-    version('4.1',   sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
-    version('3.2.4', sha256='c0fa3593a2e9e96ace3c1757900094437ad96d1d6ca19f057c378b5f394496a4')
+    version('4.2.2',  sha256='b620d187c26f76ca19e74210a0336c3b8380b97730df5cdf45f3e69e89000e5c')
+    version('4.1.1',  sha256='0cb40e3b8acaccd0ecb38aa863f66f0c6e02406246556c2992f67bf650fab058')
+    version('4.1',    sha256='b684fb43244a5c4caae652af9022ed5d85ce15210835bce054a33fb26033a1a5')
+    version('3.2.4',  sha256='c0fa3593a2e9e96ace3c1757900094437ad96d1d6ca19f057c378b5f394496a4')
+    version('2.8.15', sha256='35647f6c1f6d4a1719bc20b76bf4c26e4ccd665f46b5676c0e91c5a04622ee21')
+    version('1.0.10', sha256='1dbde434c3b5c573d3b2ffc1babe3814f781c10c4bc66193a4132a44c9715176')
 
     # Licensing
     variant('gpl', default=True,
@@ -53,9 +55,10 @@ class Ffmpeg(AutotoolsPackage):
     # variant('libxml2', default=False,
     #         description='XML parsing, needed for dash demuxing support')
     variant('libzmq', default=False, description='message passing via libzmq')
-    variant('lzma', default=True, description='lzma support')
+    variant('lzma', default=False, description='lzma support')
+    variant('avresample', default=False, description='AV reasmpling component')
     variant('openssl', default=False, description='needed for https support')
-    variant('sdl2', default=True, description='sdl2 support')
+    variant('sdl2', default=False, description='sdl2 support')
     variant('shared', default=True, description='build shared libraries')
 
     depends_on('alsa-lib')
@@ -84,58 +87,88 @@ class Ffmpeg(AutotoolsPackage):
     depends_on('speex', when='+libspeex')
     depends_on('xz', when='+lzma')
 
+    # TODO: enable when libxml2 header issue is resolved
+    # conflicts('+libxml2', when='@:3.999')
+    # See: https://www.ffmpeg.org/index.html#news (search AV1)
+    conflicts('+libaom', when='@:3.999')
+    # All of the following constraints were sourced from the official 'ffmpeg'
+    # change log, which can be found here:
+    # https://raw.githubusercontent.com/FFmpeg/FFmpeg/release/4.0/Changelog
+    conflicts('+sdl2', when='@:3.1.999')
+    conflicts('+libsnappy', when='@:2.7.999')
+    conflicts('+X', when='@:2.4.999')
+    conflicts('+lzma', when='@2.3.999:')
+    conflicts('+libwebp', when='@2.1.999:')
+    conflicts('+libssh', when='@2.0.999:')
+    conflicts('+libzmq', when='@:1.999.999')
+
+    def enable_or_disable_meta(self, variant, options):
+        switch = 'enable' if '+{0}'.format(variant) in self.spec else 'disable'
+        return ['--{0}-{1}'.format(switch, option) for option in options]
+
     def configure_args(self):
         spec = self.spec
         config_args = ['--enable-pic']
 
-        if '+X' in spec:
-            config_args.extend([
-                '--enable-libxcb',
-                '--enable-libxcb-shape',
-                '--enable-libxcb-shm',
-                '--enable-libxcb-xfixes',
-                '--enable-xlib',
-            ])
-        else:
-            config_args.extend([
-                '--disable-libxcb',
-                '--disable-libxcb-shape',
-                '--disable-libxcb-shm',
-                '--disable-libxcb-xfixes',
-                '--disable-xlib',
+        # '+X' meta variant #
+
+        xlib_opts = []
+
+        if spec.satisfies('@2.5:'):
+            xlib_opts.extend([
+                'libxcb',
+                'libxcb-shape',
+                'libxcb-shm',
+                'libxcb-xfixes',
+                'xlib',
             ])
 
-        if '+drawtext' in spec:
-            config_args.extend([
-                '--enable-libfontconfig',
-                '--enable-libfreetype',
-                '--enable-libfribidi',
-            ])
-        else:
-            config_args.extend([
-                '--disable-libfontconfig',
-                '--disable-libfreetype',
-                '--disable-libfribidi',
-            ])
-        for variant in [
+        config_args += self.enable_or_disable_meta('X', xlib_opts)
+
+        # '+drawtext' meta variant #
+
+        drawtext_opts = [
+            '{0}fontconfig'.format('lib' if spec.satisfies('@3:') else ''),
+            'libfreetype',
+        ]
+
+        if spec.satisfies('@2.3:'):
+            drawtext_opts.append('libfribidi')
+
+        config_args += self.enable_or_disable_meta('drawtext', drawtext_opts)
+
+        # other variants #
+
+        variant_opts = [
             'bzlib',
-            'libaom',
             'libmp3lame',
             'libopenjpeg',
             'libopus',
-            'libsnappy',
             'libspeex',
-            'libssh',
             'libvorbis',
-            'libwebp',
-            # TODO: enable when libxml2 header issue is resolved
-            # 'libxml2',
-            'libzmq',
-            'lzma',
+            'avresample',
             'openssl',
-            'sdl2',
             'shared',
-        ]:
-            config_args += self.enable_or_disable(variant)
+        ]
+
+        if spec.satisfies('@2.0:'):
+            variant_opts.append('libzmq')
+        if spec.satisfies('@2.1:'):
+            variant_opts.append('libssh')
+        if spec.satisfies('@2.2:'):
+            variant_opts.append('libwebp')
+        if spec.satisfies('@2.4:'):
+            variant_opts.append('lzma')
+        if spec.satisfies('@2.8:'):
+            variant_opts.append('libsnappy')
+        if spec.satisfies('@3.2:'):
+            variant_opts.append('sdl2')
+        if spec.satisfies('@4:'):
+            variant_opts.append('libaom')
+            # TODO: enable when libxml2 header issue is resolved
+            # variant_opts.append('libxml2')
+
+        for variant_opt in variant_opts:
+            config_args += self.enable_or_disable(variant_opt)
 
         return config_args
