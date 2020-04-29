@@ -296,7 +296,7 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('cuda', 'metis', 'hdf5', 'hypre', 'parmetis',
+        for library in ('cuda', 'metis', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(
@@ -338,6 +338,16 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-suitesparse=0')
+
+        # hdf5: configure detection is convoluted for pflotran
+        if '+hdf5' in spec:
+            options.extend([
+                '--with-hdf5-include=%s' % spec['hdf5'].prefix.include,
+                '--with-hdf5-lib=%s' % spec['hdf5:hl,fortran'].libs.joined(),
+                '--with-hdf5=1'
+            ])
+        else:
+            options.append('--with-hdf5=0')
 
         # zlib: configuring using '--with-zlib-dir=...' has some issues with
         # SuiteSparse so specify directly the include path and the libraries.
