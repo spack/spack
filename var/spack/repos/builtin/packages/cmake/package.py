@@ -154,16 +154,13 @@ class Cmake(Package):
         if 'cmake' not in exe_to_path:
             return None
 
-        spec = spack.spec.Spec('cmake')
-
         cmake = spack.util.executable.Executable(exe_to_path['cmake'])
         output = cmake('--version', output=str)
         if output:
-            match = re.search(r'version\s+(\S+)', output)
+            match = re.search(r'cmake.*version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
-            spec.versions = spack.version.VersionList(version_str)
-            return spec
+                return Spec('cmake@{0}'.format(version_str))
 
     def flag_handler(self, name, flags):
         if name == 'cxxflags' and self.compiler.name == 'fj':
