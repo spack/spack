@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 from collections import defaultdict, namedtuple
+import argparse
 import os
 import re
 import six
@@ -24,7 +25,8 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='external_command')
 
-    sp.add_parser('find', help=external_find.__doc__)
+    find_parser = sp.add_parser('find', help=external_find.__doc__)
+    find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
 
 def is_executable(path):
@@ -77,7 +79,13 @@ def _pkg_yaml_template(pkg_name, external_pkg_entries):
 
 
 def external_find(args):
-    _get_external_packages(TestRepo())
+    if args.packages:
+        packages_to_check = list(spack.repo.get(pkg) for pkg in args.packages)
+    else:
+        packages_to_check = spack.repo.all_packages()
+
+    pkg_to_entries = _get_external_packages(packages_to_check)
+    _update_pkg_config(pkg_to_entries)
 
 
 def _group_by_prefix(paths):
@@ -145,12 +153,12 @@ def _update_pkg_config(pkg_to_entries):
     spack.config.set('packages', pkgs_cfg, scope=cfg_scope)
 
 
-def _get_external_packages(repo, system_path_to_exe=None):
+def _get_external_packages(packages_to_check, system_path_to_exe=None):
     if not system_path_to_exe:
         system_path_to_exe = _get_system_executables()
 
     exe_pattern_to_pkgs = defaultdict(list)
-    for pkg in repo.all_packages():
+    for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
             for exe in pkg.executables:
                 exe_pattern_to_pkgs[exe].append(pkg)
@@ -215,16 +223,7 @@ def _get_external_packages(repo, system_path_to_exe=None):
                     .format(prefix, pkg.name, ', '.join(exes_in_prefix))
                 )
 
-    _update_pkg_config(pkg_to_entries)
-
-
-class TestRepo(object):
-    def all_packages(self):
-        test_pkgs = ['cmake']
-        return list(spack.repo.path.get(x) for x in test_pkgs)
-
-    def get(self, pkg_name):
-        return spack.repo.path.get(pkg_name)
+    return pkg_to_entries
 
 
 def external(parser, args):
