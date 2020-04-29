@@ -209,6 +209,11 @@ class Boost(Package):
     patch('darwin_clang_version.patch', level=0,
           when='@1.56.0:1.72.0 platform=darwin')
 
+    # Fix: "Unable to compile code using boost/process.hpp"
+    # See: https://github.com/boostorg/process/issues/116
+    # Patch: https://github.com/boostorg/process/commit/6a4d2ff72114ef47c7afaf92e1042aca3dfa41b0.patch
+    patch('1.72_boost_process.patch', level=2, when='@1.72.0')
+
     # Fix the bootstrap/bjam build for Cray
     patch('bootstrap-path.patch', when='@1.39.0: platform=cray')
 
