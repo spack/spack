@@ -201,9 +201,10 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                 exe_pattern_to_pkgs[exe].append(pkg)
 
     pkg_to_found_exes = defaultdict(set)
-    for path, exe in system_path_to_exe.items():
-        for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
-            if re.search(exe_pattern, exe):
+    for exe_pattern, pkgs in exe_pattern_to_pkgs.items():
+        compiled_re = re.compile(exe_pattern)
+        for path, exe in system_path_to_exe.items():
+            if compiled_re.search(exe):
                 for pkg in pkgs:
                     pkg_to_found_exes[pkg].add(path)
 
