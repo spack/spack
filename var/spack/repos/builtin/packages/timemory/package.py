@@ -142,8 +142,8 @@ class Timemory(CMakePackage):
     conflicts('+ompt_standalone+ompt_llvm',
               msg=('+ompt_standalone and +ompt_llvm are not compatible. Use '
                    '+ompt_llvm~ompt_standalone if building LLVM, use '
-                   '~ompt_llvm+ompt_standalone if ompt.h is not provided by the'
-                   ' compiler'))
+                   '~ompt_llvm+ompt_standalone if ompt.h is not provided by '
+                   'the compiler'))
 
     def cmake_args(self):
         spec = self.spec
