@@ -100,11 +100,11 @@ def _spec_is_valid(spec):
         return False
 
     try:
-        x = spack.spec.Spec(str(spec))
+        spack.spec.Spec(str(spec))
     except spack.error.SpackError:
         tty.warn('Constructed spec has a string representation but the string'
                  ' representation does not evaluate to a valid spec: {0}'
-                 .format(str(spec_str)))
+                 .format(str(spec)))
         return False
 
     return True

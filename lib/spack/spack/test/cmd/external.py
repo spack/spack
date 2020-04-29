@@ -111,7 +111,7 @@ def test_find_external_command(mutable_config, working_env, create_exe):
 
 
 def test_find_external_command_full_repo(
-    mutable_config, working_env, create_exe, mutable_mock_repo):
+        mutable_config, working_env, create_exe, mutable_mock_repo):
     """Test invoking 'spack external find' with no additional arguments, which
     iterates through each package in the repository.
     """
