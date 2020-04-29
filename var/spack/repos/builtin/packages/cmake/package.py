@@ -146,8 +146,8 @@ class Cmake(Package):
 
     phases = ['bootstrap', 'build', 'install']
 
-    @staticmethod
-    def determine_spec_details(prefix, exes_in_prefix):
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
         exe_to_path = dict(
             (os.path.basename(p), p) for p in exes_in_prefix
         )
