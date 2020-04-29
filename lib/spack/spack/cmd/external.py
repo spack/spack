@@ -89,7 +89,7 @@ def external_find(args):
     if args.packages:
         packages_to_check = list(spack.repo.get(pkg) for pkg in args.packages)
     else:
-        packages_to_check = spack.repo.all_packages()
+        packages_to_check = spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
     _update_pkg_config(pkg_to_entries)
