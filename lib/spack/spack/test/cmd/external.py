@@ -130,6 +130,9 @@ def test_find_external_command_full_repo(
 
 
 def test_find_external_merge(mutable_config, mutable_mock_repo):
+    """Check that 'spack find external' doesnt overwrite an existing spec
+    entry in packages.yaml.
+    """
     pkgs_cfg_init = {
         'find-externals1': {
             'paths': {
