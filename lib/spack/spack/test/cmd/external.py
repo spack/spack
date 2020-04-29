@@ -110,6 +110,19 @@ def test_find_external_command(mutable_config, working_env, create_exe):
     assert 'cmake@1.foo' in cmake_paths_cfg
 
 
+def test_find_external_cmd_not_buildable(
+        mutable_config, working_env, create_exe):
+    """When the user invokes 'spack external find --not-buildable', the config
+    for any package where Spack finds an external version should be marked as
+    not buildable.
+    """
+    cmake_path1 = create_exe("cmake", "cmake version 1.foo")
+    os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
+    external('find', '--not-buildable', 'cmake')
+    pkgs_cfg = spack.config.get('packages')
+    assert not pkgs_cfg['cmake']['buildable']
+
+
 def test_find_external_command_full_repo(
         mutable_config, working_env, create_exe, mutable_mock_repo):
     """Test invoking 'spack external find' with no additional arguments, which
