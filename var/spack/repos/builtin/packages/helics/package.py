@@ -42,7 +42,7 @@ class Helics(CMakePackage):
     # Build dependency
     depends_on('git', type='build', when='@master:')
     depends_on('cmake@3.4:', type='build')
-    depends_on('boost@1.70', type='build', when='+boost')
+    depends_on('boost@1.70:', type='build', when='+boost')
     depends_on('swig@3.0:', type='build', when='+swig')
 
     depends_on('libzmq@4.3:', when='+zmq')
