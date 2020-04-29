@@ -162,7 +162,7 @@ class Cmake(Package):
             match = re.search(r'version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
-            spec.versions = Version(version_str)
+            spec.versions = [Version(version_str)]
             return spec
 
     def flag_handler(self, name, flags):

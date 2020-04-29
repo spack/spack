@@ -11,8 +11,10 @@ import spack.spec
 
 
 @pytest.fixture()
-def cmake_exe(tmpdir):
-    cmake_path = str(tmpdir.join('cmake'))
+def cmake_exe(tmpdir_factory):
+    cmake_prefix = tmpdir_factory.mktemp('cmake-prefix')
+    cmake_prefix.ensure('bin', dir=True)
+    cmake_path = str(cmake_prefix.join('bin', 'cmake'))
     with open(cmake_path, 'w') as f:
         f.write("""\
 #!/bin/bash
