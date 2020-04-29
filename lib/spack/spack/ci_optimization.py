@@ -1,20 +1,37 @@
-
-from pprint import pprint as pp
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import collections.abc
+
+try:
+    import collections.abc as collections_abc
+except ImportError:
+    collections_abc = collections
+
 import copy
 import hashlib
-import os
 
-import spack.ci as ci
-import spack.spec as spec
-import spack.environment as environment
 import spack.util.spack_yaml as syaml
 
+
 def matches(obj, proto):
-    if isinstance(obj, collections.abc.Mapping):
-        if not isinstance(proto, collections.abc.Mapping):
+    """Returns True if the test object "obj" matches the prototype object
+    "proto".
+
+    If obj and proto are mappings, obj matches proto if (key in obj) and
+    (obj[key] matches proto[key]) for every key in proto.
+
+    If obj and proto are sequences, obj matches proto if they are of the same
+    length and (a matches b) for every (a,b) in zip(obj, proto).
+
+    Otherwise, obj matches proto if obj == proto.
+
+    Precondition: proto must not have any reference cycles
+    """
+    if isinstance(obj, collections_abc.Mapping):
+        if not isinstance(proto, collections_abc.Mapping):
             return False
 
         return all(
@@ -22,10 +39,10 @@ def matches(obj, proto):
             for key, val in proto.items()
         )
 
-    if (isinstance(obj, collections.abc.Sequence) and
+    if (isinstance(obj, collections_abc.Sequence) and
             not isinstance(obj, str)):
 
-        if not (isinstance(proto, collections.abc.Sequence) and
+        if not (isinstance(proto, collections_abc.Sequence) and
                 not isinstance(proto, str)):
             return False
 
@@ -41,8 +58,25 @@ def matches(obj, proto):
 
 
 def subkeys(obj, proto):
-    if not (isinstance(obj, collections.abc.Mapping) and
-            isinstance(proto, collections.abc.Mapping)):
+    """Returns the test mapping "obj" after factoring out the items it has in
+    common with the prototype mapping "proto".
+
+    Consider a recursive merge operation, merge(a, b) on mappings a and b, that
+    returns a mapping, m, whose keys are the union of the keys of a and b, and
+    for every such key, "k", its corresponding value is:
+
+      - merge(a[key], b[key])  if a[key] and b[key] are mappings, or
+      - b[key]                 if (key in b) and not matches(a[key], b[key]), or
+      - a[key]                 otherwise
+
+
+    If obj and proto are mappings, the returned object is the smallest object,
+    "a", such that merge(a, proto) matches obj.
+
+    Otherwise, obj is returned.
+    """
+    if not (isinstance(obj, collections_abc.Mapping) and
+            isinstance(proto, collections_abc.Mapping)):
         return obj
 
     new_obj = {}
@@ -55,7 +89,7 @@ def subkeys(obj, proto):
             matches(proto[key], value)):
             continue
 
-        if isinstance(value, collections.abc.Mapping):
+        if isinstance(value, collections_abc.Mapping):
             new_obj[key] = subkeys(value, proto[key])
             continue
 
@@ -65,10 +99,25 @@ def subkeys(obj, proto):
 
 
 def add_extends(yaml, key):
+    """Modifies the given object "yaml" so that it includes an "extends" key
+    whose value features "key".
+
+    If "extends" is not in yaml, then yaml is modified such that
+    yaml["extends"] == key.
+
+    If yaml["extends"] is a str, then yaml is modified such that
+    yaml["extends"] == [yaml["extends"], key]
+
+    Ff yaml["extends"] is a list that does not include key, then key is appended
+    to the list.
+
+    Otherwise, yaml is left unchanged.
+    """
+
     has_key = ('extends' in yaml)
     extends = yaml.get('extends')
 
-    if has_key and not isinstance(extends, (str, collections.abc.Sequence)):
+    if has_key and not isinstance(extends, (str, collections_abc.Sequence)):
         return
 
     if extends is None:
@@ -85,10 +134,25 @@ def add_extends(yaml, key):
 
 
 def common_subobject(yaml, sub):
+    """Factor prototype object "sub" out of the values of mapping "yaml".
+
+    Consider a modified copy of yaml, "new", where for each key, "key" in yaml:
+
+      - If yaml[key] matches sub, then new[key] = subkeys(yaml[key], sub).
+      - Otherwise, new[key] = yaml[key].
+
+    If the above match criteria is not satisfied for any such key, then (yaml,
+    None) is returned. The yaml object is returned unchanged.
+
+    Otherwise, each matching value in new is modified as in
+    add_extends(new[key], common_key), and then new[common_key] is set to sub.
+    The common_key value is chosen such that it does not match any preexisting
+    key in new. In this case, (new, common_key) is returned.
+    """
     match_list = set(k for k, v in yaml.items() if matches(v, sub))
 
     if not match_list:
-        return yaml
+        return yaml, None
 
     common_prefix = '.c'
     common_index = 0
@@ -139,6 +203,26 @@ def print_delta(name, old, new, applied=None):
     ))
 
 def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
+    """Try applying an optimization pass and return information about the result
+
+    "name" is a string describing the nature of the pass. If it is a non-empty
+    string, summary statistics are also printed to stdout.
+
+    "yaml" is the object to apply the pass to.
+
+    "optimization_pass" is the function implementing the pass to be applied.
+
+    "*args" and "**kwargs" are the additional arguments to pass to optimization
+    pass. The pass is applied as
+    (new_yaml, *other_results) = optimization_pass(yaml, *args, **kwargs)
+
+    The pass's results are greedily rejected if it does not modify the original
+    yaml document, or if it produces a yaml document that serializes to a larger
+    string.
+
+    Returns (new_yaml, yaml, applied, other_results) if applied, or
+    (yaml, new_yaml, applied, other_results) otherwise.
+    """
     result = optimization_pass(yaml, *args, **kwargs)
     new_yaml, other_results = result[0], result[1:]
 
@@ -161,6 +245,24 @@ def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
 
 
 def build_histogram(iterator, key):
+    """Builds a histogram of values given an iterable of mappings and a key.
+
+    For each mapping "m" with key "key" in iterator, the value m[key] is
+    considered.
+
+    Returns a list of tuples (hash, count, proportion, value), where
+
+      - "hash" is a sha1sum hash of the value.
+      - "count" is the number of occurences of values that hash to "hash".
+      - "proportion" is the proportion of all values considered above that
+        hash to "hash".
+      - "value" is one of the values considered above that hash to "hash". Which
+        value is chosen when multiple values hash to the same "hash" is
+        undefined.
+
+    The list is sorted in descending order by count, yielding the most
+    frequently occuring hashes first.
+    """
     buckets = collections.defaultdict(int)
     values = {}
 
@@ -268,13 +370,3 @@ def optimizer(yaml):
     print_delta('overall summary', original_size, new_size)
     print('\n')
     return yaml
-
-
-env = environment.Environment('.')
-ci.generate_gitlab_ci_yaml(
-    env, True, 'test.yaml',
-    custom_spack_repo='custom-repo',
-    custom_spack_ref='custom-ref',
-    optimizer=optimizer)
-    # )
-
