@@ -14,29 +14,29 @@ from spack.main import SpackCommand
 
 
 @pytest.fixture()
-def create_cmake_exe(tmpdir_factory):
-    def _create_cmake_exe(version):
-        cmake_prefix = tmpdir_factory.mktemp('cmake-prefix')
-        cmake_prefix.ensure('bin', dir=True)
-        cmake_path = str(cmake_prefix.join('bin', 'cmake'))
-        with open(cmake_path, 'w') as f:
+def create_exe(tmpdir_factory):
+    def _create_exe(exe_name, content):
+        base_prefix = tmpdir_factory.mktemp('base-prefix')
+        base_prefix.ensure('bin', dir=True)
+        exe_path = str(base_prefix.join('bin', exe_name))
+        with open(exe_path, 'w') as f:
             f.write("""\
 #!/bin/bash
 
-echo "cmake version {version}"
-""".format(version=version))
+echo "{0}"
+""".format(content))
 
-        st = os.stat(cmake_path)
-        os.chmod(cmake_path, st.st_mode | stat.S_IEXEC)
-        return cmake_path
+        st = os.stat(exe_path)
+        os.chmod(exe_path, st.st_mode | stat.S_IEXEC)
+        return exe_path
 
-    yield _create_cmake_exe
+    yield _create_exe
 
 
-def test_find_external_single_package(create_cmake_exe):
+def test_find_external_single_package(create_exe):
     pkgs_to_check = [spack.repo.get('cmake')]
 
-    cmake_path = create_cmake_exe("1.foo")
+    cmake_path = create_exe("cmake", "cmake version 1.foo")
     system_path_to_exe = {cmake_path: 'cmake'}
 
     pkg_to_entries = spack.cmd.external._get_external_packages(
@@ -48,11 +48,11 @@ def test_find_external_single_package(create_cmake_exe):
     assert single_entry.spec == Spec('cmake@1.foo')
 
 
-def test_find_external_two_instances_same_package(create_cmake_exe):
+def test_find_external_two_instances_same_package(create_exe):
     pkgs_to_check = [spack.repo.get('cmake')]
 
-    cmake_path1 = create_cmake_exe("1.foo")
-    cmake_path2 = create_cmake_exe("3.17.2")
+    cmake_path1 = create_exe("cmake", "cmake version 1.foo")
+    cmake_path2 = create_exe("cmake", "cmake version 3.17.2")
     system_path_to_exe = {
         cmake_path1: 'cmake',
         cmake_path2: 'cmake'}
@@ -83,8 +83,8 @@ def test_find_external_update_config(mutable_config):
     assert cmake_paths_cfg['cmake@3.17.2'] == '/x/y2/'
 
 
-def test_get_executables(working_env, create_cmake_exe):
-    cmake_path1 = create_cmake_exe("1.foo")
+def test_get_executables(working_env, create_exe):
+    cmake_path1 = create_exe("cmake", "cmake version 1.foo")
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
     path_to_exe = spack.cmd.external._get_system_executables()
@@ -94,11 +94,13 @@ def test_get_executables(working_env, create_cmake_exe):
 external = SpackCommand('external')
 
 
-def test_find_external_command(mutable_config, working_env, create_cmake_exe):
-    cmake_path1 = create_cmake_exe("1.foo")
+def test_find_external_command(mutable_config, working_env, create_exe):
+    """Test invoking 'spack external find' with additional package arguments,
+    which restricts the set of packages that Spack looks for.
+    """
+    cmake_path1 = create_exe("cmake", "cmake version 1.foo")
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
-    path_to_exe = spack.cmd.external._get_system_executables()
     external('find', 'cmake')
 
     pkgs_cfg = spack.config.get('packages')
@@ -106,3 +108,22 @@ def test_find_external_command(mutable_config, working_env, create_cmake_exe):
     cmake_paths_cfg = cmake_cfg['paths']
 
     assert 'cmake@1.foo' in cmake_paths_cfg
+
+
+def test_find_external_command_full_repo(
+    mutable_config, working_env, create_exe, mutable_mock_repo):
+    """Test invoking 'spack external find' with no additional arguments, which
+    iterates through each package in the repository.
+    """
+
+    exe_path1 = create_exe(
+        "find-externals1-exe", "find-externals1 version 1.foo")
+
+    os.environ['PATH'] = ':'.join([os.path.dirname(exe_path1)])
+    external('find')
+
+    pkgs_cfg = spack.config.get('packages')
+    pkg_cfg = pkgs_cfg['find-externals1']
+    pkg_paths_cfg = pkg_cfg['paths']
+
+    assert 'find-externals1@1.foo' in pkg_paths_cfg
