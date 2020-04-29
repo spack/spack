@@ -79,6 +79,8 @@ class Openmpi(AutotoolsPackage):
 
     version('develop', branch='master')
 
+    test_pkg_dirs = ['examples']
+
     # Current
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
 
@@ -618,9 +620,71 @@ class Openmpi(AutotoolsPackage):
             self.run_test(exe, ['--version'], expected, status,
                           installed=True, purpose=purpose)
 
+    def _test_examples(self):
+        assert len(self.test_pkg_dirs) == 1, \
+            'Expected only one package directory'
+
+        # First build the examples
+        work_dir = os.path.join(self.test_dir.data, self.test_pkg_dirs[0])
+        self.run_test('make', ['all'], [], None, False,
+                      purpose='test build the examples', work_dir=work_dir)
+
+        # Now run those with known results
+        have_spml = self.spec.version in spack.version.ver('2.0.0:3.1.5')
+
+        hello_world = (['Hello, world', 'I am', '0 of', '1'], None)
+
+        max_red = (['0/1 dst = 0 1 2'], None)
+
+        missing_spml = (['No available spml components'], 1)
+
+        no_out = ([''], None)
+
+        ring_out = (['Process 0 sending 10', '1 processes in ring',
+                     'Process 0 sent to', 'Process 0 decremented value:',
+                     'exiting'], None)
+
+        shift_out = (['Process 0 gets message from', '1 processes in ring'],
+                      'exiting'], None)
+
+        strided = (['not in valid range'], 255)
+
+        checks = {
+            'hello_c': hello_world,
+            'hello_cxx': hello_world,
+            'hello_mpifh': hello_world,
+            'hello_oshmem': hello_world if have_spml else missing_spml,
+            'hello_oshmemcxx': hello_world if have_spml else missing_spml,
+            'hello_oshmemfh': hello_world if have_spml else missing_spml,
+            'hello_usempi': hello_world,
+            'hello_usempif08': hello_world,
+            'oshmem_circular_shift': shift_out if have_spml else missing_spml,
+            'oshmem_max_reduction': max_red if have_spml else missing_spml,
+            'oshmem_shmalloc': no_out if have_spml else missing_spml,
+            'oshmem_strided_puts': strided if have_spml else missing_spml,
+            'oshmem_symmetric_data': no_out if have_spml else missing_spml,
+            'ring_c': ring_out,
+            'ring_cxx': ring_out,
+            'ring_mpifh': ring_out,
+            'ring_oshmem': shift_out if have_spml else missing_spml,
+            'ring_oshmemfh': shift_out if have_spml else missing_spml,
+            'ring_usempi': ring_out,
+            'ring_usempif08': ring_out,
+        }
+
+        for exe in checks:
+            path = os.path.join(work_dir, exe)
+            if os.path.exists(path):
+                expected, status = checks[exe]
+                reason = 'test {0} output'.format(exe)
+                self.run_test(exe, [], expected, status, installed=False,
+                              purpose=reason, work_dir=work_dir)
+
+
     def test(self):
         """Perform smoke tests on the installed package."""
         # Simple version check tests on known packages
         self._test_check_versions()
 
-        # TODO: Add and execute simple MPI test programs
+        # Test example programs pulled from the source
+        self._test_examples()

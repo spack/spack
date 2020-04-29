@@ -1465,10 +1465,16 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
     def test_log_name(self):
         return 'test-%s-out.txt' % self.spec.format('{name}-{version}-{hash:7}')
 
+    @property
+    def test_dir(self):
+        return self.test_stage.join(
+            self.spec.format('{name}-{version}-{hash}'))
+
     test_requires_compiler = False
     test_failures = None
     test_log_file = None
     test_stage = None
+    test_pkg_dirs = []
 
     def do_test(self, name, remove_directory=False, dirty=False):
         if self.test_requires_compiler:
@@ -1500,8 +1506,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 tty.set_debug(True)
 
                 # setup test directory
-                testdir = self.test_stage.join(
-                    self.spec.format('{name}-{version}-{hash}'))
+                testdir = self.test_dir
                 if os.path.exists(testdir):
                     shutil.rmtree(testdir)
                 mkdirp(testdir)
@@ -1510,6 +1515,18 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 datadir = Prefix(self.package_dir).test
                 if os.path.isdir(datadir):
                     shutil.copytree(datadir, testdir.data)
+
+                # copy extra directories into testdir/data
+                if self.test_pkg_dirs:
+                    self.do_stage()
+                    if os.path.exists(self.stage.source_path):
+                        for pdir in self.test_pkg_dirs:
+                            extradir = os.path.join(self.stage.source_path,
+                                                    pdir)
+                            destdir = os.path.join(testdir.data, pdir)
+                            if os.path.isdir(extradir):
+                                shutil.copytree(extradir, destdir)
+                    self.do_clean()
 
                 try:
                     os.chdir(testdir)
@@ -1534,7 +1551,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         pass
 
     def run_test(self, exe, options=[], expected=[], status=None,
-                 installed=False, purpose=''):
+                 installed=False, purpose='', work_dir=None):
         """Run the test and confirm the expected results are obtained
 
         Log any failures and continue, they will be re-raised later
@@ -1548,53 +1565,57 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
+            work_dir (str or None): path to the smoke test directory
         """
-        try:
-            self._run_test_helper(
-                exe, options, expected, status, installed, purpose)
-            print("PASSED")
-        except BaseException as e:
-            # print a summary of the error to the log file
-            # so that cdash and junit reporters know about it
-            exc_type, _, tb = sys.exc_info()
-            print('FAILED: %s' % e)
-            import traceback
-            # remove the current call frame to get back to
-            stack = traceback.extract_stack()[:-1]
+        wdir = '.' if work_dir is None else work_dir
 
-            # Package files have a line added at import time, so we re-read
-            # the file to make line numbers match. We have to subtract two from
-            # the line number because the original line number is inflated once
-            # by the import statement and the lines are displaced one by the
-            # import statement.
-            for i, entry in enumerate(stack):
-                filename, lineno, function, text = entry
-                if spack.paths.is_package_file(filename):
-                    with open(filename, 'r') as f:
-                        lines = f.readlines()
-                    text = lines[lineno - 2]
-                    stack[i] = (filename, lineno, function, text)
+        with working_dir(wdir):
+            try:
+                self._run_test_helper(
+                    exe, options, expected, status, installed, purpose)
+                print("PASSED")
+            except BaseException as e:
+                # print a summary of the error to the log file
+                # so that cdash and junit reporters know about it
+                exc_type, _, tb = sys.exc_info()
+                print('FAILED: %s' % e)
+                import traceback
+                # remove the current call frame to get back to
+                stack = traceback.extract_stack()[:-1]
 
-            # Format the stack to print and print it
-            out = traceback.format_list(stack)
-            for line in out:
-                print(line.rstrip('\n'))
+                # Package files have a line added at import time, so we re-read
+                # the file to make line numbers match. We have to subtract two
+                # from the line number because the original line number is
+                # inflated once by the import statement and the lines are
+                # displaced once by the import statement.
+                for i, entry in enumerate(stack):
+                    filename, lineno, function, text = entry
+                    if spack.paths.is_package_file(filename):
+                        with open(filename, 'r') as f:
+                            lines = f.readlines()
+                        text = lines[lineno - 2]
+                        stack[i] = (filename, lineno, function, text)
 
-            if exc_type is spack.util.executable.ProcessError:
-                out = StringIO()
-                spack.build_environment.write_log_summary(
-                    out, 'test', self.test_log_file, last=1)
-                m = out.getvalue()
-            else:
-                # We're below the package context, so get context from stack
-                # instead of from traceback.
-                # The traceback is truncated here, so we can't use it to
-                # traverse the stack.
-                m = '\n'.join(spack.build_environment.get_package_context(
-                        traceback.extract_stack()))
+                # Format the stack to print and print it
+                out = traceback.format_list(stack)
+                for line in out:
+                    print(line.rstrip('\n'))
 
-            exc = e  # e is deleted after this block
-            self.test_failures.append((exc, m))
+                if exc_type is spack.util.executable.ProcessError:
+                    out = StringIO()
+                    spack.build_environment.write_log_summary(
+                        out, 'test', self.test_log_file, last=1)
+                    m = out.getvalue()
+                else:
+                    # We're below the package context, so get context from
+                    # stack instead of from traceback.
+                    # The traceback is truncated here, so we can't use it to
+                    # traverse the stack.
+                    m = '\n'.join(spack.build_environment.get_package_context(
+                            traceback.extract_stack()))
+
+                exc = e  # e is deleted after this block
+                self.test_failures.append((exc, m))
 
     def _run_test_helper(self, exe, options, expected, status, installed,
                          purpose):
@@ -1617,7 +1638,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             output = runner(*options, output=str.split, error=str.split)
 
             can_pass = None in status or 0 in status
-            assert can_pass, 'Expected execution to fail'
+            assert can_pass, 'Expected {0} execution to fail'.format(exe)
         except ProcessError as err:
             output = str(err)
             match = re.search(r'exited with status ([0-9]+)', output)
