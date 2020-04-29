@@ -10,6 +10,7 @@ import stat
 import spack
 from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
+from spack.main import SpackCommand
 
 
 @pytest.fixture()
@@ -80,3 +81,28 @@ def test_find_external_update_config(mutable_config):
 
     assert cmake_paths_cfg['cmake@1.foo'] == '/x/y1/'
     assert cmake_paths_cfg['cmake@3.17.2'] == '/x/y2/'
+
+
+def test_get_executables(working_env, create_cmake_exe):
+    cmake_path1 = create_cmake_exe("1.foo")
+
+    os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
+    path_to_exe = spack.cmd.external._get_system_executables()
+    assert path_to_exe[cmake_path1] == 'cmake'
+
+
+external = SpackCommand('external')
+
+
+def test_find_external_command(mutable_config, working_env, create_cmake_exe):
+    cmake_path1 = create_cmake_exe("1.foo")
+
+    os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
+    path_to_exe = spack.cmd.external._get_system_executables()
+    external('find', 'cmake')
+
+    pkgs_cfg = spack.config.get('packages')
+    cmake_cfg = pkgs_cfg['cmake']
+    cmake_paths_cfg = cmake_cfg['paths']
+
+    assert 'cmake@1.foo' in cmake_paths_cfg
