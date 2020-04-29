@@ -8,6 +8,7 @@ import os
 import stat
 
 import spack.spec
+from spack.cmd.external import ExternalPackageEntry
 
 
 @pytest.fixture()
@@ -38,3 +39,20 @@ def test_get_external_packages(cmake_exe):
     single_entry = next(iter(entries))
 
     assert single_entry.spec == spack.spec.Spec('cmake@1.foo')
+
+
+def test_external_update_config(mutable_config):
+    pkg_to_entries = {
+        'cmake': [
+            ExternalPackageEntry(spack.spec.Spec('cmake@1.foo'), '/x/y1/'),
+            ExternalPackageEntry(spack.spec.Spec('cmake@2.foo'), '/x/y2/')
+        ]
+    }
+
+    spack.cmd.external._update_pkg_config(pkg_to_entries)
+
+    pkgs_cfg = spack.config.get('packages')
+    cmake_cfg = pkgs_cfg['cmake']
+    cmake_paths_cfg = cmake_cfg['paths']
+
+    assert cmake_paths_cfg['cmake@1.foo'] == '/x/y1/'
