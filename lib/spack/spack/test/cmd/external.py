@@ -127,3 +127,31 @@ def test_find_external_command_full_repo(
     pkg_paths_cfg = pkg_cfg['paths']
 
     assert 'find-externals1@1.foo' in pkg_paths_cfg
+
+
+def test_find_external_merge(mutable_config, mutable_mock_repo):
+    pkgs_cfg_init = {
+        'find-externals1': {
+            'paths': {
+                'find-externals1@1.1': '/preexisting-prefix/'
+            },
+            'buildable': False
+        }
+    }
+
+    mutable_config.update_config('packages', pkgs_cfg_init)
+
+    pkg_to_entries = {
+        'find-externals1': [
+            ExternalPackageEntry(Spec('find-externals1@1.1'), '/x/y1/'),
+            ExternalPackageEntry(Spec('find-externals1@1.2'), '/x/y2/'),
+        ]
+    }
+    spack.cmd.external._update_pkg_config(pkg_to_entries)
+
+    pkgs_cfg = spack.config.get('packages')
+    pkg_cfg = pkgs_cfg['find-externals1']
+    pkg_paths_cfg = pkg_cfg['paths']
+
+    assert pkg_paths_cfg['find-externals1@1.1'] == '/preexisting-prefix/'
+    assert pkg_paths_cfg['find-externals1@1.2'] == '/x/y2/'

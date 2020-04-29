@@ -159,7 +159,7 @@ def _get_predefined_externals():
     pkg_config = spack.config.get('packages')
     already_defined_specs = set()
     for pkg_name, per_pkg_cfg in pkg_config.items():
-        paths = per_pkg_cfg.get('packages', {})
+        paths = per_pkg_cfg.get('paths', {})
         already_defined_specs.update(spack.spec.Spec(k) for k in paths)
         modules = per_pkg_cfg.get('modules', {})
         already_defined_specs.update(spack.spec.Spec(k) for k in modules)
