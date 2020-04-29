@@ -13,11 +13,11 @@ class Brpc(CMakePackage):
     on is opensourced right now."""
 
     homepage = "https://github.com/apache/incubator-brpc"
-    url      = "https://github.com/apache/incubator-brpc/archive/0.9.7-rc03.tar.gz"
+    url      = "https://github.com/apache/incubator-brpc/archive/0.9.7.tar.gz"
 
-    version('0.9.7-rc03', sha256='baacaed6c1dcdda06cb686fc4a5218da3649b9727436288d0369a68d475e1d93')
-    version('0.9.7-rc02', sha256='ad43e5d728d8195f9e761910eaf0a6074ad32073d035b9d3ff3b8571cdb89563')
-    version('0.9.7-rc01', sha256='bf68452bd66b92dcb65a9378fe340a8e5a5b3008094ba951da3d65ad906e2aa0')
+    version('0.9.7', sha256='722cd342baf3b05189ca78ecf6c56ea6ffec22e62fc2938335e4e5bab545a49c')
+    version('0.9.6', sha256='b872ca844999e0ba768acd823b409761f126590fb34cb0183da915a595161446')
+    version('0.9.5', sha256='11ca8942242a4c542c11345b7463a4aea33a11ca33e91d9a2f64f126df8c70e9')
 
     depends_on('gflags')
     depends_on('protobuf')
