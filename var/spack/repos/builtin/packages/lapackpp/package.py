@@ -7,7 +7,8 @@ from spack import *
 
 
 class Lapackpp(CMakePackage):
-    """LAPACK++: C++ API for the Basic Linear Algebra Subroutines (University of Tennessee)"""
+    """LAPACK++: C++ API for the Basic Linear Algebra Subroutines (University
+    of Tennessee)"""
 
     homepage = "https://bitbucket.org/icl/lapackpp"
     hg       = "https://bitbucket.org/icl/lapackpp"

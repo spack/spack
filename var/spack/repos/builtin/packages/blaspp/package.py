@@ -7,14 +7,17 @@ from spack import *
 
 
 # 1) The CMake options exposed by `blaspp` allow for a value called `auto`. The
-#    value is not needed here as the choice of dependency in the spec determines
-#    the appropriate flags.
+#    value is not needed here as the choice of dependency in the spec
+#    determines the appropriate flags.
+#
 # 2) BLASFinder.cmake handles most options. For `auto`, it searches all blas
 #    libraries listed in `def_lib_list`.
+#
 # 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
 #
 class Blaspp(CMakePackage):
-    """BLAS++: C++ API for the Basic Linear Algebra Subroutines (University of Texas)."""
+    """BLAS++: C++ API for the Basic Linear Algebra Subroutines (University of
+    Texas)."""
 
     homepage = "https://bitbucket.org/icl/blaspp"
     hg       = "https://bitbucket.org/icl/blaspp"
@@ -24,13 +27,16 @@ class Blaspp(CMakePackage):
 
     variant('gfort',
             default=False,
-            description='Use GNU Fortran interface. Default is Intel interface. (MKL)')
+            description=('Use GNU Fortran interface. '
+                         'Default is Intel interface. (MKL)'))
     variant('ilp64',
             default=False,
-            description='Use 64bit integer interface. Default is 32bit. (MKL & ESSL)')
+            description=('Use 64bit integer interface. '
+                         'Default is 32bit. (MKL & ESSL)'))
     variant('parallel',
             default=False,
-            description='Use OpenMP threaded backend. Default is sequential. (MKL & ESSL)')
+            description=('Use OpenMP threaded backend. '
+                         'Default is sequential. (MKL & ESSL)'))
 
     depends_on('blas')
 
@@ -69,7 +75,7 @@ class Blaspp(CMakePackage):
             args.append('-DBLAS_LIBRARY="OpenBLAS"')
         elif '^cray-libsci' in spec:
             args.append('-DBLAS_LIBRARY="Cray LibSci"')
-        else: # e.g. netlib-lapack
+        else:  # e.g. netlib-lapack
             args.append('-DBLAS_LIBRARY="generic"')
 
         return args
