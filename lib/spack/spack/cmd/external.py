@@ -11,6 +11,7 @@ import re
 import six
 
 import spack
+import spack.error
 import llnl.util.tty as tty
 import spack.util.spack_yaml as syaml
 import spack.util.environment
@@ -78,11 +79,35 @@ def _pkg_yaml_template(external_pkg_entries):
     """
     paths_dict = syaml.syaml_dict()
     for e in external_pkg_entries:
+        if not _spec_is_valid(e.spec):
+            continue
         paths_dict[str(e.spec)] = e.base_dir
     pkg_dict = syaml.syaml_dict()
     pkg_dict['paths'] = paths_dict
 
     return pkg_dict
+
+
+def _spec_is_valid(spec):
+    try:
+        str(spec)
+    except spack.error.SpackError:
+        # It is assumed here that we can at least extract the package name from
+        # the spec so we can look up the implementation of
+        # determine_spec_details
+        tty.warn('Constructed spec for {0} does not have a string'
+                 ' representation'.format(spec.name))
+        return False
+
+    try:
+        x = spack.spec.Spec(str(spec))
+    except spack.error.SpackError:
+        tty.warn('Constructed spec has a string representation but the string'
+                 ' representation does not evaluate to a valid spec: {0}'
+                 .format(str(spec_str)))
+        return False
+
+    return True
 
 
 def external_find(args):

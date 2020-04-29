@@ -68,7 +68,7 @@ def test_find_external_update_config(mutable_config):
     pkg_to_entries = {
         'cmake': [
             ExternalPackageEntry(Spec('cmake@1.foo'), '/x/y1/'),
-            ExternalPackageEntry(Spec('cmake@2.foo'), '/x/y2/')
+            ExternalPackageEntry(Spec('cmake@3.17.2'), '/x/y2/'),
         ]
     }
 
@@ -79,3 +79,4 @@ def test_find_external_update_config(mutable_config):
     cmake_paths_cfg = cmake_cfg['paths']
 
     assert cmake_paths_cfg['cmake@1.foo'] == '/x/y1/'
+    assert cmake_paths_cfg['cmake@3.17.2'] == '/x/y2/'
