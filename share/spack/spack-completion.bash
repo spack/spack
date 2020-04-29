@@ -827,7 +827,12 @@ _spack_external() {
 }
 
 _spack_external_find() {
-    SPACK_COMPREPLY="-h --help"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        _all_packages
+    fi
 }
 
 _spack_fetch() {
