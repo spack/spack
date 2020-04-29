@@ -7,45 +7,68 @@ import pytest
 import os
 import stat
 
-import spack.spec
+import spack
+from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
 
 
 @pytest.fixture()
-def cmake_exe(tmpdir_factory):
-    cmake_prefix = tmpdir_factory.mktemp('cmake-prefix')
-    cmake_prefix.ensure('bin', dir=True)
-    cmake_path = str(cmake_prefix.join('bin', 'cmake'))
-    with open(cmake_path, 'w') as f:
-        f.write("""\
+def create_cmake_exe(tmpdir_factory):
+    def _create_cmake_exe(version):
+        cmake_prefix = tmpdir_factory.mktemp('cmake-prefix')
+        cmake_prefix.ensure('bin', dir=True)
+        cmake_path = str(cmake_prefix.join('bin', 'cmake'))
+        with open(cmake_path, 'w') as f:
+            f.write("""\
 #!/bin/bash
 
-echo "cmake version 1.foo"
-""")
+echo "cmake version {version}"
+""".format(version=version))
 
-    st = os.stat(cmake_path)
-    os.chmod(cmake_path, st.st_mode | stat.S_IEXEC)
+        st = os.stat(cmake_path)
+        os.chmod(cmake_path, st.st_mode | stat.S_IEXEC)
+        return cmake_path
 
-    system_path_to_exe = {cmake_path: 'cmake'}
-    yield system_path_to_exe
+    yield _create_cmake_exe
 
 
-def test_get_external_packages(cmake_exe):
+def test_find_external_single_package(create_cmake_exe):
     pkgs_to_check = [spack.repo.get('cmake')]
+
+    cmake_path = create_cmake_exe("1.foo")
+    system_path_to_exe = {cmake_path: 'cmake'}
+
     pkg_to_entries = spack.cmd.external._get_external_packages(
-        pkgs_to_check, cmake_exe)
+        pkgs_to_check, system_path_to_exe)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
     single_entry = next(iter(entries))
 
-    assert single_entry.spec == spack.spec.Spec('cmake@1.foo')
+    assert single_entry.spec == Spec('cmake@1.foo')
 
 
-def test_external_update_config(mutable_config):
+def test_find_external_two_instances_same_package(create_cmake_exe):
+    pkgs_to_check = [spack.repo.get('cmake')]
+
+    cmake_path1 = create_cmake_exe("1.foo")
+    cmake_path2 = create_cmake_exe("3.17.2")
+    system_path_to_exe = {
+        cmake_path1: 'cmake',
+        cmake_path2: 'cmake'}
+
+    pkg_to_entries = spack.cmd.external._get_external_packages(
+        pkgs_to_check, system_path_to_exe)
+
+    pkg, entries = next(iter(pkg_to_entries.items()))
+    collected_specs = set(entry.spec for entry in entries)
+    assert set([Spec('cmake@1.foo'), Spec('cmake@3.17.2')]) == collected_specs
+
+
+def test_find_external_update_config(mutable_config):
     pkg_to_entries = {
         'cmake': [
-            ExternalPackageEntry(spack.spec.Spec('cmake@1.foo'), '/x/y1/'),
-            ExternalPackageEntry(spack.spec.Spec('cmake@2.foo'), '/x/y2/')
+            ExternalPackageEntry(Spec('cmake@1.foo'), '/x/y1/'),
+            ExternalPackageEntry(Spec('cmake@2.foo'), '/x/y2/')
         ]
     }
 
