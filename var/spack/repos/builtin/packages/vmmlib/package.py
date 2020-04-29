@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Vmmlib(CMakePackage):
     """A templatized C++ vector and matrix math library"""
 
@@ -18,3 +19,5 @@ class Vmmlib(CMakePackage):
     depends_on('cmake@3.1:', type='build')
     depends_on('ninja', type='build')
     depends_on('boost', type='build')
+
+    patch('fix_implicit_copy_constructor.patch')

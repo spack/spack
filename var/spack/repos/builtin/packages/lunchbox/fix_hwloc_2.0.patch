@@ -1,0 +1,48 @@
+diff --git a/lunchbox/thread.cpp b/lunchbox/thread.cpp
+index 5e40cec..61eb591 100644
+--- a/lunchbox/thread.cpp
++++ b/lunchbox/thread.cpp
+@@ -74,7 +74,7 @@ void _sigUserHandler(int, siginfo_t*, void*)
+     LBERROR << ":" << backtrace << std::endl;
+ }
+ #endif
+-}
++} // namespace
+ 
+ namespace detail
+ {
+@@ -91,7 +91,7 @@ public:
+     Monitor<ThreadState> state;
+     int32_t index;
+ };
+-}
++} // namespace detail
+ 
+ Thread::Thread()
+     : _impl(new detail::Thread)
+@@ -340,7 +340,8 @@ static hwloc_bitmap_t _getCpuSet(const int32_t affinity,
+         const hwloc_obj_t coreObj =
+             hwloc_get_obj_by_type(topology, HWLOC_OBJ_CORE, coreIndex);
+         // Get the CPU set associated with the specified core
+-        cpuSet = coreObj->allowed_cpuset;
++        hwloc_bitmap_and(cpuSet, coreObj->cpuset,
++                         hwloc_topology_get_allowed_cpuset(topology));
+         return cpuSet;
+     }
+ 
+@@ -362,7 +363,8 @@ static hwloc_bitmap_t _getCpuSet(const int32_t affinity,
+     const hwloc_obj_t socketObj =
+         hwloc_get_obj_by_type(topology, HWLOC_OBJ_SOCKET, socketIndex);
+     // Get the CPU set associated with the specified socket
+-    hwloc_bitmap_copy(cpuSet, socketObj->allowed_cpuset);
++    hwloc_bitmap_and(cpuSet, socketObj->cpuset,
++                     hwloc_topology_get_allowed_cpuset(topology));
+     return cpuSet;
+ }
+ #endif
+@@ -442,4 +444,4 @@ std::ostream& operator << ( std::ostream& os, const Thread* thread )
+     return os;
+ }
+ #endif
+-}
++} // namespace lunchbox

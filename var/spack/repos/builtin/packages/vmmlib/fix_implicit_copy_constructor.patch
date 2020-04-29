@@ -1,0 +1,111 @@
+diff --git a/vmmlib/matrix.hpp b/vmmlib/matrix.hpp
+index 3659de0..45bf0c6 100644
+--- a/vmmlib/matrix.hpp
++++ b/vmmlib/matrix.hpp
+@@ -58,6 +58,8 @@ public:
+      */
+     Matrix();
+ 
++    Matrix(const Matrix&) = default;
++
+     /**
+      * Construct a matrix with default values.
+      * Missing data is zero-initialized. Additional data is ignored.
+@@ -118,8 +120,9 @@ public:
+     Matrix<R, P, T> operator*(const Matrix<C, P, T>& other) const;
+ 
+     /** Multiply two square matrices */
+-    template <size_t O, size_t P, typename = typename std::enable_if<
+-                                      R == C && O == P && R == O>::type>
++    template <
++        size_t O, size_t P,
++        typename = typename std::enable_if<R == C && O == P && R == O>::type>
+     Matrix<R, C, T>& operator*=(const Matrix<O, P, T>& right);
+ 
+     /** Element-wise addition of two matrices */
+@@ -292,7 +295,7 @@ public:
+ 
+     T array[R * C]; //!< column by column storage
+ };
+-}
++} // namespace vmml
+ 
+ #include <vmmlib/quaternion.hpp>
+ #include <vmmlib/vector.hpp>
+diff --git a/vmmlib/quaternion.hpp b/vmmlib/quaternion.hpp
+index 8ecdd32..b5a74c1 100644
+--- a/vmmlib/quaternion.hpp
++++ b/vmmlib/quaternion.hpp
+@@ -56,6 +56,8 @@ public:
+     {
+         array[3] = 1.;
+     }
++
++    Quaternion(const Quaternion&) = default;
+     Quaternion(T x, T y, T z, T w);
+ 
+     /** Construct a rotation quaternion */
+@@ -90,7 +92,7 @@ public:
+ 
+     Quaternion getConjugate() const;
+ 
+-    inline vector<3,T> rotate(const vector<3,T>& vec) const;
++    inline vector<3, T> rotate(const vector<3, T>& vec) const;
+ 
+     T abs() const;
+     T absSquare() const;
+@@ -146,7 +148,7 @@ public:
+ 
+     T array[4];
+ };
+-}
++} // namespace vmml
+ 
+ #include <vmmlib/matrix.hpp>
+ 
+@@ -301,11 +303,12 @@ Quaternion<T> Quaternion<T>::getConjugate() const
+ }
+ 
+ template <typename T>
+-inline vector<3,T> Quaternion<T>::rotate(const vector<3,T>& v) const
++inline vector<3, T> Quaternion<T>::rotate(const vector<3, T>& v) const
+ {
+-    const vector<3,T> u(array[0], array[1], array[2]);
++    const vector<3, T> u(array[0], array[1], array[2]);
+     const T s = array[3];
+-    return 2 * vmml::dot(u,v) * u + (s * s - vmml::dot(u,u)) * v + 2 * s * vmml::cross(u,v);
++    return 2 * vmml::dot(u, v) * u + (s * s - vmml::dot(u, u)) * v +
++           2 * s * vmml::cross(u, v);
+ }
+ 
+ template <typename T>
+@@ -496,5 +499,5 @@ Quaternion<T>& Quaternion<T>::operator=(const Quaternion& other)
+     ::memcpy(array, other.array, 4 * sizeof(T));
+     return *this;
+ }
+-}
++} // namespace vmml
+ #endif
+diff --git a/vmmlib/vector.hpp b/vmmlib/vector.hpp
+index 0697b22..a74953e 100644
+--- a/vmmlib/vector.hpp
++++ b/vmmlib/vector.hpp
+@@ -63,7 +63,8 @@ public:
+     vector()
+         : array()
+     {
+-    }                            // http://stackoverflow.com/questions/5602030
++    } // http://stackoverflow.com/questions/5602030
++    vector(const vector&) = default;
+     explicit vector(const T& a); // sets all components to a;
+     vector(const T& x, const T& y);
+     vector(const T& x, const T& y, const T& z);
+@@ -493,7 +494,7 @@ vector<M, T> _createVector(const T x, const T y, const T z,
+ {
+     return vector<M, T>(x, y, z, 1);
+ }
+-}
++} // namespace
+ 
+ template <size_t M, typename T>
+ vector<M, T> vector<M, T>::zero()

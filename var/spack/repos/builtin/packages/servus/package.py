@@ -5,11 +5,12 @@
 
 from spack import *
 
+
 class Servus(CMakePackage):
     """Servus is a small C++ network utility library that provides a zeroconf
        API, URI parsing and UUIDs."""
 
-    homepage = "https://github.com/HPBVIS/Servus"
+    homepage = "https://github.com/HBPVIS/Servus"
     git = "https://github.com/HBPVIS/Servus.git"
     generator = 'Ninja'
 
@@ -19,3 +20,5 @@ class Servus(CMakePackage):
     depends_on('cmake@3.1:', type='build')
     depends_on('ninja', type='build')
     depends_on('boost', type='build')
+
+    patch('fix_uint128_t_class.patch', when='@1.5.2:')

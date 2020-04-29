@@ -1,0 +1,43 @@
+diff --git a/servus/uint128_t.h b/servus/uint128_t.h
+index 683849a..ce296e6 100644
+--- a/servus/uint128_t.h
++++ b/servus/uint128_t.h
+@@ -94,18 +94,15 @@ public:
+         *this = string;
+     }
+ 
++    uint128_t(const uint128_t&) = default;
++
+     /**
+      * @return true if the uint128_t is a generated universally unique
+      *         identifier.
+      */
+     bool isUUID() const { return high() != 0; }
+     /** Assign another 128 bit value. */
+-    uint128_t& operator=(const servus::uint128_t& rhs)
+-    {
+-        _high = rhs._high;
+-        _low = rhs._low;
+-        return *this;
+-    }
++    uint128_t& operator=(const servus::uint128_t& rhs) = default;
+ 
+     /** Assign another 64 bit value. */
+     uint128_t& operator=(const uint64_t rhs)
+@@ -367,7 +364,7 @@ inline uint128_t make_uint128(const std::string& string)
+  * identifier.
+  */
+ SERVUS_API uint128_t make_UUID();
+-}
++} // namespace servus
+ 
+ namespace std
+ {
+@@ -387,6 +384,6 @@ inline string to_string(const servus::uint128_t& value)
+ {
+     return value.getString();
+ }
+-}
++} // namespace std
+ 
+ #endif // SERVUS_UINT128_H
