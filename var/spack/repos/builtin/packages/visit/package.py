@@ -12,6 +12,7 @@ class Visit(CMakePackage):
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
     url = "https://portal.nersc.gov/project/visit/releases/3.0.1/visit3.0.1.tar.gz"
 
+    version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
     version('3.0.1', sha256='a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd')
     version('2.13.3', sha256='cf0b3d2e39e1cd102dd886d3ef6da892733445e362fc28f24d9682012cccf2e5')
     version('2.13.0', sha256='716644b8e78a00ff82691619d4d1e7a914965b6535884890b667b97ba08d6a0f')
@@ -31,6 +32,89 @@ class Visit(CMakePackage):
     patch('spack-changes.patch')
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
     patch('parallel-hdf5.patch', when='+hdf5+mpi')
+
+    #############################################
+    # Full List of dependencies from build_visit
+    #############################################
+    # =====================================
+    # core:
+    # =====================================
+    #  cmake (build)
+    #  vtk
+    #  qt
+    #  qwt 
+    #  python
+    #  mpi
+    #
+    # =====================================
+    # rendering (optional):
+    # =====================================
+    # icet
+    # vtk-m
+    # vtk-h
+    # llvm
+    # mesagl
+    # osmesa
+    # tbb
+    # embree (intel only, binary only?)
+    # ispc   (intel only, binary only?)
+    # ospray (intel only, binary only?)
+    #
+    # =====================================
+    # python modules:
+    # =====================================
+    # numpy
+    # pillow
+    # mpi4py
+    # seedme
+    # sphinx (build, docs)
+    # sphinx rtd theme (build, docs)
+    # pyqt (visit support deprecated)
+    # pyside (note: we want pyside 2)
+    #
+    # =====================================
+    # testing related:
+    # =====================================
+    # p7zip (build, test)
+    #
+    # =====================================
+    # io libs:
+    # =====================================
+    # adios
+    # adios2
+    # advio
+    # boost
+    # boxlib
+    # cfitsio
+    # cgns
+    # conduit
+    # damaris
+    # fastbit
+    # fastquery
+    # gdal
+    # h5part
+    # hdf4
+    # hdf5
+    # mdsplus
+    # mfem
+    # mili
+    # moab
+    # mxml
+    # nektarpp
+    # netcdf
+    # openexr
+    # pidx
+    # silo
+    # stripack
+    # szip
+    # tbb
+    # uintah
+    # xdmf
+    # xercesc
+    # xsd
+    # zlib
+    #
+    # =====================================
 
     depends_on('cmake@3.0:', type='build')
     # https://github.com/visit-dav/visit/issues/3498
