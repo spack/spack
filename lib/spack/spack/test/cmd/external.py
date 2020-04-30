@@ -68,6 +68,7 @@ def test_find_external_two_instances_same_package(create_exe):
     assert spec_to_path[Spec('cmake@3.17.2')] == (
         spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path2)))
 
+
 def test_find_external_update_config(mutable_config):
     pkg_to_entries = {
         'cmake': [
