@@ -55,13 +55,13 @@ class Lammps(CMakePackage, CudaPackage):
             vdate.strftime("%d%b%Y").lstrip('0'))
 
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
-                          'coreshell', 'dipole', 'granular', 'kspace', 'kokkos',
-                          'latte',
-                          'manybody', 'mc', 'meam', 'misc', 'molecule',
-                          'mpiio', 'peri', 'poems', 'python', 'qeq',
-                          'replica', 'rigid', 'shock', 'snap', 'spin', 'srd',
-                          'user-atc', 'user-h5md', 'user-lb', 'user-misc',
-                          'user-netcdf', 'user-omp', 'user-reaxc', 'voronoi']
+                          'coreshell', 'dipole', 'granular', 'kspace',
+                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
+                          'molecule', 'mpiio', 'peri', 'poems', 'python',
+                          'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
+                          'srd', 'user-atc', 'user-h5md', 'user-lb',
+                          'user-misc', 'user-netcdf', 'user-omp', 'user-reaxc',
+                          'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
