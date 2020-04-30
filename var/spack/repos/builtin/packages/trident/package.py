@@ -21,7 +21,8 @@ class Trident(Package):
     depends_on('go', type='build')
 
     def install(self, spec, prefix):
-        install_tree('.', prefix)
         mkdirp(prefix.bin)
         go = which('go')
         go('build', '-o', prefix.bin)
+        with working_dir('cli'):
+            go('build', '-o', prefix.bin.tridentctl)
