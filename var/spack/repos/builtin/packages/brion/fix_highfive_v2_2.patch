@@ -1,0 +1,52 @@
+diff --git a/brion/detail/utilsHDF5.h b/brion/detail/utilsHDF5.h
+index 4bc3677..2403fc5 100644
+--- a/brion/detail/utilsHDF5.h
++++ b/brion/detail/utilsHDF5.h
+@@ -52,20 +52,23 @@ struct type_of_array<vmml::vector<M, T>>
+ template <size_t M, typename T>
+ struct data_converter<std::vector<vmml::vector<M, T>>>
+ {
+-    inline data_converter(std::vector<vmml::vector<M, T>>&, DataSpace&) {}
+-    inline T* transform_read(std::vector<vmml::vector<M, T>>& vector)
++    inline data_converter(const DataSpace&) noexcept {}
++    inline T* transform_read(std::vector<vmml::vector<M, T>>& vector) const
+     {
+         return reinterpret_cast<T*>(vector.data());
+     }
+ 
+-    inline T* transform_write(std::vector<vmml::vector<M, T>>& vector)
++    inline const T* transform_write(
++        const std::vector<vmml::vector<M, T>>& vector) const
+     {
+-        return reinterpret_cast<T*>(vector.data());
++        return reinterpret_cast<const T*>(vector.data());
+     }
+ 
+-    inline void process_result(std::vector<vmml::vector<M, T>>&) {}
++    inline void process_result(std::vector<vmml::vector<M, T>>&) const noexcept
++    {
++    }
+ };
+-}
++} // namespace details
+ 
+ template <>
+ inline AtomicType<brion::SectionType>::AtomicType()
+@@ -78,7 +81,7 @@ inline AtomicType<brion::MorphologyVersion>::AtomicType()
+ {
+     _hid = H5Tcopy(H5T_NATIVE_INT);
+ }
+-}
++} // namespace HighFive
+ 
+ namespace brion
+ {
+@@ -95,6 +98,6 @@ inline void addStringAttribute(HighFive::AnnotateTraits<T>& object,
+                                        HighFive::AtomicType<std::string>());
+     attr.write(value);
+ }
+-}
+-}
++} // namespace detail
++} // namespace brion
+ #endif

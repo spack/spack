@@ -15,6 +15,7 @@ class Highfive(CMakePackage):
     git      = "https://github.com/BlueBrain/HighFive.git"
 
     version('develop', branch='master')
+    version('2.2.1', tag='v2.2.1')
     version('2.1.1', tag='v2.1.1')
     version('2.0', sha256='deee33d7f578e33dccb5d04771f4e01b89a980dd9a3ff449dd79156901ee8d25')
     version('1.5', sha256='f194bda482ab15efa7c577ecc4fb7ee519f6d4bf83470acdb3fb455c8accb407')
@@ -45,10 +46,14 @@ class Highfive(CMakePackage):
             '-DUSE_BOOST:Bool=' + str(self.spec.satisfies('+boost')),
             '-DUSE_EIGEN:Bool=' + str(self.spec.satisfies('+eigen')),
             '-DUSE_XTENSOR:Bool=' + str(self.spec.satisfies('+xtensor')),
-            '-DHIGHFIVE_PARALLEL_HDF5:Bool=' + str(self.spec.satisfies('+mpi')),
-            '-DHIGHFIVE_EXAMPLES:Bool=' + str(self.spec.satisfies('@develop')),
-            '-DHIGHFIVE_UNIT_TESTS:Bool=' + str(self.spec.satisfies('@develop')),
-            '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool=' + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_PARALLEL_HDF5:Bool='
+            + str(self.spec.satisfies('+mpi')),
+            '-DHIGHFIVE_EXAMPLES:Bool='
+            + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_UNIT_TESTS:Bool='
+            + str(self.spec.satisfies('@develop')),
+            '-DHIGHFIVE_TEST_SINGLE_INCLUDES:Bool='
+            + str(self.spec.satisfies('@develop')),
             '-DHDF5_NO_FIND_PACKAGE_CONFIG_FILE=1',  # Dont use targets
-            #'-DHIGHFIVE_USE_INSTALL_DEPS:Bool=ON',  # Newer highfive. Otherwise dynamic deps
+            '-DHIGHFIVE_USE_INSTALL_DEPS:Bool=ON',
         ]

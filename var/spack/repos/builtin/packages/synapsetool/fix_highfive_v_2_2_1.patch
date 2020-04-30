@@ -1,0 +1,13 @@
+diff --git a/src/syn2/syn2_indexer.cpp b/src/syn2/syn2_indexer.cpp
+index 22bc850..8be2dd8 100644
+--- a/src/syn2/syn2_indexer.cpp
++++ b/src/syn2/syn2_indexer.cpp
+@@ -354,7 +354,7 @@ void create_neuron_index_mpi(HighFive::Group & population,
+                        .write(global_ranges_id.size() == 0 ? empty_entry : index_entry);
+ 
+             second_index.select({cur_syn2_offset, 0}, {global_ranges_id.size(), 2})
+-                        .write<index_type>(&global_ranges_id[0].first);
++                        .write_raw(&global_ranges_id[0].first);
+             cur_syn2_offset = next_offset;
+ 
+             if(show_info)
