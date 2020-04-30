@@ -95,7 +95,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('ghostscript', when='+ghostscript')
     depends_on('gtkplus', when='+gtkplus')
     depends_on('gts', when='+gts')
-    depends_on('cairo', when='+pangocairo')
+    depends_on('cairo+pdf', when='+pangocairo')
     depends_on('fontconfig', when='+pangocairo')
     depends_on('freetype', when='+pangocairo')
     depends_on('glib', when='+pangocairo')
