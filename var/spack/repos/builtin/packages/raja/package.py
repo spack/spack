@@ -28,10 +28,7 @@ class Raja(CMakePackage, CudaPackage):
     version('0.4.1', tag='v0.4.1', submodules="True")
     version('0.4.0', tag='v0.4.0', submodules="True")
 
-    variant('cuda', default=False, description='Build with CUDA backend')
     variant('openmp', default=True, description='Build OpenMP backend')
-
-    depends_on('cuda', when='+cuda')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
@@ -44,6 +41,10 @@ class Raja(CMakePackage, CudaPackage):
             'On' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
+
             options.extend([
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
@@ -59,7 +60,10 @@ class Raja(CMakePackage, CudaPackage):
         sys_type = ""
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        if "blueos" in sys_type:
-            options.extend(['-DENABLE_TESTS=OFF'])
+        if (self.run_tests == False) or
+           ("blueos" in sys_type):
+            options.append('-DENABLE_TESTS=OFF')
+        else:
+            options.append('-DENABLE_TESTS=ON')
 
         return options

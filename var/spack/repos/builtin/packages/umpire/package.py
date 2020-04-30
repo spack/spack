@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Umpire(CMakePackage):
+class Umpire(CMakePackage, CudaPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
@@ -35,13 +35,13 @@ class Umpire(CMakePackage):
     version('0.1.4', tag='v0.1.4', submodules='True')
     version('0.1.3', tag='v0.1.3', submodules='True')
 
-    variant('cuda', default=False, description='Build with CUDA support')
-    variant('fortran', default=False, description='Build Fortran API')
+    variant('fortran', default=False, description='Build C/Fortran API')
     variant('c', default=True, description='Build C API')
     variant('numa', default=False, description='Enable NUMA support')
     variant('openmp', default=False, description='Build with OpenMP support')
+    variant('deviceconst', default=False,
+            description='Enables support for constant device memory')
 
-    depends_on('cuda', when='+cuda')
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
@@ -56,21 +56,31 @@ class Umpire(CMakePackage):
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=On',
-                '-DENABLE_DEVICE_CONST=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
+
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch is not None:
+                flag = '-arch sm_{0}'.format(cuda_arch[0])
+                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
+
+            if '+deviceconst' in spec:
+                options.append('-DENABLE_DEVICE_CONST=On')
         else:
             options.append('-DENABLE_CUDA=Off')
 
-        if '+c' in spec:
-            options.append('-DENABLE_C=On')
+        options.append('-DENABLE_C={0}'.format(
+            'On' if '+c' in spec else 'Off'))
 
-        if '+fortran' in spec:
-            options.append('-DENABLE_FORTRAN=On')
+        options.append('-DENABLE_FORTRAN={0}'.format(
+            'On' if '+fortran' in spec else 'Off'))
 
-        if '+numa' in spec:
-            options.append('-DENABLE_NUMA=On')
+        options.append('-DENABLE_NUMA={0}'.format(
+            'On' if '+numa' in spec else 'Off'))
 
-        if '+openmp' in spec:
-            options.append('-DENABLE_OPENMP=On')
+        options.append('-DENABLE_OPENMP={0}'.format(
+            'On' if '+openmp' in spec else 'Off'))
+
+        options.append('-DENABLE_TESTS={0}'.format(
+            'On' if self.run_tests == False else 'Off'))
 
         return options
