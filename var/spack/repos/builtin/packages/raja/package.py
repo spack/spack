@@ -46,9 +46,10 @@ class Raja(CMakePackage, CudaPackage):
             options.extend([
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
-            if 'cuda_arch' in spec.variants:
-                cuda_value = spec.variants['cuda_arch'].value
-                cuda_arch = cuda_value[0]
+            
+            cuda_value = spec.variants['cuda_arch'].value
+            cuda_arch = cuda_value[0]
+            if cuda_arch is not None:
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
 
         return options
