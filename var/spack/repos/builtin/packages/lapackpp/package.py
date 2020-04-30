@@ -19,4 +19,5 @@ class Lapackpp(CMakePackage):
     depends_on('blaspp')
 
     def cmake_args(self):
-        return ['-DBUILD_LAPACKPP_TESTS=OFF']
+        return ['-DBUILD_LAPACKPP_TESTS:BOOL={0}'.format(
+            'ON' if self.run_tests else 'OFF')]

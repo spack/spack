@@ -33,7 +33,7 @@ class Blaspp(CMakePackage):
             default=False,
             description=('Use 64bit integer interface. '
                          'Default is 32bit. (MKL & ESSL)'))
-    variant('parallel',
+    variant('openmp',
             default=False,
             description=('Use OpenMP threaded backend. '
                          'Default is sequential. (MKL & ESSL)'))
@@ -42,7 +42,8 @@ class Blaspp(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = ['-DBLASPP_BUILD_TESTS=OFF']
+        args = ['-DBLASPP_BUILD_TESTS:BOOL={0}'.format(
+            'ON' if self.run_tests else 'OFF')]
 
         if '+gfort' in spec:
             args.append('-DBLAS_LIBRARY_MKL="GNU gfortran conventions"')
@@ -54,7 +55,7 @@ class Blaspp(CMakePackage):
         else:
             args.append('-DBLAS_LIBRARY_INTEGER="int (LP64)"')
 
-        if '+parallel' in spec:
+        if '+openmp' in spec:
             args.append(['-DUSE_OPENMP=ON',
                          '-DBLAS_LIBRARY_THREADING="threaded"'])
         else:
