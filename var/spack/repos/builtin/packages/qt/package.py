@@ -128,15 +128,6 @@ class Qt(Package):
           sha256='ffa41e75d0d544a517e80f068464502623bb53a11f35cd22278b37372920cf46',
           when='@5.13:5.13.99 %gcc@9')
 
-    # Fix build of QT4 with GCC 9
-    # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=925811
-    patch("qt4-gcc9-qforeach.patch", when="@4:4.999 %gcc@9")
-
-    # https://bugreports.qt.io/browse/QTBUG-74196
-    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=89585
-    patch('qt4-gcc8.3-asm-volatile-fix.patch', when='@4')
-    patch('qt5-gcc8.3-asm-volatile-fix.patch', when='@5.0.0:5.12.1')
-
     # Build-only dependencies
     depends_on("pkgconfig", type='build')
     depends_on("flex", when='+webkit', type='build')
@@ -603,7 +594,7 @@ class Qt(Package):
         else:
             config_args.extend(['-platform', 'linux-g++'])
             # Linux-only QT5 dependencies
-            if '+xcb' in specs:
+            if '+xcb' in spec:
                 config_args.append('-system-xcb')
 
         if '~webkit' in spec:
