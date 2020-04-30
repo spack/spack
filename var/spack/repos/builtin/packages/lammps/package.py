@@ -106,7 +106,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
-    depends_on('kokkos', when='+kokkos')
+    depends_on('kokkos-legacy', when='+kokkos')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
