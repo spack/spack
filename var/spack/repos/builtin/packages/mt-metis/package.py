@@ -20,8 +20,7 @@ class MtMetis(CMakePackage):
     # avoid asm('pause') for no x86_64 familly.
     patch('non_x8664.patch')
 
-    variant('shared', default=True,
-            description='Enable build of shared libraries')
+    variant('shared', default=True, description='Enable build of shared libraries')
 
     def cmake_args(self):
         define = CMakePackage.define
