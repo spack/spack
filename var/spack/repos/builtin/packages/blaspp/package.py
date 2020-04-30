@@ -31,12 +31,12 @@ class Blaspp(CMakePackage):
 
     depends_on('blas')
 
-    # 1) The CMake options exposed by `blaspp` allow for a value called `auto`. The
-    #    value is not needed here as the choice of dependency in the spec
+    # 1) The CMake options exposed by `blaspp` allow for a value called `auto`.
+    #    The value is not needed here as the choice of dependency in the spec
     #    determines the appropriate flags.
     #
-    # 2) BLASFinder.cmake handles most options. For `auto`, it searches all blas
-    #    libraries listed in `def_lib_list`.
+    # 2) BLASFinder.cmake handles most options. For `auto`, it searches all
+    #    blas libraries listed in `def_lib_list`.
     #
     # 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
     #
