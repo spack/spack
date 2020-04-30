@@ -122,7 +122,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
                     options.append("-D%s=OFF" % cmake_option)
 
         for eti in self.space_etis:
-            deflt, descr = self.space_etis[eti]
+            deflt, descr, _ = self.space_etis[eti]
             if deflt == "auto":
                 value = spec.variants[eti].value
                 # spack does these as strings, not reg booleans
