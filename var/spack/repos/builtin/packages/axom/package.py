@@ -166,12 +166,6 @@ class Axom(CMakePackage, CudaPackage):
             if os.path.isfile(env["SPACK_FC"]):
                 f_compiler  = env["SPACK_FC"]
 
-        # are we on a specific machine
-        sys_type = self._get_sys_type(spec)
-        on_blueos = 'blueos' in sys_type
-        on_blueos_p9 = on_blueos and 'p9' in sys_type
-        on_toss = 'toss_3' in sys_type
-
         # cmake
         if "+cmake" in spec:
             cmake_exe = pjoin(spec['cmake'].prefix.bin, "cmake")
@@ -280,27 +274,44 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                             spec['mpi'].mpifc))
 
+            # Check for slurm
+            using_slurm = False
+            slurm_checks = ['+slurm', 'schedulers=slurm', 'process_managers=slurm']
+            if any(spec['mpi'].satisfies(variant) for variant in slurm_checks):
+                using_slurm = True
+
             # Determine MPIEXEC
-            if on_blueos:
-                mpiexec = join_path(spec['mpi'].prefix.bin, 'mpirun')
+            if using_slurm:
+                if spec['mpi'].external:
+                    mpiexec = '/usr/bin/srun'
+                else:
+                    mpiexec = os.path.join(spec['slurm'].prefix.bin, 'srun')
             else:
-                mpiexec = join_path(spec['mpi'].prefix.bin, 'mpiexec')
-                if not os.path.isfile(mpiexec):
-                    mpiexec = "/usr/bin/srun"
-            # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
-            # vs the older versions which expect MPIEXEC
-            if self.spec["cmake"].satisfies('@3.10:'):
-                cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexec))
+                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
+                if not os.path.exists(mpiexec):
+                    mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
+             
+            if not os.path.exists(mpiexec):
+                msg = "Unable to determine MPI run executable, Axom tests may fail"
+                cfg.write("# {0}".format(msg))
+                tty.msg(msg)
             else:
-                cfg.write(cmake_cache_entry("MPIEXEC", mpiexec))
+                # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
+                # vs the older versions which expect MPIEXEC
+                if self.spec["cmake"].satisfies('@3.10:'):
+                    cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexec))
+                else:
+                    cfg.write(cmake_cache_entry("MPIEXEC", mpiexec))
 
             # Determine MPIEXEC_NUMPROC_FLAG
-            if on_blueos:
+            if using_slurm:
+                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-n"))
+            else:
                 cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-np"))
+
+            if spec['mpi'].name == 'spectrum-mpi':
                 cfg.write(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
                                             "mpibind"))
-            else:
-                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-n"))
         else:
             cfg.write(cmake_cache_option("ENABLE_MPI", False))
 
@@ -382,25 +393,24 @@ class Axom(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_option("ENABLE_OPENMP", False))
 
         # Enable death tests
-        if on_blueos and "+cuda" in spec:
+        if spec.satisfies('target=ppc64le:') and "+cuda" in spec:
             cfg.write(cmake_cache_option("ENABLE_GTEST_DEATH_TESTS", False))
         else:
             cfg.write(cmake_cache_option("ENABLE_GTEST_DEATH_TESTS", True))
 
-        # BlueOS
-        if on_blueos or on_blueos_p9:
-            familymsg = ("All of BlueOS compilers report clang "
-                         "due to nvcc, override to proper compiler family")
-            if "xlf" in f_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
-                                            familymsg))
-            if "xlc" in c_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL",
-                                            familymsg))
-            if "xlC" in cpp_compiler:
-                cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL",
-                                            familymsg))
+        # Override XL compiler family
+        familymsg = ("Override to proper compiler family for XL")
+        if "xlf" in f_compiler:
+            cfg.write(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
+                                        familymsg))
+        if "xlc" in c_compiler:
+            cfg.write(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL",
+                                        familymsg))
+        if "xlC" in cpp_compiler:
+            cfg.write(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL",
+                                        familymsg))
 
+        if spec.satisfies('target=ppc64le:'):
             if "xlf" in f_compiler:
                 description = ("Converts C-style comments to Fortran style "
                                "in preprocessed files")
@@ -457,16 +467,14 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write("# nvcc does not like gtest's 'pthreads' flag\n")
                 cfg.write(cmake_cache_option("gtest_disable_pthreads", True))
 
-        # TOSS3
-        elif on_toss:
-            if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
-                clanglibdir = pjoin(os.path.dirname(
-                                    os.path.dirname(cpp_compiler)), "lib")
-                flags = "-Wl,-rpath,{0}".format(clanglibdir)
-                description = ("Adds a missing rpath for libraries "
-                               "associated with the fortran compiler")
-                cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                            description))
+        if ("gfortran" in f_compiler) and ("clang" in cpp_compiler):
+            clanglibdir = pjoin(os.path.dirname(
+                                os.path.dirname(cpp_compiler)), "lib")
+            flags = "-Wl,-rpath,{0}".format(clanglibdir)
+            description = ("Adds a missing rpath for libraries "
+                           "associated with the fortran compiler")
+            cfg.write(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
+                                        description))
 
         cfg.write("\n")
         cfg.close()
