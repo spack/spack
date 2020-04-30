@@ -37,6 +37,7 @@ modules:
       - doxygen
       - emacs
       - ffmpeg
+      - git
       - graphviz
       - hpctoolkit
       - hpe-mpi
