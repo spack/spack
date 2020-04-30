@@ -213,7 +213,7 @@ class Kokkos(CMakePackage, CudaPackage):
         if kokkos_microarch_name:
             spack_microarches.append(kokkos_microarch_name)
 
-        for arch in amd_gpu_arches:
+        for arch in self.amd_gpu_arches:
             keyval = "amd_gpu_arch=%s" % arch
             if keyval in spec:
                 spack_microarches.append(arch)
@@ -224,7 +224,6 @@ class Kokkos(CMakePackage, CudaPackage):
         self.append_args("ENABLE", self.devices_values, options)
         self.append_args("ENABLE", self.options_values, options)
         self.append_args("ENABLE", self.tpls_values, options)
-        self.append_args("ARCH",   self.arch_values, options)
 
         for tpl in self.tpls_values:
             var = "+%s" % tpl
