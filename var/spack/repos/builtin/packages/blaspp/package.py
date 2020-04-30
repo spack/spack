@@ -6,15 +6,6 @@
 from spack import *
 
 
-# 1) The CMake options exposed by `blaspp` allow for a value called `auto`. The
-#    value is not needed here as the choice of dependency in the spec
-#    determines the appropriate flags.
-#
-# 2) BLASFinder.cmake handles most options. For `auto`, it searches all blas
-#    libraries listed in `def_lib_list`.
-#
-# 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
-#
 class Blaspp(CMakePackage):
     """BLAS++: C++ API for the Basic Linear Algebra Subroutines (University of
     Texas)."""
@@ -40,6 +31,15 @@ class Blaspp(CMakePackage):
 
     depends_on('blas')
 
+    # 1) The CMake options exposed by `blaspp` allow for a value called `auto`. The
+    #    value is not needed here as the choice of dependency in the spec
+    #    determines the appropriate flags.
+    #
+    # 2) BLASFinder.cmake handles most options. For `auto`, it searches all blas
+    #    libraries listed in `def_lib_list`.
+    #
+    # 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
+    #
     def cmake_args(self):
         spec = self.spec
         args = ['-DBLASPP_BUILD_TESTS:BOOL={0}'.format(
