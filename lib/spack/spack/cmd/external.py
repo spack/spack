@@ -232,6 +232,13 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
             specs = _convert_to_iterable(
                 pkg.determine_spec_details(prefix, exes_in_prefix))
 
+            if not specs:
+                tty.debug(
+                    'The following executables in {0} were decidedly not'
+                    'part of the package {1}: {2}'
+                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
+                )
+
             for spec in specs:
                 pkg_prefix = _determine_base_dir(prefix)
 
@@ -254,12 +261,6 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
 
                 pkg_to_entries[pkg.name].append(
                     ExternalPackageEntry(spec=spec, base_dir=pkg_prefix))
-            else:
-                tty.debug(
-                    'The following executables in {0} were decidedly not'
-                    'part of the package {1}: {2}'
-                    .format(prefix, pkg.name, ', '.join(exes_in_prefix))
-                )
 
     return pkg_to_entries
 
