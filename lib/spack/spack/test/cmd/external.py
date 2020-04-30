@@ -51,6 +51,7 @@ def test_find_external_single_package(create_exe):
 def test_find_external_two_instances_same_package(create_exe):
     pkgs_to_check = [spack.repo.get('cmake')]
 
+    # Each of these cmake instances is created in a different prefix
     cmake_path1 = create_exe("cmake", "cmake version 1.foo")
     cmake_path2 = create_exe("cmake", "cmake version 3.17.2")
     system_path_to_exe = {
@@ -61,9 +62,11 @@ def test_find_external_two_instances_same_package(create_exe):
         pkgs_to_check, system_path_to_exe)
 
     pkg, entries = next(iter(pkg_to_entries.items()))
-    collected_specs = set(entry.spec for entry in entries)
-    assert set([Spec('cmake@1.foo'), Spec('cmake@3.17.2')]) == collected_specs
-
+    spec_to_path = dict((e.spec, e.base_dir) for e in entries)
+    assert spec_to_path[Spec('cmake@1.foo')] == (
+        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path1)))
+    assert spec_to_path[Spec('cmake@3.17.2')] == (
+        spack.cmd.external._determine_base_dir(os.path.dirname(cmake_path2)))
 
 def test_find_external_update_config(mutable_config):
     pkg_to_entries = {
