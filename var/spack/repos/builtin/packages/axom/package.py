@@ -42,7 +42,7 @@ def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
     return path
 
 
-class Axom(Package):
+class Axom(CMakePackage, CudaPackage):
     """Axom provides a robust, flexible software infrastructure for the development
        of multi-physics applications and computational tools."""
 
@@ -59,7 +59,8 @@ class Axom(Package):
     version('0.3.0', tag='v0.3.0', submodules="True")
     version('0.2.9', tag='v0.2.9', submodules="True")
 
-    phases = ["hostconfig", "configure", "build", "install"]
+    phases = ["hostconfig", "cmake", "build", "install"]
+    root_cmakelists_dir = 'src'
 
     # -----------------------------------------------------------------------
     # Variants
@@ -72,7 +73,6 @@ class Axom(Package):
     variant("python",   default=False, description="Build python support")
 
     variant("mpi",      default=True, description="Build MPI support")
-    variant("cuda",     default=False, description="Turn on CUDA support.")
     variant('openmp',   default=True, description='Turn on OpenMP support.')
 
     variant("mfem",     default=False, description="Build with mfem")
@@ -90,7 +90,6 @@ class Axom(Package):
     # -----------------------------------------------------------------------
     # Basics
     depends_on("cmake@3.8.2:", type='build')
-    depends_on("cuda", when="+cuda")
     depends_on("mpi", when="+mpi")
 
     # Libraries
@@ -115,8 +114,8 @@ class Axom(Package):
 
     depends_on("umpire~openmp", when="+umpire~openmp")
     depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire~openmp+cuda", when="+umpire~openmp+cuda")
-    depends_on("umpire+openmp+cuda", when="+umpire+openmp+cuda")
+    depends_on("umpire~openmp+cuda+deviceconst", when="+umpire~openmp+cuda")
+    depends_on("umpire+openmp+cuda+deviceconst", when="+umpire+openmp+cuda")
 
     depends_on("mfem~mpi~hypre~metis~gzstream", when="+mfem")
 
@@ -182,6 +181,7 @@ class Axom(Package):
                 # error could not find cmake!
                 crash()
             cmake_exe = cmake_exe.command
+        cmake_exe = os.path.realpath(cmake_exe)
 
         host_config_path = self._get_host_config_path(spec)
         cfg = open(host_config_path, "w")
@@ -322,11 +322,9 @@ class Axom(Package):
             cfg.write("# Root directory for generated developer tools\n")
             cfg.write(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
 
-        if "python" in spec or "devtools" in spec:
-            python_bin_dir = get_spec_path(spec, "python",
-                                           path_replacements, use_bin=True)
+        if "+python" in spec or "devtools" in spec:
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
-                                        pjoin(python_bin_dir, "python")))
+                                        spec['python'].command.path))
 
         if "doxygen" in spec or "py-sphinx" in spec:
             cfg.write(cmake_cache_option("ENABLE_DOCS", True))
@@ -380,6 +378,8 @@ class Axom(Package):
         # OpenMP
         if "+openmp" in spec:
             cfg.write(cmake_cache_option("ENABLE_OPENMP", True))
+        else:
+            cfg.write(cmake_cache_option("ENABLE_OPENMP", False))
 
         # Enable death tests
         if on_blueos and "+cuda" in spec:
@@ -422,6 +422,7 @@ class Axom(Package):
                 cfg.write("#------------------{0}\n\n".format("-" * 60))
 
                 cfg.write(cmake_cache_option("ENABLE_CUDA", True))
+
                 cudatoolkitdir = spec['cuda'].prefix
                 cfg.write(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
                                             cudatoolkitdir))
@@ -432,12 +433,17 @@ class Axom(Package):
                 cfg.write(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
                                              True))
 
-                if on_blueos_p9:
-                    cfg.write(cmake_cache_entry("AXOM_CUDA_ARCH", "sm_70"))
-                else:
-                    cfg.write(cmake_cache_entry("AXOM_CUDA_ARCH", "sm_60"))
+                cfg.write(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS",True))
 
-                cudaflags  = "-restrict -arch ${AXOM_CUDA_ARCH} "
+                cuda_arch = spec.variants['cuda_arch'].value
+                axom_arch = ""
+                if cuda_arch is not None:
+                    axom_arch = 'sm_{0}'.format(cuda_arch[0])
+                    cfg.write(cmake_cache_entry("AXOM_CUDA_ARCH", "sm_70"))
+
+                cudaflags  = "-restrict "
+                if axom_arch != "":
+                    cudaflags += "-arch ${AXOM_CUDA_ARCH} "
                 cudaflags += "-std=c++11 --expt-extended-lambda -G"
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
 
@@ -466,32 +472,18 @@ class Axom(Package):
         cfg.close()
         tty.info("Spack generated Axom host-config file: " + host_config_path)
 
-    def configure(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            host_config_path = self._get_host_config_path(spec)
+    def cmake_args(self):
+        spec = self.spec
+        host_config_path = self._get_host_config_path(spec)
 
-            cmake_args = []
-            cmake_args.extend(std_cmake_args)
-            cmake_args.extend(["-C", host_config_path, "../src"])
-            print("Configuring Axom...")
-            cmake(*cmake_args)
+        options = []
+        options.extend(['-C', host_config_path])
+        if self.run_tests == False:
+            options.append('-DENABLE_TESTS=OFF')
+        else:
+            options.append('-DENABLE_TESTS=ON')
+        return options
 
-    def build(self, spec, prefix):
-        with working_dir('spack-build'):
-            print("Building Axom...")
-            make()
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def test(self):
-        with working_dir('spack-build'):
-            print("Running Axom's Unit Tests...")
-            make("test")
-
-    def install(self, spec, prefix):
-        with working_dir('spack-build'):
-            make("install")
-            # install copy of host config for provenance
-            print("Installing Axom's CMake Host Config File...")
-            host_config_path = self._get_host_config_path(spec)
-            install(host_config_path, prefix)
+    @run_after('install')
+    def install_cmake_cache(self):
+        install(self._get_host_config_path(spec), prefix)
