@@ -172,6 +172,8 @@ class Kokkos(CMakePackage, CudaPackage):
     conflicts("+cuda", when="std=17")
     conflicts("+cuda", when="std=20")
 
+    variant('shared', default=True, description='Build shared libraries')
+
     def append_args(self, cmake_prefix, cmake_options, spack_options):
         for opt in cmake_options:
             enablestr = "+%s" % opt
@@ -241,5 +243,7 @@ class Kokkos(CMakePackage, CudaPackage):
         # Set the C++ standard to use
         options.append("-DKokkos_CXX_STANDARD=%s" %
                        self.spec.variants["std"].value)
+
+        options.append('-DBUILD_SHARED_LIBS=%s' % ('+shared' in self.spec))
 
         return options

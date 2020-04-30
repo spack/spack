@@ -55,12 +55,13 @@ class Lammps(CMakePackage, CudaPackage):
             vdate.strftime("%d%b%Y").lstrip('0'))
 
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
-                          'coreshell', 'dipole', 'granular', 'kspace', 'latte',
-                          'manybody', 'mc', 'meam', 'misc', 'molecule',
-                          'mpiio', 'peri', 'poems', 'python', 'qeq',
-                          'replica', 'rigid', 'shock', 'snap', 'spin', 'srd',
-                          'user-atc', 'user-h5md', 'user-lb', 'user-misc',
-                          'user-netcdf', 'user-omp', 'user-reaxc', 'voronoi']
+                          'coreshell', 'dipole', 'granular', 'kspace',
+                          'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
+                          'molecule', 'mpiio', 'peri', 'poems', 'python',
+                          'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
+                          'srd', 'user-atc', 'user-h5md', 'user-lb',
+                          'user-misc', 'user-netcdf', 'user-omp', 'user-reaxc',
+                          'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -69,8 +70,6 @@ class Lammps(CMakePackage, CudaPackage):
             description='Build the liblammps in addition to the executable')
     variant('mpi', default=True,
             description='Build with mpi')
-    variant('kokkos', default=False,
-            description='Build with Kokkos accelerated styles')
     variant('jpeg', default=True,
             description='Build with jpeg support')
     variant('png', default=True,
@@ -106,7 +105,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('jpeg', when='+jpeg')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
-    depends_on('kokkos-legacy', when='+kokkos')
+    depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
@@ -117,7 +116,8 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('+user-phonon', when='~kspace')
     conflicts('+user-misc', when='~manybody')
-    conflicts('%gcc@9:', when='+openmp')
+    conflicts('%gcc@9:', when='@:20200303+openmp')
+    conflicts('+kokkos', when='@:20200227')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -176,5 +176,7 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('{0}=OFF'.format(opt))
         if '+kspace' in spec:
             args.append('-DFFT=FFTW3')
+        if '+kokkos' in spec:
+            args.append('-DEXTERNAL_KOKKOS=ON')
 
         return args
