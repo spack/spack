@@ -385,31 +385,33 @@ def macholib_get_paths(cur_path):
     return (rpaths, deps, ident)
 
 
-def modify_elf_object(path_name, new_rpaths):
+def _set_elf_rpaths(target, rpaths):
+    """Replace the original RPATH of the target with the paths passed
+    as arguments.
+
+    Args:
+        target: target executable. Must be an ELF object.
+        rpaths: paths to be set in the RPATH
     """
-    Replace orig_rpath with new_rpath in RPATH of elf object path_name
-    """
+    # Join the paths using ':' as a separator
+    rpaths_str = ':'.join(rpaths)
 
-    new_joined = ':'.join(new_rpaths)
+    # If we're relocating patchelf itself, make a copy and use it
+    bak_path = None
+    if target.endswith("/bin/patchelf"):
+        bak_path = target + ".bak"
+        shutil.copy(target, bak_path)
 
-    # if we're relocating patchelf itself, use it
-    bak_path = path_name + ".bak"
-
-    if path_name[-13:] == "/bin/patchelf":
-        shutil.copy(path_name, bak_path)
-        patchelf = executable.Executable(bak_path)
-    else:
-        patchelf = executable.Executable(_patchelf())
-
+    patchelf = executable.Executable(bak_path or _patchelf())
     try:
-        patchelf('--force-rpath', '--set-rpath', '%s' % new_joined,
-                 '%s' % path_name, output=str, error=str)
+        patchelf_args = ['--force-rpath', '--set-rpath', rpaths_str, target]
+        patchelf(*patchelf_args, output=str, error=str)
     except executable.ProcessError as e:
-        msg = 'patchelf --force-rpath --set-rpath %s failed with error %s' % (
-            path_name, e)
-        tty.warn(msg)
-    if os.path.exists(bak_path):
-        os.remove(bak_path)
+        msg = 'patchelf --force-rpath --set-rpath {0} failed with error {1}'
+        tty.warn(msg.format(target, e))
+    finally:
+        if os.path.exists(bak_path):
+            os.remove(bak_path)
 
 
 def needs_binary_relocation(m_type, m_subtype):
@@ -636,11 +638,11 @@ def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
             # get the relativized rpaths in the new prefix
             new_rpaths = _make_relative(path_name, new_layout_root,
                                         norm_rpaths)
-            modify_elf_object(path_name, new_rpaths)
+            _set_elf_rpaths(path_name, new_rpaths)
         else:
             new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
                                         prefix_to_prefix)
-            modify_elf_object(path_name, new_rpaths)
+            _set_elf_rpaths(path_name, new_rpaths)
 
 
 def make_link_relative(cur_path_names, orig_path_names):
@@ -684,7 +686,7 @@ def make_elf_binaries_relative(cur_path_names, orig_path_names,
         if orig_rpaths:
             new_rpaths = _make_relative(orig_path, old_layout_root,
                                         orig_rpaths)
-            modify_elf_object(cur_path, new_rpaths)
+            _set_elf_rpaths(cur_path, new_rpaths)
 
 
 def check_files_relocatable(cur_path_names, allow_root):
