@@ -182,7 +182,7 @@ class Axom(CMakePackage, CudaPackage):
         cfg.write("#------------------{0}\n".format("-" * 60))
         cfg.write("# !!!! This is a generated file, edit at own risk !!!!\n")
         cfg.write("#------------------{0}\n".format("-" * 60))
-        cfg.write("# SYS_TYPE: {0}\n".format(sys_type))
+        cfg.write("# SYS_TYPE: {0}\n".format(self._get_sys_type(spec)))
         cfg.write("# Compiler Spec: {0}\n".format(spec.compiler))
         cfg.write("#------------------{0}\n".format("-" * 60))
         # show path to cmake for reference and to be used by config-build.py
@@ -274,28 +274,21 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                             spec['mpi'].mpifc))
 
-            # Check for slurm
-            using_slurm = False
-            slurm_checks = ['+slurm',
-                            'schedulers=slurm',
-                            'process_managers=slurm']
-            if any(spec['mpi'].satisfies(variant) for variant in slurm_checks):
-                using_slurm = True
+            # Determine MPIEXEC and MPIEXEC_NUMPROC_FLAG
 
-            # Determine MPIEXEC
-            if using_slurm:
-                if spec['mpi'].external:
-                    mpiexec = '/usr/bin/srun'
-                else:
-                    mpiexec = os.path.join(spec['slurm'].prefix.bin, 'srun')
-            else:
-                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
+            mpiexec = os.path.join(spec['mpi'].prefx.bin, 'mpirun')
+            numproc_flag = "-np"
+            if not os.path.exists(mpiexec):
+                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
                 if not os.path.exists(mpiexec):
-                    mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
+                    mpiexec = os.path.join(spec['mpi'].prefix.bin, 'srun')
+                    numproc_flag = "-n"
+                    if not os.path.exists(mpiexec):
+                        mpiexec = "/usr/bin/srun"
 
             if not os.path.exists(mpiexec):
                 msg = "Unable to determine MPIEXEC, Axom tests may fail"
-                cfg.write("# {0}".format(msg))
+                cfg.write("# {0}\n\n".format(msg))
                 tty.msg(msg)
             else:
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
@@ -304,12 +297,7 @@ class Axom(CMakePackage, CudaPackage):
                     cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexec))
                 else:
                     cfg.write(cmake_cache_entry("MPIEXEC", mpiexec))
-
-            # Determine MPIEXEC_NUMPROC_FLAG
-            if using_slurm:
-                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-n"))
-            else:
-                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-np"))
+                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", numproc_flag))
 
             if spec['mpi'].name == 'spectrum-mpi':
                 cfg.write(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
@@ -336,8 +324,10 @@ class Axom(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
 
         if "+python" in spec or "+devtools" in spec:
-            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
-                                        spec['python'].command.path))
+            python_path = os.path.realpath(spec['python'].command.path)
+            for key in path_replacements:
+                python_path = python_path.replace(key, path_replacements[key])
+            cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE", python_path))
 
         if "doxygen" in spec or "py-sphinx" in spec:
             cfg.write(cmake_cache_option("ENABLE_DOCS", True))
