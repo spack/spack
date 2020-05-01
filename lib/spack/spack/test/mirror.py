@@ -92,7 +92,7 @@ def check_mirror():
                 with spack.config.override('config:checksum', False):
                     with Stage('baseline') as baseline:
                         fetcher = pkg.fetcher[0]
-                        fetcher.set_stage(baseline)
+                        fetcher.stage = baseline
                         fetcher.fetch()
                         fetcher.expand()
                         original_path = baseline.source_path
