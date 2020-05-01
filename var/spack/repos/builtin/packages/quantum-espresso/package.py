@@ -77,9 +77,6 @@ class QuantumEspresso(Package):
     # TODO: enable building EPW when ~mpi
     depends_on('mpi', when='+epw')
 
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.004')
-    patch('dspev_drv_elpa.patch', when='@6.1.0:+patch+elpa ^elpa@2016.05.003')
-
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
     # MKL with 64-bit integers not supported.
@@ -194,6 +191,11 @@ class QuantumEspresso(Package):
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
     patch(patch_url, sha256=patch_checksum, when='@6.3+qmcpack')
+
+    # ELPA
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.004')
+    patch('dspev_drv_elpa.patch', when='@6.1.0:+elpa ^elpa@2016.05.003')
+
     # QE UPSTREAM PATCHES
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
