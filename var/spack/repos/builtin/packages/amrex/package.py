@@ -12,12 +12,13 @@ class Amrex(CMakePackage):
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
-    url      = "https://github.com/AMReX-Codes/amrex/archive/20.01.tar.gz"
+    url      = "https://github.com/AMReX-Codes/amrex/releases/download/20.05/amrex-20.05.tar.gz"
     git      = "https://github.com/AMReX-Codes/amrex.git"
 
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.05', sha256='97d753bb75e845a0a959ec1a044a48e6adb86dd008b5e29ce7a01d49ed276338')
     version('20.04', sha256='a7ece54d5d89cc00fd555551902a0d4d0fb50db15d2600f441353eed0dddd83b')
     version('20.03', sha256='9728f20c0d7297c935fe5cbc63c1ee60f983b833a735c797340ee2765d626165')
     version('20.02', sha256='2eda858b43e7455718ccb96c18f678da1778ec61031e90effdcb9c3e7e6f9bb5')
@@ -59,10 +60,18 @@ class Amrex(CMakePackage):
     # Build dependencies
     depends_on('mpi', when='+mpi')
     depends_on('sundials@4.0.0:4.1.0 +ARKODE +CVODE', when='@19.08: +sundials')
-    depends_on('python@2.7:', type='build')
+    depends_on('python@2.7:', type='build', when='@:20.04')
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
-    depends_on('cmake@3.13:',  type='build', when='@18.11:')
+    depends_on('cmake@3.13:', type='build', when='@18.11:')
+    depends_on('cmake@3.14:', type='build', when='@19.04:')
     conflicts('%clang')
+
+    def url_for_version(self, version):
+        if version >= Version('20.05'):
+            url = "https://github.com/AMReX-Codes/amrex/releases/download/{0}/amrex-{0}.tar.gz"
+        else:
+            url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
+        return url.format(version.dotted)
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
