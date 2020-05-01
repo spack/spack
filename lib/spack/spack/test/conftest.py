@@ -423,13 +423,13 @@ def config(mock_configuration):
 
 
 @pytest.fixture(scope='function')
-def mutable_config(tmpdir_factory, configuration_dir):
+def mutable_config(tmpdir_factory, configuration_dir, monkeypatch):
     """Like config, but tests can modify the configuration."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
     cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+        *[spack.config.ConfigScope(name, str(mutable_dir))
           for name in ['site', 'system', 'user']])
 
     with use_configuration(cfg):
