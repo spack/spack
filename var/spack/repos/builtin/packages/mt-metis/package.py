@@ -30,7 +30,6 @@ class MtMetis(CMakePackage):
             define('METIS_PATH', 'metis'),
             self.define_from_variant('SHARED', 'shared'),
         ]
-        cmake_args.append
         return cmake_args
 
     @property
