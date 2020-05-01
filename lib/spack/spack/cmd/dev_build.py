@@ -37,6 +37,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
+    subparser.add_argument(
+        '--drop-in', type=str, dest='shell', default=None,
+        help="drop into a build environment in a new shell, e.g. bash, zsh")
     arguments.add_common_arguments(subparser, ['spec'])
 
     stop_group = subparser.add_mutually_exclusive_group()
@@ -98,3 +101,8 @@ def dev_build(self, args):
         dirty=args.dirty,
         stop_before=args.before,
         stop_at=args.until)
+
+    # drop into the build environment of the package?
+    if args.shell is not None:
+        spack.build_environment.setup_package(package, dirty=False)
+        os.execvp(args.shell, [args.shell])
