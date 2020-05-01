@@ -317,7 +317,7 @@ class QuantumEspresso(Package):
 
         if spec.variants['hdf5'].value != 'none':
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
-            if spec.satisfies('@6.4.1') or spec.satisfies('@6.5'):
+            if spec.satisfies('@6.4.1,6.5'):
                 options.extend([
                     '--with-hdf5-include={0}'.format(
                         spec['hdf5'].headers.directories[0]
