@@ -51,7 +51,7 @@ class Axom(CMakePackage, CudaPackage):
     homepage = "https://github.com/LLNL/axom"
     git      = "https://github.com/LLNL/axom.git"
 
-    version('master', branch='master', submodules=True, preferred=True)
+    version('master', branch='master', submodules=True)
     version('develop', branch='develop', submodules=True)
     version('0.3.3', tag='v0.3.3', submodules="True")
     version('0.3.2', tag='v0.3.2', submodules="True")
@@ -276,7 +276,9 @@ class Axom(CMakePackage, CudaPackage):
 
             # Check for slurm
             using_slurm = False
-            slurm_checks = ['+slurm', 'schedulers=slurm', 'process_managers=slurm']
+            slurm_checks = ['+slurm',
+                            'schedulers=slurm',
+                            'process_managers=slurm']
             if any(spec['mpi'].satisfies(variant) for variant in slurm_checks):
                 using_slurm = True
 
@@ -290,9 +292,9 @@ class Axom(CMakePackage, CudaPackage):
                 mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
                 if not os.path.exists(mpiexec):
                     mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
-             
+
             if not os.path.exists(mpiexec):
-                msg = "Unable to determine MPI run executable, Axom tests may fail"
+                msg = "Unable to determine MPIEXEC, Axom tests may fail"
                 cfg.write("# {0}".format(msg))
                 tty.msg(msg)
             else:
@@ -333,7 +335,7 @@ class Axom(CMakePackage, CudaPackage):
             cfg.write("# Root directory for generated developer tools\n")
             cfg.write(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
 
-        if "+python" in spec or "devtools" in spec:
+        if "+python" in spec or "+devtools" in spec:
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                                         spec['python'].command.path))
 
@@ -443,7 +445,7 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
                                              True))
 
-                cfg.write(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS",True))
+                cfg.write(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
                 cuda_arch = spec.variants['cuda_arch'].value
                 axom_arch = ""
@@ -486,7 +488,7 @@ class Axom(CMakePackage, CudaPackage):
 
         options = []
         options.extend(['-C', host_config_path])
-        if self.run_tests == False:
+        if self.run_tests is False:
             options.append('-DENABLE_TESTS=OFF')
         else:
             options.append('-DENABLE_TESTS=ON')
@@ -494,4 +496,4 @@ class Axom(CMakePackage, CudaPackage):
 
     @run_after('install')
     def install_cmake_cache(self):
-        install(self._get_host_config_path(spec), prefix)
+        install(self._get_host_config_path(spec), prefix)

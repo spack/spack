@@ -81,6 +81,6 @@ class Umpire(CMakePackage, CudaPackage):
             'On' if '+openmp' in spec else 'Off'))
 
         options.append('-DENABLE_TESTS={0}'.format(
-            'On' if self.run_tests == False else 'Off'))
+            'On' if self.run_tests is False else 'Off'))
 
         return options

@@ -57,8 +57,8 @@ class Raja(CMakePackage, CudaPackage):
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
         # removes -Werror from GTest flags
-        if (self.run_tests == False) or
-           self.spec.satisfies('%clang target=ppc64le:'):
+        if self.spec.satisfies('%clang target=ppc64le:') or
+           self.run_tests is False:
             options.append('-DENABLE_TESTS=OFF')
         else:
             options.append('-DENABLE_TESTS=ON')
