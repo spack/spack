@@ -57,6 +57,11 @@ class QuantumEspresso(Package):
     desc = desc + 'to False for third party patches or plugins'
     variant('patch', default=True, description=desc)
 
+    # QMCPACK converter patch
+    # https://github.com/QMCPACK/qmcpack/tree/develop/external_codes/quantum_espresso
+    variant('qmcpack', default=False,
+            description='Build QE-to-QMCPACK wave function converter')
+
     # Dependencies
     depends_on('blas')
     depends_on('lapack')
@@ -68,7 +73,7 @@ class QuantumEspresso(Package):
     # Versions of HDF5 prior to 1.8.16 lead to QE runtime errors
     depends_on('hdf5@1.8.16:+fortran+hl+mpi', when='hdf5=parallel')
     depends_on('hdf5@1.8.16:+fortran+hl~mpi', when='hdf5=serial')
-
+    depends_on('hdf5', when='+qmcpack')
     # TODO: enable building EPW when ~mpi
     depends_on('mpi', when='+epw')
 
@@ -126,6 +131,27 @@ class QuantumEspresso(Package):
     # folder QE expects as a link, we issue a conflict here.
     conflicts('+elpa', when='@:5.4.0')
 
+    # QMCPACK converter only available with hdf5 and without internal
+    # patches. Need to do three crases explictly since Spack lacks
+    # support for expressing NOT operation.
+    conflicts(
+        '+patch',
+        when='+qmcpack',
+        msg='QE-to-QMCPACK wave function converter requires '
+        'deactivatation of upstream patches'
+    )
+    conflicts(
+        'hdf5=serial',
+        when='+qmcpack',
+        msg='QE-to-QMCPACK wave function converter only '
+        'supported with parallel HDF5'
+    )
+    conflicts(
+        'hdf5=none',
+        when='+qmcpack',
+        msg='QE-to-QMCPACK wave function converter requires HDF5'
+    )
+
     # The first version of Q-E to feature integrated EPW is 6.0.0,
     # as per http://epw.org.uk/Main/DownloadAndInstall .
     # Complain if trying to install a version older than this.
@@ -152,6 +178,22 @@ class QuantumEspresso(Package):
     parallel = False
 
     # QE upstream patches
+    # QMCPACK converter patches for QE 6.4.1, 6.4, and 6.3
+    conflicts('@:6.2,6.5:', when='+qmcpack',
+              msg='QMCPACK converter NOT available for this version of QE')
+
+    # 6.4.1
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
+    patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
+    patch(patch_url, sha256=patch_checksum, when='@6.4.1+qmcpack')
+    # 6.4
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
+    patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
+    patch(patch_url, sha256=patch_checksum, when='@6.4+qmcpack')
+    # 6.3
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
+    patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
+    patch(patch_url, sha256=patch_checksum, when='@6.3+qmcpack')
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
