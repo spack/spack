@@ -36,7 +36,7 @@ class Arborx(CMakePackage):
         spec = self.spec
 
         options = [
-            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos'].prefix,
+            '-DCMAKE_PREFIX_PATH=%s' % spec['kokkos-legacy'].prefix,
             '-DARBORX_ENABLE_TESTS=OFF',
             '-DARBORX_ENABLE_EXAMPLES=OFF',
             '-DARBORX_ENABLE_BENCHMARKS=OFF',
