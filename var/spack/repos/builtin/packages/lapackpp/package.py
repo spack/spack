@@ -16,8 +16,16 @@ class Lapackpp(CMakePackage):
 
     version('develop', hg=hg, revision="7ffa486")
 
+    variant('shared', default=True,
+            description='Build a shared version of the library')
+
     depends_on('blaspp')
 
     def cmake_args(self):
-        return ['-DBUILD_LAPACKPP_TESTS:BOOL={0}'.format(
-            'ON' if self.run_tests else 'OFF')]
+        spec = self.spec
+        return [
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
+                'ON' if '+shared' in spec else 'OFF'),
+            '-DBUILD_LAPACKPP_TESTS:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF')
+        ]
