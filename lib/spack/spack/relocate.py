@@ -415,21 +415,28 @@ def _set_elf_rpaths(target, rpaths):
 
 
 def needs_binary_relocation(m_type, m_subtype):
-    """
-    Check whether the given filetype is a binary that may need relocation.
+    """Returns True if the file with MIME type/subtype passed as arguments
+    needs binary relocation, False otherwise.
+
+    Args:
+        m_type (str): MIME type of the file
+        m_subtype (str): MIME subtype of the file
     """
     if m_type == 'application':
-        if (m_subtype == 'x-executable' or m_subtype == 'x-sharedlib' or
-                m_subtype == 'x-mach-binary'):
+        if m_subtype in ('x-executable', 'x-sharedlib', 'x-mach-binary'):
             return True
     return False
 
 
 def needs_text_relocation(m_type, m_subtype):
+    """Returns True if the file with MIME type/subtype passed as arguments
+    needs text relocation, False otherwise.
+
+    Args:
+        m_type (str): MIME type of the file
+        m_subtype (str): MIME subtype of the file
     """
-    Check whether the given filetype is text that may need relocation.
-    """
-    return (m_type == "text")
+    return m_type == 'text'
 
 
 def replace_prefix_text(path_name, old_dir, new_dir):
