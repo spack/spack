@@ -44,7 +44,7 @@ class Arborx(CMakePackage):
         ]
 
         if '+cuda' in spec:
-            nvcc_wrapper_path = spec['kokkos'].prefix.bin.nvcc_wrapper
+            nvcc_wrapper_path = spec['kokkos-legacy'].prefix.bin.nvcc_wrapper
             options.append('-DCMAKE_CXX_COMPILER=%s' % nvcc_wrapper_path)
 
         return options
