@@ -242,6 +242,8 @@ if [ "$_sp_shell" = bash ]; then
     export -f spack
 fi
 
+alias spacktivate="spack env activate"
+
 #
 # Figure out where this file is.
 #
