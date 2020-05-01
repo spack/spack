@@ -13,7 +13,7 @@ class Tbl2asn(Package):
 
     homepage = "https://www.ncbi.nlm.nih.gov/genbank/tbl2asn2/"
 
-    version('20200301', sha256='7cc1119d3cfcbbffdbd4ecf33cef8bbdd44fc5625c72976bee08b1157625377e')
+    version('2020-03-01', sha256='7cc1119d3cfcbbffdbd4ecf33cef8bbdd44fc5625c72976bee08b1157625377e')
 
     def url_for_version(self, ver):
         return "https://ftp.ncbi.nih.gov/toolbox/ncbi_tools/converters/by_program/tbl2asn/linux.tbl2asn.gz"
