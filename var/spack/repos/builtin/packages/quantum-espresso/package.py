@@ -329,6 +329,16 @@ class QuantumEspresso(Package):
 
         configure(*options)
 
+        # Filter file must be applied after configure executes
+        # QE 6.4.0 to QE 6.4 have `-L` missing in front of zlib library
+        if spec.variants['hdf5'].value != 'none':
+            if spec.satisfies('@6.1.0:6.4.0'):
+                make_inc = join_path(self.stage.source_path, 'make.inc')
+                zlib_libs = spec['zlib'].prefix.lib + ' -lz'
+                filter_file(
+                    zlib_libs, format(spec['zlib'].libs.ld_flags), make_inc
+                )
+
         if '+epw' in spec:
             make('all', 'epw')
         else:
