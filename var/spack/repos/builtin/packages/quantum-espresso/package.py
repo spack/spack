@@ -186,7 +186,7 @@ class QuantumEspresso(Package):
     # 6.4
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.diff'
     patch_checksum = 'ef08f5089951be902f0854a4dbddaa7b01f08924cdb27decfade6bef0e2b8994'
-    patch(patch_url, sha256=patch_checksum, when='@6.4+qmcpack')
+    patch(patch_url, sha256=patch_checksum, when='@6.4:6.4.0+qmcpack')
     # 6.3
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.3.diff'
     patch_checksum = '2ee346e24926479f5e96f8dc47812173a8847a58354bbc32cf2114af7a521c13'
