@@ -76,6 +76,17 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
                       'dev-build-test-install@0.0.0')
 
 
+def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
+                           install_mockery):
+    def print_spack_cc(*args):
+        # Eat arguments and print environment variable to test
+        print(os.environ['CC'])
+    monkeypatch.setattr(os, 'execvp', print_spack_cc)
+    output = dev_build('-b', 'edit', '--drop-in', 'sh',
+                       'dev-build-test-install@0.0.0')
+    assert "lib/spack/env" in output
+
+
 def test_dev_build_fails_already_installed(tmpdir, mock_packages,
                                            install_mockery):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0').concretized()
