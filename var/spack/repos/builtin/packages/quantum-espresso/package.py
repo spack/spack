@@ -129,7 +129,7 @@ class QuantumEspresso(Package):
     conflicts('+elpa', when='@:5.4.0')
 
     # QMCPACK converter only available with hdf5 and without internal
-    # patches. Need to do three crases explictly since Spack lacks
+    # patches. Need to do three cases explicitly since Spack lacks
     # support for expressing NOT operation.
     conflicts(
         '+patch',
