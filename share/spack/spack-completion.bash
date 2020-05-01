@@ -304,6 +304,9 @@ _pretty_print() {
 
 complete -o bashdefault -o default -F _bash_completion_spack spack
 
+alias spacktivate="spack env activate"
+complete -o bashdefault -o default -F _bash_completion_spack spacktivate
+
 # Spack commands
 #
 # Everything below here is auto-generated.
@@ -314,6 +317,15 @@ _spack() {
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+    fi
+}
+
+_spacktivate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --sh --csh -v --with-view -V --without-view -d --dir -p --prompt"
+    else
+        _environments
     fi
 }
 
