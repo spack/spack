@@ -275,8 +275,7 @@ class Axom(CMakePackage, CudaPackage):
                                             spec['mpi'].mpifc))
 
             # Determine MPIEXEC and MPIEXEC_NUMPROC_FLAG
-
-            mpiexec = os.path.join(spec['mpi'].prefx.bin, 'mpirun')
+            mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
             numproc_flag = "-np"
             if not os.path.exists(mpiexec):
                 mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
