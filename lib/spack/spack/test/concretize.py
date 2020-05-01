@@ -12,6 +12,7 @@ import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
 from spack.error import SpecError
+from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
@@ -102,6 +103,8 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
+        # There's a cache that needs to be cleared for unit tests
+        PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
@@ -109,10 +112,7 @@ def current_host(request, monkeypatch):
     spack.architecture.get_platform.cache.clear()
 
 
-# This must use the mutable_config fixture because the test
-# adjusting_default_target_based_on_compiler uses the current_host fixture,
-# which changes the config.
-@pytest.mark.usefixtures('mutable_config', 'mock_packages')
+@pytest.mark.usefixtures('config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
