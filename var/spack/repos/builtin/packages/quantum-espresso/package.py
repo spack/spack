@@ -128,11 +128,11 @@ class QuantumEspresso(Package):
     # folder QE expects as a link, we issue a conflict here.
     conflicts('+elpa', when='@:5.4.0')
 
-    # QMCPACK converter only available with hdf5 and without internal
-    # patches. Need to do three cases explicitly since Spack lacks
-    # support for expressing NOT operation.
+    # Some QMCPACK converters only without internal patches. HDF5
+    # is a hard requirement. Need to do two HDF5 cases explicitly
+    # since Spack lacks support for expressing NOT operation.
     conflicts(
-        '+patch',
+        '@6.4+patch',
         when='+qmcpack',
         msg='QE-to-QMCPACK wave function converter requires '
         'deactivatation of upstream patches'
