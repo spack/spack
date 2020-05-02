@@ -274,20 +274,28 @@ class Axom(CMakePackage, CudaPackage):
                 cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER",
                                             spec['mpi'].mpifc))
 
-            # Determine MPIEXEC and MPIEXEC_NUMPROC_FLAG
-            mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
-            numproc_flag = "-np"
-            if not os.path.exists(mpiexec):
-                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
+            # Check for slurm
+            using_slurm = False
+            slurm_checks = ['+slurm',
+                            'schedulers=slurm',
+                            'process_managers=slurm']
+            if any(spec['mpi'].satisfies(variant) for variant in slurm_checks):
+                using_slurm = True
+
+            # Determine MPIEXEC
+            if using_slurm:
+                if spec['mpi'].external:
+                    mpiexec = '/usr/bin/srun'
+                else:
+                    mpiexec = os.path.join(spec['slurm'].prefix.bin, 'srun')
+            else:
+                mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpirun')
                 if not os.path.exists(mpiexec):
-                    mpiexec = os.path.join(spec['mpi'].prefix.bin, 'srun')
-                    numproc_flag = "-n"
-                    if not os.path.exists(mpiexec):
-                        mpiexec = "/usr/bin/srun"
+                    mpiexec = os.path.join(spec['mpi'].prefix.bin, 'mpiexec')
 
             if not os.path.exists(mpiexec):
                 msg = "Unable to determine MPIEXEC, Axom tests may fail"
-                cfg.write("# {0}\n\n".format(msg))
+                cfg.write("# {0}".format(msg))
                 tty.msg(msg)
             else:
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
@@ -296,7 +304,12 @@ class Axom(CMakePackage, CudaPackage):
                     cfg.write(cmake_cache_entry("MPIEXEC_EXECUTABLE", mpiexec))
                 else:
                     cfg.write(cmake_cache_entry("MPIEXEC", mpiexec))
-                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", numproc_flag))
+
+            # Determine MPIEXEC_NUMPROC_FLAG
+            if using_slurm:
+                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-n"))
+            else:
+                cfg.write(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-np"))
 
             if spec['mpi'].name == 'spectrum-mpi':
                 cfg.write(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
@@ -436,16 +449,18 @@ class Axom(CMakePackage, CudaPackage):
 
                 cfg.write(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
-                cuda_arch = spec.variants['cuda_arch'].value
-                axom_arch = ""
-                if cuda_arch is not None:
-                    axom_arch = 'sm_{0}'.format(cuda_arch[0])
-                    cfg.write(cmake_cache_entry("AXOM_CUDA_ARCH", "sm_70"))
-
+                # CUDA_FLAGS
                 cudaflags  = "-restrict "
-                if axom_arch != "":
+
+                if not spec.satisfies('cuda_arch=none'):
+                    cuda_arch = spec.variants['cuda_arch'].value
+                    axom_arch = 'sm_{0}'.format(cuda_arch[0])
+                    cfg.write(cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
                     cudaflags += "-arch ${AXOM_CUDA_ARCH} "
-                cudaflags += "-std=c++11 --expt-extended-lambda -G"
+                else:
+                    cfg.write("# cuda_arch could not be determined\n\n")
+
+                cudaflags += "-std=c++11 --expt-extended-lambda -G "
                 cfg.write(cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
 
                 if "+mpi" in spec:
