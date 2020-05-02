@@ -109,13 +109,17 @@ class Axom(CMakePackage, CudaPackage):
 
     depends_on("raja~openmp", when="+raja~openmp")
     depends_on("raja+openmp", when="+raja+openmp")
-    depends_on("raja~openmp+cuda", when="+raja~openmp+cuda")
-    depends_on("raja+openmp+cuda", when="+raja+openmp+cuda")
+    depends_on("raja+cuda", when="+raja+cuda")
 
     depends_on("umpire~openmp", when="+umpire~openmp")
     depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire~openmp+cuda+deviceconst", when="+umpire~openmp+cuda")
-    depends_on("umpire+openmp+cuda+deviceconst", when="+umpire+openmp+cuda")
+    depends_on("umpire+cuda+deviceconst", when="+umpire+cuda")
+
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('raja cuda_arch=%s' % sm_,
+                   when='+raja cuda_arch=%s' % sm_)
+        depends_on('umpire cuda_arch=%s' % sm_,
+                   when='+umpire cuda_arch=%s' % sm_)
 
     depends_on("mfem~mpi~hypre~metis~gzstream", when="+mfem")
 
