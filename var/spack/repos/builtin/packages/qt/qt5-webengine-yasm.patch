@@ -1,0 +1,11 @@
+--- a/qtwebengine/src/3rdparty/chromium/third_party/yasm/source/config/linux/config.h  2020-01-20 10:37:42.000000000 +0000
++++ b/qtwebengine/src/3rdparty/chromium/third_party/yasm/source/config/linux/config.h   2020-05-01 13:42:26.469818853 +0000
+@@ -5,7 +5,7 @@
+ #define CPP_PROG "cc -E"
+ 
+ /* */
+-#define ENABLE_NLS 1
++/* #undef ENABLE_NLS */
+ 
+ /* Define to 1 if you have the `abort' function. */
+ #define HAVE_ABORT 1

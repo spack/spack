@@ -121,6 +121,7 @@ class Qt(Package):
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
     # https://bugreports.qt.io/browse/QTBUG-78937
     patch('qt5-12-configure.patch', when='@5.12')
+    patch('qt5-webengine-yasm.patch', when='@5.: +webengine')
 
     # Fix INT64 build failure with new versions
     patch('https://github.com/qt/qtbase/pull/24.patch',
@@ -194,7 +195,9 @@ class Qt(Package):
         depends_on("libxtst", when='+webengine~xcb')
         depends_on("libxext", when='@3:4.99')
         depends_on("libxdamage", when='+webengine~xcb')
-        depends_on("libcap", when='+webengine')
+#        depends_on("libicu", when="+webengine")
+#        depends_on("libcap", when='+webengine')
+        depends_on("python@2.:2.99", type=('build',), when='+webengine')
         conflicts('+framework',
                   msg="QT cannot be built as a framework except on macOS.")
     else:
@@ -592,16 +595,15 @@ class Qt(Package):
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
         else:
-            config_args.extend(['-platform', 'linux-g++'])
             # Linux-only QT5 dependencies
             if '+xcb' in spec:
                 config_args.append('-system-xcb')
 
-        if '~webkit' in spec:
-            config_args.extend([
-                '-skip',
-                'webengine' if version >= Version('5.7') else 'qtwebkit',
-            ])
+        # if '~webkit' in spec:
+        #     config_args.extend([
+        #         '-skip',
+        #         'webengine' if version >= Version('5.7') else 'qtwebkit',
+        #     ])
 
         if spec.satisfies('@5.7'):
             config_args.extend(['-skip', 'virtualkeyboard'])
