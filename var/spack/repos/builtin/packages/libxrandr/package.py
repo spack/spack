@@ -18,8 +18,8 @@ class Libxrandr(AutotoolsPackage, XorgPackage):
     depends_on('libxext')
     depends_on('libxrender')
 
-    depends_on('randrproto@1.5:', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('renderproto', type='build')
+    depends_on('randrproto@1.5:', type=('build', 'link'))
+    depends_on('xextproto', type=('build', 'link'))
+    depends_on('renderproto', type=('build', 'link'))
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
