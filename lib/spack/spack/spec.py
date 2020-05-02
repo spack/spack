@@ -1119,7 +1119,7 @@ class Spec(object):
         # create an edge and add to parent and child
         dspec = DependencySpec(self, spec, deptypes)
         self._dependencies[spec.name] = dspec
-        spec._dependents[self.name] = dspec
+        spec._dependents[id(self)] = dspec
 
     def _add_default_platform(self):
         """If a spec has an os or a target and no platform, give it
@@ -1311,7 +1311,7 @@ class Spec(object):
             else:
                 raise ValueError('Invalid traversal direction: %s' % direction)
 
-            for name, dspec in sorted(where.items()):
+            for dspec in sorted(where.values()):
                 dt = dspec.deptypes
                 if dt and not any(d in deptype for d in dt):
                     continue
