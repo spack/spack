@@ -242,6 +242,7 @@ class Openmpi(AutotoolsPackage):
     variant('runpath', default=True, description='Enable wrapper runpath')
     variant('cxx', default=False, description='Enable C++ MPI bindings')
     variant('cxx_exceptions', default=False, description='Enable C++ Exception support')
+    variant('gpfs', default=True, description='Enable GPFS support (if present)')
     # Adding support to build a debug version of OpenMPI that activates
     # Memchecker, as described here:
     #
@@ -409,6 +410,11 @@ class Openmpi(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         perl = which('perl')
         perl('autogen.pl')
+
+    def setup_build_environment(self, env):
+        if '~gpfs' in self.spec:
+            env.set('ac_cv_header_gpfs_h', 'no')
+            env.set('ac_cv_header_gpfs_fcntl_h', 'no')
 
     def configure_args(self):
         spec = self.spec
