@@ -7,7 +7,9 @@ from spack import *
 
 
 class Delphes(CMakePackage):
-    """A high energy physics framework for fast simulation of a generic collider experiment"""
+    """A high energy physics framework for fast simulation
+    of a generic collider experiment.
+    """
 
     homepage = "https://cp3.irmp.ucl.ac.be/projects/delphes"
     git = "https://github.com/delphes/delphes.git"
