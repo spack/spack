@@ -208,7 +208,7 @@ class Charmpp(Package):
             if ("^openmpi" in self.spec):
                 raise InstallError("To use any process management \
                                     interface other than PMIx, \
-                                    an non OpenMPI based MPI must be \
+                                    a non OpenMPI based MPI must be \
                                     present on the system")
 
         target = spec.variants["build-target"].value
