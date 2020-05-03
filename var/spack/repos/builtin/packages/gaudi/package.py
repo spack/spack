@@ -19,17 +19,17 @@ class Gaudi(CMakePackage):
     version('33.1', sha256='7eb6b2af64aeb965228d4b6ea66c7f9f57f832f93d5b8ad55c9105235af5b042')
     version('33.0', sha256='76a967c41f579acc432593d498875dd4dc1f8afd5061e692741a355a9cf233c8')
     version('32.2', sha256='e9ef3eb57fd9ac7b9d5647e278a84b2e6263f29f0b14dbe1321667d44d969d2e')
+    version('31.0',    commit='aeb156f0c40571b5753a9e1dab31e331491b2f3e')
+    version('30.5',    commit='2c70e73ee5b543b26197b90dd59ea4e4d359d230')
 
     maintainers = ['drbenmorgan', "vvolkl"]
 
-    variant('tests', default=False,
-            description='Prepare to run the test suite')
     variant('optional', default=False,
-            description='Build most optional components')
+            description='Build most optional components and tests')
     variant('vtune', default=False,
             description='Build with Intel VTune profiler support')
 
-    # only build subdirectory GaudiExamples when +tests
+    # only build subdirectory GaudiExamples when +optional
     patch("build_testing.patch", when="@:33.1")
     # fix for the new cmake config, should be merged in branch
     patch('python2.patch', when="@develop")
@@ -44,7 +44,8 @@ class Gaudi(CMakePackage):
     depends_on('intel-tbb')
     depends_on('libuuid')
     # some bugs with python 3.8
-    depends_on('python@:3.7.99', type=('build', 'run'))
+    depends_on('python@:3.7.99', when='@32.2:', type=('build', 'run'))
+    depends_on('python@:2.99.99', when='@:32.1', type=('build', 'run'))
     depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-xenv@develop_2018-12-20:', type=('build', 'run'))
@@ -52,21 +53,9 @@ class Gaudi(CMakePackage):
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')
 
-    depends_on('py-nose', when="@develop", type='test')
-
-    # These dependencies are required by the Gaudi test suite
-    depends_on('aida', when='+tests')
-    depends_on('clhep', when='+tests')
-    depends_on('cppunit', when='+tests')
-    depends_on('gdb', when='+tests')
-    depends_on('gperftools', when='+tests')
-    depends_on('heppdt@:2.99.99', when='+tests')
-    depends_on('py-networkx@:2.2', when='+tests ^python@:2.7.99')
-    depends_on('py-networkx', when='+tests ^python@3.0.0:')
-    depends_on('py-nose', when='+tests')
-    depends_on('py-setuptools', when='+tests')
-    depends_on('relax', when='+tests')
-    depends_on('xerces-c', when='+tests')
+    # todo: this should be a test dependency only,
+    # should be fixed in the cmake-modernisation branch
+    depends_on('py-nose', when="@develop", type=('build', 'run'))
 
     # Adding these dependencies triggers the build of most optional components
     depends_on('aida', when='+optional')
@@ -75,11 +64,16 @@ class Gaudi(CMakePackage):
     depends_on('cppunit', when='+optional')
     depends_on('doxygen +graphviz', when='+optional')
     depends_on('gperftools', when='+optional')
+    depends_on('gdb', when='+optional')
     depends_on('gsl', when='+optional')
     depends_on('heppdt@:2.99.99', when='+optional')
     depends_on('jemalloc', when='+optional')
     depends_on('libpng', when='+optional')
     depends_on('libunwind', when='+optional')
+    depends_on('py-networkx@:2.2', when='+optional ^python@:2.7.99')
+    depends_on('py-networkx', when='+optional ^python@3.0.0:')
+    depends_on('py-setuptools', when='+optional')
+    depends_on('py-nose', when='+optional')
     depends_on('relax', when='+optional')
     depends_on('xerces-c', when='+optional')
     # NOTE: pocl cannot be added as a minimal OpenCL implementation because
@@ -90,7 +84,7 @@ class Gaudi(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define_from_variant("BUILD_TESTING", "tests"),
+            self.define_from_variant("BUILD_TESTING", "optional"),
             self.define_from_variant("GAUDI_USE_AIDA", "optional"),
             self.define_from_variant("GAUDI_USE_XERCESC", "optional"),
             self.define_from_variant("GAUDI_USE_CLHEP", "optional"),
