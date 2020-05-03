@@ -66,7 +66,7 @@ class Charmpp(Package):
     variant(
         "pmi",
         default="none",
-        values=("none", "simplePMI", "slurmPMI", "slurmPMI2", "PMIx"),
+        values=("none", "simplepmi", "slurmpmi", "slurmpmi2", "pmix"),
         description="The ucx/ofi/gni backends need PMI to run!"
     )
 
@@ -91,9 +91,9 @@ class Charmpp(Package):
     depends_on("cuda", when="+cuda")
 
     depends_on("ucx", when="backend=ucx")
-    depends_on("slurm@:17-11-9-2", when="pmi=slurmPMI")
-    depends_on("slurm@17-11-9-2:", when="pmi=slurmPMI2")
-    depends_on("openmpi+pmi", when="pmi=PMIx")
+    depends_on("slurm@:17-11-9-2", when="pmi=slurmpmi")
+    depends_on("slurm@17-11-9-2:", when="pmi=slurmpmi2")
+    depends_on("openmpi+pmi", when="pmi=pmix")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -206,6 +206,14 @@ class Charmpp(Package):
             "-j%d" % make_jobs,
             "--destination=%s" % builddir,
         ]
+
+        if "pmi=slurmpmi" in spec:
+            options.append("slurmpmi")
+        if "pmi=slurmpmi2" in spec:
+            options.append("slurmpmi2")
+        if "pmi=pmix" in spec:
+            options.append("ompipmix")
+            options.extend(["--basedir=%s" % spec["openmpi"].prefix])
 
         if 'backend=mpi' in spec:
             # in intelmpi <prefix>/include and <prefix>/lib fails so --basedir
