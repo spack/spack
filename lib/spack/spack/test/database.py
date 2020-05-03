@@ -13,6 +13,7 @@ import multiprocessing
 import os
 import pytest
 import json
+from collections import defaultdict
 try:
     import uuid
     _use_uuid = True
@@ -888,3 +889,14 @@ def test_prefix_write_lock_error(mutable_database, monkeypatch):
     with pytest.raises(Exception):
         with spack.store.db.prefix_write_lock(s):
             assert False
+
+
+@pytest.mark.regression('11983')
+def test_multiple_dependents(database):
+    specs = spack.store.db.query('dyninst')
+    assert len(specs) == 1
+    spec = specs[0]
+    counthash = defaultdict(int)
+    for name in [x.name for x in spec.dependents()]:
+        counthash[name] += 1
+    assert(counthash['callpath'] == 3)
