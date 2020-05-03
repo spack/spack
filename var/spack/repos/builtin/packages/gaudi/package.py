@@ -44,15 +44,15 @@ class Gaudi(CMakePackage):
     depends_on('intel-tbb')
     depends_on('libuuid')
     # some bugs with python 3.8
-    depends_on('python@:3.7.99')
-    depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99')
+    depends_on('python@:3.7.99', type=('build', 'run'))
+    depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-xenv@develop_2018-12-20:', type=('build', 'run'))
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
     depends_on('zlib')
 
-    depends_on('py-nose', when="@develop")
+    depends_on('py-nose', when="@develop", type='test')
 
     # These dependencies are required by the Gaudi test suite
     depends_on('aida', when='+tests')
