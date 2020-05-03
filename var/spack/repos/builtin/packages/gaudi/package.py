@@ -46,7 +46,7 @@ class Gaudi(CMakePackage):
     # some bugs with python 3.8
     depends_on('python@:3.7.99')
     depends_on('py-setuptools@:45.99.99', when='^python@:2.7.99')
-    depends_on('py-six')
+    depends_on('py-six', type=('build', 'run'))
     depends_on('py-xenv@develop_2018-12-20:')
     depends_on('range-v3')
     depends_on('root +python +root7 +ssl +tbb +threads')
