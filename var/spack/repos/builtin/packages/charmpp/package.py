@@ -62,7 +62,7 @@ class Charmpp(Package):
         description="Set the backend to use"
     )
 
-    # https://github.com/UIUC-PPL/charm/issues/2477
+    # Process management interface
     variant(
         "pmi",
         default="none",
