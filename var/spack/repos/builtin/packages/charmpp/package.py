@@ -265,14 +265,6 @@ class Charmpp(Package):
         if "+cuda" in spec:
             options.append("cuda")
 
-        if "pmi=slurmPMI" in spec:
-            options.append("slurmpmi")
-        if "pmi=slurmPMI2" in spec:
-            options.append("slurmpmi2")
-        if "pmi=PMIx" in spec:
-            options.append("ompipmix")
-            options.extend(["--basedir=%s" % spec["openmpi"].prefix])
-
         if "+shared" in spec:
             options.append("--build-shared")
         if "+production" in spec:
