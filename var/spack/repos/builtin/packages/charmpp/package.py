@@ -93,7 +93,15 @@ class Charmpp(Package):
     depends_on("ucx", when="backend=ucx")
     depends_on("slurm@:17-11-9-2", when="pmi=slurmpmi")
     depends_on("slurm@17-11-9-2:", when="pmi=slurmpmi2")
-    depends_on("openmpi+pmi", when="pmi=pmix")
+
+    # FIXME : As of now spack's OpenMPI recipe does not have a PMIx variant
+    # But if users have external installs of OpenMPI with PMIx support, this
+    # will allow them to build charm++ with it.
+    depends_on("openmpi", when="pmi=pmix")
+
+    depends_on("mpi", when="pmi=simplepmi")
+    depends_on("mpi", when="pmi=slurmpmi")
+    depends_on("mpi", when="pmi=slurmpmi2")
 
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
@@ -193,6 +201,15 @@ class Charmpp(Package):
                                     PMI to run. Please add pmi=... \
                                     Note that PMIx is the preferred \
                                     option.")
+
+        if ("pmi=simplepmi" in self.spec) or \
+           ("pmi=slurmpmi" in self.spec) or \
+           ("pmi=slurmpmi2" in self.spec):
+            if ("^openmpi" in self.spec):
+                raise InstallError("To use any process management \
+                                    interface other than PMIx, \
+                                    an non OpenMPI based MPI must be \
+                                    present on the system")
 
         target = spec.variants["build-target"].value
         builddir = prefix + "/" + str(self.charmarch)
