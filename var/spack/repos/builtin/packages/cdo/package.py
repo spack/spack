@@ -73,8 +73,9 @@ class Cdo(AutotoolsPackage):
 
     # PROJ.6 supported starting 1.9.8.1
     # https://launchpad.net/ubuntu/+source/cdo/+changelog
-    depends_on('proj@:5', when='@:1.9.8+proj')
-    depends_on('proj@6:', when='@1.9.9:+proj')
+    depends_on('proj@:5', when='@:1.9.6+proj')
+    depends_on('proj@:7', when='@1.9.7+proj')
+    depends_on('proj@5:', when='@1.9.8:+proj')
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')
