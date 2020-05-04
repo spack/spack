@@ -570,7 +570,7 @@ class VariantMap(lang.HashableMap):
         # Separate boolean variants from key-value pairs as they print
         # differently. All booleans go first to avoid ' ~foo' strings that
         # break spec reuse in zsh.
-        bool_keys= []
+        bool_keys = []
         kv_keys = []
         for key in sorted_keys:
             bool_keys.append(key) if isinstance(self[key].value, bool) \
