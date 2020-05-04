@@ -24,7 +24,7 @@ class PyPylint(PythonPackage):
     depends_on('py-astroid', type=('build', 'run'))
     # note there is no working version of astroid for this
     depends_on('py-astroid@1.5.1:', type=('build', 'run'), when='@1.7:')
-    depends_on('py-astroid@1.6:1.9', type=('build', 'run'), when='@1.9.4:')
+    depends_on('py-astroid@1.6:1.9', type=('build', 'run'), when='@1.9.4')
     depends_on('py-astroid@2.2.0:2.999.999', type=('build', 'run'), when='@2.3.1:')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-isort@4.2.5:', type=('build', 'run'))
