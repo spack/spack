@@ -102,7 +102,7 @@ class Qgis(CMakePackage):
     depends_on('grass@7.8.1:7.999.999', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
 
     # the below dependencies are shown in cmake config
-#    depends_on('hdf5')
+    # depends_on('hdf5').      # Depending on hdf5 and netcdf-c catches a concretizer bug.  netcdf-c already uses hdf5
     depends_on('netcdf-c')
 
     # build
