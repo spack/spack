@@ -605,7 +605,12 @@ def install_mockery(tmpdir, config, mock_packages, monkeypatch):
 @pytest.fixture(scope='function')
 def install_mockery_mutable_config(
         tmpdir, mutable_config, mock_packages, monkeypatch):
-    """Hooks a fake install directory, DB, and stage directory into Spack."""
+    """Hooks a fake install directory, DB, and stage directory into Spack.
+
+    This is specifically for tests which want to use 'install_mockery' but
+    also need to modify configuration (and hence would want to use
+    'mutable config'): 'install_mockery' does not support this.
+    """
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))
 
