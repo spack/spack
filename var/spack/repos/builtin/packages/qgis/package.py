@@ -99,7 +99,7 @@ class Qgis(CMakePackage):
     depends_on('postgresql@8:', when='+postgresql')  # for PostGIS support
     depends_on('gsl', when='+georeferencer')  # for georeferencer
     # grass@7.8.1 is the first version that supports proj@6
-    depends_on('grass@7.8.1:7.999.999', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
+    depends_on('grass@7:', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
 
     # the below dependencies are shown in cmake config
     # depends_on('hdf5').      # Depending on hdf5 and netcdf-c catches a concretizer bug.  netcdf-c already uses hdf5
