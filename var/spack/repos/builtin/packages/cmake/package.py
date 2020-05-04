@@ -135,7 +135,7 @@ class Cmake(Package):
     # Cray libhugetlbfs and icpc warnings failing CXX tests
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4698
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4681
-    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17')
+    patch('ignore_crayxc_warnings.patch', when='@3.7:3.17.2')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
