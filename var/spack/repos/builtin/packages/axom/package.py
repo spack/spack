@@ -79,8 +79,11 @@ class Axom(CMakePackage, CudaPackage):
     variant("hdf5",     default=True, description="Build with hdf5")
     variant("lua",      default=False, description="Build with Lua")
     variant("scr",      default=False, description="Build with SCR")
-    variant("raja",     default=True, description="Build with raja")
     variant("umpire",   default=True, description="Build with umpire")
+
+    variant("raja",     default=True, description="Build with raja")
+    variant("cub",     default=True,
+            description="Build with RAJA's internal CUB support")
 
     varmsg = "Build development tools (such as Sphinx, Uncrustify, etc...)"
     variant("devtools",  default=False, description=varmsg)
@@ -299,7 +302,7 @@ class Axom(CMakePackage, CudaPackage):
 
             if not os.path.exists(mpiexec):
                 msg = "Unable to determine MPIEXEC, Axom tests may fail"
-                cfg.write("# {0}".format(msg))
+                cfg.write("# {0}\n\n".format(msg))
                 tty.msg(msg)
             else:
                 # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
@@ -452,6 +455,11 @@ class Axom(CMakePackage, CudaPackage):
                                              True))
 
                 cfg.write(cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+
+                if "+cub" in spec:
+                    cfg.write(cmake_cache_option("AXOM_ENABLE_CUB", True))
+                else:
+                    cfg.write(cmake_cache_option("AXOM_ENABLE_CUB", False))
 
                 # CUDA_FLAGS
                 cudaflags  = "-restrict "
