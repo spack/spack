@@ -26,7 +26,7 @@ class PyBasemap(PythonPackage):
     depends_on('py-numpy@1.2.1:', type=('build', 'run'))
     # Also does not work with py-matplotlib@3.0.1; but that "bad" version
     # is thankfully not in py-matplotlib/packag.epy
-    depends_on('py-matplotlib@1.0.0:', type=('build', 'run'))
+    depends_on('py-matplotlib@1.0.0:3.0.0,3.0.2:', type=('build', 'run'))
     depends_on('py-pyproj@1.9.3:1.99', type=('build', 'run'), when='@:1.2.0')
     # 1.2.1 is PROJ6 compatible
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=939022
