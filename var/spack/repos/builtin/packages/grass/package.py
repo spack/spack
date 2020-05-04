@@ -19,7 +19,7 @@ class Grass(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('7.8.2', sha256='33576f7078f805b39ca20c2fa416ac79c64260c0581072a6dc7d813f53aa9abb')
     version('7.8.1', sha256='6ae578fd67afcce7abec4ba4505dcc55b3d2dfe0ca46b99d966cb148c654abb3')
     version('7.8.0', sha256='4b1192294e959ffd962282344e4ff325c4472f73abe605e246a1da3beda7ccfa')
