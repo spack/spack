@@ -27,7 +27,7 @@ class Ecflow(CMakePackage):
 
     variant('ui', default=False, description='Enable ecflow_ui')
 
-    #Boost-1.7X release not working well on serialization
+    # Boost-1.7X release not working well on serialization
     depends_on('boost@1.53:1.69+python')
     depends_on('boost@1.53:1.69+pic', when='+static_boost')
     depends_on('qt@5:', when='+ui')
