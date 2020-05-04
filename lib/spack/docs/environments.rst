@@ -691,21 +691,21 @@ For example, the following environment has three root packages:
 
 .. code-block:: yaml
 
-  spack:
-    definitions:
-    - compilers: [gcc@8.1.0]
-    - mpis: [mvapich2@2.3.1]
-    - packages: [hdf5+mpi]
+   spack:
+     definitions:
+     - compilers: [gcc@8.1.0]
+     - mpis: [mvapich2@2.3.1]
+     - packages: [hdf5+mpi]
 
-    specs:
-    - $compilers
-    - matrix:
-      - [$mpis]
-      - [$%compilers]
-    - matrix:
-      - [$packages]
-      - [$^mpis]
-      - [$%compilers]
+     specs:
+     - $compilers
+     - matrix:
+       - [$mpis]
+       - [$%compilers]
+     - matrix:
+       - [$packages]
+       - [$^mpis]
+       - [$%compilers]
 
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
