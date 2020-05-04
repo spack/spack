@@ -194,7 +194,7 @@ class SimModel(Package):
                                  for envmod in env.env_modifications
                                  if envmod.name not in to_rm]
         if os.path.isdir(self.prefix.lib.hoc):
-            env.prepend_path('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
+            env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
         if os.path.isdir(self.prefix.lib.python):
             env.prepend_path('PYTHONPATH', self.prefix.lib.python)
 
