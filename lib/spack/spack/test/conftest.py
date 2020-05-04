@@ -589,7 +589,7 @@ def disable_compiler_execution(monkeypatch):
 
 
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages, monkeypatch):
+def install_mockery(tmpdir, mutable_config, mock_packages, monkeypatch):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
     real_store = spack.store.store
     spack.store.store = spack.store.Store(str(tmpdir.join('opt')))

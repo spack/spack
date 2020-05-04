@@ -547,7 +547,7 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
-                                      config):
+                                      mutable_config):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
