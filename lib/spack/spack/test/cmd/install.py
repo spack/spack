@@ -547,7 +547,7 @@ def test_cdash_buildstamp_param(tmpdir, mock_fetch, install_mockery, capfd):
 @pytest.mark.disable_clean_stage_check
 def test_cdash_install_from_spec_yaml(tmpdir, mock_fetch, install_mockery,
                                       capfd, mock_packages, mock_archive,
-                                      mutable_config):
+                                      config):
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         with tmpdir.as_cwd():
@@ -722,7 +722,7 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
 
 
 def test_compiler_bootstrap(
-        install_mockery, mock_packages, mock_fetch, mock_archive,
+        install_mockery_mutable_config, mock_packages, mock_fetch, mock_archive,
         mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
@@ -735,8 +735,8 @@ def test_compiler_bootstrap(
 
 @pytest.mark.regression('16221')
 def test_compiler_bootstrap_already_installed(
-        install_mockery, mock_packages, mock_fetch, mock_archive,
-        mutable_config, monkeypatch):
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
