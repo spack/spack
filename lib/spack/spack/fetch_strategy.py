@@ -752,11 +752,14 @@ class GitFetchStrategy(VCSFetchStrategy):
         return self.commit or self.tag
 
     def mirror_id(self):
-        repo_ref = self.commit or self.tag or self.branch
-        if repo_ref:
-            repo_path = url_util.parse(self.url).path
-            result = os.path.sep.join(['git', repo_path, repo_ref])
-            return result
+        repo_ref = self.commit or self.tag or self.branch or 'HEAD'
+        if self.submodules:
+            repo_ref += '_submodules'
+        if self.get_full_repo:
+            repo_ref += '_full'
+        repo_path = url_util.parse(self.url).path
+        result = os.path.sep.join(['git', repo_path, repo_ref])
+        return result
 
     def get_source_id(self):
         if not self.branch:

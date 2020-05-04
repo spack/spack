@@ -690,6 +690,21 @@ def mock_git_repository(tmpdir_factory):
     git = spack.util.executable.which('git', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-git-repo-dir')
+    tmpdir.ensure("submodule", dir=True)
+    moddir = tmpdir.join("submodule")
+    with moddir.as_cwd():
+        git('init')
+        git('config', 'user.name', 'Spack')
+        git('config', 'user.email', 'spack@spack.io')
+
+        # s0 is just the first commit
+        s0_file = 's0_file'
+        moddir.ensure(s0_file)
+        git('add', s0_file)
+        git('commit', '-m', 'mock-git-submodule-repo s0')
+
+        url = 'file://' + str(moddir)
+
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
     repodir = tmpdir.join(spack.stage._source_path_subdir)
 
@@ -698,6 +713,10 @@ def mock_git_repository(tmpdir_factory):
         git('init')
         git('config', 'user.name', 'Spack')
         git('config', 'user.email', 'spack@spack.io')
+        git('submodule', 'add', url, 'submodule')
+        git('submodule', 'update', '--init', '--recursive')
+        git('add', '.gitmodules', 'submodule')
+        git('commit', '-m', 'add submodule')
         url = 'file://' + str(repodir)
 
         # r0 is just the first commit
