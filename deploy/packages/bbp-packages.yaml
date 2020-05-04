@@ -27,7 +27,7 @@ packages:
       - brion@3.1.0 +python
       - connectome-tools@0.3.2
       - spatial-index@0.2.1
-      - spykfunc@0.15.3
+      - spykfunc@0.15.4
       - psp-validation@0.2.1
       - py-pytouchreader@1.4.5
       - py-basalt@0.2.9
@@ -61,9 +61,9 @@ packages:
       - mpi
     specs:
       - functionalizer@3.12.2
-      - parquet-converters@0.5.4
+      - parquet-converters@0.5.5
       - synapsetool@0.5.8
-      - touchdetector@5.3.3
+      - touchdetector@5.4.0
       - brayns +opendeck +brion ^ospray@1.7.3%intel@19.0.4
       - brayns@1.0.1 +brion ^ospray%intel@19.0.4
       - brayns@immersive +opendeck +brion +optix
