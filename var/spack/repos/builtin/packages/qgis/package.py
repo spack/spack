@@ -101,8 +101,10 @@ class Qgis(CMakePackage):
     # grass@7.8.1 is the first version that supports proj@6
     depends_on('grass@7:', type=('build', 'link', 'run'), when='+grass7')  # for georeferencer
 
-    # the below dependencies are shown in cmake config
-    # depends_on('hdf5').      # Depending on hdf5 and netcdf-c catches a concretizer bug.  netcdf-c already uses hdf5
+    # The below dependencies are shown in cmake config
+    # hdf5 and netcdf-c together run afoul of a concretizer bug.
+    # netcdf-c already depends on hdf5
+    # depends_on('hdf5').
     depends_on('netcdf-c')
 
     # build
