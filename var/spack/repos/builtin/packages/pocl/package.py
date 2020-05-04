@@ -51,7 +51,8 @@ class Pocl(CMakePackage):
     # enabled by default, and also because they fail to build for us
     # (see #1616)
     # These are the supported LLVM versions
-    depends_on("llvm +clang @6.0:7.0", when="@master")
+    depends_on("llvm +clang @6.0:10.0", when="@master")
+    depends_on("llvm +clang @6.0:10.0", when="@1.5")
     depends_on("llvm +clang @6.0:9.0", when="@1.4")
     depends_on("llvm +clang @5.0:8.0", when="@1.3")
     depends_on("llvm +clang @5.0:7.0", when="@1.2")
