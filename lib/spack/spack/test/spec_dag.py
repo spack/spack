@@ -795,12 +795,15 @@ class TestSpecDag(object):
         assert s['d']._dependencies['e'].deptypes == ('build', 'link')
         assert s['e']._dependencies['f'].deptypes == ('run',)
 
-        test = {x.parent.name: x.deptypes for x in s['c']._dependents.values()}
-        assert test['b'] == ('build',)
-        test = {x.parent.name: x.deptypes for x in s['e']._dependents.values()}
-        assert test['d'] == ('build', 'link')
-        test = {x.parent.name: x.deptypes for x in s['f']._dependents.values()}
-        assert test['e'] == ('run',)
+        for x in s['c']._dependents.values():
+            if x.parent.name == 'b':
+                assert x.deptypes == ('build',)
+        for x in s['e']._dependents.values():
+            if x.parent.name == 'd':
+                assert x.deptypes == ('build', 'link')
+        for x in s['f']._dependents.values():
+            if x.parent.name == 'e':
+                assert x.deptypes == ('run',)
 
     def check_diamond_deptypes(self, spec):
         """Validate deptypes in dt-diamond spec.
