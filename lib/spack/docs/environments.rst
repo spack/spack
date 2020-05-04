@@ -602,7 +602,7 @@ files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '^intel']
+       - compilers: ['%gcc', '%intel']
        - second:
            - $first
            - matrix:
