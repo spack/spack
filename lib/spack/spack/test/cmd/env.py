@@ -1040,6 +1040,55 @@ env:
         assert Spec('callpath') in test.user_specs
 
 
+def test_stack_yaml_definitions_as_constraints(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis: [mpich, openmpi]
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich') in test.user_specs
+        assert Spec('callpath^mpich') in test.user_specs
+        assert Spec('mpileaks^openmpi') in test.user_specs
+        assert Spec('callpath^openmpi') in test.user_specs
+
+
+def test_stack_yaml_definitions_as_constraints_on_matrix(tmpdir):
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+env:
+  definitions:
+    - packages: [mpileaks, callpath]
+    - mpis:
+      - matrix:
+        - [mpich]
+        - ['@3.0.4', '@3.0.3']
+  specs:
+    - matrix:
+      - [$packages]
+      - [$^mpis]
+""")
+    with tmpdir.as_cwd():
+        env('create', 'test', './spack.yaml')
+        test = ev.read('test')
+
+        assert Spec('mpileaks^mpich@3.0.4') in test.user_specs
+        assert Spec('callpath^mpich@3.0.4') in test.user_specs
+        assert Spec('mpileaks^mpich@3.0.3') in test.user_specs
+        assert Spec('callpath^mpich@3.0.3') in test.user_specs
+
+
 @pytest.mark.regression('12095')
 def test_stack_yaml_definitions_write_reference(tmpdir):
     filename = str(tmpdir.join('spack.yaml'))
