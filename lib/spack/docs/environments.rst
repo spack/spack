@@ -690,6 +690,7 @@ For example, the following environment has three root packages:
 %gcc@8.1.0 ^mvapich2@2.3.1``.
 
 .. code-block:: yaml
+
   spack:
     definitions:
     - compilers: [gcc@8.1.0]
