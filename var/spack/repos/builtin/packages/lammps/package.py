@@ -150,7 +150,7 @@ class Lammps(CMakePackage, CudaPackage):
             args.append('-DPKG_GPU=ON')
             args.append('-DGPU_API=cuda')
             cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch is not None:
+            if cuda_arch != 'none':
                 args.append('-DGPU_ARCH=sm_{0}'.format(cuda_arch[0]))
             args.append('-DCUDA_MPS_SUPPORT={0}'.format(
                 'ON' if '+cuda_mps' in spec else 'OFF'))
