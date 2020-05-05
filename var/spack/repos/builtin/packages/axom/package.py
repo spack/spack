@@ -370,10 +370,10 @@ class Axom(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_option("ENABLE_DOCS", False))
 
         if "py-shroud" in spec:
-            python_bin_dir = get_spec_path(spec, "python",
+            shroud_bin_dir = get_spec_path(spec, "py-shroud",
                                            path_replacements, use_bin=True)
             cfg.write(cmake_cache_entry("SHROUD_EXECUTABLE",
-                                        pjoin(python_bin_dir, "shroud")))
+                                        pjoin(shroud_bin_dir, "shroud")))
 
         if "uncrustify" in spec:
             uncrustify_bin_dir = get_spec_path(spec, "uncrustify",
