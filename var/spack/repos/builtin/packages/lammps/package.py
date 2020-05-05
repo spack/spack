@@ -21,6 +21,7 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('master', branch='master')
+    version('20200505', sha256='c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73')
     version('20200303', sha256='9aa56dfb8673a06e6c88588505ec1dfc01dd94f9d60e719ed0c605e48cc06c58')
     version('20200227', sha256='1aabcf38bc72285797c710b648e906151a912c36b634a9c88ac383aacf85516e')
     version('20200218', sha256='73bcf146660804ced954f6a0a8dce937482677778d46018ca5a688127bf97211')
@@ -106,6 +107,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
+    depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
