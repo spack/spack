@@ -262,7 +262,7 @@ def test_cce_flags():
     supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
     unsupported_flag_test("c99_flag", "cce@8.0")
     supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@8.1")
-    supported_flag_test("c99_flag", "-h stc=c99,noconform,gnu", "cce@8.4")
+    supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@8.4")
     unsupported_flag_test("c11_flag", "cce@8.4")
     supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@8.5")
     supported_flag_test("cc_pic_flag",  "-h PIC", "cce@1.0")
