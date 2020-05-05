@@ -24,6 +24,7 @@ import spack.store
 import spack.schema.projections
 import spack.projections
 import spack.config
+import spack.relocate
 from spack.error import SpackError
 from spack.directory_layout import ExtensionAlreadyInstalledError
 from spack.directory_layout import YamlViewExtensionsLayout
@@ -41,6 +42,45 @@ __all__ = ["FilesystemView", "YamlFilesystemView"]
 _projections_path = '.spack/projections.yaml'
 
 
+def view_symlink(src, dst, view, spec):
+    os.symlink(src, dst)
+
+
+def view_hardlink(src, dst, view, spec):
+    os.link(src, dst)
+
+
+def view_copy(src, dst, view, spec):
+    shutil.copyfile(src, dst)
+    if spec:
+        # Not metadata, we have to relocate it
+
+        # What type of file are we relocating
+        relocate_method = spack.relocate.relocate_text_bin \
+                          if spack.relocate.is_binary(dst) \
+                          else spack.relocate.relocate_text
+
+        # Get information on where to relocate from/to
+        prefix_to_prefix = dict(
+                (dep.prefix, view.get_projection_for_spec(dep))
+                for dep in spec.traverse()
+            )
+
+        # Call actual relocation method
+        relocate_method(
+            [dst], spack.store.layout.root, view._root,
+            spec.prefix, view.get_projection_for_spec(spec),
+            spack.paths.spack_root, view._root, prefix_to_prefix
+        )
+
+
+def view_link_wrapper(view, link_method):
+    def view_link(src, dst, spec=None):
+        link_method(src, dst, view, spec)
+
+    return view_link
+
+    
 class FilesystemView(object):
     """
         Governs a filesystem view that is located at certain root-directory.
@@ -67,7 +107,7 @@ class FilesystemView(object):
         self.projections = kwargs.get('projections', {})
 
         self.ignore_conflicts = kwargs.get("ignore_conflicts", False)
-        self.link = kwargs.get("link", os.symlink)
+        self.link = view_link_wrapper(self, kwargs.get("link", view_symlink))
         self.verbose = kwargs.get("verbose", False)
 
     def add_specs(self, *specs, **kwargs):
@@ -355,6 +395,7 @@ class YamlFilesystemView(FilesystemView):
         if not os.path.lexists(dest):
             tty.warn("Tried to remove %s which does not exist" % dest)
             return
+        # TODO: Can I remove this?
         if not os.path.islink(dest):
             raise ValueError("%s is not a link tree!" % dest)
         # remove if dest is a hardlink/symlink to src; this will only
