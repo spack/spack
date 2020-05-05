@@ -57,14 +57,13 @@ def view_copy(src, dst, view, spec):
 
         # What type of file are we relocating
         relocate_method = spack.relocate.relocate_text_bin \
-                          if spack.relocate.is_binary(dst) \
-                          else spack.relocate.relocate_text
+            if spack.relocate.is_binary(dst) else spack.relocate.relocate_text
 
         # Get information on where to relocate from/to
         prefix_to_prefix = dict(
-                (dep.prefix, view.get_projection_for_spec(dep))
-                for dep in spec.traverse()
-            )
+            (dep.prefix, view.get_projection_for_spec(dep))
+            for dep in spec.traverse()
+        )
 
         # Call actual relocation method
         relocate_method(
@@ -80,7 +79,7 @@ def view_link_wrapper(view, link_method):
 
     return view_link
 
-    
+
 class FilesystemView(object):
     """
         Governs a filesystem view that is located at certain root-directory.

@@ -33,8 +33,6 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 '''
-import os
-
 import llnl.util.tty as tty
 from llnl.util.link_tree import MergeConflictError
 from llnl.util.tty.color import colorize
@@ -191,7 +189,7 @@ def view(parser, args):
         link_fn = view_copy
     else:
         link_fn = view_symlink
-        
+
     view = YamlFilesystemView(
         path, spack.store.layout,
         projections=ordered_projections,
