@@ -11,14 +11,12 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/kokkos/kokkos-kernels"
     git = "https://github.com/kokkos/kokkos-kernels.git"
+    url = "https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz"
 
-    version('3.1',     url='https://github.com/kokkos/kokkos-kernels/archive/3.1.00.tar.gz',
-            sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89",
-            default=True)
-    version('3.0',     url='https://github.com/kokkos/kokkos-kernels/archive/3.0.00.tar.gz',
-            sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('3.1.00', sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
+    version('3.0.00', sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
 
     depends_on("kokkos")
     depends_on("kokkos@develop", when="@develop")
