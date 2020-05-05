@@ -80,8 +80,17 @@ def test_dev_build_drop_in(tmpdir, mock_packages, monkeypatch,
                            install_mockery):
     def print_spack_cc(*args):
         # Eat arguments and print environment variable to test
-        print(os.environ['CC'])
+        print(os.environ.get('CC', ''))
     monkeypatch.setattr(os, 'execvp', print_spack_cc)
+
+    # `module unload cray-libsci` in test environment causes failure
+    # It does not fail for actual installs
+    # build_environment.py imports module directly, so we monkeypatch it there
+    # rather than in module_cmd
+    def module(*args):
+        pass
+    monkeypatch.setattr(spack.build_environment, 'module', module)
+
     output = dev_build('-b', 'edit', '--drop-in', 'sh',
                        'dev-build-test-install@0.0.0')
     assert "lib/spack/env" in output

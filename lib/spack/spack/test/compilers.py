@@ -6,9 +6,12 @@
 import pytest
 
 import sys
+import os
 
 from copy import copy
 from six import iteritems
+
+import llnl.util.filesystem as fs
 
 import spack.spec
 import spack.compiler
@@ -259,7 +262,7 @@ def test_cce_flags():
     supported_flag_test("cxx11_flag", "-h std=c++11", "cce@1.0")
     unsupported_flag_test("c99_flag", "cce@8.0")
     supported_flag_test("c99_flag", "-h c99,noconform,gnu", "cce@8.1")
-    supported_flag_test("c99_flag", "-h stc=c99,noconform,gnu", "cce@8.4")
+    supported_flag_test("c99_flag", "-h std=c99,noconform,gnu", "cce@8.4")
     unsupported_flag_test("c11_flag", "cce@8.4")
     supported_flag_test("c11_flag", "-h std=c11,noconform,gnu", "cce@8.5")
     supported_flag_test("cc_pic_flag",  "-h PIC", "cce@1.0")
@@ -615,3 +618,53 @@ def test_raising_if_compiler_target_is_over_specific(config):
         cfg = spack.compilers.get_compiler_config()
         with pytest.raises(ValueError):
             spack.compilers.get_compilers(cfg, 'gcc@9.0.1', arch_spec)
+
+
+def test_compiler_get_real_version(working_env, monkeypatch, tmpdir):
+    # Test variables
+    test_version = '2.2.2'
+
+    # Create compiler
+    gcc = str(tmpdir.join('gcc'))
+    with open(gcc, 'w') as f:
+        f.write("""#!/bin/bash
+if [[ $CMP_ON == "1" ]]; then
+    echo "$CMP_VER"
+fi
+""")
+    fs.set_executable(gcc)
+
+    # Add compiler to config
+    compiler_info = {
+        'spec': 'gcc@foo',
+        'paths': {
+            'cc': gcc,
+            'cxx': None,
+            'f77': None,
+            'fc': None,
+        },
+        'flags': {},
+        'operating_system': 'fake',
+        'target': 'fake',
+        'modules': ['turn_on'],
+        'environment': {
+            'set': {'CMP_VER': test_version},
+        },
+        'extra_rpaths': [],
+    }
+    compiler_dict = {'compiler': compiler_info}
+
+    # Set module load to turn compiler on
+    def module(*args):
+        if args[0] == 'show':
+            return ''
+        elif args[0] == 'load':
+            os.environ['CMP_ON'] = "1"
+    monkeypatch.setattr(spack.util.module_cmd, 'module', module)
+
+    # Run and confirm output
+    compilers = spack.compilers.get_compilers([compiler_dict])
+    assert len(compilers) == 1
+    compiler = compilers[0]
+    version = compiler.get_real_version()
+    assert version == test_version
