@@ -107,9 +107,6 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('+tbb', when='@:1.1')
     # https://github.com/pytorch/pytorch/issues/35149
     conflicts('+fbgemm', when='@1.4.0')
-    # https://github.com/pytorch/pytorch/issues/35478
-    conflicts('%clang@11.0.3-apple',
-              msg='Apple Clang 11.0.3 segfaults at build-time')
 
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
@@ -169,6 +166,17 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-hypothesis', type='test')
     depends_on('py-six', type='test')
     depends_on('py-psutil', type='test')
+
+    # https://github.com/pytorch/pytorch/pull/35607
+    # https://github.com/pytorch/pytorch/pull/37865
+    # Fixes CMake configuration error when XNNPACK is disabled
+    patch('xnnpack.patch', when='@1.5.0')
+
+    # https://github.com/pytorch/pytorch/pull/37086
+    # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
+    patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
+          sha256='7781c7ec0a661bf5a946a659f80e90df9dba116ad168762f15b10547113ae600',
+          when='@1.1:1.5')
 
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
