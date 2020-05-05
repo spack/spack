@@ -219,3 +219,95 @@ class TestCMakePackage(object):
 
         with pytest.raises(KeyError, match="not a variant"):
             pkg.define_from_variant('NONEXISTENT')
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestGNUMirrorPackage(object):
+
+    def test_define(self):
+        s = Spec('mirror-gnu')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        s = Spec('mirror-gnu-broken')
+        s.concretize()
+        pkg_broken = spack.repo.get(s)
+
+        cls_name = type(pkg_broken).__name__
+        with pytest.raises(AttributeError,
+                           match=r'{0} must define a `gnu_mirror_path` '
+                                 r'attribute \[none defined\]'
+                                 .format(cls_name)):
+            pkg_broken.urls
+
+        assert pkg.urls[0] == 'https://ftpmirror.gnu.org/' \
+                              'make/make-4.2.1.tar.gz'
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestSourceforgePackage(object):
+
+    def test_define(self):
+        s = Spec('mirror-sourceforge')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        s = Spec('mirror-sourceforge-broken')
+        s.concretize()
+        pkg_broken = spack.repo.get(s)
+
+        cls_name = type(pkg_broken).__name__
+        with pytest.raises(AttributeError,
+                           match=r'{0} must define a `sourceforge_mirror_path`'
+                                 r' attribute \[none defined\]'
+                                 .format(cls_name)):
+            pkg_broken.urls
+
+        assert pkg.urls[0] == 'https://prdownloads.sourceforge.net/' \
+                              'tcl/tcl8.6.5-src.tar.gz'
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestSourcewarePackage(object):
+
+    def test_define(self):
+        s = Spec('mirror-sourceware')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        s = Spec('mirror-sourceware-broken')
+        s.concretize()
+        pkg_broken = spack.repo.get(s)
+
+        cls_name = type(pkg_broken).__name__
+        with pytest.raises(AttributeError,
+                           match=r'{0} must define a `sourceware_mirror_path` '
+                                 r'attribute \[none defined\]'
+                                 .format(cls_name)):
+            pkg_broken.urls
+
+        assert pkg.urls[0] == 'https://sourceware.org/pub/' \
+                              'bzip2/bzip2-1.0.8.tar.gz'
+
+
+@pytest.mark.usefixtures('config', 'mock_packages')
+class TestXorgPackage(object):
+
+    def test_define(self):
+        s = Spec('mirror-xorg')
+        s.concretize()
+        pkg = spack.repo.get(s)
+
+        s = Spec('mirror-xorg-broken')
+        s.concretize()
+        pkg_broken = spack.repo.get(s)
+
+        cls_name = type(pkg_broken).__name__
+        with pytest.raises(AttributeError,
+                           match=r'{0} must define a `xorg_mirror_path` '
+                                 r'attribute \[none defined\]'
+                                 .format(cls_name)):
+            pkg_broken.urls
+
+        assert pkg.urls[0] == 'https://www.x.org/archive/individual/' \
+                              'util/util-macros-1.19.1.tar.bz2'

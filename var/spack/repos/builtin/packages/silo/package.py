@@ -45,9 +45,14 @@ class Silo(AutotoolsPackage):
             if spec['hdf5'].satisfies('~shared'):
                 flags.append('-ldl')
             flags.append(spec['readline'].libs.search_flags)
-        elif name in ('cflags', 'cxxflags', 'fcflags'):
-            if '+pic' in spec:
-                flags.append(self.compiler.pic_flag)
+
+        if '+pic' in spec:
+            if name == 'cflags':
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == 'cxxflags':
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == 'fcflags':
+                flags.append(self.compiler.fc_pic_flag)
         return (flags, None, None)
 
     @when('%clang@9:')

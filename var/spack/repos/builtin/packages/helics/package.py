@@ -19,6 +19,7 @@ class Helics(CMakePackage):
 
     version('develop', branch='develop', submodules=True)
     version('master', branch='master', submodules=True)
+    version('2.5.0', sha256='6f4f9308ebb59d82d71cf068e0d9d66b6edfa7792d61d54f0a61bf20dd2a7428')
     version('2.4.2', sha256='957856f06ed6d622f05dfe53df7768bba8fe2336d841252f5fac8345070fa5cb')
     version('2.4.1', sha256='ac077e9efe466881ea366721cb31fb37ea0e72a881a717323ba4f3cdda338be4')
 
@@ -42,7 +43,7 @@ class Helics(CMakePackage):
     # Build dependency
     depends_on('git', type='build', when='@master:')
     depends_on('cmake@3.4:', type='build')
-    depends_on('boost@1.70: ~atomic ~chrono ~date_time ~exception ~filesystem ~graph ~iostreams ~locale ~log ~math ~program_options ~random ~regex ~serialization ~signals ~system ~test ~thread ~timer ~wave', type='build', when='+boost')
+    depends_on('boost@1.70:', type='build', when='+boost')
     depends_on('swig@3.0:', type='build', when='+swig')
 
     depends_on('libzmq@4.3:', when='+zmq')

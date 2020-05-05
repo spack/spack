@@ -655,11 +655,15 @@ _spack_debug() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create-db-tarball"
+        SPACK_COMPREPLY="create-db-tarball report"
     fi
 }
 
 _spack_debug_create_db_tarball() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_debug_report() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -693,7 +697,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -702,7 +706,7 @@ _spack_dev_build() {
 _spack_diy() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -980,7 +984,7 @@ _spack_list() {
 _spack_load() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --only"
+        SPACK_COMPREPLY="-h --help -r --dependencies --sh --csh --first --only"
     else
         _installed_packages
     fi
@@ -1272,7 +1276,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -c -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -m"
     else
         SPACK_COMPREPLY=""
     fi

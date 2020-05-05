@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxt(AutotoolsPackage):
+class Libxt(AutotoolsPackage, XorgPackage):
     """libXt - X Toolkit Intrinsics library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libXt"
-    url      = "https://www.x.org/archive/individual/lib/libXt-1.1.5.tar.gz"
+    xorg_mirror_path = "lib/libXt-1.1.5.tar.gz"
 
     version('1.1.5', sha256='b59bee38a9935565fa49dc1bfe84cb30173e2e07e1dcdf801430d4b54eb0caa3')
 

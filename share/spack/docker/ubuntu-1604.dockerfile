@@ -5,7 +5,6 @@ ENV DOCKERFILE_BASE=ubuntu:16.04      \
     DOCKERFILE_DISTRO=ubuntu          \
     DOCKERFILE_DISTRO_VERSION=16.04   \
     SPACK_ROOT=/opt/spack             \
-    FORCE_UNSAFE_CONFIGURE=1          \
     DEBIAN_FRONTEND=noninteractive    \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
@@ -90,4 +89,3 @@ RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["docker-shell"]
-

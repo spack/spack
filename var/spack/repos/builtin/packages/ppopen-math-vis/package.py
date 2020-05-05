@@ -43,3 +43,9 @@ class PpopenMathVis(MakefilePackage):
         copy_tree('examples', join_path(prefix, 'examples'))
         mkdir(join_path(prefix, 'doc'))
         copy_tree('doc', join_path(prefix, 'doc'))
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libfppohvisfdm3d', 'libppohvisfdm3d'],
+            root=self.prefix, shared=False, recursive=True)

@@ -8,7 +8,7 @@ import glob
 import os.path
 
 
-class Elfutils(AutotoolsPackage):
+class Elfutils(AutotoolsPackage, SourcewarePackage):
     """elfutils is a collection of various binary tools such as
     eu-objdump, eu-readelf, and other utilities that allow you to
     inspect and manipulate ELF files. Refer to Table 5.Tools Included
@@ -17,13 +17,11 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-    url      = "https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
+    sourceware_mirror_path = "elfutils/0.179/elfutils-0.179.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
-    # Sourceware is often slow to respond.
-    fetch_options = {'timeout': 60}
-
+    version('0.179', sha256='25a545566cbacaa37ae6222e58f1c48ea4570f53ba991886e2f5ce96e22a23a2')
     version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
     version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
     version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class PyCrossmap(PythonPackage):
+class PyCrossmap(PythonPackage, SourceforgePackage):
     """CrossMap is a program for convenient conversion of genome coordinates
        (or annotation files) between different assemblies"""
 
     homepage = "http://crossmap.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/crossmap/CrossMap-0.3.3.tar.gz"
+    sourceforge_mirror_path = "crossmap/CrossMap-0.3.3.tar.gz"
 
     version('0.3.3', sha256='56d99fd606e13e399b83438953d0d89fc281df1c1e8e47eed7d773e7ec9c88f8')
     version('0.2.9', sha256='57243ee5051352c93088874c797ceac0426f249704ba897360fb628b3365d0af')

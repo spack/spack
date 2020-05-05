@@ -95,7 +95,7 @@ class Zoltan(AutotoolsPackage):
                 'RANLIB=echo',
                 '--with-ar=$(CXX) -shared $(LDFLAGS) -o'
             ])
-            config_cflags.append(self.compiler.pic_flag)
+            config_cflags.append(self.compiler.cc_pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs=-lgfortran')
             if spec.satisfies('%intel'):

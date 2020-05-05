@@ -13,15 +13,17 @@ class NetcdfC(AutotoolsPackage):
 
     homepage = "http://www.unidata.ucar.edu/software/netcdf"
     git      = "https://github.com/Unidata/netcdf-c.git"
-    url      = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-4.7.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-4.7.3.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version('4.6.2'):
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-c-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-c-{0}.tar.gz"
         else:
-            url = "https://www.gfd-dennou.org/arch/netcdf/unidata-mirror/netcdf-{0}.tar.gz"
+            url = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-{0}.tar.gz"
 
         return url.format(version.dotted)
+
+    maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
@@ -59,6 +61,7 @@ class NetcdfC(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
+    variant('jna', default=False, description='Enable JNA support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -156,7 +159,7 @@ class NetcdfC(AutotoolsPackage):
         if '~shared' in self.spec or '+pic' in self.spec:
             # We don't have shared libraries but we still want it to be
             # possible to use this library in shared builds
-            cflags.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.cc_pic_flag)
 
         config_args += self.enable_or_disable('dap')
         # config_args += self.enable_or_disable('cdmremote')
@@ -178,6 +181,9 @@ class NetcdfC(AutotoolsPackage):
                 config_args.append('--enable-parallel4')
             else:
                 config_args.append('--disable-parallel4')
+
+        if self.spec.satisfies('@4.3.2:'):
+            config_args += self.enable_or_disable('jna')
 
         # Starting version 4.1.3, --with-hdf5= and other such configure options
         # are removed. Variables CPPFLAGS, LDFLAGS, and LD_LIBRARY_PATH must be
@@ -213,6 +219,9 @@ class NetcdfC(AutotoolsPackage):
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
                 libs.append('-lsz')
+            if '+libtirpc' in hdf4:
+                # This should also come from hdf4.libs
+                libs.append('-ltirpc')
 
         # Fortran support
         # In version 4.2+, NetCDF-C and NetCDF-Fortran have split.

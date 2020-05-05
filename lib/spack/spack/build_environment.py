@@ -146,6 +146,7 @@ def clean_environment():
     env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
+    env.unset('DYLD_FALLBACK_LIBRARY_PATH')
 
     # Remove all pkgconfig stuff from craype
     for varname in os.environ.keys():
@@ -420,7 +421,7 @@ def _set_variables_for_single_module(pkg, module):
     if getattr(module, marker, False):
         return
 
-    jobs = spack.config.get('config:build_jobs') if pkg.parallel else 1
+    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
     assert jobs is not None, "no default set for config:build_jobs"
 

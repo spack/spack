@@ -66,6 +66,7 @@ class Petsc(Package):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
+    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')
@@ -133,6 +134,7 @@ class Petsc(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
+    depends_on('cuda', when='+cuda')
 
     # Build dependencies
     depends_on('python@2.6:2.8', type='build', when='@:3.10.99')
@@ -147,8 +149,8 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
-    depends_on('hdf5@:1.10.99+mpi+hl+fortran', when='@:3.12.99+hdf5+mpi')
-    depends_on('hdf5+mpi+hl+fortran', when='@3.13:+hdf5+mpi')
+    depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
+    depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
     depends_on('zlib', when='+hdf5')
     depends_on('parmetis', when='+metis+mpi')
     depends_on('valgrind', when='+valgrind')
@@ -159,7 +161,7 @@ class Petsc(Package):
     depends_on('hypre@:2.13.99~internal-superlu~int64', when='@:3.8.99+hypre+mpi~complex~int64')
     depends_on('hypre@:2.13.99~internal-superlu+int64', when='@:3.8.99+hypre+mpi~complex+int64')
     depends_on('hypre@2.14:~internal-superlu~int64', when='@3.9:+hypre+mpi~complex~int64')
-    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9+hypre+mpi~complex+int64')
+    depends_on('hypre@2.14:~internal-superlu+int64', when='@3.9:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
     depends_on('hypre@develop~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
@@ -294,17 +296,19 @@ class Petsc(Package):
             ])
 
         # Activates library support if needed
-        for library in ('metis', 'hdf5', 'hypre', 'parmetis',
+        for library in ('cuda', 'metis', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
             options.append(
                 '--with-{library}={value}'.format(
-                    library=library, value=('1' if library in spec else '0'))
+                    library=library,
+                    value=('1' if '+' + library in spec else '0'))
             )
-            if library in spec:
+            if '+' + library in spec:
                 options.append(
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
                 )
+
         # PETSc does not pick up SuperluDist from the dir as they look for
         # superlu_dist_4.1.a
         if 'superlu-dist' in spec:
@@ -334,6 +338,16 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-suitesparse=0')
+
+        # hdf5: configure detection is convoluted for pflotran
+        if '+hdf5' in spec:
+            options.extend([
+                '--with-hdf5-include=%s' % spec['hdf5'].prefix.include,
+                '--with-hdf5-lib=%s' % spec['hdf5:hl,fortran'].libs.joined(),
+                '--with-hdf5=1'
+            ])
+        else:
+            options.append('--with-hdf5=0')
 
         # zlib: configuring using '--with-zlib-dir=...' has some issues with
         # SuiteSparse so specify directly the include path and the libraries.

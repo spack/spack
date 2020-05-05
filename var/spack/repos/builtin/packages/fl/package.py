@@ -17,7 +17,7 @@ class Fl(Package):
 
     def install(self, spec, prefix):
         if (self.spec.satisfies('platform=linux') and
-           self.spec.satisfies('target=x86_64')):
+           self.spec.target.family == 'x86_64'):
             with working_dir('fl_{0}'.format(spec.version)):
                 install_tree('.', prefix)
         else:
