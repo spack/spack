@@ -1728,7 +1728,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         traceback.extract_stack()))
 
             exc = e  # e is deleted after this block
-            self.test_failures.append((exc, m))
+
+            # If we fail fast, raise another error
+            if spack.config.get('config:fail_fast', False):
+                raise TestFailure([(exc, m)])
+            else:
+                self.test_failures.append((exc, m))
 
     def _run_test_helper(self, exe, options, expected, status, installed,
                          purpose):
