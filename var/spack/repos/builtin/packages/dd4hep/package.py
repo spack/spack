@@ -41,7 +41,7 @@ class Dd4hep(CMakePackage):
     depends_on('cmake @3.12:', type='build')
     depends_on('boost @1.49:')
     depends_on('root @6.08: +gdml +math +opengl +python +x')
-    depends_on('python')
+    extends('python')
     depends_on('xerces-c', when='+xercesc')
     depends_on('geant4@10.2.2:', when='+geant4')
 
