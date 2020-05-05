@@ -516,48 +516,6 @@ def _replace_prefix_bin(filename, old_dir, new_dir):
         f.truncate()
 
 
-def _replace_prefix_nullterm(filename, old_dir, new_dir):
-    """Replace all the occurrences of the old install prefix with a
-    new install prefix in binary files.
-
-    The new install prefix is suffixed with enough null termination
-    characters to make it the same length as the old one.
-
-    Does nothing if the old directory is shorter than the new one.
-
-    Args:
-        filename (str): target binary file
-        old_dir (str): directory to be searched in the file
-        new_dir (str): substitute for the old directory
-    """
-    def replace(match):
-        occurances = match.group().count(old_dir.encode('utf-8'))
-        olen = len(old_dir.encode('utf-8'))
-        nlen = len(new_dir.encode('utf-8'))
-        padding = (olen - nlen) * occurances
-        if padding < 0:
-            return data
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     new_dir.encode('utf-8')) + b'\0' * padding
-
-    if len(new_dir) > len(old_dir):
-        raise BinaryTextReplaceError(old_dir, new_dir)
-
-    with open(filename, 'rb+') as f:
-        data = f.read()
-        f.seek(0)
-        original_data_len = len(data)
-        pat = re.compile(re.escape(old_dir).encode('utf-8') + b'([^\0]*?)\0')
-        if not pat.search(data):
-            return
-        ndata = pat.sub(replace, data)
-        if not len(ndata) == original_data_len:
-            raise BinaryStringReplacementError(
-                filename, original_data_len, len(ndata))
-        f.write(ndata)
-        f.truncate()
-
-
 def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                             prefix_to_prefix, rel, old_prefix, new_prefix):
     """
