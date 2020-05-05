@@ -103,6 +103,18 @@ def mock_patchelf(tmpdir):
     return _factory
 
 
+@pytest.fixture()
+def hello_world(tmpdir):
+    f = tmpdir.join('main.c')
+    f.write("""
+#include <stdio.h>
+int main(){
+    printf("Hello world!");
+}
+""")
+    return f
+
+
 @pytest.mark.requires_executables(
     '/usr/bin/gcc', 'patchelf', 'strings', 'file'
 )
@@ -207,3 +219,25 @@ def test_set_elf_rpaths(mock_patchelf):
     assert '--force-rpath' in output
     assert '--set-rpath ' + ':'.join(rpaths) in output
     assert patchelf in output
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_replace_prefix_bin(hello_world):
+    # Compile an "Hello world!" executable and set RPATHs
+    gcc = spack.util.executable.which('gcc')
+    executable = hello_world.dirpath('main.x')
+    os.path.abspath(hello_world)
+    opts = [
+        '-Wl,--disable-new-dtags',
+        '-Wl,-rpath=/usr/lib:/usr/lib64',
+        str(hello_world), '-o', str(executable)
+    ]
+    gcc(*opts)
+
+    # Relocate the paths
+    spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
+
+    # Check that the RPATHs changed
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(executable), output=str)
+    assert output.strip() == '/foo/lib:/foo/lib64'
