@@ -75,7 +75,7 @@ class NetcdfC(AutotoolsPackage):
     depends_on('libtool', type='build', when='@4.7.0')
 
     depends_on("m4", type='build')
-    depends_on("hdf", when='+hdf4')
+    depends_on("hdf~netcdf", when='+hdf4')
 
     # curl 7.18.0 or later is required:
     # http://www.unidata.ucar.edu/software/netcdf/docs/getting_and_building_netcdf.html
@@ -219,7 +219,7 @@ class NetcdfC(AutotoolsPackage):
             if '+szip' in hdf4:
                 # This should also come from hdf4.libs
                 libs.append('-lsz')
-            if '+libtirpc' in hdf4:
+            if 'xdr=external' in hdf4:
                 # This should also come from hdf4.libs
                 libs.append('-ltirpc')
 

@@ -296,7 +296,7 @@ class Gdal(AutotoolsPackage):
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
             hdf4 = self.spec['hdf']
-            if '+libtirpc' in hdf4:
+            if 'xdr=external' in hdf4:
                 libs.append('-ltirpc')
         else:
             args.append('--with-hdf4=no')
