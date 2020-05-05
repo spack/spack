@@ -11,6 +11,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 import macholib.MachO
 import macholib.mach_o
+import spack.architecture
 import spack.cmd
 import spack.repo
 import spack.spec
@@ -389,9 +390,15 @@ def _set_elf_rpaths(target, rpaths):
     """Replace the original RPATH of the target with the paths passed
     as arguments.
 
+    This function uses ``patchelf`` to set RPATHs.
+
     Args:
         target: target executable. Must be an ELF object.
         rpaths: paths to be set in the RPATH
+
+    Returns:
+        A string concatenating the stdout and stderr of the call
+        to ``patchelf``
     """
     # Join the paths using ':' as a separator
     rpaths_str = ':'.join(rpaths)
@@ -402,16 +409,19 @@ def _set_elf_rpaths(target, rpaths):
         bak_path = target + ".bak"
         shutil.copy(target, bak_path)
 
-    patchelf = executable.Executable(bak_path or _patchelf())
+    patchelf, output = executable.Executable(bak_path or _patchelf()), None
     try:
+        # TODO: revisit the use of --force-rpath as it might be conditional
+        # TODO: if we want to support setting RUNPATH from binary packages
         patchelf_args = ['--force-rpath', '--set-rpath', rpaths_str, target]
-        patchelf(*patchelf_args, output=str, error=str)
+        output = patchelf(*patchelf_args, output=str, error=str)
     except executable.ProcessError as e:
         msg = 'patchelf --force-rpath --set-rpath {0} failed with error {1}'
         tty.warn(msg.format(target, e))
     finally:
         if os.path.exists(bak_path):
             os.remove(bak_path)
+    return output
 
 
 def needs_binary_relocation(m_type, m_subtype):

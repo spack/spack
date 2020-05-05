@@ -194,3 +194,16 @@ def test_normalize_relative_paths(start_path, relative_paths, expected):
         start_path, relative_paths
     )
     assert normalized == expected
+
+
+def test_set_elf_rpaths(mock_patchelf):
+    # Try to relocate a mock version of patchelf and check
+    # the call made to patchelf itself
+    patchelf = mock_patchelf('echo $@')
+    rpaths = ['/usr/lib', '/usr/lib64', '/opt/local/lib']
+    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+
+    # Assert that the arguments of the call to patchelf are as expected
+    assert '--force-rpath' in output
+    assert '--set-rpath ' + ':'.join(rpaths) in output
+    assert patchelf in output
