@@ -226,7 +226,6 @@ def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
     gcc = spack.util.executable.which('gcc')
     executable = hello_world.dirpath('main.x')
-    os.path.abspath(hello_world)
     opts = [
         '-Wl,--disable-new-dtags',
         '-Wl,-rpath=/usr/lib:/usr/lib64',
