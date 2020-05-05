@@ -449,12 +449,16 @@ def needs_text_relocation(m_type, m_subtype):
     return m_type == 'text'
 
 
-def replace_prefix_text(path_name, old_dir, new_dir):
+def _replace_prefix_text(filename, old_dir, new_dir):
+    """Replace all the occurrences of the old install prefix with a
+    new install prefix in text files that are utf-8 encoded.
+
+    Args:
+        filename (str): target text file (utf-8 encoded)
+        old_dir (str): directory to be searched in the file
+        new_dir (str): substitute for the old directory
     """
-    Replace old install prefix with new install prefix
-    in text files using utf-8 encoded strings.
-    """
-    with open(path_name, 'rb+') as f:
+    with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
         # Replace old_dir with new_dir if it appears at the beginning of a path
@@ -473,13 +477,18 @@ def replace_prefix_text(path_name, old_dir, new_dir):
         f.truncate()
 
 
-def replace_prefix_bin(path_name, old_dir, new_dir):
-    """
-    Attempt to replace old install prefix with new install prefix
-    in binary files by prefixing new install prefix with os.sep
-    until the lengths of the prefixes are the same.
-    """
+def _replace_prefix_bin(filename, old_dir, new_dir):
+    """Replace all the occurrences of the old install prefix with a
+    new install prefix in binary files.
 
+    The new install prefix is prefixed with ``os.sep`` until the
+    lengths of the prefixes are the same.
+
+    Args:
+        filename (str): target binary file
+        old_dir (str): directory to be searched in the file
+        new_dir (str): substitute for the old directory
+    """
     def replace(match):
         occurances = match.group().count(old_dir.encode('utf-8'))
         olen = len(old_dir.encode('utf-8'))
@@ -487,11 +496,12 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         padding = (olen - nlen) * occurances
         if padding < 0:
             return data
-        return match.group().replace(old_dir.encode('utf-8'),
-                                     os.sep.encode('utf-8') * padding +
-                                     new_dir.encode('utf-8'))
+        return match.group().replace(
+            old_dir.encode('utf-8'),
+            os.sep.encode('utf-8') * padding + new_dir.encode('utf-8')
+        )
 
-    with open(path_name, 'rb+') as f:
+    with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
         original_data_len = len(data)
@@ -501,19 +511,25 @@ def replace_prefix_bin(path_name, old_dir, new_dir):
         ndata = pat.sub(replace, data)
         if not len(ndata) == original_data_len:
             raise BinaryStringReplacementError(
-                path_name, original_data_len, len(ndata))
+                filename, original_data_len, len(ndata))
         f.write(ndata)
         f.truncate()
 
 
-def replace_prefix_nullterm(path_name, old_dir, new_dir):
-    """
-    Attempt to replace old install prefix with new install prefix
-    in binary files by replacing with null terminated string
-    that is the same length unless the old path is shorter
-    Used on linux to replace mach-o rpaths
-    """
+def _replace_prefix_nullterm(filename, old_dir, new_dir):
+    """Replace all the occurrences of the old install prefix with a
+    new install prefix in binary files.
 
+    The new install prefix is suffixed with enough null termination
+    characters to make it the same length as the old one.
+
+    Does nothing if the old directory is shorter than the new one.
+
+    Args:
+        filename (str): target binary file
+        old_dir (str): directory to be searched in the file
+        new_dir (str): substitute for the old directory
+    """
     def replace(match):
         occurances = match.group().count(old_dir.encode('utf-8'))
         olen = len(old_dir.encode('utf-8'))
@@ -527,7 +543,7 @@ def replace_prefix_nullterm(path_name, old_dir, new_dir):
     if len(new_dir) > len(old_dir):
         raise BinaryTextReplaceError(old_dir, new_dir)
 
-    with open(path_name, 'rb+') as f:
+    with open(filename, 'rb+') as f:
         data = f.read()
         f.seek(0)
         original_data_len = len(data)
@@ -537,7 +553,7 @@ def replace_prefix_nullterm(path_name, old_dir, new_dir):
         ndata = pat.sub(replace, data)
         if not len(ndata) == original_data_len:
             raise BinaryStringReplacementError(
-                path_name, original_data_len, len(ndata))
+                filename, original_data_len, len(ndata))
         f.write(ndata)
         f.truncate()
 
@@ -757,11 +773,11 @@ def relocate_text(path_names, old_layout_root, new_layout_root,
     sbangnew = '#!/bin/bash %s/bin/sbang' % new_spack_prefix
 
     for path_name in path_names:
-        replace_prefix_text(path_name, old_install_prefix, new_install_prefix)
+        _replace_prefix_text(path_name, old_install_prefix, new_install_prefix)
         for orig_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
-            replace_prefix_text(path_name, orig_dep_prefix, new_dep_prefix)
-        replace_prefix_text(path_name, old_layout_root, new_layout_root)
-        replace_prefix_text(path_name, sbangre, sbangnew)
+            _replace_prefix_text(path_name, orig_dep_prefix, new_dep_prefix)
+        _replace_prefix_text(path_name, old_layout_root, new_layout_root)
+        _replace_prefix_text(path_name, sbangre, sbangnew)
 
 
 def relocate_text_bin(path_names, old_layout_root, new_layout_root,
@@ -777,9 +793,9 @@ def relocate_text_bin(path_names, old_layout_root, new_layout_root,
         for path_name in path_names:
             for old_dep_prefix, new_dep_prefix in prefix_to_prefix.items():
                 if len(new_dep_prefix) <= len(old_dep_prefix):
-                    replace_prefix_bin(
+                    _replace_prefix_bin(
                         path_name, old_dep_prefix, new_dep_prefix)
-            replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
+            _replace_prefix_bin(path_name, old_spack_prefix, new_spack_prefix)
     else:
         if len(path_names) > 0:
             raise BinaryTextReplaceError(
