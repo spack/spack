@@ -108,6 +108,7 @@ class BlisBase(Package):
             ["libblis", "libblis-mt"], root=self.prefix, recursive=True
         )
 
+
 class Blis(BlisBase):
     """BLIS is a portable software framework for instantiating high-performance
     BLAS-like dense linear algebra libraries.
