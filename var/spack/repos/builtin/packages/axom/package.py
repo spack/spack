@@ -119,10 +119,10 @@ class Axom(CMakePackage, CudaPackage):
     depends_on("umpire+cuda+deviceconst", when="+umpire+cuda")
 
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('raja cuda_arch=%s' % sm_,
-                   when='+raja cuda_arch=%s' % sm_)
-        depends_on('umpire cuda_arch=%s' % sm_,
-                   when='+umpire cuda_arch=%s' % sm_)
+        depends_on('raja cuda_arch={0}'.format(sm_),
+                   when='+raja cuda_arch={0}'.format(sm_))
+        depends_on('umpire cuda_arch={0}'.format(sm_),
+                   when='+umpire cuda_arch={0}'.format(sm_))
 
     depends_on("mfem~mpi~hypre~metis~gzstream", when="+mfem")
 
