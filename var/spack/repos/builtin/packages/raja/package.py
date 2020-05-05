@@ -41,18 +41,13 @@ class Raja(CMakePackage, CudaPackage):
             'On' if '+openmp' in spec else 'Off'))
 
         if '+cuda' in spec:
-            if not spec.satisfies('cuda_arch=none'):
-                cuda_arch = spec.variants['cuda_arch'].value
-                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-
             options.extend([
                 '-DENABLE_CUDA=On',
                 '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
 
-            cuda_value = spec.variants['cuda_arch'].value
-            cuda_arch = cuda_value[0]
-            if cuda_arch is not None:
-                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
+            if not spec.satisfies('cuda_arch=none'):
+                cuda_arch = spec.variants['cuda_arch'].value
+                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
 
         # Work around spack adding -march=ppc64le to SPACK_TARGET_ARGS which
         # is used by the spack compiler wrapper.  This can go away when BLT
