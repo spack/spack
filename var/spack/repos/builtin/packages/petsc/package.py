@@ -16,13 +16,14 @@ class Petsc(Package):
     """
 
     homepage = "http://www.mcs.anl.gov/petsc/index.html"
-    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.0.tar.gz"
+    url = "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-3.13.1.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.13.1', sha256='74a895e44e2ff1146838aaccb7613e7626d99e0eed64ca032c87c72d084efac3')
     version('3.13.0', sha256='f0ea543a54145c5d1387e25b121c3fd1b1ca834032c5a33f6f1d929e95bdf0e5')
     version('3.12.5', sha256='d676eb67e79314d6cca6422d7c477d2b192c830b89d5edc6b46934f7453bcfc0')
     version('3.12.4', sha256='56a941130da93bbacb3cfa74dcacea1e3cd8e36a0341f9ced09977b1457084c3')
