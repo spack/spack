@@ -102,7 +102,7 @@ class Hpl(AutotoolsPackage):
     @when('@2.3:')
     def configure_args(self):
         if '+openmp' in spec:
-            config = ['CFLAGS=-O3 -fopenmp']
+            config = ['CFLAGS=-O3 ' + self.compiler.openmp_flag]
         else:
             config = ['CFLAGS=-O3']
 
