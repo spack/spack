@@ -36,11 +36,17 @@ class Apbs(AutotoolsPackage):
 
     version('1.3', sha256='5fa5b597f7d5a3d9bb55429ec4fefc69e7d0f918d568c3c4a288088c0fde9ef2')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    variant('python', default=False, description='Build with python wrappers')
+
+    depends_on('python@:2.9999', when='+python')
 
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
+        spec = self.spec
         args = []
+
+        if '+python' in spec:
+            args.append('--enable-python')
+        else:
+            args.append('--disable-python')
+
         return args
