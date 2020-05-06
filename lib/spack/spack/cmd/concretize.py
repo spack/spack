@@ -7,8 +7,8 @@ import spack.environment as ev
 import llnl.util.tty.color as clr
 
 description = clr.colorize(
-    'Concretize an environment and write a lockfile. The package status, hash, '
-    'and spec for each package and dependency are shown. \n\n'
+    'Concretize an environment and write a lockfile. The package status, '
+    'hash, and spec for each package and dependency are shown. \n\n'
     'The status symbols are: \n'
     ' @*g{[\u2714]} Package is installed. \n'
     ' @*K{[-]} Package is not installed.\n'
