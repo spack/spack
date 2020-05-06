@@ -30,6 +30,9 @@ class Apbs(AutotoolsPackage):
     homepage = "http://www.poissonboltzmann.org/"
     url      = "https://downloads.sourceforge.net/project/apbs/apbs/apbs-1.3.0/apbs-1.3-source.tar.gz"
 
+    # Working around race condition
+    parallel = False
+
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
