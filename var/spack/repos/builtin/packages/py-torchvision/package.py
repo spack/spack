@@ -32,9 +32,9 @@ class PyTorchvision(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
-    depends_on('py-torch@1.4:', when='@0.6:', type=('build', 'run'))
-    depends_on('py-torch@1.2:', when='@0.4:', type=('build', 'run'))
-    depends_on('py-torch@1.1:', type=('build', 'run'))
+    depends_on('py-torch@1.4:', when='@0.6:', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.2:', when='@0.4:', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.1:', type=('build', 'link', 'run'))
     # https://github.com/pytorch/vision/issues/1712
     depends_on('py-pillow@4.1.1:6', when='@:0.4', type=('build', 'run'))  # or py-pillow-simd
     depends_on('py-pillow@4.1.1:',  when='@0.5:', type=('build', 'run'))  # or py-pillow-simd
