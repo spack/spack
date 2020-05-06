@@ -313,7 +313,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame bootstrap build build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config configure containerize create deactivate debug dependencies dependents deprecate dev-build diy docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup spec stage test uninstall unload upload-s3 url verify versions view"
     fi
 }
 
@@ -814,6 +814,24 @@ _spack_extensions() {
         SPACK_COMPREPLY="-h --help -l --long -L --very-long -d --deps -p --paths -s --show -v --view"
     else
         _extensions
+    fi
+}
+
+_spack_external() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY="find"
+    fi
+}
+
+_spack_external_find() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --not-buildable"
+    else
+        _all_packages
     fi
 }
 
