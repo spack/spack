@@ -419,7 +419,7 @@ def _set_elf_rpaths(target, rpaths):
         msg = 'patchelf --force-rpath --set-rpath {0} failed with error {1}'
         tty.warn(msg.format(target, e))
     finally:
-        if os.path.exists(bak_path):
+        if bak_path and os.path.exists(bak_path):
             os.remove(bak_path)
     return output
 
@@ -590,50 +590,89 @@ def relocate_macho_binaries(path_names, old_layout_root, new_layout_root,
                                        paths_to_paths)
 
 
-def elf_find_paths(orig_rpaths, old_layout_root, prefix_to_prefix):
-    new_rpaths = list()
+def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
+    """Return an updated list of RPATHs where each entry in the original list
+    starting with the old root is relocated to another place according to the
+    mapping passed as argument.
+
+    Args:
+        orig_rpaths (list): list of the original RPATHs
+        orig_root (str): original root to be substituted
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+
+    Returns:
+        List of paths
+    """
+    new_rpaths = []
     for orig_rpath in orig_rpaths:
-        if orig_rpath.startswith(old_layout_root):
-            for old_prefix, new_prefix in prefix_to_prefix.items():
-                if orig_rpath.startswith(old_prefix):
-                    new_rpaths.append(re.sub(re.escape(old_prefix),
-                                             new_prefix, orig_rpath))
-        else:
+        # If the original RPATH doesn't start with the target root
+        # append it verbatim and proceed
+        if not orig_rpath.startswith(orig_root):
             new_rpaths.append(orig_rpath)
+            continue
+
+        # Otherwise inspect the mapping and transform + append any prefix
+        # that starts with a registered key
+        for old_prefix, new_prefix in new_prefixes.items():
+            if orig_rpath.startswith(old_prefix):
+                new_rpaths.append(
+                    re.sub(re.escape(old_prefix), new_prefix, orig_rpath)
+                )
+
     return new_rpaths
 
 
-def relocate_elf_binaries(path_names, old_layout_root, new_layout_root,
-                          prefix_to_prefix, rel, old_prefix, new_prefix):
-    """
-    Use patchelf to get the original rpaths and then replace them with
+def relocate_elf_binaries(binaries, orig_root, new_root,
+                          new_prefixes, rel, orig_prefix, new_prefix):
+    """Relocate the binaries passed as arguments by changing their RPATHs.
+
+    Use patchelf to get the original RPATHs and then replace them with
     rpaths in the new directory layout.
-    New rpaths are determined from a dictionary mapping the prefixes in the
+
+    New RPATHs are determined from a dictionary mapping the prefixes in the
     old directory layout to the prefixes in the new directory layout if the
     rpath was in the old layout root, i.e. system paths are not replaced.
+
+    Args:
+        binaries (list): list of binaries that might need relocation, located
+            in the new prefix
+        orig_root (str): original root to be substituted
+        new_root (str): new root to be used, only relevant for relative RPATHs
+        new_prefixes (dict): dictionary that maps the original prefixes to
+            where they should be relocated
+        rel (bool): True if the RPATHs are relative, False if they are absolute
+        orig_prefix (str): prefix where the executable was originally located
+        new_prefix (str): prefix where we want to relocate the executable
     """
-    for path_name in path_names:
-        orig_rpaths = _elf_rpaths_for(path_name)
-        new_rpaths = list()
+    for new_binary in binaries:
+        orig_rpaths = _elf_rpaths_for(new_binary)
+        # TODO: Can we deduce `rel` from the original RPATHs?
         if rel:
-            # get the file path in the old_prefix
-            orig_path_name = re.sub(re.escape(new_prefix), old_prefix,
-                                    path_name)
-            # get the normalized rpaths in the old prefix using the file path
+            # Get the file path in the original prefix
+            orig_binary = re.sub(
+                re.escape(new_prefix), orig_prefix, new_binary
+            )
+
+            # Get the normalized RPATHs in the old prefix using the file path
             # in the orig prefix
-            orig_norm_rpaths = _normalize_relative_paths(orig_path_name,
-                                                         orig_rpaths)
-            # get the normalize rpaths in the new prefix
-            norm_rpaths = elf_find_paths(orig_norm_rpaths, old_layout_root,
-                                         prefix_to_prefix)
-            # get the relativized rpaths in the new prefix
-            new_rpaths = _make_relative(path_name, new_layout_root,
-                                        norm_rpaths)
-            _set_elf_rpaths(path_name, new_rpaths)
+            orig_norm_rpaths = _normalize_relative_paths(
+                orig_binary, orig_rpaths
+            )
+            # Get the normalize RPATHs in the new prefix
+            new_norm_rpaths = _transform_rpaths(
+                orig_norm_rpaths, orig_root, new_prefixes
+            )
+            # Get the relative RPATHs in the new prefix
+            new_rpaths = _make_relative(
+                new_binary, new_root, new_norm_rpaths
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
         else:
-            new_rpaths = elf_find_paths(orig_rpaths, old_layout_root,
-                                        prefix_to_prefix)
-            _set_elf_rpaths(path_name, new_rpaths)
+            new_rpaths = _transform_rpaths(
+                orig_rpaths, orig_root, new_prefixes
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
 
 
 def make_link_relative(cur_path_names, orig_path_names):
