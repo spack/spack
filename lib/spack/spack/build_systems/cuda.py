@@ -140,12 +140,12 @@ class CudaPackage(PackageBase):
     conflicts('%intel@16.0:', when='+cuda ^cuda@:8.0.43')
     conflicts('%intel@17.0:', when='+cuda ^cuda@:8.0.60')
     conflicts('%intel@18.0:', when='+cuda ^cuda@:9.9')
-    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.2.89')
+    conflicts('%intel@19.0:', when='+cuda ^cuda@:10.0')
 
     # XL is mostly relevant for ppc64le Linux
     conflicts('%xl@:12,14:', when='+cuda ^cuda@:9.1')
     conflicts('%xl@:12,14:15,17:', when='+cuda ^cuda@9.2')
-    conflicts('%xl@17:', when='+cuda ^cuda@10.0.130:10.2.89')
+    conflicts('%xl@17:', when='+cuda ^cuda@:10.2.89')
 
     # Mac OS X
     # platform = ' platform=darwin'

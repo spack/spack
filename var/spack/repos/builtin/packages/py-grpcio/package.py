@@ -10,8 +10,9 @@ class PyGrpcio(PythonPackage):
     """HTTP/2-based RPC framework."""
 
     homepage = "https://grpc.io/"
-    url      = "https://pypi.io/packages/source/g/grpcio/grpcio-1.25.0.tar.gz"
+    url      = "https://pypi.io/packages/source/g/grpcio/grpcio-1.27.2.tar.gz"
 
+    version('1.27.2', sha256='5ae532b93cf9ce5a2a549b74a2c35e3b690b171ece9358519b3039c7b84c887e')
     version('1.25.0', sha256='c948c034d8997526011960db54f512756fb0b4be1b81140a15b4ef094c6594a4')
 
     depends_on('py-setuptools', type='build')

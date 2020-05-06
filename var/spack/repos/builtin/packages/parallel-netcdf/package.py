@@ -96,8 +96,12 @@ class ParallelNetcdf(AutotoolsPackage):
         args += self.enable_or_disable('fortran')
 
         if '+pic' in self.spec:
-            args.extend(['{0}FLAGS={1}'.format(lang, self.compiler.pic_flag)
-                         for lang in ['C', 'CXX', 'F', 'FC']])
+            args.extend([
+                'CFLAGS='   + self.compiler.cc_pic_flag,
+                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
+                'FFLAGS='   + self.compiler.f77_pic_flag,
+                'FCFLAGS='  + self.compiler.fc_pic_flag,
+            ])
 
         if self.version >= Version('1.8'):
             args.append('--enable-relax-coord-bound')

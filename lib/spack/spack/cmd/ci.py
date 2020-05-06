@@ -283,8 +283,6 @@ def ci_rebuild(args):
 
     spack_cmd = exe.which('spack')
 
-    os.environ['FORCE_UNSAFE_CONFIGURE'] = '1'
-
     cdash_report_dir = os.path.join(ci_artifact_dir, 'cdash_report')
     temp_dir = os.path.join(ci_artifact_dir, 'jobs_scratch_dir')
     job_log_dir = os.path.join(temp_dir, 'logs')

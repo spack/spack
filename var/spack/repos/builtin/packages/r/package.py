@@ -163,7 +163,8 @@ class R(AutotoolsPackage):
 
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != 'gcc':
-            config_args.append('FPICFLAGS={0}'.format(self.compiler.pic_flag))
+            config_args.append('FPICFLAGS={0}'.format(
+                self.compiler.cc_pic_flag))
 
         return config_args
 

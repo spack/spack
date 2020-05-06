@@ -18,6 +18,7 @@ class Rust(Package):
 
     homepage = "https://www.rust-lang.org"
     url = "https://static.rust-lang.org/dist/rustc-1.42.0-src.tar.gz"
+    git = "https://github.com/rust-lang/rust.git"
 
     maintainers = ["AndrewGaspar"]
 
@@ -55,11 +56,22 @@ class Rust(Package):
         description='Install Rust source files'
     )
 
-    depends_on('cmake', type='build')
-    depends_on('python@:2.8', type='build')
+    depends_on('python@2.7:', type='build')
+    depends_on('python@2.7:2.8', when='@:1.43', type='build')
+    depends_on('gmake@3.81:', type='build')
+    depends_on('cmake@3.4.3:', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('openssl')
     depends_on('libssh2')
     depends_on('libgit2')
+
+    # Pre-release Versions
+    version('master', branch='master', submodules=True)
+
+    # These version strings are officially supported, but aren't explicitly
+    # listed because there's no stable checksum for them.
+    # version('nightly')
+    # version('beta')
 
     # Version Notes:
     # Here's some information on why your favorite Rust version may be missing.
@@ -73,6 +85,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.43.0', sha256='75f6ac6c9da9f897f4634d5a07be4084692f7ccc2d2bb89337be86cfc18453a1')
     version('1.42.0', sha256='d2e8f931d16a0539faaaacd801e0d92c58df190269014b2360c6ab2a90ee3475')
     version('1.41.1', sha256='38c93d016e6d3e083aa15e8f65511d3b4983072c0218a529f5ee94dd1de84573')
     version('1.41.0', sha256='5546822c09944c4d847968e9b7b3d0e299f143f307c00fa40e84a99fabf8d74b')
@@ -112,6 +125,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.43.0': {
+            'x86_64-unknown-linux-gnu':      '069f34fa5cef92551724c83c36360df1ac66fe3942bc1d0e4d341ce79611a029',
+            'powerpc64le-unknown-linux-gnu': 'c75c7ae4c94715fd6cc43d1d6fdd0952bc151f7cbe3054f66d99a529d5bb996f',
+            'aarch64-unknown-linux-gnu':     'e5fa55f333c10cdae43d147438a80ffb435d6c7b9681cd2e2f0857c024556856',
+            'x86_64-apple-darwin':           '504e8efb2cbb36f5a3db7bb36f339a1e5216082c910ad19039c370505cfbde99'
+        },
         '1.42.0': {
             'x86_64-unknown-linux-gnu':      '7d1e07ad9c8a33d8d039def7c0a131c5917aa3ea0af3d0cc399c6faf7b789052',
             'powerpc64le-unknown-linux-gnu': '805b08fa1e0aad4d706301ca1f13e2d80810d385cece2c15070360b3c4bd6e4a',
@@ -320,6 +339,37 @@ class Rust(Package):
         ]
     }
 
+    # Specifies the strings which represent a pre-release Rust version. These
+    # always bootstrap with the latest beta release.
+    #
+    # NOTE: These are moving targets, and therefore have no stable checksum. Be
+    # sure to specify "-n" or "--no-checksum" when installing these versions.
+    rust_prerelease_versions = ["beta", "nightly", "master"]
+
+    for prerelease_version in rust_prerelease_versions:
+        for rust_target, rust_arch_list in iteritems(rust_archs):
+            for rust_arch in rust_arch_list:
+                # All pre-release builds are built with the latest beta
+                # compiler.
+                resource(
+                    name='rust-beta-{target}'.format(
+                        target=rust_target
+                    ),
+                    url='https://static.rust-lang.org/dist/rust-beta-{target}.tar.gz'.format(
+                        target=rust_target
+                    ),
+                    # Fake SHA - checksums should never be checked for
+                    # pre-release builds, anyway
+                    sha256='0000000000000000000000000000000000000000000000000000000000000000',
+                    destination='spack_bootstrap_stage',
+                    when='@{version} platform={platform} target={target}'\
+                        .format(
+                            version=prerelease_version,
+                            platform=rust_arch['platform'],
+                            target=rust_arch['target']
+                        )
+                )
+
     # This loop generates resources for each binary distribution, and maps
     # them to the version of the compiler they bootstrap. This is in place
     # of listing each resource explicitly, which would be potentially even
@@ -368,14 +418,30 @@ class Rust(Package):
                 self.spec.architecture
             ))
 
+    def check_newer(self, version):
+        if '@master' in self.spec or '@beta' in self.spec or \
+           '@nightly' in self.spec:
+            return True
+
+        return '@{0}:'.format(version) in self.spec
+
     def configure(self, spec, prefix):
         target = self.get_rust_target()
+
+        # Bootstrapping compiler selection:
+        # Pre-release compilers use the latest beta release for the
+        # bootstrapping compiler.
+        # Versioned releases bootstrap themselves.
+        if '@beta' in spec or '@nightly' in spec or '@master' in spec:
+            bootstrap_version = 'beta'
+        else:
+            bootstrap_version = spec.version
         # See the NOTE above the resource loop - should be host architecture,
         # not target aarchitecture if we're to support cross-compiling.
         bootstrapping_install = Executable(
             './spack_bootstrap_stage/rust-{version}-{target}/install.sh'
             .format(
-                version=spec.version,
+                version=bootstrap_version,
                 target=target
             )
         )
@@ -403,7 +469,8 @@ class Rust(Package):
         ar = which('ar', required=True)
 
         # build.tools was introduced in Rust 1.25
-        tools_spec = 'tools={0}'.format(tools) if '@1.25:' in self.spec else ''
+        tools_spec = \
+            'tools={0}'.format(tools) if self.check_newer('1.25') else ''
         # This is a temporary fix due to rust 1.42 breaking self bootstrapping
         # See: https://github.com/rust-lang/rust/issues/69953
         #
@@ -412,6 +479,18 @@ class Rust(Package):
         # the latest set of warning.
         deny_warnings_spec = \
             'deny-warnings = false' if '@1.42.0' in self.spec else ''
+
+        # "Nightly" and master builds want a path to rustfmt - otherwise, it
+        # will try to download rustfmt from the Internet. We'll give it rustfmt
+        # for the bootstrapping compiler, but it ultimately shouldn't matter
+        # because this package never invokes it. To be clear, rustfmt from the
+        # bootstrapping compiler is probably incorrect. See: src/stage0.txt in
+        # Rust to see what the current "official" rustfmt version for Rust is.
+        if '@master' in spec or '@nightly' in spec:
+            rustfmt_spec = \
+                'rustfmt="{0}"'.format(join_path(boot_bin, 'rustfmt'))
+        else:
+            rustfmt_spec = ''
 
         with open('config.toml', 'w') as out_file:
             out_file.write("""\
@@ -423,6 +502,7 @@ vendor = true
 extended = true
 verbose = 2
 {tools_spec}
+{rustfmt_spec}
 
 [rust]
 channel = "stable"
@@ -442,7 +522,8 @@ sysconfdir = "etc"
                 target=target,
                 deny_warnings_spec=deny_warnings_spec,
                 ar=ar.path,
-                tools_spec=tools_spec
+                tools_spec=tools_spec,
+                rustfmt_spec=rustfmt_spec
             )
             )
 

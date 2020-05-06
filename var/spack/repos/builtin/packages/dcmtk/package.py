@@ -32,7 +32,7 @@ class Dcmtk(CMakePackage):
     depends_on('libxml2', type=('build', 'link'), when='+xml')
 
     variant('iconv', default=True, description="Charset conversion support (iconv)")
-    depends_on('libiconv', type=('build', 'link'))
+    depends_on('iconv', type=('build', 'link'))
 
     variant('cxx11', default=False, description="Enable c++11 features")
     variant('stl', default=True, description="Use native STL implementation")

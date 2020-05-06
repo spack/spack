@@ -6,11 +6,11 @@
 from spack import *
 
 
-class OctaveOptim(OctavePackage):
+class OctaveOptim(OctavePackage, SourceforgePackage):
     """Non-linear optimization toolkit for Octave."""
 
     homepage = "https://octave.sourceforge.io/optim/"
-    url      = "https://downloads.sourceforge.net/octave/optim-1.5.2.tar.gz"
+    sourceforge_mirror_path = "octave/optim-1.5.2.tar.gz"
 
     version('1.5.2', sha256='7b36033c5581559dc3e7616f97d402bc44dde0dfd74c0e3afdf47d452a76dddf')
 

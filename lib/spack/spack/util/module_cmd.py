@@ -19,16 +19,11 @@ import llnl.util.tty as tty
 # If we need another option that changes the environment, add it here.
 module_change_commands = ['load', 'swap', 'unload', 'purge', 'use', 'unuse']
 py_cmd = "'import os;import json;print(json.dumps(dict(os.environ)))'"
-
-# This is just to enable testing. I hate it but we can't find a better way
-_test_mode = False
+_cmd_template = "'module ' + ' '.join(args) + ' 2>&1'"
 
 
 def module(*args):
-    module_cmd = 'module ' + ' '.join(args) + ' 2>&1'
-    if _test_mode:
-        tty.warn('module function operating in test mode')
-        module_cmd = ". %s 2>&1" % args[1]
+    module_cmd = eval(_cmd_template)  # So we can monkeypatch for testing
     if args[0] in module_change_commands:
         # Do the module manipulation, then output the environment in JSON
         # and read the JSON back in the parent process to update os.environ
@@ -92,7 +87,13 @@ def get_path_args_from_module_line(line):
         words_and_symbols = line.split(lua_quote)
         path_arg = words_and_symbols[-2]
     else:
-        path_arg = line.split()[2]
+        # The path arg is the 3rd "word" of the line in a TCL module
+        # OPERATION VAR_NAME PATH_ARG
+        words = line.split()
+        if len(words) > 2:
+            path_arg = line.split()[2]
+        else:
+            return []
 
     paths = path_arg.split(':')
     return paths

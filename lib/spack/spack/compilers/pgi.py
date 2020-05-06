@@ -46,7 +46,19 @@ class Pgi(Compiler):
         return "-std=c++11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fpic"
+
+    @property
+    def fc_pic_flag(self):
         return "-fpic"
 
     required_libs = ['libpgc', 'libpgf90']

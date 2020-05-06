@@ -27,6 +27,9 @@ class Lua(Package):
     version('5.1.4', sha256='b038e225eaf2a5b57c9bcc35cd13aa8c6c8288ef493d52970c9545074098af3a')
     version('5.1.3', sha256='6b5df2edaa5e02bf1a2d85e1442b2e329493b30b0c0780f77199d24f087d296d')
 
+    variant('shared', default=True,
+            description='Builds a shared version of the library')
+
     extendable = True
 
     depends_on('ncurses')
@@ -53,36 +56,38 @@ class Lua(Package):
                  spec['ncurses'].prefix.lib),
              'MYLIBS=-lncursesw',
              'CC=%s -std=gnu99 %s' % (spack_cc,
-                                      self.compiler.pic_flag),
+                                      self.compiler.cc_pic_flag),
              target)
         make('INSTALL_TOP=%s' % prefix,
              'install')
 
-        static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
-                                 arguments=['-lm', '-ldl'],
-                                 version=self.version,
-                                 compat_version=self.version.up_to(2))
+        if '+shared' in spec:
+            static_to_shared_library(join_path(prefix.lib, 'liblua.a'),
+                                     arguments=['-lm', '-ldl'],
+                                     version=self.version,
+                                     compat_version=self.version.up_to(2))
 
         # compatibility with ax_lua.m4 from autoconf-archive
         # https://www.gnu.org/software/autoconf-archive/ax_lua.html
-        with working_dir(prefix.lib):
-            # e.g., liblua.so.5.1.5
-            src_path = 'liblua.{0}.{1}'.format(dso_suffix,
-                                               str(self.version.up_to(3)))
+        if '+shared' in spec:
+            with working_dir(prefix.lib):
+                # e.g., liblua.so.5.1.5
+                src_path = 'liblua.{0}.{1}'.format(dso_suffix,
+                                                   str(self.version.up_to(3)))
 
-            # For lua version 5.1.X, the symlinks should be:
-            # liblua5.1.so
-            # liblua51.so
-            # liblua-5.1.so
-            # liblua-51.so
-            version_formats = [str(self.version.up_to(2)),
-                               Version(str(self.version.up_to(2))).joined]
-            for version_str in version_formats:
-                for joiner in ['', '-']:
-                    dest_path = 'liblua{0}{1}.{2}'.format(joiner,
-                                                          version_str,
-                                                          dso_suffix)
-                    os.symlink(src_path, dest_path)
+                # For lua version 5.1.X, the symlinks should be:
+                # liblua5.1.so
+                # liblua51.so
+                # liblua-5.1.so
+                # liblua-51.so
+                version_formats = [str(self.version.up_to(2)),
+                                   Version(str(self.version.up_to(2))).joined]
+                for version_str in version_formats:
+                    for joiner in ['', '-']:
+                        dest_path = 'liblua{0}{1}.{2}'.format(joiner,
+                                                              version_str,
+                                                              dso_suffix)
+                        os.symlink(src_path, dest_path)
 
         with working_dir(os.path.join('luarocks', 'luarocks')):
             configure('--prefix=' + prefix, '--with-lua=' + prefix)
@@ -92,7 +97,8 @@ class Lua(Package):
     def append_paths(self, paths, cpaths, path):
         paths.append(os.path.join(path, '?.lua'))
         paths.append(os.path.join(path, '?', 'init.lua'))
-        cpaths.append(os.path.join(path, '?.so'))
+        if '+shared' in self.spec:
+            cpaths.append(os.path.join(path, '?.so'))
 
     def _setup_dependent_env_helper(self, env, dependent_spec):
         lua_paths = []
@@ -122,7 +128,8 @@ class Lua(Package):
             env, dependent_spec)
 
         env.set('LUA_PATH', ';'.join(lua_patterns), separator=';')
-        env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
+        if '+shared' in self.spec:
+            env.set('LUA_CPATH', ';'.join(lua_cpatterns), separator=';')
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         # For run time environment set only the path for dependent_spec and
@@ -132,8 +139,9 @@ class Lua(Package):
 
         if dependent_spec.package.extends(self.spec):
             env.prepend_path('LUA_PATH', ';'.join(lua_patterns), separator=';')
-            env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
-                             separator=';')
+            if '+shared' in self.spec:
+                env.prepend_path('LUA_CPATH', ';'.join(lua_cpatterns),
+                                 separator=';')
 
     def setup_run_environment(self, env):
         env.prepend_path(
@@ -152,10 +160,11 @@ class Lua(Package):
             'LUA_PATH',
             os.path.join(self.spec.prefix, self.lua_lib_dir, '?', 'init.lua'),
             separator=';')
-        env.prepend_path(
-            'LUA_CPATH',
-            os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
-            separator=';')
+        if '+shared' in self.spec:
+            env.prepend_path(
+                'LUA_CPATH',
+                os.path.join(self.spec.prefix, self.lua_lib_dir, '?.so'),
+                separator=';')
 
     @property
     def lua_lib_dir(self):

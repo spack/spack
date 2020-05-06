@@ -26,7 +26,7 @@ class Libxslt(AutotoolsPackage):
     variant('python', default=False, description='Build Python bindings')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libxml2')
     depends_on('libxml2+python', when='+python')
     depends_on('xz')

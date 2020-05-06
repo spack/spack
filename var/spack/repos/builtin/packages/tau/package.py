@@ -18,6 +18,7 @@ class Tau(Package):
     Java, Python.
     """
 
+    maintainers = ['wspear', 'eugeneswalker', 'khuck', 'sameershende']
     homepage = "http://www.cs.uoregon.edu/research/tau"
     url      = "https://www.cs.uoregon.edu/research/tau/tau_releases/tau-2.28.1.tar.gz"
     git      = "https://github.com/UO-OACISS/tau2"
@@ -69,6 +70,7 @@ class Tau(Package):
     variant('io', default=True, description='Activates POSIX I/O support')
     variant('adios2', default=False, description='Activates ADIOS2 output support')
     variant('sqlite', default=False, description='Activates SQLite3 output support')
+    variant('profileparam', default=False, description='Generate profiles with parameter mapped event data')
 
     # Support cross compiling.
     # This is a _reasonable_ subset of the full set of TAU
@@ -95,6 +97,7 @@ class Tau(Package):
     depends_on('gasnet', when='+gasnet')
     depends_on('adios2', when='+adios2')
     depends_on('sqlite', when='+sqlite')
+    depends_on('hwloc')
 
     # Elf only required from 2.28.1 on
     conflicts('+libelf', when='@:2.28.0')
@@ -219,6 +222,9 @@ class Tau(Package):
             options.append('-mpi')
             if '+comm' in spec:
                 options.append('-PROFILECOMMUNICATORS')
+
+        if '+profileparam' in spec:
+            options.append('-PROFILEPARAM')
 
         if '+shmem' in spec:
             options.append('-shmem')

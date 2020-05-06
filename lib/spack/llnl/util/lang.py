@@ -619,3 +619,28 @@ def load_module_from_file(module_name, module_path):
         import imp
         module = imp.load_source(module_name, module_path)
     return module
+
+
+def uniq(sequence):
+    """Remove strings of duplicate elements from a list.
+
+    This works like the command-line ``uniq`` tool.  It filters strings
+    of duplicate elements in a list. Adjacent matching elements are
+    merged into the first occurrence.
+
+    For example::
+
+        uniq([1, 1, 1, 1, 2, 2, 2, 3, 3]) == [1, 2, 3]
+        uniq([1, 1, 1, 1, 2, 2, 2, 1, 1]) == [1, 2, 1]
+
+    """
+    if not sequence:
+        return []
+
+    uniq_list = [sequence[0]]
+    last = sequence[0]
+    for element in sequence[1:]:
+        if element != last:
+            uniq_list.append(element)
+            last = element
+    return uniq_list

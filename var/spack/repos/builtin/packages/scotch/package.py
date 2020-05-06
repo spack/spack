@@ -117,7 +117,7 @@ class Scotch(Package):
                 makefile_inc.extend([
                     'LIB       = .dylib',
                     'CLIBFLAGS = -dynamiclib {0}'.format(
-                        self.compiler.pic_flag
+                        self.compiler.cc_pic_flag
                     ),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
@@ -126,12 +126,13 @@ class Scotch(Package):
             else:
                 makefile_inc.extend([
                     'LIB       = .so',
-                    'CLIBFLAGS = -shared {0}'.format(self.compiler.pic_flag),
+                    'CLIBFLAGS = -shared {0}'.format(
+                        self.compiler.cc_pic_flag),
                     'RANLIB    = echo',
                     'AR        = $(CC)',
                     'ARFLAGS   = -shared $(LDFLAGS) -o'
                 ])
-            cflags.append(self.compiler.pic_flag)
+            cflags.append(self.compiler.cc_pic_flag)
         else:
             makefile_inc.extend([
                 'LIB       = .a',

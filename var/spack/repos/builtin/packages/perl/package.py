@@ -35,7 +35,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964', preferred=True)
+    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689', preferred=True)
+    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964')
     version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2')
 
     # End of life releases
@@ -131,7 +132,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/spack/spack/pull/3081 and
         # https://github.com/spack/spack/pull/4416
         if spec.satisfies('%intel'):
-            config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+            config_args.append('-Accflags={0}'.format(
+                self.compiler.cc_pic_flag))
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')

@@ -18,7 +18,7 @@ from spack.main import SpackCommand
 import spack.paths as spack_paths
 import spack.repo as repo
 from spack.spec import Spec
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.executable as exe
 import spack.util.spack_yaml as syaml
 import spack.util.gpg
@@ -101,15 +101,14 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
 """
     default = ('build', 'link')
 
-    g = MockPackage('g', [], [])
-    f = MockPackage('f', [], [])
-    e = MockPackage('e', [], [])
-    d = MockPackage('d', [f, g], [default, default])
-    c = MockPackage('c', [], [])
-    b = MockPackage('b', [d, e], [default, default])
-    a = MockPackage('a', [b, c], [default, default])
-
-    mock_repo = MockPackageMultiRepo([a, b, c, d, e, f, g])
+    mock_repo = MockPackageMultiRepo()
+    g = mock_repo.add_package('g', [], [])
+    f = mock_repo.add_package('f', [], [])
+    e = mock_repo.add_package('e', [], [])
+    d = mock_repo.add_package('d', [f, g], [default, default])
+    c = mock_repo.add_package('c', [], [])
+    b = mock_repo.add_package('b', [d, e], [default, default])
+    mock_repo.add_package('a', [b, c], [default, default])
 
     with repo.swap(mock_repo):
         spec_a = Spec('a')
