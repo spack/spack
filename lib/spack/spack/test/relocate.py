@@ -143,9 +143,7 @@ def test_file_is_relocatable(source_file, is_relocatable):
     assert spack.relocate.file_is_relocatable(executable) is is_relocatable
 
 
-@pytest.mark.requires_executables(
-    'patchelf', 'strings', 'file'
-)
+@pytest.mark.requires_executables('patchelf', 'strings', 'file')
 def test_patchelf_is_relocatable():
     patchelf = spack.relocate._patchelf()
     assert llnl.util.filesystem.is_exe(patchelf)
@@ -256,3 +254,30 @@ def test_replace_prefix_bin(hello_world):
     patchelf = spack.util.executable.which('patchelf')
     output = patchelf('--print-rpath', str(executable), output=str)
     assert output.strip() == '/foo/lib:/foo/lib64'
+
+
+@pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
+def test_relocate_elf_binaries_absolute_paths(hello_world, tmpdir):
+    # Create an executable, set some RPATHs, copy it to another location
+    orig_binary = hello_world(rpaths=[str(tmpdir.mkdir('lib')), '/usr/lib64'])
+    new_root = tmpdir.mkdir('another_dir')
+    shutil.copy(str(orig_binary), str(new_root))
+
+    # Relocate the binary
+    new_binary = new_root.join('main.x')
+    spack.relocate.relocate_elf_binaries(
+        binaries=[str(new_binary)],
+        orig_root=str(orig_binary.dirpath()),
+        new_root=None,  # Not needed when relocating absolute paths
+        new_prefixes={
+            str(tmpdir): '/foo'
+        },
+        rel=False,
+        # Not needed when relocating absolute paths
+        orig_prefix=None, new_prefix=None
+    )
+
+    # Check that the RPATHs changed
+    patchelf = spack.util.executable.which('patchelf')
+    output = patchelf('--print-rpath', str(new_binary), output=str)
+    assert output.strip() == '/foo/lib:/usr/lib64'
