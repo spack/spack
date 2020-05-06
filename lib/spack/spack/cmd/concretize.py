@@ -12,7 +12,7 @@ description = clr.colorize(
     'The status symbols are: \n'
     ' @*g{[\u2714]} Package is installed. \n'
     ' @*K{[-]} Package is not installed.\n'
-    ' @*g{[^]} Package is installed upstream.\n'
+    ' @*b{[^]} Package is installed upstream.\n'
     ' @*r{[?]} Package install is missing.')
 section = "environments"
 level = "long"

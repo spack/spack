@@ -3849,7 +3849,7 @@ class Spec(object):
             if status_fn:
                 status = status_fn(node)
                 if node.package.installed_upstream:
-                    out += clr.colorize("@*B{[^]}  ", color=color) # installed upstream
+                    out += clr.colorize("@*b{[^]}  ", color=color) # installed upstream
                 elif status is None:
                     out += clr.colorize("@*K{[-]}  ", color=color)  # !installed
                 elif status:
