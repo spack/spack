@@ -99,3 +99,10 @@ class Pgi(Package):
         env.set('CXX', join_path(prefix.bin, 'pgc++'))
         env.set('F77', join_path(prefix.bin, 'pgfortran'))
         env.set('FC',  join_path(prefix.bin, 'pgfortran'))
+
+        if '+mpi' in self.spec:
+            ompi_dir = os.listdir(prefix.mpi)[0]
+            env.prepend_path('PATH', join_path(prefix.mpi, ompi_dir, 'bin'))
+            env.prepend_path('LD_LIBRARY_PATH', join_path(prefix.mpi, ompi_dir, 'lib'))
+            env.prepend_path('C_INCLUDE_PATH', join_path(prefix.mpi, ompi_dir, 'include'))
+            env.prepend_path('MANPATH', join_path(prefix.mpi, ompi_dir, 'share/man'))
