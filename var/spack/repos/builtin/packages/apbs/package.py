@@ -42,6 +42,7 @@ class Apbs(AutotoolsPackage):
     variant('python', default=False, description='Build with python wrappers')
 
     depends_on('python@:2.9999', when='+python')
+    depends_on('maloc')
 
     def configure_args(self):
         spec = self.spec
