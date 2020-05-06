@@ -1,0 +1,4 @@
+config:
+  build_stage:
+    - $tempdir
+  install_path_scheme: '${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH:6}'
