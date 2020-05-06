@@ -102,7 +102,8 @@ class Hpl(AutotoolsPackage):
     @when('@2.3:')
     def configure_args(self):
         filter_file(
-            r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags, "configure"
+            r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags,
+            "configure"
         )
 
         if '+openmp' in self.spec:
