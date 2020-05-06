@@ -39,10 +39,12 @@ class Warpx(MakefilePackage):
     variant('openpmd', default=True, description='Enable openPMD I/O')
     variant('ascent', default=False, description='Enable Ascent in situ vis')
 
-    depends_on('cuda', when='backend=cuda')
+    depends_on('cuda@9.2.88:', when='backend=cuda')
     depends_on('mpi', when='+mpi')
     depends_on('fftw@3:', when='+psatd')
     depends_on('fftw +mpi', when='+psatd +mpi')
+    depends_on('blaspp', when='+psatd dims=rz')
+    depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('pkgconfig', type='build', when='+openpmd')
     depends_on('python', type='build')  # AMReX' build system info
     depends_on('openpmd-api@0.11.0:,dev', when='+openpmd')

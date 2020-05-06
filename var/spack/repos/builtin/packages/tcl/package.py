@@ -9,7 +9,7 @@ from spack.util.environment import is_system_path
 from spack import *
 
 
-class Tcl(AutotoolsPackage):
+class Tcl(AutotoolsPackage, SourceforgePackage):
     """Tcl (Tool Command Language) is a very powerful but easy to
        learn dynamic programming language, suitable for a very wide
        range of uses, including web and desktop applications,
@@ -18,7 +18,7 @@ class Tcl(AutotoolsPackage):
        that is truly cross platform, easily deployed and highly
        extensible."""
     homepage = "http://www.tcl.tk"
-    url      = "http://prdownloads.sourceforge.net/tcl/tcl8.6.5-src.tar.gz"
+    sourceforge_mirror_path = "tcl/tcl8.6.5-src.tar.gz"
 
     version('8.6.8', sha256='c43cb0c1518ce42b00e7c8f6eaddd5195c53a98f94adc717234a65cbcfd3f96a')
     version('8.6.6', sha256='a265409781e4b3edcc4ef822533071b34c3dc6790b893963809b9fe221befe07')

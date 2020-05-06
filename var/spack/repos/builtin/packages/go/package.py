@@ -6,6 +6,7 @@
 import os
 import llnl.util.tty as tty
 from spack import *
+import platform
 
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
@@ -35,8 +36,10 @@ class Go(Package):
 
     extendable = True
 
+    version('1.14.2', sha256='98de84e69726a66da7b4e58eac41b99cbe274d7e8906eeb8a5b7eb0aadee7f7c')
     version('1.14.1', sha256='2ad2572115b0d1b4cb4c138e6b3a31cee6294cb48af75ee86bec3dca04507676')
     version('1.14',   sha256='6d643e46ad565058c7a39dac01144172ef9bd476521f42148be59249e4b74389')
+    version('1.13.10', sha256='eb9ccc8bf59ed068e7eff73e154e4f5ee7eec0a47a610fb864e3332a2fdc8b8c')
     version('1.13.9', sha256='34bb19d806e0bc4ad8f508ae24bade5e9fedfa53d09be63b488a9314d2d4f31d')
     version('1.13.8', sha256='b13bf04633d4d8cf53226ebeaace8d4d2fd07ae6fa676d0844a688339debec34')
     version('1.13.7', sha256='e4ad42cc5f5c19521fbbbde3680995f2546110b5c6aa2b48c3754ff7af9b41f4')
@@ -85,7 +88,10 @@ class Go(Package):
     depends_on('git', type=('build', 'link', 'run'))
     # TODO: Make non-c self-hosting compilers feasible without backflips
     # should be a dep on external go compiler
-    depends_on('go-bootstrap', type='build')
+    if platform.machine() == 'aarch64':
+        depends_on('gcc languages=go', type='build')
+    else:
+        depends_on('go-bootstrap', type='build')
 
     # https://github.com/golang/go/issues/17545
     patch('time_test.patch', when='@1.6.4:1.7.4')

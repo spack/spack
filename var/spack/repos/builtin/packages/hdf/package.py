@@ -21,9 +21,11 @@ class Hdf(AutotoolsPackage):
     version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
+    variant('libtirpc', default=False, description="Use xdr library from libtirpc package; if false, will use system or hdf internal")
 
     depends_on('jpeg@6b:')
     depends_on('szip', when='+szip')
+    depends_on('libtirpc', when='+libtirpc')
     depends_on('zlib@1.1.4:')
 
     depends_on('bison', type='build')
@@ -33,7 +35,7 @@ class Hdf(AutotoolsPackage):
         spec = self.spec
 
         config_args = [
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
+            'CFLAGS={0}'.format(self.compiler.cc_pic_flag),
             '--with-jpeg={0}'.format(spec['jpeg'].prefix),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
             '--disable-netcdf',  # must be disabled to build NetCDF with HDF4
@@ -48,5 +50,10 @@ class Hdf(AutotoolsPackage):
             config_args.append('--with-szlib={0}'.format(spec['szip'].prefix))
         else:
             config_args.append('--without-szlib')
+
+        if '+libtirpc' in spec:
+            config_args.append('LIBS=-ltirpc')
+            config_args.append('CPPFLAGS=-I{0}/include/tirpc'.format(
+                spec['libtirpc'].prefix))
 
         return config_args

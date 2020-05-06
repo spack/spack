@@ -60,8 +60,8 @@ class Gasnet(AutotoolsPackage):
             '--with-segment-mmap-max=%s '
             % (self.spec.variants['segment-mmap-max'].value),
             # for consumers with shared libs
-            'CC=%s %s' % (spack_cc, self.compiler.pic_flag),
-            'CXX=%s %s' % (spack_cxx, self.compiler.pic_flag),
+            "CC=%s %s" % (spack_cc, self.compiler.cc_pic_flag),
+            "CXX=%s %s" % (spack_cxx, self.compiler.cxx_pic_flag),
         ]
 
         if '+aligned-segments' in self.spec:
@@ -80,7 +80,7 @@ class Gasnet(AutotoolsPackage):
                          '--disable-ibv',
                          '--disable-seq',
                          'MPI_CC=%s %s'
-                        % (self.spec['mpi'].mpicc, self.compiler.pic_flag)])
+                        % (self.spec['mpi'].mpicc, self.compiler.cc_pic_flag)])
 
         if '+ibv' in self.spec:
             args.extend(['--enable-ibv',

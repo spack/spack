@@ -14,6 +14,7 @@ class SuiteSparse(Package):
     url      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v4.5.3.tar.gz'
     git      = 'https://github.com/DrTimothyAldenDavis/SuiteSparse.git'
 
+    version('5.7.2', sha256='fe3bc7c3bd1efdfa5cffffb5cebf021ff024c83b5daf0ab445429d3d741bd3ad')
     version('5.7.1', sha256='5ba5add1663d51a1b6fb128b50fe869b497f3096765ff7f8212f0ede044b9557')
     version('5.6.0', sha256='76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb')
     version('5.5.0', sha256='63c73451734e2bab19d1915796c6776565ea6aea5da4063a9797ecec60da2e3d')
@@ -62,7 +63,8 @@ class SuiteSparse(Package):
         # logic in it. Any kind of customization will need to go through
         # filtering of that file
 
-        pic_flag  = self.compiler.pic_flag if '+pic' in spec else ''
+        cc_pic_flag  = self.compiler.cc_pic_flag  if '+pic' in spec else ''
+        f77_pic_flag = self.compiler.f77_pic_flag if '+pic' in spec else ''
 
         make_args = [
             # By default, the Makefile uses the Intel compilers if
@@ -77,11 +79,11 @@ class SuiteSparse(Package):
             'CUDA_PATH=%s' % (spec['cuda'].prefix if '+cuda' in spec else ''),
             'CFOPENMP=%s' % (self.compiler.openmp_flag
                              if '+openmp' in spec else ''),
-            'CFLAGS=-O3 %s' % pic_flag,
+            'CFLAGS=-O3 %s' % cc_pic_flag,
             # Both FFLAGS and F77FLAGS are used in SuiteSparse makefiles;
             # FFLAGS is used in CHOLMOD, F77FLAGS is used in AMD and UMFPACK.
-            'FFLAGS=%s' % pic_flag,
-            'F77FLAGS=%s' % pic_flag,
+            'FFLAGS=%s' % f77_pic_flag,
+            'F77FLAGS=%s' % f77_pic_flag,
             # use Spack's metis in CHOLMOD/Partition module,
             # otherwise internal Metis will be compiled
             'MY_METIS_LIB=%s' % spec['metis'].libs.ld_flags,
@@ -94,6 +96,14 @@ class SuiteSparse(Package):
                 ' -lstdc++' if '@4.5.1' in spec else '')),
             'LAPACK=%s' % spec['lapack'].libs.ld_flags,
         ]
+
+        # Recent versions require c11 but some demos do not get the c11 from
+        # GraphBLAS/CMakeLists.txt, for example the file
+        # GraphBLAS/Demo/Program/wildtype_demo.c. For many compilers this is
+        # not an issue because c11 or newer is their default. However, for some
+        # compilers (e.g. xlc) the c11 flag is necessary.
+        if spec.satisfies('@5.4:'):
+            make_args += ['CFLAGS+=%s' % self.compiler.c11_flag]
 
         # 64bit blas in UMFPACK:
         if (spec.satisfies('^openblas+ilp64') or

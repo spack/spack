@@ -19,6 +19,7 @@ import spack.error
 import spack.spec
 import spack.architecture
 import spack.util.executable
+import spack.util.module_cmd
 import spack.compilers
 from spack.util.environment import filter_system_paths
 
@@ -250,13 +251,13 @@ class Compiler(object):
     PrgEnv_compiler = None
 
     def __init__(self, cspec, operating_system, target,
-                 paths, modules=[], alias=None, environment=None,
+                 paths, modules=None, alias=None, environment=None,
                  extra_rpaths=None, enable_implicit_rpaths=None,
                  **kwargs):
         self.spec = cspec
         self.operating_system = str(operating_system)
         self.target = target
-        self.modules = modules
+        self.modules = modules or []
         self.alias = alias
         self.extra_rpaths = extra_rpaths
         self.enable_implicit_rpaths = enable_implicit_rpaths
@@ -316,6 +317,10 @@ class Compiler(object):
     def _get_compiler_link_paths(cls, paths):
         first_compiler = next((c for c in paths if c), None)
         if not first_compiler:
+            return []
+        if not cls.verbose_flag():
+            # In this case there is no mechanism to learn what link directories
+            # are used by the compiler
             return []
 
         try:
@@ -405,6 +410,69 @@ class Compiler(object):
         raise UnsupportedCompilerFlag(self,
                                       "the C11 standard",
                                       "c11_flag")
+
+    @property
+    def cc_pic_flag(self):
+        """Returns the flag used by the C compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def cxx_pic_flag(self):
+        """Returns the flag used by the C++ compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def f77_pic_flag(self):
+        """Returns the flag used by the F77 compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    @property
+    def fc_pic_flag(self):
+        """Returns the flag used by the FC compiler to produce
+        Position Independent Code (PIC)."""
+        return '-fPIC'
+
+    # Note: This is not a class method. The class methods are used to detect
+    # compilers on PATH based systems, and do not set up the run environment of
+    # the compiler. This method can be called on `module` based systems as well
+    def get_real_version(self):
+        """Query the compiler for its version.
+
+        This is the "real" compiler version, regardless of what is in the
+        compilers.yaml file, which the user can change to name their compiler.
+
+        Use the runtime environment of the compiler (modules and environment
+        modifications) to enable the compiler to run properly on any platform.
+        """
+        # store environment to replace later
+        backup_env = os.environ.copy()
+
+        # load modules and set env variables
+        for module in self.modules:
+            # On cray, mic-knl module cannot be loaded without cce module
+            # See: https://github.com/spack/spack/issues/3153
+            if os.environ.get("CRAY_CPU_TARGET") == 'mic-knl':
+                spack.util.module_cmd.load_module('cce')
+            spack.util.module_cmd.load_module(module)
+
+        # apply other compiler environment changes
+        env = spack.util.environment.EnvironmentModifications()
+        env.extend(spack.schema.environment.parse(self.environment))
+        env.apply_modifications()
+
+        cc = spack.util.executable.Executable(self.cc)
+        output = cc(self.version_argument,
+                    output=str, error=str,
+                    ignore_errors=tuple(self.ignore_version_errors))
+
+        # Restore environment
+        os.environ.clear()
+        os.environ.update(backup_env)
+
+        return self.extract_version_from_output(output)
 
     #
     # Compiler classes have methods for querying the version of

@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Xts(AutotoolsPackage):
+class Xts(AutotoolsPackage, XorgPackage):
     """This is a revamped version of X Test Suite (XTS) which removes some of
     the ugliness of building and running the tests."""
 
     homepage = "https://www.x.org/wiki/XorgTesting/"
-    url      = "https://www.x.org/archive/individual/test/xts-0.99.1.tar.gz"
+    xorg_mirror_path = "test/xts-0.99.1.tar.gz"
 
     version('0.99.1', sha256='d04d987b9a9f8b3921dfe8de8577d0c2a0f21d2c4c3196948fc9805838a352e6')
 

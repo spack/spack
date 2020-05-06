@@ -20,15 +20,16 @@ class Cp2k(MakefilePackage, CudaPackage):
     git = 'https://github.com/cp2k/cp2k.git'
     list_url = 'https://github.com/cp2k/cp2k/releases'
 
+    maintainers = ['dev-zero']
+
+    version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
     version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
     version('4.1', sha256='4a3e4a101d8a35ebd80a9e9ecb02697fb8256364f1eccdbe4e5a85d31fe21343')
     version('3.0', sha256='1acfacef643141045b7cbade7006f9b7538476d861eeecd9658c9e468dc61151')
-    version('develop', branch='master', submodules="True")
+    version('master', branch='master', submodules="True")
 
     variant('mpi', default=True, description='Enable MPI support')
-    variant('blas', default='openblas', values=('openblas', 'mkl', 'accelerate'),
-            description='Enable the use of OpenBlas/MKL/Accelerate')
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('smm', default='libxsmm', values=('libxsmm', 'libsmm', 'blas'),
             description='Library for small matrix multiplications')
@@ -43,6 +44,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('sirius', default=False,
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
+    variant('cosma', default=False, description='Use COSMA for p?gemm')
 
     # override cuda_arch from CudaPackage since we only support one arch
     # at a time and only specific ones for which we have parameter files
@@ -71,18 +73,9 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     depends_on('python', type='build')
 
-    depends_on('fftw@3:', when='~openmp')
-    depends_on('fftw@3:+openmp', when='+openmp')
-
-    # see #1712 for the reason to enumerate BLAS libraries here
-    depends_on('openblas threads=none', when='blas=openblas ~openmp')
-    depends_on('openblas threads=openmp', when='blas=openblas +openmp')
-    depends_on('lapack', when='blas=openblas ~openmp')
-
-    depends_on('intel-mkl', when="blas=mkl ~openmp")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp')
-
-    conflicts('blas=accelerate', '+openmp')  # there is no Accelerate with OpenMP support
+    depends_on('blas')
+    depends_on('lapack')
+    depends_on('fftw-api@3')
 
     # require libxsmm-1.11+ since 1.10 can leak file descriptors in Fortran
     depends_on('libxsmm@1.11:~header-only', when='smm=libxsmm')
@@ -104,10 +97,14 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
+    depends_on('cosma+scalapack', when='+cosma')
+    depends_on('cosma+cuda+scalapack', when='+cosma+cuda')
     depends_on('elpa@2011.12:2016.13+openmp', when='+openmp+elpa@:5.999')
     depends_on('elpa@2011.12:2017.11+openmp', when='+openmp+elpa@6.0:')
+    depends_on('elpa@2018.05:+openmp', when='+openmp+elpa@7.0:')
     depends_on('elpa@2011.12:2016.13~openmp', when='~openmp+elpa@:5.999')
     depends_on('elpa@2011.12:2017.11~openmp', when='~openmp+elpa@6.0:')
+    depends_on('elpa@2018.05:~openmp', when='~openmp+elpa@7.0:')
     depends_on('plumed+shared+mpi', when='+plumed+mpi')
     depends_on('plumed+shared~mpi', when='+plumed~mpi')
 
@@ -123,13 +120,17 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('sirius+fortran+vdwxc+shared~openmp', when='+sirius~openmp')
 
     # the bundled libcusmm uses numpy in the parameter prediction (v7+)
+    # which is written using Python 3
     depends_on('py-numpy', when='@7:+cuda', type='build')
+    depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    # PEXSI, ELPA and SIRIUS need MPI in CP2K
+    # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
     conflicts('~mpi', '+sirius')
+    conflicts('~mpi', '+cosma')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
+    conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
 
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
@@ -141,9 +142,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts('%clang')
-    conflicts('%cray')
     conflicts('%nag')
-    conflicts('%xl')
 
     @property
     def makefile_architecture(self):
@@ -167,9 +166,42 @@ class Cp2k(MakefilePackage, CudaPackage):
     def archive_files(self):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
-    def edit(self, spec, prefix):
+    def consistency_check(self, spec):
+        """
+        Consistency checks.
+        Due to issue #1712 we can not put them into depends_on/conflicts.
+        """
 
-        fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+        if '+openmp' in spec:
+            if '^openblas' in spec and '^openblas threads=openmp' not in spec:
+                raise InstallError(
+                    '^openblas threads=openmp required for cp2k+openmp'
+                    ' with openblas')
+
+            if '^fftw' in spec and '^fftw +openmp' not in spec:
+                raise InstallError(
+                    '^fftw +openmp required for cp2k+openmp'
+                    ' with fftw')
+
+            # MKL doesn't need to be checked since they are
+            # OMP thread-safe when using mkl_sequential
+            # BUT: we should check the version of MKL IF it is used for FFTW
+            #      since there we need at least v14 of MKL to be safe!
+
+    def edit(self, spec, prefix):
+        self.consistency_check(spec)
+
+        pkgconf = which('pkg-config')
+
+        if '^fftw' in spec:
+            fftw = spec['fftw:openmp' if '+openmp' in spec else 'fftw']
+            fftw_header_dir = fftw.headers.directories[0]
+        elif '^intel-mkl' in spec:
+            fftw = spec['intel-mkl']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+        elif '^intel-parallel-studio+mkl' in spec:
+            fftw = spec['intel-parallel-studio']
+            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
 
         optimization_flags = {
             'gcc': [
@@ -177,15 +209,17 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-funroll-loops',
                 '-ftree-vectorize',
             ],
-            'intel': ['-O2', '-pc64', '-unroll'],
+            'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
+            'cray': ['-O2'],
+            'xl': ['-O3'],
         }
 
         dflags = ['-DNDEBUG']
         cppflags = [
             '-D__LIBINT',
             '-D__FFTW3',
-            fftw.headers.cpp_flags,
+            '-I{0}'.format(fftw_header_dir),
         ]
 
         if '@:6.9' in spec:
@@ -211,19 +245,24 @@ class Cp2k(MakefilePackage, CudaPackage):
             cflags.append('-fp-model precise')
             cxxflags.append('-fp-model precise')
             fcflags += [
-                '-fp-model source',
+                '-fp-model precise',
                 '-heap-arrays 64',
                 '-g',
                 '-traceback',
             ]
         elif '%gcc' in spec:
-            fcflags.extend([
+            fcflags += [
                 '-ffree-form',
                 '-ffree-line-length-none',
                 '-ggdb',  # make sure we get proper Fortran backtraces
-            ])
+            ]
         elif '%pgi' in spec:
-            fcflags.extend(['-Mfreeform', '-Mextend'])
+            fcflags += ['-Mfreeform', '-Mextend']
+        elif '%cray' in spec:
+            fcflags += ['-emf', '-ffree', '-hflex_mp=strict']
+        elif '%xl' in spec:
+            fcflags += ['-qpreprocess', '-qstrict', '-q64']
+            ldflags += ['-Wl,--allow-multiple-definition']
 
         if '+openmp' in spec:
             cflags.append(self.compiler.openmp_flag)
@@ -232,6 +271,15 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(self.compiler.openmp_flag)
             nvflags.append('-Xcompiler="{0}"'.format(
                 self.compiler.openmp_flag))
+        elif '%cray' in spec:  # Cray enables OpenMP by default
+            cflags   += ['-hnoomp']
+            cxxflags += ['-hnoomp']
+            fcflags  += ['-hnoomp']
+            ldflags  += ['-hnoomp']
+
+        if '@7:' in spec:  # recent versions of CP2K use C++14 CUDA code
+            cxxflags.append(self.compiler.cxx14_flag)
+            nvflags.append(self.compiler.cxx14_flag)
 
         ldflags.append(fftw.libs.search_flags)
 
@@ -248,8 +296,8 @@ class Cp2k(MakefilePackage, CudaPackage):
                 os.path.join(spec['libint'].libs.directories[0], 'libint.a'),
             ])
         else:
-            fcflags += ['$(shell pkg-config --cflags libint2)']
-            libs += ['$(shell pkg-config --libs libint2)']
+            fcflags += pkgconf('--cflags', 'libint2', output=str).split()
+            libs += pkgconf('--libs', 'libint2', output=str).split()
 
         if '+plumed' in self.spec:
             dflags.extend(['-D__PLUMED2'])
@@ -259,15 +307,16 @@ class Cp2k(MakefilePackage, CudaPackage):
                              'libplumed.{0}'.format(dso_suffix))
             ])
 
-        fc = self.compiler.fc if '~mpi' in spec else self.spec['mpi'].mpifc
+        cc = spack_cc if '~mpi' in spec else spec['mpi'].mpicc
+        cxx = spack_cxx if '~mpi' in spec else spec['mpi'].mpicxx
+        fc = spack_fc if '~mpi' in spec else spec['mpi'].mpifc
 
         # Intel
-        if '%intel' in self.spec:
+        if '%intel' in spec:
             cppflags.extend([
                 '-D__INTEL',
                 '-D__HAS_ISO_C_BINDING',
                 '-D__USE_CP2K_TRACE',
-                '-D__MKL'
             ])
             fcflags.extend([
                 '-diag-disable 8290,8291,10010,10212,11060',
@@ -281,13 +330,19 @@ class Cp2k(MakefilePackage, CudaPackage):
         ldflags.append((lapack + blas).search_flags)
         libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
 
-        if self.spec.variants['blas'].value == 'mkl':
+        if '^intel-mkl' in spec or '^intel-parallel-studio+mkl' in spec:
             cppflags += ['-D__MKL']
-        elif self.spec.variants['blas'].value == 'accelerate':
+        elif '^accelerate' in spec:
             cppflags += ['-D__ACCELERATE']
 
+        if '+cosma' in spec:
+            # add before ScaLAPACK to override the p?gemm symbols
+            cosma = spec['cosma'].libs
+            ldflags.append(cosma.search_flags)
+            libs.extend(cosma)
+
         # MPI
-        if '+mpi' in self.spec:
+        if '+mpi' in spec:
             cppflags.extend([
                 '-D__parallel',
                 '-D__SCALAPACK'
@@ -297,7 +352,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags.append(scalapack.search_flags)
 
             libs.extend(scalapack)
-            libs.extend(self.spec['mpi:cxx'].libs)
+            libs.extend(spec['mpi:cxx'].libs)
             libs.extend(self.compiler.stdcxx_libs)
 
             if 'wannier90' in spec:
@@ -316,10 +371,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 ldflags.append(libxc.libs.search_flags)
                 libs.append(str(libxc.libs))
             else:
-                fcflags += ['$(shell pkg-config --cflags libxcf03)']
-                libs += ['$(shell pkg-config --libs libxcf03)']
+                fcflags += pkgconf('--cflags', 'libxcf03', output=str).split()
+                libs += pkgconf('--libs', 'libxcf03', output=str).split()
 
-        if '+pexsi' in self.spec:
+        if '+pexsi' in spec:
             cppflags.append('-D__LIBPEXSI')
             fcflags.append('-I' + os.path.join(
                 spec['pexsi'].prefix, 'fortran'))
@@ -338,7 +393,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 ),
             ])
 
-        if '+elpa' in self.spec:
+        if '+elpa' in spec:
             elpa = spec['elpa']
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
             elpa_incdir = elpa.headers.directories[0]
@@ -362,27 +417,27 @@ class Cp2k(MakefilePackage, CudaPackage):
                                         int(elpa.version[1])))
                 fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'elpa'))]
 
-        if self.spec.satisfies('+sirius'):
+        if spec.satisfies('+sirius'):
             sirius = spec['sirius']
             cppflags.append('-D__SIRIUS')
             fcflags += ['-I{0}'.format(os.path.join(sirius.prefix, 'fortran'))]
             libs += list(sirius.libs)
 
-        if self.spec.satisfies('+cuda'):
+        if spec.satisfies('+cuda'):
             cppflags += ['-D__ACC']
             libs += ['-lcudart', '-lnvrtc', '-lcuda']
 
-            if self.spec.satisfies('+cuda_blas'):
+            if spec.satisfies('+cuda_blas'):
                 cppflags += ['-D__DBCSR_ACC=2']
                 libs += ['-lcublas']
             else:
                 cppflags += ['-D__DBCSR_ACC']
 
-            if self.spec.satisfies('+cuda_fft'):
+            if spec.satisfies('+cuda_fft'):
                 cppflags += ['-D__PW_CUDA']
                 libs += ['-lcufft', '-lcublas']
 
-            cuda_arch = self.spec.variants['cuda_arch'].value
+            cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch:
                 gpuver = {
                     '35': 'K40',
@@ -392,7 +447,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 }[cuda_arch]
 
                 if (cuda_arch == '35'
-                        and self.spec.satisfies('+cuda_arch_35_k20x')):
+                        and spec.satisfies('+cuda_arch_35_k20x')):
                     gpuver = 'K20X'
 
         if 'smm=libsmm' in spec:
@@ -415,12 +470,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             libs.append('-lsmm')
 
         elif 'smm=libxsmm' in spec:
-            cppflags.extend([
-                '-D__LIBXSMM',
-                '$(shell pkg-config --cflags-only-other libxsmmf)',
-            ])
-            fcflags.append('$(shell pkg-config --cflags-only-I libxsmmf)')
-            libs.append('$(shell pkg-config --libs libxsmmf)')
+            cppflags += ['-D__LIBXSMM']
+            cppflags += pkgconf('--cflags-only-other', 'libxsmmf',
+                                output=str).split()
+            fcflags += pkgconf('--cflags-only-I', 'libxsmmf',
+                               output=str).split()
+            libs += pkgconf('--libs', 'libxsmmf', output=str).split()
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
@@ -429,14 +484,21 @@ class Cp2k(MakefilePackage, CudaPackage):
         nvflags.extend(cppflags)
 
         with open(self.makefile, 'w') as mkf:
-            if '+plumed' in self.spec:
-                # Include Plumed.inc in the Makefile
+            if '+plumed' in spec:
+                mkf.write('# include Plumed.inc as recommended by'
+                          'PLUMED to include libraries and flags')
                 mkf.write('include {0}\n'.format(
-                    self.spec['plumed'].package.plumed_inc
+                    spec['plumed'].package.plumed_inc
                 ))
 
-            mkf.write('CC = {0.compiler.cc}\n'.format(self))
-            if '%intel' in self.spec:
+            mkf.write('\n# COMPILER, LINKER, TOOLS\n\n')
+            mkf.write('FC  = {0}\n'
+                      'CC  = {1}\n'
+                      'CXX = {2}\n'
+                      'LD  = {3}\n'
+                      .format(fc, cc, cxx, fc))
+
+            if '%intel' in spec:
                 intel_bin_dir = ancestor(self.compiler.cc)
                 # CPP is a commented command in Intel arch of CP2K
                 # This is the hack through which cp2k developers avoid doing :
@@ -444,33 +506,38 @@ class Cp2k(MakefilePackage, CudaPackage):
                 # ${CPP} <file>.F > <file>.f90
                 #
                 # and use `-fpp` instead
-                mkf.write('CPP = # {0.compiler.cc} -P\n\n'.format(self))
-                mkf.write('AR = {0}/xiar -r\n\n'.format(intel_bin_dir))
+                mkf.write('CPP = # {0} -P\n'.format(spack_cc))
+                mkf.write('AR  = {0}/xiar -r\n'.format(intel_bin_dir))
             else:
-                mkf.write('CPP = # {0.compiler.cc} -E\n\n'.format(self))
-                mkf.write('AR = ar -r\n\n')
-            mkf.write('FC = {0}\n'.format(fc))
-            mkf.write('LD = {0}\n'.format(fc))
+                mkf.write('CPP = # {0} -E\n'.format(spack_cc))
+                mkf.write('AR  = ar -r\n')
 
-            if self.spec.satisfies('+cuda'):
+            if spec.satisfies('+cuda'):
                 mkf.write('NVCC = {0}\n'.format(
-                    os.path.join(self.spec['cuda'].prefix, 'bin', 'nvcc')))
+                    os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
-            mkf.write('DFLAGS = {0}\n\n'.format(' '.join(dflags)))
-            mkf.write('CPPFLAGS = {0}\n\n'.format(' '.join(cppflags)))
-            mkf.write('CFLAGS = {0}\n\n'.format(' '.join(cflags)))
-            mkf.write('CXXFLAGS = {0}\n\n'.format(' '.join(cxxflags)))
-            mkf.write('NVFLAGS = {0}\n\n'.format(' '.join(nvflags)))
-            mkf.write('FCFLAGS = {0}\n\n'.format(' '.join(fcflags)))
-            mkf.write('LDFLAGS = {0}\n\n'.format(' '.join(ldflags)))
+            def fflags(var, lst):
+                return '{0} = {1}\n\n'.format(
+                    var,
+                    ' \\\n\t'.join(lst))
+
+            mkf.write('\n# FLAGS & LIBRARIES\n')
+            mkf.write(fflags('DFLAGS', dflags))
+            mkf.write(fflags('CPPFLAGS', cppflags))
+            mkf.write(fflags('CFLAGS', cflags))
+            mkf.write(fflags('CXXFLAGS', cxxflags))
+            mkf.write(fflags('NVFLAGS', nvflags))
+            mkf.write(fflags('FCFLAGS', fcflags))
+            mkf.write(fflags('LDFLAGS', ldflags))
+            mkf.write(fflags('LIBS', libs))
+
             if '%intel' in spec:
-                mkf.write('LDFLAGS_C = {0}\n\n'.format(
-                    ' '.join(ldflags) + ' -nofor_main')
-                )
-            mkf.write('LIBS = {0}\n\n'.format(' '.join(libs)))
-            mkf.write('GPUVER = {0}\n\n'.format(gpuver))
-            mkf.write('DATA_DIR = {0}\n\n'.format(self.prefix.share.data))
+                mkf.write(fflags('LDFLAGS_C', ldflags + ['-nofor_main']))
+
+            mkf.write('# CP2K-specific flags\n\n')
+            mkf.write('GPUVER = {0}\n'.format(gpuver))
+            mkf.write('DATA_DIR = {0}\n'.format(self.prefix.share.data))
 
     @property
     def build_directory(self):
