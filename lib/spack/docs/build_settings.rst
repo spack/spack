@@ -179,15 +179,72 @@ Specific limitations include:
 
 * A package must define ``executables`` and ``determine_spec_details``
   for Spack to locate instances of that package.
-* This is currently intended to find build dependencies rather than
-  library packages.
+* This implementation only collects and examines executable files, so it
+  is only useful for build/run dependencies.
+* The logic does not search through modules module files, it can only
+  detect packages with executables defined in ``PATH``
 * Spack does not overwrite existing entries in the package configuration:
   If there is an external defined for a spec at any configuration scope,
   then Spack will not add a new external entry (``spack config blame packages``
   can help locate all external entries).
-* Currently this logic is focused on examining ``PATH`` and does not
-  search through modules (although it should find the package if a
-  module is loaded for it).
+
+As mentioned above, to make a package discoverable with
+``spack external find`` a user must define one or more executables
+associated with the package and must implement a method to generate
+a Spec when given an executable.
+
+The executables are specified as a package level ``executables``
+attribute which is a list of strings (full example with context given
+below); each string is treated as a regular expression (e.g. 'gcc'
+would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.).
+
+The method, ``determine_spec_details``, has the following signature:
+
+.. code-block:: python
+
+   def determine_spec_details(prefix, exes_in_prefix):
+       # exes_in_prefix = a set of paths, each path is an executable
+       # prefix = a prefix that is common to each path in exes_in_prefix
+
+       # return None or [] if none of the exes represent an instance of
+       # the package. Return one or more Specs for each instance of the
+       # package which is thought to be installed in the provided prefix
+
+``determine_spec_details`` takes as parameters a set of discovered
+executables (which match those specified by the user) as well as a
+common prefix shared by all of those executables. The function must
+return one or more Specs associated with the executables (it can also
+return ``None`` to indicate that no provided executables are associated
+with the package).
+
+Say for example we have a package called ``foo-package`` which
+builds an executable called ``foo``. ``FooPackage`` would appear as
+follows:
+
+.. code-block:: python
+
+   class FooPackage(Package):
+       homepage = "..."
+       url = "..."
+
+       version(...)
+
+       # Each string provided here is treated as a regular expression, and
+       # would match for example 'foo', 'foobar', and 'bazfoo'.
+       executables = ['foo']
+
+       @classmethod
+       def determine_spec_details(cls, prefix, exes_in_prefix):
+           candidates = list(x for x in exes_in_prefix
+                             if os.path.basename(x) == 'foo')
+           if not candidates:
+               return
+           # This implementation is lazy and only checks the first candidate
+           exe_path = candidates[0]
+           exe = spack.util.executable.Executable(exe_path)
+           output = exe('--version')
+           version_str = ...  # parse output for version string
+           return Spec('foo-package@{0}'.format(version_str))
 
 .. _concretization-preferences:
 
