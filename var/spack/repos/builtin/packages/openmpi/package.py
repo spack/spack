@@ -568,67 +568,63 @@ class Openmpi(AutotoolsPackage):
         spec_vers = str(self.spec.version)
         bad_option = 'unknown option'
         checks = {
-            'core': {
-                'mpiCC': ([comp_vers], None),
-                'mpic++': ([comp_vers], None),
-                'mpicc': ([comp_vers], None),
-                'mpicxx': ([comp_vers], None),
-                'mpiexec': ([spec_vers], None),
-                'mpif77': ([comp_vers], None),
-                'mpif90': ([comp_vers], None),
-                'mpifort': ([comp_vers], None),
-                'mpirun': ([spec_vers], None),
-                'ompi-clean': ([bad_option], 213),
-                'ompi-server': ([bad_option], 1),
-                'ompi_info': ([spec_vers], None),
-                'opal_wrapper': (['Cannot open configuration file'], 243),
-                'orte-clean': ([bad_option], 213),
-                'orte-info': (['did not have enough parameters'], 1),
-                'orte-server': ([bad_option], 1),
-                'ortecc': ([comp_vers], None),
-                'orted': ([bad_option], 213),
-                'orterun': ([spec_vers], None),
-            },
-            '2.0.0:2.1.6': {
-                'ompi-submit': ([spec_vers], None),
-                'orte-submit': ([spec_vers], None),
-            },
-            '2.0.0:3.1.5': {
-                'ompi-dvm': ([spec_vers], None),
-                'ompi-ps': ([bad_option], 213),
-                'ompi-top': ([bad_option], 1),
-                'orte-dvm': ([spec_vers], None),
-                'orte-ps': ([bad_option], 213),
-                'orte-top': ([bad_option], 1),
-                'oshcc': ([comp_vers], None),
-                'oshfort': ([comp_vers], None),
-                'oshmem_info': ([spec_vers], None),
-                'oshrun': ([spec_vers], None),
-                'shmemcc': ([comp_vers], None),
-                'shmemfort': ([comp_vers], None),
-                'shmemrun': ([spec_vers], None),
-            },
-            '3.1.0:3.1.5': {
-                'prun': ([spec_vers], None),
-            },
-            '3.0.0:3.1.5': {
-                'oshCC': ([comp_vers], None),
-                'oshc++': ([comp_vers], None),
-                'oshcxx': ([comp_vers], None),
-                'shmemCC': ([comp_vers], None),
-                'shmemc++': ([comp_vers], None),
-                'shmemcxx': ([comp_vers], None),
-            },
+            # Binaries available in at least versions 2.0.0 through 4.0.3
+            'mpiCC': ([comp_vers], None),
+            'mpic++': ([comp_vers], None),
+            'mpicc': ([comp_vers], None),
+            'mpicxx': ([comp_vers], None),
+            'mpiexec': ([spec_vers], None),
+            'mpif77': ([comp_vers], None),
+            'mpif90': ([comp_vers], None),
+            'mpifort': ([comp_vers], None),
+            'mpirun': ([spec_vers], None),
+            'ompi-clean': ([bad_option], 213),
+            'ompi-server': ([bad_option], 1),
+            'ompi_info': ([spec_vers], None),
+            'opal_wrapper': (['Cannot open configuration file'], 243),
+            'orte-clean': ([bad_option], 213),
+            'orte-info': (['did not have enough parameters'], 1),
+            'orte-server': ([bad_option], 1),
+            'ortecc': ([comp_vers], None),
+            'orted': ([bad_option], 213),
+            'orterun': ([spec_vers], None),
+
+            # Binaries available in versions 2.0.0 through 2.1.6
+            'ompi-submit': ([spec_vers], None),
+            'orte-submit': ([spec_vers], None),
+
+            # Binaries available in versions 2.0.0 through 3.1.5
+            'ompi-dvm': ([spec_vers], None),
+            'ompi-ps': ([bad_option], 213),
+            'ompi-top': ([bad_option], 1),
+            'orte-dvm': ([spec_vers], None),
+            'orte-ps': ([bad_option], 213),
+            'orte-top': ([bad_option], 1),
+            'oshcc': ([comp_vers], None),
+            'oshfort': ([comp_vers], None),
+            'oshmem_info': ([spec_vers], None),
+            'oshrun': ([spec_vers], None),
+            'shmemcc': ([comp_vers], None),
+            'shmemfort': ([comp_vers], None),
+            'shmemrun': ([spec_vers], None),
+
+            # Binary available in version 3.1.0 through 3.1.5
+            'prun': ([spec_vers], None),
+
+            # Binaries available in versions 3.0.0 through 3.1.5
+            'oshCC': ([comp_vers], None),
+            'oshc++': ([comp_vers], None),
+            'oshcxx': ([comp_vers], None),
+            'shmemCC': ([comp_vers], None),
+            'shmemc++': ([comp_vers], None),
+            'shmemcxx': ([comp_vers], None),
         }
-        for vers in checks:
-            if vers == 'core' or self.spec.version in spack.version.ver(vers):
-                version_checks = checks[vers]
-                for exe in version_checks:
-                    expected, status = version_checks[exe]
-                    purpose = 'test version of {0} is {1}'.format(exe,
-                                                                  expected[0])
-                    self.run_test(exe, ['--version'], expected, status,
-                                  installed=True, purpose=purpose)
+
+        for exe in checks:
+            expected, status = checks[exe]
+            purpose = 'test version of {0} is {1}'.format(exe, expected[0])
+            self.run_test(exe, ['--version'], expected, status, installed=True,
+                          purpose=purpose, skip_missing=True)
 
     def test(self):
         """Perform smoke tests on the installed package."""
