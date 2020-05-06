@@ -25,6 +25,13 @@ class PyNetcdf4(PythonPackage):
     depends_on('netcdf-c')
     depends_on('hdf5@1.8.0:+hl')
 
+    # The installation script tries to find hdf5 using pkg-config. However, the
+    # version of hdf5 installed with Spack does not have pkg-config files.
+    # Therefore, if pkg-config finds hdf5.pc at all (e.g. provided by
+    # Ubuntu/Debian package manager), it is definitely not what we need. The
+    # following patch disables the usage of pkg-config at all.
+    patch('disable_pkgconf.patch')
+
     def setup_build_environment(self, env):
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
