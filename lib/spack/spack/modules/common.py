@@ -420,6 +420,19 @@ class BaseConfiguration(object):
         return spack.schema.environment.parse(self.conf.get('environment', {}))
 
     @property
+    def mprefixes(self):
+        """List of prefixes that should be prepended to the module
+        file name. 'm' is added to prefix variables to avoid ambiguity.
+        """
+        mprefixes = []
+        for mprefix, packages in self.conf.get('prefixes', {}).items():
+            for package in packages:
+                if package in self.spec.name:
+                    mprefixes.append(mprefix)
+        mprefixes = sorted(set(mprefixes))
+        return mprefixes
+
+    @property
     def suffixes(self):
         """List of suffixes that should be appended to the module
         file name.
@@ -556,7 +569,8 @@ class BaseFileLayout(object):
         parts = name.split('/')
         name = os.path.join(*parts)
         # Add optional suffixes based on constraints
-        path_elements = [name] + self.conf.suffixes
+        path_prefixes = ['/'.join(self.conf.mprefixes + [name])]
+        path_elements = path_prefixes + self.conf.suffixes
         return '-'.join(path_elements)
 
     @property

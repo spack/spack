@@ -59,6 +59,15 @@ module_file_configuration = {
         'prerequisites': dependency_selection,
         'conflict': array_of_strings,
         'load': array_of_strings,
+        'prefixes': {
+            'type': 'object',
+            'validate_spec': True,
+            'patternProperties': {
+                r'\w[\w-]*': {  # key
+                    'type': 'array'
+                }
+            }
+        },
         'suffixes': {
             'type': 'object',
             'validate_spec': True,
