@@ -655,6 +655,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # init internal variables
         self._stage = None
         self._fetcher = None
+        self._binaries = None
 
         # Set up timing variables
         self._fetch_time = 0.0
@@ -1668,7 +1669,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         pass
 
     def run_test(self, exe, options=[], expected=[], status=None,
-                 installed=False, purpose=''):
+                 installed=False, purpose='', skip_missing=False):
         """Run the test and confirm the expected results are obtained
 
         Log any failures and continue, they will be re-raised later
@@ -1682,7 +1683,19 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
+            skip_missing (bool): skip the test if the executable is not
+                in the install prefix bin directory
         """
+        if self._binaries is None:
+            # Cache the installed binaries
+            try:
+                self._binaries = os.listdir(os.path.join(self.prefix, 'bin'))
+            except FileNotFoundError:
+                self._binaries = []
+
+        if skip_missing and exe not in self._binaries:
+            return
+
         try:
             self._run_test_helper(
                 exe, options, expected, status, installed, purpose)
