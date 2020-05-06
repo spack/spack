@@ -630,7 +630,7 @@ class Openmpi(AutotoolsPackage):
         """Perform smoke tests on the installed package."""
         if self.spec.version not in spack.version.ver('2.0.0:4.0.3'):
             tty.warn('Expected results have not been confirmed for {0} {1}'
-                     .format(self.spec, self.spec.version))
+                     .format(self.name, self.spec.version))
 
         # Simple version check tests on known packages
         self._test_check_versions()
