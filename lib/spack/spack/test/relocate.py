@@ -221,6 +221,16 @@ def test_set_elf_rpaths(mock_patchelf):
     assert patchelf in output
 
 
+def test_set_elf_rpaths_warning(mock_patchelf):
+    # Mock a failing patchelf command and ensure it warns users
+    patchelf = mock_patchelf('exit 1')
+    rpaths = ['/usr/lib', '/usr/lib64', '/opt/local/lib']
+    # To avoid using capfd in order to check if the warning was triggered
+    # here we just check that output is not set
+    output = spack.relocate._set_elf_rpaths(patchelf, rpaths)
+    assert output is None
+
+
 @pytest.mark.requires_executables('patchelf', 'strings', 'file', 'gcc')
 def test_replace_prefix_bin(hello_world):
     # Compile an "Hello world!" executable and set RPATHs
