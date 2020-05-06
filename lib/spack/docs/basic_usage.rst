@@ -730,7 +730,7 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
    means two things. First, environment modification are applied in the order
    they are specified in the configuration file. Second, you cannot express
    environment modifications that require mixing different commands, i.e. you
-   cannot `set` one variable, than `prepend-path` to another one, and than
+   cannot `set` one variable, then `prepend-path` to another one, and then
    again `set` a third one.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
