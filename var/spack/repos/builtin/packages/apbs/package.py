@@ -24,10 +24,10 @@ from spack import *
 
 
 class Apbs(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """APBS solves the equations of continuum electrostatics
+    for large biomolecular assemblages."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "http://www.poissonboltzmann.org/"
     url      = "https://downloads.sourceforge.net/project/apbs/apbs/apbs-1.3.0/apbs-1.3-source.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
