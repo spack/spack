@@ -47,6 +47,8 @@ class Apbs(AutotoolsPackage):
         spec = self.spec
         args = []
 
+        args.append('--disable-maloc-rebuild')
+
         if '+python' in spec:
             args.append('--enable-python')
         else:
