@@ -3801,7 +3801,9 @@ class Spec(object):
             return None
         try:
             record = spack.store.db.get_record(self)
-            return record.installed
+            return (record.installed and 
+                    record.path is not None and 
+                    os.path.exists(record.path))
         except KeyError:
             return None
 
@@ -3847,13 +3849,13 @@ class Spec(object):
             if status_fn:
                 status = status_fn(node)
                 if node.package.installed_upstream:
-                    out += clr.colorize("@g{[^]}  ", color=color)
+                    out += clr.colorize("@*g{[^]}  ", color=color) # installed upstream
                 elif status is None:
-                    out += clr.colorize("@K{ - }  ", color=color)  # !installed
+                    out += clr.colorize("@*K{[-]}  ", color=color)  # !installed
                 elif status:
-                    out += clr.colorize("@g{[+]}  ", color=color)  # installed
+                    out += clr.colorize("@*g{[\u2714]}  ", color=color)  # installed
                 else:
-                    out += clr.colorize("@r{[-]}  ", color=color)  # missing
+                    out += clr.colorize("@*r{[?]}  ", color=color)  # missing
 
             if hashes:
                 out += clr.colorize(
