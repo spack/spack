@@ -550,6 +550,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # init internal variables
         self._stage = None
         self._fetcher = None
+        self._binaries = None
 
         # Set up timing variables
         self._fetch_time = 0.0
@@ -1550,7 +1551,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         pass
 
     def run_test(self, exe, options=[], expected=[], status=None,
-                 installed=False, purpose='', work_dir=None):
+                 installed=False, purpose='', skip_missing=False,
+                 work_dir=None):
         """Run the test and confirm the expected results are obtained
 
         Log any failures and continue, they will be re-raised later
@@ -1564,8 +1566,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 with 0 and None meaning the test is expected to succeed
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
+            skip_missing (bool): skip the test if the executable is not
+                in the install prefix bin directory
             work_dir (str or None): path to the smoke test directory
         """
+        if self._binaries is None:
+            # Cache the installed binaries
+            try:
+                self._binaries = os.listdir(os.path.join(self.prefix, 'bin'))
+            except FileNotFoundError:
+                self._binaries = []
+
+        if skip_missing and exe not in self._binaries:
+            return
+
         wdir = '.' if work_dir is None else work_dir
 
         with working_dir(wdir):
@@ -1586,7 +1600,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 # the file to make line numbers match. We have to subtract two
                 # from the line number because the original line number is
                 # inflated once by the import statement and the lines are
-                # displaced once by the import statement.
+                # displaced one by the import statement.
                 for i, entry in enumerate(stack):
                     filename, lineno, function, text = entry
                     if spack.paths.is_package_file(filename):
@@ -1606,15 +1620,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         out, 'test', self.test_log_file, last=1)
                     m = out.getvalue()
                 else:
-                    # We're below the package context, so get context from
-                    # stack instead of from traceback.
+                    # We're below the package context, so get context from stack
+                    # instead of from traceback.
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
                     m = '\n'.join(spack.build_environment.get_package_context(
                             traceback.extract_stack()))
 
                 exc = e  # e is deleted after this block
-                self.test_failures.append((exc, m))
+
+                # If we fail fast, raise another error
+                if spack.config.get('config:fail_fast', False):
+                    raise TestFailure([(exc, m)])
+                else:
+                    self.test_failures.append((exc, m))
 
     def _run_test_helper(self, exe, options, expected, status, installed,
                          purpose):
