@@ -1749,8 +1749,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                             " uninstall".format(str(spec)))
                         if isinstance(error, spack.error.SpackError):
                             error_msg += (
-                                "\n\nFull error: {0}".format(str(error)))
-                        tty.debug(error_msg)
+                                "\n\nError message: {0}".format(str(error)))
+                        tty.warn(error_msg)
+                        # Note that if the uninstall succeeds then we won't be
+                        # seeing this error again and won't have another chance
+                        # to run the hook.
                     else:
                         raise
 
