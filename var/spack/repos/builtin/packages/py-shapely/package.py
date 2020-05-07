@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import sys
 
 
 class PyShapely(PythonPackage):
@@ -38,7 +39,8 @@ class PyShapely(PythonPackage):
 
     # https://github.com/Toblerity/Shapely/pull/891
     patch('https://github.com/Toblerity/Shapely/commit/98f6b36710bbe05b4ab59231cb0e08b06fe8b69c.patch',
-          sha256='4984cd0590beb5091f213948a953f70cea08ea11c5db1de07ba98c19e3d13f06')
+          sha256='4984cd0590beb5091f213948a953f70cea08ea11c5db1de07ba98c19e3d13f06',
+          when='@:1.7')
 
     @when('^python@3.7:')
     def patch(self):
@@ -53,7 +55,14 @@ class PyShapely(PythonPackage):
         env.set('GEOS_CONFIG',
                 join_path(self.spec['geos'].prefix.bin, 'geos-config'))
 
+        # Shapely uses ctypes.util.find_library, which searches LD_LIBRARY_PATH
+        # Our RPATH logic works fine, but the unit tests fail without this
+        # https://github.com/Toblerity/Shapely/issues/909
+        libs = ':'.join(self.spec['geos'].libs.directories)
+        if sys.platform == 'darwin':
+            env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', libs)
+        else:
+            env.prepend_path('LD_LIBRARY_PATH', libs)
+
     def test(self):
-        # Tests fail when 'geos' library not found in usual search directories
-        # python('-m', 'pytest')
-        pass
+        python('-m', 'pytest')
