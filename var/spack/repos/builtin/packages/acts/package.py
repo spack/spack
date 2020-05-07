@@ -6,9 +6,9 @@
 from spack import *
 
 
-class ActsCore(CMakePackage):
+class Acts(CMakePackage):
     """
-    A Common Tracking Software (ACTS)
+    A Common Tracking Software (Acts)
 
     This project contains an experiment-independent set of track reconstruction
     tools. The main philosophy is to provide high-level track reconstruction
@@ -33,7 +33,10 @@ class ActsCore(CMakePackage):
     git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
+    # Supported Acts versions
     version('master', branch='master')
+    version('0.23.0', commit='dc443dd7e663bc4d7fb3c1e3f1f75aaf57ffd4e4')
+    version('0.22.1', commit='ca1b8b1645db6b552f44c48d2ff34c8c29618f3a')
     version('0.22.0', commit='2c8228f5843685fc0ae69a8b95dd8fc001139efb')
     version('0.21.0', commit='10b719e68ddaca15b28ac25b3daddce8c0d3368d')
     version('0.20.0', commit='1d37a849a9c318e8ca4fa541ef8433c1f004637b')
@@ -64,13 +67,13 @@ class ActsCore(CMakePackage):
     version('0.08.1', commit='289bdcc320f0b3ff1d792e29e462ec2d3ea15df6')
     version('0.08.0', commit='99eedb38f305e3a1cd99d9b4473241b7cd641fa9')
 
-    # Variants that affect the core ACTS library
+    # Variants that affect the core Acts library
     variant('benchmarks', default=False, description='Build the performance benchmarks')
     variant('examples', default=False, description='Build the examples')
-    variant('tests', default=False, description='Build the unit tests')
     variant('integration_tests', default=False, description='Build the integration tests')
+    variant('unit_tests', default=False, description='Build the unit tests')
 
-    # Variants the enable / disable ACTS plugins
+    # Variants that enable / disable Acts plugins
     variant('dd4hep', default=False, description='Build the DD4hep plugin')
     variant('digitization', default=False, description='Build the geometric digitization plugin')
     variant('fatras', default=False, description='Build the FAst TRAcking Simulation package')
@@ -79,15 +82,44 @@ class ActsCore(CMakePackage):
     variant('legacy', default=False, description='Build the Legacy package')
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
-    depends_on('cmake @3.11:', type='build')
+    # Variants that only affect Acts examples for now
+    variant('geant4', default=False, description='Build the Geant4-based examples')
+    variant('hepmc3', default=False, description='Build the HepMC3-based examples')
+    variant('pythia8', default=False, description='Build the Pythia8-based examples')
+
+    # Build dependencies
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.62: +program_options +test', when='@0.10.4:0.18.0')
-    depends_on('boost @1.69: +program_options +test', when='@0.19.0:')
+    depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4:')
+    depends_on('cmake @3.11:', type='build')
+    depends_on('dd4hep @1.10: +xercesc', when='+dd4hep')
+    depends_on('dd4hep @1.10: +geant4 +xercesc', when='+dd4hep +geant4')
     depends_on('eigen @3.2.9:', type='build')
-    depends_on('nlohmann-json @3.2.0:', when='@0.14.0: +json')
+    depends_on('geant4', when='+geant4')
+    depends_on('hepmc@3.1:', when='+hepmc3')
+    depends_on('heppdt', when='+hepmc3')
+    depends_on('intel-tbb', when='+examples')
+    depends_on('nlohmann-json @3.2.0:', when='@0.14: +json')
+    depends_on('pythia8', when='+pythia8')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
     depends_on('root @6.10: cxxstd=17', when='+tgeo @0.8.1:')
-    depends_on('dd4hep @1.2: +xercesc', when='+dd4hep')
+
+    # Some variant combinations do not make sense
+    conflicts('+benchmarks', when='@:0.15')
+    conflicts('+dd4hep', when='-tgeo')
+    conflicts('+examples', when='@:0.22')
+    conflicts('+examples', when='-digitization')
+    conflicts('+examples', when='-fatras')
+    conflicts('+examples', when='-identification')
+    conflicts('+examples', when='-json')
+    conflicts('+examples', when='-tgeo')
+    conflicts('+fatras', when='@:0.15')
+    conflicts('+geant4', when='@:0.22')
+    conflicts('+geant4', when='-examples')
+    conflicts('+hepmc3', when='@:0.22')
+    conflicts('+hepmc3', when='-examples')
+    conflicts('+pythia8', when='@:0.22')
+    conflicts('+pythia8', when='-examples')
+    conflicts('+tgeo', when='-identification')
 
     def cmake_args(self):
         spec = self.spec
@@ -96,22 +128,30 @@ class ActsCore(CMakePackage):
             enabled = spec.satisfies('+' + spack_variant)
             return "-DACTS_BUILD_{0}={1}".format(cmake_label, enabled)
 
+        def example_cmake_variant(cmake_label, spack_variant):
+            enabled = spec.satisfies('+examples +' + spack_variant)
+            return "-DACTS_BUILD_EXAMPLES_{0}={1}".format(cmake_label, enabled)
+
         integration_tests_label = "INTEGRATIONTESTS"
-        tests_label = "UNITTESTS"
+        unit_tests_label = "UNITTESTS"
         if spec.satisfies('@:0.15.99'):
             integration_tests_label = "INTEGRATION_TESTS"
-            tests_label = "TESTS"
+            unit_tests_label = "TESTS"
 
         args = [
             cmake_variant("BENCHMARKS", "benchmarks"),
-            cmake_variant("EXAMPLES", "examples"),
-            cmake_variant(tests_label, "tests"),
-            cmake_variant(integration_tests_label, "integration_tests"),
-            cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
             cmake_variant("DD4HEP_PLUGIN", "dd4hep"),
+            cmake_variant("DIGITIZATION_PLUGIN", "digitization"),
+            cmake_variant("EXAMPLES", "examples"),
+            example_cmake_variant("DD4HEP", "dd4hep"),
+            example_cmake_variant("GEANT4", "geant4"),
+            example_cmake_variant("HEPMC3", "hepmc3"),
+            example_cmake_variant("PYTHIA8", "pythia8"),
             cmake_variant("FATRAS", "fatras"),
             cmake_variant("IDENTIFICATION_PLUGIN", "identification"),
+            cmake_variant(integration_tests_label, "integration_tests"),
             cmake_variant("JSON_PLUGIN", "json"),
+            cmake_variant(unit_tests_label, "unit_tests"),
             cmake_variant("LEGACY", "legacy"),
             cmake_variant("TGEO_PLUGIN", "tgeo")
         ]
