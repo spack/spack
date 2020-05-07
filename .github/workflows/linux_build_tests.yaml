@@ -5,6 +5,7 @@ on:
     branches:
     - master
     - develop
+    - hdf5-add-variant-api
   pull_request:
     branches:
     - master
