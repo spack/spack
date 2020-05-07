@@ -162,7 +162,7 @@ architecture.
 Automatically Find External Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A user can run the :ref:`spack external find <spack-external-find>` command
+You can run the :ref:`spack external find <spack-external-find>` command
 to search for system-provided packages and add them to ``packages.yaml``.
 After running this command your ``packages.yaml`` may include new entries:
 
@@ -183,7 +183,7 @@ Specific limitations include:
   so it is typically only useful for build/run dependencies (in some cases
   if a library package also provides an executable, it may be possible to
   extract a meaningful Spec by running the executable - for example the
-  compiler wrappers in MPI implementations)
+  compiler wrappers in MPI implementations).
 * The logic does not search through module files, it can only detect
   packages with executables defined in ``PATH``; you can help Spack locate
   externals which use module files by loading any associated modules for
@@ -195,14 +195,14 @@ Specific limitations include:
   can help locate all external entries).
 
 As mentioned above, to make a package discoverable with
-``spack external find`` a user must define one or more executables
+``spack external find`` you must define one or more executables
 associated with the package and must implement a method to generate
 a Spec when given an executable.
 
 The executables are specified as a package level ``executables``
-attribute which is a list of strings (full example with context given
-below); each string is treated as a regular expression (e.g. 'gcc'
-would match 'gcc', 'gcc-8.3', 'my-weird-gcc', etc.).
+attribute which is a list of strings (see example below); each string
+is treated as a regular expression (e.g. 'gcc' would match 'gcc', 'gcc-8.3',
+'my-weird-gcc', etc.).
 
 The method, ``determine_spec_details``, has the following signature:
 
