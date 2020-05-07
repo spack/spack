@@ -112,8 +112,8 @@ packages:
         version: [0.29.1]
     python:
         paths:
-            python@3.8.2: /usr
-        version: [3.8.2]
+            python@3.8: /usr
+        version: [3.8]
     range-v3:
         variants: ~doc
     readline:
