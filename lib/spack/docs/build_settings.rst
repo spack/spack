@@ -179,10 +179,16 @@ Specific limitations include:
 
 * A package must define ``executables`` and ``determine_spec_details``
   for Spack to locate instances of that package.
-* This implementation only collects and examines executable files, so it
-  is only useful for build/run dependencies.
-* The logic does not search through modules module files, it can only
-  detect packages with executables defined in ``PATH``
+* The current implementation only collects and examines executable files,
+  so it is typically only useful for build/run dependencies (in some cases
+  if a library package also provides an executable, it may be possible to
+  extract a meaningful Spec by running the executable - for example the
+  compiler wrappers in MPI implementations)
+* The logic does not search through module files, it can only detect
+  packages with executables defined in ``PATH``; you can help Spack locate
+  externals which use module files by loading any associated modules for
+  packages that you want Spack to know about before running
+  ``spack external find``.
 * Spack does not overwrite existing entries in the package configuration:
   If there is an external defined for a spec at any configuration scope,
   then Spack will not add a new external entry (``spack config blame packages``
