@@ -222,9 +222,6 @@ class Qt(Package):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('QTDIR', self.prefix)
-        # https://riverbankcomputing.com/pipermail/qscintilla/2015-January/001012.html
-        env.set('QMAKEFEATURES', join_path(
-            dependent_spec.stage.source_path, 'Qt4Qt5', 'features'))
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
