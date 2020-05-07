@@ -28,6 +28,7 @@ class Ganglia(AutotoolsPackage):
     depends_on('python@:2.7.999')
     depends_on('pcre')
     depends_on('libtirpc')
+    depends_on('expat')
 
     def setup_build_environment(self, env):
         env.prepend_path('CPATH', self.spec['libtirpc'].prefix.include.tirpc)
