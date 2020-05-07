@@ -1,0 +1,146 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.16.1: /usr
+        version: [1.16.1]
+    binutils:
+        paths:
+            binutils@2.30: /usr
+        version: [2.30]
+    bison:
+        paths:
+            bison@3.5.1: /usr
+        version: [3.5.1]
+    boost:
+        paths:
+            boost@1.71.0: /usr
+        version: [1.71.0]
+    bzip2:
+        paths:
+            bzip2@1.0.8: /usr
+        version: [1.0.8]
+    cmake:
+        paths:
+            cmake@3.16.3: /usr
+        version: [3.16.3]
+    diffutils:
+        paths:
+            diffutils@3.7: /usr
+        version: [3.7]
+    findutils:
+        paths:
+            findutils@4.7.0: /usr
+        version: [4.7.0]
+    flex:
+        paths:
+            flex@2.6.4: /usr
+        version: [2.6.4]
+    freetype:
+        paths:
+            freetype@2.10.1: /usr
+        version: [2.10.1]
+    git:
+        paths:
+            git@2.25.1: /usr
+        version: [2.25.1]
+    hdf5:
+        paths:
+            hdf5@1.10~mpi+hl: /usr/lib/x86_64-linux-gnu/hdf5/serial
+            hdf5@1.10+mpi+hl: /usr/lib/x86_64-linux-gnu/hdf5/openmpi
+        version: [1.10]
+    libpciaccess:
+        paths:
+            libpciaccess@0.16: /usr
+    libpng:
+        paths:
+            libpng@1.6.37: /usr
+        version: [1.6.37]
+    libtool:
+        paths:
+            libtool@2.4.6: /usr
+        version: [2.4.6]
+    libxml2:
+        paths:
+            libxml2@2.9.10: /usr
+        version: [2.9.10]
+    m4:
+        paths:
+            m4@1.4.18: /usr
+        version: [1.4.18]
+    mvapich2:
+        variants: fabrics=nemesis
+        version: [2.3]
+    nasm:
+        paths:
+            nasm@2.14.02: /usr
+        version: [2.14.02]
+    ncurses:
+        paths:
+            ncurses@6.2: /usr
+        version: [6.2]
+    ninja:
+        paths:
+            ninja@1.10.0: /usr
+        version: [1.10.0]
+    numactl:
+        paths:
+            numactl@2.0.12: /usr
+        version: [2.0.12]
+    openblas:
+        paths:
+            openblas@0.3.8: /usr
+        version: [0.3.8]
+    openmpi:
+        paths:
+            openmpi@4.0.3: /usr
+        version: [4.0.3]
+    openssl:
+        paths:
+            openssl@1.1.1f: /usr
+        version: [1.1.1f]
+    perl:
+        paths:
+            perl@5.30.0: /usr
+        version: [5.30.0]
+    pkg-config:
+        paths:
+            pkg-config@0.29.1: /usr
+        version: [0.29.1]
+    python:
+        paths:
+            python@3.8.2: /usr
+        version: [3.8.2]
+    range-v3:
+        variants: ~doc
+    readline:
+        paths:
+            readline@8.0: /usr
+        version: [8.0]
+    tar:
+        paths:
+            tar@1.32: /usr
+        version: [1.32]
+    tcl:
+        paths:
+            tcl@8.6.9: /usr
+        version: [8.6.9]
+    timemory:
+        variants: ~caliper~cuda~cupti~gperftools~papi~python~mpi
+    tk:
+        paths:
+            tk@8.6.9: /usr
+        version: [8.6.9]
+    trilinos:
+        variants: ~hypre
+    xz:
+        paths:
+            xz@5.2.4: /usr
+        version: [5.2.4]
+    all:
+        providers:
+            mpi: [openmpi]
+            compiler: [gcc]
