@@ -722,8 +722,8 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
 
 
 def test_compiler_bootstrap(
-        install_mockery, mock_packages, mock_fetch, mock_archive,
-        mutable_config, monkeypatch):
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
@@ -735,8 +735,8 @@ def test_compiler_bootstrap(
 
 @pytest.mark.regression('16221')
 def test_compiler_bootstrap_already_installed(
-        install_mockery, mock_packages, mock_fetch, mock_archive,
-        mutable_config, monkeypatch):
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch):
     monkeypatch.setattr(spack.concretize.Concretizer,
                         'check_for_compiler_existence', False)
     spack.config.set('config:install_missing_compilers', True)
