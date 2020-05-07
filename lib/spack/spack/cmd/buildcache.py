@@ -130,7 +130,7 @@ def setup_parser(subparser):
     preview_parser = subparsers.add_parser(
         'preview',
         help='Analyzes an installed spec and reports whether '
-             'executables and libraries are relocatable.'
+             'executables and libraries are relocatable'
     )
     arguments.add_common_arguments(preview_parser, ['installed_specs'])
     preview_parser.set_defaults(func=preview)
