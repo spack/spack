@@ -32,6 +32,18 @@ For Ubuntu 20.04:
     $ . spack/share/spack/setup-env.sh
     $ spack compiler find
 
+Since Ubuntu 20.04 dropped python2 support, we need to set python3 as the default python:
+
+    $ sudo update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
+
+To check that we are using python3 as python:
+
+    $ sudo update-alternatives --config python    
+    
+    $ There is only one alternative in link group python 
+    $ (providing /usr/bin/python): /usr/bin/python3.8. Nothing to configure.
+
+
 Now to build software, i.e., MVDTool:
 
     $ git clone git@github.com:BlueBrain/MVDTool.git
