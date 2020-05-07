@@ -16,7 +16,7 @@ import spack.schema.environment
 #:
 #: THIS NEEDS TO BE UPDATED FOR EVERY NEW KEYWORD THAT
 #: IS ADDED IMMEDIATELY BELOW THE MODULE TYPE ATTRIBUTE
-spec_regex = r'(?!hierarchy|verbose|hash_length|whitelist|' \
+spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
              r'blacklist|naming_scheme|core_compilers|all)(^\w[\w-]*)'
 
 #: Matches an anonymous spec, i.e. a spec without a root name
@@ -145,7 +145,8 @@ properties = {
                         'type': 'object',
                         'properties': {
                             'core_compilers': array_of_strings,
-                            'hierarchy': array_of_strings
+                            'hierarchy': array_of_strings,
+                            'core_specs': array_of_strings,
                         },
                     }  # Specific lmod extensions
                 ]
