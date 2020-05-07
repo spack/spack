@@ -375,4 +375,4 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         msg = 'Hello, World!'
         output = perl('-e', 'use warnings; use strict;\nprint("%s");' % msg,
                       output=str.split, error=str.split)
-        assert output == message
+        assert output == msg
