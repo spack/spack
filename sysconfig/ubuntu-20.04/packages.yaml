@@ -119,7 +119,7 @@ packages:
     readline:
         paths:
             readline@8.0: /usr
-        version: [7.0]
+        version: [8.0]
     tar:
         paths:
             tar@1.32: /usr
