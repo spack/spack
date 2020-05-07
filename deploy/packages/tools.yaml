@@ -42,7 +42,6 @@ packages:
       - intel-mpi@2018.1.163
       - isl@0.18
       - ispc@1.10.0
-      - libx11@1.6.5
       - m4@1.4.18
       - mpc@1.1.0
       - 'mvapich2@2.3 fabrics=mrail process_managers=slurm file_systems=gpfs'
