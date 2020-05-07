@@ -1,3 +1,18 @@
+# v0.14.2 (2019-04-15)
+
+This is a minor release on the `0.14` series. It includes performance
+improvements and bug fixes:
+
+* Improvements to how `spack install` handles foreground/background (#15723)
+* Major performance improvements for reading the package DB (#14693, #15777)
+* No longer check for the old `index.yaml` database file (#15298)
+* Properly activate environments with '-h' in the name (#15429)
+* External packages have correct `.prefix` in environments/views (#15475)
+* Improvements to computing env modifications from sourcing files (#15791)
+* Bugfix on Cray machines when getting `TERM` env variable (#15630)
+* Avoid adding spurious `LMOD` env vars to Intel modules (#15778)
+* Don't output [+] for mock installs run during tests (#15609)
+
 # v0.14.1 (2019-03-20)
 
 This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
@@ -25,7 +40,7 @@ This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
 
 2.  **Build pipelines.** You can also build in parallel through Gitlab
    CI. Simply create a Spack environment and push it to Gitlab to build
-   on Gitlab runners. Pipeline support is now integreated into a single
+   on Gitlab runners. Pipeline support is now integrated into a single
    `spack ci` command, so setting it up is easier than ever.  See the
    [Pipelines section](https://spack.readthedocs.io/en/v0.14.0/pipelines.html)
    in the docs.
@@ -125,8 +140,8 @@ RHEL8.
 * mirror bugfixes: symlinks, duplicate patches, and exception handling (#13789)
 * don't try to fetch `BundlePackages` (#13908)
 * avoid re-fetching patches already added to a mirror (#13908)
-* avoid re-fetching alread added patches (#13908)
-* avoid re-fetching alread added patches (#13908)
+* avoid re-fetching already added patches (#13908)
+* avoid re-fetching already added patches (#13908)
 * allow repeated invocations of `spack mirror create` on the same dir (#13908)
 * bugfix for RHEL8 when `python` is unavailable (#14252)
 * improve concretization performance in environments (#14190)

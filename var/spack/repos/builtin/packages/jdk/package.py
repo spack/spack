@@ -32,6 +32,8 @@ class Jdk(Package):
     # found in a link above. The build number can be deciphered from the URL.
     # Alternatively, run `bin/java -version` after extracting. Replace '+'
     # symbol in version with '_', otherwise it will be interpreted as a variant
+    version('14_36', sha256='4639bbaecc9cc606f1a4b99fda1efcaefcbf57a7025b3828b095093a6c866afd',
+            url='https://download.oracle.com/otn-pub/java/jdk/14+36/076bab302c7b4508975440c56f6cc26a/jdk-14_linux-x64_bin.tar.gz')
     version('12.0.2_10', sha256='2dde6fda89a4ec6e6560ed464e917861c9e40bf576e7a64856dafc55abaaff51',
             url='https://download.oracle.com/otn-pub/java/jdk/12.0.2+10/e482c34c86bd4bf8b56c0b35558996b9/jdk-12.0.2_linux-x64_bin.tar.gz')
     version('12.0.1_12', sha256='9fd6dcdaf2cfca7da59e39b009a0f5bcd53bec2fb16105f7ca8d689cdab68d75',
@@ -57,6 +59,7 @@ class Jdk(Package):
     version('1.8.0_131-b11', sha256='62b215bdfb48bace523723cdbb2157c665e6a25429c73828a32f00e587301236',
             url='https://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.tar.gz')
 
+    provides('java@14', when='@14.0:14.999')
     provides('java@12', when='@12.0:12.999')
     provides('java@11', when='@11.0:11.999')
     provides('java@10', when='@10.0:10.999')

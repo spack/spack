@@ -115,7 +115,11 @@ class InstallPhase(object):
         return phase_wrapper
 
     def _on_phase_start(self, instance):
-        pass
+        # If a phase has a matching stop_before_phase attribute,
+        # stop the installation process raising a StopIteration
+        if getattr(instance, 'stop_before_phase', None) == self.name:
+            raise StopIteration('Stopping before \'{0}\' phase'
+                                .format(self.name))
 
     def _on_phase_exit(self, instance):
         # If a phase has a matching last_phase attribute,
@@ -1034,6 +1038,14 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             any(self.spec.satisfies(c) for c in constraints)
             for s, constraints in self.provided.items() if s.name == vpkg_name
         )
+
+    @property
+    def virtuals_provided(self):
+        """
+        virtual packages provided by this package with its spec
+        """
+        return [vspec for vspec, constraints in self.provided.items()
+                if any(self.spec.satisfies(c) for c in constraints)]
 
     @property
     def installed(self):

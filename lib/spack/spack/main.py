@@ -692,7 +692,10 @@ def main(argv=None):
     # Spack clears these variables before building and installing packages,
     # but needs to know the prior state for commands like `spack load` and
     # `spack env activate that modify the user environment.
-    for var in ('LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH'):
+    recovered_vars = (
+        'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH'
+    )
+    for var in recovered_vars:
         stored_var_name = 'SPACK_%s' % var
         if stored_var_name in os.environ:
             os.environ[var] = os.environ[stored_var_name]
@@ -733,17 +736,11 @@ def main(argv=None):
         # ensure options on spack command come before everything
         setup_main_options(args)
 
-        # Try to load the particular command the caller asked for.  If there
-        # is no module for it, just die.
+        # Try to load the particular command the caller asked for.
         cmd_name = args.command[0]
         cmd_name = aliases.get(cmd_name, cmd_name)
 
-        try:
-            command = parser.add_command(cmd_name)
-        except ImportError:
-            if spack.config.get('config:debug'):
-                raise
-            tty.die("Unknown command: %s" % args.command[0])
+        command = parser.add_command(cmd_name)
 
         # Re-parse with the proper sub-parser added.
         args, unknown = parser.parse_known_args()

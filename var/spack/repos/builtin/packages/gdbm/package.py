@@ -26,6 +26,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version('1.9',   sha256='f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57')
 
     depends_on("readline")
+    patch('gdbm_gcc_10.patch', when='%gcc@10:')
 
     def configure_args(self):
 

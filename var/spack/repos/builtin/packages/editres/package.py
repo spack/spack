@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Editres(AutotoolsPackage):
+class Editres(AutotoolsPackage, XorgPackage):
     """Dynamic resource editor for X Toolkit applications."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/editres"
-    url      = "https://www.x.org/archive/individual/app/editres-1.0.6.tar.gz"
+    xorg_mirror_path = "app/editres-1.0.6.tar.gz"
 
     version('1.0.6', sha256='85f4664ca582effb01ee972d006124569b757b9a08ae6608c3f45fc36b3b7b1a')
 

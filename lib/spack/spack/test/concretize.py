@@ -12,10 +12,9 @@ import spack.repo
 
 from spack.concretize import find_spec, NoValidVersionError
 from spack.error import SpecError
-from spack.package_prefs import PackagePrefs
 from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
 from spack.version import ver
-from spack.test.conftest import MockPackage, MockPackageMultiRepo
+from spack.util.mock_package import MockPackageMultiRepo
 import spack.compilers
 import spack.platforms.test
 
@@ -103,8 +102,6 @@ def current_host(request, monkeypatch):
         monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
         yield target
     else:
-        # There's a cache that needs to be cleared for unit tests
-        PackagePrefs._packages_config_cache = None
         with spack.config.override('packages:all', {'target': [cpu]}):
             yield target
 
@@ -112,7 +109,10 @@ def current_host(request, monkeypatch):
     spack.architecture.get_platform.cache.clear()
 
 
-@pytest.mark.usefixtures('config', 'mock_packages')
+# This must use the mutable_config fixture because the test
+# adjusting_default_target_based_on_compiler uses the current_host fixture,
+# which changes the config.
+@pytest.mark.usefixtures('mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
@@ -235,10 +235,10 @@ class TestConcretize(object):
         """
         default_dep = ('link', 'build')
 
-        bazpkg = MockPackage('bazpkg', [], [])
-        barpkg = MockPackage('barpkg', [bazpkg], [default_dep])
-        foopkg = MockPackage('foopkg', [barpkg], [default_dep])
-        mock_repo = MockPackageMultiRepo([foopkg, barpkg, bazpkg])
+        mock_repo = MockPackageMultiRepo()
+        bazpkg = mock_repo.add_package('bazpkg', [], [])
+        barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
+        mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
         with spack.repo.swap(mock_repo):
             spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +

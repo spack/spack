@@ -59,6 +59,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     variant('afqmc', default=False,
             description='Install with AFQMC support. NOTE that if used in '
                         'combination with CUDA, only AFQMC will have CUDA.')
+    variant('ppconvert', default=False,
+            description='Install with pseudopotential converter.')
 
     # Notes about CUDA-centric peculiarities:
     #
@@ -92,8 +94,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
 
-    conflicts('^intel-mkl+ilp64',
-              msg='QMCPACK does not support MKL 64-bit integer variant')
+    # Omitted for now due to concretizer bug
+    # conflicts('^intel-mkl+ilp64',
+    #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
     # QMCPACK 3.6.0 or later requires support for C++14
     compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
@@ -184,6 +187,8 @@ class Qmcpack(CMakePackage, CudaPackage):
     patch_checksum = 'c066c79901a612cf8848135e0d544efb114534cca70b90bfccc8ed989d3d9dde'
     patch(patch_url, sha256=patch_checksum, when='@3.1.0:3.3.0')
 
+    # the default flag_handler for Spack causes problems for QMCPACK
+    # https://spack.readthedocs.io/en/latest/packaging_guide.html#the-build-environment:
     flag_handler = CMakePackage.build_system_flags
 
     @when('@:3.7.0')
@@ -193,6 +198,15 @@ class Qmcpack(CMakePackage, CudaPackage):
         filter_file(r'$ENV{LIBXML2_HOME}/lib',
                     '${LIBXML2_HOME}/lib $ENV{LIBXML2_HOME}/lib',
                     'CMake/FindLibxml2QMC.cmake')
+
+    @property
+    def build_targets(self):
+        spec = self.spec
+        targets = ['all']
+        if '+ppconvert' in spec:
+            targets.append('ppconvert')
+
+        return targets
 
     def cmake_args(self):
         spec = self.spec
@@ -323,21 +337,29 @@ class Qmcpack(CMakePackage, CudaPackage):
         # Next two environment variables were introduced in QMCPACK 3.5.0
         # Prior to v3.5.0, these lines should be benign but CMake
         # may issue a warning.
-        if 'intel-mkl' in spec:
+        if '^mkl' in spec:
             args.append('-DENABLE_MKL=1')
             args.append('-DMKL_ROOT=%s' % env['MKLROOT'])
         else:
             args.append('-DENABLE_MKL=0')
 
+        # ppconvert is not build by default because it may exhibit numerical
+        # issues on some systems
+        if '+ppconvert' in spec:
+            args.append('-DBUILD_PPCONVERT=1')
+        else:
+            args.append('-DBUILD_PPCONVERT=0')
+
         return args
 
-    # QMCPACK 3.6.0 release and later has a functional 'make install',
-    # the Spack 'def install' is retained for backwards compatiblity.
-    # Note that the two install methods differ in their directory
-    # structure. Additionally, we follow the recommendation on the Spack
-    # website for defining the compilers to be the MPI compiler wrappers.
+    # QMCPACK needs custom install method for a couple of reasons:
+    # Firstly, wee follow the recommendation on the Spack website
+    # for defining the compilers variables to be the MPI compiler wrappers.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#compiler-wrappers
-    @when('@3.6.0:')
+    #
+    # Note that 3.6.0 release and later has a functioning 'make install',
+    # but still does not install nexus, manual, etc. So, there is no compelling
+    # reason to use QMCPACK's built-in version at this time.
     def install(self, spec, prefix):
         if '+mpi' in spec:
             env['CC'] = spec['mpi'].mpicc
@@ -345,57 +367,25 @@ class Qmcpack(CMakePackage, CudaPackage):
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
 
-        with working_dir(self.build_directory):
-            make('install')
-
-    @when('@:3.5.0')
-    def install(self, spec, prefix):
-        if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
-            env['CXX'] = spec['mpi'].mpicxx
-            env['F77'] = spec['mpi'].mpif77
-            env['FC'] = spec['mpi'].mpifc
-
-        # QMCPACK 'make install' does nothing, which causes
-        # Spack to throw an error.
-        #
-        # This install method creates the top level directory
-        # and copies the bin subdirectory into the appropriate
-        # location. We do not copy include or lib at this time due
-        # to technical difficulties in qmcpack itself.
-
+        # create top-level directory
         mkdirp(prefix)
 
-        # We assume cwd is self.stage.source_path
-
-        # install manual
+        # We assume cwd is self.stage.source_path, then
+        # install manual, labs, and nexus
         install_tree('manual', prefix.manual)
-
-        # install nexus
+        install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
 
+        # install binaries
         with working_dir(self.build_directory):
-            mkdirp(prefix)
-
-            # install binaries
             install_tree('bin', prefix.bin)
 
-    # QMCPACK 3.6.0 install directory structure changed, thus there
-    # thus are two version of the setup_run_environment method
-    @when('@:3.5.0')
     def setup_run_environment(self, env):
         """Set-up runtime environment for QMCPACK.
-        Set PYTHONPATH for basic analysis scripts and for Nexus."""
-        env.prepend_path('PYTHONPATH', self.prefix.nexus)
+        Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 
-    @when('@3.6.0:')
-    def setup_run_environment(self, env):
-        """Set-up runtime environment for QMCPACK.
-        Set PYTHONPATH for basic analysis scripts and for Nexus. Binaries
-        are in the  'prefix' directory instead of 'prefix.bin' which is
-        not set by the default module environment"""
-        env.prepend_path('PATH', self.prefix)
-        env.prepend_path('PYTHONPATH', self.prefix)
+        env.prepend_path('PATH', self.prefix.nexus.bin)
+        env.prepend_path('PYTHONPATH', self.prefix.nexus.lib)
 
     @run_after('build')
     @on_package_attributes(run_tests=True)

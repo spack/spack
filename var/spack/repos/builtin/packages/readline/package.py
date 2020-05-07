@@ -14,7 +14,7 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
     command lines, to recall and perhaps reedit those lines, and perform
     csh-like history expansion on previous commands."""
 
-    homepage = "http://cnswww.cns.cwru.edu/php/chet/readline/rltop.html"
+    homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
     # URL must remain http:// so Spack can bootstrap curl
     gnu_mirror_path = "readline/readline-8.0.tar.gz"
 

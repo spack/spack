@@ -29,6 +29,7 @@ class Gdal(AutotoolsPackage):
         'osgeo.gdal_array', 'osgeo.gdalconst'
     ]
 
+    version('3.1.0',  sha256='e754a22242ccbec731aacdb2333b567d4c95b9b02d3ba1ea12f70508d244fcda')
     version('3.0.4',  sha256='5569a4daa1abcbba47a9d535172fc335194d9214fdb96cd0f139bb57329ae277')
     version('3.0.3',  sha256='e20add5802265159366f197a8bb354899e1693eab8dbba2208de14a457566109')
     version('3.0.2',  sha256='c3765371ce391715c8f28bd6defbc70b57aa43341f6e94605f04fe3c92468983')
@@ -107,7 +108,7 @@ class Gdal(AutotoolsPackage):
     # Optional dependencies
     depends_on('libtool', type='build', when='+libtool')
     depends_on('zlib', when='+libz')
-    depends_on('libiconv', when='+libiconv')
+    depends_on('iconv', when='+libiconv')
     depends_on('xz', when='+liblzma')
     depends_on('zstd', when='+zstd @2.3:')
     depends_on('postgresql', when='+pg')
@@ -172,6 +173,7 @@ class Gdal(AutotoolsPackage):
     # https://trac.osgeo.org/gdal/wiki/BuildHints
     def configure_args(self):
         spec = self.spec
+        libs = []
 
         # Required dependencies
         args = [
@@ -250,7 +252,7 @@ class Gdal(AutotoolsPackage):
 
         if '+libiconv' in spec:
             args.append('--with-libiconv-prefix={0}'.format(
-                spec['libiconv'].prefix))
+                spec['iconv'].prefix))
         else:
             args.append('--with-libiconv-prefix=no')
 
@@ -294,6 +296,9 @@ class Gdal(AutotoolsPackage):
         # https://trac.osgeo.org/gdal/wiki/HDF
         if '+hdf4' in spec:
             args.append('--with-hdf4={0}'.format(spec['hdf'].prefix))
+            hdf4 = self.spec['hdf']
+            if '+libtirpc' in hdf4:
+                libs.append('-ltirpc')
         else:
             args.append('--with-hdf4=no')
 
@@ -479,6 +484,9 @@ class Gdal(AutotoolsPackage):
                 '--with-gnm=no',
                 '--with-pdfium=no',
             ])
+
+        if libs:
+            args.append('LIBS=' + ' '.join(libs))
 
         return args
 

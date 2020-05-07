@@ -44,7 +44,7 @@ Environments:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
+   # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack install && spack gc -y
 
    # Strip all the binaries
@@ -266,7 +266,7 @@ following ``Dockerfile``:
    &&   echo "    install_tree: /opt/software" \
    &&   echo "  view: /opt/view") > /opt/spack-environment/spack.yaml
 
-   # Install the software, remove unecessary deps
+   # Install the software, remove unnecessary deps
    RUN cd /opt/spack-environment && spack install && spack gc -y
 
    # Strip all the binaries

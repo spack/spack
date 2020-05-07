@@ -103,7 +103,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.15:0.18', when='@6:8.9')
     depends_on('isl@0.15:0.20', when='@9:')
     depends_on('zlib', when='@6:')
-    depends_on('libiconv', when='platform=darwin')
+    depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils')
     depends_on('zip', type='build', when='languages=java')
@@ -237,8 +237,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
 
     # Backport libsanitizer patch for glibc >= 2.31 and 8.1.0 <= gcc <= 9.2.0
     # https://bugs.gentoo.org/708346
-    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:9.2.0')
-    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-1.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
+    patch('glibc-2.31-libsanitizer-2.patch', when='@8.1.0:8.3.99,9.0.0:9.2.0')
     # Older versions do not compile with newer versions of glibc
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81712
     patch('ucontext_t.patch', when='@4.9,5.1:5.4,6.1:6.4,7.1')
@@ -356,7 +356,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.extend([
                 '--with-native-system-header-dir=/usr/include',
                 '--with-sysroot={0}'.format(macos_sdk_path()),
-                '--with-libiconv-prefix={0}'.format(spec['libiconv'].prefix)
+                '--with-libiconv-prefix={0}'.format(spec['iconv'].prefix)
             ])
 
         return options

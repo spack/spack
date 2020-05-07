@@ -1091,6 +1091,25 @@ class Environment(object):
         for view in self.views.values():
             view.regenerate(specs, self.roots())
 
+    def _env_modifications_for_default_view(self, reverse=False):
+        all_mods = spack.util.environment.EnvironmentModifications()
+
+        errors = []
+        for _, spec in self.concretized_specs():
+            if spec in self.default_view and spec.package.installed:
+                try:
+                    mods = uenv.environment_modifications_for_spec(
+                        spec, self.default_view)
+                except Exception as e:
+                    msg = ("couldn't get environment settings for %s"
+                           % spec.format("{name}@{version} /{hash:7}"))
+                    errors.append((msg, str(e)))
+                    continue
+
+                all_mods.extend(mods.reversed() if reverse else mods)
+
+        return all_mods, errors
+
     def add_default_view_to_shell(self, shell):
         env_mod = spack.util.environment.EnvironmentModifications()
 
@@ -1101,10 +1120,11 @@ class Environment(object):
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view))
 
-        for _, spec in self.concretized_specs():
-            if spec in self.default_view and spec.package.installed:
-                env_mod.extend(uenv.environment_modifications_for_spec(
-                    spec, self.default_view))
+        mods, errors = self._env_modifications_for_default_view()
+        env_mod.extend(mods)
+        if errors:
+            for err in errors:
+                tty.warn(*err)
 
         # deduplicate paths from specs mapped to the same location
         for env_var in env_mod.group_by_name():
@@ -1122,11 +1142,9 @@ class Environment(object):
         env_mod.extend(uenv.unconditional_environment_modifications(
             self.default_view).reversed())
 
-        for _, spec in self.concretized_specs():
-            if spec in self.default_view and spec.package.installed:
-                env_mod.extend(
-                    uenv.environment_modifications_for_spec(
-                        spec, self.default_view).reversed())
+        mods, _ = self._env_modifications_for_default_view(reverse=True)
+        env_mod.extend(mods)
+
         return env_mod.shell_modifications(shell)
 
     def _add_concrete_spec(self, spec, concrete, new=True):

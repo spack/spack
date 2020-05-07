@@ -6,12 +6,12 @@
 from spack import *
 
 
-class Iperf2(AutotoolsPackage):
+class Iperf2(AutotoolsPackage, SourceforgePackage):
     """This code is a continuation based from the no longer maintained iperf
     2.0.5 code base. Iperf 2.0.5 is still widely deployed and used by many for
     testing networks and for qualifying networking products."""
 
     homepage = "https://sourceforge.net/projects/iperf2"
-    url      = "https://downloads.sourceforge.net/project/iperf2/iperf-2.0.12.tar.gz"
+    sourceforge_mirror_path = "iperf2/iperf-2.0.12.tar.gz"
 
     version('2.0.12', sha256='367f651fb1264b13f6518e41b8a7e08ce3e41b2a1c80e99ff0347561eed32646')
