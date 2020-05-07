@@ -45,7 +45,6 @@ import spack.multimethod
 import spack.repo
 import spack.url
 import spack.util.environment
-import spack.util.path as sup
 import spack.util.web
 import spack.multimethod
 
@@ -1523,7 +1522,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         for pdir in self.test_pkg_dirs:
                             extradir = os.path.join(self.stage.source_path,
                                                     pdir)
-                            destdir = os.path.join(testdir.data, pdir)
+                            destdir = os.path.join(testdir, pdir)
                             if os.path.isdir(extradir):
                                 shutil.copytree(extradir, destdir)
                     self.do_clean()

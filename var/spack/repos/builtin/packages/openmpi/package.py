@@ -625,12 +625,12 @@ class Openmpi(AutotoolsPackage):
             'Expected only one package directory'
 
         # First build the examples
-        work_dir = os.path.join(self.test_dir.data, self.test_pkg_dirs[0])
+        work_dir = os.path.join(self.test_dir, self.test_pkg_dirs[0])
         self.run_test('make', ['all'], [], None, False,
                       purpose='test build the examples', work_dir=work_dir)
 
         # Now run those with known results
-        have_spml = self.spec.version in spack.version.ver('2.0.0:3.1.5')
+        have_spml = self.spec.version in spack.version.ver('2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], None)
 
@@ -640,12 +640,7 @@ class Openmpi(AutotoolsPackage):
 
         no_out = ([''], None)
 
-        ring_out = (['Process 0 sending 10', '1 processes in ring',
-                     'Process 0 sent to', 'Process 0 decremented value:',
-                     'exiting'], None)
-
-        shift_out = (['Process 0 gets message from', '1 processes in ring'],
-                      'exiting'], None)
+        ring_out = (['1 processes in ring', '0 exiting'], None)
 
         strided = (['not in valid range'], 255)
 
@@ -658,7 +653,7 @@ class Openmpi(AutotoolsPackage):
             'hello_oshmemfh': hello_world if have_spml else missing_spml,
             'hello_usempi': hello_world,
             'hello_usempif08': hello_world,
-            'oshmem_circular_shift': shift_out if have_spml else missing_spml,
+            'oshmem_circular_shift': ring_out if have_spml else missing_spml,
             'oshmem_max_reduction': max_red if have_spml else missing_spml,
             'oshmem_shmalloc': no_out if have_spml else missing_spml,
             'oshmem_strided_puts': strided if have_spml else missing_spml,
@@ -666,8 +661,8 @@ class Openmpi(AutotoolsPackage):
             'ring_c': ring_out,
             'ring_cxx': ring_out,
             'ring_mpifh': ring_out,
-            'ring_oshmem': shift_out if have_spml else missing_spml,
-            'ring_oshmemfh': shift_out if have_spml else missing_spml,
+            'ring_oshmem': ring_out if have_spml else missing_spml,
+            'ring_oshmemfh': ring_out if have_spml else missing_spml,
             'ring_usempi': ring_out,
             'ring_usempif08': ring_out,
         }
