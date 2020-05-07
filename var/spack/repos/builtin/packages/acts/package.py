@@ -36,6 +36,7 @@ class Acts(CMakePackage):
     # Supported Acts versions
     version('master', branch='master')
     version('0.23.0', commit='dc443dd7e663bc4d7fb3c1e3f1f75aaf57ffd4e4')
+    version('0.22.1', commit='ca1b8b1645db6b552f44c48d2ff34c8c29618f3a')
     version('0.22.0', commit='2c8228f5843685fc0ae69a8b95dd8fc001139efb')
     version('0.21.0', commit='10b719e68ddaca15b28ac25b3daddce8c0d3368d')
     version('0.20.0', commit='1d37a849a9c318e8ca4fa541ef8433c1f004637b')
