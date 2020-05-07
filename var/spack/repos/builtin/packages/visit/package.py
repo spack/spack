@@ -8,10 +8,11 @@ from spack import *
 
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,
-       animation and analysis tool.
-
+       animation and analysis tool. See comments in VisIt's package.py
+       for tips about building VisIt with spack.
+    """
     ############################
-    # Suggestions for building.
+    # Suggestions for building:
     ############################
     # cyrush note:
     #
@@ -36,10 +37,14 @@ class Visit(CMakePackage):
     # there is a linking issue related to OpenSSL.
     # (dyld: Symbol not found: _GENERAL_NAME_free - which comes from OpenSSL)
     #
-    """
+    ############################
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
+    git      = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
+    maintainers = ['cyrush']
+
+    version('develop', branch='develop')
     version('3.1.1', sha256='0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0')
     version('3.0.1', sha256='a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd')
     version('2.13.3', sha256='cf0b3d2e39e1cd102dd886d3ef6da892733445e362fc28f24d9682012cccf2e5')
@@ -57,7 +62,7 @@ class Visit(CMakePackage):
     variant('python', default=True, description='Enable Python support')
     variant('mpi',    default=True, description='Enable parallel engine')
 
-    patch('spack-changes-3.1.patch', when="@3.1.0:")
+    patch('spack-changes-3.1.patch', when="@3.1.0:,develop")
     patch('spack-changes-3.0.1.patch', when="@3.0.1")
     patch('nonframework-qwt.patch', when='^qt~framework platform=darwin')
     patch('parallel-hdf5.patch', when='+hdf5+mpi')
@@ -152,13 +157,14 @@ class Visit(CMakePackage):
 
     depends_on('cmake@3.0:', type='build')
     # https://github.com/visit-dav/visit/issues/3498
-    depends_on('vtk@8.1.0:8.1.999+opengl2', when='@3.0:3.999')
+    depends_on('vtk@8.1.0:8.1.999+opengl2~python', when='~python @3.0:3.999,develop')
+    depends_on('vtk@8.1.0:8.1.999+opengl2+python', when='+python @3.0:3.999,develop')
     depends_on('vtk@6.1.0~opengl2', when='@:2.999')
-    depends_on('vtk+python', when='+python @3.0:')
+    depends_on('vtk+python', when='+python @3.0:,develop')
     depends_on('vtk~mpi', when='~mpi')
     depends_on('vtk+qt', when='+gui')
     depends_on('qt@4.8.6:4.999', when='+gui @:2.999')
-    depends_on('qt@5.10:', when='+gui @3.0:')
+    depends_on('qt@5.10:', when='+gui @3.0:,develop')
     depends_on('qwt', when='+gui')
     depends_on('python@2.6:2.8', when='+python')
     # VisIt uses Silo's 'ghost zone' data structures, which are only available
@@ -177,7 +183,7 @@ class Visit(CMakePackage):
 
     root_cmakelists_dir = 'src'
 
-    @when('@3.0.0:3.999')
+    @when('@3.0.0:3.999,develop')
     def patch(self):
         # Some of VTK's targets don't create explicit libraries, so there is no
         # 'vtktiff'. Instead, replace with the library variable defined from
