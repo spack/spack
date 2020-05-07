@@ -39,21 +39,15 @@ class Brion(CMakePackage):
     depends_on('bzip2')
     depends_on('lunchbox')
     depends_on('vmmlib')
-    depends_on('highfive@2.1: +boost ~mpi')
+    depends_on('highfive@2.1.1 +boost ~mpi')
     depends_on('mvdtool ~mpi')
-
-    patch('fix_highfive_v2_2.patch')
 
     def patch(self):
         filter_file(r'-py36', r'36 -py36', 'CMake/common/ChoosePython.cmake')
 
     def cmake_args(self):
-        args = ['-DDISABLE_SUBPROJECTS=ON']
-
-        if self.spec.satisfies('@3.1.0:'):
-            args.append('-DEXTLIB_FROM_SUBMODULES=ON')
-
-        return args
+        return ['-DDISABLE_SUBPROJECTS=ON',
+                '-DBRION_SKIP_LIBSONATA_SUBMODULE=ON']
 
     @when('+python')
     def setup_run_environment(self, env):
