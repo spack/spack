@@ -546,6 +546,8 @@ most likely via the ``+blas`` variant specification.
          lmod:
            core_compilers:
              - 'gcc@4.8'
+           core_specs:
+             - 'python'
            hierarchy:
              - 'mpi'
              - 'lapack'
@@ -554,6 +556,10 @@ most likely via the ``+blas`` variant specification.
      independently. This allows a site to build the same libraries or applications against different
      implementations of ``mpi`` and ``lapack``, and let LMod switch safely from one to the
      other.
+
+     All packages built with a compiler in ``core_compilers`` and all
+     packages that satisfy a spec in ``core_specs`` will be put in the
+     ``Core`` hierarchy of the lua modules.
 
 .. warning::
   Deep hierarchies and ``lmod spider``
