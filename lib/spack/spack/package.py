@@ -1738,7 +1738,20 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         with spack.store.db.prefix_write_lock(spec):
 
             if pkg is not None:
-                spack.hooks.pre_uninstall(spec)
+                try:
+                    spack.hooks.pre_uninstall(spec)
+                except Exception as error:
+                    if force:
+                        error_msg = (
+                            "One or more pre_uninstall hooks have failed"
+                            " for {0}, but Spack is continuing with the"
+                            " uninstall".format(str(spec)))
+                        if isinstance(error, spack.error.SpackError):
+                            error_msg += (
+                                "\n\nFull error: {0}".format(str(error)))
+                        tty.debug(error_msg)
+                    else:
+                        raise
 
             # Uninstalling in Spack only requires removing the prefix.
             if not spec.external:
