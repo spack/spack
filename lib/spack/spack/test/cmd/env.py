@@ -163,6 +163,28 @@ def test_env_install_single_spec(install_mockery, mock_fetch):
     assert e.specs_by_hash[e.concretized_order[0]].name == 'cmake-client'
 
 
+def test_env_modifications_error_on_activate(
+        install_mockery, mock_fetch, monkeypatch, capfd):
+    env('create', 'test')
+    install = SpackCommand('install')
+
+    e = ev.read('test')
+    with e:
+        install('cmake-client')
+
+    def setup_error(pkg, env):
+        raise RuntimeError("cmake-client had issues!")
+
+    pkg = spack.repo.path.get_pkg_class("cmake-client")
+    monkeypatch.setattr(pkg, "setup_run_environment", setup_error)
+    with e:
+        pass
+
+    _, err = capfd.readouterr()
+    assert "cmake-client had issues!" in err
+    assert "Warning: couldn't get environment settings" in err
+
+
 def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
     env('create', 'test')
 
