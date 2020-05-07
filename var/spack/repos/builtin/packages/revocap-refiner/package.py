@@ -10,15 +10,15 @@ class RevocapRefiner(MakefilePackage):
     """The University of Tokyo, CISS Project:
         Geometric processing, mesh processing, mesh generation"""
 
-    homepage = "https://github.com/FrontISTR/FrontISTR"
+    homepage = "https://github.com/FrontISTR/REVOCAP_Refiner"
     git      = "https://github.com/FrontISTR/REVOCAP_Refiner.git"
 
-    version('master', commit='626d445')
+    version('master', branch='master')
 
     depends_on('ruby', type='build')
     depends_on('mpi')
     depends_on('doxygen', type='build')
-    depends_on('swig')
+    depends_on('swig', type='build')
 
     parallel = False
 
@@ -54,5 +54,4 @@ class RevocapRefiner(MakefilePackage):
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
         install_tree('lib', prefix.lib)
-        mkdirp(prefix.include)
-        install_tree('Refiner', prefix.include)
+        install_tree('Refiner',  prefix.include.refine)
