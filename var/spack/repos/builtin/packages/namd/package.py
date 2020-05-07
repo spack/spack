@@ -30,7 +30,8 @@ class Namd(MakefilePackage):
             description='Enables TCL and/or python interface')
 
     depends_on('charmpp@6.10.1:', when="@2.14b1:")
-    depends_on('charmpp@:6.10.1', when="@:2.14b1")
+    depends_on('charmpp@6.8.2', when="@2.13")
+    depends_on('charmpp@6.7.1', when="@2.12")
 
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
