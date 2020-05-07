@@ -26,6 +26,8 @@ class Gaudi(CMakePackage):
 
     variant('optional', default=False,
             description='Build most optional components and tests')
+    variant('docs', default=False,
+            description='Build documentation with Doxygen')
     variant('vtune', default=False,
             description='Build with Intel VTune profiler support')
 
@@ -92,7 +94,7 @@ class Gaudi(CMakePackage):
             self.define_from_variant("GAUDI_USE_CPPUNIT", "optional"),
             self.define_from_variant("GAUDI_USE_UNWIND", "optional"),
             self.define_from_variant("GAUDI_USE_GPERFTOOLS", "optional"),
-            self.define_from_variant("GAUDI_USE_DOXYGEN", "optional"),
+            self.define_from_variant("GAUDI_USE_DOXYGEN", "docs"),
             self.define_from_variant("GAUDI_USE_INTELAMPLIFIER", "optional"),
             self.define_from_variant("GAUDI_USE_JEMALLOC", "optional"),
             # this is not really used in spack builds, but needs to be set
