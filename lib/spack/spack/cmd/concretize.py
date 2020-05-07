@@ -4,16 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.environment as ev
-import llnl.util.tty.color as clr
+from spack.spec import Spec
 
-description = clr.colorize(
-    'Concretize an environment and write a lockfile. The package status, '
-    'hash, and spec for each package and dependency are shown. \n\n'
-    'The status symbols are: \n'
-    ' @*g{[\u2714]} Package is installed. \n'
-    ' @*K{[-]} Package is not installed.\n'
-    ' @*b{[^]} Package is installed upstream.\n'
-    ' @*r{[?]} Package install is missing.')
+description = 'Concretize an environment and write a lockfile.'
 section = "environments"
 level = "long"
 
@@ -25,6 +18,12 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-d', '--dry-run', action='store_true', default=False,
         help="(Re-)concretize, but don't generate the lockfile.")
+    subparser.epilog = (
+        'Statuses: {s.POS_STATUS} - installed, '
+        '{s.NEG_STATUS} - not installed, \n'
+        '          {s.UPSTREAM_STATUS} - upstream,  '
+        '{s.ERR_STATUS} - install missing/error'
+        .format(s=Spec))
 
 
 def concretize(parser, args):
