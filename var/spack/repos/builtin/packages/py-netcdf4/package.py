@@ -32,6 +32,13 @@ class PyNetcdf4(PythonPackage):
     # following patch disables the usage of pkg-config at all.
     patch('disable_pkgconf.patch')
 
+    # Older versions of the package get a false negative result when checking
+    # the version of HDF5.
+    patch('check_hdf5version.patch', when='@:1.2.9 ^hdf5@1.10:')
+
+    # We can skip the 'build' phase to avoid recompilation of the library.
+    phases = ['install']
+
     def setup_build_environment(self, env):
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
