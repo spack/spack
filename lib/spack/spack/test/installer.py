@@ -190,7 +190,7 @@ def test_try_install_from_binary_cache(install_mockery, mock_packages,
         spec = spack.spec.Spec('mpi').concretized()
         return {spec: None}
 
-    spec = spack.spec.Spec('intel-parallel-studio')
+    spec = spack.spec.Spec('mpich')
     spec.concretize()
 
     monkeypatch.setattr(spack.binary_distribution, 'get_spec', _spec)
