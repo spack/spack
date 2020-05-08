@@ -57,7 +57,7 @@ class Dd4hep(CMakePackage):
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
             "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
-            "-DBUILD_TESTING={0}".format(str(self.run_tests)),
+            "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
             "-DPYTHON_EXECUTABLE={0}".format(spec['python'].command.path),
