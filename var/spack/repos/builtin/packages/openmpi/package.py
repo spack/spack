@@ -633,12 +633,12 @@ class Openmpi(AutotoolsPackage):
             'Expected only one package directory'
 
         # First build the examples
-        work_dir = os.path.join(self.test_dir, self.test_pkg_dirs[0])
+        work_dir = os.path.join(self.install_test_root, self.test_pkg_dirs[0])
         self.run_test('make', ['all'], [], None, False,
                       purpose='test build the examples', work_dir=work_dir)
 
         # Now run those with known results
-        have_spml = self.spec.version in spack.version.ver('2.0.0:2.1.6')
+        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], None)
 
@@ -683,7 +683,9 @@ class Openmpi(AutotoolsPackage):
 
     def test(self):
         """Perform smoke tests on the installed package."""
-        if self.spec.version not in spack.version.ver('2.0.0:4.0.3'):
+        tty.warn('Expected results currently based on simple openmpi builds')
+
+        if not self.spec.satisfies('@2.0.0:4.0.3'):
             tty.warn('Expected results have not been confirmed for {0} {1}'
                      .format(self.name, self.spec.version))
 

@@ -1072,10 +1072,10 @@ class PackageInstaller(object):
                                                   pkg.name, 'src')
                         tty.msg('{0} Copying source to {1}'
                                 .format(pre, src_target))
-                        fs.install_tree(pkg.stage.source_path, src_target)
+                        fs.install_tree(source_path, src_target)
 
                     # Do the real install in the source directory.
-                    with fs.working_dir(pkg.stage.source_path):
+                    with fs.working_dir(source_path):
                         # Save the build environment in a file before building.
                         dump_environment(pkg.env_path)
 
@@ -1111,6 +1111,14 @@ class PackageInstaller(object):
                                 # Redirect stdout and stderr to daemon pipe
                                 phase = getattr(pkg, phase_attr)
                                 phase(pkg.spec, pkg.prefix)
+
+                        # cache install testing source files
+                        install_dir = pkg.install_test_root
+                        for pkg_dir in pkg.test_pkg_dirs:
+                            test_dir = os.path.join(source_path, pkg_dir)
+                            dest_dir = os.path.join(install_dir, pkg_dir)
+                            if os.path.isdir(test_dir):
+                                shutil.copytree(test_dir, dest_dir)
 
                     echo = logger.echo
                     log(pkg)

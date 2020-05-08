@@ -917,6 +917,11 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         return os.path.join(install_path, _spack_configure_argsfile)
 
+    @property
+    def install_test_root(self):
+        """Return the install test root directory."""
+        return spack.store.layout.metadata_path(self.spec)
+
     def _make_fetcher(self):
         # Construct a composite fetcher that always contains at least
         # one element (the root package). In case there are resources
@@ -1516,18 +1521,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 if os.path.isdir(datadir):
                     shutil.copytree(datadir, testdir.data)
 
-                # copy extra directories into testdir/data
-                if self.test_pkg_dirs:
-                    self.do_stage()
-                    if os.path.exists(self.stage.source_path):
-                        for pdir in self.test_pkg_dirs:
-                            extradir = os.path.join(self.stage.source_path,
-                                                    pdir)
-                            destdir = os.path.join(testdir, pdir)
-                            if os.path.isdir(extradir):
-                                shutil.copytree(extradir, destdir)
-                    self.do_clean()
-
                 try:
                     os.chdir(testdir)
                     self.test()
@@ -1567,7 +1560,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             installed (bool): the executable must be in the install prefix
             purpose (str): message to display before running test
             skip_missing (bool): skip the test if the executable is not
-                in the install prefix bin directory
+                in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
         if self._binaries is None:
@@ -1577,8 +1570,10 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             except FileNotFoundError:
                 self._binaries = []
 
-        if skip_missing and exe not in self._binaries:
-            return
+        if skip_missing:
+            if exe not in self._binaries and (work_dir is None or  \
+                    not os.path.exists(os.path.join(work_dir, exe))):
+                return
 
         wdir = '.' if work_dir is None else work_dir
 
