@@ -37,10 +37,7 @@ class PyMmcv(PythonPackage):
 
     version('0.5.1', sha256='7c5ad30d9b61e44019e81ef46c406aa85dd08b5d0ba12ddd5cdc9c445835a55e')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
