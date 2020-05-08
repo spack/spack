@@ -38,6 +38,10 @@ class PyMmcv(PythonPackage):
     version('0.5.1', sha256='7c5ad30d9b61e44019e81ef46c406aa85dd08b5d0ba12ddd5cdc9c445835a55e')
 
     depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('py-addict', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('build', 'run'))
+    depends_on('py-cython', type='build')
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
