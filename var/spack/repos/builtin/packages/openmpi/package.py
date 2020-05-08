@@ -565,6 +565,27 @@ class Openmpi(AutotoolsPackage):
                 else:
                     copy(script_stub, exe)
 
+    def _test_bin_ops(self):
+        info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
+                None)
+
+        ls = (['-n', '1', 'ls', '..'],
+              ['openmpi-{0}'.format(self.spec.version)], None)
+
+        checks = {
+            'mpirun': ls,
+            'ompi_info': info,
+            'oshmem_info': info,
+            'oshrun': ls,
+            'shmemrun': ls,
+        }
+
+        for exe in checks:
+            options, expected, status = checks[exe]
+            reason = 'test {0} output'.format(exe)
+            self.run_test(exe, options, expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
     def _test_check_versions(self):
         comp_vers = str(self.spec.compiler.version)
         spec_vers = str(self.spec.version)
@@ -692,5 +713,8 @@ class Openmpi(AutotoolsPackage):
         # Simple version check tests on known packages
         self._test_check_versions()
 
-        # Test example programs pulled from the source
+        # Test the operation of selected executables
+        self._test_bin_ops()
+
+        # Test example programs pulled from the build
         self._test_examples()
