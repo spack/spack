@@ -12,7 +12,7 @@ branches:
 # Build matrix
 #=============================================================================
 
-dist: xenial
+dist: bionic
 
 jobs:
   fast_finish: true
@@ -53,6 +53,7 @@ jobs:
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '3.5'
       os: linux
+      dist: xenial
       language: python
       env: TEST_SUITE=unit
     - python: '3.6'
