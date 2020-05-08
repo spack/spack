@@ -20,11 +20,3 @@ class PyConfigobj(PythonPackage):
     # enough version number is the same as the latest release on github.
     depends_on('py-six', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-
-    def url_for_version(self, version):
-        if version <= Version('5.0.0'):
-            url = "https://pypi.io/packages/source/c/configobj/configobj-{0}.tar.gz"
-        else:
-            url = "https://github.com/DiffSK/configobj/archive/v{0}.tar.gz"
-
-        return url.format(version)
