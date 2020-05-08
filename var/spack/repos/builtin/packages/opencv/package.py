@@ -112,6 +112,7 @@ class Opencv(CMakePackage, CudaPackage):
                  tag="{0}".format(cv),
                  when='@{0}+cuda'.format(cv))
 
+    depends_on('cmake@:3.11', when='@:3.2', type='build')
     depends_on('hdf5', when='+contrib')
     depends_on('hdf5', when='+cuda')
     depends_on('blas', when='+lapack')
