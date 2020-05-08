@@ -24,10 +24,11 @@ from spack import *
 
 
 class PyMmcv(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """MMCV is a foundational python library for computer
+    vision research and supports many research projects in
+    MMLAB, such as MMDetection and MMAction."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://mmcv.readthedocs.io/en/latest/"
     url      = "https://github.com/open-mmlab/mmcv/archive/v0.5.1.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
