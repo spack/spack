@@ -24,10 +24,11 @@ from spack import *
 
 
 class PyAddict(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """addict is a Python module that gives you dictionaries
+    whose values are both gettable and settable using
+    attributes, in addition to standard item-syntax."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/mewwts/addict"
     url      = "https://github.com/mewwts/addict/archive/v2.2.1.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
