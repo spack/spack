@@ -216,7 +216,7 @@ class Petsc(Package):
             # enabled. This generates a list of any such errors.
             errors = [
                 error_message_fmt.format(library=x)
-                for x in ('hdf5', 'hypre', 'parmetis', 'mumps', 'superlu-dist')
+                for x in ('hdf5', 'hypre', 'mumps', 'superlu-dist')
                 if ('+' + x) in self.spec]
             if errors:
                 errors = ['incompatible variants given'] + errors
@@ -296,15 +296,18 @@ class Petsc(Package):
                 '--with-scalapack=0'
             ])
 
-        # Activates library support if needed
+        # Activates library support if needed (i.e. direct dependency)
         for library in ('cuda', 'metis', 'hypre', 'parmetis',
                         'mumps', 'trilinos', 'fftw', 'valgrind'):
+            # Cannot check `library in spec` because of transitive deps
+            # Cannot check variants because parmetis keys on +metis
+            library_requested = library in spec.dependencies_dict()
             options.append(
                 '--with-{library}={value}'.format(
                     library=library,
-                    value=('1' if '+' + library in spec else '0'))
+                    value=('1' if library_requested else '0'))
             )
-            if '+' + library in spec:
+            if library_requested:
                 options.append(
                     '--with-{library}-dir={path}'.format(
                         library=library, path=spec[library].prefix)
