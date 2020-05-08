@@ -550,7 +550,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         # init internal variables
         self._stage = None
         self._fetcher = None
-        self._binaries = None
 
         # Set up timing variables
         self._fetch_time = 0.0
@@ -1563,24 +1562,15 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 in the install prefix bin directory or the provided work_dir
             work_dir (str or None): path to the smoke test directory
         """
-        if self._binaries is None:
-            # Cache the installed binaries
-            try:
-                self._binaries = os.listdir(os.path.join(self.prefix, 'bin'))
-            except FileNotFoundError:
-                self._binaries = []
-
-        if skip_missing:
-            if exe not in self._binaries and (work_dir is None or  \
-                    not os.path.exists(os.path.join(work_dir, exe))):
-                return
-
         wdir = '.' if work_dir is None else work_dir
-
         with working_dir(wdir):
             try:
+                runner = which(exe)
+                if runner is None and skip_missing:
+                    return
+
                 self._run_test_helper(
-                    exe, options, expected, status, installed, purpose)
+                    exe, runner, options, expected, status, installed, purpose)
                 print("PASSED")
             except BaseException as e:
                 # print a summary of the error to the log file
@@ -1630,8 +1620,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                 else:
                     self.test_failures.append((exc, m))
 
-    def _run_test_helper(self, exe, options, expected, status, installed,
-                         purpose):
+    def _run_test_helper(self, exe, runner, options, expected, status,
+                         installed, purpose):
         status = [status] if not isinstance(status, list) else status
         if purpose:
             tty.msg(purpose)
@@ -1639,7 +1629,6 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug('test: {0}: expect command status in {1}'
                       .format(exe, status))
 
-        runner = which(exe)
         assert runner is not None, "Failed to find executable '%s'" % exe
 
         if installed:
