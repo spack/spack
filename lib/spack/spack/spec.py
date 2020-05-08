@@ -1805,7 +1805,9 @@ class Spec(object):
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
                 dag_hash, deptypes = elt['hash'], elt['type']
-                virtuals = elt['provides']
+                # {}.get instead of subscripting is needed for backward
+                # compatibility. Without it reindex would fail
+                virtuals = elt.get('provides', [])
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
