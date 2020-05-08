@@ -20,6 +20,7 @@ class Catch(CMakePackage):
     # - CMake config package was added in 2.1.2
     conflicts('~single_header', when='@:1.6.1')
 
+    version('2.12.1', sha256='e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3')
     version('2.9.1', sha256='0b36488aca6265e7be14da2c2d0c748b4ddb9c70a1ea4da75736699c629f14ac')
     version('2.9.0', sha256='00040cad9b6d6bb817ebd5853ff6dda23f9957153d8c4eedf85def0c9e787c42')
     version('2.8.0', sha256='b567c37446cd22c8550bfeb7e2fe3f981b8f3ab8b2148499a522e7f61b8a481d')
