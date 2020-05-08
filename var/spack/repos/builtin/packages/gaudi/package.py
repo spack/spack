@@ -64,7 +64,7 @@ class Gaudi(CMakePackage):
     depends_on('clhep', when='+optional')
     depends_on('cppgsl', when='+optional')
     depends_on('cppunit', when='+optional')
-    depends_on('doxygen +graphviz', when='+optional')
+    depends_on('doxygen +graphviz', when='+docs')
     depends_on('gperftools', when='+optional')
     depends_on('gdb', when='+optional')
     depends_on('gsl', when='+optional')
