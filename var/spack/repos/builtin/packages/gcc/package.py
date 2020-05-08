@@ -3,14 +3,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-from spack.operating_systems.mac_os import macos_version, macos_sdk_path
-from llnl.util import tty
-
+import collections
 import glob
 import itertools
 import os
+import re
 import sys
+
+import spack.util.executable
+from llnl.util import tty
+from spack.operating_systems.mac_os import macos_version, macos_sdk_path
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage):
@@ -268,6 +270,63 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('zstd.patch', when='@10:')
 
     build_directory = 'spack-build'
+
+    @property
+    def executables(self):
+        names = [r'gcc', r'[^\w]?g\+\+', r'gfortran']
+        suffixes = [r'-mp-\d\.\d', r'-\d\.\d', r'-\d', r'\d\d']
+        return [r''.join(x) for x in itertools.product(names, suffixes)]
+
+    @classmethod
+    def determine_spec_details(cls, prefix, exes_in_prefix):
+        exes_by_version = collections.defaultdict(list)
+        for exe in exes_in_prefix:
+            # clang++ matches g++ -> clan[g++]
+            if 'clang' in exe:
+                continue
+
+            version_str = cls.determine_version(exe)
+            if version_str:
+                exes_by_version[version_str].append(exe)
+
+        specs = []
+        for version_str, exes in exes_by_version.items():
+            spec_str = cls.determine_variants(exes, version_str)
+            if spec_str:
+                specs.append(Spec(spec_str))
+
+        return specs
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_regex = re.compile(r'(.*)')
+        for vargs in ('-dumpfullversion', '-dumpversion'):
+            try:
+                output = spack.compiler.get_compiler_version_output(exe, vargs)
+                match = version_regex.search(output)
+                if match:
+                    return match.group(1)
+            except spack.util.executable.ProcessError:
+                pass
+            except Exception as e:
+                tty.debug(e)
+
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        spec_str = 'gcc@{0} languages={1}'
+        languages = set()
+
+        for exe in exes:
+            if 'gcc' in exe:
+                languages.add('c')
+            if 'g++' in exe:
+                languages.add('c++')
+            if 'gfortran' in exe:
+                languages.add('fortran')
+
+        return spec_str.format(version_str, ','.join(languages))
 
     def url_for_version(self, version):
         # This function will be called when trying to fetch from url, before
