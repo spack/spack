@@ -1,0 +1,23 @@
+--- a/gcc/Makefile.in	2020-05-08 11:50:17.962838228 +0200
++++ b/gcc/Makefile.in	2020-05-08 11:50:58.220960817 +0200
+@@ -1075,6 +1075,11 @@
+ # Libs needed (at present) just for jcf-dump.
+ LDEXP_LIB = @LDEXP_LIB@
+ 
++ifneq (@ZSTD_INCLUDE@,)
++ZSTD_INCLUDE = -I@ZSTD_INCLUDE@
++else
++ZSTD_INCLUDE =
++endif
+ ZSTD_LIB = @ZSTD_LIB@
+ 
+ # Likewise, for use in the tools that must run on this machine
+@@ -2275,7 +2280,7 @@
+ version.o: $(REVISION) $(DATESTAMP) $(BASEVER) $(DEVPHASE)
+ 
+ # lto-compress.o needs $(ZLIBINC) added to the include flags.
+-CFLAGS-lto-compress.o += $(ZLIBINC)
++CFLAGS-lto-compress.o += $(ZLIBINC) $(ZSTD_INCLUDE)
+ 
+ CFLAGS-lto-streamer-in.o += -DTARGET_MACHINE=\"$(target_noncanonical)\"
+ 
