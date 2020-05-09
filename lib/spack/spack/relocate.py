@@ -675,16 +675,19 @@ def relocate_elf_binaries(binaries, orig_root, new_root,
             _set_elf_rpaths(new_binary, new_rpaths)
 
 
-def make_link_relative(cur_path_names, orig_path_names):
-    """
-    Change absolute links to relative links.
-    """
-    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        target = os.readlink(orig_path)
-        relative_target = os.path.relpath(target, os.path.dirname(orig_path))
+def make_link_relative(new_links, orig_links):
+    """Compute the relative target from the original link and
+    make the new link relative.
 
-        os.unlink(cur_path)
-        os.symlink(relative_target, cur_path)
+    Args:
+        new_links (list): new links to be made relative
+        orig_links (list): original links
+    """
+    for new_link, orig_link in zip(new_links, orig_links):
+        target = os.readlink(orig_link)
+        relative_target = os.path.relpath(target, os.path.dirname(orig_link))
+        os.unlink(new_link)
+        os.symlink(relative_target, new_link)
 
 
 def make_macho_binaries_relative(cur_path_names, orig_path_names,
