@@ -32,6 +32,25 @@ jobs:
       dist: trusty
       os: linux
       language: python
+      addons:
+        apt:
+          # Everything but patchelf, that is not available for trusty
+          packages:
+            - ccache
+            - cmake
+            - gfortran
+            - graphviz
+            - gnupg2
+            - kcov
+            - mercurial
+            - ninja-build
+            - perl
+            - perl-base
+            - realpath
+            - r-base
+            - r-base-core
+            - r-base-dev
+            - zsh
       env: [ TEST_SUITE=unit, COVERAGE=true ]
     - python: '2.7'
       os: linux
@@ -84,6 +103,7 @@ addons:
       - kcov
       - mercurial
       - ninja-build
+      - patchelf
       - perl
       - perl-base
       - realpath
