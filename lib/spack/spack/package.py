@@ -1474,11 +1474,24 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
         return self.test_stage.join(
             self.spec.format('{name}-{version}-{hash}'))
 
+    def copy_src_to_install(self, src_subdir, install_subdir):
+        """Copy the source subdirectory to the install test subdirectory.
+
+        Args:
+            src_subdir (str): name of the subdirectory under staged source
+                that is to be copied to the install test directory
+            install_subdir (str): name of the target subdirectory under the
+                install test directory 
+        """
+        test_dir = os.path.join(self.stage.source_path, src_subdir)
+        dest_dir = os.path.join(self.install_test_root, install_subdir)
+        if os.path.isdir(test_dir):
+            shutil.copytree(test_dir, dest_dir)
+
     test_requires_compiler = False
     test_failures = None
     test_log_file = None
     test_stage = None
-    test_pkg_dirs = []
 
     def do_test(self, name, remove_directory=False, dirty=False):
         if self.test_requires_compiler:

@@ -79,8 +79,6 @@ class Openmpi(AutotoolsPackage):
 
     version('develop', branch='master')
 
-    test_pkg_dirs = ['examples']
-
     # Current
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
 
@@ -565,6 +563,13 @@ class Openmpi(AutotoolsPackage):
                 else:
                     copy(script_stub, exe)
 
+    extra_install_tests = 'examples'
+
+    @run_after('install')
+    def setup_install_tests(self):
+        self.copy_src_to_install(self.extra_install_tests,
+                                 self.extra_install_tests)
+
     def _test_bin_ops(self):
         info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
                 None)
@@ -650,11 +655,9 @@ class Openmpi(AutotoolsPackage):
                           purpose=purpose, skip_missing=True)
 
     def _test_examples(self):
-        assert len(self.test_pkg_dirs) == 1, \
-            'Expected only one package directory'
-
         # First build the examples
-        work_dir = os.path.join(self.install_test_root, self.test_pkg_dirs[0])
+        work_dir = os.path.join(self.install_test_root,
+                                self.extra_install_tests)
         self.run_test('make', ['all'], [], None, False,
                       purpose='test build the examples', work_dir=work_dir)
 

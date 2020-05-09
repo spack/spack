@@ -1112,14 +1112,6 @@ class PackageInstaller(object):
                                 phase = getattr(pkg, phase_attr)
                                 phase(pkg.spec, pkg.prefix)
 
-                        # cache install testing source files
-                        install_dir = pkg.install_test_root
-                        for pkg_dir in pkg.test_pkg_dirs:
-                            test_dir = os.path.join(source_path, pkg_dir)
-                            dest_dir = os.path.join(install_dir, pkg_dir)
-                            if os.path.isdir(test_dir):
-                                shutil.copytree(test_dir, dest_dir)
-
                     echo = logger.echo
                     log(pkg)
 
