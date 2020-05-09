@@ -709,17 +709,23 @@ def make_macho_binaries_relative(cur_path_names, orig_path_names,
                                 paths_to_paths)
 
 
-def make_elf_binaries_relative(cur_path_names, orig_path_names,
-                               old_layout_root):
+def make_elf_binaries_relative(new_binaries, orig_binaries, orig_layout_root):
+    """Replace the original RPATHs in the new binaries making them
+    relative to the original layout root.
+    
+    Args:
+        new_binaries (list): new binaries whose RPATHs is to be made relative
+        orig_binaries (list): original binaries
+        orig_layout_root (str): path to be used as a base for making
+            RPATHs relative
     """
-    Replace old RPATHs with paths relative to old_dir in binary files
-    """
-    for cur_path, orig_path in zip(cur_path_names, orig_path_names):
-        orig_rpaths = _elf_rpaths_for(cur_path)
+    for new_binary, orig_binary in zip(new_binaries, orig_binaries):
+        orig_rpaths = _elf_rpaths_for(new_binary)
         if orig_rpaths:
-            new_rpaths = _make_relative(orig_path, old_layout_root,
-                                        orig_rpaths)
-            _set_elf_rpaths(cur_path, new_rpaths)
+            new_rpaths = _make_relative(
+                orig_binary, orig_layout_root, orig_rpaths
+            )
+            _set_elf_rpaths(new_binary, new_rpaths)
 
 
 def check_files_relocatable(cur_path_names, allow_root):
