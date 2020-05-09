@@ -36,7 +36,7 @@ jobs:
     - name: Run unit tests
       run: |
         git --version
-        git fetch origin develop:develop
+        git fetch -u origin develop:develop
         . share/spack/setup-env.sh
         coverage run $(which spack) test
         coverage combine
