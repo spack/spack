@@ -26,7 +26,7 @@ jobs:
   install_jupyter_clang:
     name: jupyter
     runs-on: macos-latest
-    timeout-minutes: 600
+    timeout-minutes: 700
     steps:
     - uses: actions/checkout@v2
     - name: spack install
