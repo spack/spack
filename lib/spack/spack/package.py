@@ -1467,7 +1467,8 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     @property
     def test_log_name(self):
-        return 'test-%s-out.txt' % self.spec.format('{name}-{version}-{hash:7}')
+        return 'test-{0}-out.txt' \
+            .format(self.spec.format('{name}-{version}-{hash:7}'))
 
     @property
     def test_dir(self):
@@ -1481,7 +1482,7 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
             src_subdir (str): name of the subdirectory under staged source
                 that is to be copied to the install test directory
             install_subdir (str): name of the target subdirectory under the
-                install test directory 
+                install test directory
         """
         test_dir = os.path.join(self.stage.source_path, src_subdir)
         dest_dir = os.path.join(self.install_test_root, install_subdir)
@@ -1618,12 +1619,12 @@ class PackageBase(with_metaclass(PackageMeta, PackageViewMixin, object)):
                         out, 'test', self.test_log_file, last=1)
                     m = out.getvalue()
                 else:
-                    # We're below the package context, so get context from stack
-                    # instead of from traceback.
+                    # We're below the package context, so get context from
+                    # stack instead of from traceback.
                     # The traceback is truncated here, so we can't use it to
                     # traverse the stack.
                     m = '\n'.join(spack.build_environment.get_package_context(
-                            traceback.extract_stack()))
+                        traceback.extract_stack()))
 
                 exc = e  # e is deleted after this block
 
