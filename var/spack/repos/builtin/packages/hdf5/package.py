@@ -20,6 +20,7 @@ class Hdf5(AutotoolsPackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+    maintainers = ['lrknox']
 
     version('develop', branch='develop')
 
@@ -63,6 +64,13 @@ class Hdf5(AutotoolsPackage):
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    # Build HDF5 with API compaitibility.
+    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+
+    conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
+    conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
+    conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
+    conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
     depends_on('autoconf', type='build', when='@develop')
     depends_on('automake', type='build', when='@develop')
@@ -229,6 +237,10 @@ class Hdf5(AutotoolsPackage):
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
+
+        api = self.spec.variants['api'].value
+        if api != 'none':
+            extra_args.append('--with-default-api-version=' + api)
 
         if '+szip' in self.spec:
             extra_args.append('--with-szlib=%s' % self.spec['szip'].prefix)
