@@ -30,7 +30,7 @@ class Geant4Data(BundlePackage):
     # Can move to declaring on a dataset basis if needed
     # geant4@10.6.X
     depends_on("g4ndl@4.6", when='@10.6.0:10.6.9999')
-    depends_on("g4emlow@7.9", when='@10.6.0:10.6.9999')
+    depends_on("g4emlow@7.9", when='@10.6.0')
     depends_on("g4emlow@7.9.1", when='@10.6.1:10.6.9999')
     depends_on("g4photonevaporation@5.5", when='@10.6.0:10.6.9999')
     depends_on("g4radioactivedecay@5.4", when='@10.6.0:10.6.9999')
