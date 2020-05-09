@@ -36,7 +36,7 @@ class Dd4hep(CMakePackage):
 
     variant('xercesc', default=False, description="Enable 'Detector Builders' based on XercesC")
     variant('geant4', default=False, description="Enable the simulation part based on Geant4")
-    variant('testing', default=False, description="Enable and build tests")
+    variant('assimp', default=False, description="Enable CAD interface based on Assimp")
 
     depends_on('cmake @3.12:', type='build')
     depends_on('boost @1.49:')
@@ -44,6 +44,7 @@ class Dd4hep(CMakePackage):
     extends('python')
     depends_on('xerces-c', when='+xercesc')
     depends_on('geant4@10.2.2:', when='+geant4')
+    depends_on('assimp', when='+assimp')
 
     def cmake_args(self):
         spec = self.spec
@@ -55,12 +56,17 @@ class Dd4hep(CMakePackage):
             "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             "-DDD4HEP_USE_XERCESC={0}".format(spec.satisfies('+xercesc')),
             "-DDD4HEP_USE_GEANT4={0}".format(spec.satisfies('+geant4')),
-            "-DBUILD_TESTING={0}".format(spec.satisfies('+testing')),
+            "-DDD4HEP_LOAD_ASSIMP={0}".format(spec.satisfies('+assimp')),
+            "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),
             "-DBoost_NO_BOOST_CMAKE=ON",
             "-DPYTHON_EXECUTABLE={0}".format(spec['python'].command.path),
         ]
         return args
+
+    def setup_run_environment(self, env):
+        # used p.ex. in ddsim to find DDDetectors dir
+        env.set("DD4hepINSTALL", self.prefix)
 
     def url_for_version(self, version):
         # dd4hep releases are dashes and padded with a leading zero
