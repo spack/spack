@@ -16,6 +16,7 @@ class RUsethis(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/usethis_1.5.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/usethis"
 
+    version('1.6.1', sha256='60339059a97ed07dea7f8908b828b5bb42e0fd0b471165c061bc9660b0d59d6f')
     version('1.5.1', sha256='9e3920a04b0df82adf59eef2c1b2b4d835c4a757a51b3c163b8fc619172f561d')
 
     depends_on('r@3.2:', type=('build', 'run'))
