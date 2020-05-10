@@ -13,6 +13,7 @@ class RDevtools(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/devtools_1.12.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/devtools"
 
+    version('2.3.0', sha256='4fc375c171335c67bd71df4e0b1b3dff2ae3aa17b3e0566b790ba0808b39dcd0')
     version('2.1.0', sha256='c1f75346a90adf0669b5508fe68cc78bd3b114c1303fa7d22bf90991edd9230d')
     version('2.0.2', sha256='99a2fa957068254b8ecdb3fc2d50e2950230910ea31c314fc0e7d934e4bd1709')
     version('1.12.0', sha256='8a3e2ca3988dffe29341e45a160bb588995eae43485d6a811a9ae4836d37afd4')
