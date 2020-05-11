@@ -18,7 +18,7 @@ class PyMmcv(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-addict', type=('build', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy@1.11.1:', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('opencv+python', type=('build', 'run'))
     depends_on('py-cython', type='build')
